@@ -1,0 +1,54 @@
+export enum ServiceType {
+  TRANSFER = 'TRANSFER',
+  TOUR = 'TOUR',
+  RENTAL = 'RENTAL'
+}
+
+export interface Amenity {
+  icon: string;
+  label: string;
+}
+
+export interface Property {
+  id: string;
+  title: string;
+  location: string;
+  pricePerNight: number;
+  rating: number;
+  reviewsCount: number;
+  image: string;
+  images: string[];
+  guests: number;
+  bedrooms: number;
+  bathrooms: number;
+  description: string;
+  amenities: Amenity[];
+  hostName: string;
+}
+
+export interface Service {
+  id: string;
+  type: ServiceType;
+  title: string;
+  price: number;
+  description: string;
+  image: string;
+  duration?: string; // For tours
+  vehicleType?: string; // For transfers
+}
+
+export interface CartItem {
+  id: string;
+  type: ServiceType;
+  title: string;
+  price: number;
+  details?: string; // e.g., "5 nights" or "Round Trip"
+  date?: string;
+}
+
+export interface SearchFilters {
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+}
