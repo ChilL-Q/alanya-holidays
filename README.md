@@ -1,20 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Alanya Holidays 🌴
 
-# Run and deploy your AI Studio app
+**Unforgettable Alanya awaits.**
 
-This contains everything you need to run your app locally.
+This project is a modern travel platform designed to connect travelers with premium rentals and unique experiences in Alanya, Turkey.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1lbH2Cs2g3JaNNBSt4GJ4dKIN81CkGXjv
+## What is this?
 
-## Run Locally
+Alanya Holidays is a concept booking platform that removes the middleman. Unlike major booking sites that charge high service fees, this platform connects guests directly with verified local hosts.
 
-**Prerequisites:**  Node.js
+It's not just about booking a place to stay; it's about experiencing the local culture. The platform features an **AI Local Guide** that can answer questions about Alanya, recommend hidden gems, and help plan your perfect trip in English, Russian, or Turkish.
 
+## Key Features
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+-   **Zero Guest Fees**: Direct booking model saves money for travelers.
+-   **AI Travel Assistant**: Built-in AI guide to help you explore the city.
+-   **Curated Listings**: Only high-quality, verified properties.
+-   **Multilingual**: Fully translated for international visitors (EN, RU, TR).
+
+## Tech Stack
+
+Built with modern web technologies:
+-   React 19 & TypeScript
+-   Vite
+-   Tailwind CSS
+-   Google Gemini AI
+
+## Running the Project
+
+To run this on your machine:
+
+1.  Clone the repository.
+2.  Install dependencies: `npm install`
+3.  Start the server: `npm run dev`
+4.  Open `http://localhost:3000`
