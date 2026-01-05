@@ -4,8 +4,8 @@ import { askLocalGuide } from '../services/geminiService';
 import { useLanguage } from '../context/LanguageContext';
 
 interface TripAssistantProps {
-  propertyName: string;
-  location: string;
+  propertyName?: string;
+  location?: string;
 }
 
 export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, location }) => {
@@ -19,8 +19,9 @@ export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, loca
     if (!query.trim()) return;
     setIsLoading(true);
     setResponse('');
-    
-    const answer = await askLocalGuide(propertyName, location, query);
+
+    // Pass null if props are undefined
+    const answer = await askLocalGuide(propertyName || null, location || null, query);
     setResponse(answer);
     setIsLoading(false);
   };
@@ -29,7 +30,7 @@ export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, loca
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-teal-800 text-white px-5 py-3 rounded-full shadow-xl hover:bg-teal-700 hover:scale-105 transition-all duration-300"
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-full shadow-xl hover:bg-primary-dark hover:scale-105 transition-all duration-300"
       >
         <Sparkles size={18} />
         <span className="font-medium">{t('ai.button')}</span>
@@ -39,7 +40,7 @@ export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, loca
 
   return (
     <div className="fixed bottom-6 right-6 z-40 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in slide-in-from-bottom-5">
-      <div className="bg-teal-800 p-4 flex justify-between items-center text-white">
+      <div className="bg-primary p-4 flex justify-between items-center text-white">
         <div className="flex items-center gap-2">
           <Sparkles size={18} />
           <h3 className="font-medium">{t('ai.title')}</h3>
@@ -55,12 +56,12 @@ export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, loca
             {t('ai.welcome')}
           </p>
         )}
-        
+
         {isLoading && (
           <div className="flex space-x-2 justify-center items-center h-full">
-             <div className="w-2 h-2 bg-teal-600 rounded-full animate-bounce"></div>
-             <div className="w-2 h-2 bg-teal-600 rounded-full animate-bounce delay-100"></div>
-             <div className="w-2 h-2 bg-teal-600 rounded-full animate-bounce delay-200"></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100"></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200"></div>
           </div>
         )}
 
@@ -78,12 +79,12 @@ export const TripAssistant: React.FC<TripAssistantProps> = ({ propertyName, loca
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
           placeholder={t('ai.placeholder')}
-          className="flex-1 text-sm bg-slate-100 border-none rounded-lg px-3 py-2 focus:ring-1 focus:ring-teal-600 outline-none"
+          className="flex-1 text-sm bg-slate-100 border-none rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary outline-none"
         />
-        <button 
+        <button
           onClick={handleAsk}
           disabled={isLoading}
-          className="bg-teal-700 text-white p-2 rounded-lg hover:bg-teal-800 disabled:opacity-50"
+          className="bg-primary text-white p-2 rounded-lg hover:bg-primary-dark disabled:opacity-50"
         >
           <Send size={16} />
         </button>

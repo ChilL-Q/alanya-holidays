@@ -1,8 +1,7 @@
 export const ru = {
     // Navbar
     'nav.stays': 'Жилье',
-    'nav.transfers': 'Трансферы',
-    'nav.experiences': 'Впечатления',
+    'nav.services': 'Сервисы',
     'nav.list_property': 'Сдать жилье',
 
     // Home Hero
@@ -68,4 +67,42 @@ export const ru = {
     'ai.welcome': "Привет! Я ваш AI помощник. Спросите меня о пляжах, ресторанах или транспорте!",
     'ai.placeholder': 'например, Далеко ли до пляжа Клеопатры?',
     'ai.loading': 'Думаю...',
+    // Services Page
+    'services.hero.title': 'Больше, чем просто жилье.',
+    'services.hero.subtitle': 'Откройте для себя Аланью полностью с нашими проверенными партнерами.',
+
+    'services.transport.title': 'Транспорт',
+    'services.transport.subtitle': 'Исследуйте побережье в своем ритме.',
+    'services.transport.car': 'Аренда авто',
+    'services.transport.car_desc': 'Современный парк, полная страховка, доставка к двери.',
+    'services.transport.bike': 'Скутеры и Велосипеды',
+    'services.transport.bike_desc': 'С ветерком по улицам города.',
+
+    'services.adventure.title': 'Приключения',
+    'services.adventure.subtitle': 'Впечатления на всю жизнь.',
+    'services.adventure.water': 'Водный спорт',
+    'services.adventure.water_desc': 'Гидроциклы, парасейлинг и дайвинг.',
+    'services.adventure.tours': 'Экскурсии',
+    'services.adventure.tours_desc': 'Исторические туры по Замку и пещере Дим.',
+
+    'services.health.title': 'Здоровье и Красота',
+    'services.health.subtitle': 'Обновите тело и разум.',
+    'services.health.spa': 'Хамам и СПА',
+    'services.health.spa_desc': 'Традиционные турецкие бани.',
+    'services.health.dental': 'Стоматология',
+    'services.health.dental_desc': 'Мировой уровень лечения по локальным ценам.',
+
+    'services.shopping.artisan': 'Лавка Ремесленников',
+    'services.shopping.artisan_desc': 'Сувениры ручной работы и текстиль.',
+
+    'book_button': 'Забронировать',
+    'consult_button': 'Консультация',
+    'view_shop': 'В магазин',
+
+    // Zero Fees Page
+    'zerofees.hero.title': '0% Комиссии. Всегда.',
+    'zerofees.hero.subtitle': 'Тратьте деньги на отдых, а не на комиссии бронирования.',
+    'zerofees.competitors.title': 'Другие платформы',
+    'zerofees.why.title': 'Почему мы это делаем',
+    'zerofees.why.desc': 'Мы локальная платформа, соединяющая вас напрямую с хозяевами. Исключая посредников, мы помогаем хозяевам зарабатывать больше, а вам — платить меньше.',
 };

@@ -42,8 +42,8 @@ export const Navbar: React.FC = () => {
 
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-slate-600 hover:text-primary font-medium transition">{t('nav.stays')}</Link>
-            <Link to="/transfers" className="text-slate-600 hover:text-primary font-medium transition">{t('nav.transfers')}</Link>
-            <Link to="/experiences" className="text-slate-600 hover:text-primary font-medium transition">{t('nav.experiences')}</Link>
+            <Link to="/services" className="text-slate-600 hover:text-primary font-medium transition">{t('nav.services')}</Link>
+            <Link to="/zero-fees" className="text-accent hover:text-accent-hover font-medium transition">{t('value.zero_fees.title')}</Link>
           </div>
 
           <div className="flex items-center space-x-4">
