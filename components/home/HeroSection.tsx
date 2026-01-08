@@ -16,7 +16,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
                 <img
                     src="/images/hero-bg.jpg"
                     onError={(e) => {
-                        e.currentTarget.src = "https://picsum.photos/1920/1080?random=10";
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
                     }}
                     alt="Alanya Coastline"
                     className="w-full h-full object-cover"
