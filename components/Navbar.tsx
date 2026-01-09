@@ -1,10 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, ShoppingCart, Heart, Sun, Moon } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useModal } from '../context/ModalContext';
 import { useTheme } from '../context/ThemeContext';
+
+const NavLink: React.FC<{ to: string; label: string; isAccent?: boolean }> = ({ to, label, isAccent }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
+  return (
+    <Link
+      to={to}
+      className={`relative px-1 py-2 font-medium transition-colors duration-300 ${isActive
+          ? (isAccent ? 'text-accent' : 'text-slate-900 dark:text-white')
+          : (isAccent ? 'text-accent hover:text-accent-hover' : 'text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary')
+        }`}
+      data-nav-link={to}
+    >
+      {label}
+    </Link>
+  );
+};
+
+const NavIndicator = () => {
+  const location = useLocation();
+  const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
+
+  useEffect(() => {
+    const activeLink = document.querySelector(`[data-nav-link="${location.pathname}"]`) as HTMLElement;
+    if (activeLink) {
+      setStyle({
+        left: activeLink.offsetLeft,
+        width: activeLink.offsetWidth,
+        opacity: 1,
+      });
+    } else {
+      setStyle({ opacity: 0 });
+    }
+  }, [location.pathname]);
+
+  return (
+    <div
+      className="absolute bottom-0 h-0.5 bg-primary dark:bg-primary rounded-full transition-all duration-300 ease-out z-10"
+      style={style}
+    />
+  );
+};
 
 export const Navbar: React.FC = () => {
   const { items } = useCart();
@@ -45,10 +88,11 @@ export const Navbar: React.FC = () => {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary font-medium transition">{t('nav.stays')}</Link>
-            <Link to="/services" className="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary font-medium transition">{t('nav.services')}</Link>
-            <Link to="/zero-fees" className="text-accent hover:text-accent-hover font-medium transition">{t('value.zero_fees.title')}</Link>
+          <div className="hidden md:flex items-center space-x-8 relative">
+            <NavIndicator />
+            <NavLink to="/stays" label={t('nav.stays')} />
+            <NavLink to="/services" label={t('nav.services')} />
+            <NavLink to="/zero-fees" label={t('value.zero_fees.title')} isAccent />
           </div>
 
           <div className="flex items-center space-x-4">
@@ -126,7 +170,7 @@ export const Navbar: React.FC = () => {
 
             <div
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-full p-1 pl-3 hover:shadow-md transition cursor-pointer relative"
+              className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-full p-1 pl-3 hover:shadow-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative"
             >
               <Menu size={18} className="text-slate-600 dark:text-slate-300" />
               <div className="bg-slate-800 dark:bg-slate-700 text-white rounded-full p-1">
@@ -172,7 +216,7 @@ export const Navbar: React.FC = () => {
           <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
 
           <Link
-            to="/"
+            to="/stays"
             onClick={() => setIsMobileMenuOpen(false)}
             className="md:hidden px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 font-medium"
           >

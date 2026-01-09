@@ -25,7 +25,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
         if (checkOut) searchParams.set('checkOut', checkOut);
         if (guests) searchParams.set('guests', guests);
 
-        navigate(`/search?${searchParams.toString()}`);
+        navigate(`/stays?${searchParams.toString()}`);
     };
 
     return (
@@ -96,7 +96,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
 
             <button
                 onClick={handleSearch}
-                className="bg-primary hover:bg-primary-dark text-white h-14 px-8 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30"
+                className="bg-primary hover:bg-primary-dark text-white h-14 px-8 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98]"
             >
                 <Search size={20} />
                 {t('search.button')}

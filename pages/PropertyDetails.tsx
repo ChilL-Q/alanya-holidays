@@ -6,12 +6,14 @@ import { useCart } from '../context/CartContext';
 import { TripAssistant } from '../components/TripAssistant';
 import { ServiceType } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { useLightbox } from '../context/LightboxContext';
 
 export const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { t } = useLanguage();
+  const { openLightbox } = useLightbox();
   const property = MOCK_PROPERTIES.find(p => p.id === id);
   const [nights, setNights] = useState(5); // Default mock value
 
@@ -47,15 +49,44 @@ export const PropertyDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
       {/* Gallery Grid - Simplified */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px]">
-        <img src={property.images[0]} className="w-full h-full object-cover" alt="Main" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] relative">
+        <div
+          className="relative h-full w-full overflow-hidden group cursor-zoom-in"
+          onClick={() => openLightbox(property.images, 0)}
+        >
+          <img src={property.images[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Main" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+
+          {/* Glassmorphism Title Card */}
+          <div className="absolute bottom-6 left-6 max-w-lg">
+            <div className="bg-white/65 dark:bg-slate-900/65 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20">
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-primary dark:text-white mb-2 leading-tight">
+                {property.title}
+              </h1>
+              <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300 text-sm font-medium">
+                <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent" /> {property.location}</span>
+                <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {property.rating} ({property.reviewsCount})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="hidden md:grid grid-cols-2 gap-2">
           {property.images.slice(1, 3).map((img, i) => (
-            <img key={i} src={img} className="w-full h-full object-cover" alt={`Gallery ${i}`} />
+            <div
+              key={i}
+              className="relative overflow-hidden group h-full cursor-zoom-in"
+              onClick={() => openLightbox(property.images, i + 1)}
+            >
+              <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={`Gallery ${i}`} />
+            </div>
           ))}
-          <div className="relative bg-slate-900">
-            <img src={property.images[0]} className="w-full h-full object-cover opacity-60" alt="More" />
-            <div className="absolute inset-0 flex items-center justify-center text-white font-medium cursor-pointer hover:underline">
+          <div
+            className="relative bg-slate-900 overflow-hidden group cursor-zoom-in"
+            onClick={() => openLightbox(property.images, 0)}
+          >
+            <img src={property.images[0]} className="w-full h-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105" alt="More" />
+            <div className="absolute inset-0 flex items-center justify-center text-white font-medium cursor-pointer hover:underline z-10">
               {t('prop.view_photos')}
             </div>
           </div>
@@ -67,13 +98,7 @@ export const PropertyDetails: React.FC = () => {
         {/* Left Column: Info */}
         <div className="lg:col-span-2 space-y-8">
           <div>
-            <div className="flex justify-between items-start">
-              <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white">{property.title}</h1>
-            </div>
-            <div className="flex items-center gap-4 text-slate-600 dark:text-slate-400 mt-2 text-sm">
-              <span className="flex items-center gap-1"><MapPin size={16} /> {property.location}</span>
-              <span className="flex items-center gap-1"><Star size={16} className="fill-current text-yellow-500" /> {property.rating} ({property.reviewsCount} {t('prop.reviews')})</span>
-            </div>
+            {/* Title moved to Hero Image */}
           </div>
 
           <div className="py-6 border-y border-slate-200 dark:border-slate-800 flex items-center gap-4">

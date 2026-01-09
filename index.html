@@ -20,9 +20,25 @@
           },
           colors: {
             primary: {
-              DEFAULT: '#05445E', // Deep Ocean Blue
+              DEFAULT: '#05445E', // Deep Ocean Blue (Restored Holidays Color)
               dark: '#032B3B',
               light: '#189AB4',
+            },
+            teal: {
+              50: '#E6F3F5',
+              100: '#C1E1E6',
+              200: '#95CAD4',
+              300: '#64AEBD',
+              400: '#3D8F9F',
+              500: '#189AB4', // Keeping the lighter teal for mid-tones? No, user said use Holidays color everywhere.
+              // Wait, if I make teal-500 = #05445E, buttons will be very dark. 
+              // But user said "apply it everywhere". 
+              // Let's make the MAIN actions this color.
+              500: '#05445E', // Main Brand (Holidays) Color
+              600: '#04364B',
+              700: '#032B3B',
+              800: '#02202C',
+              900: '#01151D',
             },
             accent: {
               DEFAULT: '#D88C51', // Warm Sand/Terracotta

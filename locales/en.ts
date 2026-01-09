@@ -99,6 +99,16 @@ export const en = {
   'services.shopping.artisan': 'Local Artisan Shop',
   'services.shopping.artisan_desc': 'Handcrafted souvenirs and textiles.',
 
+  'services.visa.title': 'Visa & Legal',
+  'services.visa.tourist': 'Tourist Visa',
+  'services.visa.tourist_desc': 'Assistance with tourist visa applications and extensions.',
+  'services.visa.residence': 'Residence Permit',
+  'services.visa.residence_desc': 'Consultation for long-term stays.',
+
+  'services.connectivity.title': 'Connectivity',
+  'services.connectivity.esim': 'eSIM Packages',
+  'services.connectivity.esim_desc': 'Instant data connectivity for your trip.',
+
   'book_button': 'Book Now',
   'consult_button': 'Free Consultation',
   'view_shop': 'Visit Shop',

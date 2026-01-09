@@ -49,8 +49,14 @@ export const SearchResultsPage: React.FC = () => {
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredProperties.map((property) => (
-                        <PropertyCard key={property.id} property={property} />
+                    {filteredProperties.map((property, index) => (
+                        <div
+                            key={property.id}
+                            className="animate-stagger-enter"
+                            style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                            <PropertyCard property={property} />
+                        </div>
                     ))}
                 </div>
 

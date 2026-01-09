@@ -97,10 +97,20 @@ export const tr = {
     'services.health.dental': 'Diş Kliniği',
     'services.health.dental_desc': 'Yerel fiyatlarla dünya standartlarında diş bakımı.',
 
-    'services.shopping.artisan': 'Yerel Zanaatkar Dükkanı',
-    'services.shopping.artisan_desc': 'El yapımı hediyelikler ve tekstil.',
+    'services.shopping.artisan': 'Yerel El Sanatları',
+    'services.shopping.artisan_desc': 'El yapımı hediyelikler ve tekstil ürünleri.',
 
-    'book_button': 'Rezerve Et',
+    'services.visa.title': 'Vize ve Yasal İşlemler',
+    'services.visa.tourist': 'Turistik Vize',
+    'services.visa.tourist_desc': 'Turistik vize başvuruları ve uzatma işlemleri için yardım.',
+    'services.visa.residence': 'Oturma İzni',
+    'services.visa.residence_desc': 'Uzun süreli konaklamalar için danışmanlık.',
+
+    'services.connectivity.title': 'Bağlantı',
+    'services.connectivity.esim': 'eSIM Paketleri',
+    'services.connectivity.esim_desc': 'Seyahatiniz için anında veri bağlantısı.',
+
+    'book_button': 'Hemen Rezervasyon Yap',
     'consult_button': 'Ücretsiz Danışma',
     'view_shop': 'Mağazayı Gez',
 

@@ -56,9 +56,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
                     <button
                         onClick={onClick}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${price
-                                ? 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                                : 'w-full bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20'
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${price
+                            ? 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:shadow-md'
+                            : 'w-full bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
                             }`}
                     >
                         {actionLabel || 'View Details'}

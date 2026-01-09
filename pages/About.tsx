@@ -47,11 +47,35 @@ export const About: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-teal-900 rounded-3xl p-12 text-center text-white">
+                <div className="bg-teal-900 rounded-3xl p-12 text-center text-white mb-24">
                     <h2 className="text-3xl font-serif mb-6">Join the Ethical Travel Movement</h2>
                     <p className="text-lg text-teal-100 max-w-2xl mx-auto mb-8">
                         Starting in Alanya and expanding across Turkey, we’re proving that affordable, ethical travel is possible. Be part of the change that puts communities first.
                     </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 className="text-3xl font-serif text-slate-900 dark:text-white mb-6">Our Story</h2>
+                        <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+                            <p>
+                                Alanya Holidays was born from a simple observation: the vacation rental market was broken. Massive fees were hurting both guests and hosts, turning what should be a joyful experience into a transaction filled with hidden costs.
+                            </p>
+                            <p>
+                                We decided to build something different. A platform rooted in the Turkish tradition of <em>misafirperverlik</em> (hospitality), where guests are treated like family, not profit margins.
+                            </p>
+                            <p>
+                                By cutting out the middleman fees and focusing on local partnerships, we keep money in the local community while offering you the best rates on the market. It's a win-win that we're proud to champion.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="relative h-96 rounded-2xl overflow-hidden shadow-xl">
+                        <img
+                            src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=2949&auto=format&fit=crop"
+                            alt="Alanya Harbor"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

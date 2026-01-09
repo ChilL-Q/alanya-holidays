@@ -1,7 +1,8 @@
 export enum ServiceType {
   TRANSFER = 'TRANSFER',
   TOUR = 'TOUR',
-  RENTAL = 'RENTAL'
+  RENTAL = 'RENTAL',
+  OTHER = 'OTHER'
 }
 
 export interface Amenity {

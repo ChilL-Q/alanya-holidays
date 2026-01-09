@@ -96,10 +96,20 @@ export const ru = {
     'services.health.dental': 'Стоматология',
     'services.health.dental_desc': 'Мировой уровень лечения по локальным ценам.',
 
-    'services.shopping.artisan': 'Лавка Ремесленников',
-    'services.shopping.artisan_desc': 'Сувениры ручной работы и текстиль.',
+    'services.shopping.artisan': 'Местные Ремесленники',
+    'services.shopping.artisan_desc': 'Ручные сувениры и текстиль.',
 
-    'book_button': 'Забронировать',
+    'services.visa.title': 'Виза и Легализация',
+    'services.visa.tourist': 'Туристическая Виза',
+    'services.visa.tourist_desc': 'Помощь в оформлении и продлении туристических виз.',
+    'services.visa.residence': 'Вид на Жительство',
+    'services.visa.residence_desc': 'Консультации по долгосрочному проживанию.',
+
+    'services.connectivity.title': 'Связь',
+    'services.connectivity.esim': 'eSIM Пакеты',
+    'services.connectivity.esim_desc': 'Мгновенная мобильная связь для вашей поездки.',
+
+    'book_button': 'Забронировать сейчас',
     'consult_button': 'Консультация',
     'view_shop': 'В магазин',
 
