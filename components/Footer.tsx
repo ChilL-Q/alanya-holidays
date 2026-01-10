@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
     return (
         <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
                     {/* 1. Brand & Socials & Newsletter */}
                     <div className="space-y-8">
                         <div>
@@ -91,7 +91,6 @@ export const Footer: React.FC = () => {
                         <h3 className="text-accent font-semibold mb-6">{t('footer.services_title')}</h3>
                         <ul className="space-y-3 text-sm">
                             <li><Link to="/stays" className="hover:text-accent transition-colors">{t('nav.stays')}</Link></li>
-                            <li><Link to="/stays" className="hover:text-accent transition-colors">{t('nav.stays')}</Link></li>
                             <li><Link to="/services?category=transport" className="hover:text-accent transition-colors">{t('services.transport.title')}</Link></li>
                             <li><Link to="/services?category=adventure" className="hover:text-accent transition-colors">{t('services.adventure.title')}</Link></li>
                             <li><Link to="/services?category=visa" className="hover:text-accent transition-colors">{t('services.visa.title')}</Link></li>
@@ -100,19 +99,32 @@ export const Footer: React.FC = () => {
                         </ul>
                     </div>
 
-                    {/* 4. Support & Contact Info */}
+                    {/* 4. Shop */}
+                    <div>
+                        <h3 className="text-accent font-semibold mb-6">{t('nav.shop')}</h3>
+                        <ul className="space-y-3 text-sm">
+                            <li><Link to="/shop" className="hover:text-accent transition-colors">{t('featured.view_all')}</Link></li>
+                            <li><Link to="/shop?category=souvenir" className="hover:text-accent transition-colors">Souvenirs</Link></li>
+                            <li><Link to="/shop?category=textile" className="hover:text-accent transition-colors">Textiles</Link></li>
+                            <li><Link to="/shop?category=food" className="hover:text-accent transition-colors">Local Food</Link></li>
+                            <li><Link to="/shop?category=jewelry" className="hover:text-accent transition-colors">Jewelry</Link></li>
+                            <li><Link to="/shop?category=art" className="hover:text-accent transition-colors">Art & Decor</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* 5. Support & Contact Info */}
                     <div>
                         <h3 className="text-accent font-semibold mb-6">{t('footer.help')}</h3>
                         <ul className="space-y-3 text-sm mb-6">
                             <li><Link to="/help" className="hover:text-accent transition-colors">{t('footer.faqs')}</Link></li>
-                            <li><Link to="/privacy" className="hover:text-accent transition-colors">{t('footer.privacy')}</Link></li>
+                            <li><Link to="/privacy" className="hover:text-accent transition-colors">{t('footer.terms')}</Link></li>
                             <li><Link to="/terms" className="hover:text-accent transition-colors">{t('footer.terms')}</Link></li>
                         </ul>
 
                         <div className="space-y-3 pt-6 border-t border-slate-800">
                             <div className="flex items-center gap-3 text-sm text-slate-400">
                                 <Mail size={16} className="text-accent" />
-                                <span>service.dep.hq@gmail.com</span>
+                                <span>contact@alanyaholidays.com</span>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-slate-400">
                                 <Phone size={16} className="text-accent" />
@@ -125,17 +137,17 @@ export const Footer: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
-                    <p>{t('footer.copyright')}</p>
-                    <div className="flex items-center gap-4 mt-4 md:mt-0">
-                        <div className="flex gap-2 opacity-50 grayscale hover:grayscale-0 transition-all">
-                            {/* Simple CSS shapes or SVGs for payment methods could go here, or text */}
-                            <span className="border border-slate-700 px-2 py-1 rounded text-xs">VISA</span>
-                            <span className="border border-slate-700 px-2 py-1 rounded text-xs">Mastercard</span>
-                        </div>
-
+            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+                <p>{t('footer.copyright')}</p>
+                <div className="flex items-center gap-4 mt-4 md:mt-0">
+                    <div className="flex gap-2 opacity-50 grayscale hover:grayscale-0 transition-all">
+                        {/* Simple CSS shapes or SVGs for payment methods could go here, or text */}
+                        <span className="border border-slate-700 px-2 py-1 rounded text-xs">VISA</span>
+                        <span className="border border-slate-700 px-2 py-1 rounded text-xs">Mastercard</span>
                     </div>
+
                 </div>
             </div>
         </footer>

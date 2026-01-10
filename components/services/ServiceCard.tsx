@@ -1,6 +1,7 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCurrency, Currency } from '../../context/CurrencyContext';
 
 interface ServiceCardProps {
     title: string;
@@ -8,6 +9,8 @@ interface ServiceCardProps {
     icon: LucideIcon;
     imageUrl?: string;
     price?: string;
+    rawPrice?: number;
+    baseCurrency?: Currency;
     actionLabel?: string;
     onClick?: () => void;
 }
@@ -18,9 +21,16 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
     icon: Icon,
     imageUrl,
     price,
+    rawPrice,
+    baseCurrency = 'EUR',
     actionLabel,
     onClick
 }) => {
+    const { convertPrice, formatPrice } = useCurrency();
+
+    const displayPrice = rawPrice
+        ? formatPrice(convertPrice(rawPrice, baseCurrency))
+        : price;
     return (
         <div className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300">
             {imageUrl && (
@@ -47,16 +57,16 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 <p className="text-slate-500 mb-4 line-clamp-2">{description}</p>
 
                 <div className="flex items-center justify-between mt-auto">
-                    {price && (
+                    {displayPrice && (
                         <div>
                             <span className="text-xs text-slate-400 font-medium uppercase tracking-wider block">Starts from</span>
-                            <span className="text-lg font-bold text-primary">{price}</span>
+                            <span className="text-lg font-bold text-primary">{displayPrice}</span>
                         </div>
                     )}
 
                     <button
                         onClick={onClick}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${price
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${displayPrice
                             ? 'bg-slate-100 text-slate-900 hover:bg-slate-200 hover:shadow-md'
                             : 'w-full bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
                             }`}

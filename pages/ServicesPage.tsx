@@ -56,7 +56,8 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.transport.car')}
                             description={t('services.transport.car_desc')}
                             icon={Car}
-                            price="€25/day"
+                            rawPrice={25}
+                            price="/day"
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/services/car-rental')}
                         />
@@ -64,7 +65,8 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.transport.bike')}
                             description={t('services.transport.bike_desc')}
                             icon={Car}
-                            price="€10/day"
+                            rawPrice={10}
+                            price="/day"
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/services/bike-rental')}
                         />
@@ -77,7 +79,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.water')}
                             description={t('services.adventure.water_desc')}
                             icon={Anchor}
-                            price="€50"
+                            rawPrice={50}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences')}
                         />
@@ -85,7 +87,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.tours')}
                             description={t('services.adventure.tours_desc')}
                             icon={Anchor}
-                            price="€35"
+                            rawPrice={35}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences')}
                         />
@@ -98,7 +100,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.visa.tourist')}
                             description={t('services.visa.tourist_desc')}
                             icon={Anchor}
-                            price="€50"
+                            rawPrice={50}
                             actionLabel="Apply"
                             onClick={() => navigate('/services/visa')}
                         />
@@ -118,7 +120,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.connectivity.esim')}
                             description={t('services.connectivity.esim_desc')}
                             icon={Anchor}
-                            price="From €15"
+                            rawPrice={15}
                             actionLabel="Buy Now"
                             onClick={() => navigate('/services/esim')}
                         />
@@ -131,7 +133,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.health.spa')}
                             description={t('services.health.spa_desc')}
                             icon={Heart}
-                            price="€40"
+                            rawPrice={40}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences')}
                         />

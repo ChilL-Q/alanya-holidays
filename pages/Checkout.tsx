@@ -1,12 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Trash2, Shield, CreditCard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Trash2, Shield, CreditCard, CheckCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../services/db';
 
 export const Checkout: React.FC = () => {
-  const { items, total, removeFromCart, addToCart } = useCart();
+  const { items, total, removeFromCart, addToCart, clearCart } = useCart();
   const { t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handlePayment = async () => {
+    if (!isAuthenticated) {
+      // In a real app, open login modal here
+      alert("Please login to complete booking");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Simulate payment delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Create bookings in DB
+      for (const item of items) {
+        await db.createBooking({
+          user_id: user!.id,
+          item_id: item.id, // Assuming item.id maps to a valid property/service/product ID
+          type: item.type === 'RENTAL' ? 'property' : 'service', // Simple mapping
+          status: 'confirmed',
+          check_in: new Date().toISOString(), // Mock dates
+          check_out: new Date(Date.now() + 86400000 * 5).toISOString(), // Mock 5 days
+          total_price: item.price
+        });
+      }
+
+      clearCart();
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate('/profile');
+      }, 3000);
+
+    } catch (error) {
+      console.error("Booking error:", error);
+      alert("Payment failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md animate-in fade-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={40} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('checkout.success_title') || 'Booking Confirmed!'}</h2>
+          <p className="text-slate-600 mb-6">{t('checkout.success_desc') || 'Your adventure in Alanya awaits. Redirecting to your dashboard...'}</p>
+          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <div className="bg-green-500 h-full w-full animate-[progress_3s_linear]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const rental = items.find(i => i.type === 'RENTAL');
 
   return (
@@ -75,8 +139,8 @@ export const Checkout: React.FC = () => {
                         <button
                           disabled={isInCart}
                           className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 w-full justify-center ${isInCart
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-primary text-white hover:bg-primary-dark'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-primary text-white hover:bg-primary-dark'
                             }`}
                         >
                           {isInCart ? 'Added to Cart' : 'Add to Order'}
@@ -95,10 +159,15 @@ export const Checkout: React.FC = () => {
                 <span className="text-slate-500 text-sm">{t('checkout.card_mock')}</span>
               </div>
               <button
-                disabled={items.length === 0}
-                className="w-full bg-teal-700 text-white font-bold py-4 rounded-xl hover:bg-teal-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handlePayment}
+                disabled={items.length === 0 || isProcessing}
+                className="w-full bg-teal-700 text-white font-bold py-4 rounded-xl hover:bg-teal-800 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {t('checkout.pay')} ${total}
+                {isProcessing ? (
+                  <>Processing...</>
+                ) : (
+                  <>{t('checkout.pay')} ${total}</>
+                )}
               </button>
             </div>
           </div>

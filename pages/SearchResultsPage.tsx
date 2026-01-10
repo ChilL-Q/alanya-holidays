@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Star, MapPin, Filter } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { MOCK_PROPERTIES } from '../constants';
+import { db } from '../services/db';
 import { PropertyCard } from '../components/ui/PropertyCard';
 
 export const SearchResultsPage: React.FC = () => {
@@ -13,20 +13,48 @@ export const SearchResultsPage: React.FC = () => {
     const guests = searchParams.get('guests');
     const { t } = useLanguage();
 
-    const [filteredProperties, setFilteredProperties] = useState(MOCK_PROPERTIES);
+    const [properties, setProperties] = useState<any[]>([]);
+    const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                const data = await db.getProperties();
+                const formattedData = data?.map((p: any) => ({
+                    ...p,
+                    pricePerNight: p.price_per_night,
+                    image: p.images?.[0] || '', // Use first image or empty
+                    guests: p.guests || 2, // Fallback
+                    bedrooms: p.bedrooms || 1, // Fallback
+                    rating: p.rating || 0,
+                    reviewsCount: p.reviews_count || 0
+                })) || [];
+                setProperties(formattedData);
+                setFilteredProperties(formattedData);
+            } catch (error) {
+                console.error('Error fetching properties:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProperties();
+    }, []);
+
+    useEffect(() => {
+        if (!properties.length) return;
+
         if (location) {
             const lowerLocation = location.toLowerCase();
-            const filtered = MOCK_PROPERTIES.filter(p =>
-                p.location.toLowerCase().includes(lowerLocation) ||
-                p.title.toLowerCase().includes(lowerLocation)
+            const filtered = properties.filter(p =>
+                p.location?.toLowerCase().includes(lowerLocation) ||
+                p.title?.toLowerCase().includes(lowerLocation)
             );
             setFilteredProperties(filtered);
         } else {
-            setFilteredProperties(MOCK_PROPERTIES);
+            setFilteredProperties(properties);
         }
-    }, [location]);
+    }, [location, properties]);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-16 transition-colors">
@@ -48,19 +76,23 @@ export const SearchResultsPage: React.FC = () => {
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredProperties.map((property, index) => (
-                        <div
-                            key={property.id}
-                            className="animate-stagger-enter"
-                            style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                            <PropertyCard property={property} />
-                        </div>
-                    ))}
-                </div>
+                {isLoading ? (
+                    <div className="text-center py-20 text-slate-500">Loading stays...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredProperties.map((property, index) => (
+                            <div
+                                key={property.id}
+                                className="animate-stagger-enter"
+                                style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                <PropertyCard property={property} />
+                            </div>
+                        ))}
+                    </div>
+                )}
 
-                {filteredProperties.length === 0 && (
+                {!isLoading && filteredProperties.length === 0 && (
                     <div className="text-center py-20">
                         <p className="text-xl text-slate-500 font-medium">No properties found matching your criteria.</p>
                         <Link to="/" className="text-primary hover:underline mt-4 inline-block">Clear search</Link>

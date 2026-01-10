@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, MapPin, Heart } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useFavorites } from '../../context/FavoritesContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { Property } from '../../types';
 
 interface PropertyCardProps {
@@ -12,6 +13,7 @@ interface PropertyCardProps {
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     const { t } = useLanguage();
     const { isFavorite, toggleFavorite } = useFavorites();
+    const { convertPrice, formatPrice } = useCurrency();
     const [isHovered, setIsHovered] = React.useState(false);
 
     const isLiked = isFavorite(property.id);
@@ -65,7 +67,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                         <span className="font-medium text-slate-900 dark:text-white">{property.bedrooms}</span> beds • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> guests
                     </div>
                     <div className="text-right">
-                        <p className="font-bold text-slate-900 dark:text-white text-lg">${property.pricePerNight}</p>
+                        <p className="font-bold text-slate-900 dark:text-white text-lg">
+                            {formatPrice(convertPrice(property.pricePerNight, 'EUR'))}
+                        </p>
                         <p className="text-xs text-slate-400">{t('featured.night')}</p>
                     </div>
                 </div>

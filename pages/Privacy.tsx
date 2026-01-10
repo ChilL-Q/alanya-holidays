@@ -43,8 +43,8 @@ export const Privacy: React.FC = () => {
                     </p>
 
                     <h3>5. Your Rights</h3>
-                    <p>
-                        You have the right to access, correct, or delete your personal information. Please contact us at service.dep.hq@gmail.com for any privacy-related requests.
+                    <p className="mb-4 text-slate-600 dark:text-slate-400">
+                        You have the right to access, correct, or delete your personal information. Please contact us at contact@alanyaholidays.com for any privacy-related requests.
                     </p>
                 </div>
             </div>
