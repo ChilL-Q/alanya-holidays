@@ -183,7 +183,7 @@ export const Profile: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
-                                            Phone
+                                            {t('profile.phone')}
                                         </label>
                                         <div className="relative">
                                             <input
@@ -220,7 +220,7 @@ export const Profile: React.FC = () => {
                                     <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{user.name}</h2>
                                     <p className="text-slate-500 mb-6 flex items-center justify-center gap-1.5 text-sm">
                                         <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                        {user.role === 'host' ? 'Host' : user.role === 'admin' ? 'Administrator' : 'Verified Guest'}
+                                        {user.role === 'host' ? t('profile.role.host') : user.role === 'admin' ? t('profile.role.admin') : t('profile.role.guest')}
                                     </p>
 
                                     <div className="space-y-4 text-left border-t border-slate-100 dark:border-slate-700 pt-6">
@@ -239,7 +239,7 @@ export const Profile: React.FC = () => {
                                                     <Phone size={16} className="text-primary" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Phone</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t('profile.phone')}</p>
                                                     <p className="text-sm truncate font-medium">{formData.phone}</p>
                                                 </div>
                                             </div>
@@ -295,12 +295,12 @@ export const Profile: React.FC = () => {
                             <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-800">
                                 <Package size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-6" />
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('profile.no_bookings')}</h3>
-                                <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">Start exploring Alanya to find your perfect stay or experience. Our premium listings are waiting for you.</p>
+                                <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">{t('profile.empty_message')}</p>
                                 <button
                                     onClick={() => navigate('/stays')}
                                     className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-2xl font-bold transition-all hover:scale-105 shadow-lg shadow-primary/20"
                                 >
-                                    Explore Stays
+                                    {t('profile.explore_button')}
                                 </button>
                             </div>
                         ) : (
@@ -340,7 +340,7 @@ export const Profile: React.FC = () => {
                                                             </h3>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total</p>
+                                                            <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">{t('prop.total')}</p>
                                                             <p className="text-xl font-serif font-bold text-slate-900 dark:text-white">
                                                                 €{booking.total_price}
                                                             </p>
@@ -366,13 +366,13 @@ export const Profile: React.FC = () => {
 
                                                 <div className="mt-6 flex items-center justify-between border-t border-slate-50 dark:border-slate-800 pt-4">
                                                     <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                                        ID: {booking.id.slice(0, 8)}...
+                                                        {t('profile.id_label')}: {booking.id.slice(0, 8)}...
                                                     </p>
                                                     <button
                                                         onClick={() => navigate(`/properties/${booking.item_id}`)}
                                                         className="text-xs font-bold text-primary hover:text-primary-dark transition-colors flex items-center gap-1 group/btn"
                                                     >
-                                                        View Details
+                                                        {t('profile.view_details')}
                                                         <Package size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
                                                     </button>
                                                 </div>
@@ -388,4 +388,3 @@ export const Profile: React.FC = () => {
         </div>
     );
 };
-

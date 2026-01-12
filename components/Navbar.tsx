@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, ShoppingCart, Heart, Sun, Moon, LogOut } from 'lucide-react';
+import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, ShoppingCart, Heart, Sun, Moon, LogOut, Plus, Home, Car } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -67,10 +67,12 @@ export const Navbar: React.FC = () => {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isListMenuOpen, setIsListMenuOpen] = useState(false);
 
   const langRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const listMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,6 +84,9 @@ export const Navbar: React.FC = () => {
       }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
+      }
+      if (listMenuRef.current && !listMenuRef.current.contains(event.target as Node)) {
+        setIsListMenuOpen(false);
       }
     };
 
@@ -195,17 +200,61 @@ export const Navbar: React.FC = () => {
                       Türkçe
                       {language === 'tr' && <Check size={14} />}
                     </button>
+                    <button
+                      onClick={() => handleLanguageSelect('ar')}
+                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-between ${language === 'ar' ? 'text-primary font-semibold bg-slate-50 dark:bg-slate-800' : 'text-slate-700 dark:text-slate-300'
+                        }`}
+                    >
+                      العربية
+                      {language === 'ar' && <Check size={14} />}
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            <Link
-              to="/list-property"
-              className="hidden sm:block text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
-            >
-              {t('nav.list_property')}
-            </Link>
+            <div className="relative hidden sm:block" ref={listMenuRef}>
+              <button
+                onClick={() => setIsListMenuOpen(!isListMenuOpen)}
+                className="flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors p-2"
+              >
+                {t('nav.list_property')}
+                <ChevronDown size={14} className={`transition-transform duration-200 ${isListMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isListMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                  <div className="p-2">
+                    <Link
+                      to="/list-property"
+                      onClick={() => setIsListMenuOpen(false)}
+                      className="flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <div className="p-2 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-lg">
+                        <Home size={18} />
+                      </div>
+                      <div>
+                        <span className="block text-sm font-semibold text-slate-900 dark:text-white">{t('nav.list_property')}</span>
+                        <span className="block text-xs text-slate-500 dark:text-slate-400">{t('nav.list_desc')}</span>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/add-service"
+                      onClick={() => setIsListMenuOpen(false)}
+                      className="flex items-start gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg">
+                        <Car size={18} />
+                      </div>
+                      <div>
+                        <span className="block text-sm font-semibold text-slate-900 dark:text-white">{t('nav.list_service')}</span>
+                        <span className="block text-xs text-slate-500 dark:text-slate-400">{t('nav.service_desc')}</span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex items-center gap-2 md:gap-4 pl-0 md:pl-8 border-l border-slate-100 dark:border-slate-800">
@@ -368,6 +417,7 @@ export const Navbar: React.FC = () => {
               <button onClick={() => setLanguage('en')} className={`text-sm font-medium ${language === 'en' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>EN</button>
               <button onClick={() => setLanguage('ru')} className={`text-sm font-medium ${language === 'ru' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>RU</button>
               <button onClick={() => setLanguage('tr')} className={`text-sm font-medium ${language === 'tr' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>TR</button>
+              <button onClick={() => setLanguage('ar')} className={`text-sm font-medium ${language === 'ar' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>AR</button>
             </div>
           </div>
 

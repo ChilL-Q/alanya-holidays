@@ -1,22 +1,81 @@
-import React from 'react';
-import { Car, Check, ChevronRight, Shield, Fuel, Zap } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { CARS } from '../constants';
 import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { db, ServiceData } from '../services/db';
+import { useNavigate } from 'react-router-dom';
+
+interface CarGroup {
+    id: string; // generated slug
+    title: string;
+    brand: string;
+    model: string;
+    year: string;
+    minPrice: number;
+    image: string;
+    count: number;
+    features: string[];
+}
 
 export const CarRental: React.FC = () => {
     const { t } = useLanguage();
     const { openLightbox } = useLightbox();
     const { convertPrice, formatPrice } = useCurrency();
+    const navigate = useNavigate();
 
-    const allCarImages = CARS.map(c => ({ src: c.image, title: t(`car.${c.id}.title` as any) }));
+    const [loading, setLoading] = useState(true);
+    const [carGroups, setCarGroups] = useState<CarGroup[]>([]);
 
-    const stats = [
-        { label: t('car.stats.fleet'), value: '50+' },
-        { label: t('car.stats.clients'), value: '1.2k' },
-        { label: t('car.stats.years'), value: '12' },
-    ];
+    useEffect(() => {
+        const fetchCars = async () => {
+            try {
+                const services = await db.getServices('car');
+
+                // Aggregate logic
+                const groups: Record<string, CarGroup> = {};
+
+                services?.forEach((service: any) => {
+                    const brand = service.features?.brand || 'Unknown';
+                    const model = service.features?.model || 'Model';
+                    const key = `${brand}-${model}`.toLowerCase();
+                    const title = `${brand} ${model}`;
+                    const price = service.price;
+                    const image = service.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop'; // Fallback
+
+                    if (!groups[key]) {
+                        groups[key] = {
+                            id: key,
+                            title: title,
+                            brand: brand,
+                            model: model,
+                            year: service.features?.year || '',
+                            minPrice: price,
+                            image: image,
+                            count: 1,
+                            features: [service.features?.transmission, service.features?.fuel].filter(Boolean)
+                        };
+                    } else {
+                        groups[key].count += 1;
+                        if (price < groups[key].minPrice) {
+                            groups[key].minPrice = price;
+                        }
+                        // Accumulate unique features if needed, simple overwrite for now
+                    }
+                });
+
+                setCarGroups(Object.values(groups));
+            } catch (err) {
+                console.error('Failed to fetch cars', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCars();
+    }, []);
+
+    const allCarImages = carGroups.map(c => ({ src: c.image, title: c.title }));
 
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -60,50 +119,58 @@ export const CarRental: React.FC = () => {
             {/* Fleet Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 className="text-3xl font-serif text-slate-900 dark:text-white mb-8">{t('car.popular')}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {CARS.map((car, index) => (
-                        <div
-                            key={car.id}
-                            className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 group animate-stagger-enter"
-                            style={{ animationDelay: `${index * 150}ms` }}
-                        >
+
+                {loading ? (
+                    <div className="text-center py-20 text-slate-500">Loading fleet...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {carGroups.map((car, index) => (
                             <div
-                                className="aspect-[4/3] overflow-hidden relative cursor-zoom-in"
-                                onClick={() => openLightbox(allCarImages, index)}
+                                key={car.id}
+                                className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 group cursor-pointer"
+                                onClick={() => navigate(`/services/car-rental/${car.id}`, { state: { brand: car.brand, model: car.model } })}
                             >
-                                <img
-                                    src={car.image}
-                                    alt={car.title}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                                <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
-                                    {t(`car.${car.id}.type` as any)}
-                                </div>
-                            </div>
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t(`car.${car.id}.title` as any)}</h3>
-                                    <div className="text-right">
-                                        <div className="text-xl font-bold text-teal-600">
-                                            {formatPrice(convertPrice(car.price, 'EUR'))}
-                                        </div>
-                                        <div className="text-xs text-slate-500">{t('car.per_day')}</div>
+                                <div className="aspect-[4/3] overflow-hidden relative">
+                                    <img
+                                        src={car.image}
+                                        alt={car.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
+                                        {car.year}
                                     </div>
+                                    {car.count > 1 && (
+                                        <div className="absolute top-3 left-3 bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                            {car.count} Offers
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex flex-wrap gap-2 mb-6">
-                                    {[t(`car.${car.id}.f1` as any), t(`car.${car.id}.f2` as any), t(`car.${car.id}.f3` as any)].map((feature, i) => (
-                                        <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium">
-                                            {feature}
-                                        </span>
-                                    ))}
+                                <div className="p-5">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{car.title}</h3>
+                                        <div className="text-right">
+                                            <div className="text-sm text-slate-500">from</div>
+                                            <div className="text-xl font-bold text-teal-600">
+                                                {formatPrice(convertPrice(car.minPrice, 'EUR'))}
+                                            </div>
+                                            <div className="text-xs text-slate-500">{t('car.per_day')}</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mb-6">
+                                        {car.features.map((feature, i) => (
+                                            <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
+                                                {feature}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:opacity-90 transition-opacity">
+                                        {t('car.book')}
+                                    </button>
                                 </div>
-                                <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:opacity-90 transition-opacity">
-                                    {t('car.book')}
-                                </button>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

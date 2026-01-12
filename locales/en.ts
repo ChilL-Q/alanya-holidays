@@ -217,6 +217,17 @@ export const en = {
   'profile.bookings': 'My Bookings',
   'profile.no_bookings': 'No bookings yet',
   'profile.joined': 'Joined',
+  'profile.phone': 'Phone',
+  'profile.role.host': 'Host',
+  'profile.role.admin': 'Administrator',
+  'profile.role.guest': 'Verified Guest',
+  'profile.view_details': 'View Details',
+  'profile.explore_button': 'Explore Stays',
+  'profile.empty_message': 'Start exploring Alanya to find your perfect stay or experience. Our premium listings are waiting for you.',
+  'profile.id_label': 'ID',
+  'nav.list_desc': 'Rent out your home',
+  'nav.list_service': 'List Service',
+  'nav.service_desc': 'Car, Bike, or Tour',
 
   // Car Rental Page
   'car.hero.title': 'Explore Alanya on <span class="text-teal-600">Your Own Terms</span>',

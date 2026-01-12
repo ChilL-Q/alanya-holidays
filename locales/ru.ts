@@ -217,6 +217,17 @@ export const ru = {
     'profile.bookings': 'Мои бронирования',
     'profile.no_bookings': 'Бронирований пока нет',
     'profile.joined': 'С нами с',
+    'profile.phone': 'Телефон',
+    'profile.role.host': 'Хозяин',
+    'profile.role.admin': 'Администратор',
+    'profile.role.guest': 'Проверенный гость',
+    'profile.view_details': 'Подробнее',
+    'profile.explore_button': 'Найти жилье',
+    'profile.empty_message': 'Начните исследовать Аланью, чтобы найти идеальное жилье или впечатления. Наши премиальные предложения ждут вас.',
+    'profile.id_label': 'ID',
+    'nav.list_desc': 'Сдайте свое жилье',
+    'nav.list_service': 'Добавить услугу',
+    'nav.service_desc': 'Авто, Мото или Тур',
 
     // Car Rental Page
     'car.hero.title': 'Исследуй Аланью <span class="text-teal-600">По Своим Правилам</span>',

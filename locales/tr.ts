@@ -217,6 +217,17 @@ export const tr = {
     'profile.bookings': 'Rezervasyonlarım',
     'profile.no_bookings': 'Henüz rezervasyon yok',
     'profile.joined': 'Katılım',
+    'profile.phone': 'Telefon',
+    'profile.role.host': 'Ev Sahibi',
+    'profile.role.admin': 'Yönetici',
+    'profile.role.guest': 'Onaylı Misafir',
+    'profile.view_details': 'Detayları Gör',
+    'profile.explore_button': 'Konaklama Ara',
+    'profile.empty_message': 'Mükemmel konaklamanızı veya deneyiminizi bulmak için Alanya\'yı keşfetmeye başlayın. Premium ilanlarımız sizi bekliyor.',
+    'profile.id_label': 'ID',
+    'nav.list_desc': 'Evinizi kiralayın',
+    'nav.list_service': 'Hizmet Ekle',
+    'nav.service_desc': 'Araç, Motor veya Tur',
 
     // Car Rental Page
     'car.hero.title': 'Alanya\'yı <span class="text-teal-600">Kendi Tarzınla</span> Keşfet',

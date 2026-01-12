@@ -13,6 +13,7 @@ import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { FAQ } from './pages/FAQ';
 import { CarRental } from './pages/CarRental';
+import { CarModelDetails } from './pages/CarModelDetails';
 import { BikeRental } from './pages/BikeRental';
 import { Visa } from './pages/Visa';
 import { Esim } from './pages/Esim';
@@ -90,6 +91,7 @@ const App: React.FC = () => {
                                 <Route path="/help" element={<FAQ />} />
                                 <Route path="/support" element={<Contact />} />
                                 <Route path="/services/car-rental" element={<CarRental />} />
+                                <Route path="/services/car-rental/:modelId" element={<CarModelDetails />} />
                                 <Route path="/services/bike-rental" element={<BikeRental />} />
                                 <Route path="/services/visa" element={<Visa />} />
                                 <Route path="/services/esim" element={<Esim />} />
