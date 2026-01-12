@@ -22,6 +22,7 @@ export const ru = {
     'search.dates': 'Даты',
     'search.guests': 'Гости',
     'search.button': 'Найти',
+    'date_format': 'дд.мм.гггг',
 
     // Value Props
     'value.zero_fees.title': '0% Комиссии',

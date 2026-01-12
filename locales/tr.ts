@@ -21,6 +21,7 @@ export const tr = {
     'search.dates': 'Tarih ekle',
     'search.guests': 'Misafirler',
     'search.button': 'Ara',
+    'date_format': 'gg.aa.yyyy',
 
     // Value Props
     'value.zero_fees.title': 'Sıfır Komisyon',

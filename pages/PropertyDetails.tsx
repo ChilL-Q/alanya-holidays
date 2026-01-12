@@ -8,8 +8,25 @@ import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
-import { useCurrency } from '../context/CurrencyContext'; // Added
+import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../services/db';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { enGB, ru, tr } from 'date-fns/locale';
+import { IMaskInput } from 'react-imask';
+
+// Custom Masked Input Component
+const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
+  <IMaskInput
+    {...props}
+    mask="00.00.0000"
+    definitions={{
+      '0': /[0-9]/
+    }}
+    inputRef={ref}
+    overwrite
+  />
+));
 
 export const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,9 +42,10 @@ export const PropertyDetails: React.FC = () => {
   const [hasBooking, setHasBooking] = useState(false);
   const [nights, setNights] = useState(5);
   const { user, isAuthenticated } = useAuth();
+  const { language } = useLanguage();
 
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -69,9 +87,7 @@ export const PropertyDetails: React.FC = () => {
 
   useEffect(() => {
     if (checkIn && checkOut) {
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       setNights(diffDays > 0 ? diffDays : 0);
     }
@@ -347,20 +363,36 @@ export const PropertyDetails: React.FC = () => {
               <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-700">
                 <div className="p-3 border-r border-slate-200 dark:border-slate-700">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
-                  <input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200"
+                  <DatePicker
+                    selected={checkIn}
+                    onChange={(date) => setCheckIn(date)}
+                    selectsStart
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={new Date()}
+                    placeholderText={t('date_format')}
+                    dateFormat="dd.MM.yyyy"
+                    locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
+                    customInput={<DateInputMask className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
+                    calendarClassName="!font-sans"
+                    wrapperClassName="w-full"
                   />
                 </div>
                 <div className="p-3">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
-                  <input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200"
+                  <DatePicker
+                    selected={checkOut}
+                    onChange={(date) => setCheckOut(date)}
+                    selectsEnd
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={checkIn || new Date()}
+                    placeholderText={t('date_format')}
+                    dateFormat="dd.MM.yyyy"
+                    locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
+                    customInput={<DateInputMask className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
+                    calendarClassName="!font-sans"
+                    wrapperClassName="w-full"
                   />
                 </div>
               </div>

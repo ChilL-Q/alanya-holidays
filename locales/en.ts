@@ -22,6 +22,7 @@ export const en = {
   'search.dates': 'Add dates',
   'search.guests': 'Guests',
   'search.button': 'Search',
+  'date_format': 'dd.mm.yyyy',
 
   // Value Props
   'value.zero_fees.title': 'Zero Guest Fees',
