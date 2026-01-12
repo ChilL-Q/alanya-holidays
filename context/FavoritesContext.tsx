@@ -41,14 +41,14 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
             return prev;
         });
         if (isAuthenticated && user?.id) {
-            await db.toggleFavorite(user.id, id).catch(console.error); // Basic sync
+            await db.toggleFavorite({ user_id: user.id, item_id: id }).catch(console.error); // Basic sync
         }
     };
 
     const removeFavorite = async (id: string) => {
         setFavorites((prev) => prev.filter((favId) => favId !== id));
         if (isAuthenticated && user?.id) {
-            await db.toggleFavorite(user.id, id).catch(console.error); // Toggle handles remove too if logic is flip-flop
+            await db.toggleFavorite({ user_id: user.id, item_id: id }).catch(console.error); // Toggle handles remove too if logic is flip-flop
             // Wait, db.toggleFavorite implementation checks existence. 
             // If I call remove locally, I should ensure db removes it. 
             // My db.toggleFavorite implements "check if exists". 

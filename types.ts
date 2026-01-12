@@ -2,6 +2,7 @@ export enum ServiceType {
   TRANSFER = 'TRANSFER',
   TOUR = 'TOUR',
   RENTAL = 'RENTAL',
+  PRODUCT = 'PRODUCT',
   OTHER = 'OTHER'
 }
 
@@ -43,6 +44,7 @@ export interface CartItem {
   type: ServiceType;
   title: string;
   price: number;
+  image?: string;
   details?: string; // e.g., "5 nights" or "Round Trip"
   date?: string;
 }

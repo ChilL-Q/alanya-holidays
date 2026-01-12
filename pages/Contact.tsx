@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import { db } from '../services/db';
 
 export const Contact: React.FC = () => {
     return (
@@ -53,7 +54,7 @@ export const Contact: React.FC = () => {
 const ContactForm: React.FC = () => {
     const [formData, setFormData] = React.useState({ name: '', email: '', subject: '', message: '' });
     const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const { db } = require('../services/db');
+    // Moved to top level import
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

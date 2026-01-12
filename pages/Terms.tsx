@@ -1,53 +1,128 @@
 import React from 'react';
+import { LegalLayout } from '../components/LegalLayout';
+import { FileCheck, CreditCard, Ban, Gavel, Scale, AlertCircle } from 'lucide-react';
 
 export const Terms: React.FC = () => {
+    const sections = [
+        { id: 'acceptance', title: '1. Acceptance of Terms' },
+        { id: 'fees', title: '2. Zero Fees Policy' },
+        { id: 'bookings', title: '3. Booking & Cancellations' },
+        { id: 'responsibilities', title: '4. Guest Responsibilities' },
+        { id: 'liability', title: '5. Liability' },
+        { id: 'governing', title: '6. Governing Law' },
+    ];
+
     return (
-        <div className="pt-24 pb-16 min-h-screen bg-white dark:bg-slate-900">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h1 className="text-3xl font-serif text-slate-900 dark:text-white mb-8">Terms of Service</h1>
-                <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-slate-500">Last updated: January 2026</p>
+        <LegalLayout
+            title="Terms of Service"
+            lastUpdated="January 14, 2026"
+            sections={sections}
+        >
+            <p className="lead text-xl text-slate-700 dark:text-slate-300 border-l-4 border-accent pl-6 italic mb-12">
+                Please read these Terms of Service carefully using our platform. By booking with Alanya Holidays, you agree to these legal terms.
+            </p>
 
-                    <p className="lead text-xl text-slate-700 dark:text-slate-300">
-                        Please read these Terms of Service carefully before using our platform. By booking with Alanya Holidays, you agree to these terms.
-                    </p>
-
-                    <h3>1. Acceptance of Terms</h3>
-                    <p>
-                        By accessing and using Alanya Holidays, you agree to be bound by these Terms of Service and all applicable laws and regulations governing vacation rentals in Turkey.
-                    </p>
-
-                    <h3>2. Zero Fees Policy</h3>
-                    <p>
-                        <strong>For Guests:</strong> We charge 0% service fees. The price you see is the final price for the accommodation, mostly paid on arrival unless otherwise specified.
-                    </p>
-
-                    <h3>3. Booking & Cancellations</h3>
-                    <ul>
-                        <li><strong>Booking Confirmation:</strong> A booking is confirmed once you receive a confirmation email.</li>
-                        <li><strong>Cancellation:</strong> Policies vary by property (Flexible, Moderate, or Strict). Please review the specific policy on the property page.</li>
-                        <li><strong>Refunds:</strong> Refunds are processed according to the specific cancellation policy of the booked property.</li>
-                    </ul>
-
-                    <h3>4. Guest Responsibilities</h3>
-                    <p>Users agree to:</p>
-                    <ul>
-                        <li>Provide accurate information (ID/Passport) for legal registration.</li>
-                        <li>Respect the property and neighbors (quiet hours usually 11 PM - 8 AM).</li>
-                        <li>Report any damages immediately to the host or our support team.</li>
-                    </ul>
-
-                    <h3>5. Liability</h3>
-                    <p>
-                        Alanya Holidays acts as a platform connecting guests and hosts. We are not liable for direct damages arising from the use of the property, though we will assist in mediating disputes.
-                    </p>
-
-                    <h3>6. Governing Law</h3>
-                    <p>
-                        These terms are governed by the laws of the Republic of Turkey. Any disputes shall be resolved in the courts of Alanya.
-                    </p>
+            <section id="acceptance" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <FileCheck size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">1. Acceptance of Terms</h2>
                 </div>
-            </div>
-        </div>
+                <p>
+                    By accessing, browsing, and using Alanya Holidays, you agree to be bound by these Terms of Service and all applicable laws and regulations governing vacation rentals in the Republic of Turkey. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                </p>
+            </section>
+
+            <section id="fees" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <CreditCard size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">2. Zero Fees Policy</h2>
+                </div>
+                <p>
+                    Alanya Holidays operates on a <strong>Guest-First model</strong>.
+                </p>
+                <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 p-6 rounded-xl not-prose my-6 flex gap-4">
+                    <div className="text-green-600 dark:text-green-400 mt-1">
+                        <Scale size={24} />
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white mb-1">We charge 0% Guest Service Fees</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Unlike other major platforms that charge 15-20% on top of the rental price, the price you see on Alanya Holidays is the host's price. What you see is what you pay.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="bookings" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <Gavel size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">3. Booking & Cancellations</h2>
+                </div>
+                <ul className="space-y-4">
+                    <li>
+                        <strong>Booking Confirmation:</strong> A booking is officially confirmed only once you receive a confirmation email and a valid voucher code.
+                    </li>
+                    <li>
+                        <strong>Cancellation Policies:</strong> Policies vary by property (Flexible, Moderate, or Strict). The specific policy is clearly displayed on each property's page before booking.
+                    </li>
+                    <li>
+                        <strong>Refunds:</strong> Refunds are processed according to the specific cancellation policy of the booked property. Processing times may vary between 5-10 business days depending on your bank.
+                    </li>
+                </ul>
+            </section>
+
+            <section id="responsibilities" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <AlertCircle size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">4. Guest Responsibilities</h2>
+                </div>
+                <p>Users of our platform agree to:</p>
+                <ul>
+                    <li>Provide accurate ID/Passport information for legal registration (Police/Jandarma).</li>
+                    <li>Respect the property, furniture, and amenities.</li>
+                    <li>Adhere to community quiet hours (generally 11 PM - 8 AM).</li>
+                    <li>Report any damages immediately to the host or our support team.</li>
+                </ul>
+            </section>
+
+            <section id="liability" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <Ban size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">5. Liability</h2>
+                </div>
+                <p>
+                    Alanya Holidays acts as an intermediary platform connecting guests and hosts. We verify listings for existence and basic standards, but we are not liable for:
+                    <ul>
+                        <li>Direct damages arising from the use of the property.</li>
+                        <li>Personal injuries occurring on the premises.</li>
+                        <li>Theft or loss of personal belongings.</li>
+                    </ul>
+                    However, we will actively assist in mediating disputes and hold a host guarantee fund for extreme cases.
+                </p>
+            </section>
+
+            <section id="governing" className="scroll-mt-28 mb-16">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                        <Scale size={20} />
+                    </div>
+                    <h2 className="text-2xl font-bold m-0">6. Governing Law</h2>
+                </div>
+                <p>
+                    These terms are governed by the laws of the Republic of Turkey. Any disputes shall be resolved in the courts of Alanya, Antalya.
+                </p>
+            </section>
+        </LegalLayout>
     );
 };
+

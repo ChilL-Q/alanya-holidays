@@ -12,6 +12,7 @@ export interface PropertyData {
     amenities: any;
     images: string[];
     host_id: string;
+    rental_license?: string;
     // Hospitality Details
     arrival_guide?: string;
     check_in_time?: string;

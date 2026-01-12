@@ -10,7 +10,7 @@ interface SearchWidgetProps {
 }
 
 export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocation }) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const navigate = useNavigate();
     const [checkIn, setCheckIn] = React.useState('');
     const [checkOut, setCheckOut] = React.useState('');
@@ -26,6 +26,12 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
         if (guests) searchParams.set('guests', guests);
 
         navigate(`/stays?${searchParams.toString()}`);
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat(language === 'en' ? 'en-GB' : language === 'ru' ? 'ru-RU' : 'tr-TR').format(date);
     };
 
     return (
@@ -55,9 +61,9 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     placeholder={t('search.checkin')}
                     onFocus={() => setCheckInType('date')}
                     onBlur={() => {
-                        if (!checkIn) setCheckInType('text');
+                        setCheckInType('text');
                     }}
-                    value={checkIn}
+                    value={checkInType === 'date' ? checkIn : formatDate(checkIn)}
                     onChange={(e) => setCheckIn(e.target.value)}
                     className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                 />
@@ -72,9 +78,9 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     placeholder={t('search.checkout')}
                     onFocus={() => setCheckOutType('date')}
                     onBlur={() => {
-                        if (!checkOut) setCheckOutType('text');
+                        setCheckOutType('text');
                     }}
-                    value={checkOut}
+                    value={checkOutType === 'date' ? checkOut : formatDate(checkOut)}
                     onChange={(e) => setCheckOut(e.target.value)}
                     className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                 />

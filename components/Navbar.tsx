@@ -115,7 +115,7 @@ export const Navbar: React.FC = () => {
             <NavIndicator />
             <NavLink to="/stays" label={t('nav.stays')} />
             <NavLink to="/services" label={t('nav.services')} />
-            <NavLink to="/shop" label={t('nav.shop')} />
+            <NavLink to="/shop" label={t('shop')} />
             <NavLink to="/zero-fees" label={t('value.zero_fees.title')} isAccent />
           </div>
 
@@ -217,7 +217,7 @@ export const Navbar: React.FC = () => {
                   </span>
                 )}
                 <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Favorites
+                  {t('nav.favorites')}
                 </span>
               </Link>
 
@@ -316,7 +316,7 @@ export const Navbar: React.FC = () => {
           >
             <span className="flex items-center gap-2">
               <Heart size={18} />
-              Favorites
+              {t('nav.favorites')}
             </span>
           </Link>
 
@@ -341,7 +341,7 @@ export const Navbar: React.FC = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             className="md:hidden px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-200 font-medium"
           >
-            {t('nav.shop')}
+            {t('shop')}
           </Link>
           <Link
             to="/zero-fees"
@@ -363,7 +363,7 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Language Switcher */}
           <div className="px-4 py-3 sm:hidden">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 font-semibold tracking-wider">LANGUAGE</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 font-semibold tracking-wider">{t('nav.language')}</p>
             <div className="flex gap-2">
               <button onClick={() => setLanguage('en')} className={`text-sm font-medium ${language === 'en' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>EN</button>
               <button onClick={() => setLanguage('ru')} className={`text-sm font-medium ${language === 'ru' ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>RU</button>
@@ -373,7 +373,7 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Currency Switcher */}
           <div className="px-4 py-3 sm:hidden pt-0">
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 font-semibold tracking-wider">CURRENCY</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2 font-semibold tracking-wider">{t('nav.currency')}</p>
             <div className="flex gap-2">
               {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
                 <button

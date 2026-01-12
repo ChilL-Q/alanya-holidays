@@ -31,9 +31,9 @@ export const ServicesPage: React.FC = () => {
     const categories = [
         { id: 'transport', label: t('services.transport.title') },
         { id: 'adventure', label: t('services.adventure.title') },
+        { id: 'health', label: t('services.health.title') },
         { id: 'visa', label: t('services.visa.title') },
         { id: 'connectivity', label: t('services.connectivity.title') },
-        { id: 'health', label: t('services.health.title') },
     ];
 
     return (
@@ -91,6 +91,32 @@ export const ServicesPage: React.FC = () => {
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences')}
                         />
+                        <ServiceCard
+                            title={t('services.adventure.bikes')}
+                            description={t('services.adventure.bikes_desc')}
+                            icon={Car}
+                            rawPrice={15}
+                            price="/day"
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/services/bike-rental')}
+                        />
+                        <ServiceCard
+                            title={t('services.adventure.ebikes')}
+                            description={t('services.adventure.ebikes_desc')}
+                            icon={Car}
+                            rawPrice={25}
+                            price="/day"
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/services/bike-rental')}
+                        />
+                        <ServiceCard
+                            title={t('services.adventure.atv')}
+                            description={t('services.adventure.atv_desc')}
+                            icon={Car}
+                            rawPrice={45}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/experiences')}
+                        />
                     </ServiceGrid>
                 )}
 
@@ -145,10 +171,25 @@ export const ServicesPage: React.FC = () => {
                             onClick={() => navigate('/contact')}
                         />
                         <ServiceCard
-                            title={t('services.shopping.artisan')}
-                            description={t('services.shopping.artisan_desc')}
-                            icon={ShoppingBag}
-                            actionLabel={t('view_shop')}
+                            title={t('services.health.hair')}
+                            description={t('services.health.hair_desc')}
+                            icon={Heart}
+                            actionLabel={t('consult_button')}
+                            onClick={() => navigate('/contact')}
+                        />
+                        <ServiceCard
+                            title={t('services.health.cosmetic')}
+                            description={t('services.health.cosmetic_desc')}
+                            icon={Heart}
+                            actionLabel={t('consult_button')}
+                            onClick={() => navigate('/contact')}
+                        />
+                        <ServiceCard
+                            title={t('services.health.cave')}
+                            description={t('services.health.cave_desc')}
+                            icon={Heart}
+                            rawPrice={10}
+                            actionLabel={t('book_button')}
                             onClick={() => navigate('/contact')}
                         />
                     </ServiceGrid>

@@ -3,6 +3,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { db } from '../services/db';
 import { ShoppingBag, Star, User } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext'; // Added
+import { ServiceType } from '../types';
 
 interface Product {
     id: string;
@@ -19,6 +22,7 @@ interface Product {
 
 export const Shop: React.FC = () => {
     const { t } = useLanguage();
+    const { convertPrice, formatPrice } = useCurrency(); // Added
     const [searchParams, setSearchParams] = useSearchParams();
     const initialCategory = searchParams.get('category') || 'all';
 
@@ -40,12 +44,20 @@ export const Shop: React.FC = () => {
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const { addToCart: contextAddToCart } = useCart();
 
     // Cart Toast State
     const [cartToast, setCartToast] = useState<string | null>(null);
 
-    const addToCart = (productTitle: string) => {
-        setCartToast(`Added ${productTitle} to basket`);
+    const handleAddToCart = (product: Product) => {
+        contextAddToCart({
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.images[0],
+            type: ServiceType.PRODUCT
+        });
+        setCartToast(`Added ${product.title} to basket`);
         setTimeout(() => setCartToast(null), 3000);
     };
 
@@ -222,7 +234,7 @@ export const Shop: React.FC = () => {
                                     )}
                                     {/* Quick Add Button Overlay */}
                                     <button
-                                        onClick={() => addToCart(product.title)}
+                                        onClick={() => handleAddToCart(product)}
                                         className="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-amber-500 hover:text-white"
                                         title="Add to Basket"
                                     >
@@ -256,12 +268,12 @@ export const Shop: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="text-xl font-bold text-slate-900 dark:text-white">
-                                                ${product.price}
+                                                {formatPrice(convertPrice(product.price, 'EUR'))}
                                             </span>
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => addToCart(product.title)}
+                                        onClick={() => handleAddToCart(product)}
                                         className="w-full mt-4 bg-slate-100 dark:bg-slate-700 hover:bg-amber-600 hover:text-white text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
                                     >
                                         Add to Basket

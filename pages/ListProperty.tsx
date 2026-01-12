@@ -16,7 +16,8 @@ import {
     Home,
     Lock,
     Image as ImageIcon,
-    Camera
+    Camera,
+    Info
 } from 'lucide-react';
 // ...
 export const ListProperty: React.FC = () => {
@@ -37,6 +38,7 @@ export const ListProperty: React.FC = () => {
         price: '',
         description: '',
         imageUrl: '',
+        rentalLicense: '',
         amenities: [] as string[],
         // Hospitality Details
         arrivalGuide: '',
@@ -98,6 +100,7 @@ export const ListProperty: React.FC = () => {
                 address: formData.address,
                 type: formData.propertyType as 'villa' | 'apartment',
                 host_id: user.id,
+                rental_license: formData.rentalLicense,
                 amenities: formData.amenities,
                 images: uploadedUrls,
                 // Hospitality Details
@@ -118,8 +121,11 @@ export const ListProperty: React.FC = () => {
 
             toast.success(t('list.success'));
             setIsSubmitted(true);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error listing/updating property:', error);
+            if (error.message) console.error('Error Message:', error.message);
+            if (error.details) console.error('Error Details:', error.details);
+            if (error.hint) console.error('Error Hint:', error.hint);
             toast.error(t('list.error.submit'));
         } finally {
             setLoading(false);
@@ -366,6 +372,27 @@ export const ListProperty: React.FC = () => {
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                            {t('list.form.license')}
+                                            <div className="group relative">
+                                                <Info size={16} className="text-slate-400 hover:text-accent cursor-help" />
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 pointer-events-none">
+                                                    {t('list.form.license_info')}
+                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="rentalLicense"
+                                            placeholder="e.g. 07-1234..."
+                                            value={formData.rentalLicense}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
                                     </div>
 
                                     <div>
@@ -628,7 +655,7 @@ export const ListProperty: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

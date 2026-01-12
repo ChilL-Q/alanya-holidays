@@ -33,16 +33,16 @@ export const Footer: React.FC = () => {
                                 </span>
                             </Link>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                                Ethical vacation rental platform offering 0% guest fees and authentic Turkish hospitality.
+                                {t('footer.description')}
                             </p>
                         </div>
 
                         {/* Newsletter */}
                         <div>
-                            <h4 className="text-white font-medium mb-3 text-sm">Subscribe to our newsletter</h4>
+                            <h4 className="text-white font-medium mb-3 text-sm">{t('footer.subscribe_title')}</h4>
                             {subscribed ? (
                                 <div className="text-accent text-sm font-medium animate-in fade-in">
-                                    Thanks for subscribing!
+                                    {t('footer.subscribe_success')}
                                 </div>
                             ) : (
                                 <form onSubmit={handleSubscribe} className="flex gap-2">
@@ -50,12 +50,12 @@ export const Footer: React.FC = () => {
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Your email"
+                                        placeholder={t('footer.email_placeholder')}
                                         required
                                         className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-accent w-full"
                                     />
                                     <button type="submit" className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-accent/20 hover:shadow-xl">
-                                        Join
+                                        {t('footer.join_button')}
                                     </button>
                                 </form>
                             )}
@@ -82,6 +82,7 @@ export const Footer: React.FC = () => {
                         <h3 className="text-accent font-semibold mb-6">{t('footer.company')}</h3>
                         <ul className="space-y-3 text-sm">
                             <li><Link to="/about" className="hover:text-accent transition-colors">{t('footer.about')}</Link></li>
+                            <li><Link to="/stays" className="hover:text-accent transition-colors">{t('nav.stays')}</Link></li>
                             <li><Link to="/contact" className="hover:text-accent transition-colors">{t('footer.contact')}</Link></li>
                         </ul>
                     </div>
@@ -90,25 +91,24 @@ export const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-accent font-semibold mb-6">{t('footer.services_title')}</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link to="/stays" className="hover:text-accent transition-colors">{t('nav.stays')}</Link></li>
                             <li><Link to="/services?category=transport" className="hover:text-accent transition-colors">{t('services.transport.title')}</Link></li>
                             <li><Link to="/services?category=adventure" className="hover:text-accent transition-colors">{t('services.adventure.title')}</Link></li>
+                            <li><Link to="/services?category=health" className="hover:text-accent transition-colors">{t('services.health.title')}</Link></li>
                             <li><Link to="/services?category=visa" className="hover:text-accent transition-colors">{t('services.visa.title')}</Link></li>
                             <li><Link to="/services?category=connectivity" className="hover:text-accent transition-colors">{t('services.connectivity.title')}</Link></li>
-                            <li><Link to="/services?category=health" className="hover:text-accent transition-colors">{t('services.health.title')}</Link></li>
                         </ul>
                     </div>
 
                     {/* 4. Shop */}
                     <div>
-                        <h3 className="text-accent font-semibold mb-6">{t('nav.shop')}</h3>
+                        <h3 className="text-accent font-semibold mb-6">{t('shop')}</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link to="/shop" className="hover:text-accent transition-colors">{t('featured.view_all')}</Link></li>
-                            <li><Link to="/shop?category=souvenir" className="hover:text-accent transition-colors">Souvenirs</Link></li>
-                            <li><Link to="/shop?category=textile" className="hover:text-accent transition-colors">Textiles</Link></li>
-                            <li><Link to="/shop?category=food" className="hover:text-accent transition-colors">Local Food</Link></li>
-                            <li><Link to="/shop?category=jewelry" className="hover:text-accent transition-colors">Jewelry</Link></li>
-                            <li><Link to="/shop?category=art" className="hover:text-accent transition-colors">Art & Decor</Link></li>
+                            <li><Link to="/shop" className="hover:text-accent transition-colors">{t('shop.view_all_products')}</Link></li>
+                            <li><Link to="/shop?category=souvenir" className="hover:text-accent transition-colors">{t('shop.category.souvenir')}</Link></li>
+                            <li><Link to="/shop?category=textile" className="hover:text-accent transition-colors">{t('shop.category.textile')}</Link></li>
+                            <li><Link to="/shop?category=food" className="hover:text-accent transition-colors">{t('shop.category.food')}</Link></li>
+                            <li><Link to="/shop?category=jewelry" className="hover:text-accent transition-colors">{t('shop.category.jewelry')}</Link></li>
+                            <li><Link to="/shop?category=art" className="hover:text-accent transition-colors">{t('shop.category.art')}</Link></li>
                         </ul>
                     </div>
 
@@ -117,7 +117,7 @@ export const Footer: React.FC = () => {
                         <h3 className="text-accent font-semibold mb-6">{t('footer.help')}</h3>
                         <ul className="space-y-3 text-sm mb-6">
                             <li><Link to="/help" className="hover:text-accent transition-colors">{t('footer.faqs')}</Link></li>
-                            <li><Link to="/privacy" className="hover:text-accent transition-colors">{t('footer.terms')}</Link></li>
+                            <li><Link to="/privacy" className="hover:text-accent transition-colors">{t('footer.privacy')}</Link></li>
                             <li><Link to="/terms" className="hover:text-accent transition-colors">{t('footer.terms')}</Link></li>
                         </ul>
 

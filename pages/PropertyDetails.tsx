@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext'; // Added
 import { db } from '../services/db';
 
 export const PropertyDetails: React.FC = () => {
@@ -17,6 +18,7 @@ export const PropertyDetails: React.FC = () => {
   const { t } = useLanguage();
   const { openLightbox } = useLightbox();
   const { setChatContext } = useChat();
+  const { convertPrice, formatPrice } = useCurrency(); // Added
 
   const [property, setProperty] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,9 @@ export const PropertyDetails: React.FC = () => {
   }
 
   const totalPrice = (property.pricePerNight || 0) * nights;
+
+  // Helper for consistent price display
+  const displayPrice = (amount: number) => formatPrice(convertPrice(amount, 'EUR'));
 
   const handleBook = () => {
     addToCart({
@@ -189,7 +194,7 @@ export const PropertyDetails: React.FC = () => {
             </div>
             <div>
               <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.superhost')} • Verified Host</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
             </div>
           </div>
 
@@ -220,8 +225,8 @@ export const PropertyDetails: React.FC = () => {
                   <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Guest Hospitality Guide</h3>
-                  <p className="text-sm text-teal-700 dark:text-teal-400 font-medium">Exclusive information for your stay</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('prop.hospitality_guide')}</h3>
+                  <p className="text-sm text-teal-700 dark:text-teal-400 font-medium">{t('prop.exclusive_info')}</p>
                 </div>
               </div>
 
@@ -230,16 +235,16 @@ export const PropertyDetails: React.FC = () => {
                 <div className="space-y-4">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <CheckCircle size={18} className="text-teal-500" />
-                    Check-in & Checkout
+                    {t('prop.checkin')} & {t('prop.checkout')}
                   </h4>
                   <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">Arrival Time</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">{t('prop.arrival_time')}</p>
                     <p className="text-slate-900 dark:text-white font-semibold">{property.check_in_time || 'Check property rules'}</p>
                     <hr className="my-3 border-slate-100 dark:border-slate-700" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">Checkout Time</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">{t('prop.checkout_time')}</p>
                     <p className="text-slate-900 dark:text-white font-semibold">{property.check_out_time || 'Check property rules'}</p>
                     <hr className="my-3 border-slate-100 dark:border-slate-700" />
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">Check-in Method</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 font-medium">{t('prop.checkin_method')}</p>
                     <p className="text-slate-900 dark:text-white font-semibold">{property.check_in_method || 'Contact Host'}</p>
                   </div>
                 </div>
@@ -248,11 +253,11 @@ export const PropertyDetails: React.FC = () => {
                 <div className="space-y-4">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <CheckCircle size={18} className="text-teal-500" />
-                    Wifi & Internet
+                    {t('prop.wifi')}
                   </h4>
                   <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 h-full">
                     <p className="text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-                      {property.wifi_details || 'Will be provided on arrival'}
+                      {property.wifi_details || t('prop.wifi_default')}
                     </p>
                   </div>
                 </div>
@@ -261,15 +266,15 @@ export const PropertyDetails: React.FC = () => {
                 <div className="md:col-span-2 space-y-4">
                   <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <MapPin size={18} className="text-teal-500" />
-                    Arrival Guide & Directions
+                    {t('prop.directions_guide')}
                   </h4>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-100 dark:border-slate-700">
-                      <p className="text-xs font-bold text-slate-400 uppercase mb-2">Directions</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-2">{t('prop.directions')}</p>
                       <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{property.directions || 'Follow GPS to address below'}</p>
                     </div>
                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-100 dark:border-slate-700">
-                      <p className="text-xs font-bold text-slate-400 uppercase mb-2">Arrival Instructions</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-2">{t('prop.arrival_instructions')}</p>
                       <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{property.arrival_guide || 'No specific instructions.'}</p>
                     </div>
                   </div>
@@ -279,19 +284,19 @@ export const PropertyDetails: React.FC = () => {
                 <div className="md:col-span-2 space-y-4 pt-4 border-t border-teal-100 dark:border-teal-800">
                   <div className="grid md:grid-cols-3 gap-6">
                     <div>
-                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">House Rules</h5>
+                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">{t('prop.house_rules')}</h5>
                       <p className="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-line leading-relaxed">
                         {property.house_rules || 'Standard rules apply.'}
                       </p>
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">House Manual</h5>
+                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">{t('prop.house_manual')}</h5>
                       <p className="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-line leading-relaxed">
                         {property.house_manual || 'Will be available in the property.'}
                       </p>
                     </div>
                     <div>
-                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">Checkout Instructions</h5>
+                      <h5 className="font-bold text-slate-900 dark:text-white mb-3 text-sm">{t('prop.checkout_instructions')}</h5>
                       <p className="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-line leading-relaxed">
                         {property.checkout_instructions || 'Please leave keys as found.'}
                       </p>
@@ -303,13 +308,13 @@ export const PropertyDetails: React.FC = () => {
                 <div className="md:col-span-2 grid md:grid-cols-2 gap-6 pt-4">
                   <div className="bg-teal-500/5 dark:bg-teal-400/5 p-4 rounded-xl border border-teal-200/50 dark:border-teal-800/50">
                     <h5 className="font-bold text-slate-900 dark:text-white mb-2 text-sm flex items-center gap-2">
-                      Interaction Preferences
+                      {t('prop.interaction')}
                     </h5>
                     <p className="text-slate-600 dark:text-slate-400 text-sm italic">"{property.interaction_preferences || 'Available via text/app'}"</p>
                   </div>
                   {property.guidebooks && (
                     <div className="bg-teal-500/5 dark:bg-teal-400/5 p-4 rounded-xl border border-teal-200/50 dark:border-teal-800/50">
-                      <h5 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">Host Recommendations</h5>
+                      <h5 className="font-bold text-slate-900 dark:text-white mb-2 text-sm">{t('prop.recommendations')}</h5>
                       <p className="text-slate-600 dark:text-slate-400 text-sm">{property.guidebooks}</p>
                     </div>
                   )}
@@ -330,7 +335,7 @@ export const PropertyDetails: React.FC = () => {
           >
             <div className="flex justify-between items-end mb-6">
               <div>
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">${property.pricePerNight}</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{displayPrice(property.pricePerNight)}</span>
                 <span className="text-slate-500 dark:text-slate-400 text-sm"> {t('featured.night')}</span>
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-white underline cursor-pointer">
@@ -362,10 +367,10 @@ export const PropertyDetails: React.FC = () => {
               <div className="p-3">
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
                 <select className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
-                  <option>1 Guest</option>
-                  <option>2 Guests</option>
-                  <option>3 Guests</option>
-                  <option>4 Guests</option>
+                  <option>{t('prop.guest_option').replace('{count}', '1')}</option>
+                  <option>{t('prop.guests_option').replace('{count}', '2')}</option>
+                  <option>{t('prop.guests_option').replace('{count}', '3')}</option>
+                  <option>{t('prop.guests_option').replace('{count}', '4')}</option>
                 </select>
               </div>
             </div>
@@ -381,22 +386,22 @@ export const PropertyDetails: React.FC = () => {
 
             <div className="mt-6 space-y-3">
               <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
-                <span className="underline">${property.pricePerNight} x {nights} nights</span>
-                <span>${totalPrice}</span>
+                <span className="underline">{displayPrice(property.pricePerNight)} x {nights} nights</span>
+                <span>{displayPrice(totalPrice)}</span>
               </div>
               <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
                 <span className="underline">{t('prop.cleaning_fee')}</span>
-                <span>$40</span>
+                <span>{displayPrice(40)}</span>
               </div>
               <div className="flex justify-between text-sm text-teal-700 dark:text-teal-400 font-medium bg-teal-50 dark:bg-teal-900/30 p-2 rounded-lg">
                 <span>{t('prop.guest_fee')}</span>
-                <span>$0</span>
+                <span>{displayPrice(0)}</span>
               </div>
             </div>
 
             <div className="border-t border-slate-200 dark:border-slate-800 mt-4 pt-4 flex justify-between font-bold text-slate-900 dark:text-white">
               <span>{t('prop.total')}</span>
-              <span>${totalPrice + 40}</span>
+              <span>{displayPrice(totalPrice + 40)}</span>
             </div>
           </div>
         </div>
@@ -422,7 +427,7 @@ export const PropertyDetails: React.FC = () => {
                   <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600 flex items-center justify-center text-teal-700 dark:text-teal-300 shadow-sm">
                     {service.type === ServiceType.TRANSFER ? <Car size={24} /> : <Camera size={24} />}
                   </div>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-700 px-2 py-1 rounded border border-slate-200 dark:border-slate-600">${service.price}</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-700 px-2 py-1 rounded border border-slate-200 dark:border-slate-600">{displayPrice(service.price)}</span>
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">{service.title}</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{service.description}</p>

@@ -3,6 +3,8 @@ import { HeroSection } from '../components/home/HeroSection';
 import { ValueProps } from '../components/home/ValueProps';
 import { FeaturedProperties } from '../components/home/FeaturedProperties';
 
+import { AlanyaIntro } from '../components/home/AlanyaIntro';
+
 export const Home: React.FC = () => {
   const [location, setLocation] = useState('');
 
@@ -10,6 +12,7 @@ export const Home: React.FC = () => {
     <div className="min-h-screen">
       <HeroSection location={location} setLocation={setLocation} />
       <ValueProps />
+      <AlanyaIntro />
       <FeaturedProperties />
     </div>
   );

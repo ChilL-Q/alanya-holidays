@@ -123,12 +123,12 @@ export const SystemTest: React.FC = () => {
             if (props && props.length > 0) {
                 const targetId = props[0].id;
                 // Toggle ON
-                await db.toggleFavorite(user.id, targetId);
+                await db.toggleFavorite({ user_id: user.id, item_id: targetId });
                 let favs = await db.getFavorites(user.id);
                 const isFav = favs.includes(targetId);
 
                 // Toggle OFF
-                await db.toggleFavorite(user.id, targetId);
+                await db.toggleFavorite({ user_id: user.id, item_id: targetId });
                 let favsAfter = await db.getFavorites(user.id);
                 const isFavAfter = favsAfter.includes(targetId);
 
@@ -179,8 +179,8 @@ export const SystemTest: React.FC = () => {
 
                     {results.map((res, idx) => (
                         <div key={idx} className={`p-4 rounded-xl border ${res.status === 'success' ? 'bg-green-900/20 border-green-500/30' :
-                                res.status === 'failure' ? 'bg-red-900/20 border-red-500/30' :
-                                    'bg-slate-800 border-slate-700'
+                            res.status === 'failure' ? 'bg-red-900/20 border-red-500/30' :
+                                'bg-slate-800 border-slate-700'
                             }`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-3">
@@ -190,8 +190,8 @@ export const SystemTest: React.FC = () => {
                                     <span className="font-mono font-bold">{res.name}</span>
                                 </div>
                                 <span className={`text-xs uppercase font-bold px-2 py-1 rounded ${res.status === 'success' ? 'bg-green-900 text-green-300' :
-                                        res.status === 'failure' ? 'bg-red-900 text-red-300' :
-                                            'bg-slate-700 text-slate-400'
+                                    res.status === 'failure' ? 'bg-red-900 text-red-300' :
+                                        'bg-slate-700 text-slate-400'
                                     }`}>
                                     {res.status}
                                 </span>

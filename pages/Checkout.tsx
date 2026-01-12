@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { Trash2, Shield, CreditCard, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,6 +10,7 @@ import { db } from '../services/db';
 export const Checkout: React.FC = () => {
   const { items, total, removeFromCart, addToCart, clearCart } = useCart();
   const { t } = useLanguage();
+  const { convertPrice, formatPrice, currency, rates } = useCurrency();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -71,7 +73,9 @@ export const Checkout: React.FC = () => {
     );
   }
 
-  const rental = items.find(i => i.type === 'RENTAL');
+  const convertAndFormat = (amount: number, fromCurrency: 'USD' | 'EUR' = 'EUR') => {
+    return formatPrice(convertPrice(amount, fromCurrency));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pt-12 pb-24">
@@ -104,7 +108,7 @@ export const Checkout: React.FC = () => {
                         <p className="text-sm text-slate-500">{item.details}</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className="font-medium text-slate-900">${item.price}</span>
+                        <span className="font-medium text-slate-900">{convertAndFormat(item.price, 'EUR')}</span>
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-slate-400 hover:text-red-500 transition"
@@ -123,17 +127,32 @@ export const Checkout: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t('checkout.recommended')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { id: 'rec-1', type: 'OTHER', title: 'Airport Transfer', price: 45, icon: '🚗', desc: 'S-Class comfort for your arrival' },
-                  { id: 'rec-2', type: 'OTHER', title: 'Welcome Pack', price: 30, icon: '🧺', desc: 'Essentials waiting in your fridge' },
+                  { id: 'rec-1', type: 'OTHER', title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival' },
+                  { id: 'rec-2', type: 'OTHER', title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge' },
                 ].map((rec) => {
                   const isInCart = items.some(i => i.id === rec.id);
                   return (
-                    <div key={rec.id} className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-primary/30 hover:bg-slate-50 transition-all group cursor-pointer" onClick={() => !isInCart && addToCart({ id: rec.id, type: 'OTHER', title: rec.title, price: rec.price, details: 'One-time service' })}>
+                    <div
+                      key={rec.id}
+                      className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-primary/30 hover:bg-slate-50 transition-all group cursor-pointer"
+                      onClick={() => {
+                        if (!isInCart) {
+                          // Base currency is EUR, no conversion needed for cart
+                          addToCart({
+                            id: rec.id,
+                            type: 'OTHER',
+                            title: rec.title,
+                            price: rec.price,
+                            details: 'One-time service'
+                          });
+                        }
+                      }}
+                    >
                       <div className="text-2xl bg-slate-50 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">{rec.icon}</div>
                       <div className="flex-grow">
                         <div className="flex justify-between items-start">
                           <h4 className="font-semibold text-slate-900">{rec.title}</h4>
-                          <span className="font-bold text-primary">${rec.price}</span>
+                          <span className="font-bold text-primary">{formatPrice(convertPrice(rec.price, 'EUR'))}</span>
                         </div>
                         <p className="text-xs text-slate-500 mb-3">{rec.desc}</p>
                         <button
@@ -166,7 +185,7 @@ export const Checkout: React.FC = () => {
                 {isProcessing ? (
                   <>Processing...</>
                 ) : (
-                  <>{t('checkout.pay')} ${total}</>
+                  <>{t('checkout.pay')} {convertAndFormat(total)}</>
                 )}
               </button>
             </div>
@@ -180,17 +199,17 @@ export const Checkout: React.FC = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm text-slate-600">
                   <span>{t('checkout.subtotal')}</span>
-                  <span>${total}</span>
+                  <span>{convertAndFormat(total)}</span>
                 </div>
                 <div className="flex justify-between text-sm text-teal-700 font-medium">
                   <span>{t('prop.guest_fee')}</span>
-                  <span>$0</span>
+                  <span>{convertAndFormat(0)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-slate-200">
-                <span className="font-bold text-lg text-slate-900">{t('prop.total')} (USD)</span>
-                <span className="font-bold text-xl text-slate-900">${total}</span>
+                <span className="font-bold text-lg text-slate-900">{t('prop.total')} ({currency})</span>
+                <span className="font-bold text-xl text-slate-900">{convertAndFormat(total)}</span>
               </div>
 
               <div className="mt-6 bg-slate-50 p-3 rounded-lg flex gap-3 items-start">
