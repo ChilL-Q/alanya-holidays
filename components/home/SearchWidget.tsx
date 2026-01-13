@@ -32,6 +32,20 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
     const [checkIn, setCheckIn] = React.useState<Date | null>(null);
     const [checkOut, setCheckOut] = React.useState<Date | null>(null);
     const [guests, setGuests] = React.useState('');
+    const [showSuggestions, setShowSuggestions] = React.useState(false);
+    const locationWrapperRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const handleSearch = () => {
         const searchParams = new URLSearchParams();
@@ -45,20 +59,42 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
 
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-2 md:p-3 flex flex-col md:flex-row gap-2 transition-colors relative z-20">
-            <div className="flex-1 relative group">
+            <div className="flex-1 relative group" ref={locationWrapperRef}>
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
                     <MapPin className="text-slate-400" size={20} />
                 </div>
-                <select
-                    className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none appearance-none text-slate-700 dark:text-slate-200 font-medium cursor-pointer transition-colors relative z-20"
+                <input
+                    type="text"
+                    className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+                    placeholder={t('search.location')}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                >
-                    <option value="">{t('search.location')}</option>
-                    {LOCATIONS.map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                </select>
+                    onFocus={() => setShowSuggestions(true)}
+                />
+
+                {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 max-h-60 overflow-y-auto z-50 animate-in fade-in zoom-in-95 duration-200">
+                        {LOCATIONS.filter(loc => loc.toLowerCase().includes(location.toLowerCase())).map(loc => (
+                            <button
+                                key={loc}
+                                className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-2"
+                                onClick={() => {
+                                    setLocation(loc);
+                                    setShowSuggestions(false);
+                                }}
+                            >
+                                <MapPin size={14} className="text-slate-400" />
+                                {loc}
+                            </button>
+                        ))}
+                        {location && LOCATIONS.filter(loc => loc.toLowerCase().includes(location.toLowerCase())).length === 0 && (
+                            <div className="px-4 py-3 text-slate-400 text-sm flex items-center gap-2">
+                                <MapPin size={14} />
+                                <span>Custom location: "{location}"</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 relative">

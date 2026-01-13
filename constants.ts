@@ -162,4 +162,19 @@ export const BIKES = [
   }
 ];
 
-export const LOCATIONS = ['Alanya Center', 'Cleopatra', 'Oba', 'Mahmutlar', 'Tepe', 'Kargicak'];
+export const LOCATIONS = [
+  'Alanya Center',
+  'Cleopatra',
+  'Cikcilli',
+  'Oba',
+  'Tosmur',
+  'Kestel',
+  'Mahmutlar',
+  'Kargicak',
+  'Tepe',
+  'Bektas',
+  'Konakli',
+  'Avsallar',
+  'Demirtas',
+  'Okurcalar'
+];
