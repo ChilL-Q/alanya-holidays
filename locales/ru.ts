@@ -213,6 +213,8 @@ export const ru = {
     'profile.title': 'Мой профиль',
     'profile.edit': 'Редактировать',
     'profile.save': 'Сохранить изменения',
+    'profile.settings': 'Личные данные',
+    'profile.security': 'Безопасность',
     'profile.cancel': 'Отмена',
     'profile.bookings': 'Мои бронирования',
     'profile.no_bookings': 'Бронирований пока нет',

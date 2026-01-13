@@ -214,6 +214,8 @@ export const ar = {
     'profile.title': 'ملفي الشخصي',
     'profile.edit': 'تعديل الملف الشخصي',
     'profile.save': 'حفظ التغييرات',
+    'profile.settings': 'المعلومات الشخصية',
+    'profile.security': 'الأمان',
     'profile.cancel': 'إلغاء',
     'profile.bookings': 'حجوزاتي',
     'profile.no_bookings': 'لا توجد حجوزات بعد',

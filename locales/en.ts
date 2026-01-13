@@ -213,6 +213,8 @@ export const en = {
   'profile.title': 'My Profile',
   'profile.edit': 'Edit Profile',
   'profile.save': 'Save Changes',
+  'profile.settings': 'Personal Info',
+  'profile.security': 'Security',
   'profile.cancel': 'Cancel',
   'profile.bookings': 'My Bookings',
   'profile.no_bookings': 'No bookings yet',

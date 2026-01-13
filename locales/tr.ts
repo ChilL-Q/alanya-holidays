@@ -213,6 +213,8 @@ export const tr = {
     'profile.title': 'Profilim',
     'profile.edit': 'Profili Düzenle',
     'profile.save': 'Değişiklikleri Kaydet',
+    'profile.settings': 'Kişisel Bilgiler',
+    'profile.security': 'Güvenlik',
     'profile.cancel': 'İptal',
     'profile.bookings': 'Rezervasyonlarım',
     'profile.no_bookings': 'Henüz rezervasyon yok',

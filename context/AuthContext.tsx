@@ -21,6 +21,8 @@ interface AuthContextType {
     register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateUser: (data: Partial<User>) => void;
+    updateEmail: (email: string) => Promise<void>;
+    updatePassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -157,6 +159,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const updateEmail = async (email: string) => {
+        const { error } = await supabase.auth.updateUser({ email });
+        if (error) throw error;
+        // User needs to confirm via email, so local state might not update immediately depending on config
+    };
+
+    const updatePassword = async (password: string) => {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -165,7 +178,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             login,
             register,
             logout,
-            updateUser
+            updateUser,
+            updateEmail,
+            updatePassword
         }}>
             {children}
         </AuthContext.Provider>
