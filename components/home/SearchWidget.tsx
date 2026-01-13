@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, MapPin, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { LOCATIONS } from '../../constants';
+import { LOCATIONS } from '../../data/constants';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';

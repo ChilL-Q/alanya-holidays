@@ -39,9 +39,9 @@ import { AddService } from './pages/AddService';
 import { Shop } from './pages/Shop';
 import { AddProduct } from './pages/AddProduct';
 import { Profile } from './pages/Profile';
-import { AdminPage } from './pages/AdminPage';
-import { AdminEditPropertyPage } from './pages/AdminEditPropertyPage';
-import { AdminEditUserPage } from './pages/AdminEditUserPage';
+const AdminPage = React.lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })));
+const AdminEditPropertyPage = React.lazy(() => import('./pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
+const AdminEditUserPage = React.lazy(() => import('./pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
 import { AdminRoute } from './components/auth/AdminRoute';
 import { SystemTest } from './pages/SystemTest';
 
@@ -103,17 +103,23 @@ const App: React.FC = () => {
                                 {/* Admin Routes Protected by AdminRoute */}
                                 <Route path="/admin" element={
                                   <AdminRoute>
-                                    <AdminPage />
+                                    <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+                                      <AdminPage />
+                                    </React.Suspense>
                                   </AdminRoute>
                                 } />
                                 <Route path="/admin/edit-property/:id" element={
                                   <AdminRoute>
-                                    <AdminEditPropertyPage />
+                                    <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+                                      <AdminEditPropertyPage />
+                                    </React.Suspense>
                                   </AdminRoute>
                                 } />
                                 <Route path="/admin/edit-user/:id" element={
                                   <AdminRoute>
-                                    <AdminEditUserPage />
+                                    <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+                                      <AdminEditUserPage />
+                                    </React.Suspense>
                                   </AdminRoute>
                                 } />
 

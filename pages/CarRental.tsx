@@ -25,46 +25,14 @@ export const CarRental: React.FC = () => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
-    const [carGroups, setCarGroups] = useState<CarGroup[]>([]);
+    const [rawServices, setRawServices] = useState<ServiceData[]>([]);
 
     useEffect(() => {
         const fetchCars = async () => {
             try {
+                // @ts-ignore
                 const services = await db.getServices('car');
-
-                // Aggregate logic
-                const groups: Record<string, CarGroup> = {};
-
-                services?.forEach((service: any) => {
-                    const brand = service.features?.brand || 'Unknown';
-                    const model = service.features?.model || 'Model';
-                    const key = `${brand}-${model}`.toLowerCase();
-                    const title = `${brand} ${model}`;
-                    const price = service.price;
-                    const image = service.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop'; // Fallback
-
-                    if (!groups[key]) {
-                        groups[key] = {
-                            id: key,
-                            title: title,
-                            brand: brand,
-                            model: model,
-                            year: service.features?.year || '',
-                            minPrice: price,
-                            image: image,
-                            count: 1,
-                            features: [service.features?.transmission, service.features?.fuel].filter(Boolean)
-                        };
-                    } else {
-                        groups[key].count += 1;
-                        if (price < groups[key].minPrice) {
-                            groups[key].minPrice = price;
-                        }
-                        // Accumulate unique features if needed, simple overwrite for now
-                    }
-                });
-
-                setCarGroups(Object.values(groups));
+                if (services) setRawServices(services);
             } catch (err) {
                 console.error('Failed to fetch cars', err);
             } finally {
@@ -74,6 +42,41 @@ export const CarRental: React.FC = () => {
 
         fetchCars();
     }, []);
+
+    const carGroups = React.useMemo(() => {
+        const groups: Record<string, CarGroup> = {};
+
+        rawServices.forEach((service) => {
+            const features = service.features || {};
+            const brand = features.brand || 'Unknown';
+            const model = features.model || 'Model';
+            const key = `${brand}-${model}`.toLowerCase();
+            const title = `${brand} ${model}`;
+            const price = service.price;
+            const image = service.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop'; // Fallback
+
+            if (!groups[key]) {
+                groups[key] = {
+                    id: key,
+                    title: title,
+                    brand: brand,
+                    model: model,
+                    year: features.year || '',
+                    minPrice: price,
+                    image: image,
+                    count: 1,
+                    features: [features.transmission, features.fuel].filter(Boolean) as string[]
+                };
+            } else {
+                groups[key].count += 1;
+                if (price < groups[key].minPrice) {
+                    groups[key].minPrice = price;
+                }
+            }
+        });
+
+        return Object.values(groups);
+    }, [rawServices]);
 
     const allCarImages = carGroups.map(c => ({ src: c.image, title: c.title }));
 

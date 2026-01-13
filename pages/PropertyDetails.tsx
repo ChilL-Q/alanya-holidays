@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight } from 'lucide-react';
-import { CROSS_SELL_SERVICES } from '../constants';
+import { CROSS_SELL_SERVICES } from '../data/constants';
 import { useCart } from '../context/CartContext';
 import { ServiceType } from '../types';
 import { useLanguage } from '../context/LanguageContext';

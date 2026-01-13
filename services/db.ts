@@ -1,6 +1,11 @@
 import { supabase } from './supabase';
 import { User } from '../context/AuthContext';
 
+export interface Amenity {
+    icon: string;
+    label: string;
+}
+
 // Types matched to Database Schema
 export interface PropertyData {
     title: string;
@@ -9,7 +14,7 @@ export interface PropertyData {
     location: string;
     address: string;
     type: 'villa' | 'apartment';
-    amenities: any;
+    amenities: Amenity[];
     images: string[];
     host_id: string;
     rental_license?: string;
@@ -29,13 +34,23 @@ export interface PropertyData {
     beds?: number;
 }
 
+export interface ServiceFeatures {
+    [key: string]: any; // Allow flexibility but encourage typed usage where possible
+    brand?: string;
+    model?: string;
+    year?: string;
+    transmission?: string;
+    fuel?: string;
+    seats?: number;
+}
+
 export interface ServiceData {
     title: string;
     description: string;
     price: number;
     type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer';
     provider_id: string;
-    features: any;
+    features: ServiceFeatures;
     images: string[];
 }
 
