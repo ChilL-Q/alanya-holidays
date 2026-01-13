@@ -9,7 +9,7 @@ export type Language = 'en' | 'ru' | 'tr' | 'ar';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const translations = { en, ru, tr, ar };
@@ -29,9 +29,17 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [language]);
 
-  const t = (key: string): string => {
+  const t = (key: string, params?: Record<string, string | number>): string => {
     // @ts-ignore
-    return translations[language][key] || key;
+    let text = translations[language][key] || key;
+
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        text = text.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));
+      });
+    }
+
+    return text;
   };
 
   return (

@@ -39,6 +39,8 @@ import { AddService } from './pages/AddService';
 import { Shop } from './pages/Shop';
 import { AddProduct } from './pages/AddProduct';
 import { Profile } from './pages/Profile';
+import { BookVehicle } from './pages/booking/BookVehicle';
+import { BookTour } from './pages/booking/BookTour';
 const AdminPage = React.lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })));
 const AdminEditPropertyPage = React.lazy(() => import('./pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
 const AdminEditUserPage = React.lazy(() => import('./pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
@@ -99,6 +101,8 @@ const App: React.FC = () => {
                                 <Route path="/profile" element={<Profile />} />
                                 <Route path="/add-service" element={<AddService />} />
                                 <Route path="/bookmarks" element={<FavoritesPage />} />
+                                <Route path="/book-vehicle/:id" element={<BookVehicle />} />
+                                <Route path="/book-tour/:id" element={<BookTour />} />
 
                                 {/* Admin Routes Protected by AdminRoute */}
                                 <Route path="/admin" element={

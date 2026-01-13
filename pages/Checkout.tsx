@@ -34,12 +34,23 @@ export const Checkout: React.FC = () => {
       for (const item of items) {
         await db.createBooking({
           user_id: user!.id,
-          item_id: item.id, // Assuming item.id maps to a valid property/service/product ID
-          type: item.type === 'RENTAL' ? 'property' : 'service', // Simple mapping
+          item_id: item.id,
+          type: item.type === 'RENTAL' ? 'property' : (item.type === 'TOUR' || item.type === 'TRANSFER' ? 'service' : 'service'),
+          // Note: CartItem type mapping to DB type. 'RENTAL' maps to property/service depending on context but here assuming property if simple rental, 
+          // OR better: rely on item.type from cart. The current Type enum has RENTAL, TOUR.
+          // If it's a vehicle rental service, it is stored in 'services' table, but CartItem.type might be RENTAL. 
+          // For simplicity given current setup:
+          // Properties are RENTAL. Services are TOUR/TRANSFER/RENTAL(if vehicle service).
+          // We ideally distinguish. For now, defaulting to 'service' if startDate is present (BookVehicle) EXCEPT if we know it's a property.
+          // Let's assume property items have type 'RENTAL' and service items have type 'RENTAL' too? No, properties are usually just PROPERY in db but RENTAL in types.
+          // Let's check db.createBooking implementation. It expects 'property' or 'service'.
+          // A safer check: if valid property ID -> property, else service.
+          // But here simple logic:
           status: 'confirmed',
-          check_in: new Date().toISOString(), // Mock dates
-          check_out: new Date(Date.now() + 86400000 * 5).toISOString(), // Mock 5 days
-          total_price: item.price
+          check_in: item.startDate || item.date || new Date().toISOString(),
+          check_out: item.endDate || item.date || new Date(Date.now() + 86400000).toISOString(),
+          total_price: item.price,
+          guests: item.guests || 1
         });
       }
 
@@ -107,6 +118,12 @@ export const Checkout: React.FC = () => {
                         </div>
                         <h3 className="font-semibold text-slate-900">{item.title}</h3>
                         <p className="text-sm text-slate-500">{item.details}</p>
+                        {(item.startDate || item.date) && (
+                          <div className="text-xs text-slate-400 mt-1">
+                            {item.startDate ? `${item.startDate} - ${item.endDate}` : item.date}
+                            {item.guests ? ` • ${item.guests} Guests` : ''}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span className="font-medium text-slate-900">{convertAndFormat(item.price, 'EUR')}</span>

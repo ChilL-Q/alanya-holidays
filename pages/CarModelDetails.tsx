@@ -40,6 +40,7 @@ export const CarModelDetails: React.FC = () => {
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const [selectedOffer, setSelectedOffer] = useState<ServiceData | null>(null);
 
     const [loading, setLoading] = useState(true);
     const [offers, setOffers] = useState<ServiceData[]>([]);
@@ -90,6 +91,7 @@ export const CarModelDetails: React.FC = () => {
     if (loading) return <div className="pt-32 text-center">Loading offers...</div>;
     if (!groupInfo) return <div className="pt-32 text-center">Model not found</div>;
 
+
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-7xl mx-auto px-4">
@@ -126,13 +128,19 @@ export const CarModelDetails: React.FC = () => {
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Available Offers ({offers.length})</h2>
                 <div className="space-y-4">
                     {offers.map((offer) => (
-                        <div key={offer.id} className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01]">
+                        <div
+                            key={offer.id}
+                            onClick={() => setSelectedOffer(offer)}
+                            className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01] cursor-pointer group hover:ring-2 hover:ring-teal-500/20"
+                        >
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
                                     {offer.provider?.full_name?.charAt(0) || 'P'}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{offer.provider?.full_name || 'Verified Provider'}</h3>
+                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 transition-colors">
+                                        {offer.provider?.full_name || 'Verified Provider'}
+                                    </h3>
                                     <div className="flex items-center gap-1 text-yellow-500 text-sm">
                                         <Star size={14} fill="currentColor" />
                                         <span>5.0</span>
@@ -159,7 +167,13 @@ export const CarModelDetails: React.FC = () => {
                                     <div className="text-2xl font-bold text-teal-600">{formatPrice(convertPrice(offer.price, 'EUR'))}</div>
                                     <div className="text-xs text-slate-500">per day</div>
                                 </div>
-                                <button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/book-vehicle/${offer.id}`);
+                                    }}
+                                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
+                                >
                                     Book Now
                                 </button>
                             </div>
@@ -167,6 +181,126 @@ export const CarModelDetails: React.FC = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Offer Details Modal */}
+            {selectedOffer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedOffer(null)}>
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="relative">
+                            <button
+                                onClick={() => setSelectedOffer(null)}
+                                className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg z-10 hover:scale-110 transition-transform"
+                            >
+                                <ArrowLeft size={20} className="text-slate-900 dark:text-white" />
+                            </button>
+
+                            {/* Gallery */}
+                            <div className="h-64 md:h-80 w-full bg-slate-100 dark:bg-slate-900 flex overflow-x-auto snap-x snap-mandatory">
+                                {selectedOffer.images && selectedOffer.images.length > 0 ? (
+                                    selectedOffer.images.map((img, idx) => (
+                                        <img
+                                            key={idx}
+                                            src={img}
+                                            alt={`Gallery ${idx}`}
+                                            className="w-full h-full object-cover flex-shrink-0 snap-center"
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                        No Images Available
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-8">
+                            <div className="flex flex-col md:flex-row gap-8 justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-700 pb-8">
+                                <div>
+                                    <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">
+                                        {selectedOffer.title}
+                                    </h2>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-1 text-yellow-500 text-sm font-bold">
+                                            <Star size={16} fill="currentColor" />
+                                            <span>5.0</span>
+                                        </div>
+                                        <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                        <span className="text-slate-500 text-sm">Top Rated</span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-3xl font-bold text-teal-600">
+                                        {formatPrice(convertPrice(selectedOffer.price, 'EUR'))}
+                                    </div>
+                                    <div className="text-sm text-slate-500">per day</div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="md:col-span-2 space-y-8">
+                                    {/* About */}
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('offer.about') || 'About this vehicle'}</h3>
+                                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                            {selectedOffer.description || "No specific description provided by the host for this offer."}
+                                        </p>
+                                    </div>
+
+                                    {/* Features */}
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('offer.features') || 'Features'}</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {selectedOffer.features && Object.entries(selectedOffer.features).map(([key, value]) => {
+                                                if (!value || key === 'brand' || key === 'model') return null;
+                                                return (
+                                                    <div key={key} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                                                        <Check size={18} className="text-teal-600" />
+                                                        <div>
+                                                            <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, ' ')}</p>
+                                                            <p className="font-medium text-slate-900 dark:text-white capitalize">{value.toString()}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Sidebar / Provider */}
+                                <div className="space-y-6">
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+                                        <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('offer.provider') || 'Provider'}</h3>
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
+                                                {selectedOffer.provider?.full_name?.charAt(0) || 'P'}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900 dark:text-white">{selectedOffer.provider?.full_name || 'Verified Provider'}</p>
+                                                <p className="text-xs text-slate-500">Joined 2024</p>
+                                            </div>
+                                        </div>
+                                        <button className="w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2">
+                                            <MessageCircle size={16} />
+                                            Active since 2024
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
+                                        onClick={() => {
+                                            // Proceed to checkout logic (reuse existing checkout flow)
+                                            // Navigation to checkout would go here
+                                            alert('Proceed to booking flow');
+                                        }}
+                                    >
+                                        Book Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

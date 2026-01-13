@@ -45,6 +45,7 @@ export interface ServiceFeatures {
 }
 
 export interface ServiceData {
+    id?: string;
     title: string;
     description: string;
     price: number;
@@ -140,6 +141,17 @@ export const db = {
         return data;
     },
 
+    async getPropertiesByHost(hostId: string) {
+        const { data, error } = await supabase
+            .from('properties')
+            .select('*')
+            .eq('host_id', hostId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
     // --- Services ---
     async createService(data: ServiceData) {
         const { data: service, error } = await supabase
@@ -160,6 +172,28 @@ export const db = {
         }
 
         const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async getServicesByProvider(providerId: string) {
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('provider_id', providerId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async getService(id: string) {
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('id', id)
+            .single();
 
         if (error) throw error;
         return data;

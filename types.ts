@@ -47,6 +47,9 @@ export interface CartItem {
   image?: string;
   details?: string; // e.g., "5 nights" or "Round Trip"
   date?: string;
+  startDate?: string;
+  endDate?: string;
+  guests?: number;
 }
 
 export interface SearchFilters {
