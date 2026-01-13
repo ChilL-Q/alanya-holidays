@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { ServiceType } from '../types';
 import { Trash2, Shield, CreditCard, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
@@ -127,8 +128,8 @@ export const Checkout: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t('checkout.recommended')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { id: 'rec-1', type: 'OTHER', title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival' },
-                  { id: 'rec-2', type: 'OTHER', title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge' },
+                  { id: 'rec-1', type: ServiceType.OTHER, title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival' },
+                  { id: 'rec-2', type: ServiceType.OTHER, title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge' },
                 ].map((rec) => {
                   const isInCart = items.some(i => i.id === rec.id);
                   return (
@@ -140,7 +141,7 @@ export const Checkout: React.FC = () => {
                           // Base currency is EUR, no conversion needed for cart
                           addToCart({
                             id: rec.id,
-                            type: 'OTHER',
+                            type: ServiceType.OTHER,
                             title: rec.title,
                             price: rec.price,
                             details: 'One-time service'

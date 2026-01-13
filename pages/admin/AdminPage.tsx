@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { db } from '../services/db';
+import { useAuth } from '../../context/AuthContext';
+import { db } from '../../services/db';
 import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,

@@ -6,17 +6,10 @@ import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../services/db';
 import { useNavigate } from 'react-router-dom';
 
-interface CarGroup {
-    id: string; // generated slug
-    title: string;
-    brand: string;
-    model: string;
-    year: string;
-    minPrice: number;
-    image: string;
-    count: number;
-    features: string[];
-}
+import { useCarAggregation } from '../hooks/useCarAggregation';
+
+// CarGroup interface is now in the hook file, but we can re-export or just rely on inference
+
 
 export const CarRental: React.FC = () => {
     const { t } = useLanguage();
@@ -43,40 +36,7 @@ export const CarRental: React.FC = () => {
         fetchCars();
     }, []);
 
-    const carGroups = React.useMemo(() => {
-        const groups: Record<string, CarGroup> = {};
-
-        rawServices.forEach((service) => {
-            const features = service.features || {};
-            const brand = features.brand || 'Unknown';
-            const model = features.model || 'Model';
-            const key = `${brand}-${model}`.toLowerCase();
-            const title = `${brand} ${model}`;
-            const price = service.price;
-            const image = service.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop'; // Fallback
-
-            if (!groups[key]) {
-                groups[key] = {
-                    id: key,
-                    title: title,
-                    brand: brand,
-                    model: model,
-                    year: features.year || '',
-                    minPrice: price,
-                    image: image,
-                    count: 1,
-                    features: [features.transmission, features.fuel].filter(Boolean) as string[]
-                };
-            } else {
-                groups[key].count += 1;
-                if (price < groups[key].minPrice) {
-                    groups[key].minPrice = price;
-                }
-            }
-        });
-
-        return Object.values(groups);
-    }, [rawServices]);
+    const carGroups = useCarAggregation(rawServices);
 
     const allCarImages = carGroups.map(c => ({ src: c.image, title: c.title }));
 

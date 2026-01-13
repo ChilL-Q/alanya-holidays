@@ -1,4 +1,4 @@
-import { Property, Service, ServiceType } from './types';
+import { Property, Service, ServiceType } from '../types';
 
 export const MOCK_PROPERTIES: Property[] = [
   {
@@ -177,4 +177,29 @@ export const LOCATIONS = [
   'Avsallar',
   'Demirtas',
   'Okurcalar'
+];
+
+export const AMENITIES_LIST = [
+  { icon: 'wifi', label: 'amenities.wifi' },
+  { icon: 'wind', label: 'amenities.ac' },
+  { icon: 'utensils', label: 'amenities.kitchen' },
+  { icon: 'shirt', label: 'amenities.washer' },
+  { icon: 'car', label: 'amenities.parking' },
+  { icon: 'droplet', label: 'amenities.pool' },
+  { icon: 'tv', label: 'amenities.tv' },
+  { icon: 'thermometer', label: 'amenities.heating' },
+  { icon: 'box', label: 'amenities.essentials' },
+  { icon: 'coffee', label: 'amenities.hot_water' },
+  { icon: 'snowflake', label: 'amenities.fridge' },
+  { icon: 'disc', label: 'amenities.dishwasher' },
+  { icon: 'zap', label: 'amenities.microwave' },
+  { icon: 'flame', label: 'amenities.stove' },
+  { icon: 'sun', label: 'amenities.balcony' },
+  { icon: 'flame', label: 'amenities.bbq' },
+  { icon: 'key', label: 'amenities.private_entrance' },
+  { icon: 'waves', label: 'amenities.waterfront' },
+  { icon: 'bell', label: 'amenities.smoke_alarm' },
+  { icon: 'wind', label: 'amenities.hair_dryer' },
+  { icon: 'scissors', label: 'amenities.iron' },
+  { icon: 'droplet', label: 'amenities.shampoo' }
 ];

@@ -19,6 +19,7 @@ import {
     Camera,
     Info
 } from 'lucide-react';
+import { AMENITIES_LIST } from '../data/constants';
 // ...
 export const ListProperty: React.FC = () => {
     const { t } = useLanguage();
@@ -101,7 +102,10 @@ export const ListProperty: React.FC = () => {
                 type: formData.propertyType as 'villa' | 'apartment',
                 host_id: user.id,
                 rental_license: formData.rentalLicense,
-                amenities: formData.amenities,
+                amenities: formData.amenities.map(label => {
+                    const found = AMENITIES_LIST.find(a => a.label === label);
+                    return found || { icon: 'box', label };
+                }),
                 images: uploadedUrls,
                 // Hospitality Details
                 arrival_guide: formData.arrivalGuide,
@@ -433,28 +437,22 @@ export const ListProperty: React.FC = () => {
                                             Amenities
                                         </label>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                            {[
-                                                'Wifi', 'Air conditioning', 'Kitchen', 'Washer', 'Free parking on premises',
-                                                'Pool', 'TV', 'Heating', 'Essentials', 'Hot water',
-                                                'Refrigerator', 'Dishwasher', 'Microwave', 'Stove',
-                                                'Patio or balcony', 'BBQ grill', 'Private entrance', 'Waterfront',
-                                                'Smoke alarm', 'Hair dryer', 'Iron', 'Shampoo'
-                                            ].map(am => (
-                                                <label key={am} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            {AMENITIES_LIST.map(am => (
+                                                <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                                     <input
                                                         type="checkbox"
-                                                        checked={(formData.amenities as string[] || []).includes(am)}
+                                                        checked={(formData.amenities as string[] || []).includes(am.label)}
                                                         onChange={(e) => {
                                                             const current = (formData.amenities as string[]) || [];
                                                             if (e.target.checked) {
-                                                                setFormData(prev => ({ ...prev, amenities: [...current, am] }));
+                                                                setFormData(prev => ({ ...prev, amenities: [...current, am.label] }));
                                                             } else {
-                                                                setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am) }));
+                                                                setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
                                                             }
                                                         }}
                                                         className="w-4 h-4 text-accent rounded focus:ring-accent border-gray-300"
                                                     />
-                                                    <span className="text-sm text-slate-700 dark:text-slate-300">{am}</span>
+                                                    <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
                                                 </label>
                                             ))}
                                         </div>
