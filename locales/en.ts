@@ -22,6 +22,8 @@ export const en = {
   'search.dates': 'Add dates',
   'search.guests': 'Guests',
   'search.button': 'Search',
+  'search.show_map': 'Show Map',
+  'search.show_list': 'Show List',
   'date_format': 'dd.mm.yyyy',
 
   // Value Props
@@ -89,6 +91,7 @@ export const en = {
   'checkout.subtotal': 'Subtotal',
   'checkout.free_cancel': 'Free Cancellation',
   'checkout.free_cancel_desc': 'for 48 hours after booking.',
+  'checkout.recommended': 'Recommended Extras',
 
   // Trip Assistant
   'ai.button': 'Ask AI Guide',
@@ -210,6 +213,10 @@ export const en = {
   'auth.no_account': "Don't have an account?",
   'auth.or': 'or',
   'auth.close': 'Close',
+  'auth.role.buyer': 'Buyer',
+  'auth.role.buyer_desc': 'I want to book stays',
+  'auth.role.seller': 'Seller',
+  'auth.role.seller_desc': 'I want to list properties',
   'profile.title': 'My Profile',
   'profile.edit': 'Edit Profile',
   'profile.save': 'Save Changes',
@@ -219,6 +226,10 @@ export const en = {
   'profile.my_services': 'My Services',
   'profile.no_properties': 'No properties listed yet',
   'profile.no_services': 'No services listed yet',
+  'profile.become_host_title': 'Become a Host',
+  'profile.become_host_desc': 'Earn money by renting out your property or vehicle.',
+  'profile.upgrade_btn': 'Upgrade to Host',
+  'profile.host_success': 'Congratulations! You are now a host.',
   'profile.add_property': 'List a New Property',
   'profile.add_service': 'Add a New Service',
   'profile.cancel': 'Cancel',
@@ -391,4 +402,39 @@ export const en = {
   'amenities.hair_dryer': 'Hair dryer',
   'amenities.iron': 'Iron',
   'amenities.shampoo': 'Shampoo',
+
+  // Cookies
+  'cookies.title': 'We use cookies',
+  'cookies.desc': 'We use cookies to improve your experience and ensure the website functions properly.',
+  'cookies.accept': 'Accept',
+  'cookies.decline': 'Decline',
+
+  // Host Dashboard
+  'host.dashboard.title': 'Host Dashboard',
+  'host.dashboard.welcome': 'Welcome back, {name}',
+  'host.dashboard.add_listing': 'Add New Listing',
+  'host.stats.earnings': 'Total Earnings',
+  'host.stats.bookings': 'Bookings',
+  'host.stats.properties': 'Properties',
+  'host.stats.views': 'Total Views',
+  'host.bookings.title': 'Recent Bookings',
+  'host.bookings.view_all': 'View All',
+  'host.bookings.empty': 'No bookings yet.',
+  'host.sync.title': 'Sync Calendars',
+  'host.sync.desc': 'Connect your Airbnb or Booking.com calendar to avoid double bookings.',
+  'host.sync.btn': 'Manage iCal Connections',
+  'host.listings.title': 'Your Listings',
+  'host.listings.view_all': 'View All Properties',
+
+  // Reviews
+  'reviews.success': 'Review submitted successfully!',
+  'reviews.error': 'Failed to submit review',
+  'reviews.write_title': 'Write a Review',
+  'reviews.rating_label': 'Rating',
+  'reviews.experience_label': 'Your Experience',
+  'reviews.placeholder': 'Tell us about your stay...',
+  'reviews.photos_label': 'Photos (Optional)',
+  'reviews.add_photo': 'Add',
+  'reviews.submit': 'Submit Review',
+  'reviews.submitting': 'Submitting...',
 };

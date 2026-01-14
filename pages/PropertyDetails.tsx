@@ -1,19 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight } from 'lucide-react';
-import { CROSS_SELL_SERVICES } from '../data/constants';
 import { useCart } from '../context/CartContext';
 import { ServiceType } from '../types';
 import { useLanguage } from '../context/LanguageContext';
+import { Map } from '../components/ui/Map';
 import { useLightbox } from '../context/LightboxContext';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services/db';
+import { db, PropertyData } from '../services/db';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
-import { IMaskInput } from 'react-imask';
+import { IMaskInput } from 'react-imask'; // Ensure this reference is correct and unused standard import removed if needed
+import { ReviewsSection } from '../components/reviews/ReviewsSection';
+
+interface PropertyDetailsData extends PropertyData {
+  hostName: string;
+  reviewsCount: number;
+  pricePerNight: number;
+}
 
 // Custom Masked Input Component
 const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
@@ -35,9 +42,9 @@ export const PropertyDetails: React.FC = () => {
   const { t } = useLanguage();
   const { openLightbox } = useLightbox();
   const { setChatContext } = useChat();
-  const { convertPrice, formatPrice } = useCurrency(); // Added
+  const { convertPrice, formatPrice } = useCurrency();
 
-  const [property, setProperty] = useState<any>(null);
+  const [property, setProperty] = useState<PropertyDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBooking, setHasBooking] = useState(false);
   const [nights, setNights] = useState(5);
@@ -46,6 +53,8 @@ export const PropertyDetails: React.FC = () => {
 
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
+
+  const [crossSellServices, setCrossSellServices] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -60,9 +69,10 @@ export const PropertyDetails: React.FC = () => {
             hostName: data.host?.full_name || 'Alanya Holidays',
             reviewsCount: data.reviews_count || 0,
             amenities: Array.isArray(data.amenities)
-              ? data.amenities.map((a: any) => typeof a === 'string' ? { label: a } : a)
+              ? data.amenities.map((a: any) => typeof a === 'string' ? { label: a, icon: '' } : a)
               : []
-          });
+          } as PropertyDetailsData); // Cast because we are adding fields
+          // ...
 
           // Check for booking if logged in
           if (isAuthenticated && user) {
@@ -83,7 +93,21 @@ export const PropertyDetails: React.FC = () => {
       }
     };
     fetchProperty();
-  }, [id]);
+  }, [id, isAuthenticated, user]);
+
+  useEffect(() => {
+    const fetchCrossSell = async () => {
+      try {
+        const transfers = await db.getServices('transfer');
+        const tours = await db.getServices('tour');
+        const combined = [...(transfers || []), ...(tours || [])].slice(0, 3);
+        setCrossSellServices(combined);
+      } catch (e) {
+        console.error("Error fetching cross-sell services", e);
+      }
+    };
+    fetchCrossSell();
+  }, []);
 
   useEffect(() => {
     if (checkIn && checkOut) {
@@ -145,7 +169,7 @@ export const PropertyDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
       {/* Gallery Grid - Simplified */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] relative animate-fade-in">
         <div
           className="relative h-full w-full overflow-hidden group cursor-zoom-in"
           onClick={() => openLightbox(property.images, 0)}
@@ -199,7 +223,7 @@ export const PropertyDetails: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
 
         {/* Left Column: Info */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-8 animate-fade-up delay-100 opacity-0 fill-mode-forwards">
           <div>
             {/* Title moved to Hero Image */}
           </div>
@@ -227,7 +251,7 @@ export const PropertyDetails: React.FC = () => {
                   <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 text-xs">
                     <CheckCircle size={16} />
                   </div>
-                  {am.label}
+                  {t(am.label)}
                 </div>
               ))}
             </div>
@@ -294,6 +318,11 @@ export const PropertyDetails: React.FC = () => {
                       <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{property.arrival_guide || 'No specific instructions.'}</p>
                     </div>
                   </div>
+
+                  {/* Map */}
+                  <div className="mt-6 h-96 md:h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-slate-100 dark:border-slate-700">
+                    <Map properties={[property]} />
+                  </div>
                 </div>
 
                 {/* House Rules & Manual */}
@@ -339,10 +368,13 @@ export const PropertyDetails: React.FC = () => {
             </div>
           )}
 
+          {/* Reviews Section Integration */}
+          {id && <ReviewsSection propertyId={id} />}
+
         </div>
 
         {/* Right Column: Booking Card */}
-        <div className="relative z-30">
+        <div className="relative z-30 animate-fade-up delay-200 opacity-0 fill-mode-forwards">
           <div
             className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6"
             onClick={(e) => e.stopPropagation()}
@@ -440,7 +472,7 @@ export const PropertyDetails: React.FC = () => {
       </div>
 
       {/* Cross-Sell Section */}
-      <section id="cross-sell" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-16">
+      <section id="cross-sell" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-16 animate-fade-up">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-8">
             <div className="p-2 bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-300 rounded-lg">
@@ -453,7 +485,7 @@ export const PropertyDetails: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {CROSS_SELL_SERVICES.map(service => (
+            {crossSellServices.length > 0 ? crossSellServices.map(service => (
               <div key={service.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:shadow-lg transition bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-900 group">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600 flex items-center justify-center text-teal-700 dark:text-teal-300 shadow-sm">
@@ -470,7 +502,9 @@ export const PropertyDetails: React.FC = () => {
                   {t('cross.add')} <ArrowRight size={16} />
                 </button>
               </div>
-            ))}
+            )) : (
+              <div className="col-span-3 text-center text-slate-400 py-8">No extra services available at the moment.</div>
+            )}
           </div>
         </div>
       </section>

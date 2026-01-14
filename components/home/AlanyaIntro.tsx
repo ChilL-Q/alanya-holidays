@@ -42,7 +42,7 @@ export const AlanyaIntro: React.FC = () => {
         <>
             <section className="py-24 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16 max-w-2xl mx-auto">
+                    <div className="text-center mb-16 max-w-2xl mx-auto animate-fade-up">
                         <h2 className="text-3xl md:text-4xl font-serif text-slate-900 dark:text-white mb-4">
                             {t('intro.title')}
                         </h2>
@@ -55,13 +55,17 @@ export const AlanyaIntro: React.FC = () => {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {sections.map((section) => {
+                        {sections.map((section, index) => {
                             const Icon = section.icon;
+                            // Calculate delay for stagger effect: 100ms, 200ms, etc.
+                            const delayClass = `delay-${(index + 1) * 100}`;
+
                             return (
                                 <div
                                     key={section.key}
                                     onClick={() => handleCardClick(section)}
-                                    className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+                                    className={`group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-xl transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl animate-fade-up opacity-0 fill-mode-forwards ${delayClass}`}
+                                    style={{ animationDelay: `${(index + 1) * 100}ms` }}
                                 >
                                     {/* Background Image */}
                                     <img

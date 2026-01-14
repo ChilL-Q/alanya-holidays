@@ -21,6 +21,8 @@ export const tr = {
     'search.dates': 'Tarih ekle',
     'search.guests': 'Misafirler',
     'search.button': 'Ara',
+    'search.show_map': 'Harita',
+    'search.show_list': 'Liste',
     'date_format': 'gg.aa.yyyy',
 
     // Value Props
@@ -88,6 +90,7 @@ export const tr = {
     'checkout.subtotal': 'Ara toplam',
     'checkout.free_cancel': 'Ücretsiz İptal',
     'checkout.free_cancel_desc': 'rezervasyondan sonraki 48 saat içinde.',
+    'checkout.recommended': 'Önerilen Ekstralar',
 
     // Trip Assistant
     'ai.button': 'AI Rehberine Sor',
@@ -210,6 +213,10 @@ export const tr = {
     'auth.no_account': 'Hesabınız yok mu?',
     'auth.or': 'veya',
     'auth.close': 'Kapat',
+    'auth.role.buyer': 'Alıcı',
+    'auth.role.buyer_desc': 'Rezervasyon yapmak istiyorum',
+    'auth.role.seller': 'Satıcı',
+    'auth.role.seller_desc': 'İlan vermek istiyorum',
     'profile.title': 'Profilim',
     'profile.edit': 'Profili Düzenle',
     'profile.save': 'Değişiklikleri Kaydet',
@@ -219,6 +226,10 @@ export const tr = {
     'profile.my_services': 'Hizmetlerim',
     'profile.no_properties': 'Henüz listelenen mülk yok',
     'profile.no_services': 'Henüz listelenen hizmet yok',
+    'profile.become_host_title': 'Ev Sahibi Olun',
+    'profile.become_host_desc': 'Mülkünüzü veya aracınızı kiralayarak para kazanın.',
+    'profile.upgrade_btn': 'Ev Sahibi Ol',
+    'profile.host_success': 'Tebrikler! Artık bir ev sahibisiniz.',
     'profile.add_property': 'Yeni Mülk Ekle',
     'profile.add_service': 'Yeni Hizmet Ekle',
     'profile.cancel': 'İptal',
@@ -391,4 +402,39 @@ export const tr = {
     'amenities.hair_dryer': 'Saç Kurutma Makinesi',
     'amenities.iron': 'Ütü',
     'amenities.shampoo': 'Şampuan',
+
+    // Cookies
+    'cookies.title': 'Çerezleri kullanıyoruz',
+    'cookies.desc': 'Deneyiminizi geliştirmek ve web sitesinin düzgün çalışmasını sağlamak için çerezleri kullanıyoruz.',
+    'cookies.accept': 'Kabul Et',
+    'cookies.decline': 'Reddet',
+
+    // Host Dashboard
+    'host.dashboard.title': 'Ev Sahibi Paneli',
+    'host.dashboard.welcome': 'Tekrar hoşgeldiniz, {name}',
+    'host.dashboard.add_listing': 'Yeni İlan Ekle',
+    'host.stats.earnings': 'Toplam Kazanç',
+    'host.stats.bookings': 'Rezervasyonlar',
+    'host.stats.properties': 'Mülkler',
+    'host.stats.views': 'Görüntülenme',
+    'host.bookings.title': 'Son Rezervasyonlar',
+    'host.bookings.view_all': 'Tümünü Gör',
+    'host.bookings.empty': 'Henüz rezervasyon yok.',
+    'host.sync.title': 'Takvim Senkronizasyonu',
+    'host.sync.desc': 'Çifte rezervasyonu önlemek için Airbnb veya Booking.com takviminizi bağlayın.',
+    'host.sync.btn': 'iCal Bağlantılarını Yönet',
+    'host.listings.title': 'İlanlarınız',
+    'host.listings.view_all': 'Tüm Mülkleri Gör',
+
+    // Reviews
+    'reviews.success': 'Yorum başarıyla gönderildi!',
+    'reviews.error': 'Yorum gönderilemedi',
+    'reviews.write_title': 'Yorum Yaz',
+    'reviews.rating_label': 'Puanınız',
+    'reviews.experience_label': 'Deneyiminiz',
+    'reviews.placeholder': 'Konaklamanız hakkında bilgi verin...',
+    'reviews.photos_label': 'Fotoğraf (İsteğe bağlı)',
+    'reviews.add_photo': 'Ekle',
+    'reviews.submit': 'Yorumu Gönder',
+    'reviews.submitting': 'Gönderiliyor...',
 };

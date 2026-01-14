@@ -168,6 +168,24 @@ export const Profile: React.FC = () => {
         }
     };
 
+    const handleBecomeHost = async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            // Update role in DB
+            await db.updateUserRole(user.id, 'host');
+            // Update role in Context
+            await updateUser({ role: 'host' });
+            toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');
+            // Refresh page or state to show new tabs
+        } catch (error: any) {
+            console.error('Error upgrading to host:', error);
+            toast.error('Failed to update role');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (!user) return null;
 
     return (
@@ -220,20 +238,27 @@ export const Profile: React.FC = () => {
                                 <Grid size={20} />
                                 <span className="font-medium">{t('profile.bookings') || 'Overview'}</span>
                             </button>
-                            <button
-                                onClick={() => setActiveTab('my_properties')}
-                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_properties' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                            >
-                                <Home size={20} />
-                                <span className="font-medium">{t('profile.my_properties')}</span>
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('my_services')}
-                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_services' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
-                            >
-                                <Car size={20} />
-                                <span className="font-medium">{t('profile.my_services')}</span>
-                            </button>
+
+                            {/* Host Only Tabs */}
+                            {(user.role === 'host' || user.role === 'admin') && (
+                                <>
+                                    <button
+                                        onClick={() => setActiveTab('my_properties')}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_properties' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                        <Home size={20} />
+                                        <span className="font-medium">{t('profile.my_properties')}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('my_services')}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_services' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                        <Car size={20} />
+                                        <span className="font-medium">{t('profile.my_services')}</span>
+                                    </button>
+                                </>
+                            )}
+
                             <button
                                 onClick={() => setActiveTab('settings')}
                                 className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'settings' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
@@ -258,6 +283,26 @@ export const Profile: React.FC = () => {
                                 </button>
                             </div>
                         </nav>
+
+                        {/* Become a Host Call to Action */}
+                        {user.role === 'guest' && (
+                            <div className="bg-gradient-to-br from-primary to-teal-600 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
+                                <div className="absolute top-0 right-0 p-4 opacity-20">
+                                    <Home size={80} />
+                                </div>
+                                <h3 className="text-lg font-bold mb-2 relative z-10">{t('profile.become_host_title') || 'Become a Host'}</h3>
+                                <p className="text-white/90 text-sm mb-4 relative z-10">
+                                    {t('profile.become_host_desc') || 'Earn money by renting out your property or vehicle.'}
+                                </p>
+                                <button
+                                    onClick={handleBecomeHost}
+                                    disabled={loading}
+                                    className="w-full bg-white text-primary font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition-colors relative z-10"
+                                >
+                                    {loading ? 'Updating...' : (t('profile.upgrade_btn') || 'Upgrade to Host')}
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Main Content Area */}
@@ -308,8 +353,8 @@ export const Profile: React.FC = () => {
                                                         )}
                                                         <div className="absolute top-4 left-4">
                                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${booking.status === 'confirmed' ? 'bg-green-500 text-white' :
-                                                                    booking.status === 'cancelled' ? 'bg-red-500 text-white' :
-                                                                        'bg-amber-500 text-white'
+                                                                booking.status === 'cancelled' ? 'bg-red-500 text-white' :
+                                                                    'bg-amber-500 text-white'
                                                                 }`}>
                                                                 {booking.status}
                                                             </span>
@@ -408,8 +453,8 @@ export const Profile: React.FC = () => {
                                                         )}
                                                         <div className="absolute top-4 left-4">
                                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${property.status === 'approved' ? 'bg-green-500 text-white' :
-                                                                    property.status === 'rejected' ? 'bg-red-500 text-white' :
-                                                                        'bg-amber-500 text-white'
+                                                                property.status === 'rejected' ? 'bg-red-500 text-white' :
+                                                                    'bg-amber-500 text-white'
                                                                 }`}>
                                                                 {property.status || 'Pending'}
                                                             </span>

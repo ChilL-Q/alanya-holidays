@@ -1,14 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
-import { MOCK_PROPERTIES } from '../data/constants';
+import { db } from '../services/db';
 import { PropertyCard } from '../components/ui/PropertyCard';
 
 export const FavoritesPage: React.FC = () => {
     const { favorites } = useFavorites();
+    const [properties, setProperties] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const favoriteProperties = MOCK_PROPERTIES.filter(p => favorites.includes(p.id));
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            setLoading(true);
+            try {
+                // Fetch all properties and filter by favorites
+                // In a larger app, we would have a specific endpoint for fetchByIds
+                const allProperties = await db.getProperties();
+                const favProperties = allProperties
+                    ?.filter(p => favorites.includes(p.id))
+                    .map((p: any) => ({
+                        ...p,
+                        pricePerNight: p.price_per_night,
+                        image: p.images?.[0] || '',
+                        guests: p.guests || 2,
+                        bedrooms: p.bedrooms || 1,
+                        rating: p.rating || 0,
+                        reviewsCount: p.reviews_count || 0
+                    })) || [];
+
+                setProperties(favProperties);
+            } catch (error) {
+                console.error('Error fetching favorite properties:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (favorites.length > 0) {
+            fetchFavorites();
+        } else {
+            setProperties([]);
+            setLoading(false);
+        }
+    }, [favorites]);
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-16 transition-colors">
@@ -19,13 +54,15 @@ export const FavoritesPage: React.FC = () => {
                         Shortlist
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">
-                        {favoriteProperties.length} saved properties
+                        {properties.length} saved properties
                     </p>
                 </div>
 
-                {favoriteProperties.length > 0 ? (
+                {loading ? (
+                    <div className="text-center py-20 text-slate-500">Loading favorites...</div>
+                ) : properties.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {favoriteProperties.map((property) => (
+                        {properties.map((property) => (
                             <PropertyCard key={property.id} property={property} />
                         ))}
                     </div>
@@ -40,7 +77,7 @@ export const FavoritesPage: React.FC = () => {
                         </p>
                         <Link
                             to="/search"
-                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary hover:bg-primary-dark transition-colors"
+                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-colors"
                         >
                             Explore Stays
                         </Link>

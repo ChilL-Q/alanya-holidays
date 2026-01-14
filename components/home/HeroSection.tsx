@@ -11,8 +11,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
     const { t } = useLanguage();
 
     return (
-        <section className="relative h-[600px] flex items-center justify-center">
-            <div className="absolute inset-0">
+        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
                 <img
                     src="/images/hero-bg.jpg"
                     onError={(e) => {
@@ -27,7 +27,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
             </div>
 
-            <div className="relative z-10 w-full max-w-5xl px-4">
+            <div className="relative z-10 w-full max-w-5xl px-4 animate-fade-up">
                 <div className="text-center mb-10">
                     <h1 className="font-serif text-4xl md:text-6xl text-white mb-4 drop-shadow-2xl">
                         {t('hero.title')}

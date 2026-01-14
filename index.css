@@ -1,5 +1,19 @@
-/* Custom Animations */
+@import "tailwindcss";
 
+@layer base {
+    :root {
+        --color-primary: 5 68 94;
+        /* #05445E */
+    }
+}
+
+html,
+body {
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+}
+
+/* Custom Animations */
 @layer utilities {
     @keyframes page-enter {
         0% {
@@ -34,7 +48,102 @@
         animation: stagger-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
+
     .font-arabic {
         font-family: 'Cairo', sans-serif !important;
+    }
+
+    /* Modern Animations */
+    @keyframes fade-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slide-in-right {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .animate-fade-up {
+        animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.4s ease-out forwards;
+    }
+
+    .animate-scale-in {
+        animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-slide-in-right {
+        animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Stagger Delays */
+    .delay-100 {
+        animation-delay: 100ms;
+    }
+
+    .delay-200 {
+        animation-delay: 200ms;
+    }
+
+    .delay-300 {
+        animation-delay: 300ms;
+    }
+
+    .delay-400 {
+        animation-delay: 400ms;
+    }
+
+    .delay-500 {
+        animation-delay: 500ms;
+    }
+
+    /* Hover Utilities */
+    .hover-lift {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     }
 }

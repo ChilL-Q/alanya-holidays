@@ -4,6 +4,7 @@ import { Star, MapPin, Filter } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { db } from '../services/db';
 import { PropertyCard } from '../components/ui/PropertyCard';
+import { Map } from '../components/ui/Map';
 
 export const SearchResultsPage: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -16,6 +17,7 @@ export const SearchResultsPage: React.FC = () => {
     const [properties, setProperties] = useState<any[]>([]);
     const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [showMap, setShowMap] = useState(false);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -69,26 +71,45 @@ export const SearchResultsPage: React.FC = () => {
                             {filteredProperties.length} properties found • {checkIn && checkOut ? `${checkIn} - ${checkOut}` : 'Any dates'} • {guests || 1} guests
                         </p>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200">
-                        <Filter size={18} />
-                        Filters
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowMap(!showMap)}
+                            className={`flex items-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium ${showMap ? 'bg-teal-600 text-white border-teal-600' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'}`}
+                        >
+                            <MapPin size={18} />
+                            {showMap ? t('search.show_list') : t('search.show_map')}
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200">
+                            <Filter size={18} />
+                            Filters
+                        </button>
+                    </div>
                 </div>
 
-                {/* Grid */}
+                {/* Content */}
                 {isLoading ? (
                     <div className="text-center py-20 text-slate-500">Loading stays...</div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {filteredProperties.map((property, index) => (
-                            <div
-                                key={property.id}
-                                className="animate-stagger-enter"
-                                style={{ animationDelay: `${index * 100}ms` }}
-                            >
-                                <PropertyCard property={property} />
+                    <div className="space-y-8">
+                        {/* Properties Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredProperties.map((property, index) => (
+                                <div
+                                    key={property.id}
+                                    className="animate-stagger-enter"
+                                    style={{ animationDelay: `${index * 100}ms` }}
+                                >
+                                    <PropertyCard property={property} />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Map Section */}
+                        {showMap && (
+                            <div className="h-[500px] w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 animate-fade-up">
+                                <Map properties={filteredProperties} />
                             </div>
-                        ))}
+                        )}
                     </div>
                 )}
 

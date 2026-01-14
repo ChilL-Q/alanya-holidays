@@ -227,7 +227,7 @@ export const AddService: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     {step > 0 && (
-                        <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                        <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all duration-300 active:scale-90">
                             <ArrowLeft size={24} className="text-slate-600 dark:text-slate-400" />
                         </button>
                     )}
@@ -242,7 +242,7 @@ export const AddService: React.FC = () => {
                     <div className="grid md:grid-cols-2 gap-6">
                         <button
                             onClick={() => handleCategorySelect('transportation')}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 transition-all text-left group"
+                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
                             <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Car size={32} />
@@ -253,7 +253,7 @@ export const AddService: React.FC = () => {
 
                         <button
                             onClick={() => handleCategorySelect('adventure')}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 transition-all text-left group"
+                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
                             <div className="w-14 h-14 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <Map size={32} />
@@ -612,7 +612,7 @@ export const AddService: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 disabled:opacity-50 text-lg flex items-center justify-center gap-2"
+                                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? 'Listing Service...' : 'List Service'}
                                 <ChevronRight />

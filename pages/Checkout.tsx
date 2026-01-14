@@ -96,7 +96,7 @@ export const Checkout: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Order Details */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6 animate-fade-up">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t('checkout.basket')}</h2>
 
@@ -210,7 +210,7 @@ export const Checkout: React.FC = () => {
           </div>
 
           {/* Sidebar Summary */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 animate-fade-up delay-200 opacity-0 fill-mode-forwards">
             <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6 sticky top-24">
               <h3 className="font-bold text-lg text-slate-900 mb-6">{t('checkout.price_details')}</h3>
 

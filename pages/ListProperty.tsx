@@ -17,8 +17,10 @@ import {
     Lock,
     Image as ImageIcon,
     Camera,
-    Info
+    Info,
+    Calendar
 } from 'lucide-react';
+import { LocationPicker } from '../components/ui/LocationPicker';
 import { AMENITIES_LIST } from '../data/constants';
 // ...
 export const ListProperty: React.FC = () => {
@@ -53,8 +55,11 @@ export const ListProperty: React.FC = () => {
         checkoutInstructions: '',
         guidebooks: '',
         interactionPreferences: '',
+        icalUrl: '',
         maxGuests: '2',
-        beds: '1'
+        beds: '1',
+        latitude: null as number | null,
+        longitude: null as number | null,
     });
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -99,6 +104,8 @@ export const ListProperty: React.FC = () => {
                 price_per_night: Number(formData.price),
                 location: formData.location,
                 address: formData.address,
+                latitude: formData.latitude || undefined,
+                longitude: formData.longitude || undefined,
                 type: formData.propertyType as 'villa' | 'apartment',
                 host_id: user.id,
                 rental_license: formData.rentalLicense,
@@ -119,6 +126,7 @@ export const ListProperty: React.FC = () => {
                 checkout_instructions: formData.checkoutInstructions,
                 guidebooks: formData.guidebooks,
                 interaction_preferences: formData.interactionPreferences,
+                ical_url: formData.icalUrl,
                 max_guests: Number(formData.maxGuests),
                 beds: Number(formData.beds)
             });
@@ -153,7 +161,7 @@ export const ListProperty: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/90"></div>
                 </div>
 
-                <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+                <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-page-enter">
                     <h1
                         className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight"
                         dangerouslySetInnerHTML={{ __html: t('list.hero.title') }}
@@ -163,7 +171,7 @@ export const ListProperty: React.FC = () => {
                     </p>
                     <a
                         href="#application-form"
-                        className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-8 py-4 rounded-full text-lg font-medium transition-all transform hover:scale-105 shadow-lg hover:shadow-accent/30"
+                        className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-accent/30 ease-out"
                     >
                         {isAuthenticated ? t('list.hero.cta') : t('list.hero.cta.guest')}
                     </a>
@@ -173,8 +181,8 @@ export const ListProperty: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
                 {/* Benefits Grid */}
                 <div className="grid md:grid-cols-3 gap-8 mb-20">
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out">
+                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
                             <ShieldCheck size={32} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
@@ -185,8 +193,8 @@ export const ListProperty: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out delay-100">
+                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
                             <Settings size={32} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
@@ -197,8 +205,8 @@ export const ListProperty: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out delay-200">
+                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
                             <TrendingUp size={32} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
@@ -211,8 +219,8 @@ export const ListProperty: React.FC = () => {
                 </div>
 
                 {/* Application Form or Guest Gate */}
-                <div id="application-form" className="max-w-3xl mx-auto">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-700">
+                <div id="application-form" className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-backwards">
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:shadow-2xl transition-shadow duration-500">
                         {!isAuthenticated ? (
                             <div className="p-16 text-center">
                                 <div className="w-24 h-24 bg-slate-100 dark:bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
@@ -403,7 +411,7 @@ export const ListProperty: React.FC = () => {
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                             {t('list.form.location')} (Area)
                                         </label>
-                                        <div className="relative">
+                                        <div className="relative mb-4">
                                             <input
                                                 type="text"
                                                 name="location"
@@ -415,6 +423,17 @@ export const ListProperty: React.FC = () => {
                                             />
                                             <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                         </div>
+
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Pin Exact Location
+                                        </label>
+                                        <div className="h-64 md:h-80 w-full mb-4">
+                                            <LocationPicker
+                                                onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))}
+                                                initialLocation={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : undefined}
+                                            />
+                                        </div>
+                                        <p className="text-xs text-slate-500 mb-2">Click on the map to set the exact location of your property.</p>
                                     </div>
 
                                     <div>
@@ -587,6 +606,21 @@ export const ListProperty: React.FC = () => {
                                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                                 />
                                             </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                                    <Calendar size={16} className="text-teal-600" />
+                                                    Sync Calendar (iCal)
+                                                </label>
+                                                <input
+                                                    type="url"
+                                                    name="icalUrl"
+                                                    placeholder="e.g. https://www.airbnb.com/calendar/ical/..."
+                                                    value={formData.icalUrl}
+                                                    onChange={handleChange}
+                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                                />
+                                                <p className="text-xs text-slate-500 mt-1">Paste your Airbnb or Booking.com iCal export link to sync availability.</p>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -644,7 +678,7 @@ export const ListProperty: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
+                                        className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg hover:shadow-accent/40 text-lg disabled:opacity-50 disabled:cursor-wait hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         {isLoading ? 'Submitting...' : t('list.form.submit')}
                                     </button>

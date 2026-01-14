@@ -10,6 +10,7 @@ export const RegisterModal: React.FC = () => {
     const { t } = useLanguage();
     const { register } = useAuth();
 
+    const [role, setRole] = useState<'guest' | 'host'>('guest');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -30,13 +31,14 @@ export const RegisterModal: React.FC = () => {
         setLoading(true);
 
         try {
-            const result = await register(name, email, password);
+            const result = await register(name, email, password, role);
             if (result.success) {
                 closeModal();
                 // Clear form
                 setName('');
                 setEmail('');
                 setPassword('');
+                setRole('guest');
             } else {
                 setError(result.error || 'Failed to register');
             }
@@ -60,6 +62,41 @@ export const RegisterModal: React.FC = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Role Selection */}
+                    <div className="grid grid-cols-2 gap-4 mb-2">
+                        <button
+                            type="button"
+                            onClick={() => setRole('guest')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'guest'
+                                ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600'
+                                : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                                }`}
+                        >
+                            <span className={`block font-bold mb-1 ${role === 'guest' ? 'text-teal-800' : 'text-slate-700'}`}>
+                                {t('auth.role.buyer') || 'Buyer'}
+                            </span>
+                            <span className={`text-xs block ${role === 'guest' ? 'text-teal-600' : 'text-slate-500'}`}>
+                                {t('auth.role.buyer_desc') || 'I want to book stays'}
+                            </span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setRole('host')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'host'
+                                ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600'
+                                : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                                }`}
+                        >
+                            <span className={`block font-bold mb-1 ${role === 'host' ? 'text-teal-800' : 'text-slate-700'}`}>
+                                {t('auth.role.seller') || 'Seller'}
+                            </span>
+                            <span className={`text-xs block ${role === 'host' ? 'text-teal-600' : 'text-slate-500'}`}>
+                                {t('auth.role.seller_desc') || 'I want to list properties'}
+                            </span>
+                        </button>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.name')}</label>
                         <input

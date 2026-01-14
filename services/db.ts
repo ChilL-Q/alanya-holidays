@@ -8,15 +8,19 @@ export interface Amenity {
 
 // Types matched to Database Schema
 export interface PropertyData {
+    id?: string;
     title: string;
     description: string;
     price_per_night: number;
     location: string;
     address: string;
+    latitude?: number;
+    longitude?: number;
     type: 'villa' | 'apartment';
-    amenities: Amenity[];
+    amenities: Amenity[] | any[];
     images: string[];
     host_id: string;
+    ical_url?: string;
     rental_license?: string;
     // Hospitality Details
     arrival_guide?: string;
@@ -32,6 +36,15 @@ export interface PropertyData {
     interaction_preferences?: string;
     max_guests?: number;
     beds?: number;
+    bathrooms: number;
+    bedrooms: number;
+    rating?: number;
+    reviews_count?: number;
+    host?: {
+        full_name: string;
+        avatar_url?: string;
+    };
+    [key: string]: any;
 }
 
 export interface ServiceFeatures {
@@ -63,6 +76,31 @@ export interface ProductData {
     stock: number;
     artisan_id: string;
     images: string[];
+}
+
+export interface Review {
+    id?: string;
+    property_id: string;
+    user_id: string;
+    rating: number; // 1-5
+    comment: string;
+    images?: string[];
+    created_at?: string;
+    user?: {
+        full_name: string;
+        avatar_url: string;
+    };
+}
+
+export interface Notification {
+    id?: string;
+    user_id: string;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'error';
+    read: boolean;
+    created_at?: string;
+    link?: string;
 }
 
 export const db = {
@@ -440,6 +478,79 @@ export const db = {
             .from('bookings')
             .update({ status })
             .eq('id', id);
+        if (error) throw error;
+    },
+
+    // --- Reviews ---
+    async getReviews(propertyId: string) {
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('*, user:profiles(full_name, avatar_url)')
+            .eq('property_id', propertyId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.warn("Reviews table might not exist yet, using fallback/empty.");
+            return [];
+        }
+        return data;
+    },
+
+    async addReview(review: Review) {
+        const { data, error } = await supabase
+            .from('reviews')
+            .insert([review])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // --- Notifications ---
+    async getNotifications(userId: string) {
+        const { data, error } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) {
+            console.warn("Notifications table might not exist yet, using fallback.");
+            return [];
+        }
+        return data;
+    },
+
+    async markNotificationRead(id: string) {
+        const { error } = await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    async addNotification(notification: Notification) {
+        try {
+            const { error } = await supabase
+                .from('notifications')
+                .insert([notification]);
+
+            if (error) throw error;
+        } catch (e) {
+            console.error("Failed to add notification (ignoring if table missing)", e);
+        }
+    },
+
+    // --- Calendar Sync ---
+    async updatePropertyIcal(propertyId: string, icalUrl: string) {
+        const { error } = await supabase
+            .from('properties')
+            .update({ ical_url: icalUrl })
+            .eq('id', propertyId);
+
         if (error) throw error;
     }
 };

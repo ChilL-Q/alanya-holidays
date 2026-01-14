@@ -21,7 +21,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     return (
         <Link
             to={`/property/${property.id}`}
-            className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-800 relative"
+            className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800 relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >

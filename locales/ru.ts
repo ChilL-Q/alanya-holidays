@@ -22,6 +22,8 @@ export const ru = {
     'search.dates': 'Даты',
     'search.guests': 'Гости',
     'search.button': 'Найти',
+    'search.show_map': 'На карте',
+    'search.show_list': 'Списком',
     'date_format': 'дд.мм.гггг',
 
     // Value Props
@@ -89,6 +91,7 @@ export const ru = {
     'checkout.subtotal': 'Подытог',
     'checkout.free_cancel': 'Бесплатная отмена',
     'checkout.free_cancel_desc': 'в течение 48 часов после бронирования.',
+    'checkout.recommended': 'Рекомендуем добавить',
 
     // Trip Assistant
     'ai.button': 'Спросить AI Гида',
@@ -210,6 +213,10 @@ export const ru = {
     'auth.no_account': 'Нет аккаунта?',
     'auth.or': 'или',
     'auth.close': 'Закрыть',
+    'auth.role.buyer': 'Покупатель',
+    'auth.role.buyer_desc': 'Я хочу бронировать',
+    'auth.role.seller': 'Продавец',
+    'auth.role.seller_desc': 'Я хочу размещать',
     'profile.title': 'Мой профиль',
     'profile.edit': 'Редактировать',
     'profile.save': 'Сохранить изменения',
@@ -218,7 +225,11 @@ export const ru = {
     'profile.my_properties': 'Мои объекты',
     'profile.my_services': 'Мои услуги',
     'profile.no_properties': 'Нет добавленных объектов',
-    'profile.no_services': 'Нет добавленных услуг',
+    'profile.no_services': 'Услуги пока не добавлены',
+    'profile.become_host_title': 'Стать хозяином',
+    'profile.become_host_desc': 'Зарабатывайте, сдавая в аренду свою недвижимость или транспорт.',
+    'profile.upgrade_btn': 'Стать хозяином',
+    'profile.host_success': 'Поздравляем! Теперь вы хозяин.',
     'profile.add_property': 'Добавить объект',
     'profile.add_service': 'Добавить услугу',
     'profile.cancel': 'Отмена',
@@ -391,4 +402,39 @@ export const ru = {
     'amenities.hair_dryer': 'Фен',
     'amenities.iron': 'Утюг',
     'amenities.shampoo': 'Шампунь',
+
+    // Cookies
+    'cookies.title': 'Мы используем cookie',
+    'cookies.desc': 'Мы используем файлы cookie для улучшения работы сайта и анализа трафика.',
+    'cookies.accept': 'Принять',
+    'cookies.decline': 'Отклонить',
+
+    // Host Dashboard
+    'host.dashboard.title': 'Панель Хозяина',
+    'host.dashboard.welcome': 'С возвращением, {name}',
+    'host.dashboard.add_listing': 'Добавить объявление',
+    'host.stats.earnings': 'Общий доход',
+    'host.stats.bookings': 'Бронирования',
+    'host.stats.properties': 'Объекты',
+    'host.stats.views': 'Просмотры',
+    'host.bookings.title': 'Недавние бронирования',
+    'host.bookings.view_all': 'Смотреть все',
+    'host.bookings.empty': 'Бронирований пока нет.',
+    'host.sync.title': 'Синхронизация Календарей',
+    'host.sync.desc': 'Подключите календарь Airbnb или Booking.com, чтобы избежать овербукинга.',
+    'host.sync.btn': 'Управление iCal',
+    'host.listings.title': 'Ваши объявления',
+    'host.listings.view_all': 'Все объекты',
+
+    // Reviews
+    'reviews.success': 'Отзыв успешно отправлен!',
+    'reviews.error': 'Не удалось отправить отзыв',
+    'reviews.write_title': 'Написать отзыв',
+    'reviews.rating_label': 'Оценка',
+    'reviews.experience_label': 'Ваш опыт',
+    'reviews.placeholder': 'Расскажите о вашем проживании...',
+    'reviews.photos_label': 'Фото (Опционально)',
+    'reviews.add_photo': 'Добавить',
+    'reviews.submit': 'Отправить отзыв',
+    'reviews.submitting': 'Отправка...',
 };

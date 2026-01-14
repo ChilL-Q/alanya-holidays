@@ -73,7 +73,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 />
 
                 {showSuggestions && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 max-h-60 overflow-y-auto z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 max-h-60 overflow-y-auto z-50 animate-scale-in origin-top">
                         {LOCATIONS.filter(loc => loc.toLowerCase().includes(location.toLowerCase())).map(loc => (
                             <button
                                 key={loc}
@@ -153,7 +153,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
 
             <button
                 onClick={handleSearch}
-                className="bg-primary hover:bg-primary-dark text-white h-14 px-8 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98]"
+                className="bg-primary hover:bg-primary-dark text-white h-14 px-8 rounded-xl font-semibold flex items-center justify-center gap-2 hover-lift shadow-lg shadow-primary/30"
             >
                 <Search size={20} />
                 {t('search.button')}

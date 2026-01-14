@@ -37,10 +37,10 @@ export const ServicesPage: React.FC = () => {
     ];
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20 pt-24">
+        <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-20 pt-24">
             <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
-                <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 mb-6">{t('services.hero.title')}</h1>
-                <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">{t('services.hero.subtitle')}</p>
+                <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 dark:text-white mb-6">{t('services.hero.title')}</h1>
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">{t('services.hero.subtitle')}</p>
 
                 <CategoryTabs
                     categories={categories}
