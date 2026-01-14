@@ -257,8 +257,26 @@ export const Navbar: React.FC = () => {
                 {items.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
               </button>
 
-              {/* Profile */}
-              <div className="relative ml-1" ref={profileRef}>
+              {/* Desktop Auth Buttons */}
+              {!isAuthenticated && (
+                <div className="hidden md:flex items-center gap-3 mr-2">
+                  <button
+                    onClick={openLogin}
+                    className="px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all duration-300 hover:scale-105 active:scale-95"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={openRegister}
+                    className="px-5 py-2.5 text-sm font-bold text-white bg-teal-600 hover:bg-teal-500 rounded-full transition-all duration-300 shadow-lg shadow-teal-600/20 hover:shadow-teal-600/40 hover:scale-105 active:scale-95 hover:-translate-y-0.5"
+                  >
+                    Register
+                  </button>
+                </div>
+              )}
+
+              {/* Profile / Mobile Menu Trigger */}
+              <div className={`relative ml-1 ${!isAuthenticated ? 'md:hidden' : ''}`} ref={profileRef}>
                 <button
                   onClick={() => isAuthenticated ? setIsProfileOpen(!isProfileOpen) : setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800"
@@ -289,6 +307,12 @@ export const Navbar: React.FC = () => {
                         <User size={16} className="text-slate-400" />
                         {t('nav.profile')}
                       </Link>
+                      {user?.role === 'admin' && (
+                        <Link to="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                          <LayoutDashboard size={16} className="text-purple-600" />
+                          Admin Panel
+                        </Link>
+                      )}
                       <Link to="/host/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                         <LayoutDashboard size={16} className="text-teal-500" />
                         Host Dashboard

@@ -64,12 +64,12 @@ export const HostDashboard: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t['host.dashboard.title']}</h1>
-                        <p className="text-slate-500 dark:text-slate-400">{t['host.dashboard.welcome'].replace('{name}', user?.name || '')}</p>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('host.dashboard.title')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400">{t('host.dashboard.welcome', { name: user?.name || '' })}</p>
                     </div>
                     <Link to="/list-property" className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition">
                         <Plus size={20} />
-                        {t['host.dashboard.add_listing']}
+                        {t('host.dashboard.add_listing')}
                     </Link>
                 </div>
 
@@ -82,7 +82,7 @@ export const HostDashboard: React.FC = () => {
                             </div>
                             <span className="text-xs font-bold text-teal-600 bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded">+12%</span>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t['host.stats.earnings']}</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.earnings')}</p>
                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatPrice(convertPrice(totalEarnings, 'EUR'))}</h3>
                     </div>
 
@@ -92,7 +92,7 @@ export const HostDashboard: React.FC = () => {
                                 <Calendar size={24} />
                             </div>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t['host.stats.bookings']}</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.bookings')}</p>
                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{bookings.length}</h3>
                     </div>
 
@@ -102,7 +102,7 @@ export const HostDashboard: React.FC = () => {
                                 <Home size={24} />
                             </div>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t['host.stats.properties']}</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.properties')}</p>
                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{properties.length}</h3>
                     </div>
 
@@ -112,7 +112,7 @@ export const HostDashboard: React.FC = () => {
                                 <BarChart3 size={24} />
                             </div>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t['host.stats.views']}</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.views')}</p>
                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">1,248</h3> {/* Mocked for now */}
                     </div>
                 </div>
@@ -121,8 +121,8 @@ export const HostDashboard: React.FC = () => {
                     {/* Recent Bookings */}
                     <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900 dark:text-white">{t['host.bookings.title']}</h3>
-                            <button className="text-sm text-teal-600 font-medium hover:underline">{t['host.bookings.view_all']}</button>
+                            <h3 className="font-bold text-slate-900 dark:text-white">{t('host.bookings.title')}</h3>
+                            <button className="text-sm text-teal-600 font-medium hover:underline">{t('host.bookings.view_all')}</button>
                         </div>
                         <div className="divide-y divide-slate-100 dark:divide-slate-700">
                             {bookings.length > 0 ? bookings.slice(0, 5).map((booking) => (
@@ -148,7 +148,7 @@ export const HostDashboard: React.FC = () => {
                                 </div>
                             )) : (
                                 <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                                    {t['host.bookings.empty']}
+                                    {t('host.bookings.empty')}
                                 </div>
                             )}
                         </div>
@@ -157,15 +157,15 @@ export const HostDashboard: React.FC = () => {
                     {/* Quick Actions / Properties */}
                     <div className="space-y-6">
                         <div className="bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
-                            <h3 className="font-bold text-lg mb-2">{t['host.sync.title']}</h3>
-                            <p className="text-teal-100 text-sm mb-4">{t['host.sync.desc']}</p>
+                            <h3 className="font-bold text-lg mb-2">{t('host.sync.title')}</h3>
+                            <p className="text-teal-100 text-sm mb-4">{t('host.sync.desc')}</p>
                             <button className="bg-white text-teal-600 px-4 py-2 rounded-lg font-bold text-sm w-full hover:bg-teal-50 transition">
-                                {t['host.sync.btn']}
+                                {t('host.sync.btn')}
                             </button>
                         </div>
 
                         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
-                            <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t['host.listings.title']}</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('host.listings.title')}</h3>
                             <div className="space-y-4">
                                 {properties.slice(0, 3).map(prop => (
                                     <div key={prop.id} className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export const HostDashboard: React.FC = () => {
                                         </Link>
                                     </div>
                                 ))}
-                                <Link to="/profile" className="block text-center text-sm font-bold text-teal-600 hover:underline pt-2">{t['host.listings.view_all']}</Link>
+                                <Link to="/profile" className="block text-center text-sm font-bold text-teal-600 hover:underline pt-2">{t('host.listings.view_all')}</Link>
                             </div>
                         </div>
                     </div>

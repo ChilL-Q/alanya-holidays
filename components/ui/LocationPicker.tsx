@@ -97,10 +97,11 @@ const darkMapStyles = [
 
 interface LocationPickerProps {
     onLocationSelect: (lat: number, lng: number) => void;
+    onAddressSelect?: (address: string, city?: string) => void;
     initialLocation?: { lat: number, lng: number };
 }
 
-export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, initialLocation }) => {
+export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect, onAddressSelect, initialLocation }) => {
     const { theme } = useTheme();
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
@@ -121,8 +122,31 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect
             const lng = e.latLng.lng();
             setMarkerPosition({ lat, lng });
             onLocationSelect(lat, lng);
+
+            // Reverse Geocoding
+            if (onAddressSelect && window.google) {
+                const geocoder = new window.google.maps.Geocoder();
+                geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                        const address = results[0].formatted_address;
+
+                        // Try to extract city/district (administrative_area_level_2 or locality)
+                        let city = '';
+                        const addressComponents = results[0].address_components;
+                        const districtComponent = addressComponents.find(c => c.types.includes('sublocality') || c.types.includes('administrative_area_level_2'));
+                        const cityComponent = addressComponents.find(c => c.types.includes('locality') || c.types.includes('administrative_area_level_1'));
+
+                        // Prefer district (e.g. Mahmutlar) over city (Alanya), or city over province
+                        city = districtComponent ? districtComponent.long_name : (cityComponent ? cityComponent.long_name : '');
+
+                        onAddressSelect(address, city);
+                    } else {
+                        console.warn('Geocoder failed due to: ' + status);
+                    }
+                });
+            }
         }
-    }, [onLocationSelect]);
+    }, [onLocationSelect, onAddressSelect]);
 
     if (!isLoaded) return <div className="w-full h-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl"></div>;
 

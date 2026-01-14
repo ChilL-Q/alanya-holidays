@@ -57,6 +57,8 @@ export const ListProperty: React.FC = () => {
         interactionPreferences: '',
         icalUrl: '',
         maxGuests: '2',
+        bedrooms: '1',
+        bathrooms: '1',
         beds: '1',
         latitude: null as number | null,
         longitude: null as number | null,
@@ -128,6 +130,8 @@ export const ListProperty: React.FC = () => {
                 interaction_preferences: formData.interactionPreferences,
                 ical_url: formData.icalUrl,
                 max_guests: Number(formData.maxGuests),
+                bedrooms: Number(formData.bedrooms),
+                bathrooms: Number(formData.bathrooms),
                 beds: Number(formData.beds)
             });
 
@@ -372,6 +376,34 @@ export const ListProperty: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                Bedrooms
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="bedrooms"
+                                                required
+                                                min="0"
+                                                value={formData.bedrooms}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                                Bathrooms
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="bathrooms"
+                                                required
+                                                min="0"
+                                                value={formData.bathrooms}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                                 Number of Beds
                                             </label>
                                             <input
@@ -430,6 +462,14 @@ export const ListProperty: React.FC = () => {
                                         <div className="h-64 md:h-80 w-full mb-4">
                                             <LocationPicker
                                                 onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))}
+                                                onAddressSelect={(address, city) => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        address: address, // Auto-fill full address
+                                                        location: city || prev.location // Auto-fill Area/City if found, otherwise keep existing
+                                                    }));
+                                                    toast.success('Address found: ' + (city ? `${city}` : address));
+                                                }}
                                                 initialLocation={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : undefined}
                                             />
                                         </div>

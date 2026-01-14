@@ -47,6 +47,7 @@ import { HostDashboard } from './pages/host/HostDashboard';
 const AdminPage = React.lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })));
 const AdminEditPropertyPage = React.lazy(() => import('./pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
 const AdminEditUserPage = React.lazy(() => import('./pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
+import { DebugAuth } from './pages/DebugAuth';
 import { AdminRoute } from './components/auth/AdminRoute';
 
 
@@ -132,6 +133,8 @@ const App: React.FC = () => {
                                     </AdminRoute>
                                   } />
 
+                                  <Route path="/auth-debug" element={<DebugAuth />} />
+
                                   <Route path="/add-product" element={<AddProduct />} />
 
                                   <Route path="*" element={<Home />} />
@@ -155,7 +158,7 @@ const App: React.FC = () => {
           </CurrencyProvider>
         </AuthProvider>
       </LanguageProvider>
-    </ThemeProvider>
+    </ThemeProvider >
   );
 };
 
