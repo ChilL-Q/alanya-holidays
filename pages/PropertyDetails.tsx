@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { ServiceType } from '../types';
+import { ServiceType } from '../types/index';
 import { useLanguage } from '../context/LanguageContext';
 import { Map } from '../components/ui/Map';
 import { useLightbox } from '../context/LightboxContext';
@@ -98,8 +98,8 @@ export const PropertyDetails: React.FC = () => {
   useEffect(() => {
     const fetchCrossSell = async () => {
       try {
-        const transfers = await db.getServices('transfer');
-        const tours = await db.getServices('tour');
+        const { data: transfers } = await db.getServices('transfer', 1, 5);
+        const { data: tours } = await db.getServices('tour', 1, 5);
         const combined = [...(transfers || []), ...(tours || [])].slice(0, 3);
         setCrossSellServices(combined);
       } catch (e) {

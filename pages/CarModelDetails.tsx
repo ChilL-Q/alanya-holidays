@@ -3,36 +3,12 @@ import { createPortal } from 'react-dom';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services/db';
+import { db, ServiceData } from '../services/db';
 import { useAuth } from '../context/AuthContext';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X } from 'lucide-react';
 
-interface CarOffer {
-    id: string;
-    title: string;
-    price: number;
-    provider_id: string;
-    provider: {
-        full_name: string;
-    };
-    features: any;
-    images: string[];
-}
-
-// Assuming ServiceData is similar to CarOffer but more generic
-interface ServiceData {
-    id: string;
-    title: string;
-    price: number;
-    provider_id: string;
-    provider: {
-        full_name: string;
-    };
-    features: any; // This will contain brand, model, transmission, fuel, seats etc.
-    images: string[];
-    description?: string;
-}
+// Local interfaces removed in favor of global types
 
 export const CarModelDetails: React.FC = () => {
     const { modelId } = useParams<{ modelId: string }>();
@@ -67,7 +43,7 @@ export const CarModelDetails: React.FC = () => {
             try {
                 // If type is explicitly passed (e.g. 'bike'), use it. Otherwise default to 'car'.
                 const targetType = serviceType || 'car';
-                const services = await db.getServices(targetType);
+                const { data: services } = await db.getServices(targetType, 1, 1000);
 
                 // Filter by modelId (slug) or direct brand/model match
                 // Slug generation logic: `${brand}-${model}`.toLowerCase()

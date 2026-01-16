@@ -24,7 +24,7 @@ export const CarRental: React.FC = () => {
         const fetchCars = async () => {
             try {
                 // @ts-ignore
-                const services = await db.getServices('car');
+                const { data: services } = await db.getServices('car', 1, 100);
                 if (services) setRawServices(services);
             } catch (err) {
                 console.error('Failed to fetch cars', err);

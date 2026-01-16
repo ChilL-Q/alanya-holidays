@@ -36,8 +36,8 @@ export const PropertiesPage: React.FC = () => {
 
     const loadProperties = async () => {
         try {
-            const data = await db.getAdminProperties() || [];
-            setProperties(data);
+            const { data } = await db.getAdminProperties('all', 1, 100);
+            setProperties(data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -80,8 +80,8 @@ export const PropertiesPage: React.FC = () => {
         if (!type || !itemId) return;
 
         try {
-            if (type === 'approve') await db.approveProperty(itemId);
-            if (type === 'delete') await db.deleteProperty(itemId, reason);
+            if (type === 'approve') await db.approveProperty(itemId.toString());
+            if (type === 'delete') await db.deleteProperty(itemId.toString()); // deleteProperty does not accept reason
             if (type === 'reject') await db.updatePropertyStatus(itemId.toString(), 'rejected', reason);
 
             // Refresh
@@ -180,7 +180,7 @@ export const PropertiesPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="p-4 font-medium text-slate-900 dark:text-white">
-                                            €{p.price}/night
+                                            €{p.price_per_night}/night
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${p.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :

@@ -12,8 +12,8 @@ export const FeaturedProperties: React.FC = () => {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const data = await db.getProperties();
-                const formattedData = data?.slice(0, 3).map((p: any) => ({
+                const { data } = await db.getProperties(1, 3);
+                const formattedData = data?.map((p: any) => ({
                     ...p,
                     pricePerNight: p.price_per_night,
                     image: p.images?.[0] || '', // Use first image or empty

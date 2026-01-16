@@ -22,7 +22,7 @@ export const SearchResultsPage: React.FC = () => {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const data = await db.getProperties();
+                const { data } = await db.getProperties(1, 100);
                 const formattedData = data?.map((p: any) => ({
                     ...p,
                     pricePerNight: p.price_per_night,

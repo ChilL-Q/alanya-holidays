@@ -37,11 +37,11 @@ export const BookingsPage: React.FC = () => {
         }
     };
 
-    const handleStatusChange = async (id: number, newStatus: string) => {
+    const handleStatusChange = async (id: number | string, newStatus: string) => {
         if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
 
         try {
-            await db.updateBookingStatus(id, newStatus as 'confirmed' | 'cancelled' | 'completed');
+            await db.updateBookingStatus(id.toString(), newStatus as 'confirmed' | 'cancelled' | 'completed');
             // Optimistic update
             setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
         } catch (e) {

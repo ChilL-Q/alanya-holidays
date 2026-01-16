@@ -20,7 +20,12 @@ export const AdminEditUserPage: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        full_name: string;
+        email: string;
+        phone: string;
+        role: 'user' | 'host' | 'admin' | 'guest'; // 'guest' used in initial state but DB uses user/host/admin usually?
+    }>({
         full_name: '',
         email: '',
         phone: '',

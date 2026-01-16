@@ -21,7 +21,7 @@ export const Experiences: React.FC = () => {
     useEffect(() => {
         const fetchTours = async () => {
             try {
-                const data = await db.getServices('tour');
+                const { data } = await db.getServices('tour', 1, 100);
                 setTours(data || []);
             } catch (error) {
                 console.error('Error fetching tours:', error);
@@ -54,8 +54,8 @@ export const Experiences: React.FC = () => {
                                     key={cat.id}
                                     onClick={() => setActiveTab(cat.id)}
                                     className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all ${activeTab === cat.id
-                                            ? 'bg-slate-900 text-white shadow-lg scale-105 dark:bg-white dark:text-slate-900'
-                                            : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                                        ? 'bg-slate-900 text-white shadow-lg scale-105 dark:bg-white dark:text-slate-900'
+                                        : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
                                         }`}
                                 >
                                     <Icon size={18} />

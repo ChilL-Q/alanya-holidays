@@ -32,7 +32,7 @@ export const BikeRental: React.FC = () => {
             try {
                 // Fetch both 'bike' and 'scooter' if you distinguish them, or just 'bike'
                 // Our AddService uses 'bike' type for both.
-                const services = await db.getServices('bike');
+                const { data: services } = await db.getServices('bike', 1, 100);
 
                 // Aggregation Logic (Same as Car)
                 const groups: Record<string, BikeGroup> = {};

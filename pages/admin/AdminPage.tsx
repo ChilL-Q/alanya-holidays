@@ -81,9 +81,11 @@ export const AdminPage: React.FC = () => {
 
     const loadStats = async () => {
         try {
-            const props = await db.getAdminProperties() || [];
+            // Optimized Stats Loading
+            const { count: totalProperties } = await db.getAdminProperties('all', 1, 1);
+            const { count: pendingProperties } = await db.getAdminProperties('pending', 1, 1);
+            const { count: totalServices } = await db.getAdminServices('all', 1, 1);
             const users = await db.getAllUsers() || [];
-            const services = await db.getServices() || [];
 
             // Fetch bookings for stats
             // We'll fetch 'pending' and 'confirmed' for active stats
@@ -130,10 +132,10 @@ export const AdminPage: React.FC = () => {
                 .slice(0, 5);
 
             setStats({
-                pending: props.filter((p: any) => p.status === 'pending').length,
-                total_properties: props.length,
+                pending: pendingProperties || 0,
+                total_properties: totalProperties || 0,
                 total_users: users.length,
-                total_services: services.length,
+                total_services: totalServices || 0,
                 revenue: totalRevenue,
                 active_bookings: allBookings.length + pendingBookings.length,
                 recent_bookings: recent,

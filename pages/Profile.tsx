@@ -173,7 +173,7 @@ export const Profile: React.FC = () => {
         setLoading(true);
         try {
             // Update role in DB
-            await db.updateUserRole(user.id, 'host');
+            await db.updateUserProfile(user.id, { role: 'host' });
             // Update role in Context
             await updateUser({ role: 'host' });
             toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');

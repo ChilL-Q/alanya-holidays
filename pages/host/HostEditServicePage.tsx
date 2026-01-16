@@ -85,7 +85,7 @@ export const HostEditServicePage: React.FC = () => {
                     year: features.year || new Date().getFullYear().toString(),
                     transmission: features.transmission || 'automatic',
                     fuel: features.fuel || 'petrol',
-                    seats: features.seats || '4',
+                    seats: features.seats?.toString() || '4',
                     modelSelection: 'custom', // Default to custom when editing existing to avoid overwriting logic
                     // Adventure
                     subcategory: features.subcategory || 'water',

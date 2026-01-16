@@ -37,8 +37,8 @@ export const ServicesPage: React.FC = () => {
 
     const loadServices = async () => {
         try {
-            const [servicesData, editsData] = await Promise.all([
-                db.getAdminServices(),
+            const [{ data: servicesData }, editsData] = await Promise.all([
+                db.getAdminServices('all', 1, 100),
                 db.getPendingServiceEdits()
             ]);
             setServices(servicesData || []);

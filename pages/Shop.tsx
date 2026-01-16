@@ -5,7 +5,7 @@ import { ShoppingBag, Star, User } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext'; // Added
-import { ServiceType } from '../types';
+import { ServiceType } from '../types/index';
 
 interface Product {
     id: string;

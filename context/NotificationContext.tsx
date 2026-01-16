@@ -49,7 +49,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const markAsRead = async (id: string) => {
         try {
-            await db.markNotificationRead(id);
+            await db.markNotificationAsRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         } catch (error) {
             console.error('Failed to mark notification as read:', error);

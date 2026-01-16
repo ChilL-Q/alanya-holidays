@@ -22,9 +22,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/admin/properties', label: 'Properties', icon: Home },
+        { path: '/admin/services', label: 'Fleet & Services', icon: Car },
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
         { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/services', label: 'Fleet & Services', icon: Car },
     ];
 
     return (

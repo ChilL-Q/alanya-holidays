@@ -1,4 +1,4 @@
-import { Property, Service, ServiceType } from '../types';
+import { Property, Service, ServiceType } from '../types/index';
 
 export const MOCK_PROPERTIES: Property[] = [
   {

@@ -22,7 +22,7 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
 
     const navItems = [
         { path: '/host', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-        { path: '/host/properties', label: 'My Listings', icon: Home },
+        { path: '/host/properties', label: 'My Properties', icon: Home },
         { path: '/host/services', label: 'My Services', icon: Car },
         { path: '/host/bookings', label: 'Reservations', icon: Calendar },
         { path: '/host/messages', label: 'Inbox', icon: Inbox },

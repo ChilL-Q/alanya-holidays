@@ -4,7 +4,7 @@ import { Star, MapPin, Heart } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { Property } from '../../types';
+import { Property } from '../../types/index';
 
 interface PropertyCardProps {
     property: Property;

@@ -2,6 +2,7 @@ export const tr = {
     // Navbar
     'nav.stays': 'Konaklama',
     'nav.services': 'Hizmetler',
+    'nav.about': 'Hakkımızda',
     'shop': 'Mağaza',
     'nav.profile': 'Profil',
     'nav.list_property': 'Evini Kirala',

@@ -33,9 +33,10 @@ export const Dashboard: React.FC = () => {
 
     const loadStats = async () => {
         try {
-            const props = await db.getAdminProperties() || [];
+            // Optimized Stats Loading
+            const { count: totalProperties } = await db.getAdminProperties('all', 1, 1);
+            const { count: totalServices } = await db.getAdminServices('all', 1, 1);
             const users = await db.getAllUsers() || [];
-            const services = await db.getServices() || [];
 
             // Fetch bookings
             const allBookings = await db.getBookingsByStatus('confirmed') || [];
@@ -78,9 +79,9 @@ export const Dashboard: React.FC = () => {
                 .slice(0, 5);
 
             setStats({
-                total_properties: props.length,
+                total_properties: totalProperties || 0,
                 total_users: users.length,
-                total_services: services.length,
+                total_services: totalServices || 0,
                 revenue: totalRevenue,
                 revenue_history: revenueHistory,
                 booking_status_distribution: bookingStatusDistribution,

@@ -14,22 +14,20 @@ export const FavoritesPage: React.FC = () => {
         const fetchFavorites = async () => {
             setLoading(true);
             try {
-                // Fetch all properties and filter by favorites
-                // In a larger app, we would have a specific endpoint for fetchByIds
-                const allProperties = await db.getProperties();
-                const favProperties = allProperties
-                    ?.filter(p => favorites.includes(p.id))
-                    .map((p: any) => ({
-                        ...p,
-                        pricePerNight: p.price_per_night,
-                        image: p.images?.[0] || '',
-                        guests: p.guests || 2,
-                        bedrooms: p.bedrooms || 1,
-                        rating: p.rating || 0,
-                        reviewsCount: p.reviews_count || 0
-                    })) || [];
+                // Fetch only favorite properties directly using IDs
+                const data = await db.getPropertiesByIds(favorites);
 
-                setProperties(favProperties);
+                const formattedData = data?.map((p: any) => ({
+                    ...p,
+                    pricePerNight: p.price_per_night,
+                    image: p.images?.[0] || '',
+                    guests: p.guests || 2,
+                    bedrooms: p.bedrooms || 1,
+                    rating: p.rating || 0,
+                    reviewsCount: p.reviews_count || 0
+                })) || [];
+
+                setProperties(formattedData);
             } catch (error) {
                 console.error('Error fetching favorite properties:', error);
             } finally {

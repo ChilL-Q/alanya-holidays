@@ -6,7 +6,7 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Calendar, ArrowLeft, Users, Clock, ChevronRight } from 'lucide-react';
-import { ServiceType } from '../../types';
+import { ServiceType } from '../../types/index';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';

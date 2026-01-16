@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://alanya-holidays.com/sitemap.xml
