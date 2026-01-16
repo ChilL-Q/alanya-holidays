@@ -79,7 +79,7 @@ export const AlanyaIntro: React.FC = () => {
 
                                     {/* Content */}
                                     <div className="absolute inset-0 p-6 flex flex-col justify-end translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                        <div className="w-12 h-12 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 text-white border border-white/20">
+                                        <div className="w-12 h-12 rounded-lg glass flex items-center justify-center mb-4 text-white border border-white/20 shadow-lg">
                                             <Icon size={24} />
                                         </div>
                                         <h3 className="text-xl font-bold text-white mb-2">

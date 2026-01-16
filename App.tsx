@@ -44,10 +44,22 @@ import { Profile } from './pages/Profile';
 import { BookVehicle } from './pages/booking/BookVehicle';
 import { BookTour } from './pages/booking/BookTour';
 import { HostDashboard } from './pages/host/HostDashboard';
-const AdminPage = React.lazy(() => import('./pages/admin/AdminPage').then(module => ({ default: module.AdminPage })));
+import { HostLayout } from './components/layouts/HostLayout';
+import { HostPropertiesPage } from './pages/host/HostPropertiesPage';
+import { HostServicesPage } from './pages/host/HostServicesPage';
+import { HostEditServicePage } from './pages/host/HostEditServicePage';
+import { HostBookingsPage } from './pages/host/HostBookingsPage';
+import { HostCalendarPage } from './pages/host/HostCalendarPage';
 const AdminEditPropertyPage = React.lazy(() => import('./pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
 const AdminEditUserPage = React.lazy(() => import('./pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
-import { DebugAuth } from './pages/DebugAuth';
+const AdminEditServicePage = React.lazy(() => import('./pages/admin/AdminEditServicePage').then(module => ({ default: module.AdminEditServicePage })));
+// New Admin 3.0
+import { AdminLayout } from './components/layouts/AdminLayout';
+import { Dashboard } from './pages/admin/Dashboard';
+import { BookingsPage } from './pages/admin/BookingsPage';
+import { PropertiesPage } from './pages/admin/PropertiesPage';
+import { UsersPage } from './pages/admin/UsersPage';
+import { ServicesPage as AdminServicesPage } from './pages/admin/ServicesPage';
 import { AdminRoute } from './components/auth/AdminRoute';
 
 
@@ -108,32 +120,114 @@ const App: React.FC = () => {
                                   <Route path="/bookmarks" element={<FavoritesPage />} />
                                   <Route path="/book-vehicle/:id" element={<BookVehicle />} />
                                   <Route path="/book-tour/:id" element={<BookTour />} />
-                                  <Route path="/host/dashboard" element={<HostDashboard />} />
+                                  <Route path="/host" element={
+                                    <HostLayout>
+                                      <HostDashboard />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/properties" element={
+                                    <HostLayout>
+                                      <HostPropertiesPage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/services" element={
+                                    <HostLayout>
+                                      <HostServicesPage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/edit-service/:id" element={
+                                    <HostLayout>
+                                      <HostEditServicePage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/bookings" element={
+                                    <HostLayout>
+                                      <HostBookingsPage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/calendar" element={
+                                    <HostLayout>
+                                      <HostCalendarPage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/dashboard" element={
+                                    <HostLayout>
+                                      <HostDashboard />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/messages" element={
+                                    <HostLayout>
+                                      <div className="p-8 text-center text-slate-500">Inbox coming soon...</div>
+                                    </HostLayout>
+                                  } />
 
                                   {/* Admin Routes Protected by AdminRoute */}
                                   <Route path="/admin" element={
                                     <AdminRoute>
-                                      <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-                                        <AdminPage />
-                                      </React.Suspense>
+                                      <AdminLayout>
+                                        <Dashboard />
+                                      </AdminLayout>
                                     </AdminRoute>
                                   } />
+                                  <Route path="/admin/bookings" element={
+                                    <AdminRoute>
+                                      <AdminLayout>
+                                        <BookingsPage />
+                                      </AdminLayout>
+                                    </AdminRoute>
+                                  } />
+                                  <Route path="/admin/properties" element={
+                                    <AdminRoute>
+                                      <AdminLayout>
+                                        <PropertiesPage />
+                                      </AdminLayout>
+                                    </AdminRoute>
+                                  } />
+                                  <Route path="/admin/users" element={
+                                    <AdminRoute>
+                                      <AdminLayout>
+                                        <UsersPage />
+                                      </AdminLayout>
+                                    </AdminRoute>
+                                  } />
+                                  <Route path="/admin/services" element={
+                                    <AdminRoute>
+                                      <AdminLayout>
+                                        <AdminServicesPage />
+                                      </AdminLayout>
+                                    </AdminRoute>
+                                  } />
+
+                                  {/* Edit Routes (Wrapped in Layout) */}
                                   <Route path="/admin/edit-property/:id" element={
                                     <AdminRoute>
                                       <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-                                        <AdminEditPropertyPage />
+                                        <AdminLayout>
+                                          <AdminEditPropertyPage />
+                                        </AdminLayout>
                                       </React.Suspense>
                                     </AdminRoute>
                                   } />
                                   <Route path="/admin/edit-user/:id" element={
                                     <AdminRoute>
                                       <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
-                                        <AdminEditUserPage />
+                                        <AdminLayout>
+                                          <AdminEditUserPage />
+                                        </AdminLayout>
+                                      </React.Suspense>
+                                    </AdminRoute>
+                                  } />
+                                  <Route path="/admin/edit-service/:id" element={
+                                    <AdminRoute>
+                                      <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+                                        <AdminLayout>
+                                          <AdminEditServicePage />
+                                        </AdminLayout>
                                       </React.Suspense>
                                     </AdminRoute>
                                   } />
 
-                                  <Route path="/auth-debug" element={<DebugAuth />} />
+
 
                                   <Route path="/add-product" element={<AddProduct />} />
 

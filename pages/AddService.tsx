@@ -1,46 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../services/db';
-import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Bus } from 'lucide-react';
+import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PhotoUploader } from '../components/ui/PhotoUploader';
+import toast from 'react-hot-toast';
+import { CAR_CATALOG, BIKE_CATALOG, CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 
 type ServiceCategory = 'transportation' | 'adventure' | null;
 type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim';
 
-// Car Catalog (Brand -> Models)
-const CAR_CATALOG: Record<string, string[]> = {
-    'Fiat': ['Egea', '500', 'Panda', 'Doblo', 'Fiorino'],
-    'Renault': ['Clio', 'Taliant', 'Megane', 'Captur', 'Austral'],
-    'Hyundai': ['i10', 'i20', 'Bayon', 'Tucson', 'Elantra'],
-    'Toyota': ['Corolla', 'Yaris', 'C-HR', 'Rav4'],
-    'Honda': ['City', 'Civic', 'Jazz', 'HR-V'],
-    'Ford': ['Focus', 'Fiesta', 'Puma', 'Kuga', 'Tourneo Courier'],
-    'Dacia': ['Duster', 'Sandero', 'Jogger'],
-    'Citroen': ['C3', 'C3 Aircross', 'C4', 'C5 Aircross'],
-    'Peugeot': ['208', '2008', '3008', '5008', 'Rifter'],
-    'Opel': ['Corsa', 'Astra', 'Mokka', 'Crossland', 'Grandland'],
-    'Volkswagen': ['Polo', 'Golf', 'T-Roc', 'Tiguan', 'Passat'],
-    'Skoda': ['Fabia', 'Scala', 'Kamiq', 'Octavia', 'Kodiaq'],
-    'Nissan': ['Juke', 'Qashqai', 'X-Trail'],
-    'BMW': ['1 Series', '2 Series', '3 Series', '5 Series', 'X1', 'X3'],
-    'Mercedes': ['A-Class', 'C-Class', 'E-Class', 'CLA', 'GLA', 'GLB'],
-    'Chery': ['Omoda 5', 'Tiggo 7 Pro', 'Tiggo 8 Pro'],
-};
-
-// Bike/Scooter Catalog
-const BIKE_CATALOG: Record<string, string[]> = {
-    'Honda': ['PCX 125', 'Dio', 'Activa', 'Forza 250', 'ADV 350', 'NC 750'],
-    'Yamaha': ['NMAX 125', 'NMAX 155', 'XMAX 250', 'Delight', 'MT-25', 'R25'],
-    'Vespa': ['Primavera 150', 'GTS 300', 'Sprint'],
-    'Arora': ['Cappucino', 'Verano', 'Freedom'],
-    'Kuba': ['Blueberry', 'Chia', 'Space'],
-    'Sym': ['Fiddle III', 'Jet 14', 'Wolf'],
-    'Suzuki': ['Address 125', 'Burgman 200'],
-    'Piaggio': ['Liberty 150', 'Medley 150', 'Beverly'],
-    'RKS': ['Spontini', 'Wildcat', 'Vieste'],
-    'Mondial': ['Drift L', 'Turismo'],
-};
+interface ItineraryItem {
+    time: string;
+    description: string;
+}
 
 export const AddService: React.FC = () => {
     const { t } = useLanguage();
@@ -74,11 +48,20 @@ export const AddService: React.FC = () => {
         groupSize: '',
         included: '',
         languages: '',
-        imageUrl: ''
+        requirements: '',
     });
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [itinerary, setItinerary] = useState<ItineraryItem[]>([{ time: '09:00', description: 'Start' }]);
+
+    // Auto-fill description when popular model changes
+    useEffect(() => {
+        if (formData.modelSelection === 'popular' && formData.brand && formData.model) {
+            const key = `${formData.brand} ${formData.model}`;
+            const desc = CAR_DESCRIPTIONS[key] || DEFAULT_DESCRIPTION;
+            setFormData(prev => ({ ...prev, description: desc }));
+        }
+    }, [formData.brand, formData.model, formData.modelSelection]);
 
     const handleCategorySelect = (cat: ServiceCategory) => {
         setCategory(cat);
@@ -93,41 +76,42 @@ export const AddService: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
-            setUploadError(null);
-        }
-    };
-
-    const YEARS = Array.from({ length: 17 }, (_, i) => (new Date().getFullYear() - i + 1).toString()); // 2026 down to 2010
+    // Catalog Logic
+    const currentCatalog = formData.type === 'car' ? CAR_CATALOG : (formData.type === 'bike' ? BIKE_CATALOG : null);
+    const availableModels = currentCatalog && formData.brand ? currentCatalog[formData.brand] : [];
 
     const handleBrandSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const brand = e.target.value;
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             brand,
-            model: '', // Reset model when brand changes
-            title: `${brand} ${new Date().getFullYear()}` // Partial title update
-        });
+            model: '',
+            title: `${brand} ${new Date().getFullYear()}`
+        }));
     };
 
     const handleModelSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const model = e.target.value;
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             model,
-            title: `${formData.brand} ${model} ${formData.year}`
-        });
+            title: `${prev.brand} ${model} ${prev.year}`
+        }));
     };
 
-    const handleYearSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const year = e.target.value;
-        setFormData({
-            ...formData,
-            year,
-            title: `${formData.brand} ${formData.model} ${year}`
-        });
+    // Itinerary Handlers
+    const addItineraryItem = () => {
+        setItinerary([...itinerary, { time: '', description: '' }]);
+    };
+
+    const removeItineraryItem = (index: number) => {
+        setItinerary(itinerary.filter((_, i) => i !== index));
+    };
+
+    const updateItineraryItem = (index: number, field: keyof ItineraryItem, value: string) => {
+        const newItinerary = [...itinerary];
+        newItinerary[index] = { ...newItinerary[index], [field]: value };
+        setItinerary(newItinerary);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -135,21 +119,19 @@ export const AddService: React.FC = () => {
         if (!user) return;
 
         setIsSubmitting(true);
-        setUploadError(null);
 
         try {
-            let uploadedImageUrl = formData.imageUrl;
-
-            if (selectedFile) {
+            // Upload images
+            const uploadedUrls = [];
+            for (const file of files) {
+                // Fallback catch handled inside db function if set up, or here
                 try {
-                    // Try uploading to 'services' bucket, fallback handled in db potentially or via error catch
-                    // Note: db.uploadImage defaults to 'properties', let's stick to that if strict typing requires it or pass 'services' if allowed.
-                    // Looking at db.ts, second arg is bucket name.
-                    uploadedImageUrl = await db.uploadImage(selectedFile, 'services');
+                    const url = await db.uploadImage(file, 'services');
+                    uploadedUrls.push(url);
                 } catch (err) {
-                    console.error("Upload failed", err);
-                    // Fallback to properties bucket if services fails (common setup issue)
-                    uploadedImageUrl = await db.uploadImage(selectedFile, 'properties');
+                    // console.log("Service bucket failed, trying property bucket");
+                    const url = await db.uploadImage(file, 'properties'); // Fallback
+                    uploadedUrls.push(url);
                 }
             }
 
@@ -173,23 +155,27 @@ export const AddService: React.FC = () => {
                     difficulty: formData.difficulty,
                     groupSize: formData.groupSize,
                     included: formData.included,
-                    languages: formData.languages
+                    languages: formData.languages,
+                    requirements: formData.requirements,
+                    itinerary: itinerary.filter(i => i.description) // Only save items with description
                 };
             }
 
+
+
             await db.createService({
                 title: formData.title,
-                description: formData.description,
+                description: formData.description || DEFAULT_DESCRIPTION,
                 price: Number(formData.price),
                 type: formData.type,
                 provider_id: user.id,
                 features: features,
-                images: uploadedImageUrl ? [uploadedImageUrl] : []
+                images: uploadedUrls
             });
             setStep(2);
         } catch (error) {
             console.error(error);
-            setUploadError('Failed to list service or upload image.');
+            toast.error('Failed to list service');
         } finally {
             setIsSubmitting(false);
         }
@@ -202,8 +188,8 @@ export const AddService: React.FC = () => {
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Service Listed!</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mb-8">Your service has been successfully added to the marketplace.</p>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Submission Received!</h2>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8">Your service has been submitted for approval. You will be notified once it is live.</p>
                     <div className="flex flex-col gap-3">
                         <button onClick={() => navigate('/services')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-3 rounded-xl transition-colors">
                             View All Services
@@ -216,10 +202,6 @@ export const AddService: React.FC = () => {
             </div>
         );
     }
-
-    // Determine current catalog based on type
-    const currentCatalog = formData.type === 'car' ? CAR_CATALOG : (formData.type === 'bike' ? BIKE_CATALOG : null);
-    const availableModels = currentCatalog && formData.brand ? currentCatalog[formData.brand] : [];
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4">
@@ -267,11 +249,11 @@ export const AddService: React.FC = () => {
                 {/* Step 1: Details Form */}
                 {step === 1 && (
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
-                        <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                        <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                                 {category === 'transportation' ? 'Vehicle Details' : 'Activity Details'}
                             </h2>
-                            <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs font-semibold uppercase tracking-wide">
+                            <span className="px-3 py-1 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs font-semibold uppercase tracking-wide border border-slate-200 dark:border-slate-600">
                                 {category}
                             </span>
                         </div>
@@ -324,17 +306,28 @@ export const AddService: React.FC = () => {
                                         <div className="text-xs text-slate-500 mt-1">Title is auto-generated but can be customized.</div>
                                     )}
                                 </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
-                                    <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        required
-                                        rows={3}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
-                                    />
-                                </div>
+
+                                {/* Description Field - Conditional */}
+                                {(category !== 'transportation' || formData.modelSelection === 'custom') ? (
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+                                        <textarea
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleChange}
+                                            required
+                                            rows={3}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="md:col-span-2 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
+                                        <p className="text-sm text-teal-700 dark:text-teal-300">
+                                            <span className="font-bold">Description Auto-Generated:</span> We've automatically added a professional description for the {formData.brand} {formData.model} to help your listing stand out.
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Base Price (€)</label>
                                     <input
@@ -342,269 +335,224 @@ export const AddService: React.FC = () => {
                                         type="number"
                                         value={formData.price}
                                         onChange={handleChange}
+                                        onWheel={(e) => e.currentTarget.blur()}
                                         required
                                         placeholder="0.00"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Main Photo (Optional)</label>
-                                    <div className="relative group">
-                                        <div className="absolute inset-0 bg-teal-50 dark:bg-teal-900/20 rounded-xl border-dashed border-2 border-teal-200 dark:border-teal-800 group-hover:border-teal-400 transition-colors pointer-events-none" />
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleFileSelect}
-                                            className="w-full px-4 py-3 rounded-xl opacity-0 cursor-pointer relative z-10"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            {selectedFile ? (
-                                                <span className="text-teal-600 dark:text-teal-400 font-medium truncate px-4">
-                                                    {selectedFile.name}
-                                                </span>
-                                            ) : (
-                                                <span className="text-slate-500 dark:text-slate-400">
-                                                    Click to upload an image
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
+                                <div className="md:col-span-2">
+                                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Photos</h3>
+                                    <p className="text-xs text-slate-500 mb-3">Add at least one photo. First photo will be the cover.</p>
+                                    <PhotoUploader files={files} onChange={setFiles} maxFiles={5} />
                                 </div>
                             </div>
 
                             <hr className="border-slate-100 dark:border-slate-700" />
 
-                            {/* Specific Fields: Transportation (Catalog) */}
+                            {/* Specific Fields: Transportation */}
                             {category === 'transportation' && (formData.type === 'car' || formData.type === 'bike') && (
-                                <div className="md:col-span-2 mb-6 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Vehicle Selection</label>
-                                    <div className="flex gap-4 mb-4">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="modelSelection"
-                                                value="popular"
-                                                checked={formData.modelSelection === 'popular'}
-                                                onChange={() => setFormData({ ...formData, modelSelection: 'popular', brand: '', model: '', title: '' })}
-                                                className="text-teal-600 focus:ring-teal-500"
-                                            />
-                                            <span className="text-sm text-slate-700 dark:text-slate-300">Catalog (Popular)</span>
+                                <div className="md:col-span-2 mb-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <div className="flex gap-4 mb-6">
+                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
+                                            <input type="radio" name="modelSelection" value="popular" checked={formData.modelSelection === 'popular'} onChange={() => setFormData({ ...formData, modelSelection: 'popular', brand: '', model: '', title: '' })} className="text-teal-600" />
+                                            <span className="text-sm font-medium text-slate-900 dark:text-white">Catalog (Popular)</span>
                                         </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="modelSelection"
-                                                value="custom"
-                                                checked={formData.modelSelection === 'custom'}
-                                                onChange={() => setFormData({ ...formData, modelSelection: 'custom', brand: '', model: '', title: '' })}
-                                                className="text-teal-600 focus:ring-teal-500"
-                                            />
-                                            <span className="text-sm text-slate-700 dark:text-slate-300">Other / Custom</span>
+                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
+                                            <input type="radio" name="modelSelection" value="custom" checked={formData.modelSelection === 'custom'} onChange={() => setFormData({ ...formData, modelSelection: 'custom', brand: '', model: '', title: '' })} className="text-teal-600" />
+                                            <span className="text-sm font-medium text-slate-900 dark:text-white">Other / Custom</span>
                                         </label>
                                     </div>
 
-                                    {formData.modelSelection === 'popular' && currentCatalog && (
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Brand</label>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Brand</label>
+                                            {formData.modelSelection === 'popular' ? (
                                                 <select
                                                     value={formData.brand}
                                                     onChange={handleBrandSelect}
                                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                                 >
-                                                    <option value="">Brand</option>
-                                                    {Object.keys(currentCatalog).sort().map(brand => (
+                                                    <option value="">Select Brand</option>
+                                                    {currentCatalog && Object.keys(currentCatalog).sort().map(brand => (
                                                         <option key={brand} value={brand}>{brand}</option>
                                                     ))}
                                                 </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Model</label>
+                                            ) : (
+                                                <input name="brand" value={formData.brand} onChange={handleChange} placeholder="e.g. Fiat" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Model</label>
+                                            {formData.modelSelection === 'popular' ? (
                                                 <select
                                                     value={formData.model}
                                                     onChange={handleModelSelect}
                                                     disabled={!formData.brand}
                                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white disabled:opacity-50"
                                                 >
-                                                    <option value="">Model</option>
+                                                    <option value="">Select Model</option>
                                                     {availableModels.map(model => (
                                                         <option key={model} value={model}>{model}</option>
                                                     ))}
                                                 </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Year</label>
-                                                <select
-                                                    value={formData.year}
-                                                    onChange={handleYearSelect}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                                >
-                                                    {Array.from({ length: 17 }, (_, i) => (new Date().getFullYear() - i + 1).toString()).map(year => (
-                                                        <option key={year} value={year}>{year}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            ) : (
+                                                <input name="model" value={formData.model} onChange={handleChange} placeholder="e.g. Egea" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Specific Fields: Transportation (Continued) */}
-                            {category === 'transportation' && (
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {/* Custom Brand/Model Input */}
-                                    {formData.modelSelection === 'custom' && (
-                                        <>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Brand</label>
-                                                <input
-                                                    name="brand"
-                                                    value={formData.brand}
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Fiat"
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Model</label>
-                                                <input
-                                                    name="model"
-                                                    value={formData.model}
-                                                    onChange={handleChange}
-                                                    placeholder="e.g. Egea"
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Year</label>
-                                                <input
-                                                    name="year"
-                                                    type="number"
-                                                    value={formData.year}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Additional fields logic remains the same... */}
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Transmission</label>
-                                        <select
-                                            name="transmission"
-                                            value={formData.transmission}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        >
-                                            <option value="automatic">Automatic</option>
-                                            <option value="manual">Manual</option>
-                                        </select>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fuel</label>
-                                        <select
-                                            name="fuel"
-                                            value={formData.fuel}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        >
-                                            <option value="petrol">Petrol</option>
-                                            <option value="diesel">Diesel</option>
-                                            <option value="electric">Electric</option>
-                                            <option value="hybrid">Hybrid</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Seats</label>
-                                        <input
-                                            name="seats"
-                                            type="number"
-                                            value={formData.seats}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        />
+
+                                    <div className="grid md:grid-cols-2 gap-6 mt-6">
+                                        {/* Additional Transportation Fields */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Year</label>
+                                            <select
+                                                name="year"
+                                                value={formData.year}
+                                                onChange={(e) => {
+                                                    const newYear = e.target.value;
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        year: newYear,
+                                                        // Update title if it looks like a standard auto-generated title (Brand Model Year)
+                                                        title: (prev.brand && prev.modelSelection === 'popular')
+                                                            ? `${prev.brand} ${prev.model} ${newYear}`
+                                                            : prev.title
+                                                    }));
+                                                }}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            >
+                                                {Array.from({ length: 17 }, (_, i) => (new Date().getFullYear() - i + 1).toString()).map(year => (
+                                                    <option key={year} value={year}>{year}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Transmission</label>
+                                            <select
+                                                name="transmission"
+                                                value={formData.transmission}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            >
+                                                <option value="automatic">Automatic</option>
+                                                <option value="manual">Manual</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Fuel</label>
+                                            <select
+                                                name="fuel"
+                                                value={formData.fuel}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            >
+                                                <option value="petrol">Petrol</option>
+                                                <option value="diesel">Diesel</option>
+                                                <option value="electric">Electric</option>
+                                                <option value="hybrid">Hybrid</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Seats</label>
+                                            <input
+                                                name="seats"
+                                                type="number"
+                                                value={formData.seats}
+                                                onChange={handleChange}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {/* Specific Fields: Adventure */}
                             {category === 'adventure' && (
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subcategory</label>
-                                        <select
-                                            name="subcategory"
-                                            value={formData.subcategory}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        >
-                                            <option value="water">Water Activity (Boat, Jet Ski, Diving)</option>
-                                            <option value="safari">Safari & Off-road</option>
-                                            <option value="air">Air Activity (Paragliding, Balloon)</option>
-                                            <option value="land">Land Tours (City, Historical)</option>
-                                            <option value="wellness">Wellness (Hamam, Spa)</option>
-                                        </select>
+                                <div className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subcategory</label>
+                                            <select
+                                                name="subcategory"
+                                                value={formData.subcategory}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500"
+                                            >
+                                                <option value="water">Water (Boat, Jet Ski, Diving)</option>
+                                                <option value="safari">Safari & Off-road</option>
+                                                <option value="air">Air (Paragliding, Balloon)</option>
+                                                <option value="land">Land Tours (City, Historical)</option>
+                                                <option value="wellness">Wellness (Hamam, Spa)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Difficulty</label>
+                                            <select
+                                                name="difficulty"
+                                                value={formData.difficulty}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500"
+                                            >
+                                                <option value="easy">Easy</option>
+                                                <option value="medium">Medium</option>
+                                                <option value="hard">Hard</option>
+                                                <option value="extreme">Extreme</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Duration (Hours)</label>
+                                            <input name="duration" type="number" value={formData.duration} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Group Size</label>
+                                            <input name="groupSize" type="number" value={formData.groupSize} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                        </div>
+                                    </div>
+
+                                    {/* Itinerary Builder */}
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Trip Schedule / Itinerary</h3>
+                                            <button type="button" onClick={addItineraryItem} className="text-sm text-teal-600 font-bold hover:underline flex items-center gap-1">
+                                                <Plus size={16} /> Add Stop
+                                            </button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {itinerary.map((item, index) => (
+                                                <div key={index} className="flex gap-3 items-start">
+                                                    <div className="w-24">
+                                                        <input
+                                                            placeholder="09:00"
+                                                            value={item.time}
+                                                            onChange={(e) => updateItineraryItem(index, 'time', e.target.value)}
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-grow">
+                                                        <input
+                                                            placeholder="Activity description (e.g. Hotel Pickup)"
+                                                            value={item.description}
+                                                            onChange={(e) => updateItineraryItem(index, 'description', e.target.value)}
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+                                                        />
+                                                    </div>
+                                                    <button type="button" onClick={() => removeItineraryItem(index)} className="p-2 text-slate-400 hover:text-rose-500">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Duration (Hours)</label>
-                                        <input
-                                            name="duration"
-                                            type="number"
-                                            value={formData.duration}
-                                            onChange={handleChange}
-                                            placeholder="e.g. 6"
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        />
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">What is Included?</label>
+                                        <textarea name="included" value={formData.included} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="e.g. Lunch, Transfer, Guide" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Difficulty</label>
-                                        <select
-                                            name="difficulty"
-                                            value={formData.difficulty}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        >
-                                            <option value="easy">Easy</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="hard">Hard</option>
-                                            <option value="extreme">Extreme</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Max Group Size</label>
-                                        <input
-                                            name="groupSize"
-                                            type="number"
-                                            value={formData.groupSize}
-                                            onChange={handleChange}
-                                            placeholder="e.g. 12"
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Languages</label>
-                                        <input
-                                            name="languages"
-                                            value={formData.languages}
-                                            onChange={handleChange}
-                                            placeholder="e.g. EN, RU, TR"
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">What's Included</label>
-                                        <textarea
-                                            name="included"
-                                            value={formData.included}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Lunch, Hotel Pickup, Equipment"
-                                            rows={2}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
-                                        />
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Requirements</label>
+                                        <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="e.g. Driving License, Comfortable shoes" />
                                     </div>
                                 </div>
                             )}

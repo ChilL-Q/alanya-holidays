@@ -20,7 +20,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({ children, title, subti
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {React.Children.map(children, (child, index) => (
                         <div
-                            className="animate-stagger-enter"
+                            className="animate-fade-up opacity-0 fill-mode-forwards h-full"
                             style={{ animationDelay: `${index * 100}ms` }}
                         >
                             {child}

@@ -32,9 +32,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         ? formatPrice(convertPrice(rawPrice, baseCurrency))
         : price;
     return (
-        <div className="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div className="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
             {imageUrl && (
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-48 overflow-hidden shrink-0">
                     <img
                         src={imageUrl}
                         alt={title}
@@ -46,7 +46,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 </div>
             )}
 
-            <div className="p-6">
+            <div className="p-6 flex flex-col flex-1">
                 {!imageUrl && (
                     <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center mb-4 text-primary dark:text-teal-400">
                         <Icon size={24} />

@@ -31,9 +31,20 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     useEffect(() => {
         refreshNotifications();
-        // Poll every minute for new notifications
-        const interval = setInterval(refreshNotifications, 60000);
-        return () => clearInterval(interval);
+
+        // Real-time subscription
+        if (user) {
+            const subscription = db.subscribeToNotifications(user.id, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    setNotifications(prev => [payload.new as Notification, ...prev]);
+                    // Optional: Play a sound or show a toast
+                }
+            });
+
+            return () => {
+                subscription.unsubscribe();
+            };
+        }
     }, [user]);
 
     const markAsRead = async (id: string) => {

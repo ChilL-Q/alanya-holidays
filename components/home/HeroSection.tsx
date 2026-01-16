@@ -29,10 +29,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
 
             <div className="relative z-10 w-full max-w-5xl px-4 animate-fade-up">
                 <div className="text-center mb-10">
-                    <h1 className="font-serif text-4xl md:text-6xl text-white mb-4 drop-shadow-2xl">
+                    <h1 className="font-serif text-4xl md:text-6xl text-white mb-4 drop-shadow-2xl animate-fade-up opacity-0 fill-mode-forwards" style={{ animationDelay: '200ms' }}>
                         {t('hero.title')}
                     </h1>
-                    <p className="text-lg md:text-xl text-slate-100 font-light">
+                    <p className="text-lg md:text-xl text-slate-100 font-light animate-fade-up opacity-0 fill-mode-forwards" style={{ animationDelay: '400ms' }}>
                         {t('hero.subtitle')} <span className="font-semibold text-accent">{t('hero.zero_fees')}</span>
                     </p>
                 </div>

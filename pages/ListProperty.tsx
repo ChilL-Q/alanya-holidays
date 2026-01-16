@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { db } from '../services/db'; // Static import
+import { db } from '../services/db';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -10,43 +10,78 @@ import {
     TrendingUp,
     Settings,
     CheckCircle,
-    XCircle,
-    Building2,
-    MapPin,
-    Home,
     Lock,
-    Image as ImageIcon,
-    Camera,
-    Info,
-    Calendar
+    Home,
+    Building2,
+    ArrowLeft,
+    ArrowRight,
+    Save
 } from 'lucide-react';
-import { LocationPicker } from '../components/ui/LocationPicker';
+import { Button, buttonVariants, buttonBase } from '../components/ui/Button';
+import { cn } from '../utils/cn';
 import { AMENITIES_LIST } from '../data/constants';
-// ...
+
+// UI Components
+import { StepsIndicator } from '../components/ui/StepsIndicator';
+import { Counter } from '../components/ui/Counter';
+import { PhotoUploader } from '../components/ui/PhotoUploader';
+
+// Form Components (Reused)
+import { PropertyLocation } from '../components/property-form/PropertyLocation';
+import { PropertyAmenities } from '../components/property-form/PropertyAmenities';
+import { PropertyHospitality } from '../components/property-form/PropertyHospitality';
+
+const STEPS = [
+    'Property Type',
+    'Location',
+    'Basics',
+    'Amenities',
+    'Photos',
+    'Description',
+    'Pricing & Rules'
+];
+
 export const ListProperty: React.FC = () => {
     const { t } = useLanguage();
     const { isAuthenticated, user } = useAuth();
     const { openRegister, openLogin } = useModal();
     const navigate = useNavigate();
-    const [files, setFiles] = useState<File[]>([]);
 
+    const [step, setStep] = useState(0);
+    const [files, setFiles] = useState<File[]>([]);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Initial Form State
     const [formData, setFormData] = useState({
+        // Type
+        propertyType: 'apartment', // 'apartment' | 'villa' | 'hotel'
+        rentalType: 'entire', // 'entire' | 'room' (Future proofing)
+        // Description
         title: '',
+        description: '',
+        // Contact (Auto-filled)
         name: user?.name || '',
         email: user?.email || '',
         phone: '',
-        propertyType: 'apartment',
+        // Location
         location: '',
         address: '',
+        latitude: null as number | null,
+        longitude: null as number | null,
+        // Pricing
         price: '',
-        description: '',
-        imageUrl: '',
-        rentalLicense: '',
+        // Details
+        maxGuests: 2,
+        bedrooms: 1,
+        bathrooms: 1,
+        beds: 1,
         amenities: [] as string[],
+        rentalLicense: '',
         // Hospitality Details
         arrivalGuide: '',
-        checkInTime: '',
-        checkOutTime: '',
+        checkInTime: '14:00',
+        checkOutTime: '11:00',
         directions: '',
         checkInMethod: '',
         wifiDetails: '',
@@ -56,18 +91,9 @@ export const ListProperty: React.FC = () => {
         guidebooks: '',
         interactionPreferences: '',
         icalUrl: '',
-        maxGuests: '2',
-        bedrooms: '1',
-        bathrooms: '1',
-        beds: '1',
-        latitude: null as number | null,
-        longitude: null as number | null,
     });
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const setLoading = setIsLoading;
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (user && !formData.name) {
             setFormData(prev => ({
                 ...prev,
@@ -77,20 +103,42 @@ export const ListProperty: React.FC = () => {
         }
     }, [user, formData.name]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
+    const nextStep = () => {
+        // Validation per step could go here
+        if (step === 0 && !formData.propertyType) return toast.error('Please select a property type');
+        if (step === 1 && !formData.location) return toast.error('Please enter a location area');
+        if (step === 4 && files.length < 1) return toast.error('Please upload at least 1 photo');
+        if (step === 5 && !formData.title) return toast.error('Please enter a title');
+
+        if (step < STEPS.length - 1) {
+            setStep(step + 1);
+            window.scrollTo(0, 0);
+        }
+    };
+
+    const prevStep = () => {
+        if (step > 0) {
+            setStep(step - 1);
+            window.scrollTo(0, 0);
+        }
+    };
+
+    const handleSubmit = async () => {
         if (!isAuthenticated || !user) {
             toast.error(t('list.error.auth'));
             return;
         }
 
-        if (files.length === 0) {
-            toast.error('Please upload at least one image');
+        if (!formData.price) {
+            toast.error('Please enter a price');
             return;
         }
 
-        setLoading(true);
+        setIsLoading(true);
 
         try {
             // Upload images
@@ -138,596 +186,269 @@ export const ListProperty: React.FC = () => {
             toast.success(t('list.success'));
             setIsSubmitted(true);
         } catch (error: any) {
-            console.error('Error listing/updating property:', error);
-            if (error.message) console.error('Error Message:', error.message);
-            if (error.details) console.error('Error Details:', error.details);
-            if (error.hint) console.error('Error Hint:', error.hint);
+            console.error('Error listing property:', error);
             toast.error(t('list.error.submit'));
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    return (
-        <div className="min-h-screen bg-white dark:bg-slate-900 pb-20">
-            {/* Hero Section */}
-            <div className="relative h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2671&auto=format&fit=crop"
-                        alt="Alanya Luxury Property"
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/90"></div>
+    // Hero / Landing for Guests
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-slate-900 pb-20">
+                <div className="relative h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0">
+                        <img
+                            src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2671&auto=format&fit=crop"
+                            alt="Alanya Luxury Property"
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/90"></div>
+                    </div>
+                    <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-page-enter">
+                        <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight" dangerouslySetInnerHTML={{ __html: t('list.hero.title') }} />
+                        <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto font-light">{t('list.hero.subtitle')}</p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Button onClick={openRegister} variant="accent" size="lg" className="gap-2 shadow-lg shadow-accent/30">{t('auth.submit.register')}</Button>
+                            <Button onClick={openLogin} variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-slate-900 font-medium">{t('auth.submit.login')}</Button>
+                        </div>
+                    </div>
                 </div>
-
-                <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-page-enter">
-                    <h1
-                        className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight"
-                        dangerouslySetInnerHTML={{ __html: t('list.hero.title') }}
-                    />
-                    <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto font-light">
-                        {t('list.hero.subtitle')}
-                    </p>
-                    <a
-                        href="#application-form"
-                        className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-accent/30 ease-out"
-                    >
-                        {isAuthenticated ? t('list.hero.cta') : t('list.hero.cta.guest')}
-                    </a>
+                {/* Benefits Grid - Keep existing simplified */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
+                    <div className="grid md:grid-cols-3 gap-8 mb-20">
+                        {/* ... Simplified Benefits ... */}
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                            <ShieldCheck size={32} className="text-teal-600 mb-4" />
+                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.verified.title')}</h3>
+                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.verified.desc')}</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                            <Settings size={32} className="text-teal-600 mb-4" />
+                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.management.title')}</h3>
+                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.management.desc')}</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
+                            <TrendingUp size={32} className="text-teal-600 mb-4" />
+                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.revenue.title')}</h3>
+                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.revenue.desc')}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+        );
+    }
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
-                {/* Benefits Grid */}
-                <div className="grid md:grid-cols-3 gap-8 mb-20">
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
-                            <ShieldCheck size={32} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
-                            {t('list.benefit.verified.title')}
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            {t('list.benefit.verified.desc')}
-                        </p>
+    if (isSubmitted) {
+        return (
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-12 text-center border border-slate-100 dark:border-slate-700">
+                    <div className="w-24 h-24 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600 dark:text-teal-400">
+                        <CheckCircle size={48} />
                     </div>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Application Received!</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-8">Your property has been submitted. Our team will verify it within 24 hours.</p>
+                    <Button onClick={() => navigate('/')} variant="primary" fullWidth>Return Home</Button>
+                </div>
+            </div>
+        );
+    }
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out delay-100">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
-                            <Settings size={32} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
-                            {t('list.benefit.management.title')}
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            {t('list.benefit.management.desc')}
-                        </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 ease-out delay-200">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-xl flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform duration-500">
-                            <TrendingUp size={32} />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
-                            {t('list.benefit.revenue.title')}
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            {t('list.benefit.revenue.desc')}
-                        </p>
-                    </div>
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-10 px-4 transition-colors">
+            <div className="max-w-3xl mx-auto">
+                <div className="mb-8">
+                    <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS} />
                 </div>
 
-                {/* Application Form or Guest Gate */}
-                <div id="application-form" className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-backwards">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:shadow-2xl transition-shadow duration-500">
-                        {!isAuthenticated ? (
-                            <div className="p-16 text-center">
-                                <div className="w-24 h-24 bg-slate-100 dark:bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-400">
-                                    <Lock size={48} />
-                                </div>
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                                    {t('list.guest.title')}
-                                </h2>
-                                <p className="text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-lg mx-auto">
-                                    {t('list.guest.desc')}
-                                </p>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <button
-                                        onClick={openRegister}
-                                        className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-semibold transition-colors text-lg"
-                                    >
-                                        {t('auth.submit.register')}
-                                    </button>
-                                    <button
-                                        onClick={openLogin}
-                                        className="bg-white dark:bg-slate-700 text-slate-700 dark:text-white border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 px-8 py-3 rounded-xl font-semibold transition-colors text-lg"
-                                    >
-                                        {t('auth.submit.login')}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : isSubmitted ? (
-                            <div className="p-16 text-center">
-                                <div className="w-24 h-24 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-600 dark:text-yellow-400">
-                                    <CheckCircle size={48} />
-                                </div>
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                                    Application Received!
-                                </h2>
-                                <p className="text-xl text-slate-600 dark:text-slate-400 mb-6">
-                                    Your property has been submitted for review.
-                                </p>
-                                <div className="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-2xl max-w-lg mx-auto mb-8">
-                                    <p className="text-slate-600 dark:text-slate-300">
-                                        Please allow 24 hours for our team to verify your listing.
-                                        If you have urgent questions, please contact us at:
-                                        <br />
-                                        <a href="tel:+905551234567" className="text-primary font-bold mt-2 inline-block">+90 555 123 45 67</a>
-                                    </p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-8 md:p-12">
-                                <div className="text-center mb-10">
-                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
-                                        {t('list.form.title')}
-                                    </h2>
-                                    <p className="text-slate-600 dark:text-slate-400">
-                                        {t('list.form.subtitle')}
-                                    </p>
-                                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden min-h-[500px] flex flex-col">
+                    <div className="p-8 flex-grow">
+                        {/* Step Content */}
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
 
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                {t('list.form.prop_title')}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="title"
-                                                required
-                                                placeholder="e.g. Luxury Seaview Apartment"
-                                                value={formData.title}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                {t('list.form.name')}
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                required
-                                                value={formData.name}
-                                                onChange={handleChange}
-                                                readOnly={true}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all opacity-60 cursor-not-allowed"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                {t('list.form.email')}
-                                            </label>
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                required
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                readOnly={true}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all opacity-60 cursor-not-allowed"
-                                            />
-                                        </div>
+                            {/* Step 0: Type */}
+                            {step === 0 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">What kind of place will you host?</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => setFormData({ ...formData, propertyType: 'apartment' })}
+                                            className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'apartment'
+                                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                }`}
+                                        >
+                                            <Building2 size={32} className={`mb-4 ${formData.propertyType === 'apartment' ? 'text-teal-600' : 'text-slate-400'}`} />
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Apartment</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">A flat in a multi-unit building or complex.</p>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setFormData({ ...formData, propertyType: 'villa' })}
+                                            className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'villa'
+                                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                }`}
+                                        >
+                                            <Home size={32} className={`mb-4 ${formData.propertyType === 'villa' ? 'text-teal-600' : 'text-slate-400'}`} />
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Villa</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">A private house, often with outdoor space.</p>
+                                        </button>
                                     </div>
+                                </div>
+                            )}
 
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                {t('list.form.price')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="price"
-                                                required
-                                                min="1"
-                                                value={formData.price}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                {t('list.form.type')}
-                                            </label>
-                                            <div className="relative">
-                                                <select
-                                                    name="propertyType"
-                                                    value={formData.propertyType}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
-                                                >
-                                                    <option value="apartment">{t('list.form.type.apartment')}</option>
-                                                    <option value="villa">{t('list.form.type.villa')}</option>
-                                                </select>
-                                                <Home className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                Max Guests
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="maxGuests"
-                                                required
-                                                min="1"
-                                                value={formData.maxGuests}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                Bedrooms
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="bedrooms"
-                                                required
-                                                min="0"
-                                                value={formData.bedrooms}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                Bathrooms
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="bathrooms"
-                                                required
-                                                min="0"
-                                                value={formData.bathrooms}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                                Number of Beds
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="beds"
-                                                required
-                                                min="1"
-                                                value={formData.beds}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                    </div>
+                            {/* Step 1: Location */}
+                            {step === 1 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Where is your place located?</h2>
+                                    <PropertyLocation formData={formData} handleChange={handleChange} setFormData={setFormData} />
+                                </div>
+                            )}
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                            {t('list.form.license')}
-                                            <div className="group relative">
-                                                <Info size={16} className="text-slate-400 hover:text-accent cursor-help" />
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 pointer-events-none">
-                                                    {t('list.form.license_info')}
-                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
-                                                </div>
-                                            </div>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="rentalLicense"
-                                            placeholder="e.g. 07-1234..."
-                                            value={formData.rentalLicense}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                            {/* Step 2: Basics */}
+                            {step === 2 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Share some basics about your place</h2>
+                                    <div className="max-w-md">
+                                        <Counter
+                                            label="Guests" subtitle="How many guests can stay?"
+                                            value={formData.maxGuests} min={1} max={16}
+                                            onChange={(v) => setFormData({ ...formData, maxGuests: v })}
+                                        />
+                                        <Counter
+                                            label="Bedrooms"
+                                            value={formData.bedrooms} min={0} max={10}
+                                            onChange={(v) => setFormData({ ...formData, bedrooms: v })}
+                                        />
+                                        <Counter
+                                            label="Beds"
+                                            value={formData.beds} min={1} max={20}
+                                            onChange={(v) => setFormData({ ...formData, beds: v })}
+                                        />
+                                        <Counter
+                                            label="Bathrooms"
+                                            value={formData.bathrooms} min={1} max={10}
+                                            onChange={(v) => setFormData({ ...formData, bathrooms: v })}
                                         />
                                     </div>
+                                </div>
+                            )}
 
+                            {/* Step 3: Amenities */}
+                            {step === 3 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">What does your place offer?</h2>
+                                    <PropertyAmenities formData={formData} setFormData={setFormData} />
+                                </div>
+                            )}
+
+                            {/* Step 4: Photos */}
+                            {step === 4 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Add some photos of your place</h2>
+                                    <p className="text-slate-500 dark:text-slate-400">You'll need at least 1 photo to get started. You can add more later.</p>
+                                    <PhotoUploader files={files} onChange={setFiles} />
+                                </div>
+                            )}
+
+                            {/* Step 5: Description */}
+                            {step === 5 && (
+                                <div className="space-y-6">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Now, let's describe your place</h2>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('list.form.location')} (Area)
-                                        </label>
-                                        <div className="relative mb-4">
-                                            <input
-                                                type="text"
-                                                name="location"
-                                                placeholder="e.g. Mahmutlar"
-                                                required
-                                                value={formData.location}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                            <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        </div>
-
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Pin Exact Location
-                                        </label>
-                                        <div className="h-64 md:h-80 w-full mb-4">
-                                            <LocationPicker
-                                                onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))}
-                                                onAddressSelect={(address, city) => {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        address: address, // Auto-fill full address
-                                                        location: city || prev.location // Auto-fill Area/City if found, otherwise keep existing
-                                                    }));
-                                                    toast.success('Address found: ' + (city ? `${city}` : address));
-                                                }}
-                                                initialLocation={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : undefined}
-                                            />
-                                        </div>
-                                        <p className="text-xs text-slate-500 mb-2">Click on the map to set the exact location of your property.</p>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Full Address
-                                        </label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Create a title</label>
                                         <input
-                                            type="text"
-                                            name="address"
-                                            placeholder="Street, Building No, Apartment No..."
-                                            required
-                                            value={formData.address || ''}
+                                            name="title"
+                                            value={formData.title}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            placeholder="e.g. Modern Villa with Sea View"
+                                            maxLength={50}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none font-bold text-lg"
                                         />
+                                        <p className="text-right text-xs text-slate-400 mt-1">{formData.title.length}/50</p>
                                     </div>
-
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
-                                            Amenities
-                                        </label>
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                            {AMENITIES_LIST.map(am => (
-                                                <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={(formData.amenities as string[] || []).includes(am.label)}
-                                                        onChange={(e) => {
-                                                            const current = (formData.amenities as string[]) || [];
-                                                            if (e.target.checked) {
-                                                                setFormData(prev => ({ ...prev, amenities: [...current, am.label] }));
-                                                            } else {
-                                                                setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
-                                                            }
-                                                        }}
-                                                        className="w-4 h-4 text-accent rounded focus:ring-accent border-gray-300"
-                                                    />
-                                                    <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Hospitality & Guest Guide Section */}
-                                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                            <ShieldCheck className="text-accent" size={20} />
-                                            Hospitality & Guest Guide
-                                            <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Visible only after booking</span>
-                                        </h3>
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Time</label>
-                                                <input
-                                                    type="text"
-                                                    name="checkInTime"
-                                                    placeholder="e.g. 3:00 PM"
-                                                    value={formData.checkInTime}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Time</label>
-                                                <input
-                                                    type="text"
-                                                    name="checkOutTime"
-                                                    placeholder="e.g. 11:00 AM"
-                                                    value={formData.checkOutTime}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Method</label>
-                                                <input
-                                                    type="text"
-                                                    name="checkInMethod"
-                                                    placeholder="e.g. Lockbox, Keypad, In-person..."
-                                                    value={formData.checkInMethod}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Wifi Details</label>
-                                                <textarea
-                                                    name="wifiDetails"
-                                                    placeholder="Network Name and Password"
-                                                    rows={2}
-                                                    value={formData.wifiDetails}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Arrival Guide</label>
-                                                <textarea
-                                                    name="arrivalGuide"
-                                                    placeholder="Instructions for when guests arrive"
-                                                    rows={3}
-                                                    value={formData.arrivalGuide}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Directions</label>
-                                                <textarea
-                                                    name="directions"
-                                                    placeholder="How to get to the property"
-                                                    rows={2}
-                                                    value={formData.directions}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Manual</label>
-                                                <textarea
-                                                    name="houseManual"
-                                                    placeholder="How to use appliances, AC, pool etc."
-                                                    rows={3}
-                                                    value={formData.houseManual}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Rules</label>
-                                                <textarea
-                                                    name="houseRules"
-                                                    placeholder="No smoking, no parties, etc."
-                                                    rows={3}
-                                                    value={formData.houseRules}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Instructions</label>
-                                                <textarea
-                                                    name="checkoutInstructions"
-                                                    placeholder="What to do before leaving (trash, keys, etc.)"
-                                                    rows={2}
-                                                    value={formData.checkoutInstructions}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Guidebooks</label>
-                                                <textarea
-                                                    name="guidebooks"
-                                                    placeholder="Local recommendations (restaurants, sights)"
-                                                    rows={2}
-                                                    value={formData.guidebooks}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interaction Preferences</label>
-                                                <textarea
-                                                    name="interactionPreferences"
-                                                    placeholder="How you prefer to interact with guests"
-                                                    rows={2}
-                                                    value={formData.interactionPreferences}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                                />
-                                            </div>
-                                            <div className="md:col-span-2">
-                                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                                    <Calendar size={16} className="text-teal-600" />
-                                                    Sync Calendar (iCal)
-                                                </label>
-                                                <input
-                                                    type="url"
-                                                    name="icalUrl"
-                                                    placeholder="e.g. https://www.airbnb.com/calendar/ical/..."
-                                                    value={formData.icalUrl}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                                />
-                                                <p className="text-xs text-slate-500 mt-1">Paste your Airbnb or Booking.com iCal export link to sync availability.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Property Images
-                                        </label>
-                                        <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                accept="image/*"
-                                                onChange={(e) => {
-                                                    if (e.target.files) {
-                                                        const files = Array.from(e.target.files);
-                                                        // Store actual File objects separately or in state for upload
-                                                        // Here we are just modifying visual preview logic for now, actual upload needs state
-                                                        setFiles(files);
-                                                    }
-                                                }}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                <Camera size={24} />
-                                            </div>
-                                            <p className="text-sm font-medium text-slate-900 dark:text-white">Click to upload photos</p>
-                                            <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
-
-                                            {files.length > 0 && (
-                                                <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                                                    {files.map((f, i) => (
-                                                        <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
-                                                            {f.name}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('list.form.message')} (Description)
-                                        </label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Create a description</label>
                                         <textarea
                                             name="description"
-                                            rows={4}
-                                            required
                                             value={formData.description}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        ></textarea>
+                                            rows={6}
+                                            placeholder="Share what makes your place special..."
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Step 6: Pricing & hospitality */}
+                            {step === 6 && (
+                                <div className="space-y-8">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Price & Rules</h2>
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Now, set your price</label>
+                                            <div className="relative max-w-xs">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">€</span>
+                                                <input
+                                                    type="number"
+                                                    name="price"
+                                                    value={formData.price}
+                                                    onChange={handleChange}
+                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-3xl"
+                                                />
+                                            </div>
+                                            <p className="text-sm text-slate-500 mt-2">Per night</p>
+                                        </div>
                                     </div>
 
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg hover:shadow-accent/40 text-lg disabled:opacity-50 disabled:cursor-wait hover:scale-[1.02] active:scale-[0.98]"
-                                    >
-                                        {isLoading ? 'Submitting...' : t('list.form.submit')}
-                                    </button>
-                                </form>
-                            </div>
-                        )}
+                                    <PropertyHospitality formData={formData} handleChange={handleChange} />
+                                </div>
+                            )}
+
+                        </div>
                     </div>
+
+                    {/* Footer Actions */}
+                    <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center">
+                        <button
+                            onClick={prevStep}
+                            disabled={step === 0}
+                            className={`flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors ${step === 0 ? 'opacity-0 pointer-events-none' : ''}`}
+                        >
+                            <ArrowLeft size={18} />
+                            Back
+                        </button>
+
+                        <div className="flex gap-4">
+                            {step === STEPS.length - 1 ? (
+                                <Button
+                                    onClick={handleSubmit}
+                                    isLoading={isLoading}
+                                    variant="accent"
+                                    size="lg"
+                                    className="px-8"
+                                >
+                                    Publish Listing
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={nextStep}
+                                    variant="secondary"
+                                    size="lg"
+                                    className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 gap-2"
+                                >
+                                    Next
+                                    <ArrowRight size={18} />
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                    {/* Progress Bar fixed bottom mobile? (Optional, skipping for now as StepsIndicator has it) */}
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };

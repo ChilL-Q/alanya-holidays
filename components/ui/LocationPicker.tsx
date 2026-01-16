@@ -127,12 +127,19 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect
             if (onAddressSelect && window.google) {
                 const geocoder = new window.google.maps.Geocoder();
                 geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                    if (status === 'OK' && results && results[0]) {
-                        const address = results[0].formatted_address;
+                    if (status === 'OK' && results && results.length > 0) {
+                        // Priority: street_address > route > premise
+                        // Filter out generic plus_codes if possible
+                        const bestResult = results.find(r => r.types.includes('street_address') || r.types.includes('premise'))
+                            || results.find(r => r.types.includes('route'))
+                            || results.find(r => !r.types.includes('plus_code'))
+                            || results[0];
+
+                        const address = bestResult.formatted_address;
 
                         // Try to extract city/district (administrative_area_level_2 or locality)
                         let city = '';
-                        const addressComponents = results[0].address_components;
+                        const addressComponents = bestResult.address_components;
                         const districtComponent = addressComponents.find(c => c.types.includes('sublocality') || c.types.includes('administrative_area_level_2'));
                         const cityComponent = addressComponents.find(c => c.types.includes('locality') || c.types.includes('administrative_area_level_1'));
 
@@ -144,6 +151,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect
                         console.warn('Geocoder failed due to: ' + status);
                     }
                 });
+
             }
         }
     }, [onLocationSelect, onAddressSelect]);

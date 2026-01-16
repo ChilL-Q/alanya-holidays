@@ -96,7 +96,7 @@ export const SearchResultsPage: React.FC = () => {
                             {filteredProperties.map((property, index) => (
                                 <div
                                     key={property.id}
-                                    className="animate-stagger-enter"
+                                    className="animate-fade-up opacity-0 fill-mode-forwards"
                                     style={{ animationDelay: `${index * 100}ms` }}
                                 >
                                     <PropertyCard property={property} />

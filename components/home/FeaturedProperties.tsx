@@ -62,7 +62,11 @@ export const FeaturedProperties: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {properties.map((property, index) => (
-                    <div key={property.id} className={`animate-fade-up opacity-0 fill-mode-forwards`} style={{ animationDelay: `${(index + 1) * 150}ms` }}>
+                    <div
+                        key={property.id}
+                        className="animate-fade-up opacity-0 fill-mode-forwards"
+                        style={{ animationDelay: `${index * 150}ms` }}
+                    >
                         <PropertyCard property={property} />
                     </div>
                 ))}

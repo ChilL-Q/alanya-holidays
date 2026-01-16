@@ -43,6 +43,8 @@ export const useCarAggregation = (services: ServiceData[]) => {
                 if (price < groups[key].minPrice) {
                     groups[key].minPrice = price;
                 }
+                // Update image to current (older) service to eventually show the oldest one
+                groups[key].image = image;
             }
         });
 

@@ -33,7 +33,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 />
 
                 {/* Rating Badge */}
-                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold text-slate-800 shadow-sm">
+                <div className="absolute top-3 left-3 glass px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold text-slate-900 shadow-sm z-10 transition-transform duration-300 group-hover:scale-110">
                     <Star size={12} className="text-yellow-500 fill-yellow-500" />
                     {property.rating}
                 </div>
@@ -45,10 +45,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                         e.stopPropagation();
                         toggleFavorite(property.id);
                     }}
-                    className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-300 ${isLiked
+                    className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-300 z-10 ${isLiked
                         ? 'bg-white text-rose-500 shadow-md scale-110'
-                        : 'bg-black/20 text-white hover:bg-white hover:text-rose-500 backdrop-blur-sm'
-                        }`}
+                        : 'glass text-slate-700 hover:bg-white hover:text-rose-500 hover:scale-110'
+                        } active:scale-90`}
                 >
                     <Heart size={18} className={isLiked ? 'fill-rose-500' : ''} />
                 </button>

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../services/db';
 import { useAuth } from '../context/AuthContext';
-import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle } from 'lucide-react';
+import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
+import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X } from 'lucide-react';
 
 interface CarOffer {
     id: string;
@@ -46,6 +48,20 @@ export const CarModelDetails: React.FC = () => {
     const [offers, setOffers] = useState<ServiceData[]>([]);
     const [groupInfo, setGroupInfo] = useState<any>(null);
 
+    // Lock scroll and handle escape key when modal is open
+    // Handle escape key when modal is open
+    useEffect(() => {
+        if (selectedOffer) {
+            const handleEsc = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') setSelectedOffer(null);
+            };
+            window.addEventListener('keydown', handleEsc);
+            return () => {
+                window.removeEventListener('keydown', handleEsc);
+            };
+        }
+    }, [selectedOffer]);
+
     useEffect(() => {
         const fetchOffers = async () => {
             try {
@@ -69,13 +85,29 @@ export const CarModelDetails: React.FC = () => {
 
                 setOffers(filtered);
 
-                if (filtered.length > 0) {
-                    const first = filtered[0];
+                // Sort by created_at ASC to get the "First" (Oldest) service as the constant representer
+                // db.getServices returns DESC, so we can just reverse it or pick the last one.
+                // However, to be safe, let's sort if we have dates, or just take the last one since we know the query order.
+                const constantService = filtered.length > 0 ? filtered[filtered.length - 1] : null;
+
+                setOffers(filtered);
+
+                if (constantService) {
+                    const brand = constantService.features.brand;
+                    const model = constantService.features.model;
+
+                    // Fetch dynamic metadata from DB
+                    const serviceModel = await db.getServiceModel(targetType, brand, model);
+
+                    const staticDescription = serviceModel?.description || CAR_DESCRIPTIONS[`${brand} ${model}`];
+                    const staticImage = serviceModel?.image_url;
+
                     setGroupInfo({
-                        title: `${first.features.brand} ${first.features.model}`,
-                        description: first.description,
-                        image: first.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop', // Fallback
-                        features: [first.features.transmission, first.features.fuel, first.features.seats ? `${first.features.seats} Seats` : null].filter(Boolean)
+                        ...constantService, // Keep full object for modal
+                        title: `${brand} ${model}`,
+                        description: staticDescription || constantService.description || DEFAULT_DESCRIPTION,
+                        image: staticImage || constantService.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop',
+                        features: [constantService.features.transmission, constantService.features.fuel, constantService.features.seats ? `${constantService.features.seats} Seats` : null].filter(Boolean)
                     });
                 }
             } catch (error) {
@@ -90,6 +122,7 @@ export const CarModelDetails: React.FC = () => {
 
     if (loading) return <div className="pt-32 text-center">Loading offers...</div>;
     if (!groupInfo) return <div className="pt-32 text-center">Model not found</div>;
+
 
 
     return (
@@ -146,6 +179,9 @@ export const CarModelDetails: React.FC = () => {
                                         <span>5.0</span>
                                         <span className="text-slate-400 ml-1">(New)</span>
                                     </div>
+                                    <div className="text-xs text-teal-600 font-medium mt-1 md:hidden">
+                                        Click to view details
+                                    </div>
                                 </div>
                             </div>
 
@@ -162,17 +198,20 @@ export const CarModelDetails: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-6">
-                                <div className="text-right">
+                            <div className="flex items-center gap-4">
+                                <div className="text-right mr-2">
                                     <div className="text-2xl font-bold text-teal-600">{formatPrice(convertPrice(offer.price, 'EUR'))}</div>
                                     <div className="text-xs text-slate-500">per day</div>
                                 </div>
+                                <button className="hidden md:block px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-700 transition-colors">
+                                    View Details
+                                </button>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         navigate(`/book-vehicle/${offer.id}`);
                                     }}
-                                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
+                                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
                                 >
                                     Book Now
                                 </button>
@@ -183,17 +222,22 @@ export const CarModelDetails: React.FC = () => {
             </div>
 
             {/* Offer Details Modal */}
-            {selectedOffer && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedOffer(null)}>
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-                        <div className="relative">
-                            <button
-                                onClick={() => setSelectedOffer(null)}
-                                className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg z-10 hover:scale-110 transition-transform"
-                            >
-                                <ArrowLeft size={20} className="text-slate-900 dark:text-white" />
-                            </button>
+            {selectedOffer && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedOffer(null)}>
+                    {/* Modal Content - Auto height with max constraints */}
+                    <div
+                        className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden relative"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setSelectedOffer(null)}
+                            className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg z-50 hover:scale-110 transition-transform cursor-pointer group"
+                        >
+                            <X size={24} className="text-slate-900 dark:text-white group-hover:text-rose-500 transition-colors" />
+                        </button>
 
+                        {/* Reset scroll on modal open */}
+                        <div className="overflow-y-auto flex-1">
                             {/* Gallery */}
                             <div className="h-64 md:h-80 w-full bg-slate-100 dark:bg-slate-900 flex overflow-x-auto snap-x snap-mandatory">
                                 {selectedOffer.images && selectedOffer.images.length > 0 ? (
@@ -238,13 +282,6 @@ export const CarModelDetails: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 <div className="md:col-span-2 space-y-8">
-                                    {/* About */}
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('offer.about') || 'About this vehicle'}</h3>
-                                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                                            {selectedOffer.description || "No specific description provided by the host for this offer."}
-                                        </p>
-                                    </div>
 
                                     {/* Features */}
                                     <div>
@@ -299,7 +336,8 @@ export const CarModelDetails: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -15,6 +15,7 @@
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/react-datepicker": "^6.2.0",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
@@ -22,7 +23,9 @@
     "react-dom": "^19.2.3",
     "react-hot-toast": "^2.6.0",
     "react-imask": "^7.6.1",
-    "react-router-dom": "^7.11.0"
+    "react-router-dom": "^7.11.0",
+    "recharts": "^3.6.0",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

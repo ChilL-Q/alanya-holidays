@@ -89,6 +89,7 @@ export const AddProduct: React.FC = () => {
                                     type="number"
                                     value={formData.price}
                                     onChange={handleChange}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     required
                                     placeholder="0.00"
                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
@@ -104,6 +105,7 @@ export const AddProduct: React.FC = () => {
                                     type="number"
                                     value={formData.stock}
                                     onChange={handleChange}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     required
                                     min="1"
                                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"

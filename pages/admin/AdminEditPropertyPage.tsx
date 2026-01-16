@@ -216,6 +216,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         min="1"
                                         value={formData.price}
                                         onChange={handleChange}
+                                        onWheel={(e) => e.currentTarget.blur()}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                 </div>
@@ -247,6 +248,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         min="1"
                                         value={formData.maxGuests}
                                         onChange={handleChange}
+                                        onWheel={(e) => e.currentTarget.blur()}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                 </div>
@@ -261,6 +263,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         min="1"
                                         value={formData.beds}
                                         onChange={handleChange}
+                                        onWheel={(e) => e.currentTarget.blur()}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                 </div>

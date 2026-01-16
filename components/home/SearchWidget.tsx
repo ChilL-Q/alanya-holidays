@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
 import { IMaskInput } from 'react-imask';
+import { Button } from '../ui/Button';
 
 // Custom Masked Input Component
 const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
@@ -151,13 +152,17 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 />
             </div>
 
-            <button
+
+
+            <Button
                 onClick={handleSearch}
-                className="bg-primary hover:bg-primary-dark text-white h-14 px-8 rounded-xl font-semibold flex items-center justify-center gap-2 hover-lift shadow-lg shadow-primary/30"
+                variant="primary"
+                size="lg"
+                className="hover-lift shadow-primary/30" // Maintain hover-lift and shadow
             >
-                <Search size={20} />
+                <Search size={20} className="mr-2" />
                 {t('search.button')}
-            </button>
+            </Button>
         </div>
     );
 };
