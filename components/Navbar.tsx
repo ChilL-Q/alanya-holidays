@@ -11,6 +11,7 @@ import { Banknote } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 import { NotificationBell } from './ui/NotificationBell';
 
+
 const NavLink: React.FC<{ to: string; label: string; isAccent?: boolean }> = ({ to, label, isAccent }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
@@ -55,7 +56,7 @@ const NavIndicator = () => {
 };
 
 export const Navbar: React.FC = () => {
-  const { items } = useCart();
+  const { items, isCartOpen, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
@@ -91,8 +92,23 @@ export const Navbar: React.FC = () => {
       }
     };
 
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        setIsLangOpen(false);
+        setIsCurrencyOpen(false);
+        setIsProfileOpen(false);
+        setIsListMenuOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleEsc);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, []);
 
   const handleLanguageSelect = (lang: Language) => {
@@ -107,6 +123,8 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 transition-colors supports-[backdrop-filter]:bg-white/60">
+
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
 
@@ -153,7 +171,7 @@ export const Navbar: React.FC = () => {
                   {currency}
                   <ChevronDown size={12} className={`opacity-50 transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`} />
                 </button>
-                {/* ... Currency Dropdown (Same logic) ... */}
+                {/* ... Currency Dropdown ... */}
                 {isCurrencyOpen && (
                   <div className="absolute top-full mt-2 right-0 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
                     <div className="py-1">
@@ -252,7 +270,10 @@ export const Navbar: React.FC = () => {
                 {favorites.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
               </Link>
 
-              <button onClick={() => navigate('/checkout')} className="p-2.5 rounded-full text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:text-slate-400 transition-all relative group">
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="p-2.5 rounded-full text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:text-slate-400 transition-all relative group"
+              >
                 <ShoppingBag size={20} />
                 {items.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
               </button>
@@ -336,7 +357,7 @@ export const Navbar: React.FC = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shadow-2xl p-4 flex flex-col gap-2 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden">
-          {/* ... Mobile Menu Content similar to simple one but cleaner ... */}
+          {/* ... Mobile Menu Content ... */}
           {!isAuthenticated && (
             <div className="grid grid-cols-2 gap-3 mb-4">
               <button onClick={() => { openLogin(); setIsMobileMenuOpen(false); }} className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-center">Login</button>

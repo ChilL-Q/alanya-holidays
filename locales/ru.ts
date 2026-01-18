@@ -92,6 +92,17 @@ export const ru = {
     'checkout.free_cancel': 'Бесплатная отмена',
     'checkout.free_cancel_desc': 'в течение 48 часов после бронирования.',
     'checkout.recommended': 'Рекомендуем добавить',
+    'checkout.method.title': 'Способ оплаты',
+    'checkout.method.card': 'Карта',
+    'checkout.method.bank': 'Банковский перевод',
+    'checkout.method.bank_desc': 'Перевод на наш банковский счет.',
+    'checkout.method.crypto': 'Криптовалюта',
+    'checkout.method.crypto_desc': 'Оплата Bitcoin, USDT или ETH.',
+    'checkout.method.cash': 'Наличные при заезде',
+    'checkout.method.cash_desc': 'Оплатите при заселении в объект.',
+    'checkout.bank_details': 'Реквизиты: IBAN TR00 0000 0000 0000 0000',
+    'checkout.crypto_address': 'USDT (TRC20): TTrs...',
+    'checkout.copy': 'Копировать',
 
     // Trip Assistant
     'ai.button': 'Спросить AI Гида',

@@ -199,4 +199,98 @@ export const propertiesService = {
         if (error) throw error;
         return data as PropertyDB[];
     },
+
+    // Availability & Calendar
+    async getPropertyAvailability(propertyId: string, startDate: string, endDate: string) {
+        const { data, error } = await supabase
+            .from('property_availability')
+            .select('*, feed:property_ical_feeds(name)')
+            .eq('property_id', propertyId)
+            .gte('date', startDate)
+            .lte('date', endDate);
+
+        if (error) throw error;
+        return data as any[]; // Type assertion needed or update types import
+    },
+
+    async updatePropertyAvailability(
+        propertyId: string, 
+        dates: string[], 
+        status: 'available' | 'booked' | 'blocked', 
+        price?: number
+    ) {
+        // If status is 'available', we remove the entry (unless we want to keep price override?)
+        // Strategy: 
+        // 1. Delete existing entries for these dates
+        // 2. If status != available or price is set, insert new entries
+
+        const { error: deleteError } = await supabase
+            .from('property_availability')
+            .delete()
+            .eq('property_id', propertyId)
+            .in('date', dates);
+        
+        if (deleteError) throw deleteError;
+
+        if (status === 'available' && !price) {
+            return; // Just clearing
+        }
+
+        const entries = dates.map(date => ({
+            property_id: propertyId,
+            date,
+            status,
+            price,
+            source: 'manual'
+        }));
+
+        const { error: insertError } = await supabase
+            .from('property_availability')
+            .insert(entries);
+
+        if (insertError) throw insertError;
+    },
+
+    async syncPropertyCalendar(propertyId: string) {
+        const { data, error } = await supabase.functions.invoke('sync-ical', {
+            body: { propertyId }
+        });
+        if (error) throw error;
+        return data;
+    },
+
+    // Multi-Calendar Management
+    async getICalFeeds(propertyId: string) {
+        const { data, error } = await supabase
+            .from('property_ical_feeds')
+            .select('*')
+            .eq('property_id', propertyId)
+            .order('created_at', { ascending: true });
+        
+        if (error) throw error;
+        return data as any[]; // Need to import PropertyICalFeed type properly if possible, or cast later
+    },
+
+    async addICalFeed(propertyId: string, name: string, url: string) {
+        const { data, error } = await supabase
+            .from('property_ical_feeds')
+            .insert([{ property_id: propertyId, name, url }])
+            .select()
+            .single();
+        
+        if (error) throw error;
+        return data;
+    },
+
+    async removeICalFeed(id: string) {
+        // First, delete availability entries associated with this feed
+        // (Though ON DELETE CASCADE on the foreign key should handle this automatically in DB,
+        // it's good to be aware. We rely on DB cascade here.)
+        const { error } = await supabase
+            .from('property_ical_feeds')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+    }
 };

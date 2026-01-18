@@ -28,9 +28,10 @@ import { AuthProvider } from './context/AuthContext';
 import { LightboxProvider } from './context/LightboxContext';
 import { Lightbox } from './components/ui/Lightbox';
 import { NotificationProvider } from './context/NotificationContext';
+import { CartDrawer } from './components/ui/CartDrawer';
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
-import { Experiences } from './pages/Experiences';
+import { ExperienceCategoryPage } from './pages/ExperienceCategoryPage';
 import { PageTransition } from './components/PageTransition';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ChatProvider } from './context/ChatContext';
@@ -50,6 +51,7 @@ import { HostServicesPage } from './pages/host/HostServicesPage';
 import { HostEditServicePage } from './pages/host/HostEditServicePage';
 import { HostBookingsPage } from './pages/host/HostBookingsPage';
 import { HostCalendarPage } from './pages/host/HostCalendarPage';
+import { Toaster } from 'react-hot-toast';
 const AdminEditPropertyPage = React.lazy(() => import('./pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
 const AdminEditUserPage = React.lazy(() => import('./pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
 const AdminEditServicePage = React.lazy(() => import('./pages/admin/AdminEditServicePage').then(module => ({ default: module.AdminEditServicePage })));
@@ -61,9 +63,6 @@ import { PropertiesPage } from './pages/admin/PropertiesPage';
 import { UsersPage } from './pages/admin/UsersPage';
 import { ServicesPage as AdminServicesPage } from './pages/admin/ServicesPage';
 import { AdminRoute } from './components/auth/AdminRoute';
-
-
-
 
 // Scroll to top on route change
 const ScrollToTop = () => {
@@ -87,6 +86,7 @@ const App: React.FC = () => {
                     <LightboxProvider>
                       <ChatProvider>
                         <BrowserRouter>
+                          <Toaster position="bottom-left" />
                           <ScrollToTop />
                           <div className="flex flex-col min-h-screen font-sans">
                             <Navbar />
@@ -94,25 +94,27 @@ const App: React.FC = () => {
                               <PageTransition>
                                 <Routes>
                                   <Route path="/" element={<Home />} />
+
                                   <Route path="/list-property" element={<ListProperty />} />
+
                                   <Route path="/search-results" element={<SearchResultsPage />} />
                                   <Route path="/stays" element={<SearchResultsPage />} />
                                   <Route path="/favorites" element={<FavoritesPage />} />
                                   <Route path="/property/:id" element={<PropertyDetails />} />
                                   <Route path="/checkout" element={<Checkout />} />
                                   <Route path="/services" element={<ServicesPage />} />
+                                  <Route path="/services/:category" element={<ServicesPage />} />
                                   <Route path="/zero-fees" element={<ZeroFeesPage />} />
                                   <Route path="/about" element={<About />} />
                                   <Route path="/contact" element={<Contact />} />
                                   <Route path="/privacy" element={<Privacy />} />
                                   <Route path="/terms" element={<Terms />} />
-                                  <Route path="/experiences" element={<Experiences />} />
+                                  <Route path="/experiences/:category" element={<ExperienceCategoryPage />} />
                                   <Route path="/help" element={<FAQ />} />
                                   <Route path="/support" element={<Contact />} />
                                   <Route path="/services/car-rental" element={<CarRental />} />
                                   <Route path="/services/car-rental/:modelId" element={<CarModelDetails />} />
                                   <Route path="/services/bike-rental" element={<BikeRental />} />
-                                  <Route path="/services/visa" element={<Visa />} />
                                   <Route path="/services/esim" element={<Esim />} />
                                   <Route path="/shop" element={<Shop />} />
                                   <Route path="/profile" element={<Profile />} />
@@ -138,6 +140,13 @@ const App: React.FC = () => {
                                   <Route path="/host/edit-service/:id" element={
                                     <HostLayout>
                                       <HostEditServicePage />
+                                    </HostLayout>
+                                  } />
+                                  <Route path="/host/edit-property/:id" element={
+                                    <HostLayout>
+                                      <React.Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+                                        <AdminEditPropertyPage />
+                                      </React.Suspense>
                                     </HostLayout>
                                   } />
                                   <Route path="/host/bookings" element={
@@ -227,8 +236,6 @@ const App: React.FC = () => {
                                     </AdminRoute>
                                   } />
 
-
-
                                   <Route path="/add-product" element={<AddProduct />} />
 
                                   <Route path="*" element={<Home />} />
@@ -240,6 +247,7 @@ const App: React.FC = () => {
                           <LoginModal />
                           <RegisterModal />
                           <Lightbox />
+                          <CartDrawer />
                           <TripAssistant />
                           <CookieConsent />
                         </BrowserRouter>

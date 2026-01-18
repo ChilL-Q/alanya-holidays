@@ -4,7 +4,12 @@ import { Booking } from '../../types/index';
 export const bookingsService = {
     async createBooking(data: any) { // Keep explicit type if possible, simpler for now
         // Map frontend 'type' to DB 'item_type'
-        const dbData: any = { ...data };
+        const dbData: any = { 
+            ...data,
+            // Ensure payment fields are passed
+            payment_method: data.payment_method || 'card',
+            payment_status: data.payment_status || 'pending'
+        };
         dbData.item_type = data.type;
         delete dbData.type;
 

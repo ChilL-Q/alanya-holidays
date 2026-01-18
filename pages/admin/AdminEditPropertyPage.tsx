@@ -9,9 +9,13 @@ import {
     XCircle,
     Home,
     MapPin,
-    ArrowLeft
+    ArrowLeft,
+    Calendar,
+    Settings
 } from 'lucide-react';
 import { AMENITIES_LIST } from '../../data/constants';
+import { AvailabilityCalendar } from '../../components/host/AvailabilityCalendar';
+import { ICalManager } from '../../components/host/ICalManager';
 
 export const AdminEditPropertyPage: React.FC = () => {
     const { t } = useLanguage();
@@ -21,6 +25,8 @@ export const AdminEditPropertyPage: React.FC = () => {
 
     const [files, setFiles] = useState<File[]>([]);
     const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState<'details' | 'calendar'>('details');
+    const [icalData, setIcalData] = useState<{ url?: string; lastSynced?: string }>({});
 
     const [formData, setFormData] = useState({
         title: '',
@@ -52,47 +58,51 @@ export const AdminEditPropertyPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // Fetch property data
-    useEffect(() => {
-        if (id) {
-            const fetchProp = async () => {
-                try {
-                    const data = await db.getProperty(id);
-                    if (data) {
-                        setFormData(prev => ({
-                            ...prev,
-                            title: data.title,
-                            description: data.description,
-                            price: data.price_per_night.toString(),
-                            location: data.location,
-                            address: data.address || '',
-                            propertyType: data.type || 'apartment',
-                            amenities: (data.amenities || []).map(a => a.label),
-                            name: data.host?.full_name || '',
-                            email: '',
-                            // Hospitality Details
-                            arrivalGuide: data.arrival_guide || '',
-                            checkInTime: data.check_in_time || '',
-                            checkOutTime: data.check_out_time || '',
-                            directions: data.directions || '',
-                            checkInMethod: data.check_in_method || '',
-                            wifiDetails: data.wifi_details || '',
-                            houseManual: data.house_manual || '',
-                            houseRules: data.house_rules || '',
-                            checkoutInstructions: data.checkout_instructions || '',
-                            guidebooks: data.guidebooks || '',
-                            interactionPreferences: data.interaction_preferences || '',
-                            maxGuests: (data.max_guests ?? 2).toString(),
-                            beds: (data.beds ?? 1).toString()
-                        }));
-                        setExistingImages(data.images || []);
-                    }
-                } catch (error) {
-                    console.error('Error fetching property:', error);
-                    toast.error('Failed to load property');
-                }
-            };
-            fetchProp();
+    const fetchProp = async () => {
+        if (!id) return;
+        try {
+            const data = await db.getProperty(id);
+            if (data) {
+                setFormData(prev => ({
+                    ...prev,
+                    title: data.title,
+                    description: data.description,
+                    price: data.price_per_night.toString(),
+                    location: data.location,
+                    address: data.address || '',
+                    propertyType: data.type || 'apartment',
+                    amenities: (data.amenities || []).map(a => a.label),
+                    name: data.host?.full_name || '',
+                    email: '',
+                    // Hospitality Details
+                    arrivalGuide: data.arrival_guide || '',
+                    checkInTime: data.check_in_time || '',
+                    checkOutTime: data.check_out_time || '',
+                    directions: data.directions || '',
+                    checkInMethod: data.check_in_method || '',
+                    wifiDetails: data.wifi_details || '',
+                    houseManual: data.house_manual || '',
+                    houseRules: data.house_rules || '',
+                    checkoutInstructions: data.checkout_instructions || '',
+                    guidebooks: data.guidebooks || '',
+                    interactionPreferences: data.interaction_preferences || '',
+                    maxGuests: (data.max_guests ?? 2).toString(),
+                    beds: (data.beds ?? 1).toString()
+                }));
+                setExistingImages(data.images || []);
+                setIcalData({
+                    url: data.ical_url,
+                    lastSynced: data.last_synced_at
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching property:', error);
+            toast.error('Failed to load property');
         }
+    };
+
+    useEffect(() => {
+        fetchProp();
     }, [id]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -165,370 +175,413 @@ export const AdminEditPropertyPage: React.FC = () => {
         }
     };
 
-    // Protected by AdminRoute wrapper in App.tsx
+    // Protected by AdminRoute wrapper in App.tsx for admin routes
+    // For host routes, we handle check here or in HostRoute (if it exists)
     if (authLoading) return null;
-    if (!isAuthenticated || user?.role !== 'admin') return null;
+    if (!isAuthenticated) return null;
+    if (user?.role !== 'admin' && user?.role !== 'host') return null;
+
+    const backLink = user?.role === 'admin' ? '/admin/properties' : '/host/properties';
+    const backText = user?.role === 'admin' ? 'Back to Admin, Properties' : 'Back to My Listings';
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
                 <button
-                    onClick={() => navigate('/admin')}
+                    onClick={() => navigate(backLink)}
                     className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white mb-6 transition-colors"
                 >
                     <ArrowLeft size={20} />
-                    Back to Admin
+                    {backText}
                 </button>
 
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
                     <div className="p-8 border-b border-slate-100 dark:border-slate-700">
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Property</h1>
-                        <p className="text-slate-500 mt-1">Update property details and images</p>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Property</h1>
+                                <p className="text-slate-500 mt-1">Update property details and images</p>
+                            </div>
+
+                            {/* Tabs */}
+                            <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setActiveTab('details')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'details' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    <Settings size={16} />
+                                    Details
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('calendar')}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                >
+                                    <Calendar size={16} />
+                                    Calendar & Sync
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="p-8">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Title
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        required
-                                        value={formData.title}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                </div>
+                        {activeTab === 'calendar' ? (
+                            <div className="space-y-8 animate-fade-in">
+                                {id && (
+                                    <>
+                                        <AvailabilityCalendar propertyId={id} />
+                                        <ICalManager
+                                            propertyId={id}
+                                            existingIcalUrl={icalData.url}
+                                            lastSyncedAt={icalData.lastSynced}
+                                            onUpdate={fetchProp}
+                                        />
+                                    </>
+                                )}
                             </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Price (€/night)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="price"
-                                        required
-                                        min="1"
-                                        value={formData.price}
-                                        onChange={handleChange}
-                                        onWheel={(e) => e.currentTarget.blur()}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Type
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            name="propertyType"
-                                            value={formData.propertyType}
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Title
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="title"
+                                            required
+                                            value={formData.title}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
-                                        >
-                                            <option value="apartment">Apartment</option>
-                                            <option value="villa">Villa</option>
-                                        </select>
-                                        <Home className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Max Guests
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="maxGuests"
-                                        required
-                                        min="1"
-                                        value={formData.maxGuests}
-                                        onChange={handleChange}
-                                        onWheel={(e) => e.currentTarget.blur()}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Beds
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="beds"
-                                        required
-                                        min="1"
-                                        value={formData.beds}
-                                        onChange={handleChange}
-                                        onWheel={(e) => e.currentTarget.blur()}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Location (Area)
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        required
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                    <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Full Address
-                                </label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    required
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
-                                    Amenities
-                                </label>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {AMENITIES_LIST.map(am => (
-                                        <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={(formData.amenities as string[] || []).includes(am.label)}
-                                                onChange={(e) => {
-                                                    const current = (formData.amenities as string[]) || [];
-                                                    if (e.target.checked) {
-                                                        setFormData(prev => ({ ...prev, amenities: [...current, am.label] }));
-                                                    } else {
-                                                        setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
-                                                    }
-                                                }}
-                                                className="w-4 h-4 text-accent rounded focus:ring-accent border-gray-300"
-                                            />
-                                            <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Hospitality & Guest Guide Section */}
-                            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                    Hospitality & Guest Guide
-                                    <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Visible only after booking</span>
-                                </h3>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Time</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Price (€/night)
+                                        </label>
                                         <input
-                                            type="text"
-                                            name="checkInTime"
-                                            placeholder="e.g. 3:00 PM"
-                                            value={formData.checkInTime}
+                                            type="number"
+                                            name="price"
+                                            required
+                                            min="1"
+                                            value={formData.price}
                                             onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Time</label>
-                                        <input
-                                            type="text"
-                                            name="checkOutTime"
-                                            placeholder="e.g. 11:00 AM"
-                                            value={formData.checkOutTime}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Method</label>
-                                        <input
-                                            type="text"
-                                            name="checkInMethod"
-                                            placeholder="e.g. Lockbox, Keypad, In-person..."
-                                            value={formData.checkInMethod}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Wifi Details</label>
-                                        <textarea
-                                            name="wifiDetails"
-                                            placeholder="Network Name and Password"
-                                            rows={2}
-                                            value={formData.wifiDetails}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Arrival Guide</label>
-                                        <textarea
-                                            name="arrivalGuide"
-                                            placeholder="Instructions for when guests arrive"
-                                            rows={3}
-                                            value={formData.arrivalGuide}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Directions</label>
-                                        <textarea
-                                            name="directions"
-                                            placeholder="How to get to the property"
-                                            rows={2}
-                                            value={formData.directions}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Manual</label>
-                                        <textarea
-                                            name="houseManual"
-                                            placeholder="How to use appliances, AC, pool etc."
-                                            rows={3}
-                                            value={formData.houseManual}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Rules</label>
-                                        <textarea
-                                            name="houseRules"
-                                            placeholder="No smoking, no parties, etc."
-                                            rows={3}
-                                            value={formData.houseRules}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Instructions</label>
-                                        <textarea
-                                            name="checkoutInstructions"
-                                            placeholder="What to do before leaving (trash, keys, etc.)"
-                                            rows={2}
-                                            value={formData.checkoutInstructions}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Guidebooks</label>
-                                        <textarea
-                                            name="guidebooks"
-                                            placeholder="Local recommendations (restaurants, sights)"
-                                            rows={2}
-                                            value={formData.guidebooks}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interaction Preferences</label>
-                                        <textarea
-                                            name="interactionPreferences"
-                                            placeholder="How you prefer to interact with guests"
-                                            rows={2}
-                                            value={formData.interactionPreferences}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Property Images
-                                </label>
-                                <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            if (e.target.files) {
-                                                setFiles(Array.from(e.target.files));
-                                            }
-                                        }}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Camera size={24} />
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">Click to upload new photos</p>
-                                    <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
-
-                                    {(existingImages.length > 0 || files.length > 0) && (
-                                        <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                                            {existingImages.map((img, i) => (
-                                                <div key={`existing-${i}`} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
-                                                    <img src={img} className="w-full h-full object-cover" />
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            e.preventDefault();
-                                                            setExistingImages(prev => prev.filter((_, idx) => idx !== i));
-                                                        }}
-                                                        className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <XCircle size={12} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            {files.map((f, i) => (
-                                                <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
-                                                    {f.name}
-                                                </span>
-                                            ))}
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Type
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                name="propertyType"
+                                                value={formData.propertyType}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
+                                            >
+                                                <option value="apartment">Apartment</option>
+                                                <option value="villa">Villa</option>
+                                            </select>
+                                            <Home className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                         </div>
-                                    )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Max Guests
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="maxGuests"
+                                            required
+                                            min="1"
+                                            value={formData.maxGuests}
+                                            onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Beds
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="beds"
+                                            required
+                                            min="1"
+                                            value={formData.beds}
+                                            onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Description
-                                </label>
-                                <textarea
-                                    name="description"
-                                    rows={4}
-                                    required
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                ></textarea>
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        Location (Area)
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            required
+                                            value={formData.location}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                        <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    </div>
+                                </div>
 
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
-                            >
-                                {isLoading ? 'Saving Changes...' : 'Save Changes'}
-                            </button>
-                        </form>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        Full Address
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        required
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
+                                        Amenities
+                                    </label>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {AMENITIES_LIST.map(am => (
+                                            <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={(formData.amenities as string[] || []).includes(am.label)}
+                                                    onChange={(e) => {
+                                                        const current = (formData.amenities as string[]) || [];
+                                                        if (e.target.checked) {
+                                                            setFormData(prev => ({ ...prev, amenities: [...current, am.label] }));
+                                                        } else {
+                                                            setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-accent rounded focus:ring-accent border-gray-300"
+                                                />
+                                                <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Hospitality & Guest Guide Section */}
+                                <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                        Hospitality & Guest Guide
+                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Visible only after booking</span>
+                                    </h3>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Time</label>
+                                            <input
+                                                type="text"
+                                                name="checkInTime"
+                                                placeholder="e.g. 3:00 PM"
+                                                value={formData.checkInTime}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Time</label>
+                                            <input
+                                                type="text"
+                                                name="checkOutTime"
+                                                placeholder="e.g. 11:00 AM"
+                                                value={formData.checkOutTime}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Method</label>
+                                            <input
+                                                type="text"
+                                                name="checkInMethod"
+                                                placeholder="e.g. Lockbox, Keypad, In-person..."
+                                                value={formData.checkInMethod}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Wifi Details</label>
+                                            <textarea
+                                                name="wifiDetails"
+                                                placeholder="Network Name and Password"
+                                                rows={2}
+                                                value={formData.wifiDetails}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Arrival Guide</label>
+                                            <textarea
+                                                name="arrivalGuide"
+                                                placeholder="Instructions for when guests arrive"
+                                                rows={3}
+                                                value={formData.arrivalGuide}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Directions</label>
+                                            <textarea
+                                                name="directions"
+                                                placeholder="How to get to the property"
+                                                rows={2}
+                                                value={formData.directions}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Manual</label>
+                                            <textarea
+                                                name="houseManual"
+                                                placeholder="How to use appliances, AC, pool etc."
+                                                rows={3}
+                                                value={formData.houseManual}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Rules</label>
+                                            <textarea
+                                                name="houseRules"
+                                                placeholder="No smoking, no parties, etc."
+                                                rows={3}
+                                                value={formData.houseRules}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Instructions</label>
+                                            <textarea
+                                                name="checkoutInstructions"
+                                                placeholder="What to do before leaving (trash, keys, etc.)"
+                                                rows={2}
+                                                value={formData.checkoutInstructions}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Guidebooks</label>
+                                            <textarea
+                                                name="guidebooks"
+                                                placeholder="Local recommendations (restaurants, sights)"
+                                                rows={2}
+                                                value={formData.guidebooks}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interaction Preferences</label>
+                                            <textarea
+                                                name="interactionPreferences"
+                                                placeholder="How you prefer to interact with guests"
+                                                rows={2}
+                                                value={formData.interactionPreferences}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        Property Images
+                                    </label>
+                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                if (e.target.files) {
+                                                    setFiles(Array.from(e.target.files));
+                                                }
+                                            }}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                        <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Camera size={24} />
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-900 dark:text-white">Click to upload new photos</p>
+                                        <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+
+                                        {(existingImages.length > 0 || files.length > 0) && (
+                                            <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                                                {existingImages.map((img, i) => (
+                                                    <div key={`existing-${i}`} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
+                                                        <img src={img} className="w-full h-full object-cover" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                setExistingImages(prev => prev.filter((_, idx) => idx !== i));
+                                                            }}
+                                                            className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <XCircle size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {files.map((f, i) => (
+                                                    <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
+                                                        {f.name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        name="description"
+                                        rows={4}
+                                        required
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                    ></textarea>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
+                                >
+                                    {isLoading ? 'Saving Changes...' : 'Save Changes'}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </div >
             </div >

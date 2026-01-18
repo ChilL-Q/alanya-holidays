@@ -91,11 +91,11 @@ export const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-accent font-semibold mb-6">{t('footer.services_title')}</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link to="/services?category=transport" className="hover:text-accent transition-colors">{t('services.transport.title')}</Link></li>
-                            <li><Link to="/services?category=adventure" className="hover:text-accent transition-colors">{t('services.adventure.title')}</Link></li>
-                            <li><Link to="/services?category=health" className="hover:text-accent transition-colors">{t('services.health.title')}</Link></li>
-                            <li><Link to="/services?category=visa" className="hover:text-accent transition-colors">{t('services.visa.title')}</Link></li>
-                            <li><Link to="/services?category=connectivity" className="hover:text-accent transition-colors">{t('services.connectivity.title')}</Link></li>
+                            <li><Link to="/services" className="hover:text-accent transition-colors">{t('services.transport.title')}</Link></li>
+                            <li><Link to="/services/experiences" className="hover:text-accent transition-colors">{t('footer.experiences')}</Link></li>
+                            <li><Link to="/services/health" className="hover:text-accent transition-colors">{t('services.health.title')}</Link></li>
+                            <li><Link to="/services/visa" className="hover:text-accent transition-colors">{t('services.visa.title')}</Link></li>
+                            <li><Link to="/services/connectivity" className="hover:text-accent transition-colors">{t('services.connectivity.title')}</Link></li>
                         </ul>
                     </div>
 

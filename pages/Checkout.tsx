@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { ServiceType } from '../types/index';
-import { Trash2, Shield, CreditCard, CheckCircle } from 'lucide-react';
+import { Trash2, Shield, CreditCard, CheckCircle, Smartphone, Banknote, Bitcoin, Copy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,14 @@ export const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'crypto' | 'cash'>('card');
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handlePayment = async () => {
     if (!isAuthenticated) {
@@ -32,21 +40,29 @@ export const Checkout: React.FC = () => {
 
       // Create bookings in DB
       for (const item of items) {
+        // Determine status based on payment method
+        let bookingStatus: 'confirmed' | 'pending' = 'pending';
+        let paymentStatus: 'paid' | 'pending' = 'pending';
+
+        if (paymentMethod === 'card') {
+          bookingStatus = 'confirmed';
+          paymentStatus = 'paid';
+        } else if (paymentMethod === 'cash') {
+          bookingStatus = 'confirmed'; // Instant confirmation for cash on arrival
+          paymentStatus = 'pending';
+        } else {
+          // Bank / Crypto need verification
+          bookingStatus = 'pending';
+          paymentStatus = 'pending';
+        }
+
         await db.createBooking({
           user_id: user!.id,
           item_id: item.id,
           type: item.type === 'RENTAL' ? 'property' : (item.type === 'TOUR' || item.type === 'TRANSFER' ? 'service' : 'service'),
-          // Note: CartItem type mapping to DB type. 'RENTAL' maps to property/service depending on context but here assuming property if simple rental, 
-          // OR better: rely on item.type from cart. The current Type enum has RENTAL, TOUR.
-          // If it's a vehicle rental service, it is stored in 'services' table, but CartItem.type might be RENTAL. 
-          // For simplicity given current setup:
-          // Properties are RENTAL. Services are TOUR/TRANSFER/RENTAL(if vehicle service).
-          // We ideally distinguish. For now, defaulting to 'service' if startDate is present (BookVehicle) EXCEPT if we know it's a property.
-          // Let's assume property items have type 'RENTAL' and service items have type 'RENTAL' too? No, properties are usually just PROPERY in db but RENTAL in types.
-          // Let's check db.createBooking implementation. It expects 'property' or 'service'.
-          // A safer check: if valid property ID -> property, else service.
-          // But here simple logic:
-          status: 'confirmed',
+          status: bookingStatus,
+          payment_method: paymentMethod,
+          payment_status: paymentStatus,
           check_in: item.startDate || item.date || new Date().toISOString(),
           check_out: item.endDate || item.date || new Date(Date.now() + 86400000).toISOString(),
           total_price: item.price,
@@ -145,8 +161,8 @@ export const Checkout: React.FC = () => {
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t('checkout.recommended')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { id: 'rec-1', type: ServiceType.OTHER, title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival' },
-                  { id: 'rec-2', type: ServiceType.OTHER, title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge' },
+                  { id: 'rec-1', type: ServiceType.OTHER, title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=200&h=200&fit=crop' },
+                  { id: 'rec-2', type: ServiceType.OTHER, title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop' },
                 ].map((rec) => {
                   const isInCart = items.some(i => i.id === rec.id);
                   return (
@@ -161,6 +177,7 @@ export const Checkout: React.FC = () => {
                             type: ServiceType.OTHER,
                             title: rec.title,
                             price: rec.price,
+                            image: rec.image,
                             details: 'One-time service'
                           });
                         }
@@ -191,10 +208,74 @@ export const Checkout: React.FC = () => {
 
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t('checkout.payment')}</h2>
-              <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg bg-slate-50 mb-4">
-                <CreditCard className="text-slate-400" />
-                <span className="text-slate-500 text-sm">{t('checkout.card_mock')}</span>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <button
+                  onClick={() => setPaymentMethod('card')}
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${paymentMethod === 'card' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <CreditCard className={paymentMethod === 'card' ? 'text-teal-600' : 'text-slate-400'} />
+                  <span className="text-sm font-medium">{t('checkout.method.card')}</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('cash')}
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${paymentMethod === 'cash' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <Banknote className={paymentMethod === 'cash' ? 'text-teal-600' : 'text-slate-400'} />
+                  <span className="text-sm font-medium">{t('checkout.method.cash')}</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('bank')}
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${paymentMethod === 'bank' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <Shield className={paymentMethod === 'bank' ? 'text-teal-600' : 'text-slate-400'} />
+                  <span className="text-sm font-medium">{t('checkout.method.bank')}</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('crypto')}
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${paymentMethod === 'crypto' ? 'border-teal-600 bg-teal-50 text-teal-700' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <Bitcoin className={paymentMethod === 'crypto' ? 'text-teal-600' : 'text-slate-400'} />
+                  <span className="text-sm font-medium">{t('checkout.method.crypto')}</span>
+                </button>
               </div>
+
+              {paymentMethod === 'card' && (
+                <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg bg-slate-50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <CreditCard className="text-slate-400" />
+                  <span className="text-slate-500 text-sm">{t('checkout.card_mock')}</span>
+                </div>
+              )}
+
+              {paymentMethod === 'cash' && (
+                <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-slate-600 font-medium mb-1">{t('checkout.method.cash')}</p>
+                  <p className="text-xs text-slate-500">{t('checkout.method.cash_desc')}</p>
+                </div>
+              )}
+
+              {paymentMethod === 'bank' && (
+                <div className="p-4 border border-teal-100 rounded-lg bg-teal-50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-teal-800 font-medium mb-2">{t('checkout.method.bank_desc')}</p>
+                  <div className="flex items-center justify-between text-xs bg-white p-3 rounded border border-teal-100">
+                    <code className="text-slate-600 font-mono">TR00 0000 0000 0000 0000</code>
+                    <button onClick={() => copyToClipboard('TR00 0000 0000 0000 0000')} className="text-teal-600 hover:text-teal-800 flex items-center gap-1">
+                      <Copy size={14} /> {copied ? 'Copied' : t('checkout.copy')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod === 'crypto' && (
+                <div className="p-4 border border-indigo-100 rounded-lg bg-indigo-50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-indigo-800 font-medium mb-2">{t('checkout.method.crypto_desc')}</p>
+                  <div className="flex items-center justify-between text-xs bg-white p-3 rounded border border-indigo-100">
+                    <code className="text-slate-600 font-mono truncate max-w-[200px]">TTrsS...</code>
+                    <button onClick={() => copyToClipboard('TTrsSkD...')} className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                      <Copy size={14} /> {copied ? 'Copied' : t('checkout.copy')}
+                    </button>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={handlePayment}
                 disabled={items.length === 0 || isProcessing}

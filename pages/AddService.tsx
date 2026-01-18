@@ -482,6 +482,7 @@ export const AddService: React.FC = () => {
                                             >
                                                 <option value="water">Water (Boat, Jet Ski, Diving)</option>
                                                 <option value="safari">Safari & Off-road</option>
+                                                <option value="atv">ATV & Buggy</option>
                                                 <option value="air">Air (Paragliding, Balloon)</option>
                                                 <option value="land">Land Tours (City, Historical)</option>
                                                 <option value="wellness">Wellness (Hamam, Spa)</option>

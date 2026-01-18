@@ -28,7 +28,6 @@ export interface PropertyDB {
     amenities: Amenity[];
     images: string[];
     host_id: string;
-    ical_url?: string;
     rental_license?: string;
     status?: ApprovalStatus | 'approved' | 'pending' | 'rejected';
     rejection_reason?: string;
@@ -54,6 +53,36 @@ export interface PropertyDB {
     reviews_count?: number;
 
     host?: Partial<UserProfile>;
+    created_at?: string;
+    updated_at?: string;
+    
+    // iCal & Sync
+    ical_url?: string;
+    ical_token?: string;
+    last_synced_at?: string;
+}
+
+export interface PropertyICalFeed {
+    id: string;
+    property_id: string;
+    name: string;
+    url: string;
+    last_synced_at?: string;
+    created_at?: string;
+}
+
+export interface PropertyAvailability {
+    id: string;
+    property_id: string;
+    date: string;
+    status: 'available' | 'booked' | 'blocked';
+    price?: number;
+    source: 'manual' | 'ical' | 'reservation';
+    feed_id?: string;
+    feed?: {
+        name: string;
+    };
+    external_id?: string;
     created_at?: string;
     updated_at?: string;
 }
@@ -159,6 +188,9 @@ export interface Booking {
     property?: Partial<PropertyDB>;
     service?: Partial<ServiceDB>;
     product?: Partial<Product>;
+    
+    payment_method?: 'card' | 'bank' | 'crypto' | 'cash';
+    payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
 }
 
 export interface Message {

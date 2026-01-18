@@ -146,10 +146,10 @@ export const HostPropertiesPage = () => {
                                         </td>
                                         <td className="p-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${property.status === 'approved'
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50'
-                                                    : property.status === 'pending'
-                                                        ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50'
-                                                        : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50'
+                                                : property.status === 'pending'
+                                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50'
+                                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                                                 }`}>
                                                 {property.status === 'approved' ? 'Published' : property.status.charAt(0).toUpperCase() + property.status.slice(1)}
                                             </span>
@@ -169,7 +169,7 @@ export const HostPropertiesPage = () => {
                                                     <Eye size={18} />
                                                 </Link>
                                                 <Link
-                                                    to={`/admin/edit-property/${property.id}`} // We can reuse the edit page or make a host specific one
+                                                    to={`/host/edit-property/${property.id}`}
                                                     className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition"
                                                     title="Edit"
                                                 >

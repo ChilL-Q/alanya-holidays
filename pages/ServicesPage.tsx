@@ -1,36 +1,67 @@
 import React, { useState } from 'react';
-import { Car, Anchor, Heart, Stethoscope, ShoppingBag } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ServiceGrid } from '../components/services/ServiceGrid';
 import { ServiceCard } from '../components/services/ServiceCard';
 import { CategoryTabs } from '../components/services/CategoryTabs';
 
+
+
+import { db } from '../services/db';
+
 export const ServicesPage: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    const categoryParam = searchParams.get('category');
-    const [activeCategory, setActiveCategory] = useState(categoryParam || 'transport');
+    const { category } = useParams<{ category: string }>();
+    const [activeCategory, setActiveCategory] = useState(category || 'transport');
+    const [minPrices, setMinPrices] = useState<Record<string, number>>({});
 
     // Sync activeCategory with URL params
     React.useEffect(() => {
-        if (categoryParam) {
-            setActiveCategory(categoryParam);
+        if (category) {
+            setActiveCategory(category);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            setActiveCategory('transport');
         }
-    }, [categoryParam]);
+    }, [category]);
+
+    // Fetch minimum prices for categories
+    React.useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                // Fetch tours to calculate min prices for experiences
+                const { data } = await db.getServices('tour', 1, 100);
+                if (data) {
+                    const prices: Record<string, number> = {};
+                    const subcategories = ['water', 'safari', 'air', 'land', 'atv'];
+
+                    subcategories.forEach(sub => {
+                        const servicesInSub = data.filter(s => s.features?.subcategory === sub && s.type === 'tour');
+                        if (servicesInSub.length > 0) {
+                            const minPrice = Math.min(...servicesInSub.map(s => s.price));
+                            prices[sub] = minPrice;
+                        }
+                    });
+                    setMinPrices(prices);
+                }
+            } catch (err) {
+                console.error('Failed to fetch prices', err);
+            }
+        };
+        fetchPrices();
+    }, []);
 
     // Update URL when category changes
-    const handleCategorySelect = (category: string) => {
-        setActiveCategory(category);
-        setSearchParams({ category });
+    const handleCategorySelect = (id: string) => {
+        setActiveCategory(id);
+        navigate(id === 'transport' ? '/services' : `/services/${id}`);
     };
 
     const categories = [
         { id: 'transport', label: t('services.transport.title') },
-        { id: 'adventure', label: t('services.adventure.title') },
+        { id: 'experiences', label: t('footer.experiences') },
         { id: 'health', label: t('services.health.title') },
         { id: 'visa', label: t('services.visa.title') },
         { id: 'connectivity', label: t('services.connectivity.title') },
@@ -45,11 +76,11 @@ export const ServicesPage: React.FC = () => {
                 <CategoryTabs
                     categories={categories}
                     activeCategory={activeCategory}
-                    onSelect={setActiveCategory}
+                    onSelect={handleCategorySelect}
                 />
             </div>
 
-            <div className="space-y-12">
+            <div className="space-y-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {activeCategory === 'transport' && (
                     <ServiceGrid id="cars" title={t('services.transport.title')}>
                         <ServiceCard
@@ -73,49 +104,48 @@ export const ServicesPage: React.FC = () => {
                     </ServiceGrid>
                 )}
 
-                {activeCategory === 'adventure' && (
-                    <ServiceGrid id="tours" title={t('services.adventure.title')}>
+
+                {activeCategory === 'experiences' && (
+                    <ServiceGrid id="experiences" title={t('footer.experiences')}>
+                        <ServiceCard
+                            title={t('services.adventure.land')}
+                            description={t('services.adventure.land_desc')}
+                            icon={Mountain}
+                            rawPrice={minPrices['land'] || 30}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/experiences/land')}
+                        />
                         <ServiceCard
                             title={t('services.adventure.water')}
                             description={t('services.adventure.water_desc')}
                             icon={Anchor}
-                            rawPrice={50}
+                            rawPrice={minPrices['water'] || 50}
                             actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences')}
+                            onClick={() => navigate('/experiences/water')}
                         />
                         <ServiceCard
-                            title={t('services.adventure.tours')}
-                            description={t('services.adventure.tours_desc')}
-                            icon={Anchor}
-                            rawPrice={35}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences')}
-                        />
-                        <ServiceCard
-                            title={t('services.adventure.bikes')}
-                            description={t('services.adventure.bikes_desc')}
+                            title={t('services.adventure.safari')}
+                            description={t('services.adventure.safari_desc')}
                             icon={Car}
-                            rawPrice={15}
-                            price="/day"
+                            rawPrice={minPrices['safari'] || 35}
                             actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/bike-rental')}
+                            onClick={() => navigate('/experiences/safari')}
                         />
                         <ServiceCard
-                            title={t('services.adventure.ebikes')}
-                            description={t('services.adventure.ebikes_desc')}
+                            title="ATV & Buggy"
+                            description="Hourly rentals for off-road fun"
                             icon={Car}
-                            rawPrice={25}
-                            price="/day"
+                            rawPrice={minPrices['atv'] || 45}
                             actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/bike-rental')}
+                            onClick={() => navigate('/experiences/atv')}
                         />
                         <ServiceCard
-                            title={t('services.adventure.atv')}
-                            description={t('services.adventure.atv_desc')}
-                            icon={Car}
-                            rawPrice={45}
+                            title={t('services.adventure.air')}
+                            description={t('services.adventure.air_desc')}
+                            icon={Cloud}
+                            rawPrice={minPrices['air'] || 80}
                             actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences')}
+                            onClick={() => navigate('/experiences/air')}
                         />
                     </ServiceGrid>
                 )}
@@ -127,15 +157,16 @@ export const ServicesPage: React.FC = () => {
                             description={t('services.visa.tourist_desc')}
                             icon={Anchor}
                             rawPrice={50}
-                            actionLabel="Apply"
-                            onClick={() => navigate('/services/visa')}
+                            actionLabel="Consult"
+                            onClick={() => navigate('/contact')}
                         />
                         <ServiceCard
                             title={t('services.visa.residence')}
                             description={t('services.visa.residence_desc')}
                             icon={Anchor}
+                            rawPrice={250}
                             actionLabel="Consult"
-                            onClick={() => navigate('/services/visa')}
+                            onClick={() => navigate('/contact')}
                         />
                     </ServiceGrid>
                 )}

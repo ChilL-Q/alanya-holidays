@@ -92,6 +92,17 @@ export const tr = {
     'checkout.free_cancel': 'Ücretsiz İptal',
     'checkout.free_cancel_desc': 'rezervasyondan sonraki 48 saat içinde.',
     'checkout.recommended': 'Önerilen Ekstralar',
+    'checkout.method.title': 'Ödeme Yöntemi',
+    'checkout.method.card': 'Kredi/Banka Kartı',
+    'checkout.method.bank': 'Banka Havalesi',
+    'checkout.method.bank_desc': 'Doğrudan banka hesabımıza transfer.',
+    'checkout.method.crypto': 'Kripto Para',
+    'checkout.method.crypto_desc': 'Bitcoin, USDT veya ETH ile ödeyin.',
+    'checkout.method.cash': 'Varışta Nakit',
+    'checkout.method.cash_desc': 'Mülke vardığınızda ödeme yapın.',
+    'checkout.bank_details': 'Banka Detayları: IBAN TR00 0000 0000 0000 0000',
+    'checkout.crypto_address': 'USDT (TRC20): TTrs...',
+    'checkout.copy': 'Kopyala',
 
     // Trip Assistant
     'ai.button': 'AI Rehberine Sor',

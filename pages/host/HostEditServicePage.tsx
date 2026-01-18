@@ -336,6 +336,23 @@ export const HostEditServicePage: React.FC = () => {
                         {/* Adventure Fields */}
                         {category === 'adventure' && (
                             <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subcategory</label>
+                                    <select
+                                        name="subcategory"
+                                        value={formData.subcategory}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                    >
+                                        <option value="water">Water (Boat, Jet Ski, Diving)</option>
+                                        <option value="safari">Safari & Off-road</option>
+                                        <option value="atv">ATV & Buggy</option>
+                                        <option value="air">Air (Paragliding, Balloon)</option>
+                                        <option value="land">Land Tours (City, Historical)</option>
+                                        <option value="wellness">Wellness (Hamam, Spa)</option>
+                                    </select>
+                                </div>
+
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Duration (Hours)</label>

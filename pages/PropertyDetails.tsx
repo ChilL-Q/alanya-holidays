@@ -79,7 +79,7 @@ export const PropertyDetails: React.FC = () => {
             const bookings = await db.getBookings(user.id);
             const activeBooking = bookings.find((b: any) =>
               b.item_id === id &&
-              (b.status === 'confirmed' || b.status === 'completed')
+              (b.status === 'confirmed' || b.payment_status === 'paid')
             );
             if (activeBooking) {
               setHasBooking(true);
@@ -150,6 +150,7 @@ export const PropertyDetails: React.FC = () => {
       type: ServiceType.RENTAL,
       title: property.title,
       price: totalPrice,
+      image: property.images?.[0],
       details: `${nights} nights`
     });
     const crossSellSection = document.getElementById('cross-sell');
@@ -162,6 +163,7 @@ export const PropertyDetails: React.FC = () => {
       type: service.type,
       title: service.title,
       price: service.price,
+      image: service.images?.[0],
       details: service.type === ServiceType.TRANSFER ? service.vehicleType : service.duration
     });
   };
@@ -486,21 +488,37 @@ export const PropertyDetails: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {crossSellServices.length > 0 ? crossSellServices.map(service => (
-              <div key={service.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:shadow-lg transition bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-900 group">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600 flex items-center justify-center text-teal-700 dark:text-teal-300 shadow-sm">
-                    {service.type === ServiceType.TRANSFER ? <Car size={24} /> : <Camera size={24} />}
+              <div key={service.id} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg transition bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-900 group flex flex-col">
+                {/* Image Area */}
+                <div className="h-40 bg-slate-200 relative overflow-hidden">
+                  {service.images?.[0] ? (
+                    <img
+                      src={service.images[0]}
+                      alt={service.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
+                      {service.type === ServiceType.TRANSFER ? <Car size={32} /> : <Camera size={32} />}
+                    </div>
+                  )}
+                  <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm">
+                    {displayPrice(service.price)}
                   </div>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-700 px-2 py-1 rounded border border-slate-200 dark:border-slate-600">{displayPrice(service.price)}</span>
                 </div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1">{service.title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{service.description}</p>
-                <button
-                  onClick={() => handleAddService(service)}
-                  className="w-full py-2 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-teal-700 hover:text-teal-700 transition flex items-center justify-center gap-2 group-hover:bg-teal-50"
-                >
-                  {t('cross.add')} <ArrowRight size={16} />
-                </button>
+
+                <div className="p-4 flex flex-col flex-grow">
+                  <div className="mb-auto">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1 line-clamp-1">{service.title}</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{service.description}</p>
+                  </div>
+                  <button
+                    onClick={() => handleAddService(service)}
+                    className="w-full py-2 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-teal-700 hover:text-teal-700 transition flex items-center justify-center gap-2 group-hover:bg-teal-50"
+                  >
+                    {t('cross.add')} <ArrowRight size={16} />
+                  </button>
+                </div>
               </div>
             )) : (
               <div className="col-span-3 text-center text-slate-400 py-8">No extra services available at the moment.</div>

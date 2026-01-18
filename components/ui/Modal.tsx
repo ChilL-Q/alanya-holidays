@@ -10,15 +10,22 @@ interface ModalProps {
 
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
     useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', handleEsc);
         } else {
             document.body.style.overflow = 'unset';
+            window.removeEventListener('keydown', handleEsc);
         }
         return () => {
             document.body.style.overflow = 'unset';
+            window.removeEventListener('keydown', handleEsc);
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
