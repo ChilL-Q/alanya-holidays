@@ -301,9 +301,9 @@ export const CarModelDetails: React.FC = () => {
                                     <button
                                         className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
                                         onClick={() => {
-                                            // Proceed to checkout logic (reuse existing checkout flow)
-                                            // Navigation to checkout would go here
-                                            alert('Proceed to booking flow');
+                                            if (selectedOffer) {
+                                                navigate(`/book-vehicle/${selectedOffer.id}`);
+                                            }
                                         }}
                                     >
                                         Book Now

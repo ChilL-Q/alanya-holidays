@@ -48,6 +48,8 @@ export const ServicesPage: React.FC = () => {
                 }
             } catch (err) {
                 console.error('Failed to fetch prices', err);
+                // @ts-ignore
+                if (err?.message) console.error('Error details:', err.message);
             }
         };
         fetchPrices();

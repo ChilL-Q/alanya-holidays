@@ -8,6 +8,7 @@ interface NotificationContextType {
     markAsRead: (id: string) => Promise<void>;
     addNotification: (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => Promise<void>;
     refreshNotifications: () => Promise<void>;
+    lastNotification: Notification | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -15,6 +16,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [lastNotification, setLastNotification] = useState<Notification | null>(null);
 
     const refreshNotifications = async () => {
         if (!user) {
@@ -36,7 +38,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         if (user) {
             const subscription = db.subscribeToNotifications(user.id, (payload) => {
                 if (payload.eventType === 'INSERT') {
-                    setNotifications(prev => [payload.new as Notification, ...prev]);
+                    const newNotification = payload.new as Notification;
+                    setNotifications(prev => {
+                        // Prevent duplicates
+                        if (prev.some(n => n.id === newNotification.id)) return prev;
+                        return [newNotification, ...prev];
+                    });
+                    setLastNotification(newNotification);
                     // Optional: Play a sound or show a toast
                 }
             });
@@ -66,8 +74,17 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                 read: false,
                 created_at: new Date().toISOString()
             };
+
+            // Optimistic update
+            console.log('Adding new notification:', newNotification);
+            setNotifications(prev => [newNotification, ...prev]);
+            setLastNotification(newNotification);
+
+            // Play notification sound
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+            audio.play().catch(e => console.error('Error playing sound:', e));
+
             await db.addNotification(newNotification);
-            await refreshNotifications();
         } catch (error) {
             console.error('Failed to add notification:', error);
         }
@@ -76,7 +93,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, addNotification, refreshNotifications }}>
+        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, addNotification, refreshNotifications, lastNotification }}>
             {children}
         </NotificationContext.Provider>
     );

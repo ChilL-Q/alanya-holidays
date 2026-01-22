@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -25,6 +25,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/services', label: 'Fleet & Services', icon: Car },
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
         { path: '/admin/users', label: 'Users', icon: Users },
+        { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
 
     return (
@@ -54,7 +55,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     </button>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                <nav className="p-4 space-y-1 overflow-y-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.exact

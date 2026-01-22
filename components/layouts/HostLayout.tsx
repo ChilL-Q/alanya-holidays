@@ -5,12 +5,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
 
+import { useChat } from '../../context/ChatContext';
+
 interface HostLayoutProps {
     children: React.ReactNode;
 }
 
 export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
     const { logout, user } = useAuth();
+    const { conversations } = useChat();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -65,7 +68,7 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                     </Button>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                <nav className="p-4 space-y-1 overflow-y-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.exact
@@ -83,13 +86,21 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                                 `}
                             >
                                 <Icon size={20} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
-                                <span>{item.label}</span>
+                                <span className="flex-1">{item.label}</span>
+                                {item.label === 'Inbox' && (() => {
+                                    const unreadCount = conversations.reduce((acc, curr) => acc + (curr.unread_count || 0), 0);
+                                    return unreadCount > 0 ? (
+                                        <span className="bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                                            {unreadCount}
+                                        </span>
+                                    ) : null;
+                                })()}
                             </NavLink>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800 mt-2">
                     <div className="flex items-center gap-3 px-4 py-3 mb-2">
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                             {user?.avatar ? (
@@ -111,6 +122,9 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                         <span>Back to Site</span>
                     </button>
                 </div>
+
+                {/* Spacer to fill height if needed or just leave empty space at bottom */}
+                <div className="flex-1"></div>
             </aside>
 
             {/* Main Content */}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
+import { Modal } from './Modal';
 import { X, AlertTriangle } from 'lucide-react';
 
 interface ConfirmationModalProps {
@@ -27,17 +27,10 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 }) => {
     const [reason, setReason] = useState('');
 
-    // Handle Escape key
-    useEffect(() => {
-        if (isOpen) {
-            const handleEsc = (e: KeyboardEvent) => {
-                if (e.key === 'Escape') onClose();
-            };
-            window.addEventListener('keydown', handleEsc);
-            return () => window.removeEventListener('keydown', handleEsc);
-        }
-    }, [isOpen, onClose]);
+    // We don't need manual Esc handling anymore as Modal handles it
+    // But we need to keep handleConfirm logic
 
+    // Modal component handles isOpen check if we place it inside
     if (!isOpen) return null;
 
     const handleConfirm = () => {
@@ -48,13 +41,15 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         setReason(''); // Reset
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            {/* Modal Container */}
-            <div
-                className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-700 relative"
-                onClick={(e) => e.stopPropagation()}
-            >
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            maxWidth="md"
+            noPadding // We handle padding in our internal layout for header/footer
+        // No title passed to Modal, we render custom header
+        >
+            <div className="flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start shrink-0">
                     <div className="flex gap-4">
@@ -63,7 +58,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                 <AlertTriangle size={20} />
                             </div>
                         )}
-                        <div>
+                        <div className="pr-6">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                                 {title}
                             </h3>
@@ -74,7 +69,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </div>
                 </div>
 
-                {/* Close Button Absolute (like Car Modal) */}
+                {/* Close Button Absolute (retained functionality but inside Modal content) */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
@@ -101,7 +96,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3 shrink-0">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
                     <button
                         onClick={onClose}
                         className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 rounded-xl transition-all"
@@ -123,7 +118,6 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                     </button>
                 </div>
             </div>
-        </div>,
-        document.body
+        </Modal>
     );
 };

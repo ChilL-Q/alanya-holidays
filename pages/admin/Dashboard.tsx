@@ -179,7 +179,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-[350px] flex flex-col">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Booking Status</h3>
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 w-full min-h-[200px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie

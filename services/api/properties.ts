@@ -156,6 +156,16 @@ export const propertiesService = {
         return data as Review[];
     },
 
+    async getReviewCount(propertyId: string) {
+        const { count, error } = await supabase
+            .from('reviews')
+            .select('*', { count: 'exact', head: true })
+            .eq('property_id', propertyId);
+        
+        if (error) throw error;
+        return count || 0;
+    },
+
     async addReview(review: Omit<Review, 'id' | 'created_at'>) {
         const { error } = await supabase
             .from('reviews')
@@ -257,6 +267,19 @@ export const propertiesService = {
         });
         if (error) throw error;
         return data;
+    },
+
+    async getUnavailableDates(propertyId: string) {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+            .from('property_availability')
+            .select('date')
+            .eq('property_id', propertyId)
+            .gte('date', today)
+            .neq('status', 'available');
+
+        if (error) throw error;
+        return (data || []).map((row: any) => row.date);
     },
 
     // Multi-Calendar Management

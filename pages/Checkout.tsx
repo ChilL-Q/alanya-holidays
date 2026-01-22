@@ -76,9 +76,9 @@ export const Checkout: React.FC = () => {
         navigate('/profile');
       }, 3000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Booking error:", error);
-      alert("Payment failed. Please try again.");
+      alert(error.message || "Payment failed. Please try again.");
     } finally {
       setIsProcessing(false);
     }

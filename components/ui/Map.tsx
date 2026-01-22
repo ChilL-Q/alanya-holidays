@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, OverlayView, OverlayViewF } from '@react-google-maps/api';
 import { useTheme } from '../../context/ThemeContext';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { PropertyData } from '../../services/db';
+import { Star, Users, Bed } from 'lucide-react';
 
 const containerStyle = {
     width: '100%',
@@ -27,7 +29,7 @@ const darkMapStyles = [
     {
         featureType: "poi",
         elementType: "labels.text.fill",
-        stylers: [{ color: "#d59563" }],
+        stylers: [{ color: "#d59563" }]
     },
     {
         featureType: "poi.park",
@@ -96,27 +98,25 @@ const darkMapStyles = [
     },
 ];
 
-import { PropertyData } from '../../services/db';
-
 interface MapProps {
     properties: PropertyData[];
 }
 
 export const Map: React.FC<MapProps> = ({ properties }) => {
     const { theme } = useTheme();
+    const navigate = useNavigate();
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
     });
 
-    const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(null);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     // Generate mock coordinates if missing
     const getCoords = useCallback((p: PropertyData) => {
         if (p.latitude && p.longitude) return { lat: p.latitude, lng: p.longitude };
 
-        // Deterministic pseudo-random based on ID (or title if ID missing in strict type, but ID should be there)
-        // We'll cast to 'any' for the ID check since PropertyData might not strictly have 'id' optional in interface but usually has it from DB
+        // Deterministic pseudo-random based on ID
         const seed = ((p as any).id || 'default').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const latOffset = (Math.sin(seed) * 0.04);
         const lngOffset = (Math.cos(seed) * 0.04);
@@ -129,11 +129,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
 
     const center = useMemo(() => {
         if (properties.length === 0) return AlanyaCenter;
-
-        // Single property or multiple
-        if (properties.length === 1) {
-            return getCoords(properties[0]);
-        }
+        if (properties.length === 1) return getCoords(properties[0]);
 
         const coords = properties.map(getCoords);
         const avgLat = coords.reduce((sum, c) => sum + c.lat, 0) / coords.length;
@@ -143,9 +139,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
     }, [properties, getCoords]);
 
     const onLoad = useCallback(function callback(map: google.maps.Map) {
-        // const bounds = new window.google.maps.LatLngBounds(center);
-        // map.fitBounds(bounds);
-        // We set center via prop, so manual bounds fitting is optional unless we want strict bounds
+        // center logic handled by prop
     }, []);
 
     const onUnmount = useCallback(function callback(map: google.maps.Map) {
@@ -161,6 +155,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
         streetViewControl: false,
         mapTypeControl: false,
         fullscreenControl: true,
+        clickableIcons: false,
     };
 
     return (
@@ -172,49 +167,99 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                 onLoad={onLoad}
                 onUnmount={onUnmount}
                 options={mapOptions}
+                onClick={() => setSelectedId(null)}
             >
                 {properties.map((property) => {
                     const position = getCoords(property);
+                    const isSelected = selectedId === property.id;
+
                     return (
-                        <MarkerF
+                        <OverlayViewF
                             key={property.id}
                             position={position}
-                            onClick={() => setSelectedProperty(property)}
-                        // Custom icon can be added here: icon={{ url: "...", scaledSize: ... }}
-                        />
+                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                        >
+                            <div
+                                className={`relative transform -translate-x-1/2 -translate-y-full transition-all duration-200 cursor-pointer ${isSelected ? 'z-50 scale-110' : 'z-10 hover:z-50 hover:scale-110'}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedId(isSelected ? null : property.id);
+                                }}
+                            >
+                                {/* Pin Triangle for Pill */}
+                                <div className={`
+                                    absolute top-full left-1/2 -translate-x-1/2 -mt-2 w-3 h-3 rotate-45 transition-colors duration-200
+                                    ${isSelected
+                                        ? 'bg-teal-600'
+                                        : 'bg-white dark:bg-slate-800 border-r border-b border-slate-200 dark:border-slate-700'}
+                                `}></div>
+
+                                {/* Price Pill */}
+                                <div className={`
+                                    relative flex items-center justify-center px-4 py-2 rounded-full shadow-lg font-bold text-sm transition-all duration-200 z-10
+                                    ${isSelected
+                                        ? 'bg-teal-600 text-white ring-2 ring-white dark:ring-slate-900'
+                                        : 'bg-white text-slate-900 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700'}
+                                `}>
+                                    €{Math.round(property.price_per_night)}
+                                </div>
+
+                                {/* Detail Card (Click Sticky) */}
+                                {isSelected && (
+                                    <div
+                                        className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[60]"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/property/${property.id}`);
+                                        }}
+                                    >
+                                        {/* Image */}
+                                        <div className="h-40 w-full bg-slate-200 relative group overflow-hidden">
+                                            <img
+                                                src={property.images?.[0] || 'https://via.placeholder.com/300'}
+                                                alt={property.title}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                            {/* Rating Badge */}
+                                            <div className="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                                                <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                                <span className="text-xs font-bold text-slate-900 dark:text-white">4.96</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-bold text-base text-slate-900 dark:text-white leading-tight line-clamp-2">{property.title}</h3>
+                                            </div>
+
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-3 flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                                                {property.location}
+                                            </p>
+
+                                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-xs font-medium border-t border-slate-100 dark:border-slate-800 pt-3">
+                                                <div className="flex items-center gap-1">
+                                                    <Users size={14} />
+                                                    <span>{property.max_guests} Guests</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Bed size={14} />
+                                                    <span>{property.bedrooms} Bed</span>
+                                                </div>
+                                                <div className="ml-auto font-bold text-teal-600 dark:text-teal-400">
+                                                    View Details →
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+
+                            </div>
+                        </OverlayViewF>
                     );
                 })}
-
-                {selectedProperty && (
-                    <InfoWindowF
-                        position={getCoords(selectedProperty)}
-                        onCloseClick={() => setSelectedProperty(null)}
-                    >
-                        <div className="min-w-[200px] max-w-[250px] p-1 font-sans text-slate-900">
-                            <div className="relative mb-2 rounded-lg overflow-hidden h-32 w-full">
-                                <img
-                                    src={selectedProperty.images?.[0] || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'}
-                                    alt={selectedProperty.title}
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-md text-xs font-bold shadow-sm">
-                                    ★ {selectedProperty.rating || 5.0}
-                                </div>
-                            </div>
-                            <h3 className="font-bold text-sm mb-1 leading-tight line-clamp-1">{selectedProperty.title}</h3>
-                            <p className="text-slate-500 text-xs mb-2 truncate">{selectedProperty.location}</p>
-                            <div className="flex justify-between items-center mt-2">
-                                <p className="text-teal-700 font-bold text-base">€{selectedProperty.price_per_night}<span className="text-xs text-slate-400 font-normal">/night</span></p>
-                                <Link
-                                    to={`/property/${selectedProperty.id}`}
-                                    className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors no-underline block"
-                                >
-                                    View
-                                </Link>
-                            </div>
-                        </div>
-                    </InfoWindowF>
-                )}
             </GoogleMap>
         </div>
     );

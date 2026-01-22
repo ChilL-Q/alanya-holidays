@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { SearchWidget } from './SearchWidget';
+import { WeatherWidget } from '../weather/WeatherWidget';
 
 interface HeroSectionProps {
     location: string;
@@ -11,20 +12,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
     const { t } = useLanguage();
 
     return (
-        <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
-                <img
-                    src="/images/hero-bg.jpg"
-                    onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
-                    }}
-                    alt="Alanya Coastline"
-                    className="w-full h-full object-cover"
-                />
-                {/* Darker overlay for better text contrast */}
-                <div className="absolute inset-0 bg-black/20"></div>
-                {/* Bottom gradient for smooth transition */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+        <section className="relative h-[600px] flex items-center justify-center">
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
+                    <img
+                        src="/images/hero-bg.jpg"
+                        onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
+                        }}
+                        alt="Alanya Coastline"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Darker overlay for better text contrast */}
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    {/* Bottom gradient for smooth transition */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                </div>
             </div>
 
             <div className="relative z-10 w-full max-w-5xl px-4 animate-fade-up">
@@ -39,6 +42,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
 
                 <SearchWidget location={location} setLocation={setLocation} />
             </div>
+            <WeatherWidget />
         </section>
     );
 };

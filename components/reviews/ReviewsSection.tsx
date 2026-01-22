@@ -55,7 +55,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
     if (loading) return <div className="py-8 text-center text-slate-500">Loading reviews...</div>;
 
     return (
-        <section className="py-12 border-t border-slate-200 dark:border-slate-800">
+        <section id="reviews-section" className="py-12 border-t border-slate-200 dark:border-slate-800">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">

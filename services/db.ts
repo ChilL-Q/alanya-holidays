@@ -6,6 +6,7 @@ import { productsService } from './api/products';
 import { messagesService, favoritesService } from './api/misc';
 import { storageService } from './api/storage';
 import { notificationsService } from './api/notifications';
+import { chatService } from './api/chat';
 
 // Re-export types for backward compatibility
 // Mapping new names to old names where originally defined in db.ts
@@ -29,5 +30,6 @@ export const db = {
     ...messagesService,
     ...favoritesService,
     ...storageService,
-    ...notificationsService
+    ...notificationsService,
+    ...chatService
 };

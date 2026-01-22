@@ -9,6 +9,12 @@ export const CartDrawer: React.FC = () => {
     const { formatPrice } = useCurrency();
     const navigate = useNavigate();
     // Prevent body scroll when open
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Prevent body scroll when open & Handle Esc key
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -27,6 +33,8 @@ export const CartDrawer: React.FC = () => {
             window.removeEventListener('keydown', handleEsc);
         };
     }, [isCartOpen, setIsCartOpen]);
+
+    if (!mounted) return null;
 
     return (
         <>

@@ -2,26 +2,32 @@ import { supabase } from '../supabase';
 import { Booking } from '../../types/index';
 
 export const bookingsService = {
-    async createBooking(data: any) { // Keep explicit type if possible, simpler for now
-        // Map frontend 'type' to DB 'item_type'
-        const dbData: any = { 
-            ...data,
-            // Ensure payment fields are passed
-            payment_method: data.payment_method || 'card',
-            payment_status: data.payment_status || 'pending'
+    async createBooking(data: any) {
+        // Fallback or Legacy: use RPC if possible for safety
+        // We will switch to using the safe version as primary
+        
+        // Clean data for RPC
+        const rpcParams = {
+            p_property_id: data.item_id || data.id, // handle both just in case
+            p_user_id: data.user_id,
+            p_check_in: data.check_in,
+            p_check_out: data.check_out,
+            p_total_price: data.total_price,
+            p_guests: data.guests,
+            p_message: data.message,
+            p_payment_method: data.payment_method || 'card'
         };
-        dbData.item_type = data.type;
-        delete dbData.type;
 
-        const { data: booking, error } = await supabase
-            .from('bookings')
-            .insert([dbData])
-            .select()
-            .single();
+        const { data: result, error } = await supabase.rpc('create_booking', rpcParams);
 
         if (error) throw error;
-        return booking;
+        if (result.error) throw new Error(result.error);
+        
+        return { id: result.data };
     },
+    
+    // Original unsafe method kept as reference if needed (renamed internal or just removed)
+    // async createBookingLegacy(data: any) { ... }
 
     async getBookings(userId?: string) {
         // 1. Fetch raw bookings
@@ -80,8 +86,7 @@ export const bookingsService = {
     
     // Admin Bookings
     async getAdminBookings(statusFilter?: string) {
-         let query = supabase.from('bookings').select('*, user:profiles(full_name, email)');
-         // Note: user:profiles might not work if relation isn't set up. But usually it is on user_id.
+        let query = supabase.from('bookings').select('*');
 
         if (statusFilter && statusFilter !== 'all') {
             query = query.eq('status', statusFilter);
@@ -90,30 +95,74 @@ export const bookingsService = {
         const { data: bookings, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
-        
-         // Enrich admin bookings too? 
-         // Original db.ts didn't have specific getAdminBookings logic different from getBookings except for `getAdminBookings` in 555cfe conversation snippet but not in the viewed file.
-         // Limit to what I saw in db.ts or standard logic.
-         // Ref: "Modify relevant database queries in services/db.ts ... to use .maybeSingle()"
-         // I'll stick to a generic approach or reuse getBookings logic if possible, but admin needs *all* users.
-         
-         const enrichedBookings = await Promise.all(bookings.map(async (booking: any) => {
-            let details = null;
+        if (!bookings) return [];
+
+        // Manual Join for Users, Properties, Services
+        // This is more reliable than depending on Supabase relations if they aren't perfect
+        const enrichedBookings = await Promise.all(bookings.map(async (booking: any) => {
+            // User
+            const { data: user } = await supabase.from('profiles').select('full_name, email, avatar_url').eq('id', booking.user_id).maybeSingle();
+            
+            // Item
+            let itemDetails = null;
             if (booking.item_type === 'property') {
-                const { data } = await supabase.from('properties').select('title').eq('id', booking.item_id).maybeSingle();
-                details = { property: data };
+                const { data } = await supabase.from('properties').select('title, images, price_per_night, location').eq('id', booking.item_id).maybeSingle();
+                itemDetails = { property: data, itemTitle: data?.title };
             } else if (booking.item_type === 'service') {
-                const { data } = await supabase.from('services').select('title, type').eq('id', booking.item_id).maybeSingle();
-                details = { service: data };
+                const { data } = await supabase.from('services').select('title, images, price, type').eq('id', booking.item_id).maybeSingle();
+                itemDetails = { service: data, itemTitle: data?.title };
             }
-            return { ...booking, ...details };
+
+            return { ...booking, user, ...itemDetails };
         }));
-        
+
         return enrichedBookings;
     },
 
     async getBookingsByStatus(status: string) {
         return this.getAdminBookings(status);
+    },
+
+    // Host Bookings (New Efficient Method)
+    async getBookingsForHost(hostId: string) {
+        // 1. Get all properties owned by host
+        const { data: properties } = await supabase
+            .from('properties')
+            .select('id, title, images, location')
+            .eq('host_id', hostId);
+
+        if (!properties || properties.length === 0) return [];
+
+        const propertyIds = properties.map(p => p.id);
+        const propertyMap = new Map(properties.map(p => [p.id, p]));
+
+        // 2. Get bookings for these properties
+        const { data: bookings, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .in('item_id', propertyIds)
+            .eq('item_type', 'property') // Only property bookings for now
+            .order('check_in', { ascending: true }); // Upcoming first
+
+        if (error) throw error;
+
+        // 3. Enrich with Guest Info
+        const enrichedBookings = await Promise.all(bookings.map(async (booking: any) => {
+            const { data: user } = await supabase
+                .from('profiles')
+                .select('full_name, email, avatar_url, phone') // Host needs phone potentially
+                .eq('id', booking.user_id)
+                .maybeSingle();
+
+            return {
+                ...booking,
+                user, // Guest details
+                property: propertyMap.get(booking.item_id),
+                itemTitle: propertyMap.get(booking.item_id)?.title
+            };
+        }));
+
+        return enrichedBookings;
     },
 
     async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'completed') {

@@ -19,6 +19,8 @@ interface AuthContextType {
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     register: (name: string, email: string, password: string, role: 'guest' | 'host') => Promise<{ success: boolean; error?: string }>;
+    sendOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
+    verifyOtp: (email: string, token: string, type?: 'email' | 'signup' | 'recovery') => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateUser: (data: Partial<User>) => void;
     updateEmail: (email: string) => Promise<void>;
@@ -134,6 +136,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { success: true };
     };
 
+    const sendOtp = async (email: string) => {
+        setIsLoading(true);
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+        });
+        setIsLoading(false);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    };
+
+    const verifyOtp = async (email: string, token: string, type: 'email' | 'signup' | 'recovery' = 'email') => {
+        setIsLoading(true);
+        const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type,
+        });
+
+        setIsLoading(false);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    };
+
     const logout = async () => {
         await supabase.auth.signOut();
         setUser(null);
@@ -177,6 +208,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             isLoading,
             login,
             register,
+            sendOtp,
+            verifyOtp,
             logout,
             updateUser,
             updateEmail,

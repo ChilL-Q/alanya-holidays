@@ -53,3 +53,5 @@ export interface SearchFilters {
   checkOut: string;
   guests: number;
 }
+
+// Chat Types are exported from ./models

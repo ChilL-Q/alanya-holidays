@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -7,6 +8,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { Map } from '../components/ui/Map';
 import { useLightbox } from '../context/LightboxContext';
 import { useChat } from '../context/ChatContext';
+import { ChatWindow } from '../components/chat/ChatWindow';
+import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, PropertyData } from '../services/db';
@@ -41,8 +44,9 @@ export const PropertyDetails: React.FC = () => {
   const { addToCart } = useCart();
   const { t } = useLanguage();
   const { openLightbox } = useLightbox();
-  const { setChatContext } = useChat();
+  const { startConversation } = useChat();
   const { convertPrice, formatPrice } = useCurrency();
+  const [showChat, setShowChat] = useState(false);
 
   const [property, setProperty] = useState<PropertyDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,9 +55,9 @@ export const PropertyDetails: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { language } = useLanguage();
 
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
-
   const [crossSellServices, setCrossSellServices] = useState<any[]>([]);
 
   useEffect(() => {
@@ -71,8 +75,17 @@ export const PropertyDetails: React.FC = () => {
             amenities: Array.isArray(data.amenities)
               ? data.amenities.map((a: any) => typeof a === 'string' ? { label: a, icon: '' } : a)
               : []
-          } as PropertyDetailsData); // Cast because we are adding fields
-          // ...
+          } as PropertyDetailsData);
+
+          // Fetch blocked dates
+          const unavailable = await db.getUnavailableDates(id);
+          if (unavailable) {
+            setBlockedDates(unavailable.map((d: string) => new Date(d)));
+          }
+
+          // Fetch review count separately to ensure accuracy
+          const reviewCount = await db.getReviewCount(id);
+          setProperty(prev => prev ? { ...prev, reviewsCount: reviewCount } : null);
 
           // Check for booking if logged in
           if (isAuthenticated && user) {
@@ -117,15 +130,6 @@ export const PropertyDetails: React.FC = () => {
     }
   }, [checkIn, checkOut]);
 
-  useEffect(() => {
-    if (property) {
-      setChatContext({
-        propertyName: property.title,
-        location: property.location
-      });
-    }
-    return () => setChatContext(null);
-  }, [property, setChatContext]);
 
   if (loading) {
     return (
@@ -226,18 +230,32 @@ export const PropertyDetails: React.FC = () => {
 
         {/* Left Column: Info */}
         <div className="lg:col-span-2 space-y-8 animate-fade-up delay-100 opacity-0 fill-mode-forwards">
-          <div>
-            {/* Title moved to Hero Image */}
-          </div>
-
-          <div className="py-6 border-y border-slate-200 dark:border-slate-800 flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400">
-              <User size={24} />
+          <div className="mt-24 py-6 border-y border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400">
+                <User size={24} />
+              </div>
+              <div>
+                <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
-            </div>
+            <button
+              onClick={async () => {
+                if (!isAuthenticated) {
+                  document.dispatchEvent(new CustomEvent('open-login'));
+                  return;
+                }
+                if (property.host_id) {
+                  await startConversation(property.id, property.host_id);
+                  setShowChat(true);
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-900 dark:text-white font-medium transition-colors"
+            >
+              <MessageCircle size={18} />
+              Contact Host
+            </button>
           </div>
 
           <div>
@@ -388,7 +406,12 @@ export const PropertyDetails: React.FC = () => {
                 <span className="text-2xl font-bold text-slate-900 dark:text-white">{displayPrice(property.pricePerNight)}</span>
                 <span className="text-slate-500 dark:text-slate-400 text-sm"> {t('featured.night')}</span>
               </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-white underline cursor-pointer">
+              <div
+                className="flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-white underline cursor-pointer"
+                onClick={() => {
+                  document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 {property.reviewsCount} {t('prop.reviews')}
               </div>
             </div>
@@ -404,6 +427,7 @@ export const PropertyDetails: React.FC = () => {
                     startDate={checkIn}
                     endDate={checkOut}
                     minDate={new Date()}
+                    excludeDates={blockedDates}
                     placeholderText={t('date_format')}
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
@@ -421,6 +445,7 @@ export const PropertyDetails: React.FC = () => {
                     startDate={checkIn}
                     endDate={checkOut}
                     minDate={checkIn || new Date()}
+                    excludeDates={blockedDates}
                     placeholderText={t('date_format')}
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
@@ -526,6 +551,10 @@ export const PropertyDetails: React.FC = () => {
           </div>
         </div>
       </section>
+      {showChat && createPortal(
+        <ChatWindow className="fixed bottom-4 right-4 z-50 shadow-2xl" />,
+        document.body
+      )}
     </div>
   );
 };
