@@ -6,7 +6,8 @@ import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../services/db';
 import { useAuth } from '../context/AuthContext';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
-import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X } from 'lucide-react';
+import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X, Calendar, Settings2 } from 'lucide-react';
+import { getCarImage } from '../utils/carImages';
 
 // Local interfaces removed in favor of global types
 
@@ -82,7 +83,7 @@ export const CarModelDetails: React.FC = () => {
                         ...constantService, // Keep full object for modal
                         title: `${brand} ${model}`,
                         description: staticDescription || constantService.description || DEFAULT_DESCRIPTION,
-                        image: staticImage || constantService.images?.[0] || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop',
+                        image: getCarImage(brand, model, targetType, staticImage || constantService.images?.[0]),
                         features: [constantService.features.transmission, constantService.features.fuel, constantService.features.seats ? `${constantService.features.seats} Seats` : null].filter(Boolean)
                     });
                 }
@@ -144,11 +145,11 @@ export const CarModelDetails: React.FC = () => {
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
-                                    {offer.provider?.full_name?.charAt(0) || 'P'}
+                                    {offer.provider?.company_name?.charAt(0) || offer.provider?.full_name?.charAt(0) || 'P'}
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 transition-colors">
-                                        {offer.provider?.full_name || 'Verified Provider'}
+                                        {offer.provider?.company_name || offer.provider?.full_name || 'Verified Provider'}
                                     </h3>
                                     <div className="flex items-center gap-1 text-yellow-500 text-sm">
                                         <Star size={14} fill="currentColor" />
@@ -162,15 +163,25 @@ export const CarModelDetails: React.FC = () => {
                             </div>
 
                             <div className="flex-1 md:px-8">
-                                <div className="grid grid-cols-2 gap-4 text-sm text-slate-600 dark:text-slate-400">
-                                    <div className="flex items-center gap-2">
-                                        <Check size={16} className="text-green-500" />
-                                        <span>Instant Confirmation</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Check size={16} className="text-green-500" />
-                                        <span>Free Cancellation</span>
-                                    </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {offer.features?.year && (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
+                                            <Calendar size={14} className="text-slate-400" />
+                                            <span>{offer.features.year}</span>
+                                        </div>
+                                    )}
+                                    {offer.features?.transmission && (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
+                                            <Settings2 size={14} className="text-slate-400" />
+                                            <span className="capitalize">{offer.features.transmission}</span>
+                                        </div>
+                                    )}
+                                    {offer.features?.fuel && (
+                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
+                                            <Fuel size={14} className="text-slate-400" />
+                                            <span className="capitalize">{offer.features.fuel}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -285,10 +296,10 @@ export const CarModelDetails: React.FC = () => {
                                         <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('offer.provider') || 'Provider'}</h3>
                                         <div className="flex items-center gap-4 mb-4">
                                             <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
-                                                {selectedOffer.provider?.full_name?.charAt(0) || 'P'}
+                                                {selectedOffer.provider?.company_name?.charAt(0) || selectedOffer.provider?.full_name?.charAt(0) || 'P'}
                                             </div>
                                             <div>
-                                                <p className="font-bold text-slate-900 dark:text-white">{selectedOffer.provider?.full_name || 'Verified Provider'}</p>
+                                                <p className="font-bold text-slate-900 dark:text-white">{selectedOffer.provider?.company_name || selectedOffer.provider?.full_name || 'Verified Provider'}</p>
                                                 <p className="text-xs text-slate-500">Joined 2024</p>
                                             </div>
                                         </div>

@@ -5,6 +5,7 @@ import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../services/db';
 import { useNavigate } from 'react-router-dom';
+import { getCarImage } from '../utils/carImages';
 
 interface BikeGroup {
     id: string; // generated slug
@@ -43,8 +44,8 @@ export const BikeRental: React.FC = () => {
                     const key = `${brand}-${model}`.toLowerCase();
                     const title = `${brand} ${model}`;
                     const price = service.price;
-                    // Use first image found, fallback to generic bike image
-                    const image = service.images?.[0] || 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2670&auto=format&fit=crop';
+                    // Use getCarImage to ensure local files are used
+                    const image = getCarImage(brand, model, 'bike', service.images?.[0]);
 
                     if (!groups[key]) {
                         groups[key] = {
@@ -109,7 +110,7 @@ export const BikeRental: React.FC = () => {
                     <div className="relative">
                         <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
                         <img
-                            src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2670&auto=format&fit=crop"
+                            src="/images/transportation/bike/rent-a-bike-page.png"
                             alt="Scooter Rental"
                             className="relative rounded-3xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
                         />

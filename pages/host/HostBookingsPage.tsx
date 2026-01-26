@@ -271,9 +271,7 @@ export const HostBookingsPage = () => {
                                 <div className="mt-4 flex gap-2">
                                     <button
                                         onClick={() => {
-                                            // TODO: Navigate to chat
                                             navigate('/host/messages');
-                                            // In a clearer implementation, we'd pass the conversation ID or start one
                                         }}
                                         className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 transition"
                                     >

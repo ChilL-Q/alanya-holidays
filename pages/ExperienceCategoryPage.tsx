@@ -175,6 +175,11 @@ export const ExperienceCategoryPage: React.FC = () => {
                                 </div>
 
                                 <div className="p-5 flex flex-col flex-grow">
+                                    {(service.provider?.company_name || service.provider?.full_name) && (
+                                        <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider mb-1">
+                                            {service.provider.company_name || service.provider.full_name}
+                                        </p>
+                                    )}
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-teal-600 transition-colors">
                                         {service.title}
                                     </h3>

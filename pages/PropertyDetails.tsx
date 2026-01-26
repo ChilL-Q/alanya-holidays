@@ -23,6 +23,7 @@ interface PropertyDetailsData extends PropertyData {
   hostName: string;
   reviewsCount: number;
   pricePerNight: number;
+  host: any; // Allow full profile access
 }
 
 // Custom Masked Input Component
@@ -238,6 +239,12 @@ export const PropertyDetails: React.FC = () => {
               <div>
                 <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
+                {(property.host?.email || property.host?.phone) && (
+                  <div className="mt-1 text-xs text-slate-400 flex flex-col gap-0.5">
+                    {property.host.email && <span>{property.host.email}</span>}
+                    {property.host.phone && <span>{property.host.phone}</span>}
+                  </div>
+                )}
               </div>
             </div>
             <button
@@ -251,7 +258,7 @@ export const PropertyDetails: React.FC = () => {
                   setShowChat(true);
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-900 dark:text-white font-medium transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-medium transition-colors shadow-sm"
             >
               <MessageCircle size={18} />
               Contact Host
@@ -539,7 +546,7 @@ export const PropertyDetails: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleAddService(service)}
-                    className="w-full py-2 border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-teal-700 hover:text-teal-700 transition flex items-center justify-center gap-2 group-hover:bg-teal-50"
+                    className="w-full py-2 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:border-teal-700 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-500 transition flex items-center justify-center gap-2 group-hover:bg-teal-50 dark:group-hover:bg-teal-900/20"
                   >
                     {t('cross.add')} <ArrowRight size={16} />
                   </button>

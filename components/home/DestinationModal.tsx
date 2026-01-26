@@ -23,11 +23,12 @@ export const DestinationModal: React.FC<ModalProps> = ({ isOpen, onClose, data }
             onClose={onClose}
             maxWidth="4xl"
             noPadding
-        // We don't pass title so we get the floating close button and full control
+            hideCloseButton // We implement our own visible one
+            lockBodyScroll={false}
         >
-            <div className="grid md:grid-cols-2 h-[80vh] md:h-auto">
+            <div className="grid md:grid-cols-2">
                 {/* Image Side */}
-                <div className="relative h-64 md:h-full">
+                <div className="relative h-64 md:h-auto min-h-[300px]">
                     <img
                         src={data.image}
                         alt={data.title}
@@ -40,8 +41,31 @@ export const DestinationModal: React.FC<ModalProps> = ({ isOpen, onClose, data }
                 </div>
 
                 {/* Content Side */}
-                <div className="p-8 md:p-10 overflow-y-auto max-h-[calc(80vh-16rem)] md:max-h-[600px]">
-                    <div className="hidden md:block mb-6">
+                <div className="p-8 md:p-10 relative">
+                    {/* Manual Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white transition-colors z-20"
+                    >
+                        {/* Use X icon from lucide-react (make sure it's imported if not already) */}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="lucide lucide-x"
+                        >
+                            <path d="M18 6 6 18" />
+                            <path d="m6 6 12 12" />
+                        </svg>
+                    </button>
+
+                    <div className="hidden md:block mb-6 pr-8">
                         <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{data.title}</h2>
                         <div className="h-1 w-20 bg-accent rounded-full"></div>
                     </div>

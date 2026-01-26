@@ -22,12 +22,12 @@ const getWeatherInfo = (code: number, isDay: boolean = true) => {
     if (code === 0) return { icon: isDay ? Sun : Moon, label: 'Clear', color: isDay ? 'text-yellow-400' : 'text-slate-200' };
 
     // 1, 2, 3: Mainly clear, partly cloudy, and overcast
-    if (code === 1) return { icon: isDay ? CloudSun : Moon, label: 'Fair', color: isDay ? 'text-orange-300' : 'text-slate-300' };
-    if (code === 2) return { icon: Cloud, label: 'Cloudy', color: 'text-slate-200' };
-    if (code === 3) return { icon: Cloud, label: 'Overcast', color: 'text-slate-400' };
+    if (code === 1) return { icon: isDay ? CloudSun : Moon, label: 'Fair', color: isDay ? 'text-orange-300' : 'text-blue-100' };
+    if (code === 2) return { icon: Cloud, label: 'Cloudy', color: 'text-sky-200' };
+    if (code === 3) return { icon: Cloud, label: 'Overcast', color: 'text-sky-300' };
 
     // 45, 48: Fog
-    if (code === 45 || code === 48) return { icon: CloudFog, label: 'Fog', color: 'text-slate-300' };
+    if (code === 45 || code === 48) return { icon: CloudFog, label: 'Fog', color: 'text-blue-200' };
 
     // 51, 53, 55, 56, 57: Drizzle
     if ([51, 53, 55, 56, 57].includes(code)) return { icon: CloudDrizzle, label: 'Drizzle', color: 'text-blue-300' };
@@ -91,24 +91,24 @@ export const WeatherWidget: React.FC = () => {
     const currentInfo = getWeatherInfo(weather.current.code, weather.current.isDay);
 
     return (
-        <div className="group absolute top-6 right-4 z-40 transition-all duration-300 ease-in-out">
+        <div className="group absolute top-8 right-6 lg:right-12 z-40 transition-all duration-300 ease-in-out">
             {/* Main Widget Card */}
-            <div className="relative overflow-hidden rounded-2xl bg-black/20 backdrop-blur-md border border-white/10 shadow-lg text-white p-3 pr-5 hover:bg-black/40 transition-colors cursor-default">
+            <div className="relative overflow-hidden rounded-xl bg-slate-900/20 backdrop-blur-md border border-white/20 shadow-xl text-white p-2 pr-4 hover:bg-slate-900/30 transition-all cursor-default group-hover:scale-[1.02] duration-300">
 
                 {/* Current Weather Display */}
                 <div className="flex items-center gap-3">
-                    <div className={`${currentInfo.color} animate-pulse-slow`}>
-                        <CurrentIcon size={32} strokeWidth={1.5} />
+                    <div className={`${currentInfo.color} drop-shadow-md filter`}>
+                        <CurrentIcon size={28} strokeWidth={2} />
                     </div>
                     <div>
-                        <div className="text-2xl font-bold leading-none">{weather.current.temp}°</div>
-                        <div className="text-xs font-medium opacity-80 mt-0.5">{currentInfo.label}</div>
+                        <div className="text-2xl font-bold leading-none tracking-tight drop-shadow-sm">{weather.current.temp}°</div>
+                        <div className="text-xs font-medium opacity-90 mt-0.5 tracking-wide drop-shadow-sm">{currentInfo.label}</div>
                     </div>
                 </div>
             </div>
 
             {/* Popover Forecast (Visible on Hover) */}
-            <div className="absolute top-full right-0 mt-2 w-64 p-4 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 text-white">
+            <div className="absolute top-full right-0 mt-3 w-64 p-4 rounded-2xl bg-slate-950/60 backdrop-blur-xl border border-white/10 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 text-white">
                 <h4 className="text-sm font-semibold mb-3 border-b border-white/10 pb-2">Weekly Forecast</h4>
                 <div className="space-y-3">
                     {weather.daily.time.slice(1, 6).map((date, i) => { // Next 5 days

@@ -66,6 +66,9 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 </div>
                 <input
                     type="text"
+                    id="search-location"
+                    name="location"
+                    autoComplete="off"
                     className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
                     placeholder={t('search.location')}
                     value={location}
@@ -103,6 +106,8 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     <Calendar className="text-slate-400" size={20} />
                 </div>
                 <DatePicker
+                    id="search-check-in"
+                    name="checkIn"
                     selected={checkIn}
                     onChange={(date) => setCheckIn(date)}
                     selectsStart
@@ -112,6 +117,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     placeholderText={t('date_format')} // Expecting "dd.mm.yyyy", "gg.aa.yyyy" etc from locale
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
+                    autoComplete="off"
                     customInput={<DateInputMask className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors" />}
                     calendarClassName="!font-sans"
                     wrapperClassName="w-full"
@@ -123,6 +129,8 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     <Calendar className="text-slate-400" size={20} />
                 </div>
                 <DatePicker
+                    id="search-check-out"
+                    name="checkOut"
                     selected={checkOut}
                     onChange={(date) => setCheckOut(date)}
                     selectsEnd
@@ -132,6 +140,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     placeholderText={t('date_format')}
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
+                    autoComplete="off"
                     customInput={<DateInputMask className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors" />}
                     calendarClassName="!font-sans"
                     wrapperClassName="w-full"
@@ -144,6 +153,9 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 </div>
                 <input
                     type="number"
+                    id="search-guests"
+                    name="guests"
+                    autoComplete="off"
                     placeholder={t('search.guests')}
                     min={1}
                     value={guests}
@@ -158,7 +170,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 onClick={handleSearch}
                 variant="primary"
                 size="lg"
-                className="hover-lift shadow-primary/30" // Maintain hover-lift and shadow
+                className="hover-lift shadow-primary/30"
             >
                 <Search size={20} className="mr-2" />
                 {t('search.button')}

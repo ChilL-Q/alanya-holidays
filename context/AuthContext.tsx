@@ -10,6 +10,7 @@ export interface User {
     email: string;
     avatar?: string;
     role: 'guest' | 'host' | 'admin';
+    company_name?: string;
     joinedDate: string;
 }
 
@@ -18,7 +19,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    register: (name: string, email: string, password: string, role: 'guest' | 'host') => Promise<{ success: boolean; error?: string }>;
+    register: (name: string, email: string, password: string, role: 'guest' | 'host', companyName?: string) => Promise<{ success: boolean; error?: string }>;
     sendOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
     verifyOtp: (email: string, token: string, type?: 'email' | 'signup' | 'recovery') => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
@@ -42,6 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             email: sessionUser.email || '',
             avatar: metadata.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || 'U')}&background=0D9488&color=fff`,
             role: (metadata.role as 'guest' | 'host' | 'admin') || 'guest',
+            company_name: metadata.company_name,
             joinedDate: sessionUser.created_at,
         };
     };
@@ -69,6 +71,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         email: profile.email || sessionUser.email || '',
                         avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'U')}&background=0D9488&color=fff`,
                         role: profile.role || 'guest',
+                        company_name: profile.company_name,
                         joinedDate: profile.created_at || sessionUser.created_at,
                     });
                 } else {
@@ -111,7 +114,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { success: true };
     };
 
-    const register = async (name: string, email: string, password: string, role: 'guest' | 'host' = 'guest') => {
+    const register = async (name: string, email: string, password: string, role: 'guest' | 'host' = 'guest', companyName?: string) => {
         setIsLoading(true);
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -120,6 +123,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 data: {
                     full_name: name,
                     role: role,
+                    company_name: companyName, // Added optional company name
                     avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D9488&color=fff`
                 }
             }
@@ -177,6 +181,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (data.name) updates.full_name = data.name;
         if (data.avatar) updates.avatar_url = data.avatar;
         if (data.role) updates.role = data.role;
+        if (data.company_name) updates.company_name = data.company_name;
 
         const { error } = await supabase.auth.updateUser({
             data: updates

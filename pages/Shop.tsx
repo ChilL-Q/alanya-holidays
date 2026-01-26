@@ -274,7 +274,7 @@ export const Shop: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={() => handleAddToCart(product)}
-                                        className="w-full mt-4 bg-slate-100 dark:bg-slate-700 hover:bg-amber-600 hover:text-white text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
+                                        className="w-full mt-4 bg-slate-100 dark:bg-slate-700 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
                                     >
                                         Add to Basket
                                     </button>

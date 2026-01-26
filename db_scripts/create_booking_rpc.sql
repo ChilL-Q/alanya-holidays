@@ -14,10 +14,27 @@ CREATE OR REPLACE FUNCTION create_booking(
 DECLARE
     v_booking_id UUID;
     v_overlap_count INTEGER;
+    v_property_status TEXT;
+    v_host_id UUID;
 BEGIN
+    -- 0. Validation: Property Existence & Status & Self-Booking
+    SELECT status, host_id INTO v_property_status, v_host_id
+    FROM properties
+    WHERE id = p_property_id;
+
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('error', 'Property not found');
+    END IF;
+
+    IF v_property_status != 'approved' THEN
+        RETURN jsonb_build_object('error', 'Property is not available for booking (Not Approved)');
+    END IF;
+
+    IF v_host_id = p_user_id THEN
+         RETURN jsonb_build_object('error', 'You cannot book your own property');
+    END IF;
+
     -- 1. Check for overlapping existing bookings (ACTIVE ones only)
-    -- Range overlap logic: (StartA <= EndB) and (EndA >= StartB)
-    -- Our bookings are nightly, so overlap if (CheckIn_New < CheckOut_Existing) AND (CheckOut_New > CheckIn_Existing)
     SELECT COUNT(*) INTO v_overlap_count
     FROM bookings
     WHERE item_id = p_property_id
@@ -32,9 +49,6 @@ BEGIN
     END IF;
 
     -- 2. Check for availability blocks (Manual blocks or iCal imports)
-    -- Availability table stores individual dates (nights) that are occupied.
-    -- If I book Jan 10-12, I need Jan 10 night and Jan 11 night to be available. Jan 12 is checkout.
-    -- So we check for any entry with status != 'available' in range [p_check_in, p_check_out)
     SELECT COUNT(*) INTO v_overlap_count
     FROM property_availability
     WHERE property_id = p_property_id
@@ -56,7 +70,6 @@ BEGIN
     ) RETURNING id INTO v_booking_id;
 
     -- 4. Automatically block these dates in property_availability matches
-    -- This ensures subsequent queries see them as booked immediately
     INSERT INTO property_availability (property_id, date, status, source, external_id)
     SELECT 
         p_property_id,

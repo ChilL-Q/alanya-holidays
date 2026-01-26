@@ -20,9 +20,6 @@ export const chatService = {
             .order('updated_at', { ascending: false });
 
         if (error) throw error;
-
-        console.log('[Chat] Current User:', user.id);
-        console.log('[Chat] Raw Conversations:', data);
         
         // Fetch last message for each conversation to display snippet
         const conversations = await Promise.all(data.map(async (conv: any) => {

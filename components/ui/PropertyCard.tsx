@@ -30,12 +30,15 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                     src={property.image}
                     alt={property.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?w=800&auto=format&fit=crop&q=60'; // Alanya fallback
+                    }}
                 />
 
                 {/* Rating Badge */}
                 <div className="absolute top-3 left-3 glass px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold text-slate-900 shadow-sm z-10 transition-transform duration-300 group-hover:scale-110">
                     <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                    {property.rating}
+                    {property.rating > 0 ? property.rating.toFixed(1) : 'New'}
                 </div>
 
                 {/* Favorite Button */}
@@ -64,7 +67,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 </div>
                 <div className="flex items-end justify-between border-t border-slate-50 dark:border-slate-800 pt-4">
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                        <span className="font-medium text-slate-900 dark:text-white">{property.bedrooms}</span> beds • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> guests
+                        <span className="font-medium text-slate-900 dark:text-white">{property.bedrooms}</span> {property.bedrooms === 1 ? 'bed' : 'beds'} • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> {property.guests === 1 ? 'guest' : 'guests'}
                     </div>
                     <div className="text-right">
                         <p className="font-bold text-slate-900 dark:text-white text-lg">

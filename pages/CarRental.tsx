@@ -71,7 +71,7 @@ export const CarRental: React.FC = () => {
                     <div className="relative">
                         <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
                         <img
-                            src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=2940&auto=format&fit=crop"
+                            src="/images/transportation/cars/Rent-a-Car-Services-page.jpg"
                             alt="Luxury Car Rental"
                             className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500"
                         />

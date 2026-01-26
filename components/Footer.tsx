@@ -48,6 +48,9 @@ export const Footer: React.FC = () => {
                                 <form onSubmit={handleSubscribe} className="flex gap-2">
                                     <input
                                         type="email"
+                                        id="newsletter-email"
+                                        name="email"
+                                        autoComplete="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={t('footer.email_placeholder')}

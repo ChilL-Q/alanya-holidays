@@ -15,7 +15,7 @@ export const servicesService = {
     },
 
     async getServices(type?: string, page = 1, limit = 20) {
-        let query = supabase.from('services').select('*, provider:profiles(full_name)', { count: 'exact' });
+        let query = supabase.from('services').select('*, provider:profiles(full_name, company_name)', { count: 'exact' });
 
         if (type) {
             query = query.eq('type', type);

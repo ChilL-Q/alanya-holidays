@@ -12,6 +12,7 @@ export interface UserProfile {
   email?: string;
   phone?: string;
   role?: 'user' | 'host' | 'admin' | 'guest';
+  company_name?: string;
   created_at?: string;
 }
 

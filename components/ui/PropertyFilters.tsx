@@ -106,9 +106,11 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Price Range (Per Night)</h3>
                         <div className="flex items-center gap-4">
                             <div className="flex-1">
-                                <label className="text-xs text-slate-500 mb-1 block">Min Price (€)</label>
+                                <label htmlFor="filter-price-min" className="text-xs text-slate-500 mb-1 block">Min Price (€)</label>
                                 <input
                                     type="number"
+                                    id="filter-price-min"
+                                    name="minPrice"
                                     value={filters.priceRange[0] || ''}
                                     onChange={(e) => handlePriceChange(0, e.target.value)}
                                     placeholder="0"
@@ -116,9 +118,11 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                 />
                             </div>
                             <div className="flex-1">
-                                <label className="text-xs text-slate-500 mb-1 block">Max Price (€)</label>
+                                <label htmlFor="filter-price-max" className="text-xs text-slate-500 mb-1 block">Max Price (€)</label>
                                 <input
                                     type="number"
+                                    id="filter-price-max"
+                                    name="maxPrice"
                                     value={filters.priceRange[1] || ''}
                                     onChange={(e) => handlePriceChange(1, e.target.value)}
                                     placeholder="Any"
@@ -165,7 +169,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Property Type</h3>
                         <div className="space-y-3">
                             {PROPERTY_TYPES.map(type => (
-                                <label key={type} className="flex items-center cursor-pointer group">
+                                <label key={type} htmlFor={`filter-type-${type}`} className="flex items-center cursor-pointer group">
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.types.includes(type)
                                         ? 'bg-teal-600 border-teal-600'
                                         : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
@@ -174,6 +178,9 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     </div>
                                     <input
                                         type="checkbox"
+                                        id={`filter-type-${type}`}
+                                        name="propertyType"
+                                        value={type}
                                         className="hidden"
                                         checked={filters.types.includes(type)}
                                         onChange={() => handleTypeToggle(type)}
@@ -191,7 +198,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                     {/* Features */}
                     <section>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Features</h3>
-                        <label className="flex items-center cursor-pointer group">
+                        <label htmlFor="filter-has-photos" className="flex items-center cursor-pointer group">
                             <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.hasPhotos
                                 ? 'bg-teal-600 border-teal-600'
                                 : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
@@ -200,6 +207,8 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                             </div>
                             <input
                                 type="checkbox"
+                                id="filter-has-photos"
+                                name="hasPhotos"
                                 className="hidden"
                                 checked={filters.hasPhotos}
                                 onChange={() => onFilterChange({ ...filters, hasPhotos: !filters.hasPhotos })}
@@ -218,7 +227,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Amenities</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {AMENITIES_LIST.map(amenity => (
-                                <label key={amenity.label} className="flex items-center cursor-pointer group">
+                                <label key={amenity.label} htmlFor={`filter-amenity-${amenity.label}`} className="flex items-center cursor-pointer group">
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.amenities.includes(amenity.label)
                                         ? 'bg-teal-600 border-teal-600'
                                         : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
@@ -227,6 +236,9 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     </div>
                                     <input
                                         type="checkbox"
+                                        id={`filter-amenity-${amenity.label}`}
+                                        name="amenity"
+                                        value={amenity.label}
                                         className="hidden"
                                         checked={filters.amenities.includes(amenity.label)}
                                         onChange={() => handleAmenityToggle(amenity.label)}

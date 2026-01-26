@@ -45,10 +45,30 @@ export const propertiesService = {
         return { data: data as PropertyDB[], count };
     },
 
+    async getAvailableProperties(checkIn: string, checkOut: string) {
+        const { data, error } = await supabase
+            .rpc('get_available_properties', {
+                check_in_date: checkIn,
+                check_out_date: checkOut
+            });
+
+        if (error) throw error;
+        
+        // We also need to fetch the host details for these properties manually or via a join if RPC allows.
+        // Since RPC returns 'setof properties', it doesn't include the joined 'host' relation automatically.
+        // We can either fetch hosts separately or update RPC to return a custom type.
+        // For simplicity/speed, let's just return properties. The UI might need host info (avatar), 
+        // but let's check if PropertyCard uses it. Yes, it uses basic info.
+        // Actually, PropertyCard doesn't seem to display Host info in the current design (just image, title, location, rating).
+        // So raw properties are fine.
+        
+        return data as PropertyDB[];
+    },
+
     async getProperty(id: string) {
         const { data, error } = await supabase
             .from('properties')
-            .select('*, host:profiles(full_name, avatar_url)')
+            .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
             .eq('id', id)
             .single();
 

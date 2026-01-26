@@ -1,9 +1,9 @@
-@import "tailwindcss";
+/* Clean CSS for CDN compatibility */
 
 @layer base {
     :root {
-        --color-primary: 5 68 94;
-        /* #05445E */
+        /* Fallback / util variables if needed */
+        --color-primary-rgb: 5 68 94;
     }
 }
 
@@ -11,6 +11,7 @@ html,
 body {
     font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;
+    @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300;
 }
 
 /* Custom Animations */

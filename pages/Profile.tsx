@@ -28,7 +28,8 @@ export const Profile: React.FC = () => {
     // Forms State
     const [profileForm, setProfileForm] = useState({
         name: user?.name || '',
-        phone: ''
+        phone: '',
+        companyName: user?.company_name || ''
     });
 
     const [emailForm, setEmailForm] = useState({
@@ -70,7 +71,8 @@ export const Profile: React.FC = () => {
                         setProfileForm(prev => ({
                             ...prev,
                             name: profile.full_name || user.name,
-                            phone: profile.phone || ''
+                            phone: profile.phone || '',
+                            companyName: profile.company_name || user.company_name || ''
                         }));
                         // Update email form initial value
                         setEmailForm(prev => ({
@@ -123,9 +125,13 @@ export const Profile: React.FC = () => {
         try {
             await db.updateUserProfile(user.id, {
                 full_name: profileForm.name,
-                phone: profileForm.phone
+                phone: profileForm.phone,
+                company_name: profileForm.companyName
             });
-            await updateUser({ name: profileForm.name });
+            await updateUser({
+                name: profileForm.name,
+                company_name: profileForm.companyName
+            });
             toast.success(t('profile.save_success') || 'Profile updated successfully');
         } catch (error: any) {
             toast.error(error.message || 'Failed to update profile');
@@ -626,6 +632,25 @@ export const Profile: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Company Name (For Hosts) */}
+                                    {(user.role === 'host' || user.role === 'admin') && (
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                                Company Name
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    value={profileForm.companyName}
+                                                    onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
+                                                    placeholder="Alanya Holidays Ltd."
+                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
+                                                />
+                                                <Home size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
                                         <button

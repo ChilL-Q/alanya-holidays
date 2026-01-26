@@ -13,6 +13,7 @@ export const RegisterModal: React.FC = () => {
     const [step, setStep] = useState<'register' | 'otp'>('register');
     const [role, setRole] = useState<'guest' | 'host'>('guest');
     const [name, setName] = useState('');
+    const [companyName, setCompanyName] = useState(''); // New State
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
@@ -28,6 +29,7 @@ export const RegisterModal: React.FC = () => {
             setError('');
             setOtp('');
             setPassword('');
+            setCompanyName('');
         }
     }, [isOpen]);
 
@@ -43,7 +45,7 @@ export const RegisterModal: React.FC = () => {
         setLoading(true);
 
         try {
-            const result = await register(name, email, password, role);
+            const result = await register(name, email, password, role, companyName);
             if (result.success) {
                 setStep('otp');
             } else {
@@ -156,6 +158,23 @@ export const RegisterModal: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        {role === 'host' && (
+                            <div className="animate-fade-in">
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name (Optional)</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                    <input
+                                        type="text"
+                                        value={companyName}
+                                        onChange={(e) => setCompanyName(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                        placeholder="Alanya Holidays Ltd."
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
                             <div className="relative">

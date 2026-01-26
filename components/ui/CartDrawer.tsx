@@ -110,7 +110,7 @@ export const CartDrawer: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="font-bold text-teal-600">{formatPrice(item.price)}</span>
+                                            <span className="font-bold text-teal-600 dark:text-white">{formatPrice(item.price)}</span>
                                             <button
                                                 onClick={() => removeFromCart(item.id)}
                                                 className="text-slate-400 hover:text-rose-500 p-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors opacity-0 group-hover:opacity-100"

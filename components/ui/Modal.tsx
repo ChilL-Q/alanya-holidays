@@ -9,9 +9,20 @@ interface ModalProps {
     title?: string;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
     noPadding?: boolean;
+    hideCloseButton?: boolean;
+    lockBodyScroll?: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, maxWidth = 'md', noPadding = false }) => {
+export const Modal: React.FC<ModalProps> = ({
+    isOpen,
+    onClose,
+    children,
+    title,
+    maxWidth = 'md',
+    noPadding = false,
+    hideCloseButton = false,
+    lockBodyScroll = true
+}) => {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -25,7 +36,9 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, 
         };
 
         if (isOpen) {
-            document.body.style.overflow = 'hidden';
+            if (lockBodyScroll) {
+                document.body.style.overflow = 'hidden';
+            }
             window.addEventListener('keydown', handleEsc);
         } else {
             document.body.style.overflow = 'unset';
@@ -35,7 +48,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, 
             document.body.style.overflow = 'unset';
             window.removeEventListener('keydown', handleEsc);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, lockBodyScroll]);
 
     if (!isOpen || !mounted) return null;
 
@@ -71,7 +84,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, 
                         )}
 
                         {/* Floating Close Button for Untitled Modals */}
-                        {!title && (
+                        {!title && !hideCloseButton && (
                             <button
                                 onClick={onClose}
                                 className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors shadow-sm"

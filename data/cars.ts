@@ -2,7 +2,7 @@
 export const CAR_CATALOG: Record<string, string[]> = {
     'Fiat': ['Egea', '500', 'Panda', 'Doblo', 'Fiorino'],
     'Renault': ['Clio', 'Taliant', 'Megane', 'Captur', 'Austral'],
-    'Hyundai': ['i10', 'i20', 'Bayon', 'Tucson', 'Elantra'],
+    'Hyundai': ['i10', 'i20', 'Bayon', 'Tucson', 'Accent'],
     'Toyota': ['Corolla', 'Yaris', 'C-HR', 'Rav4'],
     'Honda': ['City', 'Civic', 'Jazz', 'HR-V'],
     'Ford': ['Focus', 'Fiesta', 'Puma', 'Kuga', 'Tourneo Courier'],
@@ -19,7 +19,7 @@ export const CAR_CATALOG: Record<string, string[]> = {
 };
 
 export const BIKE_CATALOG: Record<string, string[]> = {
-    'Honda': ['PCX 125', 'Dio', 'Activa', 'Forza 250', 'ADV 350', 'NC 750'],
+    'Honda': ['PCX 125', 'Dio', 'Activa', 'Forza 250', 'ADV 350'],
     'Yamaha': ['NMAX 125', 'NMAX 155', 'XMAX 250', 'Delight', 'MT-25', 'R25'],
     'Vespa': ['Primavera 150', 'GTS 300', 'Sprint'],
     'Arora': ['Cappucino', 'Verano', 'Freedom'],
@@ -37,7 +37,7 @@ export const CAR_DESCRIPTIONS: Record<string, string> = {
     'Hyundai i10': "The Hyundai i10 is a clever city car that combines compact dimensions with a surprisingly spacious interior. Perfect for navigating narrow streets and finding parking spots with ease. It offers excellent fuel economy and a smooth ride, making it an ideal choice for couples or solo travelers exploring the city.",
     'Hyundai Bayon': "The Hyundai Bayon is a stylish crossover SUV designed for urban adventures. It offers elevated seating for better visibility, a spacious cabin, and advanced safety features. With its fuel-efficient engine and compact footprint, it's perfect for both city driving and weekend getaways along the coast.",
     'Hyundai Tucson': "The Hyundai Tucson is a premium SUV that blends sophisticated design with cutting-edge technology. It offers generous space for families, advanced safety systems, and a powerful yet efficient engine. Whether you're heading to the beach or the mountains, the Tucson provides comfort and confidence on every journey.",
-    'Hyundai Elantra': "The Hyundai Elantra is a sleek and spacious sedan that offers a premium driving experience. With its striking design, advanced technology, and comfortable interior, it's perfect for longer trips and business travel. Enjoy a smooth, quiet ride with excellent fuel efficiency.",
+    'Hyundai Accent': "The Hyundai Accent is a dependable (and economical) compact sedan, offering a comfortable ride and excellent fuel efficiency. With its spacious interior and user-friendly features, it's a great choice for small families or couples touring the region.",
 
     // Fiat
     'Fiat Egea': "The Fiat Egea is a popular choice for its reliability and comfort. This spacious sedan offers plenty of legroom and a large trunk, making it great for families with luggage. Its efficient diesel or petrol engines ensure a cost-effective journey, whether you're driving in the city or on the open road.",

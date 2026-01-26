@@ -9,26 +9,34 @@ export const FeaturedProperties: React.FC = () => {
     const [properties, setProperties] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Curated Featured Properties (Hardcoded for high-quality display)
     useEffect(() => {
         const fetchProperties = async () => {
+            setIsLoading(true);
             try {
-                const { data } = await db.getProperties(1, 3);
-                const formattedData = data?.map((p: any) => ({
+                // Fetch top 6 properties to ensure user's restored properties are visible
+                const { data } = await db.getProperties(1, 6);
+
+                const formattedData = (data || []).map((p: any) => ({
                     ...p,
                     pricePerNight: p.price_per_night,
-                    image: p.images?.[0] || '', // Use first image or empty
-                    guests: p.guests || 2, // Fallback
-                    bedrooms: p.bedrooms || 1, // Fallback
-                    rating: p.rating || 0,
+                    // Ensure consistent types
+                    amenities: p.amenities || [],
+                    // Ensure image is string for PropertyCard main image
+                    image: p.images?.[0] || '',
+                    images: p.images || [],
+                    rating: p.rating || 5,
                     reviewsCount: p.reviews_count || 0
-                })) || [];
+                }));
+
                 setProperties(formattedData);
             } catch (error) {
-                console.error('Error fetching featured properties:', error);
+                console.error('Failed to fetch featured properties:', error);
             } finally {
                 setIsLoading(false);
             }
         };
+
         fetchProperties();
     }, []);
 
@@ -57,7 +65,7 @@ export const FeaturedProperties: React.FC = () => {
                     <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white">{t('featured.title')}</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">{t('featured.subtitle')}</p>
                 </div>
-                <Link to="/search" className="hidden md:block text-teal-700 font-medium hover:text-teal-900 hover:underline transition-colors duration-300">{t('featured.view_all')}</Link>
+                <Link to="/stays" className="hidden md:block text-teal-700 font-medium hover:text-teal-900 hover:underline transition-colors duration-300">{t('featured.view_all')}</Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

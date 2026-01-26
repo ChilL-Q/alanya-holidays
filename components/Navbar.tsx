@@ -19,7 +19,7 @@ const NavLink: React.FC<{ to: string; label: string; isAccent?: boolean }> = ({ 
   return (
     <Link
       to={to}
-      className={`relative px-1 py-2 font-medium transition-colors duration-300 ${isActive
+      className={`relative px-2 py-1.5 font-medium transition-colors duration-300 whitespace-nowrap ${isActive
         ? (isAccent ? 'text-accent' : 'text-slate-900 dark:text-white')
         : (isAccent ? 'text-accent hover:text-accent-hover' : 'text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary')
         }`}
@@ -126,10 +126,10 @@ export const Navbar: React.FC = () => {
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex items-center h-20">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group relative z-10">
+          <Link to="/" className="flex-shrink-0 flex items-center gap-3 group relative z-10">
             <div className="relative">
               <div className="absolute inset-0 bg-teal-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
               <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
@@ -140,7 +140,7 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 relative bg-slate-50/50 dark:bg-slate-800/50 px-2 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 relative bg-slate-50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200 dark:border-slate-700/50 backdrop-blur-sm mx-4">
             <NavIndicator />
             <NavLink to="/stays" label={t('nav.stays')} />
             <NavLink to="/services" label={t('nav.services')} />
@@ -149,7 +149,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
 
             {/* Utilities Group (Desktop) */}
             <div className="hidden lg:flex items-center gap-1 bg-slate-50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200 dark:border-slate-700/50">
@@ -228,7 +228,7 @@ export const Navbar: React.FC = () => {
             <div className="relative hidden md:block" ref={listMenuRef}>
               <button
                 onClick={() => setIsListMenuOpen(!isListMenuOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
               >
                 <Plus size={16} className="text-teal-400" />
                 <span>{t('nav.list_property')}</span>
@@ -278,28 +278,18 @@ export const Navbar: React.FC = () => {
                 {items.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
               </button>
 
-              {/* Desktop Auth Buttons */}
-              {!isAuthenticated && (
-                <div className="hidden md:flex items-center gap-3 mr-2">
-                  <button
-                    onClick={openLogin}
-                    className="px-5 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all duration-300 hover:scale-105 active:scale-95"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={openRegister}
-                    className="px-5 py-2.5 text-sm font-bold text-white bg-teal-600 hover:bg-teal-500 rounded-full transition-all duration-300 shadow-lg shadow-teal-600/20 hover:shadow-teal-600/40 hover:scale-105 active:scale-95 hover:-translate-y-0.5"
-                  >
-                    Register
-                  </button>
-                </div>
-              )}
-
               {/* Profile / Mobile Menu Trigger */}
-              <div className={`relative ml-1 ${!isAuthenticated ? 'md:hidden' : ''}`} ref={profileRef}>
+              <div className="relative ml-1" ref={profileRef}>
                 <button
-                  onClick={() => isAuthenticated ? setIsProfileOpen(!isProfileOpen) : setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  onClick={() => {
+                    // Logic: On Mobile (Guest) -> Open MobileMenu. On Desktop (Guest) -> Open ProfileDropdown.
+                    // On Auth -> Always Open ProfileDropdown (which acts as Mobile Menu too).
+                    if (!isAuthenticated && window.innerWidth < 768) {
+                      setIsMobileMenuOpen(!isMobileMenuOpen);
+                    } else {
+                      setIsProfileOpen(!isProfileOpen);
+                    }
+                  }}
                   className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800"
                 >
                   <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden ring-2 ring-white dark:ring-slate-900">
@@ -316,15 +306,37 @@ export const Navbar: React.FC = () => {
                   </div>
                 </button>
 
-                {/* Desktop Profile Dropdown */}
-                {isAuthenticated && isProfileOpen && (
+                {/* Dropdown (Profile + Auth Actions) */}
+                {isProfileOpen && (
                   <div className="absolute top-full mt-3 right-0 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user?.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-                    </div>
 
-                    {/* Mobile Navigation Links */}
+                    {/* User Header (Auth Only) */}
+                    {isAuthenticated && user && (
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                      </div>
+                    )}
+
+                    {/* Guest Actions (Desktop Only - Mobile uses MobileMenu) */}
+                    {!isAuthenticated && (
+                      <div className="p-2 border-b border-slate-100 dark:border-slate-800 hidden md:block">
+                        <button
+                          onClick={() => { openLogin(); setIsProfileOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                        >
+                          Login
+                        </button>
+                        <button
+                          onClick={() => { openRegister(); setIsProfileOpen(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
+                        >
+                          Register
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Navigation Links (Mobile Only) */}
                     <div className="md:hidden p-2 border-b border-slate-100 dark:border-slate-800">
                       <Link to="/stays" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                         <Home size={16} className="text-slate-400" />
@@ -343,28 +355,41 @@ export const Navbar: React.FC = () => {
                         {t('value.zero_fees.title')}
                       </Link>
                     </div>
+
                     <div className="p-2">
-                      <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                        <User size={16} className="text-slate-400" />
-                        {t('nav.profile')}
-                      </Link>
-                      {user?.role === 'admin' && (
-                        <Link to="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                          <LayoutDashboard size={16} className="text-purple-600" />
-                          Admin Panel
-                        </Link>
+                      {isAuthenticated && (
+                        <>
+                          <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                            <User size={16} className="text-slate-400" />
+                            {t('nav.profile')}
+                          </Link>
+                          {user?.role === 'admin' && (
+                            <Link to="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                              <LayoutDashboard size={16} className="text-purple-600" />
+                              Admin Panel
+                            </Link>
+                          )}
+                          {(user?.role === 'host' || user?.role === 'admin') && (
+                            <Link to="/host/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                              <LayoutDashboard size={16} className="text-teal-500" />
+                              Host Dashboard
+                            </Link>
+                          )}
+                          <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
+                          <button onClick={() => { logout(); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">
+                            <LogOut size={16} />
+                            {t('auth.logout')}
+                          </button>
+                        </>
                       )}
-                      {(user?.role === 'host' || user?.role === 'admin') && (
-                        <Link to="/host/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                          <LayoutDashboard size={16} className="text-teal-500" />
-                          Host Dashboard
-                        </Link>
+
+                      {!isAuthenticated && (
+                        <div className="md:hidden">
+                          {/* Mobile Auth Actions if accessed via ProfileDropdown (unlikely as we use MobileMenu for guests, but nice fallback) */}
+                          <button onClick={() => { openLogin(); setIsProfileOpen(false); }} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">Login</button>
+                          <button onClick={() => { openRegister(); setIsProfileOpen(false); }} className="w-full text-left px-3 py-2 text-sm font-bold text-teal-600">Register</button>
+                        </div>
                       )}
-                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
-                      <button onClick={() => { logout(); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">
-                        <LogOut size={16} />
-                        {t('auth.logout')}
-                      </button>
                     </div>
                   </div>
                 )}
@@ -376,10 +401,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (Guest Only) */}
       {isMobileMenuOpen && (
         <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shadow-2xl p-4 flex flex-col gap-2 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden">
-          {/* ... Mobile Menu Content ... */}
           {!isAuthenticated && (
             <div className="grid grid-cols-2 gap-3 mb-4">
               <button onClick={() => { openLogin(); setIsMobileMenuOpen(false); }} className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-center">Login</button>
