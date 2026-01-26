@@ -2,13 +2,12 @@ import { supabase } from '../supabase';
 import { Booking } from '../../types/index';
 
 export const bookingsService = {
+
+
     async createBooking(data: any) {
-        // Fallback or Legacy: use RPC if possible for safety
-        // We will switch to using the safe version as primary
-        
-        // Clean data for RPC
-        const rpcParams = {
-            p_property_id: data.item_id || data.id, // handle both just in case
+         // ... (keep existing RPC param prep) ...
+         const rpcParams = {
+            p_property_id: data.item_id || data.id, 
             p_user_id: data.user_id,
             p_check_in: data.check_in,
             p_check_out: data.check_out,
@@ -23,7 +22,50 @@ export const bookingsService = {
         if (error) throw error;
         if (result.error) throw new Error(result.error);
         
-        return { id: result.data };
+        // Trigger Email Notification (Non-blocking)
+        const bookingId = result.data;
+        supabase.functions.invoke('send-email', {
+            body: {
+                type: 'booking_created',
+                userId: data.user_id, // Guest receives confirmation they asked? Or maybe Host receives request?
+                // Actually, let's send to Guest confirming receipt
+                data: {
+                    userName: 'Guest', // We might need to fetch profile if we want name, or just use generic
+                    itemTitle: data.title || 'Property', // meaningful title needed
+                    checkIn: data.check_in,
+                    checkOut: data.check_out,
+                    totalPrice: data.total_price,
+                    guests: data.guests,
+                    link: `${window.location.origin}/profile`
+                }
+            }
+        }).catch(err => console.error('Failed to send email:', err));
+
+        // Notify Host (New Feature)
+        // Fetch property host_id if not available
+        supabase.from('properties').select('host_id, title').eq('id', data.item_id || data.id).single()
+            .then(({ data: property }) => {
+                if (property && property.host_id) {
+                    supabase.functions.invoke('send-email', {
+                        body: {
+                            type: 'booking_request_host',
+                            userId: property.host_id,
+                            data: {
+                                guestName: 'A Guest', // Ideally fetch user name
+                                itemTitle: property.title,
+                                checkIn: data.check_in,
+                                checkOut: data.check_out,
+                                totalPrice: data.total_price,
+                                guests: data.guests,
+                                message: data.message, // Include user message
+                                link: `${window.location.origin}/host/bookings`
+                            }
+                        }
+                    }).catch(err => console.error('Failed to send host email:', err));
+                }
+            });
+
+        return { id: bookingId };
     },
     
     // Original unsafe method kept as reference if needed (renamed internal or just removed)
@@ -172,5 +214,53 @@ export const bookingsService = {
             .eq('id', id);
 
         if (error) throw error;
+
+        // Trigger Email Notification
+        if (status === 'confirmed' || status === 'cancelled' || status === 'pending') { // 'pending' might be 'rejected' mapped? No, rejected is not in params list
+             // We need to fetch booking details to send meaningful email
+             const { data: booking } = await supabase
+                .from('bookings')
+                .select('*, property:properties(title, host_id)')
+                .eq('id', id)
+                .single();
+            
+            if (booking) {
+                const type = status === 'confirmed' ? 'booking_confirmed' : 
+                             status === 'cancelled' ? 'booking_cancelled' : null;
+                
+                if (type) {
+                     // Notify Guest
+                     supabase.functions.invoke('send-email', {
+                        body: {
+                            type,
+                            userId: booking.user_id,
+                            data: {
+                                itemTitle: booking.property?.title || 'Property',
+                                checkIn: booking.check_in,
+                                checkOut: booking.check_out,
+                                link: `${window.location.origin}/profile`
+                            }
+                        }
+                    }).catch(err => console.error('Failed to send status email:', err));
+
+                    // Notify Host if Cancelled
+                    if (status === 'cancelled' && booking.property && booking.property.host_id) {
+                        supabase.functions.invoke('send-email', {
+                            body: {
+                                type: 'booking_cancelled_host',
+                                userId: booking.property.host_id,
+                                data: {
+                                    guestName: 'Guest', // Fetching real name would be better but keeping simple for now
+                                    itemTitle: booking.property.title,
+                                    checkIn: booking.check_in,
+                                    checkOut: booking.check_out,
+                                    link: `${window.location.origin}/host/bookings`
+                                }
+                            }
+                        }).catch(err => console.error('Failed to send host cancellation email:', err));
+                    }
+                }
+            }
+        }
     }
 };

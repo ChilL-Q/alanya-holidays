@@ -61,7 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
             />
 
             {/* Scrollable Container */}
-            <div className="fixed inset-0 z-[9999] overflow-y-auto">
+            <div className="fixed inset-0 z-[9999] overflow-y-auto" onClick={onClose}>
                 <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
                     {/* Modal Panel */}
                     <div

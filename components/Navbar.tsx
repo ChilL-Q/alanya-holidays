@@ -1,62 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, ShoppingCart, Heart, Sun, Moon, LogOut, Plus, Home, Car, LayoutDashboard } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, Sun, Moon, LogOut, Plus, Home, Car, LayoutDashboard, Heart, Banknote } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { useCurrency, Currency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
-import { Banknote } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 import { NotificationBell } from './ui/NotificationBell';
-
-
-const NavLink: React.FC<{ to: string; label: string; isAccent?: boolean }> = ({ to, label, isAccent }) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-
-  return (
-    <Link
-      to={to}
-      className={`relative px-2 py-1.5 font-medium transition-colors duration-300 whitespace-nowrap ${isActive
-        ? (isAccent ? 'text-accent' : 'text-slate-900 dark:text-white')
-        : (isAccent ? 'text-accent hover:text-accent-hover' : 'text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary')
-        }`}
-      data-nav-link={to}
-    >
-      {label}
-    </Link>
-  );
-};
-
-const NavIndicator = () => {
-  const location = useLocation();
-  const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
-
-  useEffect(() => {
-    const activeLink = document.querySelector(`[data-nav-link="${location.pathname}"]`) as HTMLElement;
-    if (activeLink) {
-      setStyle({
-        left: activeLink.offsetLeft,
-        width: activeLink.offsetWidth,
-        opacity: 1,
-      });
-    } else {
-      setStyle({ opacity: 0 });
-    }
-  }, [location.pathname]);
-
-  return (
-    <div
-      className="absolute bottom-0 h-0.5 bg-primary dark:bg-accent rounded-full transition-all duration-300 ease-out z-10"
-      style={style}
-    />
-  );
-};
+import { NavLink } from './navbar/NavLink';
+import { NavIndicator } from './navbar/NavIndicator';
+import { MobileMenu } from './navbar/MobileMenu';
 
 export const Navbar: React.FC = () => {
-  const { items, isCartOpen, setIsCartOpen } = useCart();
+  const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
@@ -123,8 +81,6 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 transition-colors supports-[backdrop-filter]:bg-white/60">
-
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20">
 
@@ -401,33 +357,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu (Guest Only) */}
-      {isMobileMenuOpen && (
-        <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shadow-2xl p-4 flex flex-col gap-2 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden">
-          {!isAuthenticated && (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <button onClick={() => { openLogin(); setIsMobileMenuOpen(false); }} className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-center">Login</button>
-              <button onClick={() => { openRegister(); setIsMobileMenuOpen(false); }} className="py-2.5 rounded-xl bg-teal-600 text-white font-bold text-center">Register</button>
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <Link to="/stays" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-200">{t('nav.stays')}</Link>
-            <Link to="/services" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-200">{t('nav.services')}</Link>
-            <Link to="/shop" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-200">{t('shop')}</Link>
-          </div>
-
-          <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
-
-          <div className="flex items-center justify-between px-4">
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Theme</span>
-            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-              <button onClick={() => theme === 'dark' && toggleTheme()} className={`p-1.5 rounded ${theme === 'light' ? 'bg-white shadow text-orange-500' : 'text-slate-400'}`}><Sun size={16} /></button>
-              <button onClick={() => theme === 'light' && toggleTheme()} className={`p-1.5 rounded ${theme === 'dark' ? 'bg-slate-700 shadow text-white' : 'text-slate-400'}`}><Moon size={16} /></button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
     </nav>
   );
 };

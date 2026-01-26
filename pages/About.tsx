@@ -1,80 +1,113 @@
 import React from 'react';
-import { Shield, Users, Heart } from 'lucide-react';
+import { Shield, Users, Heart, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { Link } from 'react-router-dom';
 
 export const About: React.FC = () => {
+    const { t } = useLanguage();
+
     return (
-        <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl font-serif text-slate-900 dark:text-white mb-4">Discover Alanya</h1>
-                    <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                        We’re revolutionizing travel by making it more affordable and ethical for everyone.
+        <div className="min-h-screen bg-white dark:bg-slate-900">
+            {/* Hero Section */}
+            <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=2940&auto=format&fit=crop"
+                        alt="Alanya Coastline"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900/90" />
+                </div>
+
+                <div className="relative z-10 text-center px-4 max-w-4xl mx-auto animate-fade-in-up">
+                    <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight">
+                        {t('about.hero.title')}
+                    </h1>
+                    <p className="text-xl md:text-2xl text-slate-200 font-light max-w-2xl mx-auto">
+                        {t('about.hero.subtitle')}
                     </p>
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-24">
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6">
-                            <Shield size={24} />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20 pb-20">
+                {/* Stats / Pillars */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-24">
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
+                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6 group-hover:scale-110 transition-transform">
+                            <Shield size={28} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">0% Guest Fees</h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Unlike major platforms that charge 14-20% in fees, we believe travel should be affordable for everyone.
-                            Save up to $200 per booking when you choose Alanya Holidays.
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('about.pillar.fees_guest.title')}</h3>
+                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm lg:text-base">
+                            {t('about.pillar.fees_guest.desc')}
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6">
-                            <Users size={24} />
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
+                        <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
+                            <Users size={28} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">7% Host Fees Only</h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Fair commission structure that benefits both hosts and guests, creating a sustainable travel ecosystem.
-                            We offer the lowest host fees in Turkey.
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('about.pillar.fees_host.title')}</h3>
+                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm lg:text-base">
+                            {t('about.pillar.fees_host.desc')}
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6">
-                            <Heart size={24} />
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
+                        <div className="w-14 h-14 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center text-rose-600 dark:text-rose-400 mb-6 group-hover:scale-110 transition-transform">
+                            <Heart size={28} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">Ethical Travel</h3>
-                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                            We stand for transparency and social consciousness, supporting communities without compromising values.
-                            Travel with purpose.
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('about.pillar.ethical.title')}</h3>
+                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm lg:text-base">
+                            {t('about.pillar.ethical.desc')}
                         </p>
                     </div>
                 </div>
 
-                <div className="bg-teal-900 rounded-3xl p-12 text-center text-white mb-24">
-                    <h2 className="text-3xl font-serif mb-6">Join the Ethical Travel Movement</h2>
-                    <p className="text-lg text-teal-100 max-w-2xl mx-auto mb-8">
-                        Starting in Alanya and expanding across Turkey, we’re proving that affordable, ethical travel is possible. Be part of the change that puts communities first.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <div>
-                        <h2 className="text-3xl font-serif text-slate-900 dark:text-white mb-6">Our Story</h2>
-                        <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed">
+                {/* Our Story */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+                    <div className="order-2 lg:order-1">
+                        <h2 className="text-3xl md:text-4xl font-serif text-slate-900 dark:text-white mb-6">{t('about.story.title')}</h2>
+                        <div className="space-y-4 text-slate-600 dark:text-slate-400 leading-relaxed text-lg">
                             <p>
-                                Alanya Holidays was born from a simple observation: the vacation rental market was broken. Massive fees were hurting both guests and hosts, turning what should be a joyful experience into a transaction filled with hidden costs.
+                                {t('about.story.p1')}
                             </p>
                             <p>
-                                We decided to build something different. A platform rooted in the Turkish tradition of <em>misafirperverlik</em> (hospitality), where guests are treated like family, not profit margins.
+                                {t('about.story.p2')}
                             </p>
                             <p>
-                                By cutting out the middleman fees and focusing on local partnerships, we keep money in the local community while offering you the best rates on the market. It's a win-win that we're proud to champion.
+                                {t('about.story.p3')}
                             </p>
                         </div>
                     </div>
-                    <div className="relative h-96 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl order-1 lg:order-2 group">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-purple-500/20 mix-blend-overlay z-10" />
                         <img
                             src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=2949&auto=format&fit=crop"
                             alt="Alanya Harbor"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
+                    </div>
+                </div>
+
+                {/* CTA */}
+                <div className="relative rounded-3xl overflow-hidden">
+                    <div className="absolute inset-0">
+                        <img
+                            src="https://images.unsplash.com/photo-1605218427368-35b81a3ddabc?q=80&w=2832&auto=format&fit=crop"
+                            alt="Turkish Hospitality"
+                            className="w-full h-full object-cover grayscale"
+                        />
+                        <div className="absolute inset-0 bg-teal-900/90 mix-blend-multiply" />
+                    </div>
+
+                    <div className="relative z-10 p-12 md:p-24 text-center text-white">
+                        <h2 className="text-3xl md:text-5xl font-serif mb-6">{t('about.movement.title')}</h2>
+                        <p className="text-lg md:text-xl text-teal-100 max-w-2xl mx-auto mb-10 leading-relaxed">
+                            {t('about.movement.desc')}
+                        </p>
+                        <Link to="/stays" className="inline-flex items-center bg-white text-teal-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-teal-50 transition-all duration-300 hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                            {t('checkout.start')} <ArrowRight className="ml-2" />
+                        </Link>
                     </div>
                 </div>
             </div>

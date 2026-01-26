@@ -19,6 +19,7 @@ import { CurrencyProvider } from './context/CurrencyContext';
 import { ChatProvider } from './context/ChatContext';
 import { TripAssistant } from './components/TripAssistant';
 import { CookieConsent } from './components/ui/CookieConsent';
+import { CommandPalette } from './components/ui/CommandPalette';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
 
@@ -77,6 +78,7 @@ const App: React.FC = () => {
                           <CartDrawer />
                           <TripAssistant />
                           <CookieConsent />
+                          <CommandPalette />
                         </BrowserRouter>
                       </ChatProvider>
                     </LightboxProvider>

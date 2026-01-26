@@ -449,4 +449,20 @@ export const tr = {
     'reviews.add_photo': 'Ekle',
     'reviews.submit': 'Yorumu Gönder',
     'reviews.submitting': 'Gönderiliyor...',
+
+    // About Page
+    'about.hero.title': 'Alanya\'yı Keşfet',
+    'about.hero.subtitle': 'Seyahati herkes için daha erişilebilir ve etik hale getirerek devrim yaratıyoruz.',
+    'about.pillar.fees_guest.title': '%0 Misafir Komisyonu',
+    'about.pillar.fees_guest.desc': '%14-20 komisyon alan büyük platformların aksine, seyahatin herkes için uygun fiyatlı olması gerektiğine inanıyoruz. Alanya Holidays ile rezervasyon başına 200$\'a kadar tasarruf edin.',
+    'about.pillar.fees_host.title': 'Sadece %7 Ev Sahibi Komisyonu',
+    'about.pillar.fees_host.desc': 'Hem ev sahiplerine hem de misafirlere fayda sağlayan adil bir komisyon yapısı. Türkiye\'deki en düşük ev sahibi ücretlerini sunuyoruz.',
+    'about.pillar.ethical.title': 'Etik Seyahat',
+    'about.pillar.ethical.desc': 'Şeffaflık ve sosyal bilinci savunuyor, değerlerimizden ödün vermeden toplulukları destekliyoruz. Amacı olan seyahat.',
+    'about.movement.title': 'Etik Seyahat Hareketine Katılın',
+    'about.movement.desc': 'Alanya\'dan başlayıp Türkiye geneline yayılarak, uygun fiyatlı ve etik seyahatin mümkün olduğunu kanıtlıyoruz. Toplulukları önceliklendiren değişimin bir parçası olun.',
+    'about.story.title': 'Hikayemiz',
+    'about.story.p1': 'Alanya Holidays basit bir gözlemden doğdu: tatil kiralama pazarı bozuktu. Büyük komisyonlar hem misafirleri hem de ev sahiplerini incitiyor, keyifli bir deneyimi gizli maliyetlerle dolu bir işleme dönüştürüyordu.',
+    'about.story.p2': 'Farklı bir şey inşa etmeye karar verdik. Misafirlerin kâr marjı değil, aileden biri gibi görüldüğü Türk misafirperverliği geleneğine dayanan bir platform.',
+    'about.story.p3': 'Aracı ücretlerini ortadan kaldırarak ve yerel ortaklıklara odaklanarak, parayı yerel ekonomide tutuyor ve size piyasadaki en iyi fiyatları sunuyoruz. Bu, savunmaktan gurur duyduğumuz bir kazan-kazan durumu.',
 };

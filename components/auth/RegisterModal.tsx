@@ -4,6 +4,7 @@ import { useModal } from '../../context/ModalContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { AlertCircle, Loader2, ArrowLeft, Mail, User, Lock } from 'lucide-react';
+import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 
 export const RegisterModal: React.FC = () => {
     const { activeModal, closeModal, openLogin } = useModal();
@@ -33,8 +34,8 @@ export const RegisterModal: React.FC = () => {
         }
     }, [isOpen]);
 
-    const handleRegisterSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleRegisterSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setError('');
 
         if (password.length < 6) {
@@ -58,8 +59,8 @@ export const RegisterModal: React.FC = () => {
         }
     };
 
-    const handleOtpSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleOtpSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setError('');
         setLoading(true);
 
@@ -83,6 +84,11 @@ export const RegisterModal: React.FC = () => {
             setLoading(false);
         }
     };
+
+    useSubmitShortcut(() => {
+        if (step === 'register') handleRegisterSubmit();
+        else if (step === 'otp') handleOtpSubmit();
+    });
 
     const handleBack = () => {
         setStep('register');

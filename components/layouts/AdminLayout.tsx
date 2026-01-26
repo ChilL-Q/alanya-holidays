@@ -19,6 +19,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         navigate('/login');
     };
 
+    // Handle Esc key to close mobile menu
+    React.useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsMobileMenuOpen(false);
+        };
+        if (isMobileMenuOpen) window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [isMobileMenuOpen]);
+
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/admin/properties', label: 'Properties', icon: Home },

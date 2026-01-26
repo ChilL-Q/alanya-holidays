@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { db, ServiceData } from '../../services/db';
 import { Car, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Save } from 'lucide-react';
+import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';
 import toast from 'react-hot-toast';
 import { CAR_CATALOG, BIKE_CATALOG, CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../../data/cars';
@@ -142,8 +143,8 @@ export const HostEditServicePage: React.FC = () => {
         setExistingImages(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         if (!user || !id) return;
 
         setSubmitting(true);
@@ -206,6 +207,8 @@ export const HostEditServicePage: React.FC = () => {
             setSubmitting(false);
         }
     };
+
+    useSaveShortcut(handleSubmit);
 
     if (loading) return <div className="min-h-screen pt-32 text-center">Loading...</div>;
 

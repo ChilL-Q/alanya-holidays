@@ -87,6 +87,12 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                             <textarea
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleConfirm();
+                                    }
+                                }}
                                 placeholder={reasonPlaceholder}
                                 className="w-full h-32 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all resize-none text-sm"
                                 autoFocus

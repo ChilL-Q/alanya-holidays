@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Save, Trash2, Plus, X, Edit2 } from 'lucide-react';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';
 import toast from 'react-hot-toast';
+import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 
 export const AdminEditServicePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -119,6 +120,8 @@ export const AdminEditServicePage: React.FC = () => {
             setSaving(false);
         }
     };
+
+    useSaveShortcut(handleSave);
 
     const handleRejectEdit = async () => {
         if (!editId) return;

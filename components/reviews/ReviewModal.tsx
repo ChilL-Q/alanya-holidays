@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Star, Upload, X } from 'lucide-react';
+import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import { useLanguage } from '../../context/LanguageContext';
 import { db } from '../../services/db';
 import { toast } from 'react-hot-toast';
@@ -34,8 +35,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
         setImages(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setIsSubmitting(true);
 
         try {
@@ -63,6 +64,8 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
             setIsSubmitting(false);
         }
     };
+
+    useSubmitShortcut(handleSubmit);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('reviews.write_title')}>

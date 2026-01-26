@@ -81,7 +81,7 @@ export const PropertiesPage: React.FC = () => {
 
         try {
             if (type === 'approve') await db.approveProperty(itemId.toString());
-            if (type === 'delete') await db.deleteProperty(itemId.toString()); // deleteProperty does not accept reason
+            if (type === 'delete') await db.deleteProperty(itemId.toString(), reason);
             if (type === 'reject') await db.updatePropertyStatus(itemId.toString(), 'rejected', reason);
 
             // Refresh

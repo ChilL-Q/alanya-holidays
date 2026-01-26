@@ -7,6 +7,9 @@ const { mockSupabase } = vi.hoisted(() => {
     mockSupabase: {
       from: vi.fn(),
       rpc: vi.fn(),
+      functions: {
+        invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
+      },
     },
   };
 });
@@ -35,6 +38,12 @@ describe('bookingsService', () => {
 
       const mockResponse = { data: 'booking-id-789', error: null };
       mockSupabase.rpc.mockResolvedValue({ data: mockResponse, error: null });
+
+      // Mock property fetch for notification
+      const mockSingle = vi.fn().mockResolvedValue({ data: { host_id: 'host-123', title: 'Villa' }, error: null });
+      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
+      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+      mockSupabase.from.mockReturnValue({ select: mockSelect });
 
       const result = await bookingsService.createBooking(mockBookingData);
 

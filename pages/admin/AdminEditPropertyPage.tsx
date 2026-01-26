@@ -16,6 +16,7 @@ import {
 import { AMENITIES_LIST } from '../../data/constants';
 import { AvailabilityCalendar } from '../../components/host/AvailabilityCalendar';
 import { ICalManager } from '../../components/host/ICalManager';
+import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 
 export const AdminEditPropertyPage: React.FC = () => {
     const { t } = useLanguage();
@@ -109,8 +110,8 @@ export const AdminEditPropertyPage: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
         if (!isAuthenticated || !user) {
             toast.error(t('list.error.auth'));
@@ -174,6 +175,8 @@ export const AdminEditPropertyPage: React.FC = () => {
             setIsLoading(false);
         }
     };
+
+    useSaveShortcut(handleSubmit);
 
     // Protected by AdminRoute wrapper in App.tsx for admin routes
     // For host routes, we handle check here or in HostRoute (if it exists)

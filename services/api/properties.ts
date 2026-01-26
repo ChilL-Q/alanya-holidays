@@ -141,7 +141,30 @@ export const propertiesService = {
             .eq('id', id);
         if (error) throw error;
 
-        // Notify Host
+        // Notify Host via Email
+        if (status === 'approved' || status === 'rejected') {
+            const { data: property } = await supabase
+                .from('properties')
+                .select('host_id, title')
+                .eq('id', id)
+                .single();
+            
+            if (property) {
+                supabase.functions.invoke('send-email', {
+                    body: {
+                        type: status === 'approved' ? 'listing_approved' : 'listing_rejected',
+                        userId: property.host_id,
+                        data: {
+                            title: property.title,
+                            reason: reason,
+                            link: `${window.location.origin}/property/${id}`
+                        }
+                    }
+                }).catch(err => console.error('Failed to send status email:', err));
+            }
+        }
+
+        // Notify Host via In-App Notification (Keep existing logic)
         if (status !== 'pending') {
             const { data: property } = await supabase.from('properties').select('host_id, title, type').eq('id', id).single();
             if (property) {
@@ -187,13 +210,62 @@ export const propertiesService = {
     },
 
     async addReview(review: Omit<Review, 'id' | 'created_at'>) {
-        const { error } = await supabase
+        const { error, data: newReview } = await supabase
             .from('reviews')
-            .insert([review]);
+            .insert([review])
+            .select()
+            .single();
+            
         if (error) throw error;
+
+        // Notify Host of New Review
+        const { data: property } = await supabase
+            .from('properties')
+            .select('host_id, title')
+            .eq('id', review.property_id)
+            .single();
+
+        if (property) {
+             // Fetch guest name (optional, but good for email)
+             // We can assume we have user context if we needed, but let's just use generic or fetch if critical
+             // For now, let's send basic notification
+             supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'new_review',
+                    userId: property.host_id,
+                    data: {
+                        itemTitle: property.title,
+                        rating: review.rating,
+                        comment: review.comment,
+                        guestName: 'A Guest', // We'd need to fetch user profile to get specific name
+                        link: `${window.location.origin}/property/${review.property_id}`
+                    }
+                }
+            }).catch(err => console.error('Failed to send review email:', err));
+        }
     },
 
-    async deleteProperty(id: string) {
+    async deleteProperty(id: string, reason?: string) {
+        // Fetch details before deletion to notify host
+        const { data: property } = await supabase
+            .from('properties')
+            .select('host_id, title')
+            .eq('id', id)
+            .single();
+
+        if (property) {
+             supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'listing_deleted',
+                    userId: property.host_id,
+                    data: {
+                        title: property.title,
+                        reason: reason
+                    }
+                }
+            }).catch(err => console.error('Failed to send deletion email:', err));
+        }
+
         const { error } = await supabase
             .from('properties')
             .delete()

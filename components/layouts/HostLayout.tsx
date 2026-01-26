@@ -23,6 +23,15 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
         navigate('/login');
     };
 
+    // Handle Esc key to close mobile menu
+    React.useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsMobileMenuOpen(false);
+        };
+        if (isMobileMenuOpen) window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [isMobileMenuOpen]);
+
     const navItems = [
         { path: '/host', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/host/properties', label: 'My Properties', icon: Home },

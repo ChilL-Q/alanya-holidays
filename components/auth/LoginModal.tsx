@@ -4,6 +4,7 @@ import { useModal } from '../../context/ModalContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, AlertCircle, Loader2, ArrowLeft, KeyRound } from 'lucide-react';
+import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 
 export const LoginModal: React.FC = () => {
     const { activeModal, closeModal, openRegister } = useModal();
@@ -31,8 +32,8 @@ export const LoginModal: React.FC = () => {
         }
     }, [isOpen]);
 
-    const handleLoginSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleLoginSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setError('');
         setLoading(true);
 
@@ -50,8 +51,8 @@ export const LoginModal: React.FC = () => {
         }
     };
 
-    const handleRecoverySubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleRecoverySubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setError('');
         setLoading(true);
 
@@ -70,8 +71,8 @@ export const LoginModal: React.FC = () => {
         }
     };
 
-    const handleOtpSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleOtpSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setError('');
         setLoading(true);
 
@@ -89,6 +90,13 @@ export const LoginModal: React.FC = () => {
             setLoading(false);
         }
     };
+
+    // Keyboard Shortcuts
+    useSubmitShortcut(() => {
+        if (mode === 'login') handleLoginSubmit();
+        else if (mode === 'recovery') handleRecoverySubmit();
+        else if (mode === 'otp') handleOtpSubmit();
+    });
 
     const getTitle = () => {
         if (mode === 'recovery') return 'Reset Password';

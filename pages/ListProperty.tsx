@@ -17,6 +17,7 @@ import {
     ArrowRight,
     Save
 } from 'lucide-react';
+import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
 import { Button, buttonVariants, buttonBase } from '../components/ui/Button';
 import { cn } from '../utils/cn';
 import { AMENITIES_LIST } from '../data/constants';
@@ -193,6 +194,15 @@ export const ListProperty: React.FC = () => {
         }
     };
 
+    // Keyboard Shortcuts
+    useSubmitShortcut(() => {
+        if (step === STEPS.length - 1) {
+            handleSubmit();
+        } else {
+            nextStep();
+        }
+    });
+
     // Hero / Landing for Guests
     if (!isAuthenticated) {
         return (
@@ -275,8 +285,8 @@ export const ListProperty: React.FC = () => {
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'apartment' })}
                                             className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'apartment'
-                                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                                                 }`}
                                         >
                                             <Building2 size={32} className={`mb-4 ${formData.propertyType === 'apartment' ? 'text-teal-600' : 'text-slate-400'}`} />
@@ -287,8 +297,8 @@ export const ListProperty: React.FC = () => {
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'villa' })}
                                             className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'villa'
-                                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                                                 }`}
                                         >
                                             <Home size={32} className={`mb-4 ${formData.propertyType === 'villa' ? 'text-teal-600' : 'text-slate-400'}`} />

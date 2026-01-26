@@ -453,4 +453,20 @@ export const en = {
   'reviews.add_photo': 'Add',
   'reviews.submit': 'Submit Review',
   'reviews.submitting': 'Submitting...',
+
+  // About Page
+  'about.hero.title': 'Discover Alanya',
+  'about.hero.subtitle': 'We’re revolutionizing travel by making it more affordable and ethical for everyone.',
+  'about.pillar.fees_guest.title': '0% Guest Fees',
+  'about.pillar.fees_guest.desc': 'Unlike major platforms that charge 14-20% in fees, we believe travel should be affordable for everyone. Save up to $200 per booking when you choose Alanya Holidays.',
+  'about.pillar.fees_host.title': '7% Host Fees Only',
+  'about.pillar.fees_host.desc': 'Fair commission structure that benefits both hosts and guests, creating a sustainable travel ecosystem. We offer the lowest host fees in Turkey.',
+  'about.pillar.ethical.title': 'Ethical Travel',
+  'about.pillar.ethical.desc': 'We stand for transparency and social consciousness, supporting communities without compromising values. Travel with purpose.',
+  'about.movement.title': 'Join the Ethical Travel Movement',
+  'about.movement.desc': 'Starting in Alanya and expanding across Turkey, we’re proving that affordable, ethical travel is possible. Be part of the change that puts communities first.',
+  'about.story.title': 'Our Story',
+  'about.story.p1': 'Alanya Holidays was born from a simple observation: the vacation rental market was broken. Massive fees were hurting both guests and hosts, turning what should be a joyful experience into a transaction filled with hidden costs.',
+  'about.story.p2': 'We decided to build something different. A platform rooted in the Turkish tradition of misafirperverlik (hospitality), where guests are treated like family, not profit margins.',
+  'about.story.p3': 'By cutting out the middleman fees and focusing on local partnerships, we keep money in the local community while offering you the best rates on the market. It\'s a win-win that we\'re proud to champion.',
 };
