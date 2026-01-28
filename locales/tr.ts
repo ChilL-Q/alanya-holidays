@@ -5,6 +5,7 @@ export const tr = {
     'nav.about': 'Hakkımızda',
     'shop': 'Mağaza',
     'nav.profile': 'Profil',
+    'nav.messages': 'Mesajlar',
     'nav.list_property': 'Evini Kirala',
     'nav.login': 'Giriş yap',
     'nav.signup': 'Kaydol',

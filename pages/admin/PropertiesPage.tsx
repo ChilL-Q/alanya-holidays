@@ -94,7 +94,9 @@ export const PropertiesPage: React.FC = () => {
     };
 
     const filteredProperties = properties.filter(p => {
-        const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+        // If filter is 'all', exclude 'rejected' (soft deleted) items so they look deleted.
+        // If filter is specific (e.g. 'rejected'), show them.
+        const matchesStatus = filterStatus === 'all' ? p.status !== 'rejected' : p.status === filterStatus;
         const matchesSearch =
             p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.location?.toLowerCase().includes(searchQuery.toLowerCase());

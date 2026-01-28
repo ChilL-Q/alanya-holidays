@@ -5,6 +5,7 @@ export const ru = {
     'shop': 'Магазин',
     'nav.about': 'О нас',
     'nav.profile': 'Профиль',
+    'nav.messages': 'Сообщения',
     'nav.list_property': 'Сдать объект',
     'nav.login': 'Войти',
     'nav.signup': 'Зарегистрироваться',

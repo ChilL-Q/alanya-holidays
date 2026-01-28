@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'react-hot-toast';
+import { BecomeHostModal } from '../components/modals/BecomeHostModal';
 
 export const Profile: React.FC = () => {
     const { user, logout, isAuthenticated, updateUser, updateEmail, updatePassword } = useAuth();
@@ -23,6 +24,7 @@ export const Profile: React.FC = () => {
     // UI State
     const [activeTab, setActiveTab] = useState<'overview' | 'my_properties' | 'my_services' | 'settings' | 'security'>('overview');
     const [uploading, setUploading] = useState(false);
+    const [isHostModalOpen, setIsHostModalOpen] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Forms State
@@ -183,6 +185,7 @@ export const Profile: React.FC = () => {
             // Update role in Context
             await updateUser({ role: 'host' });
             toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');
+            setIsHostModalOpen(false);
             // Refresh page or state to show new tabs
         } catch (error: any) {
             console.error('Error upgrading to host:', error);
@@ -301,7 +304,7 @@ export const Profile: React.FC = () => {
                                     {t('profile.become_host_desc') || 'Earn money by renting out your property or vehicle.'}
                                 </p>
                                 <button
-                                    onClick={handleBecomeHost}
+                                    onClick={() => setIsHostModalOpen(true)}
                                     disabled={loading}
                                     className="w-full bg-white text-primary font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition-colors relative z-10"
                                 >
@@ -775,6 +778,13 @@ export const Profile: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <BecomeHostModal
+                isOpen={isHostModalOpen}
+                onClose={() => setIsHostModalOpen(false)}
+                onConfirm={handleBecomeHost}
+                isLoading={loading}
+            />
         </div>
     );
 };

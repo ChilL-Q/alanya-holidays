@@ -32,7 +32,14 @@ export const servicesService = {
             .range(from, to);
 
         if (error) throw error;
-        return { data: data as ServiceDB[], count };
+        if (error) throw error;
+        
+        const mappedData = (data as ServiceDB[]).map(s => ({
+            ...s,
+            service_ref: s.service_ref || parseInt(s.id.slice(0, 8), 16) % 10000 
+        }));
+
+        return { data: mappedData, count };
     },
 
     async getServicesByProvider(providerId: string) {
@@ -47,11 +54,25 @@ export const servicesService = {
     },
 
     async getService(id: string) {
-        const { data, error } = await supabase
-            .from('services')
-            .select('*')
-            .eq('id', id)
-            .single();
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+        let query = supabase.from('services').select('*');
+        if (isUUID) {
+            query = query.eq('id', id);
+        } else {
+             query = query.eq('service_ref', parseInt(id));
+        }
+
+        const { data, error } = await query.single();
+        
+        // Mock fallback check
+        if ((error || !data) && !isUUID) {
+             const { data: all } = await supabase.from('services').select('*');
+             if (all) {
+                 const found = all.find((s: any) => (parseInt(s.id.slice(0, 8), 16) % 10000).toString() === id);
+                 if (found) return found as ServiceDB;
+             }
+        }
 
         if (error) throw error;
         return data as ServiceDB;

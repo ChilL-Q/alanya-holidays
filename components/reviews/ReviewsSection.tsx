@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, User, Camera } from 'lucide-react';
+import { Star, User, Camera, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { db, Review } from '../../services/db';
@@ -19,6 +19,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
     const fetchReviews = async () => {
         try {
@@ -41,6 +42,32 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
             return;
         }
         setIsModalOpen(true);
+    };
+
+    const handleDeleteReview = async (reviewId: string) => {
+        if (!user) return;
+
+        console.log('🗑️ Attempting to delete review:', reviewId, 'by user:', user.id);
+
+        if (!confirm('Are you sure you want to delete this review?')) {
+            return;
+        }
+
+        setDeletingReviewId(reviewId);
+        try {
+            console.log('🗑️ Calling deleteReview API...');
+            await db.deleteReview(reviewId, user.id);
+            console.log('✅ Review deleted successfully');
+            toast.success('Review deleted successfully');
+            console.log('🔄 Fetching updated reviews...');
+            await fetchReviews();
+            console.log('✅ Reviews refreshed');
+        } catch (error) {
+            console.error('❌ Failed to delete review:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to delete review');
+        } finally {
+            setDeletingReviewId(null);
+        }
     };
 
     const formatDate = (dateString?: string) => {
@@ -97,14 +124,27 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
                                         <p className="text-xs text-slate-500">{formatDate(review.created_at)}</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-0.5">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star
-                                            key={i}
-                                            size={14}
-                                            className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300 dark:text-slate-700"}
-                                        />
-                                    ))}
+                                <div className="flex items-center gap-2">
+                                    <div className="flex gap-0.5">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                size={14}
+                                                className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300 dark:text-slate-700"}
+                                            />
+                                        ))}
+                                    </div>
+                                    {user && review.user_id === user.id && (
+                                        <button
+                                            onClick={() => handleDeleteReview(review.id!)}
+                                            disabled={deletingReviewId === review.id}
+                                            className="ml-2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition disabled:opacity-50"
+                                            title="Delete review"
+                                            aria-label="Delete review"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

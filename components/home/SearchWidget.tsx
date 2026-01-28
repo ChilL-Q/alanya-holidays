@@ -59,7 +59,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-2 md:p-3 flex flex-col md:flex-row gap-2 transition-colors relative z-20">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-3 md:p-3 flex flex-col md:flex-row gap-2 transition-colors relative z-20">
             <div className="flex-1 relative group" ref={locationWrapperRef}>
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none z-10">
                     <MapPin className="text-slate-400" size={20} />
@@ -69,7 +69,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     id="search-location"
                     name="location"
                     autoComplete="off"
-                    className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+                    className="w-full h-12 md:h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors text-sm md:text-base"
                     placeholder={t('search.location')}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
@@ -118,7 +118,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
                     autoComplete="off"
-                    customInput={<DateInputMask className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors" />}
+                    customInput={<DateInputMask className="w-full h-12 md:h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors text-sm md:text-base" />}
                     calendarClassName="!font-sans"
                     wrapperClassName="w-full"
                 />
@@ -141,7 +141,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     dateFormat="dd.MM.yyyy"
                     locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
                     autoComplete="off"
-                    customInput={<DateInputMask className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors" />}
+                    customInput={<DateInputMask className="w-full h-12 md:h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors text-sm md:text-base" />}
                     calendarClassName="!font-sans"
                     wrapperClassName="w-full"
                 />
@@ -160,7 +160,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     min={1}
                     value={guests}
                     onChange={(e) => setGuests(e.target.value)}
-                    className="w-full h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors"
+                    className="w-full h-12 md:h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors text-sm md:text-base"
                 />
             </div>
 
@@ -170,7 +170,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                 onClick={handleSearch}
                 variant="primary"
                 size="lg"
-                className="hover-lift shadow-primary/30"
+                className="hover-lift shadow-primary/30 h-12 md:h-14 text-sm md:text-base"
             >
                 <Search size={20} className="mr-2" />
                 {t('search.button')}

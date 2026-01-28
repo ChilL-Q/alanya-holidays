@@ -26,7 +26,9 @@ export const FeaturedProperties: React.FC = () => {
                     image: p.images?.[0] || '',
                     images: p.images || [],
                     rating: p.rating || 5,
-                    reviewsCount: p.reviews_count || 0
+                    reviewsCount: p.reviews_count || 0,
+                    guests: p.max_guests || 2,
+                    bedrooms: p.bedrooms || 1
                 }));
 
                 setProperties(formattedData);

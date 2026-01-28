@@ -13,7 +13,7 @@ interface EmailPayload {
   to?: string;
 
   userId?: string;
-  type: 'booking_created' | 'booking_confirmed' | 'booking_rejected' | 'booking_cancelled' | 'listing_approved' | 'listing_rejected' | 'new_review' | 'listing_deleted' | 'booking_request_host' | 'booking_cancelled_host' | 'booking_expired_guest' | 'booking_expired_host';
+  type: 'booking_created' | 'booking_confirmed' | 'booking_rejected' | 'booking_cancelled' | 'listing_approved' | 'listing_rejected' | 'new_review' | 'listing_deleted' | 'booking_request_host' | 'booking_cancelled_host' | 'booking_expired_guest' | 'booking_expired_host' | 'admin_contact_message' | 'welcome_email';
   data: any; // Dynamic data for templates
 }
 
@@ -243,6 +243,40 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     <p>If you believe this is a mistake, please contact support.</p>
                  `)
              };
+
+        case 'admin_contact_message':
+            return {
+                subject: `New Contact Message: ${data.subject}`,
+                html: wrapper('New Message Received', `
+                    <p>You received a new message via the contact form.</p>
+                    <div class="details">
+                        <p><strong>From:</strong> ${data.name} (${data.email})</p>
+                        <p><strong>Subject:</strong> ${data.subject}</p>
+                        <p><strong>Message:</strong></p>
+                        <p>${data.message}</p>
+                    </div>
+                    <a href="mailto:${data.email}" class="btn">Reply via Email</a>
+                `)
+            };
+
+        case 'welcome_email':
+            return {
+                subject: `Welcome to Alanya Holidays!`,
+                html: wrapper('Welcome Aboard!', `
+                    <p>Hi ${data.name},</p>
+                    <p>Welcome to Alanya Holidays! We're thrilled to have you join our community.</p>
+                    <p>Whether you're looking for a dream villa, a car for your trip, or an unforgettable tour, we've got you covered.</p>
+                    <div class="details">
+                        <p>Check out our latest listings:</p>
+                        <ul>
+                            <li><a href="${data.url}/stays">Stays</a></li>
+                            <li><a href="${data.url}/services/car-rental">Car Rentals</a></li>
+                            <li><a href="${data.url}/services/tours">Tours & Activities</a></li>
+                        </ul>
+                    </div>
+                    <a href="${data.url}" class="btn">Start Exploring</a>
+                `)
+            };
 
         default:
             return {

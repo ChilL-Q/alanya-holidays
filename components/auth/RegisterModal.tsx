@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { AlertCircle, Loader2, ArrowLeft, Mail, User, Lock } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
+import { supabase } from '../../services/supabase';
 
 export const RegisterModal: React.FC = () => {
     const { activeModal, closeModal, openLogin } = useModal();
@@ -67,6 +68,18 @@ export const RegisterModal: React.FC = () => {
         try {
             const result = await verifyOtp(email, otp, 'signup');
             if (result.success) {
+                // Send Welcome Email
+                supabase.functions.invoke('send-email', {
+                    body: {
+                        type: 'welcome_email',
+                        to: email,
+                        data: {
+                            name: name, // From state
+                            url: window.location.origin
+                        }
+                    }
+                }).catch(err => console.error('Failed to send welcome email:', err));
+
                 closeModal();
                 // Clear form
                 setName('');

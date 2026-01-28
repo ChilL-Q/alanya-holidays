@@ -119,7 +119,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
     if (!activeConversationId) return null;
 
     return (
-        <div className={`flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${embedded ? 'rounded-none border-0 shadow-none h-full' : 'fixed top-28 bottom-6 right-6 w-[400px] rounded-3xl z-50'} ${className} font-sans`}>
+        <div className={`flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${embedded ? 'rounded-none border-0 shadow-none h-full' : 'fixed top-[72px] bottom-0 left-0 right-0 sm:top-28 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[400px] rounded-t-3xl sm:rounded-3xl z-50'} ${className} font-sans`}>
             {/* Premium Header */}
             <div className={`relative z-10 p-4 ${embedded ? 'bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800' : 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg'}`}>
                 <div className="flex justify-between items-center">

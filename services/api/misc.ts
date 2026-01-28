@@ -8,6 +8,21 @@ export const messagesService = {
             .insert([data]);
 
         if (error) throw error;
+        
+        // Notify Admin
+        supabase.functions.invoke('send-email', {
+            body: {
+                type: 'admin_contact_message',
+                to: 'contact@alanyaholidays.com', // Notification to Admin
+                data: {
+                    name: data.name,
+                    email: data.email,
+                    subject: data.subject,
+                    message: data.message
+                }
+            }
+        }).catch(err => console.error('Failed to send admin email:', err));
+
         return true;
     }
 };

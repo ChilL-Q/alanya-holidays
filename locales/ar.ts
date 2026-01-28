@@ -5,6 +5,7 @@ export const ar = {
     'shop': 'المتجر',
     'nav.about': 'معلومات عنا',
     'nav.profile': 'الملف الشخصي',
+    'nav.messages': 'الرسائل',
     'nav.list_property': 'اعرض عقارك',
     'nav.login': 'تسجيل الدخول',
     'nav.signup': 'تسجيل',

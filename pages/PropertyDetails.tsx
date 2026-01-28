@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight } from 'lucide-react';
+import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight, DoorOpen, Bath } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { ServiceType } from '../types/index';
 import { useLanguage } from '../context/LanguageContext';
@@ -68,7 +68,7 @@ export const PropertyDetails: React.FC = () => {
         const data = await db.getProperty(id);
         if (data) {
           // Normalize data structure
-          setProperty({
+          let normalizedData = {
             ...data,
             pricePerNight: data.price_per_night, // Map DB snake_case to CamelCase
             hostName: data.host?.full_name || 'Alanya Holidays',
@@ -76,23 +76,27 @@ export const PropertyDetails: React.FC = () => {
             amenities: Array.isArray(data.amenities)
               ? data.amenities.map((a: any) => typeof a === 'string' ? { label: a, icon: '' } : a)
               : []
-          } as PropertyDetailsData);
+          } as PropertyDetailsData;
 
-          // Fetch blocked dates
-          const unavailable = await db.getUnavailableDates(id);
+
+
+          setProperty(normalizedData);
+
+          // Fetch blocked dates - use UUID from property data
+          const unavailable = await db.getUnavailableDates(normalizedData.id);
           if (unavailable) {
             setBlockedDates(unavailable.map((d: string) => new Date(d)));
           }
 
-          // Fetch review count separately to ensure accuracy
-          const reviewCount = await db.getReviewCount(id);
+          // Fetch review count separately to ensure accuracy - use UUID
+          const reviewCount = await db.getReviewCount(normalizedData.id);
           setProperty(prev => prev ? { ...prev, reviewsCount: reviewCount } : null);
 
-          // Check for booking if logged in
+          // Check for booking if logged in - use UUID
           if (isAuthenticated && user) {
             const bookings = await db.getBookings(user.id);
             const activeBooking = bookings.find((b: any) =>
-              b.item_id === id &&
+              b.item_id === normalizedData.id &&
               (b.status === 'confirmed' || b.payment_status === 'paid')
             );
             if (activeBooking) {
@@ -186,18 +190,16 @@ export const PropertyDetails: React.FC = () => {
 
           {/* Glassmorphism Title Card */}
           <div
-            className="absolute bottom-6 left-6 max-w-lg cursor-default"
+            className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-auto max-w-lg cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white/65 dark:bg-slate-900/65 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20">
+            <div className="bg-white/65 dark:bg-slate-900/65 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-xl border border-white/20">
               <h1 className="text-2xl md:text-3xl font-serif font-bold text-primary dark:text-white mb-2 leading-tight">
                 {property.title}
               </h1>
-              <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300 text-sm font-medium">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-600 dark:text-slate-300 text-sm font-medium">
                 <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent" /> {property.address || property.location}</span>
                 <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {property.rating || 5.0} ({property.reviewsCount} reviews)</span>
-                <span className="flex items-center gap-1.5"><Users size={16} className="text-accent" /> Up to {property.max_guests || 2} guests</span>
-                <span className="flex items-center gap-1.5"><BedDouble size={16} className="text-accent" /> {property.beds || 1} beds</span>
               </div>
             </div>
           </div>
@@ -231,7 +233,27 @@ export const PropertyDetails: React.FC = () => {
 
         {/* Left Column: Info */}
         <div className="lg:col-span-2 space-y-8 animate-fade-up delay-100 opacity-0 fill-mode-forwards">
-          <div className="mt-24 py-6 border-y border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+          {/* Key Property Stats - Moved from Overlay */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
+              <Users size={24} className="text-accent" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.max_guests || 2} Guests</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
+              <DoorOpen size={24} className="text-accent" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bedrooms || 1} Bedrooms</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
+              <BedDouble size={24} className="text-accent" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.beds || 1} Beds</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
+              <Bath size={24} className="text-accent" />
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bathrooms || 1} Baths</span>
+            </div>
+          </div>
+
+          <div className="py-6 border-y border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400">
                 <User size={24} />
@@ -396,7 +418,7 @@ export const PropertyDetails: React.FC = () => {
           )}
 
           {/* Reviews Section Integration */}
-          {id && <ReviewsSection propertyId={id} />}
+          {property?.id && <ReviewsSection propertyId={property.id} />}
 
         </div>
 
@@ -426,8 +448,9 @@ export const PropertyDetails: React.FC = () => {
             <div className="border border-slate-200 dark:border-slate-700 rounded-xl mb-4 overflow-hidden">
               <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-700">
                 <div className="p-3 border-r border-slate-200 dark:border-slate-700">
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
+                  <label htmlFor="check-in-date" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
                   <DatePicker
+                    id="check-in-date"
                     selected={checkIn}
                     onChange={(date) => setCheckIn(date)}
                     selectsStart
@@ -444,8 +467,9 @@ export const PropertyDetails: React.FC = () => {
                   />
                 </div>
                 <div className="p-3">
-                  <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
+                  <label htmlFor="check-out-date" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
                   <DatePicker
+                    id="check-out-date"
                     selected={checkOut}
                     onChange={(date) => setCheckOut(date)}
                     selectsEnd
@@ -463,8 +487,8 @@ export const PropertyDetails: React.FC = () => {
                 </div>
               </div>
               <div className="p-3">
-                <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
-                <select className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
+                <label htmlFor="guests-select" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
+                <select id="guests-select" className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
                   <option>{t('prop.guest_option').replace('{count}', '1')}</option>
                   <option>{t('prop.guests_option').replace('{count}', '2')}</option>
                   <option>{t('prop.guests_option').replace('{count}', '3')}</option>
@@ -559,7 +583,7 @@ export const PropertyDetails: React.FC = () => {
         </div>
       </section>
       {showChat && createPortal(
-        <ChatWindow className="fixed bottom-4 right-4 z-50 shadow-2xl" />,
+        <ChatWindow className="z-[100]" />,
         document.body
       )}
     </div>

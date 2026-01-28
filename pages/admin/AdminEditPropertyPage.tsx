@@ -54,7 +54,9 @@ export const AdminEditPropertyPage: React.FC = () => {
         guidebooks: '',
         interactionPreferences: '',
         maxGuests: '2',
-        beds: '1'
+        beds: '1',
+        bedrooms: '1',
+        bathrooms: '1'
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -88,7 +90,9 @@ export const AdminEditPropertyPage: React.FC = () => {
                     guidebooks: data.guidebooks || '',
                     interactionPreferences: data.interaction_preferences || '',
                     maxGuests: (data.max_guests ?? 2).toString(),
-                    beds: (data.beds ?? 1).toString()
+                    beds: (data.beds ?? 1).toString(),
+                    bedrooms: (data.bedrooms ?? 1).toString(),
+                    bathrooms: (data.bathrooms ?? 1).toString()
                 }));
                 setExistingImages(data.images || []);
                 setIcalData({
@@ -160,7 +164,9 @@ export const AdminEditPropertyPage: React.FC = () => {
                 guidebooks: formData.guidebooks,
                 interaction_preferences: formData.interactionPreferences,
                 max_guests: Number(formData.maxGuests),
-                beds: Number(formData.beds)
+                beds: Number(formData.beds),
+                bedrooms: Number(formData.bedrooms),
+                bathrooms: Number(formData.bathrooms)
             };
 
             if (id) {
@@ -317,6 +323,36 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             required
                                             min="1"
                                             value={formData.beds}
+                                            onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Bedrooms
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="bedrooms"
+                                            required
+                                            min="0"
+                                            value={formData.bedrooms}
+                                            onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Bathrooms
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="bathrooms"
+                                            required
+                                            min="0"
+                                            value={formData.bathrooms}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"

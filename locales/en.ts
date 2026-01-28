@@ -5,6 +5,7 @@ export const en = {
   'shop': 'Shop',
   'nav.about': 'About',
   'nav.profile': 'Profile',
+  'nav.messages': 'Messages',
   'nav.list_property': 'List Property',
   'nav.login': 'Log in',
   'nav.signup': 'Sign up',

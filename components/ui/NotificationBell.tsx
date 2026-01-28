@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
 export const NotificationBell: React.FC = () => {
     const { notifications, unreadCount, markAsRead, addNotification } = useNotifications();
+    const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const { t } = useLanguage();
@@ -72,7 +74,7 @@ export const NotificationBell: React.FC = () => {
                             <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{lastNotification.message}</p>
                             {lastNotification.link && (
                                 <Link
-                                    to={lastNotification.link}
+                                    to={lastNotification.link.includes('/host/messages') && user?.role !== 'host' && user?.role !== 'admin' ? '/inbox' : lastNotification.link}
                                     onClick={() => setShowBubble(false)}
                                     className="text-xs text-teal-600 font-bold hover:underline mt-1.5 inline-block"
                                 >

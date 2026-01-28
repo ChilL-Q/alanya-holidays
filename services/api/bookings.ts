@@ -207,7 +207,15 @@ export const bookingsService = {
         return enrichedBookings;
     },
 
-    async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'completed') {
+    async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'completed', reason?: string) {
+        
+        // 1. Fetch current status to determine email type (Reject vs Cancel)
+        const { data: currentBooking } = await supabase
+            .from('bookings')
+            .select('status, user_id, check_in, check_out, property:properties(title, host_id), service:services(title, provider_id)')
+            .eq('id', id)
+            .single();
+
          const { error } = await supabase
             .from('bookings')
             .update({ status })
@@ -216,44 +224,60 @@ export const bookingsService = {
         if (error) throw error;
 
         // Trigger Email Notification
-        if (status === 'confirmed' || status === 'cancelled' || status === 'pending') { // 'pending' might be 'rejected' mapped? No, rejected is not in params list
-             // We need to fetch booking details to send meaningful email
-             const { data: booking } = await supabase
-                .from('bookings')
-                .select('*, property:properties(title, host_id)')
-                .eq('id', id)
-                .single();
-            
-            if (booking) {
-                const type = status === 'confirmed' ? 'booking_confirmed' : 
-                             status === 'cancelled' ? 'booking_cancelled' : null;
+        if (status === 'confirmed' || status === 'cancelled') {
+             
+            if (currentBooking) {
+                let type: string | null = null;
+                
+                // Supabase join often returns array, handle both cases safely
+                const property = Array.isArray(currentBooking.property) ? currentBooking.property[0] : currentBooking.property;
+                const service = Array.isArray(currentBooking.service) ? currentBooking.service[0] : currentBooking.service;
+                
+                const itemTitle = property?.title || service?.title || 'Item';
+                const hostId = property?.host_id || service?.provider_id;
+
+                if (status === 'confirmed') {
+                    type = 'booking_confirmed';
+                } else if (status === 'cancelled') {
+                    // Distinguish Reject vs Cancel
+                    if (currentBooking.status === 'pending') {
+                        type = 'booking_rejected';
+                    } else {
+                        type = 'booking_cancelled';
+                    }
+                }
                 
                 if (type) {
                      // Notify Guest
                      supabase.functions.invoke('send-email', {
                         body: {
                             type,
-                            userId: booking.user_id,
+                            userId: currentBooking.user_id,
                             data: {
-                                itemTitle: booking.property?.title || 'Property',
-                                checkIn: booking.check_in,
-                                checkOut: booking.check_out,
+                                itemTitle: itemTitle,
+                                checkIn: currentBooking.check_in,
+                                checkOut: currentBooking.check_out,
+                                reason: reason, // For rejection
                                 link: `${window.location.origin}/profile`
                             }
                         }
                     }).catch(err => console.error('Failed to send status email:', err));
 
-                    // Notify Host if Cancelled
-                    if (status === 'cancelled' && booking.property && booking.property.host_id) {
+                    // Notify Host if Cancelled (by Guest or System? usually Admin/Host cancels... 
+                    // if Host cancels confirmed booking, they know. 
+                    // if Guest cancels, this function is called? 
+                    // This function is generic. Let's assume if status becomes cancelled, we notify host too just in case, unless it was rejection)
+                    
+                    if (status === 'cancelled' && type === 'booking_cancelled' && hostId) {
                         supabase.functions.invoke('send-email', {
                             body: {
                                 type: 'booking_cancelled_host',
-                                userId: booking.property.host_id,
+                                userId: hostId,
                                 data: {
-                                    guestName: 'Guest', // Fetching real name would be better but keeping simple for now
-                                    itemTitle: booking.property.title,
-                                    checkIn: booking.check_in,
-                                    checkOut: booking.check_out,
+                                    guestName: 'Guest', 
+                                    itemTitle: itemTitle,
+                                    checkIn: currentBooking.check_in,
+                                    checkOut: currentBooking.check_out,
                                     link: `${window.location.origin}/host/bookings`
                                 }
                             }

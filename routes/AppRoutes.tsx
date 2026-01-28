@@ -26,10 +26,12 @@ import { AddProduct } from '../pages/AddProduct';
 import { Profile } from '../pages/Profile';
 import { BookVehicle } from '../pages/booking/BookVehicle';
 import { BookTour } from '../pages/booking/BookTour';
+import { InboxPage } from '../pages/InboxPage';
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
 import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
+import { HostRoute } from '../components/auth/HostRoute';
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -83,52 +85,71 @@ export const AppRoutes: React.FC = () => {
             <Route path="/bookmarks" element={<FavoritesPage />} />
             <Route path="/book-vehicle/:id" element={<BookVehicle />} />
             <Route path="/book-tour/:id" element={<BookTour />} />
+            <Route path="/inbox" element={<InboxPage />} />
 
-            {/* Host Routes */}
+            {/* Host Routes - Protected */}
             <Route path="/host" element={
-                <HostLayout>
-                    <HostDashboard />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostDashboard />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/properties" element={
-                <HostLayout>
-                    <HostPropertiesPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostPropertiesPage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/services" element={
-                <HostLayout>
-                    <HostServicesPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostServicesPage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/edit-service/:id" element={
-                <HostLayout>
-                    <HostEditServicePage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostEditServicePage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/edit-property/:id" element={
-                <HostLayout>
-                    <AdminEditPropertyPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <AdminEditPropertyPage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/bookings" element={
-                <HostLayout>
-                    <HostBookingsPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostBookingsPage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/calendar" element={
-                <HostLayout>
-                    <HostCalendarPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostCalendarPage />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/dashboard" element={
-                <HostLayout>
-                    <HostDashboard />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostDashboard />
+                    </HostLayout>
+                </HostRoute>
             } />
             <Route path="/host/messages" element={
-                <HostLayout>
-                    <HostMessagesPage />
-                </HostLayout>
+                <HostRoute>
+                    <HostLayout>
+                        <HostMessagesPage />
+                    </HostLayout>
+                </HostRoute>
             } />
 
             {/* Admin Routes Protected by AdminRoute */}

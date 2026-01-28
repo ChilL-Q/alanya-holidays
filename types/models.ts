@@ -18,6 +18,8 @@ export interface UserProfile {
 
 export interface PropertyDB {
     id: string;
+    property_ref?: number; // Friendly ID (e.g., 1001) - DEPRECATED, use ref_id
+    ref_id?: number; // Auto-incrementing friendly ID from database
     title: string;
     description: string;
     price_per_night: number;
@@ -112,6 +114,7 @@ export interface ServiceFeatures {
 
 export interface ServiceDB {
     id: string;
+    service_ref?: number;
     title: string;
     description: string;
     price: number;

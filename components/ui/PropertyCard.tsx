@@ -20,7 +20,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
     return (
         <Link
-            to={`/property/${property.id}`}
+            to={`/property/${property.ref_id || property.id}`}
             className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800 relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -67,7 +67,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 </div>
                 <div className="flex items-end justify-between border-t border-slate-50 dark:border-slate-800 pt-4">
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                        <span className="font-medium text-slate-900 dark:text-white">{property.bedrooms}</span> {property.bedrooms === 1 ? 'bed' : 'beds'} • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> {property.guests === 1 ? 'guest' : 'guests'}
+                        <span className="font-medium text-slate-900 dark:text-white">{property.beds || property.bedrooms}</span> {property.beds === 1 ? 'bed' : 'beds'} • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> {property.guests === 1 ? 'guest' : 'guests'}
                     </div>
                     <div className="text-right">
                         <p className="font-bold text-slate-900 dark:text-white text-lg">

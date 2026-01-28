@@ -128,10 +128,11 @@ export const LoginModal: React.FC = () => {
                 {mode === 'login' && (
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
+                            <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    id="login-email"
                                     type="email"
                                     required
                                     value={email}
@@ -143,7 +144,7 @@ export const LoginModal: React.FC = () => {
                         </div>
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="block text-sm font-medium text-slate-700">{t('auth.password')}</label>
+                                <label htmlFor="login-password" className="block text-sm font-medium text-slate-700">{t('auth.password')}</label>
                                 <button
                                     type="button"
                                     onClick={() => setMode('recovery')}
@@ -155,6 +156,7 @@ export const LoginModal: React.FC = () => {
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    id="login-password"
                                     type="password"
                                     required
                                     value={password}
@@ -194,10 +196,11 @@ export const LoginModal: React.FC = () => {
                             Enter your email address and we'll send you a code to log in instantly.
                         </p>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
+                            <label htmlFor="recovery-email" className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    id="recovery-email"
                                     type="email"
                                     required
                                     value={email}
@@ -226,7 +229,9 @@ export const LoginModal: React.FC = () => {
                         </div>
 
                         <div className="flex justify-center">
+                            <label htmlFor="otp-input" className="sr-only">One Time Password</label>
                             <input
+                                id="otp-input"
                                 type="text"
                                 maxLength={8}
                                 required

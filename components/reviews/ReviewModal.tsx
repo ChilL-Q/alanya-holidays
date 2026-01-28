@@ -22,9 +22,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Modal component handles isOpen check, but we can keep it here to avoid render if closed
-    if (!isOpen) return null;
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setImages(prev => [...prev, ...Array.from(e.target.files!)]);
@@ -59,7 +56,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
             onClose();
         } catch (error) {
             console.error(error);
-            toast.error(t('reviews.error'));
+            console.error(error);
+            // Show exact error message to help debugging (e.g. RLS policy violation)
+            toast.error(error instanceof Error ? error.message : t('reviews.error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -67,18 +66,30 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
 
     useSubmitShortcut(handleSubmit);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault();
+            handleSubmit();
+        }
+    };
+
+    // Modal component handles isOpen check, but we can keep it here to avoid render if closed
+    if (!isOpen) return null;
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={t('reviews.write_title')}>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Rating */}
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('reviews.rating_label')}</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2" role="group" aria-label={t('reviews.rating_label')}>
                         {[1, 2, 3, 4, 5].map((star) => (
                             <button
                                 key={star}
                                 type="button"
                                 onClick={() => setRating(star)}
+                                aria-label={`${star} Stars`}
+                                aria-pressed={star <= rating}
                                 className="transition-transform hover:scale-110 focus:outline-none"
                             >
                                 <Star
@@ -94,10 +105,12 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
 
                 {/* Comment */}
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('reviews.experience_label')}</label>
+                    <label htmlFor="review-comment" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('reviews.experience_label')}</label>
                     <textarea
+                        id="review-comment"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         rows={4}
                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition text-slate-900 dark:text-white resize-none"
                         placeholder={t('reviews.placeholder')}
@@ -113,13 +126,14 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                             <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
                                 <img
                                     src={URL.createObjectURL(file)}
-                                    alt="Preview"
+                                    alt={`Review upload ${i + 1}`}
                                     className="w-full h-full object-cover"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => removeImage(i)}
                                     className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                    aria-label="Remove image"
                                 >
                                     <X size={12} />
                                 </button>
@@ -129,6 +143,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-400 hover:border-teal-500 hover:text-teal-500 transition"
+                            aria-label={t('reviews.add_photo')}
                         >
                             <Upload size={20} />
                             <span className="text-xs mt-1">{t('reviews.add_photo')}</span>

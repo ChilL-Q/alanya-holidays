@@ -238,9 +238,10 @@ export const Navbar: React.FC = () => {
               <div className="relative ml-1" ref={profileRef}>
                 <button
                   onClick={() => {
-                    // Logic: On Mobile (Guest) -> Open MobileMenu. On Desktop (Guest) -> Open ProfileDropdown.
-                    // On Auth -> Always Open ProfileDropdown (which acts as Mobile Menu too).
-                    if (!isAuthenticated && window.innerWidth < 768) {
+                    // Logic: Mobile -> Open MobileMenu. Desktop -> Open ProfileDropdown.
+                    // If user is Auth on Desktop -> ProfileDropdown acting as user menu.
+                    // If user is Guest on Desktop -> ProfileDropdown acting as Login/Register menu.
+                    if (window.innerWidth < 768) {
                       setIsMobileMenuOpen(!isMobileMenuOpen);
                     } else {
                       setIsProfileOpen(!isProfileOpen);
@@ -254,17 +255,22 @@ export const Navbar: React.FC = () => {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-400">
                         <User size={16} />
+                        {/* Burger Menu Icon on Mobile for Guests/Auth? Maybe just User icon is enough or we can swap icon */}
                       </div>
                     )}
                   </div>
                   <div className="hidden lg:flex flex-col items-start">
                     <Menu size={14} className="text-slate-400" />
                   </div>
+                  {/* Show Menu icon on mobile to indicate it opens a menu */}
+                  <div className="lg:hidden">
+                    <Menu size={16} className="text-slate-500" />
+                  </div>
                 </button>
 
-                {/* Dropdown (Profile + Auth Actions) */}
+                {/* Dropdown (Profile + Auth Actions) - DESKTOP ONLY NOW */}
                 {isProfileOpen && (
-                  <div className="absolute top-full mt-3 right-0 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                  <div className="absolute top-full mt-3 right-0 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50 hidden md:block">
 
                     {/* User Header (Auth Only) */}
                     {isAuthenticated && user && (
@@ -274,9 +280,9 @@ export const Navbar: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Guest Actions (Desktop Only - Mobile uses MobileMenu) */}
+                    {/* Guest Actions */}
                     {!isAuthenticated && (
-                      <div className="p-2 border-b border-slate-100 dark:border-slate-800 hidden md:block">
+                      <div className="p-2 border-b border-slate-100 dark:border-slate-800">
                         <button
                           onClick={() => { openLogin(); setIsProfileOpen(false); }}
                           className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
@@ -292,29 +298,20 @@ export const Navbar: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Navigation Links (Mobile Only) */}
-                    <div className="md:hidden p-2 border-b border-slate-100 dark:border-slate-800">
-                      <Link to="/stays" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                        <Home size={16} className="text-slate-400" />
-                        {t('nav.stays')}
-                      </Link>
-                      <Link to="/services" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                        <Car size={16} className="text-slate-400" />
-                        {t('nav.services')}
-                      </Link>
-                      <Link to="/shop" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                        <ShoppingBag size={16} className="text-slate-400" />
-                        {t('shop')}
-                      </Link>
-                      <Link to="/zero-fees" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
-                        <Banknote size={16} />
-                        {t('value.zero_fees.title')}
-                      </Link>
-                    </div>
+                    {/* No Mobile Links here anymore - they are in MobileMenu */}
 
                     <div className="p-2">
                       {isAuthenticated && (
                         <>
+                          <Link to="/inbox" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                            <div className="relative">
+                              <div className="text-slate-400">
+                                {/* Icon placeholder if needed, User uses Lucide icons */}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-inbox"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>
+                              </div>
+                            </div>
+                            {t('nav.messages') || 'Messages'}
+                          </Link>
                           <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                             <User size={16} className="text-slate-400" />
                             {t('nav.profile')}

@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({
         };
     }, [isOpen, onClose, lockBodyScroll]);
 
-    if (!isOpen || !mounted) return null;
+    if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
     return createPortal(
         <div className="relative z-[9999]" aria-labelledby="modal-title" role="dialog" aria-modal="true">

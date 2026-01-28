@@ -8,6 +8,8 @@ import { Amenity } from './models';
 
 export interface Property {
   id: string;
+  property_ref?: number;
+  ref_id?: number;
   title: string;
   location: string;
   pricePerNight: number;
@@ -17,6 +19,7 @@ export interface Property {
   images: string[];
   guests: number;
   bedrooms: number;
+  beds: number;
   bathrooms: number;
   description: string;
   amenities: Amenity[];
