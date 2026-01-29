@@ -29,7 +29,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                 <input
                     type="text"
                     name="rentalLicense"
-                    placeholder="e.g. 07-1234..."
+                    placeholder={t('prop_form.license_placeholder')}
                     value={formData.rentalLicense}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
@@ -38,13 +38,13 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    {t('list.form.location')} (Area)
+                    {t('prop_form.label_location')}
                 </label>
                 <div className="relative mb-4">
                     <input
                         type="text"
                         name="location"
-                        placeholder="e.g. Mahmutlar"
+                        placeholder={t('prop_form.location')}
                         required
                         value={formData.location}
                         onChange={handleChange}
@@ -54,7 +54,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                 </div>
 
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Pin Exact Location
+                    {t('prop_form.pin_location')}
                 </label>
                 <div className="h-64 md:h-80 w-full mb-4">
                     <LocationPicker
@@ -70,17 +70,17 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                         initialLocation={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : undefined}
                     />
                 </div>
-                <p className="text-xs text-slate-500 mb-2">Click on the map to set the exact location of your property.</p>
+                <p className="text-xs text-slate-500 mb-2">{t('prop_form.pin_hint')}</p>
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Full Address
+                    {t('prop_form.label_address')}
                 </label>
                 <input
                     type="text"
                     name="address"
-                    placeholder="Street, Building No, Apartment No..."
+                    placeholder={t('prop_form.address_placeholder')}
                     required
                     value={formData.address || ''}
                     onChange={handleChange}

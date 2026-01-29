@@ -34,6 +34,6 @@ export const serviceSchema = z.object({
     price: z.number().positive(),
     type: z.enum(['car', 'bike', 'tour', 'transfer', 'visa', 'esim']),
     provider_id: z.string().uuid(),
-    features: z.record(z.any()).default({}),
+    features: z.record(z.string(), z.any()).default({}),
     images: z.array(z.string()).default([])
 });

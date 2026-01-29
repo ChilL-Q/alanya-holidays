@@ -208,8 +208,8 @@ export const AdminEditPropertyPage: React.FC = () => {
                     <div className="p-8 border-b border-slate-100 dark:border-slate-700">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Property</h1>
-                                <p className="text-slate-500 mt-1">Update property details and images</p>
+                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('admin_prop.edit_title')}</h1>
+                                <p className="text-slate-500 mt-1">{t('admin_prop.edit_subtitle')}</p>
                             </div>
 
                             {/* Tabs */}
@@ -219,14 +219,14 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'details' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     <Settings size={16} />
-                                    Details
+                                    {t('admin_prop.tab_details')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('calendar')}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     <Calendar size={16} />
-                                    Calendar & Sync
+                                    {t('admin_prop.tab_calendar')}
                                 </button>
                             </div>
                         </div>
@@ -252,7 +252,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Title
+                                            {t('prop_form.label_title')}
                                         </label>
                                         <input
                                             type="text"
@@ -268,7 +268,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Price (€/night)
+                                            {t('prop_form.label_price')}
                                         </label>
                                         <input
                                             type="number"
@@ -283,7 +283,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Type
+                                            {t('prop_form.label_type')}
                                         </label>
                                         <div className="relative">
                                             <select
@@ -300,7 +300,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Max Guests
+                                            {t('prop_form.label_max_guests')}
                                         </label>
                                         <input
                                             type="number"
@@ -315,7 +315,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Beds
+                                            {t('prop_form.label_beds')}
                                         </label>
                                         <input
                                             type="number"
@@ -330,7 +330,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Bedrooms
+                                            {t('prop_form.label_bedrooms')}
                                         </label>
                                         <input
                                             type="number"
@@ -345,7 +345,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Bathrooms
+                                            {t('prop_form.label_bathrooms')}
                                         </label>
                                         <input
                                             type="number"
@@ -362,7 +362,7 @@ export const AdminEditPropertyPage: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Location (Area)
+                                        {t('prop_form.label_location')}
                                     </label>
                                     <div className="relative">
                                         <input
@@ -379,7 +379,7 @@ export const AdminEditPropertyPage: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Full Address
+                                        {t('prop_form.label_address')}
                                     </label>
                                     <input
                                         type="text"
@@ -393,7 +393,7 @@ export const AdminEditPropertyPage: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
-                                        Amenities
+                                        {t('prop_form.label_amenities')}
                                     </label>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {AMENITIES_LIST.map(am => (
@@ -420,48 +420,48 @@ export const AdminEditPropertyPage: React.FC = () => {
                                 {/* Hospitality & Guest Guide Section */}
                                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                        Hospitality & Guest Guide
-                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Visible only after booking</span>
+                                        {t('prop_form.section_hospitality')}
+                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
                                     </h3>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Time</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkin')}</label>
                                             <input
                                                 type="text"
                                                 name="checkInTime"
-                                                placeholder="e.g. 3:00 PM"
+                                                placeholder={t('prop_form.checkin_time')}
                                                 value={formData.checkInTime}
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Time</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout')}</label>
                                             <input
                                                 type="text"
                                                 name="checkOutTime"
-                                                placeholder="e.g. 11:00 AM"
+                                                placeholder={t('prop_form.checkout_time')}
                                                 value={formData.checkOutTime}
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Method</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_method')}</label>
                                             <input
                                                 type="text"
                                                 name="checkInMethod"
-                                                placeholder="e.g. Lockbox, Keypad, In-person..."
+                                                placeholder={t('prop_form.checkin_method')}
                                                 value={formData.checkInMethod}
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Wifi Details</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_wifi')}</label>
                                             <textarea
                                                 name="wifiDetails"
-                                                placeholder="Network Name and Password"
+                                                placeholder={t('prop_form.wifi')}
                                                 rows={2}
                                                 value={formData.wifiDetails}
                                                 onChange={handleChange}
@@ -469,10 +469,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Arrival Guide</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_arrival')}</label>
                                             <textarea
                                                 name="arrivalGuide"
-                                                placeholder="Instructions for when guests arrive"
+                                                placeholder={t('prop_form.arrival')}
                                                 rows={3}
                                                 value={formData.arrivalGuide}
                                                 onChange={handleChange}
@@ -480,10 +480,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Directions</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_directions')}</label>
                                             <textarea
                                                 name="directions"
-                                                placeholder="How to get to the property"
+                                                placeholder={t('prop_form.directions')}
                                                 rows={2}
                                                 value={formData.directions}
                                                 onChange={handleChange}
@@ -491,10 +491,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Manual</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_manual')}</label>
                                             <textarea
                                                 name="houseManual"
-                                                placeholder="How to use appliances, AC, pool etc."
+                                                placeholder={t('prop_form.house_manual')}
                                                 rows={3}
                                                 value={formData.houseManual}
                                                 onChange={handleChange}
@@ -502,10 +502,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Rules</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_rules')}</label>
                                             <textarea
                                                 name="houseRules"
-                                                placeholder="No smoking, no parties, etc."
+                                                placeholder={t('prop_form.house_rules')}
                                                 rows={3}
                                                 value={formData.houseRules}
                                                 onChange={handleChange}
@@ -513,10 +513,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Instructions</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout_instr')}</label>
                                             <textarea
                                                 name="checkoutInstructions"
-                                                placeholder="What to do before leaving (trash, keys, etc.)"
+                                                placeholder={t('prop_form.checkout_instr')}
                                                 rows={2}
                                                 value={formData.checkoutInstructions}
                                                 onChange={handleChange}
@@ -524,10 +524,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Guidebooks</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_guidebooks')}</label>
                                             <textarea
                                                 name="guidebooks"
-                                                placeholder="Local recommendations (restaurants, sights)"
+                                                placeholder={t('prop_form.recommendations')}
                                                 rows={2}
                                                 value={formData.guidebooks}
                                                 onChange={handleChange}
@@ -535,10 +535,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             />
                                         </div>
                                         <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interaction Preferences</label>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_interaction')}</label>
                                             <textarea
                                                 name="interactionPreferences"
-                                                placeholder="How you prefer to interact with guests"
+                                                placeholder={t('prop_form.interaction')}
                                                 rows={2}
                                                 value={formData.interactionPreferences}
                                                 onChange={handleChange}
@@ -550,7 +550,7 @@ export const AdminEditPropertyPage: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Property Images
+                                        {t('admin_prop.upload_title')}
                                     </label>
                                     <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative">
                                         <input
@@ -567,8 +567,8 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <Camera size={24} />
                                         </div>
-                                        <p className="text-sm font-medium text-slate-900 dark:text-white">Click to upload new photos</p>
-                                        <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{t('admin_prop.upload_text')}</p>
+                                        <p className="text-xs text-slate-500 mt-1">{t('admin_prop.upload_hint')}</p>
 
                                         {(existingImages.length > 0 || files.length > 0) && (
                                             <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -600,7 +600,7 @@ export const AdminEditPropertyPage: React.FC = () => {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        Description
+                                        {t('prop_form.label_desc')}
                                     </label>
                                     <textarea
                                         name="description"
@@ -617,7 +617,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     disabled={isLoading}
                                     className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
                                 >
-                                    {isLoading ? 'Saving Changes...' : 'Save Changes'}
+                                    {isLoading ? t('admin_prop.save_loading') : t('admin_prop.save')}
                                 </button>
                             </form>
                         )}

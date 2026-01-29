@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Calendar } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface PropertyHospitalityProps {
     formData: any;
@@ -7,52 +8,53 @@ interface PropertyHospitalityProps {
 }
 
 export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formData, handleChange }) => {
+    const { t } = useLanguage();
     return (
         <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <ShieldCheck className="text-accent" size={20} />
-                Hospitality & Guest Guide
-                <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">Visible only after booking</span>
+                {t('prop_form.section_hospitality')}
+                <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Time</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkin')}</label>
                     <input
                         type="text"
                         name="checkInTime"
-                        placeholder="e.g. 3:00 PM"
+                        placeholder={t('prop_form.checkin_time')}
                         value={formData.checkInTime}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Time</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout')}</label>
                     <input
                         type="text"
                         name="checkOutTime"
-                        placeholder="e.g. 11:00 AM"
+                        placeholder={t('prop_form.checkout_time')}
                         value={formData.checkOutTime}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Check-in Method</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_method')}</label>
                     <input
                         type="text"
                         name="checkInMethod"
-                        placeholder="e.g. Lockbox, Keypad, In-person..."
+                        placeholder={t('prop_form.checkin_method')}
                         value={formData.checkInMethod}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Wifi Details</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_wifi')}</label>
                     <textarea
                         name="wifiDetails"
-                        placeholder="Network Name and Password"
+                        placeholder={t('prop_form.wifi')}
                         rows={2}
                         value={formData.wifiDetails}
                         onChange={handleChange}
@@ -60,10 +62,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Arrival Guide</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_arrival')}</label>
                     <textarea
                         name="arrivalGuide"
-                        placeholder="Instructions for when guests arrive"
+                        placeholder={t('prop_form.arrival')}
                         rows={3}
                         value={formData.arrivalGuide}
                         onChange={handleChange}
@@ -71,10 +73,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Directions</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_directions')}</label>
                     <textarea
                         name="directions"
-                        placeholder="How to get to the property"
+                        placeholder={t('prop_form.directions')}
                         rows={2}
                         value={formData.directions}
                         onChange={handleChange}
@@ -82,10 +84,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Manual</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_manual')}</label>
                     <textarea
                         name="houseManual"
-                        placeholder="How to use appliances, AC, pool etc."
+                        placeholder={t('prop_form.house_manual')}
                         rows={3}
                         value={formData.houseManual}
                         onChange={handleChange}
@@ -93,10 +95,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">House Rules</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_rules')}</label>
                     <textarea
                         name="houseRules"
-                        placeholder="No smoking, no parties, etc."
+                        placeholder={t('prop_form.house_rules')}
                         rows={3}
                         value={formData.houseRules}
                         onChange={handleChange}
@@ -104,10 +106,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Checkout Instructions</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout_instr')}</label>
                     <textarea
                         name="checkoutInstructions"
-                        placeholder="What to do before leaving (trash, keys, etc.)"
+                        placeholder={t('prop_form.checkout_instr')}
                         rows={2}
                         value={formData.checkoutInstructions}
                         onChange={handleChange}
@@ -115,10 +117,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Guidebooks</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_guidebooks')}</label>
                     <textarea
                         name="guidebooks"
-                        placeholder="Local recommendations (restaurants, sights)"
+                        placeholder={t('prop_form.recommendations')}
                         rows={2}
                         value={formData.guidebooks}
                         onChange={handleChange}
@@ -126,10 +128,10 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                     />
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interaction Preferences</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_interaction')}</label>
                     <textarea
                         name="interactionPreferences"
-                        placeholder="How you prefer to interact with guests"
+                        placeholder={t('prop_form.interaction')}
                         rows={2}
                         value={formData.interactionPreferences}
                         onChange={handleChange}
@@ -139,7 +141,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                         <Calendar size={16} className="text-teal-600" />
-                        Sync Calendar (iCal)
+                        {t('prop_form.sync_calendar')}
                     </label>
                     <input
                         type="url"
@@ -149,7 +151,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
-                    <p className="text-xs text-slate-500 mt-1">Paste your Airbnb or Booking.com iCal export link to sync availability.</p>
+                    <p className="text-xs text-slate-500 mt-1">{t('prop_form.sync_desc')}</p>
                 </div>
             </div>
         </div>

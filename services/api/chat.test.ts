@@ -45,7 +45,8 @@ describe('chatService', () => {
           eq: vi.fn().mockReturnThis(),
           order: vi.fn().mockReturnThis(),
           limit: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: { content: 'hi' } })
+          single: vi.fn().mockResolvedValue({ data: { content: 'hi' } }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { content: 'hi' } })
       };
       
       // Call 2: Unread Count
@@ -73,6 +74,7 @@ describe('chatService', () => {
                   order: vi.fn().mockReturnThis(),
                   limit: vi.fn().mockReturnThis(),
                   single: vi.fn().mockResolvedValue({ data: { content: 'hi' } }),
+                  maybeSingle: vi.fn().mockResolvedValue({ data: { content: 'hi' } }),
                   neq: vi.fn().mockReturnThis(),
                   then: (cb) => cb({ count: 5, data: [] }) // Handle "await" directly by behaving like promise? 
                   // No, supabase calls return a Promise.
@@ -98,6 +100,7 @@ describe('chatService', () => {
               limit: vi.fn().mockReturnThis(),
               neq: vi.fn().mockReturnThis(),
               single: vi.fn().mockResolvedValue({ data: { content: 'hi' } }),
+              maybeSingle: vi.fn().mockResolvedValue({ data: { content: 'hi' } }),
               // For count query:
               then: function(resolve) { resolve({ count: 2, data: [] }) } 
           }

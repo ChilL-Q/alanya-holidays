@@ -33,13 +33,13 @@ import { PropertyAmenities } from '../components/property-form/PropertyAmenities
 import { PropertyHospitality } from '../components/property-form/PropertyHospitality';
 
 const STEPS = [
-    'Property Type',
-    'Location',
-    'Basics',
-    'Amenities',
-    'Photos',
-    'Description',
-    'Pricing & Rules'
+    'list_prop.steps.type',
+    'list_prop.steps.location',
+    'list_prop.steps.basics',
+    'list_prop.steps.amenities',
+    'list_prop.steps.photos',
+    'list_prop.steps.desc',
+    'list_prop.steps.pricing'
 ];
 
 export const ListProperty: React.FC = () => {
@@ -49,71 +49,57 @@ export const ListProperty: React.FC = () => {
     const navigate = useNavigate();
 
     const [step, setStep] = useState(0);
-    const [files, setFiles] = useState<File[]>([]);
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
-    // Initial Form State
+    // Form Data
+    const [files, setFiles] = useState<File[]>([]);
     const [formData, setFormData] = useState({
-        // Type
-        propertyType: 'apartment', // 'apartment' | 'villa' | 'hotel'
-        rentalType: 'entire', // 'entire' | 'room' (Future proofing)
-        // Description
         title: '',
         description: '',
-        // Contact (Auto-filled)
-        name: user?.name || '',
-        email: user?.email || '',
-        phone: '',
-        // Location
+        price: '',
+        propertyType: '',
+        maxGuests: 4,
+        bedrooms: 2,
+        beds: 2,
+        bathrooms: 1,
         location: '',
         address: '',
-        latitude: null as number | null,
-        longitude: null as number | null,
-        // Pricing
-        price: '',
-        // Details
-        maxGuests: 2,
-        bedrooms: 1,
-        bathrooms: 1,
-        beds: 1,
+        rentalLicense: '', // Optional
         amenities: [] as string[],
-        rentalLicense: '',
-        // Hospitality Details
-        arrivalGuide: '',
-        checkInTime: '14:00',
-        checkOutTime: '11:00',
-        directions: '',
+
+        // Hospitality details
+        checkInTime: '',
+        checkOutTime: '',
         checkInMethod: '',
         wifiDetails: '',
+        arrivalGuide: '',
         houseManual: '',
         houseRules: '',
         checkoutInstructions: '',
         guidebooks: '',
-        interactionPreferences: '',
-        icalUrl: '',
+        interactionPreferences: ''
     });
 
-    useEffect(() => {
-        if (user && !formData.name) {
-            setFormData(prev => ({
-                ...prev,
-                name: user.name || '',
-                email: user.email || ''
-            }));
-        }
-    }, [user, formData.name]);
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    useSubmitShortcut(() => {
+        if (step === STEPS.length - 1) {
+            handleSubmit();
+        } else {
+            nextStep();
+        }
+    });
 
     const nextStep = () => {
         // Validation per step could go here
-        if (step === 0 && !formData.propertyType) return toast.error('Please select a property type');
-        if (step === 1 && !formData.location) return toast.error('Please enter a location area');
-        if (step === 4 && files.length < 1) return toast.error('Please upload at least 1 photo');
-        if (step === 5 && !formData.title) return toast.error('Please enter a title');
+        if (step === 0 && !formData.propertyType) return toast.error(t('list_prop.error.type'));
+        if (step === 1 && !formData.location) return toast.error(t('list_prop.error.location'));
+        if (step === 4 && files.length < 1) return toast.error(t('list_prop.error.photo'));
+        if (step === 5 && !formData.title) return toast.error(t('list_prop.error.title'));
 
         if (step < STEPS.length - 1) {
             setStep(step + 1);
@@ -129,120 +115,111 @@ export const ListProperty: React.FC = () => {
     };
 
     const handleSubmit = async () => {
-        if (!isAuthenticated || !user) {
-            toast.error(t('list.error.auth'));
-            return;
-        }
+        if (!user) return toast.error(t('auth.required'));
 
         if (!formData.price) {
-            toast.error('Please enter a price');
+            toast.error(t('list_prop.error.price'));
             return;
         }
 
         setIsLoading(true);
-
         try {
-            // Upload images
-            const uploadedUrls = [];
+            // Upload images first
+            const imageUrls: string[] = [];
             for (const file of files) {
-                const url = await db.uploadPropertyImage(file);
-                uploadedUrls.push(url);
+                const url = await db.uploadImage(file, 'properties');
+                if (url) imageUrls.push(url);
             }
 
+            // Create property
+            // Map form data to PropertyDB shape
             await db.createProperty({
                 title: formData.title,
                 description: formData.description,
-                price_per_night: Number(formData.price),
+                price_per_night: parseFloat(formData.price),
                 location: formData.location,
                 address: formData.address,
-                latitude: formData.latitude || undefined,
-                longitude: formData.longitude || undefined,
-                type: formData.propertyType as 'villa' | 'apartment',
-                host_id: user.id,
-                rental_license: formData.rentalLicense,
+                type: formData.propertyType as any, // 'apartment' | 'villa'
+                max_guests: formData.maxGuests,
+                bedrooms: formData.bedrooms,
+                beds: formData.beds,
+                bathrooms: formData.bathrooms,
                 amenities: formData.amenities.map(label => {
                     const found = AMENITIES_LIST.find(a => a.label === label);
-                    return found || { icon: 'box', label };
+                    return { label, icon: found?.icon || 'Check' }; // Fallback icon
                 }),
-                images: uploadedUrls,
+                images: imageUrls,
+                host_id: user.id,
+
                 // Hospitality Details
-                arrival_guide: formData.arrivalGuide,
                 check_in_time: formData.checkInTime,
                 check_out_time: formData.checkOutTime,
-                directions: formData.directions,
                 check_in_method: formData.checkInMethod,
                 wifi_details: formData.wifiDetails,
+                arrival_guide: formData.arrivalGuide,
                 house_manual: formData.houseManual,
                 house_rules: formData.houseRules,
                 checkout_instructions: formData.checkoutInstructions,
                 guidebooks: formData.guidebooks,
                 interaction_preferences: formData.interactionPreferences,
-                ical_url: formData.icalUrl,
-                max_guests: Number(formData.maxGuests),
-                bedrooms: Number(formData.bedrooms),
-                bathrooms: Number(formData.bathrooms),
-                beds: Number(formData.beds)
+
+                status: 'pending'
             });
 
-            toast.success(t('list.success'));
-            setIsSubmitted(true);
-        } catch (error: any) {
-            console.error('Error listing property:', error);
-            toast.error(t('list.error.submit'));
+            setIsSuccess(true);
+            window.scrollTo(0, 0);
+        } catch (error) {
+            console.error(error);
+            toast.error(t('error.generic'));
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Keyboard Shortcuts
-    useSubmitShortcut(() => {
-        if (step === STEPS.length - 1) {
-            handleSubmit();
-        } else {
-            nextStep();
-        }
-    });
-
-    // Hero / Landing for Guests
+    // Hero Section for non-authenticated users
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-white dark:bg-slate-900 pb-20">
-                <div className="relative h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0">
-                        <img
-                            src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2671&auto=format&fit=crop"
-                            alt="Alanya Luxury Property"
-                            className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/90"></div>
-                    </div>
-                    <div className="relative z-10 max-w-4xl mx-auto px-4 text-center animate-page-enter">
-                        <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight" dangerouslySetInnerHTML={{ __html: t('list.hero.title') }} />
-                        <p className="text-xl text-slate-200 mb-8 max-w-2xl mx-auto font-light">{t('list.hero.subtitle')}</p>
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 transition-colors">
+                <div className="relative bg-slate-900 text-white py-24 overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80')] bg-cover bg-center opacity-20"></div>
+                    <div className="relative max-w-7xl mx-auto px-4 text-center">
+                        <h1 className="text-4xl md:text-6xl font-bold mb-6">{t('list.hero.title')}</h1>
+                        <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+                            {t('list.hero.desc')}
+                        </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button onClick={openRegister} variant="accent" size="lg" className="gap-2 shadow-lg shadow-accent/30">{t('auth.submit.register')}</Button>
-                            <Button onClick={openLogin} variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-slate-900 font-medium">{t('auth.submit.login')}</Button>
+                            <Button onClick={openRegister} variant="primary" size="lg" className="text-lg px-8">
+                                {t('auth.submit.register')}
+                            </Button>
+                            <Button onClick={openLogin} variant="outline" size="lg" className="text-lg px-8 bg-transparent text-white border-white hover:bg-white/10">
+                                {t('auth.submit.login')}
+                            </Button>
                         </div>
                     </div>
                 </div>
-                {/* Benefits Grid - Keep existing simplified */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
-                    <div className="grid md:grid-cols-3 gap-8 mb-20">
-                        {/* ... Simplified Benefits ... */}
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                            <ShieldCheck size={32} className="text-teal-600 mb-4" />
-                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.verified.title')}</h3>
+
+                <div className="max-w-7xl mx-auto px-4 py-20">
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
+                                <ShieldCheck size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.verified.title')}</h3>
                             <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.verified.desc')}</p>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                            <Settings size={32} className="text-teal-600 mb-4" />
-                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.management.title')}</h3>
-                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.management.desc')}</p>
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600 dark:text-green-400 mb-6">
+                                <TrendingUp size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.earnings.title')}</h3>
+                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.earnings.desc')}</p>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700">
-                            <TrendingUp size={32} className="text-teal-600 mb-4" />
-                            <h3 className="text-xl font-bold dark:text-white mb-2">{t('list.benefit.revenue.title')}</h3>
-                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.revenue.desc')}</p>
+                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6">
+                                <Settings size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.control.title')}</h3>
+                            <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.control.desc')}</p>
                         </div>
                     </div>
                 </div>
@@ -250,16 +227,16 @@ export const ListProperty: React.FC = () => {
         );
     }
 
-    if (isSubmitted) {
+    if (isSuccess) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-12 text-center border border-slate-100 dark:border-slate-700">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4 transition-colors">
+                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-slate-100 dark:border-slate-700">
                     <div className="w-24 h-24 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600 dark:text-teal-400">
                         <CheckCircle size={48} />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Application Received!</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mb-8">Your property has been submitted. Our team will verify it within 24 hours.</p>
-                    <Button onClick={() => navigate('/')} variant="primary" fullWidth>Return Home</Button>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('list_prop.success.title')}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-8">{t('list_prop.success.desc')}</p>
+                    <Button onClick={() => navigate('/')} variant="primary" fullWidth>{t('list_prop.return_home')}</Button>
                 </div>
             </div>
         );
@@ -269,41 +246,40 @@ export const ListProperty: React.FC = () => {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-10 px-4 transition-colors">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
-                    <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS} />
+                    <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS.map(s => t(s))} />
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden min-h-[500px] flex flex-col">
                     <div className="p-8 flex-grow">
-                        {/* Step Content */}
-                        <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                             {/* Step 0: Type */}
                             {step === 0 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">What kind of place will you host?</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step1_title')}</h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'apartment' })}
-                                            className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'apartment'
-                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                            className={`p-6 rounded-2xl border-2 text-left transition-all hover:border-teal-600 ${formData.propertyType === 'apartment'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
+                                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                                                 }`}
                                         >
                                             <Building2 size={32} className={`mb-4 ${formData.propertyType === 'apartment' ? 'text-teal-600' : 'text-slate-400'}`} />
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Apartment</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">A flat in a multi-unit building or complex.</p>
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('list_prop.type_apt')}</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('list_prop.type_apt_desc')}</p>
                                         </button>
 
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'villa' })}
-                                            className={`p-6 rounded-2xl border-2 text-left transition-all ${formData.propertyType === 'villa'
-                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                                            className={`p-6 rounded-2xl border-2 text-left transition-all hover:border-teal-600 ${formData.propertyType === 'villa'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
+                                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                                                 }`}
                                         >
                                             <Home size={32} className={`mb-4 ${formData.propertyType === 'villa' ? 'text-teal-600' : 'text-slate-400'}`} />
-                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Villa</h3>
-                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">A private house, often with outdoor space.</p>
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('list_prop.type_villa')}</h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('list_prop.type_villa_desc')}</p>
                                         </button>
                                     </div>
                                 </div>
@@ -312,7 +288,7 @@ export const ListProperty: React.FC = () => {
                             {/* Step 1: Location */}
                             {step === 1 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Where is your place located?</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step2_title')}</h2>
                                     <PropertyLocation formData={formData} handleChange={handleChange} setFormData={setFormData} />
                                 </div>
                             )}
@@ -320,25 +296,25 @@ export const ListProperty: React.FC = () => {
                             {/* Step 2: Basics */}
                             {step === 2 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Share some basics about your place</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step3_title')}</h2>
                                     <div className="max-w-md">
                                         <Counter
-                                            label="Guests" subtitle="How many guests can stay?"
+                                            label={t('prop_form.label_max_guests')} subtitle={t('list_prop.guests_subtitle')}
                                             value={formData.maxGuests} min={1} max={16}
                                             onChange={(v) => setFormData({ ...formData, maxGuests: v })}
                                         />
                                         <Counter
-                                            label="Bedrooms"
+                                            label={t('prop_form.label_bedrooms')}
                                             value={formData.bedrooms} min={0} max={10}
                                             onChange={(v) => setFormData({ ...formData, bedrooms: v })}
                                         />
                                         <Counter
-                                            label="Beds"
+                                            label={t('prop_form.label_beds')}
                                             value={formData.beds} min={1} max={20}
                                             onChange={(v) => setFormData({ ...formData, beds: v })}
                                         />
                                         <Counter
-                                            label="Bathrooms"
+                                            label={t('prop_form.label_bathrooms')}
                                             value={formData.bathrooms} min={1} max={10}
                                             onChange={(v) => setFormData({ ...formData, bathrooms: v })}
                                         />
@@ -349,7 +325,7 @@ export const ListProperty: React.FC = () => {
                             {/* Step 3: Amenities */}
                             {step === 3 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">What does your place offer?</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step4_title')}</h2>
                                     <PropertyAmenities formData={formData} setFormData={setFormData} />
                                 </div>
                             )}
@@ -357,8 +333,8 @@ export const ListProperty: React.FC = () => {
                             {/* Step 4: Photos */}
                             {step === 4 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Add some photos of your place</h2>
-                                    <p className="text-slate-500 dark:text-slate-400">You'll need at least 1 photo to get started. You can add more later.</p>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step5_title')}</h2>
+                                    <p className="text-slate-500 dark:text-slate-400">{t('list_prop.photos_desc')}</p>
                                     <PhotoUploader files={files} onChange={setFiles} />
                                 </div>
                             )}
@@ -366,27 +342,27 @@ export const ListProperty: React.FC = () => {
                             {/* Step 5: Description */}
                             {step === 5 && (
                                 <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Now, let's describe your place</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step6_title')}</h2>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Create a title</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('list_prop.create_title')}</label>
                                         <input
                                             name="title"
                                             value={formData.title}
                                             onChange={handleChange}
-                                            placeholder="e.g. Modern Villa with Sea View"
+                                            placeholder={t('prop_form.title')}
                                             maxLength={50}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none font-bold text-lg"
                                         />
                                         <p className="text-right text-xs text-slate-400 mt-1">{formData.title.length}/50</p>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Create a description</label>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('list_prop.create_desc')}</label>
                                         <textarea
                                             name="description"
                                             value={formData.description}
                                             onChange={handleChange}
                                             rows={6}
-                                            placeholder="Share what makes your place special..."
+                                            placeholder={t('prop_form.description')}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
                                         />
                                     </div>
@@ -397,9 +373,9 @@ export const ListProperty: React.FC = () => {
                             {step === 6 && (
                                 <div className="space-y-8">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Price & Rules</h2>
+                                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('list_prop.step7_title')}</h2>
                                         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
-                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Now, set your price</label>
+                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('list_prop.set_price')}</label>
                                             <div className="relative max-w-xs">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">€</span>
                                                 <input
@@ -410,7 +386,7 @@ export const ListProperty: React.FC = () => {
                                                     className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-3xl"
                                                 />
                                             </div>
-                                            <p className="text-sm text-slate-500 mt-2">Per night</p>
+                                            <p className="text-sm text-slate-500 mt-2">{t('list_prop.per_night')}</p>
                                         </div>
                                     </div>
 
@@ -429,7 +405,7 @@ export const ListProperty: React.FC = () => {
                             className={`flex items-center gap-2 font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors ${step === 0 ? 'opacity-0 pointer-events-none' : ''}`}
                         >
                             <ArrowLeft size={18} />
-                            Back
+                            {t('list_prop.back')}
                         </button>
 
                         <div className="flex gap-4">
@@ -441,7 +417,7 @@ export const ListProperty: React.FC = () => {
                                     size="lg"
                                     className="px-8"
                                 >
-                                    Publish Listing
+                                    {t('list_prop.publish')}
                                 </Button>
                             ) : (
                                 <Button
@@ -450,13 +426,12 @@ export const ListProperty: React.FC = () => {
                                     size="lg"
                                     className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 gap-2"
                                 >
-                                    Next
+                                    {t('list_prop.next')}
                                     <ArrowRight size={18} />
                                 </Button>
                             )}
                         </div>
                     </div>
-                    {/* Progress Bar fixed bottom mobile? (Optional, skipping for now as StepsIndicator has it) */}
                 </div>
             </div>
         </div>

@@ -12,19 +12,21 @@ import { ChatWindow } from '../components/chat/ChatWindow';
 import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, PropertyData } from '../services';
+import { db } from '../services';
+import { Property, Amenity } from '../types/models';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
 import { IMaskInput } from 'react-imask';
 import { ReviewsSection } from '../components/reviews/ReviewsSection';
 import toast from 'react-hot-toast';
-import { Modal } from '../components/ui/Modal'; // Import Modal
+import { Modal } from '../components/ui/Modal';
 
-interface PropertyDetailsData extends PropertyData {
-  hostName: string;
-  reviewsCount: number;
-  pricePerNight: number;
+interface PropertyDetailsData extends Property {
+  // Extending Property from models.ts ensuring consistency.
+  address?: string;
+  host?: any; // Using any or UserProfile to avoid deep type issues for now, or import UserProfile
+  host_id?: string;
 }
 
 // Custom Masked Input Component
@@ -40,12 +42,12 @@ const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
   />
 ));
 
-// CURATED FALLBACK IMAGES - UPDATED with stable 4th image
+// CURATED FALLBACK IMAGES
 const PREMIUM_GRID_IMAGES = [
   'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&auto=format&fit=crop', // Modern Kitchen
   'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&auto=format&fit=crop', // Bright Living Room
   'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop', // Master Bedroom
-  'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?w=800&auto=format&fit=crop', // Elegant Interior (Replaces broken Pool image)
+  'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?w=800&auto=format&fit=crop', // Elegant Interior
 ];
 
 // Fallback for Main image if broken
@@ -60,7 +62,7 @@ export const PropertyDetails: React.FC = () => {
   const { startConversation } = useChat();
   const { convertPrice, formatPrice } = useCurrency();
   const [showChat, setShowChat] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false); // New state for modal
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const [property, setProperty] = useState<PropertyDetailsData | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
@@ -82,15 +84,33 @@ export const PropertyDetails: React.FC = () => {
         const data = await db.getProperty(id);
         if (data) {
           // Normalize data structure
-          let normalizedData = {
-            ...data,
-            pricePerNight: data.price_per_night, // Map DB snake_case to CamelCase
-            hostName: data.host?.full_name || 'Alanya Holidays',
+          let normalizedData: PropertyDetailsData = {
+            id: data.id,
+            title: data.title,
+            description: data.description,
+            location: data.location,
+            address: data.address || '',
+            latitude: data.latitude,
+            longitude: data.longitude,
+            pricePerNight: data.price_per_night,
+            images: data.images,
+            image: data.images[0],
+            rating: data.rating || 0,
             reviewsCount: data.reviews_count || 0,
+            guests: data.max_guests || 0,
+            bedrooms: data.bedrooms || 0,
+            beds: data.beds || 0,
+            bathrooms: data.bathrooms || 0,
+            hostName: data.host?.full_name || 'Alanya Holidays',
             amenities: Array.isArray(data.amenities)
-              ? data.amenities.map((a: string | { label: string; icon: string }) => typeof a === 'string' ? { label: a, icon: '' } : a)
-              : []
-          } as PropertyDetailsData;
+              ? data.amenities.map((a: string | Amenity) => typeof a === 'string' ? { label: a, icon: 'CheckCircle' } : a)
+              : [],
+            host: data.host,
+            type: data.type
+          } as unknown as PropertyDetailsData;
+
+          // Manually ensuring all required Property fields are present if needed
+          // The casting above handles the transition from DB type to UI type
 
           setProperty(normalizedData);
 
@@ -118,6 +138,7 @@ export const PropertyDetails: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching property:', error);
+        toast.error('Failed to load property details');
       } finally {
         setLoading(false);
       }
@@ -283,19 +304,19 @@ export const PropertyDetails: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <Users size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.max_guests || 2} Guests</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.guests} Guests</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <DoorOpen size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bedrooms || 1} Bedrooms</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bedrooms} Bedrooms</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <BedDouble size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.beds || 1} Beds</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.beds} Beds</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <Bath size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bathrooms || 1} Baths</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bathrooms} Baths</span>
             </div>
           </div>
 
@@ -341,7 +362,7 @@ export const PropertyDetails: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('prop.offers')}</h3>
             <div className="grid grid-cols-2 gap-4">
-              {property.amenities.map((am: any, i: number) => (
+              {property.amenities.map((am: Amenity, i: number) => (
                 <div key={i} className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 text-xs">
                     <CheckCircle size={16} />
@@ -355,7 +376,17 @@ export const PropertyDetails: React.FC = () => {
           {/* Hospitality Guide */}
           {hasBooking && (
             <div className="bg-teal-50 dark:bg-teal-900/10 rounded-2xl p-8 border border-teal-100 dark:border-teal-800 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* Content omitted for brevity as it is unchanged */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                  <ShieldCheck size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Hospitality Guide</h3>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">
+                    Detailed guide containing check-in instructions, Wi-Fi passwords, and house rules.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -370,7 +401,6 @@ export const PropertyDetails: React.FC = () => {
             className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Booking card content identical to before */}
             <div className="flex justify-between items-end mb-6">
               <div>
                 <span className="text-2xl font-bold text-slate-900 dark:text-white">{displayPrice(property.pricePerNight)}</span>
@@ -405,7 +435,7 @@ export const PropertyDetails: React.FC = () => {
               <div className="p-3">
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
                 <select id="guests-select" className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
-                  {Array.from({ length: property.max_guests || 1 }, (_, i) => i + 1).map((num) => (
+                  {Array.from({ length: property.guests || 1 }, (_, i) => i + 1).map((num) => (
                     <option key={num} value={num}>{num}</option>
                   ))}
                 </select>
@@ -440,7 +470,7 @@ export const PropertyDetails: React.FC = () => {
         </div>
       </section>
 
-      {/* Login Required Modal - Custom Implementation for Visibility */}
+      {/* Login Required Modal */}
       <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} title="Login Required">
         <div className="flex flex-col gap-6 py-2">
           <div className="text-center">

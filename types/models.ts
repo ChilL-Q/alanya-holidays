@@ -264,6 +264,8 @@ export interface Property {
   ref_id?: number;
   title: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   pricePerNight: number;
   rating: number;
   reviewsCount: number;

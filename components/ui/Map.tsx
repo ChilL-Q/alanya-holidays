@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, OverlayView, OverlayViewF } from '@react-google-maps/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { PropertyData } from '../../services';
+import { Property } from '../../types/models'; // Explicit import
 import { Star, Users, Bed } from 'lucide-react';
 
 const containerStyle = {
@@ -99,7 +99,7 @@ const darkMapStyles = [
 ];
 
 interface MapProps {
-    properties: PropertyData[];
+    properties: Property[];
 }
 
 export const Map: React.FC<MapProps> = ({ properties }) => {
@@ -113,7 +113,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     // Generate mock coordinates if missing
-    const getCoords = useCallback((p: PropertyData) => {
+    const getCoords = useCallback((p: Property) => {
         if (p.latitude && p.longitude) return { lat: p.latitude, lng: p.longitude };
 
         // Deterministic pseudo-random based on ID
@@ -201,7 +201,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                         ? 'bg-teal-600 text-white ring-2 ring-white dark:ring-slate-900'
                                         : 'bg-white text-slate-900 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700'}
                                 `}>
-                                    €{Math.round(property.price_per_night)}
+                                    €{Math.round(property.pricePerNight)}
                                 </div>
 
                                 {/* Detail Card (Click Sticky) */}
@@ -243,7 +243,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                             <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-xs font-medium border-t border-slate-100 dark:border-slate-800 pt-3">
                                                 <div className="flex items-center gap-1">
                                                     <Users size={14} />
-                                                    <span>{property.max_guests} Guests</span>
+                                                    <span>{property.guests} Guests</span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <Bed size={14} />
