@@ -86,7 +86,7 @@ export const AdminEditServicePage: React.FC = () => {
                     const url = await db.uploadImage(file, 'services');
                     newImageUrls.push(url);
                 } catch (err) {
-                    // console.log("Service bucket failed, trying property bucket");
+
                     const url = await db.uploadImage(file, 'properties'); // Fallback
                     newImageUrls.push(url);
                 }

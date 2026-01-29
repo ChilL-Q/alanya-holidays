@@ -29,7 +29,7 @@ export const chatService = {
                 .eq('conversation_id', conv.id)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
             
             // Count unread messages (if I am the receiver)
             // If I am guest, sender was host, and vice versa.

@@ -32,7 +32,7 @@ export const propertiesService = {
         // Optimized: removed * and selected specific fields if needed
         let query = supabase
             .from('properties')
-            .select('*, host:profiles(full_name, avatar_url)', { count: 'exact' });
+            .select('*, host:profiles(full_name, avatar_url), reviews(count)', { count: 'exact' });
 
         query = query.eq('status', 'approved');
 

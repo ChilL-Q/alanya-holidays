@@ -38,7 +38,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 {/* Rating Badge */}
                 <div className="absolute top-3 left-3 glass px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold text-slate-900 shadow-sm z-10 transition-transform duration-300 group-hover:scale-110">
                     <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                    {property.rating > 0 ? property.rating.toFixed(1) : 'New'}
+                    {property.reviewsCount > 0 ? property.rating.toFixed(1) : 'New'}
                 </div>
 
                 {/* Favorite Button */}

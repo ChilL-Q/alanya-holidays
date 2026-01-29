@@ -61,7 +61,7 @@ const App: React.FC = () => {
                         <BrowserRouter>
                           <Toaster position="bottom-left" />
                           <ScrollToTop />
-                          <div className="flex flex-col min-h-screen font-sans">
+                          <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
                             <Navbar />
                             <main className="flex-grow">
                               <PageTransition>

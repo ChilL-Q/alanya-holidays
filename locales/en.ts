@@ -234,6 +234,8 @@ export const en = {
   'auth.role.buyer_desc': 'I want to book stays',
   'auth.role.seller': 'Seller',
   'auth.role.seller_desc': 'I want to list properties',
+  'auth.login_required': 'Please log in to contact the host',
+  'prop.login_to_contact': 'Please log in to contact the host.',
   'profile.title': 'My Profile',
   'profile.edit': 'Edit Profile',
   'profile.save': 'Save Changes',

@@ -90,7 +90,8 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     max_guests: p.max_guests,
                     
                     rating: p.rating || 0,
-                    reviewsCount: p.reviews_count || 0,
+                    // @ts-ignore - reviews joined dynamically
+                    reviewsCount: p.reviews?.[0]?.count ?? (p.reviews_count || 0),
                     image: p.images?.[0] || '',
                     images: p.images || [],
                     guests: p.max_guests || 0,

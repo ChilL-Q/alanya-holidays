@@ -129,7 +129,7 @@ export const AddService: React.FC = () => {
                     const url = await db.uploadImage(file, 'services');
                     uploadedUrls.push(url);
                 } catch (err) {
-                    // console.log("Service bucket failed, trying property bucket");
+
                     const url = await db.uploadImage(file, 'properties'); // Fallback
                     uploadedUrls.push(url);
                 }

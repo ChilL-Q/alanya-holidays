@@ -91,7 +91,7 @@ export const WeatherWidget: React.FC = () => {
     const currentInfo = getWeatherInfo(weather.current.code, weather.current.isDay);
 
     return (
-        <div className="group absolute top-8 right-6 lg:right-12 z-40 transition-all duration-300 ease-in-out">
+        <div className="group absolute top-20 right-4 md:top-8 md:right-6 lg:right-12 z-40 transition-all duration-300 ease-in-out hidden sm:block">
             {/* Main Widget Card */}
             <div className="relative overflow-hidden rounded-xl bg-slate-900/20 backdrop-blur-md border border-white/20 shadow-xl text-white p-2 pr-4 hover:bg-slate-900/30 transition-all cursor-default group-hover:scale-[1.02] duration-300">
 

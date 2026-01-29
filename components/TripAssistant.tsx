@@ -76,10 +76,10 @@ export const TripAssistant: React.FC = () => {
           e.stopPropagation();
           setIsOpen(true);
         }}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 ${isFooterVisible ? 'bg-teal-600' : 'bg-slate-900 dark:bg-teal-600'} text-white px-5 py-3 rounded-full shadow-xl hover:scale-105 transition-all duration-300 group`}
+        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 ${isFooterVisible ? 'bg-teal-600' : 'bg-slate-900 dark:bg-teal-600'} text-white px-4 py-3 md:px-5 rounded-full shadow-xl hover:scale-105 transition-all duration-300 group max-w-[calc(100vw-3rem)]`}
       >
-        <Sparkles size={18} className="group-hover:animate-pulse" />
-        <span className="font-medium">{t('ai.button')}</span>
+        <Sparkles size={18} className="group-hover:animate-pulse shrink-0" />
+        <span className="font-medium truncate">{t('ai.button')}</span>
       </button>
     );
   }
@@ -87,7 +87,7 @@ export const TripAssistant: React.FC = () => {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="fixed bottom-6 right-6 z-50 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-5 flex flex-col max-h-[600px] h-[500px]"
+      className="fixed bottom-6 right-4 left-4 md:left-auto md:right-6 z-50 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-5 flex flex-col max-h-[80vh] md:max-h-[600px] h-[500px]"
     >
       {/* Header */}
       <div className="bg-slate-900 dark:bg-teal-600 p-4 flex justify-between items-center text-white shrink-0">
