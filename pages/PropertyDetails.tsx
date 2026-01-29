@@ -12,7 +12,7 @@ import { ChatWindow } from '../components/chat/ChatWindow';
 import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, PropertyData } from '../services/db';
+import { db, PropertyData } from '../services';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
@@ -23,7 +23,6 @@ interface PropertyDetailsData extends PropertyData {
   hostName: string;
   reviewsCount: number;
   pricePerNight: number;
-  host: any; // Allow full profile access
 }
 
 // Custom Masked Input Component
@@ -95,7 +94,7 @@ export const PropertyDetails: React.FC = () => {
           // Check for booking if logged in - use UUID
           if (isAuthenticated && user) {
             const bookings = await db.getBookings(user.id);
-            const activeBooking = bookings.find((b: any) =>
+            const activeBooking = bookings?.find((b: any) =>
               b.item_id === normalizedData.id &&
               (b.status === 'confirmed' || b.payment_status === 'paid')
             );
@@ -156,11 +155,14 @@ export const PropertyDetails: React.FC = () => {
   const handleBook = () => {
     addToCart({
       id: property.id,
-      type: ServiceType.RENTAL,
+      type: 'property', // Explicitly identify as property to distinguishing from 'RENTAL' (vehicles)
       title: property.title,
       price: totalPrice,
       image: property.images?.[0],
-      details: `${nights} nights`
+      details: `${nights} nights`,
+      startDate: checkIn ? `${checkIn.getFullYear()}-${String(checkIn.getMonth() + 1).padStart(2, '0')}-${String(checkIn.getDate()).padStart(2, '0')}` : undefined,
+      endDate: checkOut ? `${checkOut.getFullYear()}-${String(checkOut.getMonth() + 1).padStart(2, '0')}-${String(checkOut.getDate()).padStart(2, '0')}` : undefined,
+      guests: Number(document.querySelector<HTMLSelectElement>('#guests-select')?.value || 1)
     });
     const crossSellSection = document.getElementById('cross-sell');
     if (crossSellSection) crossSellSection.scrollIntoView({ behavior: 'smooth' });
@@ -173,7 +175,12 @@ export const PropertyDetails: React.FC = () => {
       title: service.title,
       price: service.price,
       image: service.images?.[0],
-      details: service.type === ServiceType.TRANSFER ? service.vehicleType : service.duration
+      details: service.type === ServiceType.TRANSFER ? service.vehicleType : service.duration,
+      startDate: checkIn ? `${checkIn.getFullYear()}-${String(checkIn.getMonth() + 1).padStart(2, '0')}-${String(checkIn.getDate()).padStart(2, '0')}` : undefined,
+      endDate: checkOut ? `${checkOut.getFullYear()}-${String(checkOut.getMonth() + 1).padStart(2, '0')}-${String(checkOut.getDate()).padStart(2, '0')}` : undefined, // For transfer/services, maybe just startDate is enough, but passing both safeguards strict checks
+      // Transfer usually is single day. But "Welcome Pack" might be associated with stay.
+      // Better to pass checkIn as date.
+      date: checkIn ? `${checkIn.getFullYear()}-${String(checkIn.getMonth() + 1).padStart(2, '0')}-${String(checkIn.getDate()).padStart(2, '0')}` : undefined // Some logic uses 'date' for single day services
     });
   };
 
@@ -261,7 +268,7 @@ export const PropertyDetails: React.FC = () => {
               <div>
                 <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
-                {(property.host?.email || property.host?.phone) && (
+                {property.host && (property.host.email || property.host.phone) && (
                   <div className="mt-1 text-xs text-slate-400 flex flex-col gap-0.5">
                     {property.host.email && <span>{property.host.email}</span>}
                     {property.host.phone && <span>{property.host.phone}</span>}
@@ -489,10 +496,13 @@ export const PropertyDetails: React.FC = () => {
               <div className="p-3">
                 <label htmlFor="guests-select" className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
                 <select id="guests-select" className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
-                  <option>{t('prop.guest_option').replace('{count}', '1')}</option>
-                  <option>{t('prop.guests_option').replace('{count}', '2')}</option>
-                  <option>{t('prop.guests_option').replace('{count}', '3')}</option>
-                  <option>{t('prop.guests_option').replace('{count}', '4')}</option>
+                  {Array.from({ length: property.max_guests || 1 }, (_, i) => i + 1).map((num) => (
+                    <option key={num} value={num}>
+                      {num === 1
+                        ? t('prop.guest_option').replace('{count}', '1')
+                        : t('prop.guests_option').replace('{count}', String(num))}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

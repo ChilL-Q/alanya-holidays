@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MapPin, Filter, X } from 'lucide-react';
+import { MapPin, Filter, X, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { PropertyCard } from '../components/ui/PropertyCard';
 import { Map } from '../components/ui/Map';
 import { PropertyFilters } from '../components/ui/PropertyFilters';
+import { Pagination } from '../components/ui/Pagination';
 import { usePropertyFilters } from '../hooks/usePropertyFilters';
 
 export const SearchResultsPage: React.FC = () => {
@@ -17,13 +18,21 @@ export const SearchResultsPage: React.FC = () => {
 
     const [showMap, setShowMap] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [showSortMenu, setShowSortMenu] = useState(false);
 
     const {
         filteredProperties,
+        totalCount,
+        totalPages,
+        page,
+        setPage,
+        sort,
+        setSort,
         isLoading,
         filters,
         setFilters,
-        activeFilterCount
+        activeFilterCount,
+        hasMore
     } = usePropertyFilters({ checkIn, checkOut, location, guests });
 
     return (
@@ -48,10 +57,51 @@ export const SearchResultsPage: React.FC = () => {
                                 {location ? `Stays in "${location}"` : 'All Stays in Alanya'}
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm md:text-base">
-                                {filteredProperties.length} properties found • {checkIn && checkOut ? `${checkIn} - ${checkOut}` : 'Any dates'} • {guests || 1} guests
+                                {totalCount} properties found • {checkIn && checkOut ? `${checkIn} - ${checkOut}` : 'Any dates'} • {guests || 1} guests
                             </p>
                         </div>
                         <div className="flex gap-2">
+                            {/* Sort Dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowSortMenu(!showSortMenu)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
+                                >
+                                    <ArrowUpDown size={16} />
+                                    {sort === 'recommended' ? 'Recommended' : sort === 'newest' ? 'Newest' : sort === 'price_asc' ? 'Price: Low to High' : sort === 'price_desc' ? 'Price: High to Low' : 'Top Rated'}
+                                    <ChevronDown size={14} />
+                                </button>
+
+                                {showSortMenu && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setShowSortMenu(false)}
+                                        />
+                                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
+                                            {[
+                                                { label: 'Recommended', value: 'recommended' },
+                                                { label: 'Newest', value: 'newest' },
+                                                { label: 'Price: Low to High', value: 'price_asc' },
+                                                { label: 'Price: High to Low', value: 'price_desc' },
+                                                { label: 'Top Rated', value: 'rating' }
+                                            ].map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    className={`w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${sort === option.value ? 'text-teal-600 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                                    onClick={() => {
+                                                        setSort(option.value);
+                                                        setShowSortMenu(false);
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
                             <button
                                 onClick={() => setShowMap(!showMap)}
                                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium text-sm ${showMap ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'}`}
@@ -75,23 +125,50 @@ export const SearchResultsPage: React.FC = () => {
                     </div>
 
                     {/* Scrollable Content Area */}
-                    {isLoading ? (
+                    {isLoading && filteredProperties.length === 0 ? (
                         <div className="flex-1 flex items-center justify-center text-slate-500">Loading stays...</div>
                     ) : (
                         <div className={`flex-1 ${showMap ? 'overflow-y-auto px-6 py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showMap ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'} gap-8 pb-20`}>
-                                {filteredProperties.map((property, index) => (
-                                    <div
-                                        key={property.id}
-                                        className="animate-fade-up opacity-0 fill-mode-forwards"
-                                        style={{ animationDelay: `${index * 50}ms` }}
-                                    >
-                                        <PropertyCard property={property} />
-                                    </div>
-                                ))}
+                            <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showMap ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'} gap-8 pb-10`}>
+                                {filteredProperties.map((property, index) => {
+                                    // Calculate relative index for animation delay
+                                    const relativeIndex = index % 12;
+                                    return (
+                                        <div
+                                            key={property.id}
+                                            className="animate-fade-up opacity-0 fill-mode-forwards"
+                                            style={{ animationDelay: `${relativeIndex * 50}ms` }}
+                                        >
+                                            <PropertyCard property={property} />
+                                        </div>
+                                    );
+                                })}
                             </div>
 
-                            {!filteredProperties.length && (
+                            {/* Pagination Component */}
+                            {!isLoading && totalCount > 0 && (
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={(newPage) => {
+                                        setPage(newPage);
+                                        const listContainer = document.querySelector('.overflow-y-auto');
+                                        if (listContainer) {
+                                            listContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                                        } else {
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {isLoading && filteredProperties.length > 0 && (
+                                <div className="flex justify-center pb-20">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 dark:border-white"></div>
+                                </div>
+                            )}
+
+                            {!filteredProperties.length && !isLoading && (
                                 <div className="text-center py-20">
                                     <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                                         <Filter size={24} />
@@ -144,6 +221,6 @@ export const SearchResultsPage: React.FC = () => {
                     </>
                 )}
             </div>
-        </div >
+        </div>
     );
 };

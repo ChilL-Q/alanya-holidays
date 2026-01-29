@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { db } from '../../services/db';
+import { db } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 
 export const HostCalendarPage = () => {

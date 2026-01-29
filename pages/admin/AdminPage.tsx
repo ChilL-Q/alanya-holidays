@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { db, ServiceModel } from '../../services/db';
+import { db, ServiceModel } from '../../services';
 import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -241,8 +241,8 @@ export const AdminPage: React.FC = () => {
                         onClick: () => pushPath(l)
                     })));
                 } else if (explorerPath.length === 2) {
-                    const listings = await db.getPropertiesByLocation(explorerPath[0], explorerPath[1]);
-                    setLeafData(listings || []);
+                    const response = await db.getPropertiesByLocation(explorerPath[0], explorerPath[1]);
+                    setLeafData(response.data || []);
                 }
             }
 

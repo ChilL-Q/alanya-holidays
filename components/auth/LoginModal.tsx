@@ -128,7 +128,7 @@ export const LoginModal: React.FC = () => {
                 {mode === 'login' && (
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
+                            <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('auth.email')}</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
@@ -137,18 +137,18 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
                         </div>
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label htmlFor="login-password" className="block text-sm font-medium text-slate-700">{t('auth.password')}</label>
+                                <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">{t('auth.password')}</label>
                                 <button
                                     type="button"
                                     onClick={() => setMode('recovery')}
-                                    className="text-sm text-primary font-semibold hover:underline"
+                                    className="text-sm text-primary dark:text-teal-400 font-semibold hover:underline"
                                 >
                                     Forgot password?
                                 </button>
@@ -161,7 +161,7 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -176,12 +176,12 @@ export const LoginModal: React.FC = () => {
                             {t('auth.submit.login')}
                         </button>
 
-                        <div className="flex items-center gap-2 justify-center mt-6 text-sm text-slate-600">
+                        <div className="flex items-center gap-2 justify-center mt-6 text-sm text-slate-600 dark:text-slate-400">
                             <span>{t('auth.no_account')}</span>
                             <button
                                 type="button"
                                 onClick={openRegister}
-                                className="text-primary font-semibold hover:underline"
+                                className="text-primary dark:text-teal-400 font-semibold hover:underline"
                             >
                                 {t('auth.submit.register')}
                             </button>
@@ -192,11 +192,11 @@ export const LoginModal: React.FC = () => {
                 {/* RECOVERY REQUEST FORM */}
                 {mode === 'recovery' && (
                     <form onSubmit={handleRecoverySubmit} className="space-y-4">
-                        <p className="text-slate-600 text-sm">
+                        <p className="text-slate-600 dark:text-slate-400 text-sm">
                             Enter your email address and we'll send you a code to log in instantly.
                         </p>
                         <div>
-                            <label htmlFor="recovery-email" className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
+                            <label htmlFor="recovery-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('auth.email')}</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
@@ -205,7 +205,7 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
@@ -225,7 +225,7 @@ export const LoginModal: React.FC = () => {
                 {mode === 'otp' && (
                     <form onSubmit={handleOtpSubmit} className="space-y-6">
                         <div className="text-center space-y-2">
-                            <p className="text-slate-500">We sent a login code to <strong>{email}</strong></p>
+                            <p className="text-slate-500 dark:text-slate-400">We sent a login code to <strong className="text-slate-900 dark:text-white">{email}</strong></p>
                         </div>
 
                         <div className="flex justify-center">
@@ -237,7 +237,7 @@ export const LoginModal: React.FC = () => {
                                 required
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-64 text-center text-3xl tracking-[0.3em] font-bold py-3 border-b-2 border-slate-300 focus:border-primary outline-none text-slate-900 bg-transparent placeholder:tracking-normal placeholder:text-slate-300"
+                                className="w-64 text-center text-3xl tracking-[0.3em] font-bold py-3 border-b-2 border-slate-300 dark:border-slate-700 focus:border-primary outline-none text-slate-900 dark:text-white bg-transparent placeholder:tracking-normal placeholder:text-slate-300"
                                 placeholder="12345678"
                                 autoFocus
                             />

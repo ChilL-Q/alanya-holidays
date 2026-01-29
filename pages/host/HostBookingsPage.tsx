@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../../services/db';
+import { db } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Filter, Calendar, CheckCircle, XCircle, Clock, Eye, MessageSquare, Phone, Mail, MapPin } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';

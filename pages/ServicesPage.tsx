@@ -8,7 +8,7 @@ import { CategoryTabs } from '../components/services/CategoryTabs';
 
 
 
-import { db } from '../services/db';
+import { db } from '../services';
 
 export const ServicesPage: React.FC = () => {
     const { t } = useLanguage();

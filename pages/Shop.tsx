@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { db } from '../services/db';
+import { db } from '../services';
 import { ShoppingBag, Star, User } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';

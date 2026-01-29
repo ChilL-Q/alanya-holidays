@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../services/db';
+import { db } from '../services';
 import { useNavigate } from 'react-router-dom';
 import {
     User, Mail, Calendar, MapPin, Package, LogOut, Edit2, Save, X,

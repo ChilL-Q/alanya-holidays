@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../services/db';
+import { db } from '../../services';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
@@ -26,10 +26,42 @@ export const Dashboard: React.FC = () => {
         recent_bookings: []
     });
     const [loading, setLoading] = useState(true);
+    const [revenueChartDims, setRevenueChartDims] = useState({ width: 0, height: 0 });
+    const [breakdownChartDims, setBreakdownChartDims] = useState({ width: 0, height: 0 });
+    const revenueChartRef = React.useRef<HTMLDivElement>(null);
+    const breakdownChartRef = React.useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         loadStats();
     }, []);
+
+    // Manual ResizeObserver to fully replace buggy ResponsiveContainer
+    useEffect(() => {
+        if (loading) return;
+
+        const handleResize = (entries: ResizeObserverEntry[]) => {
+            for (const entry of entries) {
+                if (entry.target === revenueChartRef.current) {
+                    setRevenueChartDims({
+                        width: entry.contentRect.width,
+                        height: entry.contentRect.height
+                    });
+                } else if (entry.target === breakdownChartRef.current) {
+                    setBreakdownChartDims({
+                        width: entry.contentRect.width,
+                        height: entry.contentRect.height
+                    });
+                }
+            }
+        };
+
+        const observer = new ResizeObserver(handleResize);
+
+        if (revenueChartRef.current) observer.observe(revenueChartRef.current);
+        if (breakdownChartRef.current) observer.observe(breakdownChartRef.current);
+
+        return () => observer.disconnect();
+    }, [loading]);
 
     const loadStats = async () => {
         try {
@@ -155,9 +187,13 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-[350px]">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Revenue Trend</h3>
-                    <div className="h-[280px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.revenue_history}>
+                    <div ref={revenueChartRef} className="h-[280px] w-full min-w-0 overflow-hidden">
+                        {revenueChartDims.width > 0 && revenueChartDims.height > 0 && (
+                            <AreaChart
+                                width={revenueChartDims.width}
+                                height={revenueChartDims.height}
+                                data={stats.revenue_history}
+                            >
                                 <defs>
                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#0D9488" stopOpacity={0.1} />
@@ -174,14 +210,14 @@ export const Dashboard: React.FC = () => {
                                 />
                                 <Area type="monotone" dataKey="value" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
                             </AreaChart>
-                        </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-[350px] flex flex-col">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Booking Status</h3>
-                    <div className="flex-1 w-full min-h-[200px] min-w-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
+                    <div ref={breakdownChartRef} className="flex-1 w-full min-h-[200px] min-w-0 overflow-hidden">
+                        {breakdownChartDims.width > 0 && breakdownChartDims.height > 0 && (
+                            <PieChart width={breakdownChartDims.width} height={breakdownChartDims.height}>
                                 <Pie
                                     data={stats.booking_status_distribution}
                                     innerRadius={60}
@@ -195,7 +231,7 @@ export const Dashboard: React.FC = () => {
                                 </Pie>
                                 <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                             </PieChart>
-                        </ResponsiveContainer>
+                        )}
                     </div>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
                         {stats.booking_status_distribution.map((entry: any) => (
@@ -208,8 +244,9 @@ export const Dashboard: React.FC = () => {
                 </div>
             </div>
 
+
             {/* Recent Bookings & Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            < div className="grid grid-cols-1 lg:grid-cols-3 gap-6" >
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Real Bookings</h3>
@@ -266,7 +303,7 @@ export const Dashboard: React.FC = () => {
                         </NavLink>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };

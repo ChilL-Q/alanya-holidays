@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { db } from '../services/db';
+import { db } from '../services';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {

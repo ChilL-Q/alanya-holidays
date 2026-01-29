@@ -1,6 +1,17 @@
-import { useState, useEffect } from 'react';
-import { db } from '../services/db';
-import { FilterState } from '../components/ui/PropertyFilters';
+import { useState, useMemo, useEffect } from 'react';
+import { Property, PropertyDB } from '../types/models';
+import { propertiesService } from '../services/api/properties';
+
+export interface FilterState {
+    priceRange: [number, number];
+    types: string[];
+    amenities: string[];
+    minGuests: number;
+    minBedrooms: number;
+    minBeds: number;
+    minBathrooms: number;
+    hasPhotos: boolean;
+}
 
 interface UsePropertyFiltersProps {
     checkIn: string | null;
@@ -10,140 +21,154 @@ interface UsePropertyFiltersProps {
 }
 
 export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UsePropertyFiltersProps) => {
-    const [properties, setProperties] = useState<any[]>([]);
-    const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<Property[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
+    const [sort, setSort] = useState('recommended');
+    const LIMIT = 12;
 
     const [filters, setFilters] = useState<FilterState>({
-        priceRange: [0, 0], // 0 means "Any" for max price
+        priceRange: [0, 1000],
         types: [],
         amenities: [],
-        minGuests: 1,
+        minGuests: guests ? parseInt(guests) : 1,
         minBedrooms: 0,
         minBeds: 1,
         minBathrooms: 1,
         hasPhotos: false
     });
 
-    // 1. Fetch Properties
+    // Reset pagination when filters/sort change
+    useEffect(() => {
+        setPage(1);
+        setProperties([]);
+        setHasMore(true);
+    }, [location, checkIn, checkOut, filters, sort]); 
+
+    // Fetch Properties
     useEffect(() => {
         const fetchProperties = async () => {
             setIsLoading(true);
+            setError(null);
             try {
-                let rawData: any[] = [];
-
-                // If dates are selected, use the availability filter
+                // 1. Availability Filter (Base)
+                let availableIds: string[] | null = null;
                 if (checkIn && checkOut) {
-                    rawData = await db.getAvailableProperties(checkIn, checkOut);
-                } else {
-                    // Otherwise fetch all standard properties
-                    const { data } = await db.getProperties(1, 100);
-                    rawData = data || [];
+                    const available = await propertiesService.getAvailableProperties(checkIn, checkOut);
+                    availableIds = available.map(p => p.id);
                 }
 
-                const formattedData = rawData.map((p: any) => ({
-                    ...p,
+                // 2. Fetch Page with Filters & Sort
+                let result = await propertiesService.getProperties(
+                    page, 
+                    LIMIT, 
+                    filters, 
+                    location || undefined, 
+                    availableIds || undefined,
+                    sort
+                );
+                let fetchedProps = result.data || [];
+                
+                // Update Total Count
+                if (result.count !== null) {
+                    setTotalCount(result.count);
+                }
+
+                // 4. Map to UI Model (Property)
+                const mappedProps: Property[] = fetchedProps.map(p => ({
+                    id: p.id,
+                    title: p.title,
+                    location: p.location,
                     pricePerNight: p.price_per_night,
-                    image: p.images?.[0] || '', // Use first image or empty
-                    guests: p.max_guests || 2, // Corrected from p.guests to p.max_guests
-                    bedrooms: p.bedrooms || 1,
-                    beds: p.beds || 1,
-                    bathrooms: p.bathrooms || 1,
-                    rating: p.rating || 0, // Will be updated by trigger if reviews exist
+                    // Keep raw fields for Map component compatibility
+                    price_per_night: p.price_per_night, 
+                    latitude: p.latitude,
+                    longitude: p.longitude,
+                    max_guests: p.max_guests,
+                    
+                    rating: p.rating || 0,
                     reviewsCount: p.reviews_count || 0,
-                    images: p.images || []
-                })) || [];
-                setProperties(formattedData);
-                // Initial filter will happen in next effect
-            } catch (error) {
-                console.error('Error fetching properties:', error);
+                    image: p.images?.[0] || '',
+                    images: p.images || [],
+                    guests: p.max_guests || 0,
+                    bedrooms: p.bedrooms || 0,
+                    beds: p.beds || 0,
+                    bathrooms: p.bathrooms || 0,
+                    description: p.description,
+                    amenities: p.amenities || [],
+                    hostName: p.host?.full_name || 'Host',
+                    property_ref: p.property_ref,
+                    ref_id: p.ref_id,
+                    type: p.type
+                }));
+
+                if (page === 1) {
+                    setProperties(mappedProps);
+                } else {
+                    // Replace properties for pagination (Standard Pages)
+                    setProperties(mappedProps);
+                }
+                
+                // Check if we reached the end relative to total count
+                // Not strictly needed for page-based solving, but good for hasMore check if kept
+                if (result.data.length < LIMIT) {
+                    setHasMore(false);
+                } else {
+                     setHasMore(true);
+                }
+                
+                // Initialize text search filters if needed? No, separate state.
+
+            } catch (err) {
+                console.error(err);
+                setError(err as Error);
             } finally {
                 setIsLoading(false);
             }
         };
+
         fetchProperties();
-    }, [checkIn, checkOut]);
+    }, [page, location, checkIn, checkOut, filters, sort]); // Re-fetch when filters/sort change 
 
-    // 2. Filter Properties
-    useEffect(() => {
-        if (!properties.length && !isLoading) {
-            setFilteredProperties([]);
-            return;
+    const loadMore = () => {
+        if (!isLoading && hasMore) {
+            setPage(prev => prev + 1);
         }
+    };
 
-        let filtered = [...properties];
+    // Client-side filtering removed - properties are now already filtered from backend
+    const filteredProperties = properties;
 
-        // 1. Text Search (Location/Title)
-        if (location) {
-            const lowerLocation = location.toLowerCase();
-            filtered = filtered.filter(p =>
-                p.location?.toLowerCase().includes(lowerLocation) ||
-                p.title?.toLowerCase().includes(lowerLocation)
-            );
-        }
+    const activeFilterCount = Object.keys(filters).reduce((acc, key) => {
+        // @ts-ignore
+        if (key === 'priceRange') return acc;
+        // @ts-ignore
+        if (Array.isArray(filters[key])) return acc + filters[key].length;
+         // @ts-ignore
+        if (typeof filters[key] === 'boolean') return acc + (filters[key] ? 1 : 0);
+         // @ts-ignore
+        if (key.startsWith('min') && filters[key] > (key === 'minGuests' ? 1 : 0)) return acc + 1;
+        return acc;
+    }, 0);
 
-        // 2. Filter by Price
-        filtered = filtered.filter(p => {
-            const matchesMin = p.pricePerNight >= filters.priceRange[0];
-            const matchesMax = filters.priceRange[1] === 0 || p.pricePerNight <= filters.priceRange[1];
-            return matchesMin && matchesMax;
-        });
-
-        // 3. Filter by Type
-        if (filters.types.length > 0) {
-            filtered = filtered.filter(p =>
-                filters.types.some(t => p.type?.toLowerCase().includes(t.toLowerCase()))
-            );
-        }
-
-        // 4. Filter by Capacity (Guests, Bedrooms, Beds, Bathrooms)
-        filtered = filtered.filter(p =>
-            (p.guests || 0) >= filters.minGuests &&
-            (p.bedrooms || 0) >= filters.minBedrooms &&
-            (p.beds || 0) >= filters.minBeds &&
-            (p.bathrooms || 0) >= filters.minBathrooms
-        );
-
-        // 5. Filter by Photos
-        if (filters.hasPhotos) {
-            filtered = filtered.filter(p => p.images && p.images.length > 0);
-        }
-
-        // 6. Filter by Amenities
-        if (filters.amenities.length > 0) {
-            filtered = filtered.filter(p => {
-                // Determine property amenities list (handle both object array and string array if necessary)
-                // Assuming p.amenities is Array<{label: string}> based on PropertyDB
-                const propAmenities = p.amenities?.map((a: any) => a.label?.toLowerCase() || '') || [];
-
-                // Check if property has ALL selected amenities
-                return filters.amenities.every(filterAmenity =>
-                    propAmenities.some((pa: string) => pa.includes(filterAmenity.toLowerCase()))
-                );
-            });
-        }
-
-        setFilteredProperties(filtered);
-    }, [location, properties, filters, isLoading]);
-
-    // 3. Calculate active filter count
-    const activeFilterCount =
-        filters.types.length +
-        filters.amenities.length +
-        (filters.priceRange[0] > 0 ? 1 : 0) +
-        (filters.priceRange[1] > 0 ? 1 : 0) +
-        (filters.minGuests > 1 ? 1 : 0) +
-        (filters.minBedrooms > 0 ? 1 : 0) +
-        (filters.minBeds > 1 ? 1 : 0) +
-        (filters.minBathrooms > 1 ? 1 : 0) +
-        (filters.hasPhotos ? 1 : 0);
+    const totalPages = Math.ceil(totalCount / LIMIT);
 
     return {
-        properties,
         filteredProperties,
+        totalCount,
+        totalPages,
+        page,
+        setPage,
+        sort,
+        setSort,
         isLoading,
+        error,
         filters,
         setFilters,
-        activeFilterCount
+        activeFilterCount,
+        hasMore
     };
 };

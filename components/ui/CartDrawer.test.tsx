@@ -26,7 +26,7 @@ describe('CartDrawer', () => {
             formatPrice: (price: number) => `$${price}`,
             currency: 'USD',
             setCurrency: vi.fn(),
-            rates: {},
+            rates: { USD: 1, EUR: 0.92, TRY: 30 },
             convertPrice: (p) => p
         });
     });
@@ -79,8 +79,8 @@ describe('CartDrawer', () => {
 
     it('renders items and total correctly', () => {
         const mockItems = [
-            { id: '1', title: 'Luxury Villa', price: 100, image: 'img.jpg' },
-            { id: '2', title: 'Jet Ski', price: 50, image: 'img.jpg' }
+            { id: '1', title: 'Luxury Villa', price: 100, image: 'img.jpg', type: 'property' },
+            { id: '2', title: 'Jet Ski', price: 50, image: 'img.jpg', type: 'service' }
         ];
 
         vi.mocked(CartContext.useCart).mockReturnValue({
@@ -101,7 +101,7 @@ describe('CartDrawer', () => {
 
     it('calls removeFromCart when trash icon clicked', () => {
         const mockRemove = vi.fn();
-        const mockItems = [{ id: '1', title: 'Villa', price: 100, image: 'img.jpg' }];
+        const mockItems = [{ id: '1', title: 'Villa', price: 100, image: 'img.jpg', type: 'property' }];
 
         vi.mocked(CartContext.useCart).mockReturnValue({
             items: mockItems,
@@ -160,7 +160,7 @@ describe('CartDrawer', () => {
 
     it('navigates to checkout', () => {
         const setIsCartOpen = vi.fn();
-        const mockItems = [{ id: '1', title: 'Villa', price: 100, image: 'img.jpg' }];
+        const mockItems = [{ id: '1', title: 'Villa', price: 100, image: 'img.jpg', type: 'property' }];
 
         vi.mocked(CartContext.useCart).mockReturnValue({
             items: mockItems,

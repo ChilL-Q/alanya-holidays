@@ -33,3 +33,15 @@ To run this on your machine:
 2.  Install dependencies: `npm install`
 3.  Start the server: `npm run dev`
 4.  Open `http://localhost:3000`
+
+## Cron Jobs
+
+The platform uses scheduled jobs for maintenance, such as cleaning up expired "pending" bookings.
+
+### Cleanup Pending Bookings
+- **Function**: `cleanup-bookings`
+- **URL**: `https://mdmizeyjabyvhkuijyjg.supabase.co/functions/v1/cleanup-bookings`
+- **Interval**: Every 5 minutes (via cron-job.org)
+
+> [!IMPORTANT]
+> Always use **HTTPS** for Supabase Edge Functions. Using HTTP will result in a `301 Moved Permanently` error.

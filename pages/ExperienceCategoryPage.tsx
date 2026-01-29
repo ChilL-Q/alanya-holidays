@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../services/db';
+import { db, ServiceData } from '../services';
 
 export const ExperienceCategoryPage: React.FC = () => {
     const { category } = useParams<{ category: string }>();

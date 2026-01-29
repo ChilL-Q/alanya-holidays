@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useCarAggregation } from './useCarAggregation';
-import { ServiceData } from '../services/db';
+import { ServiceData } from '../services';
 
 describe('useCarAggregation', () => {
   it('returns empty array for empty input', () => {

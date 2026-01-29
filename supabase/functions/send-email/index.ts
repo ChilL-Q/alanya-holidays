@@ -82,206 +82,273 @@ Deno.serve(async (req) => {
   }
 })
 
-function generateEmailContent(type: string, data: any): { subject: string, html: string } {
-    const styles = `
-      body { font-family: sans-serif; color: #333; line-height: 1.6; }
-      .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
-      .header { background: #0d9488; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
-      .content { padding: 20px; }
-      .footer { text-align: center; font-size: 12px; color: #999; margin-top: 20px; }
-      .btn { display: inline-block; background: #0d9488; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px; }
-      .details { background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0; }
-    `;
+// --- Email Template Helpers ---
 
-    const wrapper = (title: string, body: string) => `
-      <!DOCTYPE html>
-      <html>
-      <head><style>${styles}</style></head>
-      <body>
-        <div class="container">
-          <div class="header"><h1>${title}</h1></div>
-          <div class="content">${body}</div>
-          <div class="footer">Alanya Holidays • Best Rentals in Turkey</div>
+const BRAND_COLOR = '#0d9488'; // Teal-600
+const BG_COLOR = '#f8fafc'; // Slate-50
+const CONTAINER_BG = '#ffffff';
+const TEXT_COLOR = '#334155'; // Slate-700
+const LOGO_URL = 'https://placehold.co/200x50/0d9488/ffffff?text=Alanya+Holidays'; // Placeholder for dev
+
+const getHtmlTemplate = (title: string, content: string, actionLink?: string, actionText?: string) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: ${BG_COLOR}; margin: 0; padding: 0; color: ${TEXT_COLOR}; line-height: 1.6; }
+    .container { max-width: 600px; margin: 40px auto; background-color: ${CONTAINER_BG}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    .header { background-color: #ffffff; padding: 24px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+    .logo { height: 40px; }
+    .hero { background-color: ${BRAND_COLOR}; padding: 32px 24px; text-align: center; color: white; }
+    .hero h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+    .content { padding: 32px 24px; }
+    .info-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 24px 0; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
+    .info-table td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+    .info-table tr:last-child td { border-bottom: none; }
+    .label { font-weight: 600; color: ${TEXT_COLOR}; width: 120px; }
+    .value { color: #0f172a; }
+    .btn-container { text-align: center; margin-top: 32px; margin-bottom: 16px; }
+    .btn { display: inline-block; background-color: ${BRAND_COLOR}; color: white !important; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 50px; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.4); }
+    .footer { background-color: #f1f5f9; padding: 24px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+    .footer a { color: ${BRAND_COLOR}; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="${LOGO_URL}" alt="Alanya Holidays" class="logo">
+    </div>
+    <div class="hero">
+      <h1>${title}</h1>
+    </div>
+    <div class="content">
+      ${content}
+      ${actionLink ? `
+        <div class="btn-container">
+          <a href="${actionLink}" class="btn">${actionText || 'View Details'}</a>
         </div>
-      </body>
-      </html>
-    `;
+      ` : ''}
+    </div>
+    <div class="footer">
+      <p>&copy; ${new Date().getFullYear()} Alanya Holidays. All rights reserved.</p>
+      <p>Turkey, Alanya • <a href="#">Unsubscribe</a></p>
+    </div>
+  </div>
+</body>
+</html>
+`;
 
+function generateEmailContent(type: string, data: any): { subject: string, html: string } {
     switch (type) {
+        // --- Host Notifications ---
         case 'booking_request_host':
             return {
-                subject: `Action Required: New Booking Request for ${data.itemTitle}`,
-                html: wrapper('New Booking Request', `
-                    <p>You have a new booking request from <strong>${data.guestName}</strong>!</p>
-                    <div class="details">
-                        <p><strong>Property:</strong> ${data.itemTitle}</p>
-                        <p><strong>Dates:</strong> ${data.checkIn} - ${data.checkOut}</p>
-                        <p><strong>Guests:</strong> ${data.guests}</p>
-                        <p><strong>Total Payout:</strong> €${data.totalPrice}</p>
-                        ${data.message ? `<div style="margin-top: 10px; padding: 10px; background-color: #f1f5f9; border-radius: 5px;"><strong>Message:</strong> <i>"${data.message}"</i></div>` : ''}
-                    </div>
-                    <p>Please review and accept or decline this request within 24 hours.</p>
-                    <a href="${data.link || '#'}" class="btn">Manage Booking</a>
-                `)
+                subject: `🔔 New Booking Request: ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'New Booking Request',
+                    `
+                    <p>Good news! You have received a new booking request from <strong>${data.guestName}</strong>.</p>
+                    <table class="info-table">
+                        <tr><td class="label">Property</td><td class="value">${data.itemTitle}</td></tr>
+                        <tr><td class="label">Dates</td><td class="value">${data.checkIn} — ${data.checkOut}</td></tr>
+                        <tr><td class="label">Guests</td><td class="value">${data.guests}</td></tr>
+                        <tr><td class="label">Total Payout</td><td class="value" style="font-weight:bold; color: ${BRAND_COLOR}">€${data.totalPrice}</td></tr>
+                        ${data.message ? `<tr><td class="label">Message</td><td class="value">"${data.message}"</td></tr>` : ''}
+                    </table>
+                    <p>Please review and accept or decline this request within 24 hours to maintain your response rate.</p>
+                    `,
+                    data.link,
+                    'Manage Booking'
+                )
             };
 
         case 'booking_cancelled_host':
             return {
-                subject: `Booking Cancelled: ${data.itemTitle}`,
-                html: wrapper('Booking Cancelled', `
+                subject: `❌ Booking Cancelled: ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'Booking Cancelled',
+                    `
                     <p>The booking for <strong>${data.itemTitle}</strong> has been cancelled by the guest.</p>
-                    <div class="details">
-                        <p><strong>Guest:</strong> ${data.guestName}</p>
-                        <p><strong>Dates:</strong> ${data.checkIn} - ${data.checkOut}</p>
-                    </div>
-                    <p>Your calendar has been automatically updated.</p>
-                    <a href="${data.link || '#'}" class="btn">View Calendar</a>
-                `)
-            };
-
-        case 'booking_expired_guest':
-            return {
-                subject: `Booking Request Expired: ${data.itemTitle}`,
-                html: wrapper('Request Expired', `
-                    <p>Your booking request for <strong>${data.itemTitle}</strong> has expired because it wasn't confirmed within 24 hours.</p>
-                    <p>No charge has been made.</p>
-                    <a href="${data.link || '#'}" class="btn">Find Another Property</a>
-                `)
+                    <table class="info-table">
+                        <tr><td class="label">Guest</td><td class="value">${data.guestName}</td></tr>
+                        <tr><td class="label">Dates</td><td class="value">${data.checkIn} — ${data.checkOut}</td></tr>
+                    </table>
+                    <p>Your calendar has been automatically updated and the dates are now available for new bookings.</p>
+                    `,
+                    data.link,
+                    'View Calendar'
+                )
             };
 
         case 'booking_expired_host':
             return {
-                subject: `Request Expired: ${data.itemTitle}`,
-                html: wrapper('Request Expired', `
-                    <p>The booking request from <strong>${data.guestName}</strong> has expired.</p>
-                    <p>You missed the 24-hour window to accept or decline.</p>
-                    <p>The dates have been unblocked.</p>
-                `)
+                subject: `⏳ Request Expired: ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'Request Expired',
+                    `
+                    <p>The booking request from <strong>${data.guestName}</strong> has expired because no action was taken within 24 hours.</p>
+                    <table class="info-table">
+                        <tr><td class="label">Property</td><td class="value">${data.itemTitle}</td></tr>
+                         <tr><td class="label">Dates</td><td class="value">${data.checkIn} — ${data.checkOut}</td></tr>
+                    </table>
+                    <p>The dates have been unblocked on your calendar.</p>
+                    `,
+                    data.link,
+                    'View Dashboard'
+                )
             };
 
+        // --- Guest Notifications ---
         case 'booking_created':
             return {
-                subject: `Booking Request: ${data.itemTitle}`,
-                html: wrapper('Booking Request Received', `
+                subject: `🕒 Booking Request Sent: ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'Request Sent',
+                    `
                     <p>Hi ${data.userName || 'there'},</p>
-                    <p>We have received your booking request for <strong>${data.itemTitle}</strong>.</p>
-                    <div class="details">
-                        <p><strong>Check-in:</strong> ${data.checkIn}</p>
-                        <p><strong>Check-out:</strong> ${data.checkOut}</p>
-                        <p><strong>Total Price:</strong> €${data.totalPrice}</p>
-                        <p><strong>Guests:</strong> ${data.guests}</p>
-                    </div>
-                    <p>The host will review your request shortly. You will receive another email once verified.</p>
-                    <a href="${data.link || '#'}" class="btn">View Booking</a>
-                `)
+                    <p>We've received your request! The host has 24 hours to accept your booking.</p>
+                    <table class="info-table">
+                        <tr><td class="label">Property</td><td class="value">${data.itemTitle}</td></tr>
+                        <tr><td class="label">Dates</td><td class="value">${data.checkIn} — ${data.checkOut}</td></tr>
+                        <tr><td class="label">Total Price</td><td class="value" style="font-weight:bold">€${data.totalPrice}</td></tr>
+                    </table>
+                    <p>You won't be charged until the host accepts your request.</p>
+                    `,
+                    data.link,
+                    'View Booking'
+                )
             };
 
         case 'booking_confirmed':
             return {
-                subject: `Booking Confirmed: ${data.itemTitle}`,
-                html: wrapper('You are going to Alanya!', `
-                    <p>Great news! Your booking for <strong>${data.itemTitle}</strong> has been confirmed.</p>
-                    <div class="details">
-                        <p><strong>Dates:</strong> ${data.checkIn} - ${data.checkOut}</p>
-                        <p><strong>Address:</strong> ${data.address || 'Check details in app'}</p>
-                    </div>
-                    <p>Get ready for your trip!</p>
-                    <a href="${data.link || '#'}" class="btn">View Trip Details</a>
-                `)
+                subject: `✅ Booking Confirmed: ${data.itemTitle}!`,
+                html: getHtmlTemplate(
+                    'Booking Confirmed!',
+                    `
+                    <p>Your trip is on! Your booking for <strong>${data.itemTitle}</strong> is confirmed.</p>
+                    <table class="info-table">
+                        <tr><td class="label">Dates</td><td class="value">${data.checkIn} — ${data.checkOut}</td></tr>
+                        <tr><td class="label">Address</td><td class="value">${data.address || 'Check details in app'}</td></tr>
+                        <tr><td class="label">Guests</td><td class="value">${data.guests}</td></tr>
+                    </table>
+                    <p>Get ready for an amazing stay in Alanya!</p>
+                    `,
+                    data.link,
+                    'View Trip Details'
+                )
             };
 
         case 'booking_rejected':
             return {
-                subject: `Update on your booking for ${data.itemTitle}`,
-                html: wrapper('Booking Declined', `
+                subject: `⛔ Update on your booking for ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'Booking Declined',
+                    `
                     <p>We're sorry, but your booking request for <strong>${data.itemTitle}</strong> could not be accepted at this time.</p>
-                    <p><strong>Reason:</strong> ${data.reason || 'Dates unavailable or other reason'}</p>
-                    <p>No charges have been made.</p>
-                    <a href="${data.searchLink || '#'}" class="btn">Search Other Properties</a>
-                `)
+                    <table class="info-table">
+                         <tr><td class="label">Reason</td><td class="value">${data.reason || 'Dates unavailable'}</td></tr>
+                    </table>
+                    <p>No charges have been made. You can find many other great properties for your dates.</p>
+                    `,
+                    data.searchLink,
+                    'Search Properties'
+                )
             };
-        
+
+        case 'booking_expired_guest':
+            return {
+                subject: `⏳ Request Expired: ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'Request Expired',
+                    `
+                    <p>Your booking request for <strong>${data.itemTitle}</strong> has expired because the host didn't respond within 24 hours.</p>
+                    <p>No charge has been made. Please try booking another property.</p>
+                    `,
+                    data.link,
+                    'Find Another Stay'
+                )
+            };
+
+        // --- Listings & Reviews ---
         case 'listing_approved':
             return {
-                 subject: `Your property is Live!`,
-                 html: wrapper('Listing Approved', `
+                subject: `🎉 Your property is Live!`,
+                html: getHtmlTemplate(
+                    'Listing Published',
+                    `
                     <p>Congratulations! Your property <strong>${data.title}</strong> has been approved by our team.</p>
-                    <p>It is now visible to thousands of travelers.</p>
-                    <a href="${data.link || '#'}" class="btn">View Listing</a>
-                 `)
+                    <p>It is now visible to thousands of travelers searching for their next holiday.</p>
+                    `,
+                    data.link,
+                    'View Listing'
+                )
             };
 
         case 'listing_rejected':
             return {
-                 subject: `Action Required: ${data.title}`,
-                 html: wrapper('Listing Returned', `
-                    <p>Your property <strong>${data.title}</strong> was not approved for publishing.</p>
-                    <p><strong>Reason:</strong> ${data.reason}</p>
-                    <p>Please update your listing and submit again.</p>
-                 `)
+                subject: `⚠️ Action Required: ${data.title}`,
+                html: getHtmlTemplate(
+                    'Listing Returned',
+                    `
+                    <p>Your property <strong>${data.title}</strong> needs some changes before it can be published.</p>
+                    <table class="info-table">
+                         <tr><td class="label">Reason</td><td class="value" style="color:#ef4444">${data.reason}</td></tr>
+                    </table>
+                    <p>Please update your listing based on this feedback and submit it again.</p>
+                    `,
+                    data.link,
+                    'Edit Listing'
+                )
             };
 
         case 'new_review':
-             return {
-                 subject: `New Review for ${data.itemTitle}`,
-                 html: wrapper('New 5-Star Review!', `
+            return {
+                subject: `⭐ New Review for ${data.itemTitle}`,
+                html: getHtmlTemplate(
+                    'New Review Received',
+                    `
                     <p>You received a new review from <strong>${data.guestName}</strong>.</p>
-                    <div class="details">
-                        <p><i>"${data.comment}"</i></p>
-                        <p>Rating: ${data.rating}/5</p>
+                    <div style="background: #f8fafc; padding: 16px; border-left: 4px solid ${BRAND_COLOR}; margin: 16px 0; font-style: italic;">
+                        "${data.comment}"
                     </div>
-                    <a href="${data.link || '#'}" class="btn">Read Review</a>
-                 `)
-             };
+                    <p><strong>Rating:</strong> ${data.rating}/5</p>
+                    `,
+                    data.link,
+                    'Read Review'
+                )
+            };
 
-        case 'listing_deleted':
-             return {
-                 subject: `Property Removed: ${data.title}`,
-                 html: wrapper('Listing Deleted', `
-                    <p>Your property <strong>${data.title}</strong> has been removed from Alanya Holidays.</p>
-                    <p><strong>Reason:</strong> ${data.reason || 'Administrative action'}</p>
-                    <p>If you believe this is a mistake, please contact support.</p>
-                 `)
-             };
-
+        // --- Admin/System ---
         case 'admin_contact_message':
             return {
-                subject: `New Contact Message: ${data.subject}`,
-                html: wrapper('New Message Received', `
+                subject: `📩 New Contact Message: ${data.subject}`,
+                html: getHtmlTemplate(
+                    'New Message',
+                    `
                     <p>You received a new message via the contact form.</p>
-                    <div class="details">
-                        <p><strong>From:</strong> ${data.name} (${data.email})</p>
-                        <p><strong>Subject:</strong> ${data.subject}</p>
-                        <p><strong>Message:</strong></p>
-                        <p>${data.message}</p>
-                    </div>
-                    <a href="mailto:${data.email}" class="btn">Reply via Email</a>
-                `)
+                    <table class="info-table">
+                        <tr><td class="label">From</td><td class="value">${data.name} (${data.email})</td></tr>
+                        <tr><td class="label">Subject</td><td class="value">${data.subject}</td></tr>
+                    </table>
+                    <p><strong>Message:</strong></p>
+                    <div style="background: #f1f5f9; padding: 16px; border-radius: 8px;">${data.message}</div>
+                    `,
+                    `mailto:${data.email}`,
+                    'Reply via Email'
+                )
             };
 
-        case 'welcome_email':
-            return {
-                subject: `Welcome to Alanya Holidays!`,
-                html: wrapper('Welcome Aboard!', `
-                    <p>Hi ${data.name},</p>
-                    <p>Welcome to Alanya Holidays! We're thrilled to have you join our community.</p>
-                    <p>Whether you're looking for a dream villa, a car for your trip, or an unforgettable tour, we've got you covered.</p>
-                    <div class="details">
-                        <p>Check out our latest listings:</p>
-                        <ul>
-                            <li><a href="${data.url}/stays">Stays</a></li>
-                            <li><a href="${data.url}/services/car-rental">Car Rentals</a></li>
-                            <li><a href="${data.url}/services/tours">Tours & Activities</a></li>
-                        </ul>
-                    </div>
-                    <a href="${data.url}" class="btn">Start Exploring</a>
-                `)
-            };
-
+        // --- Fallback ---
         default:
             return {
                 subject: 'Notification from Alanya Holidays',
-                html: wrapper('Notification', `<p>${JSON.stringify(data)}</p>`)
+                html: getHtmlTemplate(
+                    'Notification',
+                    `<p>You have a new notification.</p>
+                     <pre style="background:#f1f5f9; padding:12px; overflow-x:auto;">${JSON.stringify(data, null, 2)}</pre>`
+                )
             };
     }
 }

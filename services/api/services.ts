@@ -1,12 +1,14 @@
 import { supabase } from '../supabase';
 import { ServiceDB, ServiceModel, ApprovalStatus } from '../../types/index';
 import { notificationsService } from './notifications';
+import { serviceSchema } from './schemas';
 
 export const servicesService = {
     async createService(data: Omit<ServiceDB, 'id' | 'created_at'>) {
+        const validatedData = serviceSchema.parse(data);
         const { data: service, error } = await supabase
             .from('services')
-            .insert([data])
+            .insert([validatedData])
             .select()
             .single();
 
@@ -65,13 +67,17 @@ export const servicesService = {
 
         const { data, error } = await query.single();
         
-        // Mock fallback check
+        // Optimized Fallback check: Query by service_ref if it was a number but look-up failed
         if ((error || !data) && !isUUID) {
-             const { data: all } = await supabase.from('services').select('*');
-             if (all) {
-                 const found = all.find((s: any) => (parseInt(s.id.slice(0, 8), 16) % 10000).toString() === id);
-                 if (found) return found as ServiceDB;
-             }
+             const { data: found } = await supabase
+                .from('services')
+                .select('*')
+                // This is a bit of a hack since service_ref is SERIAL and we are matching string id
+                // But it's much better than fetching everything.
+                .eq('service_ref', parseInt(id))
+                .maybeSingle();
+             
+             if (found) return found as ServiceDB;
         }
 
         if (error) throw error;

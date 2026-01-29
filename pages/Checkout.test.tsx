@@ -2,25 +2,33 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Checkout } from './Checkout';
 import * as CartContext from '../context/CartContext';
-import { db } from '../services/db';
+import { db } from '../services';
 
-vi.mock('../services/db', () => ({ db: { createBooking: vi.fn() } }));
+vi.mock('../services', () => ({ db: { createBooking: vi.fn() } }));
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {
         ...actual,
-        useNavigate: vi.fn(),
-        Link: ({ children }) => <a>{children}</a>
+        useNavigate: () => vi.fn(),
+        Link: ({ children }: any) => <a>{children}</a>
     };
 });
 vi.mock('../context/CartContext', () => ({ useCart: vi.fn() }));
-vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true, user: { id: 'u1' } }) }));
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true, user: { id: '550e8400-e29b-41d4-a716-446655440000' } }) }));
 vi.mock('../context/LanguageContext', () => ({ useLanguage: () => ({ t: (k: string) => k }) }));
+vi.mock('../services/supabase', () => ({
+    supabase: {
+        functions: {
+            invoke: vi.fn().mockResolvedValue({ data: { url: 'http://test.com' }, error: null })
+        }
+    }
+}));
 vi.mock('../context/CurrencyContext', () => ({
     useCurrency: () => ({
         formatPrice: (p) => `€${p}`,
         convertPrice: (p) => p,
-        currency: 'EUR'
+        currency: 'EUR',
+        rates: {}
     })
 }));
 
@@ -29,6 +37,11 @@ describe('Checkout', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        // Mock window.location
+        Object.defineProperty(window, 'location', {
+            configurable: true,
+            value: { href: '', origin: 'http://localhost' }
+        });
     });
 
     it('renders empty state when cart is empty', () => {
@@ -49,7 +62,7 @@ describe('Checkout', () => {
     it('renders cart items and total', () => {
         vi.mocked(CartContext.useCart).mockReturnValue({
             items: [
-                { id: '1', title: 'Villa A', price: 100, type: 'RENTAL' }
+                { id: '550e8400-e29b-41d4-a716-446655440001', title: 'Villa A', price: 100, type: 'property' }
             ],
             removeFromCart: vi.fn(),
             addToCart: vi.fn(),
@@ -67,7 +80,7 @@ describe('Checkout', () => {
     it('handles payment submission', async () => {
         vi.mocked(CartContext.useCart).mockReturnValue({
             items: [
-                { id: '1', title: 'Villa A', price: 100, type: 'RENTAL' }
+                { id: '550e8400-e29b-41d4-a716-446655440001', title: 'Villa A', price: 100, type: 'property' }
             ],
             removeFromCart: vi.fn(),
             addToCart: vi.fn(),
@@ -79,16 +92,11 @@ describe('Checkout', () => {
 
         render(<Checkout />);
 
-        // Find pay button - use role and stricter name matching, or class if needed
-        // The button contains "checkout.pay" and the price.
-        // Let's look for the button that specifically *starts* with payment text or just use getByRole
-        const payBtn = screen.getByRole('button', { name: (content) => content.includes('checkout.pay') });
+        // The button contains "checkout.pay" (from mock t function) and the price "€100"
+        const payBtn = screen.getByTestId('pay-button');
         fireEvent.click(payBtn);
 
-        expect(await screen.findByText(/Processing/i)).toBeInTheDocument();
-
-        // Wait for success (timout in component is 2000ms, test environment might be fast or we use fake timers)
-        // For unit test, we can use vi.useFakeTimers() for speed, but let's just check loading state is triggered.
-        // If we want to check success, we need to advance timers.
+        expect(await screen.findByText(/checkout\.success_title/i, {}, { timeout: 3000 })).toBeInTheDocument();
+        expect(mockClearCart).toHaveBeenCalled();
     });
 });

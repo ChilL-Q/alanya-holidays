@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Star, User, Camera, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { db, Review } from '../../services/db';
+import { db, Review } from '../../services';
 import { ReviewModal } from './ReviewModal';
 import { useLightbox } from '../../context/LightboxContext';
 import { toast } from 'react-hot-toast';

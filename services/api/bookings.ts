@@ -1,20 +1,24 @@
 import { supabase } from '../supabase';
 import { Booking } from '../../types/index';
+import { bookingSchema } from './schemas';
 
 export const bookingsService = {
 
 
     async createBooking(data: any) {
-         // ... (keep existing RPC param prep) ...
+         // Validate Input
+         const validatedData = bookingSchema.parse(data);
+
          const rpcParams = {
-            p_property_id: data.item_id || data.id, 
-            p_user_id: data.user_id,
-            p_check_in: data.check_in,
-            p_check_out: data.check_out,
-            p_total_price: data.total_price,
-            p_guests: data.guests,
-            p_message: data.message,
-            p_payment_method: data.payment_method || 'card'
+            p_item_id: validatedData.item_id, 
+            p_user_id: validatedData.user_id,
+            p_check_in: validatedData.check_in,
+            p_check_out: validatedData.check_out,
+            p_total_price: validatedData.total_price,
+            p_guests: validatedData.guests,
+            p_message: validatedData.message,
+            p_payment_method: validatedData.payment_method,
+            p_item_type: validatedData.type
         };
 
         const { data: result, error } = await supabase.rpc('create_booking', rpcParams);
@@ -137,26 +141,43 @@ export const bookingsService = {
         const { data: bookings, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
-        if (!bookings) return [];
+        if (bookings.length === 0) return [];
 
-        // Manual Join for Users, Properties, Services
-        // This is more reliable than depending on Supabase relations if they aren't perfect
-        const enrichedBookings = await Promise.all(bookings.map(async (booking: any) => {
-            // User
-            const { data: user } = await supabase.from('profiles').select('full_name, email, avatar_url').eq('id', booking.user_id).maybeSingle();
+        // Batch Fetching for Efficient Data Loading (Avoid N+1 Problem)
+        const userIds = Array.from(new Set(bookings.map((b: any) => b.user_id).filter(Boolean)));
+        const propertyIds = Array.from(new Set(bookings.filter((b: any) => b.item_type === 'property').map((b: any) => b.item_id).filter(Boolean)));
+        const serviceIds = Array.from(new Set(bookings.filter((b: any) => b.item_type === 'service').map((b: any) => b.item_id).filter(Boolean)));
+
+        const [usersResult, propertiesResult, servicesResult] = await Promise.all([
+            userIds.length > 0 
+                ? supabase.from('profiles').select('id, full_name, email, avatar_url').in('id', userIds)
+                : Promise.resolve({ data: [] }),
+            propertyIds.length > 0 
+                ? supabase.from('properties').select('id, title, images, price_per_night, location').in('id', propertyIds)
+                : Promise.resolve({ data: [] }),
+            serviceIds.length > 0
+                ? supabase.from('services').select('id, title, images, price, type').in('id', serviceIds)
+                : Promise.resolve({ data: [] })
+        ]);
+
+        const userMap = new Map((usersResult.data || []).map((u: any) => [u.id, u]));
+        const propertyMap = new Map((propertiesResult.data || []).map((p: any) => [p.id, p]));
+        const serviceMap = new Map((servicesResult.data || []).map((s: any) => [s.id, s]));
+
+        const enrichedBookings = bookings.map((booking: any) => {
+            const user = userMap.get(booking.user_id);
             
-            // Item
             let itemDetails = null;
             if (booking.item_type === 'property') {
-                const { data } = await supabase.from('properties').select('title, images, price_per_night, location').eq('id', booking.item_id).maybeSingle();
-                itemDetails = { property: data, itemTitle: data?.title };
+                const property = propertyMap.get(booking.item_id);
+                itemDetails = { property, itemTitle: property?.title };
             } else if (booking.item_type === 'service') {
-                const { data } = await supabase.from('services').select('title, images, price, type').eq('id', booking.item_id).maybeSingle();
-                itemDetails = { service: data, itemTitle: data?.title };
+                const service = serviceMap.get(booking.item_id);
+                itemDetails = { service, itemTitle: service?.title };
             }
 
             return { ...booking, user, ...itemDetails };
-        }));
+        });
 
         return enrichedBookings;
     },
@@ -188,20 +209,20 @@ export const bookingsService = {
 
         if (error) throw error;
 
-        // 3. Enrich with Guest Info
-        const enrichedBookings = await Promise.all(bookings.map(async (booking: any) => {
-            const { data: user } = await supabase
-                .from('profiles')
-                .select('full_name, email, avatar_url, phone') // Host needs phone potentially
-                .eq('id', booking.user_id)
-                .maybeSingle();
+        // 3. Batch Fetch Guest Info (Fix N+1 query)
+        const guestIds = Array.from(new Set(bookings.map((b: any) => b.user_id).filter(Boolean)));
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, avatar_url, phone')
+            .in('id', guestIds);
+        
+        const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
-            return {
-                ...booking,
-                user, // Guest details
-                property: propertyMap.get(booking.item_id),
-                itemTitle: propertyMap.get(booking.item_id)?.title
-            };
+        const enrichedBookings = bookings.map((booking: any) => ({
+            ...booking,
+            user: profileMap.get(booking.user_id), // Guest details
+            property: propertyMap.get(booking.item_id),
+            itemTitle: propertyMap.get(booking.item_id)?.title
         }));
 
         return enrichedBookings;

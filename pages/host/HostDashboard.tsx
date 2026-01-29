@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../services/db';
+import { db } from '../../services';
 import { useLanguage } from '../../context/LanguageContext';
 import { BarChart3, Calendar, DollarSign, Home, Plus, ExternalLink, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -30,17 +30,13 @@ export const HostDashboard: React.FC = () => {
         const fetchData = async () => {
             if (!user) return;
             try {
-                const [props, allBookings] = await Promise.all([
+                const [props, myBookings] = await Promise.all([
                     db.getPropertiesByHost(user.id),
-                    db.getBookings() // In real app, we'd filter by host's properties backend-side
+                    db.getBookingsForHost(user.id)
                 ]);
 
                 setProperties(props || []);
-
-                // Filter bookings for my properties (Client-side filtering for MVP)
-                const myPropertyIds = new Set(props?.map((p: any) => p.id));
-                const myBookings = allBookings?.filter((b: any) => myPropertyIds.has(b.item_id) && b.item_type === 'property') || [];
-                setBookings(myBookings);
+                setBookings(myBookings || []);
 
             } catch (error) {
                 console.error("Dashboard error:", error);
@@ -52,10 +48,18 @@ export const HostDashboard: React.FC = () => {
         fetchData();
     }, [user, isAuthenticated, navigate]);
 
-    // Stats
+    // Stats Calculation
     const totalEarnings = bookings
-        .filter(b => b.status === 'confirmed' || b.status === 'completed')
-        .reduce((sum, b) => sum + (b.total_price || 0), 0);
+        .filter(b => b.payment_status === 'paid' && b.host_payout_amount)
+        .reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
+
+    const pendingPayouts = bookings
+        .filter(b => b.payment_status === 'paid' && b.payout_status === 'pending')
+        .reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
+
+    const paidPayouts = bookings
+        .filter(b => b.payout_status === 'paid')
+        .reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
 
     if (loading) return <div className="h-full flex items-center justify-center min-h-[400px]">Loading Dashboard...</div>;
 
@@ -66,7 +70,6 @@ export const HostDashboard: React.FC = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('host.dashboard.title')}</h1>
                     <p className="text-slate-500 dark:text-slate-400">{t('host.dashboard.welcome', { name: user?.name || 'Host' })}</p>
                 </div>
-                {/* Mobile 'Add' fits in Layout, desktop can stay here for quick access */}
                 <Button
                     onClick={() => navigate('/list-property')}
                     className="hidden md:flex gap-2"
@@ -83,10 +86,21 @@ export const HostDashboard: React.FC = () => {
                         <div className="p-3 bg-teal-50 dark:bg-teal-900/30 rounded-xl text-teal-600 dark:text-teal-400">
                             <DollarSign size={24} />
                         </div>
-                        <span className="text-xs font-bold text-teal-600 bg-teal-50 dark:bg-teal-900/30 px-2 py-1 rounded">+12%</span>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.earnings')}</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatPrice(convertPrice(totalEarnings, 'EUR'))}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Total Net Earnings</p>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl text-yellow-600 dark:text-yellow-400">
+                            <DollarSign size={24} />
+                        </div>
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pending Payouts</p>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatPrice(convertPrice(pendingPayouts, 'EUR'))}</h3>
+                    <p className="text-xs text-slate-400 mt-1">Funds held by platform</p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -107,16 +121,6 @@ export const HostDashboard: React.FC = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.properties')}</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{properties.length}</h3>
-                </div>
-
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400">
-                            <BarChart3 size={24} />
-                        </div>
-                    </div>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.views')}</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">1,248</h3>
                 </div>
             </div>
 

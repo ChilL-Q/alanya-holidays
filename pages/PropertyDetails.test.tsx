@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { PropertyDetails } from './PropertyDetails';
-import { db } from '../services/db';
+import { db } from '../services';
 import * as RouterModule from 'react-router-dom';
 import * as CartContext from '../context/CartContext';
 
@@ -10,7 +10,7 @@ vi.mock('../components/reviews/ReviewsSection', () => ({
 }));
 
 // Mock dependencies
-vi.mock('../services/db');
+vi.mock('../services');
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return {

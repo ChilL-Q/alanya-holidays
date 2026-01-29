@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { PropertyDB, ApprovalStatus, Review } from '../../types/index';
 import { NotificationType } from '../../types/enums';
 import { notificationsService } from './notifications';
+import { propertySchema } from './schemas';
 
 export const propertiesService = {
     async getPropertiesByIds(ids: string[]) {
@@ -16,9 +17,10 @@ export const propertiesService = {
     },
 
     async createProperty(data: Omit<PropertyDB, 'id' | 'created_at' | 'updated_at'>) {
+        const validatedData = propertySchema.parse(data);
         const { data: property, error } = await supabase
             .from('properties')
-            .insert([data])
+            .insert([validatedData])
             .select()
             .single();
 
@@ -26,7 +28,7 @@ export const propertiesService = {
         return property as PropertyDB;
     },
 
-    async getProperties(page = 1, limit = 20) {
+    async getProperties(page = 1, limit = 20, filters?: any, location?: string, allowedIds?: string[], sort: string = 'newest') {
         // Optimized: removed * and selected specific fields if needed
         let query = supabase
             .from('properties')
@@ -34,11 +36,67 @@ export const propertiesService = {
 
         query = query.eq('status', 'approved');
 
+        // Availability Filter (Server-Side)
+        if (allowedIds && allowedIds.length > 0) {
+            query = query.in('id', allowedIds);
+        }
+
+        // Server-Side Filtering
+        if (location && location !== 'all') {
+            // Case-insensitive check for location or title
+            query = query.or(`location.ilike.%${location}%,title.ilike.%${location}%`);
+        }
+
+        if (filters) {
+            if (filters.priceRange) {
+                query = query.gte('price_per_night', filters.priceRange[0]);
+                if (filters.priceRange[1] > 0) {
+                    query = query.lte('price_per_night', filters.priceRange[1]);
+                }
+            }
+
+            if (filters.types && filters.types.length > 0) {
+                 const lowerTypes = filters.types.map((t: string) => t.toLowerCase());
+                 query = query.in('type', lowerTypes);
+            }
+
+            if (filters.minGuests > 1) query = query.gte('max_guests', filters.minGuests);
+            if (filters.minBedrooms > 0) query = query.gte('bedrooms', filters.minBedrooms);
+            if (filters.minBeds > 1) query = query.gte('beds', filters.minBeds);
+            if (filters.minBathrooms > 1) query = query.gte('bathrooms', filters.minBathrooms);
+            
+            // hasPhotos filter? 'images' is an array.
+            // checking array length in PostgREST is tricky without a dedicated column or function.
+            // ignoring 'hasPhotos' server-side for MVP unless critically needed, or using not.is.images.null
+            if (filters.hasPhotos) {
+                 query = query.not('images', 'is', null);
+            }
+        }
+
+        // Sorting
+        switch (sort) {
+            case 'price_asc':
+                query = query.order('price_per_night', { ascending: true });
+                break;
+            case 'price_desc':
+                query = query.order('price_per_night', { ascending: false });
+                break;
+            case 'rating':
+                query = query.order('rating', { ascending: false });
+                break;
+            case 'newest':
+            default:
+                query = query.order('created_at', { ascending: false });
+                break;
+        }
+
+        // Secondary sort for stable pagination
+        query = query.order('id', { ascending: true });
+
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
         const { data, error, count } = await query
-            .order('created_at', { ascending: false })
             .range(from, to);
 
         if (error) throw error;
@@ -208,6 +266,7 @@ export const propertiesService = {
 
         const { data, error, count } = await query
             .order('created_at', { ascending: false })
+            .order('id', { ascending: true })
             .range(from, to);
 
         if (error) throw error;
@@ -460,15 +519,26 @@ export const propertiesService = {
         return [...new Set(data.map((p: any) => p.location))];
     },
 
-    async getPropertiesByLocation(type: string, location: string) {
-        const { data, error } = await supabase
+    async getPropertiesByLocation(type: string, location: string, page = 1, limit = 20) {
+        let query = supabase
             .from('properties')
-            .select('*, host:profiles(full_name, avatar_url)')
-            .eq('type', type)
-            .eq('location', location)
-            .order('created_at', { ascending: false });
+            .select('*, host:profiles(full_name, avatar_url)', { count: 'exact' });
+        
+        query = query.eq('type', type);
+
+        // Case insensitive search using ilike for location if needed, but exact match requested here
+        query = query.eq('location', location);
+            
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await query
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: true })
+            .range(from, to);
+
         if (error) throw error;
-        return data as PropertyDB[];
+        return { data: data as PropertyDB[], count };
     },
 
     // Availability & Calendar

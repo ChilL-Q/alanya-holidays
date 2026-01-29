@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../services/db';
+import { db } from '../../services';
 import { Search, Edit2, Trash2, Mail, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

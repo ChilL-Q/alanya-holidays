@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../services/db';
+import { db } from '../services';
 import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoUploader } from '../components/ui/PhotoUploader';

@@ -26,7 +26,10 @@ import { AddProduct } from '../pages/AddProduct';
 import { Profile } from '../pages/Profile';
 import { BookVehicle } from '../pages/booking/BookVehicle';
 import { BookTour } from '../pages/booking/BookTour';
+import { BookingSuccess } from '../pages/booking/Success';
 import { InboxPage } from '../pages/InboxPage';
+
+
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
 import { HostLayout } from '../components/layouts/HostLayout';
@@ -88,6 +91,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/inbox" element={<InboxPage />} />
 
             {/* Host Routes - Protected */}
+            <Route path="/booking/success" element={<BookingSuccess />} />
             <Route path="/host" element={
                 <HostRoute>
                     <HostLayout>

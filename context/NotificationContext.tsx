@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { db, Notification } from '../services/db';
+import { db, Notification } from '../services';
 
 interface NotificationContextType {
     notifications: Notification[];

@@ -1,3 +1,21 @@
+import { PropertyDB, ServiceDB, Review, Notification, ServiceModel } from '../types/models';
+
+export type PropertyData = PropertyDB;
+export type ServiceData = ServiceDB;
+export type { Review, Notification, ServiceModel };
+
+export * from './api/properties';
+export * from './api/services';
+export * from './api/bookings';
+export * from './api/users';
+export * from './api/products';
+export * from './api/misc';
+export * from './api/storage';
+export * from './api/notifications';
+export * from './api/chat';
+export * from './supabase';
+export * from './aiService';
+
 import { propertiesService } from './api/properties';
 import { servicesService } from './api/services';
 import { bookingsService } from './api/bookings';
@@ -7,19 +25,6 @@ import { messagesService, favoritesService } from './api/misc';
 import { storageService } from './api/storage';
 import { notificationsService } from './api/notifications';
 import { chatService } from './api/chat';
-
-// Re-export types for backward compatibility
-// Mapping new names to old names where originally defined in db.ts
-export type { 
-    PropertyDB as PropertyData, 
-    ServiceDB as ServiceData, 
-    Product as ProductData, 
-    Review, 
-    Notification,
-    Amenity,
-    ServiceFeatures,
-    ServiceModel
-} from '../types/index';
 
 export const db = {
     ...propertiesService,

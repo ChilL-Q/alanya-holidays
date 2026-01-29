@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { Flag, CheckCircle, Clock, XCircle, MessageSquare } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Flag, CheckCircle, Clock, XCircle, MessageSquare, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface Report {
     id: string;
@@ -18,8 +20,10 @@ interface Report {
 }
 
 export const ReportsPage: React.FC = () => {
+    const navigate = useNavigate();
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeMenu, setActiveMenu] = useState<{ id: string; rect: DOMRect; status: string; conversation_id: string } | null>(null);
 
     useEffect(() => {
         fetchReports();
@@ -123,34 +127,22 @@ export const ReportsPage: React.FC = () => {
                                         {format(new Date(report.created_at), 'MMM d, yyyy')}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex justify-center gap-2">
-                                            {report.status !== 'resolved' && (
-                                                <button
-                                                    onClick={() => updateStatus(report.id, 'resolved')}
-                                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                                    title="Mark Resolved"
-                                                >
-                                                    <CheckCircle size={18} />
-                                                </button>
-                                            )}
-                                            {report.status !== 'investigating' && report.status !== 'resolved' && (
-                                                <button
-                                                    onClick={() => updateStatus(report.id, 'investigating')}
-                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Investigate"
-                                                >
-                                                    <Clock size={18} />
-                                                </button>
-                                            )}
-                                            {report.status !== 'dismissed' && (
-                                                <button
-                                                    onClick={() => updateStatus(report.id, 'dismissed')}
-                                                    className="p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
-                                                    title="Dismiss"
-                                                >
-                                                    <XCircle size={18} />
-                                                </button>
-                                            )}
+                                        <div className="flex justify-center relative">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    setActiveMenu({
+                                                        id: report.id,
+                                                        rect,
+                                                        status: report.status,
+                                                        conversation_id: report.conversation_id
+                                                    });
+                                                }}
+                                                className={`p-2 rounded-full transition-colors ${activeMenu?.id === report.id ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                            >
+                                                <MoreVertical size={20} />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -169,6 +161,87 @@ export const ReportsPage: React.FC = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Portal Menu */}
+            {activeMenu && createPortal(
+                <>
+                    <div
+                        className="fixed inset-0 z-[50]"
+                        onClick={() => setActiveMenu(null)}
+                    />
+                    <div
+                        className="fixed w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-[51] animate-in fade-in zoom-in-95 duration-200 origin-top-right"
+                        style={{
+                            top: `${activeMenu.rect.bottom + 5}px`,
+                            left: `${activeMenu.rect.right - 192}px` // Align right edge
+                        }}
+                    >
+                        <div className="px-3 py-2 border-b border-slate-50 dark:border-slate-800/50 mb-1">
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Actions</p>
+                        </div>
+
+                        {activeMenu.status !== 'resolved' && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateStatus(activeMenu.id, 'resolved');
+                                    setActiveMenu(null);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                            >
+                                <CheckCircle size={16} className="text-green-600" />
+                                <span>Mark Resolved</span>
+                            </button>
+                        )}
+
+                        {activeMenu.status !== 'investigating' && activeMenu.status !== 'resolved' && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateStatus(activeMenu.id, 'investigating');
+                                    setActiveMenu(null);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                            >
+                                <Clock size={16} className="text-blue-600" />
+                                <span>Investigate</span>
+                            </button>
+                        )}
+
+                        {activeMenu.status !== 'dismissed' && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateStatus(activeMenu.id, 'dismissed');
+                                    setActiveMenu(null);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                            >
+                                <XCircle size={16} className="text-slate-400" />
+                                <span>Dismiss</span>
+                            </button>
+                        )}
+
+                        <div className="border-t border-slate-50 dark:border-slate-800/50 my-1"></div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (activeMenu.conversation_id) {
+                                    navigate(`/inbox?conversationId=${activeMenu.conversation_id}`);
+                                } else {
+                                    toast.error('No conversation linked to this report');
+                                }
+                                setActiveMenu(null);
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                        >
+                            <MessageSquare size={16} className="text-teal-600" />
+                            <span>View Chat Context</span>
+                        </button>
+                    </div>
+                </>,
+                document.body
+            )}
         </div>
     );
 };

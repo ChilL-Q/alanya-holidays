@@ -3,7 +3,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services/db';
+import { db } from '../services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
 

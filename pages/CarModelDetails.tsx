@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../services/db';
+import { db, ServiceData } from '../services';
 import { useAuth } from '../context/AuthContext';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X, Calendar, Settings2 } from 'lucide-react';

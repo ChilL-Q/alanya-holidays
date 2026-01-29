@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, OverlayView, OverlayViewF } from '@react-google-maps/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { PropertyData } from '../../services/db';
+import { PropertyData } from '../../services';
 import { Star, Users, Bed } from 'lucide-react';
 
 const containerStyle = {
@@ -223,7 +223,9 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                             {/* Rating Badge */}
                                             <div className="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                                                 <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                                                <span className="text-xs font-bold text-slate-900 dark:text-white">4.96</span>
+                                                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                                                    {(property.rating || 0) > 0 ? (property.rating || 0).toFixed(1) : 'New'}
+                                                </span>
                                             </div>
                                         </div>
 

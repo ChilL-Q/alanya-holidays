@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+    RATES,
+    SYMBOLS,
+    convertPrice as convertPriceUtil,
+    formatPrice as formatPriceUtil,
+    type Currency
+} from '../utils/currency';
 
-export type Currency = 'USD' | 'EUR' | 'TRY';
+export type { Currency };
 
 interface CurrencyContextType {
     currency: Currency;
@@ -11,20 +18,6 @@ interface CurrencyContextType {
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
-
-// Mock exchange rates relative to EUR
-// In a real app, these would come from an API
-const RATES: Record<Currency, number> = {
-    USD: 1.09, // 1 EUR = 1.09 USD
-    EUR: 1,
-    TRY: 35.5 // 1 EUR = ~35.5 TRY
-};
-
-const SYMBOLS: Record<Currency, string> = {
-    USD: '$',
-    EUR: '€',
-    TRY: '₺'
-};
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currency, setCurrency] = useState<Currency>(() => {
@@ -37,21 +30,11 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, [currency]);
 
     const convertPrice = (amount: number, fromCurrency: Currency): number => {
-        if (fromCurrency === currency) return amount;
-
-        // Convert to Base (EUR) first
-        const amountInBase = amount / RATES[fromCurrency];
-
-        // Convert to target currency
-        return amountInBase * RATES[currency];
+        return convertPriceUtil(amount, fromCurrency, currency);
     };
 
     const formatPrice = (amount: number, targetCurrency?: Currency): string => {
-        const curr = targetCurrency || currency;
-        const val = Math.round(amount).toLocaleString('en-US'); // Keeping en-US format for consistency for now
-
-        // Special formatting for different currencies if needed
-        return `${SYMBOLS[curr]}${val}`;
+        return formatPriceUtil(amount, targetCurrency || currency);
     };
 
     return (

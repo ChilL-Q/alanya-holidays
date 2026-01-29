@@ -24,6 +24,7 @@ interface AuthContextType {
     verifyOtp: (email: string, token: string, type?: 'email' | 'signup' | 'recovery') => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateUser: (data: Partial<User>) => void;
+    updateProfile: (data: Partial<User>) => void;
     updateEmail: (email: string) => Promise<void>;
     updatePassword: (password: string) => Promise<void>;
 }
@@ -217,6 +218,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             verifyOtp,
             logout,
             updateUser,
+            updateProfile: updateUser,
             updateEmail,
             updatePassword
         }}>

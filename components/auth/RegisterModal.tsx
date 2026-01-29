@@ -134,14 +134,14 @@ export const RegisterModal: React.FC = () => {
                                 type="button"
                                 onClick={() => setRole('guest')}
                                 className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'guest'
-                                    ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600'
-                                    : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                             >
-                                <span className={`block font-bold mb-1 ${role === 'guest' ? 'text-teal-800' : 'text-slate-700'}`}>
+                                <span className={`block font-bold mb-1 ${role === 'guest' ? 'text-teal-800 dark:text-teal-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {t('auth.role.buyer') || 'Buyer'}
                                 </span>
-                                <span className={`text-xs block ${role === 'guest' ? 'text-teal-600' : 'text-slate-500'}`}>
+                                <span className={`text-xs block ${role === 'guest' ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
                                     {t('auth.role.buyer_desc') || 'I want to book stays'}
                                 </span>
                             </button>
@@ -150,21 +150,21 @@ export const RegisterModal: React.FC = () => {
                                 type="button"
                                 onClick={() => setRole('host')}
                                 className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'host'
-                                    ? 'border-teal-600 bg-teal-50 ring-1 ring-teal-600'
-                                    : 'border-slate-200 hover:border-teal-200 hover:bg-slate-50'
+                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
+                                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                             >
-                                <span className={`block font-bold mb-1 ${role === 'host' ? 'text-teal-800' : 'text-slate-700'}`}>
+                                <span className={`block font-bold mb-1 ${role === 'host' ? 'text-teal-800 dark:text-teal-400' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {t('auth.role.seller') || 'Seller'}
                                 </span>
-                                <span className={`text-xs block ${role === 'host' ? 'text-teal-600' : 'text-slate-500'}`}>
+                                <span className={`text-xs block ${role === 'host' ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
                                     {t('auth.role.seller_desc') || 'I want to list properties'}
                                 </span>
                             </button>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.name')}</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('auth.name')}</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
@@ -172,7 +172,7 @@ export const RegisterModal: React.FC = () => {
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="John Doe"
                                 />
                             </div>
@@ -180,14 +180,14 @@ export const RegisterModal: React.FC = () => {
 
                         {role === 'host' && (
                             <div className="animate-fade-in">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name (Optional)</label>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Company Name (Optional)</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                     <input
                                         type="text"
                                         value={companyName}
                                         onChange={(e) => setCompanyName(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                         placeholder="Alanya Holidays Ltd."
                                     />
                                 </div>
@@ -195,7 +195,7 @@ export const RegisterModal: React.FC = () => {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.email')}</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('auth.email')}</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
@@ -203,13 +203,13 @@ export const RegisterModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.password')}</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t('auth.password')}</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
@@ -218,7 +218,7 @@ export const RegisterModal: React.FC = () => {
                                     minLength={6}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -233,12 +233,12 @@ export const RegisterModal: React.FC = () => {
                             {t('auth.submit.register')}
                         </button>
 
-                        <div className="flex items-center gap-2 justify-center mt-6 text-sm text-slate-600">
+                        <div className="flex items-center gap-2 justify-center mt-6 text-sm text-slate-600 dark:text-slate-400">
                             <span>{t('auth.has_account')}</span>
                             <button
                                 type="button"
                                 onClick={openLogin}
-                                className="text-primary font-semibold hover:underline"
+                                className="text-primary dark:text-teal-400 font-semibold hover:underline"
                             >
                                 {t('auth.submit.login')}
                             </button>
@@ -247,8 +247,8 @@ export const RegisterModal: React.FC = () => {
                 ) : (
                     <form onSubmit={handleOtpSubmit} className="space-y-6">
                         <div className="text-center space-y-2">
-                            <h3 className="text-xl font-bold text-slate-900">Confirm your email address</h3>
-                            <p className="text-slate-500">We sent a verification code to <strong>{email}</strong></p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Confirm your email address</h3>
+                            <p className="text-slate-500 dark:text-slate-400">We sent a verification code to <strong className="text-slate-900 dark:text-white">{email}</strong></p>
                             <p className="text-xs text-slate-400">Enter the code below to complete registration.</p>
                         </div>
 

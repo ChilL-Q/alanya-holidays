@@ -11,9 +11,15 @@ export interface UserProfile {
   avatar_url?: string;
   email?: string;
   phone?: string;
-  role?: 'user' | 'host' | 'admin' | 'guest';
   company_name?: string;
+  
+  // Manual Payout Details
+  iban?: string;
+  bank_name?: string;
+  bank_account_holder_name?: string;
+
   created_at?: string;
+  role?: 'guest' | 'user' | 'host' | 'admin';
 }
 
 export interface PropertyDB {
@@ -196,6 +202,13 @@ export interface Booking {
     
     payment_method?: 'card' | 'bank' | 'crypto' | 'cash';
     payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
+    payment_intent_id?: string;
+    
+    // Payout fields (Manual Tracking)
+    payout_status?: 'pending' | 'processing' | 'paid' | 'failed' | 'hold';
+    commission_amount?: number;
+    host_payout_amount?: number;
+    payout_due_date?: string;
 }
 
 export interface Message {
@@ -241,4 +254,58 @@ export interface ChatConversation {
     // Computed/Virtual
     last_message?: ChatMessage;
     unread_count?: number;
+}
+
+// UI Specific Types (Migrated from index.ts)
+
+export interface Property {
+  id: string;
+  property_ref?: number;
+  ref_id?: number;
+  title: string;
+  location: string;
+  pricePerNight: number;
+  rating: number;
+  reviewsCount: number;
+  image: string;
+  images: string[];
+  guests: number;
+  bedrooms: number;
+  beds: number;
+  bathrooms: number;
+  description: string;
+  amenities: Amenity[];
+  hostName: string;
+  type?: string; 
+}
+
+export interface Service {
+  id: string;
+  type: any; // Using any for transition or Specific enum if imported
+  title: string;
+  price: number;
+  description: string;
+  image: string;
+  duration?: string; // For tours
+  vehicleType?: string; // For transfers
+}
+
+export interface CartItem {
+  id: string;
+  type: string;
+  title: string;
+  price: number;
+  image?: string;
+  details?: string; // e.g., "5 nights" or "Round Trip"
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  guests?: number;
+}
+
+export interface SearchFilters {
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
 }

@@ -186,5 +186,24 @@ export const chatService = {
             .insert([data]);
         
         if (error) throw error;
+    },
+
+    // Subscribe to messages (Realtime)
+    subscribeToMessages(conversationId: string, callback: (message: ChatMessage) => void) {
+        return supabase
+            .channel(`conversation:${conversationId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'chat_messages',
+                    filter: `conversation_id=eq.${conversationId}`
+                },
+                (payload) => {
+                    callback(payload.new as ChatMessage);
+                }
+            )
+            .subscribe();
     }
 };

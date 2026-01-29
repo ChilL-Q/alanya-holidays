@@ -53,8 +53,16 @@ describe('servicesService', () => {
         });
         
         // Mock fetch for notification
+        const mockService = {
+            title: 'Rent a Car',
+            description: 'Luxury car for rent',
+            price: 100,
+            type: 'car',
+            provider_id: '550e8400-e29b-41d4-a716-446655440001',
+            features: { seats: 5 }
+        };
         const mockSingle = vi.fn().mockResolvedValue({ 
-            data: { provider_id: 'p1', title: 'Tour', type: 'tour' } 
+            data: mockService
         });
 
         mockSupabase.from.mockReturnValue({
@@ -67,7 +75,7 @@ describe('servicesService', () => {
         await servicesService.updateService('s1', { title: 'New Title' });
 
         expect(notificationsService.createNotification).toHaveBeenCalledWith(
-            'p1', 
+            '550e8400-e29b-41d4-a716-446655440001', 
             expect.stringContaining('Service Updated'), 
             expect.any(String), 
             'info'
@@ -83,7 +91,13 @@ describe('servicesService', () => {
            
            mockSupabase.from.mockReturnValue({ insert: mockInsert });
 
-           const result = await servicesService.createService({ title: 'New Service', provider_id: 'p1' } as any);
+           const result = await servicesService.createService({ 
+               title: 'New Service', 
+               description: 'Providing luxury car rental services in Alanya',
+               price: 50,
+               type: 'car',
+               provider_id: '550e8400-e29b-41d4-a716-446655440001' 
+           } as any);
            expect(result).toEqual({ id: 's1' });
       });
   });

@@ -5,6 +5,9 @@ const { mockSupabase } = vi.hoisted(() => {
   return {
     mockSupabase: {
       from: vi.fn(),
+      functions: {
+        invoke: vi.fn().mockResolvedValue({})
+      }
     }
   }
 });

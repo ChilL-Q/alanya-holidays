@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { Search, Home, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 
 export const InboxPage: React.FC = () => {
     const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
@@ -13,9 +13,17 @@ export const InboxPage: React.FC = () => {
     const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [searchParams] = useSearchParams();
+
     useEffect(() => {
         refreshConversations();
-    }, []);
+
+        // Handle deep linking to specific conversation
+        const conversationIdParam = searchParams.get('conversationId');
+        if (conversationIdParam) {
+            setActiveConversationId(conversationIdParam);
+        }
+    }, [searchParams]);
 
     // Redirect if not logged in
     if (!isAuthenticated) {
