@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Car, Camera, ArrowRight, DoorOpen, Bath, LogIn } from 'lucide-react';
+import { Star, MapPin, User, Users, BedDouble, ShieldCheck, CheckCircle, Camera, DoorOpen, Bath, LogIn, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { ServiceType } from '../types/index';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,7 +9,6 @@ import { Map } from '../components/ui/Map';
 import { useLightbox } from '../context/LightboxContext';
 import { useChat } from '../context/ChatContext';
 import { ChatWindow } from '../components/chat/ChatWindow';
-import { MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../services';
@@ -17,7 +16,6 @@ import { Property, Amenity } from '../types/models';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
-import { IMaskInput } from 'react-imask';
 import { ReviewsSection } from '../components/reviews/ReviewsSection';
 import toast from 'react-hot-toast';
 import { Modal } from '../components/ui/Modal';
@@ -27,20 +25,21 @@ interface PropertyDetailsData extends Property {
   address?: string;
   host?: any; // Using any or UserProfile to avoid deep type issues for now, or import UserProfile
   host_id?: string;
+  hostAvatar?: string | null;
 }
 
 // Custom Masked Input Component
-const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
-  <IMaskInput
+// Basic Input for DatePicker
+const DateInput = React.forwardRef<HTMLInputElement, any>((props, ref) => (
+  <input
     {...props}
-    mask="00.00.0000"
-    definitions={{
-      '0': /[0-9]/
-    }}
-    inputRef={ref}
-    overwrite
+    ref={ref}
+    className={props.className}
+    placeholder={props.placeholder}
   />
 ));
+
+
 
 // CURATED FALLBACK IMAGES
 const PREMIUM_GRID_IMAGES = [
@@ -84,33 +83,30 @@ export const PropertyDetails: React.FC = () => {
         const data = await db.getProperty(id);
         if (data) {
           // Normalize data structure
-          let normalizedData: PropertyDetailsData = {
-            id: data.id,
-            title: data.title,
-            description: data.description,
-            location: data.location,
-            address: data.address || '',
-            latitude: data.latitude,
-            longitude: data.longitude,
-            pricePerNight: data.price_per_night,
-            images: data.images,
-            image: data.images[0],
-            rating: data.rating || 0,
-            reviewsCount: data.reviews_count || 0,
-            guests: data.max_guests || 0,
-            bedrooms: data.bedrooms || 0,
-            beds: data.beds || 0,
-            bathrooms: data.bathrooms || 0,
-            hostName: data.host?.full_name || 'Alanya Holidays',
+          const normalizedData: PropertyDetailsData = {
+            ...data,
+            title: data.title || 'Property Details',
+            description: data.description || '',
+            images: Array.isArray(data.images) ? data.images : [],
             amenities: Array.isArray(data.amenities)
-              ? data.amenities.map((a: string | Amenity) => typeof a === 'string' ? { label: a, icon: 'CheckCircle' } : a)
+              ? data.amenities.map((a: any) => {
+                if (typeof a === 'object' && a !== null) {
+                  return a.label || a.name || a.title || JSON.stringify(a);
+                }
+                return String(a);
+              })
               : [],
-            host: data.host,
-            type: data.type
+            pricePerNight: Number(data.price_per_night) || 0,
+            guests: data.max_guests || 2,
+            bedrooms: data.bedrooms || 1,
+            beds: data.beds || 1,
+            bathrooms: data.bathrooms || 1,
+            host_id: data.host_id,
+            hostName: data.host?.full_name || ((data as any).profiles ? ((data as any).profiles.full_name || (data as any).profiles.username) : 'Alanya Holidays'),
+            hostAvatar: data.host?.avatar_url || ((data as any).profiles ? (data as any).profiles.avatar_url : null),
+            rating: data.rating || 5.0,
+            reviewsCount: data.reviews_count || 0
           } as unknown as PropertyDetailsData;
-
-          // Manually ensuring all required Property fields are present if needed
-          // The casting above handles the transition from DB type to UI type
 
           setProperty(normalizedData);
 
@@ -168,23 +164,41 @@ export const PropertyDetails: React.FC = () => {
     }
   }, [checkIn, checkOut]);
 
+  console.log('DEBUG: PropertyDetails state:', {
+    hasProperty: !!property,
+    loading,
+    propertyId: property?.id,
+    imagesCount: property?.images?.length,
+    amenitiesCount: property?.amenities?.length
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="p-20 text-center flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
         <div className="text-slate-500">Loading property details...</div>
       </div>
     );
   }
 
   if (!property) {
-    return <div className="p-20 text-center text-slate-500">Property not found</div>;
+    return (
+      <div className="p-20 text-center text-slate-500">
+        <h2 className="text-xl font-bold mb-2">Property not found</h2>
+        <p>The property with ID {id} could not be loaded.</p>
+        <button onClick={() => window.history.back()} className="mt-4 text-teal-600 underline">Go Back</button>
+      </div>
+    );
   }
 
-  const totalPrice = (property.pricePerNight || 0) * nights;
+  const totalPrice = (property?.pricePerNight || 0) * nights;
 
   // Helper for consistent price display
-  const displayPrice = (amount: number) => formatPrice(convertPrice(amount, 'EUR'));
+  // Robust Data Normalization
+  const displayPrice = (amount: number) => {
+    const converted = convertPrice(amount || 0, 'EUR');
+    return formatPrice(converted);
+  };
 
   const handleBook = () => {
     addToCart({
@@ -219,55 +233,58 @@ export const PropertyDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
       {/* Gallery Grid - Force 2 cols on md+ with strict Height Enforcement */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] relative animate-fade-in text-white overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[300px] md:h-[500px] relative animate-fade-in text-white overflow-hidden">
 
         {/* Left: Main Image */}
         <div
           className="relative h-full w-full overflow-hidden group cursor-zoom-in"
-          onClick={() => openLightbox(property.images, 0)}
+          onClick={() => openLightbox(property?.images || [], 0)}
         >
           <img
-            src={(property.images?.[0] && !imageErrors[0]) ? property.images[0] : MAIN_FALLBACK}
+            src={(property?.images?.[0] && !imageErrors[0]) ? property.images[0] : MAIN_FALLBACK}
             className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-105"
             alt="Main"
             onError={() => setImageErrors(prev => ({ ...prev, 0: true }))}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+          {/* Gradient for Desktop Overlay visibility */}
+          <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
 
-          {/* Glassmorphism Title Card */}
+          {/* Desktop Glassmorphism Title Card */}
           <div
-            className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-auto max-w-lg cursor-default"
+            className="hidden md:block absolute bottom-6 left-6 max-w-lg cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white/65 dark:bg-slate-900/65 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-xl border border-white/20">
-              <h1 className="text-2xl md:text-3xl font-serif font-bold text-primary dark:text-white mb-2 leading-tight">
-                {property.title}
+            <div className="bg-white/65 dark:bg-slate-900/65 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/20">
+              <h1 className="text-3xl font-serif font-bold text-primary dark:text-white mb-2 leading-tight">
+                {property?.title || 'Unknown Property'}
               </h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-600 dark:text-slate-300 text-sm font-medium">
-                <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent" /> {property.address || property.location}</span>
-                <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {property.reviewsCount > 0 ? `${(property.rating || 5.0).toFixed(1)} (${property.reviewsCount} reviews)` : <span className="text-sm font-bold bg-teal-600 text-white px-2 py-0.5 rounded-md">New</span>}</span>
+                <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent" /> {property?.address || property?.location || 'No location'}</span>
+                <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {(property?.reviewsCount || 0) > 0 ? `${(property?.rating || 5.0).toFixed(1)} (${property?.reviewsCount} reviews)` : <span className="text-sm font-bold bg-teal-600 text-white px-2 py-0.5 rounded-md">New</span>}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Grid of 4 images */}
-        <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full overflow-hidden">
+        {/* Right: Grid of 4 images (Hidden on Mobile usually, but here checking layout) */}
+        {/* Mobile: Hide grid images, show only main. Desktop: Show grid. */}
+        {/* ACTUALLY: The grid-cols-1 above creates a stack. The 2nd div (grid of 4) sits BELOW the main image on mobile. */}
+        {/* This takes up too much vertical space on mobile. Let's hide the 2nd grid on mobile completely for a cleaner look, or maybe show a row? */}
+        {/* Current implementation: grid-cols-1 means the RIGHT column becomes the BOTTOM row. */}
+        {/* Let's hide the 4-grid on mobile to save space and stick to standard 'Main Image + Dots' or just Main Image. */}
+        <div className="hidden md:grid grid-cols-2 grid-rows-2 gap-2 h-full overflow-hidden">
           {Array.from({ length: 4 }).map((_, i) => {
             const imgIndex = i + 1;
             const isLast = i === 3;
-            // Mixed Source: Real images prioritized, Premium fallback if missing
-            const realImg = property.images?.[imgIndex];
+            const realImg = property?.images?.[imgIndex];
             const displaySrc = (realImg && !imageErrors[imgIndex]) ? realImg : PREMIUM_GRID_IMAGES[i];
-
-            // Allow clicking to open lightbox even if using fallback (it will just show what's available)
-            const remainingCount = Math.max(0, (property.images?.length || 0) - 5);
+            const remainingCount = Math.max(0, (property?.images?.length || 0) - 5);
 
             return (
               <div
                 key={i}
                 className="relative overflow-hidden group h-full cursor-zoom-in bg-slate-200 dark:bg-slate-800"
-                onClick={() => openLightbox(property.images, imgIndex)}
+                onClick={() => openLightbox(property?.images || [], imgIndex)}
               >
                 <img
                   src={displaySrc}
@@ -275,8 +292,6 @@ export const PropertyDetails: React.FC = () => {
                   alt={`Gallery ${i}`}
                   onError={() => setImageErrors(prev => ({ ...prev, [imgIndex]: true }))}
                 />
-
-                {/* Overlay for Last Image */}
                 {isLast && (
                   <div className="absolute inset-0 flex items-center justify-center transition-colors z-10 text-white font-medium cursor-pointer">
                     {remainingCount > 0 ? (
@@ -295,6 +310,34 @@ export const PropertyDetails: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Mobile "View Photos" button overlay on the single image */}
+        <div className="md:hidden absolute bottom-4 right-4 z-10">
+          <button
+            onClick={() => openLightbox(property?.images || [], 0)}
+            className="bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2"
+          >
+            <Camera size={14} />
+            {property?.images?.length || 0} Photos
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Title Section (Below Image) */}
+      <div className="md:hidden px-4 py-5 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 rounded-b-3xl shadow-sm mb-2">
+        <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+          {property?.title || 'Unknown Property'}
+        </h1>
+        <div className="flex flex-col gap-2 text-slate-600 dark:text-slate-400 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent shrink-0" /> <span className="truncate">{property?.address || property?.location || 'No location'}</span></span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 font-medium"><Star size={16} className="fill-orange-400 text-orange-400" /> {(property?.reviewsCount || 0) > 0 ? `${(property?.rating || 5.0).toFixed(1)}` : 'New'}</span>
+            <span className="text-slate-300">•</span>
+            <span className="underline decoration-slate-300 decoration-1 underline-offset-2">{property?.reviewsCount || 0} reviews</span>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8 mt-2 grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -304,31 +347,35 @@ export const PropertyDetails: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <Users size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.guests} Guests</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.guests || 1} Guests</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <DoorOpen size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bedrooms} Bedrooms</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.bedrooms || 1} Bedrooms</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <BedDouble size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.beds} Beds</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.beds || 1} Beds</span>
             </div>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
               <Bath size={24} className="text-accent" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{property.bathrooms} Baths</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.bathrooms || 1} Baths</span>
             </div>
           </div>
 
-          <div className="py-4 border-y border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+          <div className="py-6 border-y border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center sm:justify-between gap-6 px-2 sm:px-0">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400">
-                <User size={24} />
+              <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 overflow-hidden shrink-0">
+                {property?.hostAvatar ? (
+                  <img src={property.hostAvatar} alt={property.hostName} className="w-full h-full object-cover" />
+                ) : (
+                  <User size={24} />
+                )}
               </div>
               <div>
-                <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property.hostName}</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{t('prop.hosted_by')} {property?.hostName || 'Alanya Holidays'}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{t('prop.verified_host')} • {t('prop.superhost')}</p>
-                {property.host && (property.host.email || property.host.phone) && (
+                {property?.host && (property.host.email || property.host.phone) && (
                   <div className="mt-1 text-xs text-slate-400 flex flex-col gap-0.5">
                     {property.host.email && <span>{property.host.email}</span>}
                     {property.host.phone && <span>{property.host.phone}</span>}
@@ -339,35 +386,35 @@ export const PropertyDetails: React.FC = () => {
             <button
               onClick={() => {
                 if (!isAuthenticated) {
-                  setShowLoginModal(true); // Show manual modal 
+                  setShowLoginModal(true);
                   return;
                 }
-                if (property.host_id) {
+                if (property?.host_id) {
                   startConversation(property.id, property.host_id);
                   setShowChat(true);
                 }
               }}
-              className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 shrink-0 ml-auto z-10 ring-2 ring-transparent hover:ring-slate-900 dark:hover:ring-white ring-offset-2"
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 z-10 ring-2 ring-transparent hover:ring-slate-900 dark:hover:ring-white ring-offset-2"
             >
-              <MessageCircle size={18} />
+              <MessageCircle size={20} />
               Contact Host
             </button>
           </div>
 
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('prop.about')}</h3>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{property.description || 'No description provided.'}</p>
+            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{property?.description || 'No description provided.'}</p>
           </div>
 
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('prop.offers')}</h3>
             <div className="grid grid-cols-2 gap-4">
-              {property.amenities.map((am: Amenity, i: number) => (
+              {(property?.amenities || []).map((am: string, i: number) => (
                 <div key={i} className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 text-xs">
                     <CheckCircle size={16} />
                   </div>
-                  {t(am.label)}
+                  {t(am)}
                 </div>
               ))}
             </div>
@@ -390,7 +437,6 @@ export const PropertyDetails: React.FC = () => {
             </div>
           )}
 
-          {/* Reviews Section Integration */}
           {property?.id && <ReviewsSection propertyId={property.id} />}
 
         </div>
@@ -403,7 +449,7 @@ export const PropertyDetails: React.FC = () => {
           >
             <div className="flex justify-between items-end mb-6">
               <div>
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">{displayPrice(property.pricePerNight)}</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{displayPrice(property?.pricePerNight || 0)}</span>
                 <span className="text-slate-500 dark:text-slate-400 text-sm"> {t('featured.night')}</span>
               </div>
               <div
@@ -412,7 +458,7 @@ export const PropertyDetails: React.FC = () => {
                   document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                {property.reviewsCount > 0 ? (
+                {(property?.reviewsCount || 0) > 0 ? (
                   <span className="flex items-center gap-1"><Star size={12} className="fill-slate-900 dark:fill-white" /> {property.reviewsCount} {t('prop.reviews')}</span>
                 ) : (
                   <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-500">New Listing</span>
@@ -425,17 +471,17 @@ export const PropertyDetails: React.FC = () => {
               <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-700">
                 <div className="p-3 border-r border-slate-200 dark:border-slate-700">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
-                  <DatePicker selected={checkIn} onChange={setCheckIn} selectsStart startDate={checkIn} endDate={checkOut} minDate={new Date()} excludeDates={blockedDates} placeholderText={t('date_format')} dateFormat="dd.MM.yyyy" customInput={<DateInputMask className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />} />
+                  <DatePicker selected={checkIn} onChange={setCheckIn} selectsStart startDate={checkIn} endDate={checkOut} minDate={new Date()} excludeDates={blockedDates} placeholderText={t('date_format')} dateFormat="dd.MM.yyyy" customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />} />
                 </div>
                 <div className="p-3">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
-                  <DatePicker selected={checkOut} onChange={setCheckOut} selectsEnd startDate={checkIn} endDate={checkOut} minDate={checkIn || new Date()} excludeDates={blockedDates} placeholderText={t('date_format')} dateFormat="dd.MM.yyyy" customInput={<DateInputMask className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />} />
+                  <DatePicker selected={checkOut} onChange={setCheckOut} selectsEnd startDate={checkIn} endDate={checkOut} minDate={checkIn || new Date()} excludeDates={blockedDates} placeholderText={t('date_format')} dateFormat="dd.MM.yyyy" customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />} />
                 </div>
               </div>
               <div className="p-3">
                 <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.guests_label')}</label>
                 <select id="guests-select" className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 dark:bg-slate-900">
-                  {Array.from({ length: property.guests || 1 }, (_, i) => i + 1).map((num) => (
+                  {Array.from({ length: Number(property?.guests || 1) }, (_, i) => i + 1).map((num) => (
                     <option key={num} value={num}>{num}</option>
                   ))}
                 </select>
@@ -447,7 +493,7 @@ export const PropertyDetails: React.FC = () => {
 
             {/* Price breakdown */}
             <div className="mt-6 space-y-3">
-              <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{displayPrice(property.pricePerNight)} x {nights} nights</span><span>{displayPrice(totalPrice)}</span></div>
+              <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{displayPrice(property?.pricePerNight || 0)} x {nights} nights</span><span>{displayPrice(totalPrice)}</span></div>
               <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{t('prop.cleaning_fee')}</span><span>{displayPrice(40)}</span></div>
               <div className="flex justify-between font-bold text-slate-900 dark:text-white mt-4 pt-4 border-t border-slate-200 dark:border-slate-800"><span>{t('prop.total')}</span><span>{displayPrice(totalPrice + 40)}</span></div>
             </div>
@@ -507,3 +553,5 @@ export const PropertyDetails: React.FC = () => {
     </div>
   );
 };
+
+export default PropertyDetails;

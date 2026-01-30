@@ -66,6 +66,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
             if (isMounted) {
                 setMessages(prev => {
                     if (prev.some(m => m.id === newMsg.id)) return prev;
+
+                    // Deduplication logic: Check if we have a matching optimistic message
+                    const tempMatchIndex = prev.findIndex(m =>
+                        m.id.startsWith('temp-') &&
+                        m.content === newMsg.content &&
+                        m.sender_id === newMsg.sender_id
+                    );
+
+                    if (tempMatchIndex !== -1) {
+                        // Replace the temp message with the real one immediately
+                        const newMessages = [...prev];
+                        newMessages[tempMatchIndex] = newMsg;
+                        return newMessages;
+                    }
+
                     return [...prev, newMsg];
                 });
             }
@@ -110,7 +125,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
         try {
             const realMsg = await sendMessage(content);
             if (realMsg) {
-                setMessages(prev => prev.map(m => m.id === tempId ? realMsg : m));
+                setMessages(prev => {
+                    // Check if realtime subscription already added the message
+                    if (prev.some(m => m.id === realMsg.id)) {
+                        return prev.filter(m => m.id !== tempId);
+                    }
+                    return prev.map(m => m.id === tempId ? realMsg : m);
+                });
             }
         } catch (err) {
             console.error("Failed to send message:", err);

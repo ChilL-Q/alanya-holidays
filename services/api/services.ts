@@ -142,6 +142,22 @@ export const servicesService = {
         if (status !== 'pending') {
             const { data: service } = await supabase.from('services').select('provider_id, title, type').eq('id', id).single();
             if (service) {
+                // 1. Send Email
+                if (status === 'approved' || status === 'rejected') {
+                     supabase.functions.invoke('send-email', {
+                        body: {
+                            type: status === 'approved' ? 'service_approved' : 'service_rejected',
+                            userId: service.provider_id,
+                            data: {
+                                title: service.title,
+                                reason: reason,
+                                link: `${window.location.origin}/service/${id}` 
+                            }
+                        }
+                    }).catch(err => console.error('Failed to send status email:', err));
+                }
+
+                // 2. In-App Notification
                 const typeLabel = service.type ? (service.type.charAt(0).toUpperCase() + service.type.slice(1)) : 'Service';
                 const title = status === 'approved' ? 'Service Approved' : 'Service Rejected';
                 const message = status === 'approved'

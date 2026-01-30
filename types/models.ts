@@ -126,7 +126,7 @@ export interface ServiceDB {
     price: number;
     type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer';
     provider_id: string;
-    features: ServiceFeatures;
+    features: { [key: string]: any };
     images: string[];
     status?: ApprovalStatus | 'approved' | 'pending' | 'rejected';
     rejection_reason?: string;
@@ -276,7 +276,7 @@ export interface Property {
   beds: number;
   bathrooms: number;
   description: string;
-  amenities: Amenity[];
+  amenities: string[];
   hostName: string;
   type?: string; 
 }

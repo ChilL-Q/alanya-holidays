@@ -138,6 +138,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // If email confirmation is enabled in Supabase, user might not be logged in yet.
         // But for this use-case, we assume it might be optional or handled.
+
+        // Trigger Welcome Email
+        if (data.user) {
+            supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'welcome_email',
+                    to: email,
+                    userId: data.user.id,
+                    data: {
+                        name: name,
+                        link: window.location.origin
+                    }
+                }
+            }).catch(e => console.error('Failed to send welcome email', e));
+        }
+
         return { success: true };
     };
 

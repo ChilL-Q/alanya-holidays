@@ -86,6 +86,36 @@ export const chatService = {
             .update({ updated_at: new Date().toISOString() })
             .eq('id', conversationId);
 
+        // Notify recipient via Email (Fire-and-forget)
+        (async () => {
+             try {
+                 const { data: conv } = await supabase
+                    .from('chat_conversations')
+                    .select('guest_id, host_id, property:properties(title)')
+                    .eq('id', conversationId)
+                    .single();
+                 
+                 if (conv) {
+                    const recipientId = user.id === conv.guest_id ? conv.host_id : conv.guest_id;
+                    const senderName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+
+                    await supabase.functions.invoke('send-email', {
+                        body: {
+                            type: 'new_chat_message',
+                            userId: recipientId,
+                            data: {
+                                senderName,
+                                messagePreview: content.length > 50 ? content.substring(0, 50) + '...' : content,
+                                link: `${window.location.origin}/host/inbox`, // Simplify to inbox for now
+                            }
+                        }
+                    });
+                 }
+            } catch (e) {
+                console.error('Failed to send chat notification', e);
+            }
+        })();
+
         return data as ChatMessage;
     },
 

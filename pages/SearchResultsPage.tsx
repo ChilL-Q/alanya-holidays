@@ -60,15 +60,22 @@ export const SearchResultsPage: React.FC = () => {
                                 {totalCount} properties found • {checkIn && checkOut ? `${checkIn} - ${checkOut}` : 'Any dates'} • {guests || 1} guests
                             </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                             {/* Sort Dropdown */}
-                            <div className="relative">
+                            <div className="relative w-full md:w-auto">
                                 <button
                                     onClick={() => setShowSortMenu(!showSortMenu)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
+                                    className="flex w-full items-center justify-between md:justify-start gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
                                 >
-                                    <ArrowUpDown size={16} />
-                                    {sort === 'recommended' ? 'Recommended' : sort === 'newest' ? 'Newest' : sort === 'price_asc' ? 'Price: Low to High' : sort === 'price_desc' ? 'Price: High to Low' : 'Top Rated'}
+                                    <span className="flex items-center gap-2">
+                                        <ArrowUpDown size={16} />
+                                        <span className="hidden sm:inline">
+                                            {sort === 'recommended' ? 'Recommended' : sort === 'newest' ? 'Newest' : sort === 'price_asc' ? 'Price: Low to High' : sort === 'price_desc' ? 'Price: High to Low' : 'Top Rated'}
+                                        </span>
+                                        <span className="sm:hidden">
+                                            {sort === 'recommended' ? 'Rec.' : sort === 'price_asc' ? '€↑' : sort === 'price_desc' ? '€↓' : 'Sort'}
+                                        </span>
+                                    </span>
                                     <ChevronDown size={14} />
                                 </button>
 
@@ -78,7 +85,7 @@ export const SearchResultsPage: React.FC = () => {
                                             className="fixed inset-0 z-10"
                                             onClick={() => setShowSortMenu(false)}
                                         />
-                                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
+                                        <div className="absolute left-0 md:right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
                                             {[
                                                 { label: 'Recommended', value: 'recommended' },
                                                 { label: 'Newest', value: 'newest' },
@@ -102,25 +109,29 @@ export const SearchResultsPage: React.FC = () => {
                                 )}
                             </div>
 
-                            <button
-                                onClick={() => setShowMap(!showMap)}
-                                className={`flex items-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium text-sm ${showMap ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'}`}
-                            >
-                                <MapPin size={16} />
-                                {showMap ? t('search.show_list') : t('search.show_map')}
-                            </button>
-                            <button
-                                onClick={() => setShowFilters(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
-                            >
-                                <Filter size={16} />
-                                Filters
-                                {activeFilterCount > 0 && (
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">
-                                        {activeFilterCount}
-                                    </span>
-                                )}
-                            </button>
+                            <div className="flex items-center gap-2 w-full md:w-auto">
+                                <button
+                                    onClick={() => setShowMap(!showMap)}
+                                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium text-sm ${showMap ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'}`}
+                                >
+                                    <MapPin size={16} />
+                                    <span className="hidden sm:inline">{showMap ? t('search.show_list') : t('search.show_map')}</span>
+                                    <span className="sm:hidden">{showMap ? 'List' : 'Map'}</span>
+                                </button>
+                                <button
+                                    onClick={() => setShowFilters(true)}
+                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
+                                >
+                                    <Filter size={16} />
+                                    <span className="hidden sm:inline">Filters</span>
+                                    <span className="sm:hidden">Filters</span>
+                                    {activeFilterCount > 0 && (
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">
+                                            {activeFilterCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
 

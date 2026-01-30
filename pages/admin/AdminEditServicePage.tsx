@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { db, ServiceData } from '../../services';
+import { supabase } from '../../services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Save, Trash2, Plus, X, Edit2 } from 'lucide-react';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';
@@ -18,7 +19,6 @@ export const AdminEditServicePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [service, setService] = useState<Partial<ServiceData>>({});
-    const [featuresText, setFeaturesText] = useState('');
     const [uploadFiles, setUploadFiles] = useState<File[]>([]);
 
     useEffect(() => {
@@ -40,18 +40,13 @@ export const AdminEditServicePage: React.FC = () => {
                     if (edit) {
                         const merged = { ...data, ...edit.changed_data };
                         setService(merged);
-                        setFeaturesText(JSON.stringify(merged.features || {}, null, 2));
-                        // Also set upload files if any? (Not easily done as they are files not URLs yet in the edit... wait. 
-                        // The edit stores URLs if they were uploaded. 
-                        // Hosts upload images first, then submit URL. So logic matches.)
+                        // Features are now handled directly in service.features
                     } else {
                         toast.error("Edit not found");
                         setService(data);
-                        setFeaturesText(JSON.stringify(data.features || {}, null, 2));
                     }
                 } else {
                     setService(data);
-                    setFeaturesText(JSON.stringify(data.features || {}, null, 2));
                 }
             } catch (error) {
                 console.error('Failed to fetch service', error);
@@ -69,16 +64,6 @@ export const AdminEditServicePage: React.FC = () => {
         if (!id) return;
         setSaving(true);
         try {
-            // Parse features JSON
-            let parsedFeatures = {};
-            try {
-                parsedFeatures = JSON.parse(featuresText);
-            } catch (e) {
-                toast.error('Invalid JSON in Features field');
-                setSaving(false);
-                return;
-            }
-
             // Upload new files
             const newImageUrls = [...(service.images || [])];
             for (const file of uploadFiles) {
@@ -86,7 +71,6 @@ export const AdminEditServicePage: React.FC = () => {
                     const url = await db.uploadImage(file, 'services');
                     newImageUrls.push(url);
                 } catch (err) {
-
                     const url = await db.uploadImage(file, 'properties'); // Fallback
                     newImageUrls.push(url);
                 }
@@ -97,7 +81,7 @@ export const AdminEditServicePage: React.FC = () => {
                 description: service.description,
                 price: parseFloat(service.price?.toString() || '0'),
                 type: service.type,
-                features: parsedFeatures,
+                features: service.features, // Use features directly
                 images: newImageUrls,
                 provider_id: service.provider_id
             };
@@ -107,9 +91,37 @@ export const AdminEditServicePage: React.FC = () => {
                 await db.updateService(id, updates);
                 await db.deleteServiceEdit(editId);
                 toast.success('Update approved and applied');
+
+                // Notify provider about approval/edit integration
+                // We reuse service_updated or a new type. 'service_updated' works well.
+                supabase.functions.invoke('send-email', {
+                    body: {
+                        type: 'service_updated',
+                        userId: service.provider_id,
+                        data: {
+                            title: service.title,
+                            link: `${window.location.origin}/service/${id}`
+                        }
+                    }
+                }).catch(e => console.error('Failed to notify provider', e));
+
             } else {
                 await db.updateService(id, updates);
                 toast.success('Service updated successfully');
+
+                // Notify provider about admin changes
+                if (service.provider_id) {
+                    supabase.functions.invoke('send-email', {
+                        body: {
+                            type: 'service_updated',
+                            userId: service.provider_id,
+                            data: {
+                                title: service.title,
+                                link: `${window.location.origin}/service/${id}`
+                            }
+                        }
+                    }).catch(e => console.error('Failed to notify provider', e));
+                }
             }
 
             navigate('/admin');
@@ -169,10 +181,243 @@ export const AdminEditServicePage: React.FC = () => {
         }));
     };
 
-    if (loading) return <div className="p-8 text-center">Loading...</div>;
+    // Helper to update specific feature fields
+    const updateFeature = (key: string, value: any) => {
+        setService(prev => ({
+            ...prev,
+            features: {
+                ...prev.features,
+                [key]: value
+            }
+        }));
+    };
+
+    // Render Features Form based on Type
+    const renderFeaturesForm = () => {
+        const features = service.features || {};
+
+        // 1. Vehicle Forms (Car, Bike, Transfer)
+        if (['car', 'bike', 'transfer'].includes(service.type || '')) {
+            return (
+                <div className="space-y-4">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white border-b pb-2">Vehicle Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Brand</label>
+                            <input
+                                type="text"
+                                value={features.brand || ''}
+                                onChange={e => updateFeature('brand', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Model</label>
+                            <input
+                                type="text"
+                                value={features.model || ''}
+                                onChange={e => updateFeature('model', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Year</label>
+                            <input
+                                type="text"
+                                value={features.year || ''}
+                                onChange={e => updateFeature('year', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Transmission</label>
+                            <select
+                                value={features.transmission || ''}
+                                onChange={e => updateFeature('transmission', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            >
+                                <option value="">Select...</option>
+                                <option value="Automatic">Automatic</option>
+                                <option value="Manual">Manual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Fuel Type</label>
+                            <select
+                                value={features.fuel || ''}
+                                onChange={e => updateFeature('fuel', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            >
+                                <option value="">Select...</option>
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Electric">Electric</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Seats</label>
+                            <input
+                                type="number"
+                                value={features.seats || ''}
+                                onChange={e => updateFeature('seats', Number(e.target.value))}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 2. Tours & Adventures
+        if (service.type === 'tour') {
+            const itinerary = (features.itinerary || []) as any[];
+
+            const addItineraryItem = () => {
+                updateFeature('itinerary', [...itinerary, { time: '', description: '' }]);
+            };
+
+            const updateItineraryItem = (idx: number, field: string, val: string) => {
+                const newItinerary = [...itinerary];
+                newItinerary[idx] = { ...newItinerary[idx], [field]: val };
+                updateFeature('itinerary', newItinerary);
+            };
+
+            const removeItineraryItem = (idx: number) => {
+                updateFeature('itinerary', itinerary.filter((_, i) => i !== idx));
+            };
+
+            return (
+                <div className="space-y-6">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white border-b pb-2">Tour Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Duration</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. 6 hours"
+                                value={features.duration || ''}
+                                onChange={e => updateFeature('duration', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Group Size</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Up to 10 people"
+                                value={features.groupSize || ''}
+                                onChange={e => updateFeature('groupSize', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Difficulty</label>
+                            <select
+                                value={features.difficulty || ''}
+                                onChange={e => updateFeature('difficulty', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            >
+                                <option value="">Select...</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Hard">Hard</option>
+                                <option value="Extreme">Extreme</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Languages</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. English, Russian, Turkish"
+                                value={features.languages || ''}
+                                onChange={e => updateFeature('languages', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Included (comma separated)</label>
+                            <textarea
+                                rows={2}
+                                value={features.included || ''}
+                                onChange={e => updateFeature('included', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Requirements / What to bring</label>
+                            <textarea
+                                rows={2}
+                                value={features.requirements || ''}
+                                onChange={e => updateFeature('requirements', e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Itinerary Builder */}
+                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">Itinerary Schedule</h4>
+                            <button onClick={addItineraryItem} className="text-sm bg-teal-100 text-teal-700 px-3 py-1 rounded-full font-bold hover:bg-teal-200 transaction-colors">
+                                + Add Step
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            {itinerary.map((item, idx) => (
+                                <div key={idx} className="flex gap-2 items-start">
+                                    <input
+                                        type="text"
+                                        placeholder="Time"
+                                        value={item.time || ''}
+                                        onChange={e => updateItineraryItem(idx, 'time', e.target.value)}
+                                        className="w-24 p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 text-sm"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Description (e.g. Pick up from hotel)"
+                                        value={item.description || ''}
+                                        onChange={e => updateItineraryItem(idx, 'description', e.target.value)}
+                                        className="flex-1 p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 text-sm"
+                                    />
+                                    <button onClick={() => removeItineraryItem(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                            {itinerary.length === 0 && <p className="text-sm text-slate-400 italic text-center py-2">No itinerary steps defined.</p>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 3. Fallback / Generic
+        return (
+            <div className="space-y-4">
+                <h3 className="font-bold text-lg text-slate-800 dark:text-white border-b pb-2">Service Details</h3>
+                <div>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">Key Features (Generic)</label>
+                    <div className="text-xs text-slate-500 mb-2">Since this is a generic type, you can edit raw JSON features below if needed, or we can add specific fields for this type.</div>
+                    <textarea
+                        value={JSON.stringify(features, null, 2)}
+                        onChange={e => {
+                            try {
+                                setService(prev => ({ ...prev, features: JSON.parse(e.target.value) }));
+                            } catch { }
+                        }}
+                        rows={6}
+                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs"
+                    />
+                </div>
+            </div>
+        );
+    };
+
+    if (loading) return <div className="p-8 text-center text-slate-500">Loading service data...</div>;
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8 pb-32">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
@@ -288,18 +533,9 @@ export const AdminEditServicePage: React.FC = () => {
                         />
                     </div>
 
-                    {/* Features JSON */}
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Features (JSON)</label>
-                            <span className="text-xs text-slate-500">Edit raw JSON for features</span>
-                        </div>
-                        <textarea
-                            value={featuresText}
-                            onChange={e => setFeaturesText(e.target.value)}
-                            rows={8}
-                            className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-300 font-mono text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                        />
+                    {/* Dynamic Features Form */}
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                        {renderFeaturesForm()}
                     </div>
 
                     {/* Images */}

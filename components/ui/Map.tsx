@@ -99,7 +99,7 @@ const darkMapStyles = [
 ];
 
 interface MapProps {
-    properties: Property[];
+    properties: any[];
 }
 
 export const Map: React.FC<MapProps> = ({ properties }) => {

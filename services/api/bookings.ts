@@ -28,14 +28,16 @@ export const bookingsService = {
         
         // Trigger Email Notification (Non-blocking)
         const bookingId = result.data;
+        const itemTypeLabel = data.type === 'service' ? 'Service' : 'Property';
+
         supabase.functions.invoke('send-email', {
             body: {
                 type: 'booking_created',
-                userId: data.user_id, // Guest receives confirmation they asked? Or maybe Host receives request?
-                // Actually, let's send to Guest confirming receipt
+                userId: data.user_id, 
                 data: {
-                    userName: 'Guest', // We might need to fetch profile if we want name, or just use generic
-                    itemTitle: data.title || 'Property', // meaningful title needed
+                    userName: 'Guest', 
+                    itemTitle: data.title || 'Item', 
+                    itemTypeLabel: itemTypeLabel,
                     checkIn: data.check_in,
                     checkOut: data.check_out,
                     totalPrice: data.total_price,
@@ -46,17 +48,24 @@ export const bookingsService = {
         }).catch(err => console.error('Failed to send email:', err));
 
         // Notify Host (New Feature)
-        // Fetch property host_id if not available
-        supabase.from('properties').select('host_id, title').eq('id', data.item_id || data.id).single()
-            .then(({ data: property }) => {
-                if (property && property.host_id) {
+        // Correctly identify table based on type
+        const table = data.type === 'service' ? 'services' : 'properties';
+        const ownerParams = data.type === 'service' ? 'provider_id, title' : 'host_id, title';
+
+        supabase.from(table).select(ownerParams).eq('id', data.item_id || data.id).single()
+            .then(({ data: item }) => {
+                const itemData = item as any;
+                const hostId = itemData ? (itemData.host_id || itemData.provider_id) : null;
+                
+                if (hostId) {
                     supabase.functions.invoke('send-email', {
                         body: {
                             type: 'booking_request_host',
-                            userId: property.host_id,
+                            userId: hostId,
                             data: {
                                 guestName: 'A Guest', // Ideally fetch user name
-                                itemTitle: property.title,
+                                itemTitle: itemData.title,
+                                itemTypeLabel: itemTypeLabel,
                                 checkIn: data.check_in,
                                 checkOut: data.check_out,
                                 totalPrice: data.total_price,
@@ -256,6 +265,7 @@ export const bookingsService = {
                 
                 const itemTitle = property?.title || service?.title || 'Item';
                 const hostId = property?.host_id || service?.provider_id;
+                const itemTypeLabel = property ? 'Property' : (service ? 'Service' : 'Item');
 
                 if (status === 'confirmed') {
                     type = 'booking_confirmed';
@@ -276,6 +286,7 @@ export const bookingsService = {
                             userId: currentBooking.user_id,
                             data: {
                                 itemTitle: itemTitle,
+                                itemTypeLabel: itemTypeLabel,
                                 checkIn: currentBooking.check_in,
                                 checkOut: currentBooking.check_out,
                                 reason: reason, // For rejection
@@ -284,11 +295,7 @@ export const bookingsService = {
                         }
                     }).catch(err => console.error('Failed to send status email:', err));
 
-                    // Notify Host if Cancelled (by Guest or System? usually Admin/Host cancels... 
-                    // if Host cancels confirmed booking, they know. 
-                    // if Guest cancels, this function is called? 
-                    // This function is generic. Let's assume if status becomes cancelled, we notify host too just in case, unless it was rejection)
-                    
+                    // Notify Host if Cancelled
                     if (status === 'cancelled' && type === 'booking_cancelled' && hostId) {
                         supabase.functions.invoke('send-email', {
                             body: {
@@ -297,6 +304,7 @@ export const bookingsService = {
                                 data: {
                                     guestName: 'Guest', 
                                     itemTitle: itemTitle,
+                                    itemTypeLabel: itemTypeLabel,
                                     checkIn: currentBooking.check_in,
                                     checkOut: currentBooking.check_out,
                                     link: `${window.location.origin}/host/bookings`
