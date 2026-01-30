@@ -99,7 +99,10 @@ export const ListProperty: React.FC = () => {
         if (step === 0 && !formData.propertyType) return toast.error(t('list_prop.error.type'));
         if (step === 1 && !formData.location) return toast.error(t('list_prop.error.location'));
         if (step === 4 && files.length < 1) return toast.error(t('list_prop.error.photo'));
-        if (step === 5 && !formData.title) return toast.error(t('list_prop.error.title'));
+        if (step === 5) {
+            if (!formData.title || formData.title.length < 5) return toast.error(t('Title must be at least 5 characters'));
+            if (!formData.description || formData.description.length < 20) return toast.error(t('Description must be at least 20 characters'));
+        }
 
         if (step < STEPS.length - 1) {
             setStep(step + 1);
@@ -144,10 +147,7 @@ export const ListProperty: React.FC = () => {
                 bedrooms: formData.bedrooms,
                 beds: formData.beds,
                 bathrooms: formData.bathrooms,
-                amenities: formData.amenities.map(label => {
-                    const found = AMENITIES_LIST.find(a => a.label === label);
-                    return { label, icon: found?.icon || 'Check' }; // Fallback icon
-                }),
+                amenities: formData.amenities, // Send array of strings directly as per schema
                 images: imageUrls,
                 host_id: user.id,
 

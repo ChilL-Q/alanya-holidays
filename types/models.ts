@@ -34,7 +34,7 @@ export interface PropertyDB {
     latitude?: number;
     longitude?: number;
     type: PropertyType | 'villa' | 'apartment'; // Support both for transition
-    amenities: Amenity[];
+    amenities: string[];
     images: string[];
     host_id: string;
     rental_license?: string;
