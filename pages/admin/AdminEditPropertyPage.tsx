@@ -374,22 +374,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        {t('prop_form.label_location')}
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            name="location"
-                                            required
-                                            value={formData.location}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                        <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                    </div>
-                                </div>
+
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">

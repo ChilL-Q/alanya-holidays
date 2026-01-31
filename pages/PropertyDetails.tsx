@@ -41,13 +41,7 @@ const DateInput = React.forwardRef<HTMLInputElement, any>((props, ref) => (
 
 
 
-// CURATED FALLBACK IMAGES
-const PREMIUM_GRID_IMAGES = [
-  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800&auto=format&fit=crop', // Modern Kitchen
-  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&auto=format&fit=crop', // Bright Living Room
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop', // Master Bedroom
-  'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?w=800&auto=format&fit=crop', // Elegant Interior
-];
+
 
 // Fallback for Main image if broken
 const MAIN_FALLBACK = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&auto=format&fit=crop';
@@ -233,8 +227,9 @@ export const PropertyDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
-      {/* Gallery Grid - Force 2 cols on md+ with strict Height Enforcement */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[300px] md:h-[500px] relative animate-fade-in text-white overflow-hidden">
+      {/* Gallery Grid - Dynamic Layout */}
+      <div className={`grid gap-2 h-[300px] md:h-[500px] relative animate-fade-in text-white overflow-hidden ${(property?.images?.length || 0) === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
+        }`}>
 
         {/* Left: Main Image */}
         <div
@@ -267,52 +262,51 @@ export const PropertyDetails: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Grid of 4 images (Hidden on Mobile usually, but here checking layout) */}
-        {/* Mobile: Hide grid images, show only main. Desktop: Show grid. */}
-        {/* ACTUALLY: The grid-cols-1 above creates a stack. The 2nd div (grid of 4) sits BELOW the main image on mobile. */}
-        {/* This takes up too much vertical space on mobile. Let's hide the 2nd grid on mobile completely for a cleaner look, or maybe show a row? */}
-        {/* Current implementation: grid-cols-1 means the RIGHT column becomes the BOTTOM row. */}
-        {/* Let's hide the 4-grid on mobile to save space and stick to standard 'Main Image + Dots' or just Main Image. */}
-        <div className="hidden md:grid grid-cols-2 grid-rows-2 gap-2 h-full overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => {
-            const imgIndex = i + 1;
-            const isLast = i === 3;
-            const realImg = property?.images?.[imgIndex];
-            const displaySrc = (realImg && !imageErrors[imgIndex]) ? realImg : PREMIUM_GRID_IMAGES[i];
-            const remainingCount = Math.max(0, (property?.images?.length || 0) - 5);
+        {/* Right: Grid of Extra Images (Hide if only 1 image) */}
+        {(property?.images?.length || 0) > 1 && (
+          <div className={`hidden md:grid gap-2 h-full overflow-hidden ${(property?.images?.length === 2) ? 'grid-cols-1' :
+            (property?.images?.length === 3) ? 'grid-cols-1 grid-rows-2' :
+              'grid-cols-2 grid-rows-2'
+            }`}>
+            {property?.images?.slice(1, 5).map((img, i) => {
+              const imgIndex = i + 1;
+              const isLast = i === (Math.min(4, (property?.images?.length || 0) - 1) - 1);
+              const remainingCount = Math.max(0, (property?.images?.length || 0) - 5);
 
-            return (
-              <div
-                key={i}
-                className="relative overflow-hidden group h-full cursor-zoom-in bg-slate-200 dark:bg-slate-800"
-                onClick={() => openLightbox(property?.images || [], imgIndex)}
-              >
-                <img
-                  src={displaySrc}
-                  className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-105"
-                  alt={`Gallery ${i}`}
-                  onError={() => setImageErrors(prev => ({ ...prev, [imgIndex]: true }))}
-                />
-                {isLast && (
-                  <div className="absolute inset-0 flex items-center justify-center transition-colors z-10 text-white font-medium cursor-pointer">
-                    {remainingCount > 0 ? (
+              return (
+                <div
+                  key={i}
+                  className="relative overflow-hidden group h-full w-full cursor-zoom-in bg-slate-200 dark:bg-slate-800"
+                  onClick={() => openLightbox(property?.images || [], imgIndex)}
+                >
+                  <img
+                    src={img}
+                    className="w-full h-full object-cover block transition-transform duration-700 group-hover:scale-105"
+                    alt={`Gallery ${i}`}
+                    onError={() => setImageErrors(prev => ({ ...prev, [imgIndex]: true }))}
+                  />
+                  {isLast && remainingCount > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center transition-colors z-10 text-white font-medium cursor-pointer">
                       <div className="w-full h-full bg-black/50 hover:bg-black/60 flex items-center justify-center text-lg">
                         +{remainingCount} more
                       </div>
-                    ) : (
-                      <div className="w-full h-full bg-black/30 hover:bg-black/50 flex items-center justify-center gap-2">
+                    </div>
+                  )}
+                  {isLast && remainingCount === 0 && i === 3 && (
+                    <div className="absolute inset-0 flex items-center justify-center transition-colors z-10 text-white font-medium cursor-pointer opacity-0 group-hover:opacity-100">
+                      <div className="w-full h-full bg-black/20 flex items-center justify-center gap-2">
                         <Camera size={20} />
                         {t('prop.view_photos')}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Mobile "View Photos" button overlay on the single image */}
+        {/* Mobile "View Photos" button overlay */}
         <div className="md:hidden absolute bottom-4 right-4 z-10">
           <button
             onClick={() => openLightbox(property?.images || [], 0)}
