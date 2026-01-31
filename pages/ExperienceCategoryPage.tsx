@@ -158,7 +158,13 @@ export const ExperienceCategoryPage: React.FC = () => {
                             <div
                                 key={service.id}
                                 className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
-                                onClick={() => navigate(`/book-tour/${service.service_ref || service.id}`)} // Fixed: Use friendly ID
+                                onClick={() => {
+                                    if (category === 'wellness') {
+                                        navigate(`/book-wellness/${service.service_ref || service.id}`);
+                                    } else {
+                                        navigate(`/book-tour/${service.service_ref || service.id}`);
+                                    }
+                                }}
                             >
                                 <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     <img
@@ -214,6 +220,6 @@ export const ExperienceCategoryPage: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };

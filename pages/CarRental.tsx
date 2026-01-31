@@ -1,44 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Check, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useLightbox } from '../context/LightboxContext';
-import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../services';
-import { useNavigate } from 'react-router-dom';
-
-import { useCarAggregation } from '../hooks/useCarAggregation';
-
-// CarGroup interface is now in the hook file, but we can re-export or just rely on inference
-
+import { useCars } from '../hooks/useCars';
+import { CarCard } from '../components/services/CarCard';
 
 export const CarRental: React.FC = () => {
     const { t } = useLanguage();
-    const { openLightbox } = useLightbox();
-    const { convertPrice, formatPrice } = useCurrency();
-    const navigate = useNavigate();
-
-    const [loading, setLoading] = useState(true);
-    const [rawServices, setRawServices] = useState<ServiceData[]>([]);
-
-    useEffect(() => {
-        const fetchCars = async () => {
-            try {
-                // @ts-ignore
-                const { data: services } = await db.getServices('car', 1, 100);
-                if (services) setRawServices(services);
-            } catch (err) {
-                console.error('Failed to fetch cars', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCars();
-    }, []);
-
-    const carGroups = useCarAggregation(rawServices);
-
-    const allCarImages = carGroups.map(c => ({ src: c.image, title: c.title }));
+    const { carGroups, loading } = useCars();
 
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -87,50 +55,8 @@ export const CarRental: React.FC = () => {
                     <div className="text-center py-20 text-slate-500">Loading fleet...</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {carGroups.map((car, index) => (
-                            <div
-                                key={car.id}
-                                className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 group cursor-pointer"
-                                onClick={() => navigate(`/services/car-rental/${car.id}`, { state: { brand: car.brand, model: car.model } })}
-                            >
-                                <div className="aspect-[4/3] overflow-hidden relative">
-                                    <img
-                                        src={car.image}
-                                        alt={car.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                    <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
-                                        {car.year}
-                                    </div>
-                                    {car.count > 1 && (
-                                        <div className="absolute top-3 left-3 bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                            {car.count} Offers
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-5">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{car.title}</h3>
-                                        <div className="text-right">
-                                            <div className="text-sm text-slate-500">from</div>
-                                            <div className="text-xl font-bold text-teal-600">
-                                                {formatPrice(convertPrice(car.minPrice, 'EUR'))}
-                                            </div>
-                                            <div className="text-xs text-slate-500">{t('car.per_day')}</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 mb-6">
-                                        {car.features.map((feature, i) => (
-                                            <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
-                                                {feature}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:opacity-90 transition-opacity">
-                                        {t('car.book')}
-                                    </button>
-                                </div>
-                            </div>
+                        {carGroups.map((car) => (
+                            <CarCard key={car.id} car={car} />
                         ))}
                     </div>
                 )}
@@ -138,3 +64,4 @@ export const CarRental: React.FC = () => {
         </div>
     );
 };
+

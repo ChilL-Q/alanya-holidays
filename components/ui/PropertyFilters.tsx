@@ -113,6 +113,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     name="minPrice"
                                     value={filters.priceRange[0] || ''}
                                     onChange={(e) => handlePriceChange(0, e.target.value)}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     placeholder="0"
                                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                                 />
@@ -125,6 +126,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     name="maxPrice"
                                     value={filters.priceRange[1] || ''}
                                     onChange={(e) => handlePriceChange(1, e.target.value)}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     placeholder="Any"
                                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                                 />

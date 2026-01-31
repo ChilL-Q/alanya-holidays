@@ -8,14 +8,14 @@ import { CategoryTabs } from '../components/services/CategoryTabs';
 
 
 
-import { db } from '../services';
+import { useServicePrices } from '../hooks/useServicePrices';
 
 export const ServicesPage: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const { category } = useParams<{ category: string }>();
     const [activeCategory, setActiveCategory] = useState(category || 'transport');
-    const [minPrices, setMinPrices] = useState<Record<string, number>>({});
+    const { minPrices } = useServicePrices();
 
     // Sync activeCategory with URL params
     React.useEffect(() => {
@@ -26,34 +26,6 @@ export const ServicesPage: React.FC = () => {
             setActiveCategory('transport');
         }
     }, [category]);
-
-    // Fetch minimum prices for categories
-    React.useEffect(() => {
-        const fetchPrices = async () => {
-            try {
-                // Fetch tours to calculate min prices for experiences
-                const { data } = await db.getServices('tour', 1, 100);
-                if (data) {
-                    const prices: Record<string, number> = {};
-                    const subcategories = ['water', 'safari', 'air', 'land', 'atv'];
-
-                    subcategories.forEach(sub => {
-                        const servicesInSub = data.filter(s => s.features?.subcategory === sub && s.type === 'tour');
-                        if (servicesInSub.length > 0) {
-                            const minPrice = Math.min(...servicesInSub.map(s => s.price));
-                            prices[sub] = minPrice;
-                        }
-                    });
-                    setMinPrices(prices);
-                }
-            } catch (err) {
-                console.error('Failed to fetch prices', err);
-                // @ts-ignore
-                if (err?.message) console.error('Error details:', err.message);
-            }
-        };
-        fetchPrices();
-    }, []);
 
     // Update URL when category changes
     const handleCategorySelect = (id: string) => {
@@ -194,7 +166,7 @@ export const ServicesPage: React.FC = () => {
                             icon={Heart}
                             rawPrice={40}
                             actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences')}
+                            onClick={() => navigate('/experiences/wellness')}
                         />
                         <ServiceCard
                             title={t('services.health.dental')}

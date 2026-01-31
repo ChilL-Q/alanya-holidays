@@ -385,6 +385,7 @@ export const ListProperty: React.FC = () => {
                                                     name="price"
                                                     value={formData.price}
                                                     onChange={handleChange}
+                                                    onWheel={(e) => e.currentTarget.blur()}
                                                     className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-3xl"
                                                 />
                                             </div>
@@ -400,6 +401,7 @@ export const ListProperty: React.FC = () => {
                                                     name="cleaningFee"
                                                     value={formData.cleaningFee}
                                                     onChange={handleChange}
+                                                    onWheel={(e) => e.currentTarget.blur()}
                                                     placeholder="0"
                                                     className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-xl"
                                                 />

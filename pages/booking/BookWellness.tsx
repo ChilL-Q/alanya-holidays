@@ -53,7 +53,7 @@ export const BookWellness: React.FC = () => {
     const handleContact = () => {
         if (!service) return;
 
-        const formatDate = (d: Date) => d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : 'Dates to be discussed';
+        const formatDate = (d: Date) => d ? `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}` : 'Dates to be discussed';
         const dateStr = date ? formatDate(date) : '';
 
         // Prioritize service specific whatsapp, otherwise fallback (though generic fallback might not be ideal for health)

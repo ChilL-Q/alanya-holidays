@@ -165,13 +165,7 @@ export const HostDashboard: React.FC = () => {
 
                 {/* Quick Actions / Properties */}
                 <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-                        <h3 className="font-bold text-lg mb-2">{t('host.sync.title')}</h3>
-                        <p className="text-indigo-100 text-sm mb-4">{t('host.sync.desc')}</p>
-                        <Button variant="secondary" size="sm" fullWidth className="text-indigo-600 hover:bg-indigo-50">
-                            {t('host.sync.btn')}
-                        </Button>
-                    </div>
+
 
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
                         <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('host.listings.title')}</h3>

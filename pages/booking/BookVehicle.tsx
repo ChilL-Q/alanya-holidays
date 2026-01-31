@@ -201,7 +201,7 @@ export const BookVehicle: React.FC = () => {
                                 onClick={() => {
                                     if (!service || !startDate || !endDate || days <= 0) return;
 
-                                    const formatDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                    const formatDate = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
                                     const startDateStr = formatDate(startDate);
                                     const endDateStr = formatDate(endDate);
 

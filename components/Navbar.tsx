@@ -3,81 +3,37 @@ import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, Sun, Moon, LogOut, 
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { useLanguage, Language } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
-import { useCurrency, Currency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { NotificationBell } from './ui/NotificationBell';
 import { NavLink } from './navbar/NavLink';
 import { NavIndicator } from './navbar/NavIndicator';
 import { MobileMenu } from './navbar/MobileMenu';
+import { UserDropdown } from './navbar/UserDropdown';
+import { DesktopNav } from './navbar/DesktopNav';
+import { NavbarActions } from './navbar/NavbarActions';
+import { ListPropertyAction } from './navbar/ListPropertyAction';
 
 export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
-  const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
-  const { currency, setCurrency } = useCurrency();
-  const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { openLogin, openRegister } = useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isListMenuOpen, setIsListMenuOpen] = useState(false);
-
-  const langRef = useRef<HTMLDivElement>(null);
-  const currencyRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  const listMenuRef = useRef<HTMLDivElement>(null);
 
+  // Handle Mobile Menu and Profile dropdown clicks
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(event.target as Node)) {
-        setIsLangOpen(false);
-      }
-      if (currencyRef.current && !currencyRef.current.contains(event.target as Node)) {
-        setIsCurrencyOpen(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
-      if (listMenuRef.current && !listMenuRef.current.contains(event.target as Node)) {
-        setIsListMenuOpen(false);
-      }
     };
-
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMobileMenuOpen(false);
-        setIsLangOpen(false);
-        setIsCurrencyOpen(false);
-        setIsProfileOpen(false);
-        setIsListMenuOpen(false);
-      }
-    };
-
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('keydown', handleEsc);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('keydown', handleEsc);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleLanguageSelect = (lang: Language) => {
-    setLanguage(lang);
-    setIsLangOpen(false);
-  };
-
-  const handleCurrencySelect = (curr: Currency) => {
-    setCurrency(curr);
-    setIsCurrencyOpen(false);
-  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 transition-colors supports-[backdrop-filter]:bg-white/60">
@@ -96,125 +52,16 @@ export const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2 relative bg-slate-50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200 dark:border-slate-700/50 backdrop-blur-sm mx-4">
-            <NavIndicator />
-            <NavLink to="/stays" label={t('nav.stays')} />
-            <NavLink to="/services" label={t('nav.services')} />
-            <NavLink to="/shop" label={t('shop')} />
-            <NavLink to="/zero-fees" label={t('value.zero_fees.title')} isAccent />
-          </div>
+          <DesktopNav />
 
           {/* Right Section */}
           <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
 
             {/* Utilities Group (Desktop) */}
-            <div className="hidden lg:flex items-center gap-1 bg-slate-50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200 dark:border-slate-700/50">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-orange-500 dark:hover:text-yellow-400 transition-all shadow-sm hover:shadow"
-              >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
-
-              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-
-              {/* Currency */}
-              <div className="relative" ref={currencyRef}>
-                <button
-                  onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow border border-transparent hover:border-slate-100 dark:hover:border-slate-600"
-                >
-                  {currency}
-                  <ChevronDown size={12} className={`opacity-50 transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {/* ... Currency Dropdown ... */}
-                {isCurrencyOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                    <div className="py-1">
-                      {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
-                        <button
-                          key={curr}
-                          onClick={() => handleCurrencySelect(curr)}
-                          className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-between ${currency === curr ? 'text-teal-600 bg-teal-50 dark:bg-teal-900/10' : 'text-slate-600 dark:text-slate-400'}`}
-                        >
-                          {curr}
-                          {currency === curr && <Check size={12} />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Language */}
-              <div className="relative" ref={langRef}>
-                <button
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow border border-transparent hover:border-slate-100 dark:hover:border-slate-600"
-                >
-                  <Globe size={14} className="opacity-70" />
-                  <span className="uppercase">{language}</span>
-                </button>
-                {/* ... Lang Dropdown ... */}
-                {isLangOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-40 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                    <div className="py-1">
-                      {[
-                        { code: 'en', label: 'English' },
-                        { code: 'ru', label: 'Русский' },
-                        { code: 'tr', label: 'Türkçe' },
-                        { code: 'ar', label: 'العربية' }
-                      ].map((l) => (
-                        <button
-                          key={l.code}
-                          onClick={() => handleLanguageSelect(l.code as Language)}
-                          className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-between ${language === l.code ? 'text-teal-600 bg-teal-50 dark:bg-teal-900/10' : 'text-slate-600 dark:text-slate-400'}`}
-                        >
-                          {l.label}
-                          {language === l.code && <Check size={12} />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <NavbarActions />
 
             {/* List Property CTA (Desktop) */}
-            <div className="relative hidden md:block" ref={listMenuRef}>
-              <button
-                onClick={() => setIsListMenuOpen(!isListMenuOpen)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
-              >
-                <Plus size={16} className="text-teal-400" />
-                <span>{t('nav.list_property')}</span>
-              </button>
-              {/* List Dropdown */}
-              {isListMenuOpen && (
-                <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                  <div className="p-2 space-y-1">
-                    <Link to="/list-property" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group">
-                      <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-lg flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-teal-900/50 transition-colors">
-                        <Home size={20} />
-                      </div>
-                      <div>
-                        <span className="block text-sm font-bold text-slate-900 dark:text-white">List a Property</span>
-                        <span className="block text-xs text-slate-500 font-medium">Earn money as a host</span>
-                      </div>
-                    </Link>
-                    <Link to="/add-service" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group">
-                      <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors">
-                        <Car size={20} />
-                      </div>
-                      <div>
-                        <span className="block text-sm font-bold text-slate-900 dark:text-white">List a Service</span>
-                        <span className="block text-xs text-slate-500 font-medium">Cars, tours, and more</span>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ListPropertyAction />
 
             {/* User Actions */}
             <div className="flex items-center gap-1 sm:gap-2 pl-2">
@@ -269,84 +116,7 @@ export const Navbar: React.FC = () => {
                   </div>
                 </button>
 
-                {/* Dropdown (Profile + Auth Actions) - DESKTOP ONLY NOW */}
-                {isProfileOpen && (
-                  <div className="absolute top-full mt-3 right-0 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50 hidden md:block">
-
-                    {/* User Header (Auth Only) */}
-                    {isAuthenticated && user && (
-                      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-                      </div>
-                    )}
-
-                    {/* Guest Actions */}
-                    {!isAuthenticated && (
-                      <div className="p-2 border-b border-slate-100 dark:border-slate-800">
-                        <button
-                          onClick={() => { openLogin(); setIsProfileOpen(false); }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                        >
-                          Login
-                        </button>
-                        <button
-                          onClick={() => { openRegister(); setIsProfileOpen(false); }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
-                        >
-                          Register
-                        </button>
-                      </div>
-                    )}
-
-                    {/* No Mobile Links here anymore - they are in MobileMenu */}
-
-                    <div className="p-2">
-                      {isAuthenticated && (
-                        <>
-                          <Link to="/inbox" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                            <div className="relative">
-                              <div className="text-slate-400">
-                                {/* Icon placeholder if needed, User uses Lucide icons */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-inbox"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>
-                              </div>
-                            </div>
-                            {t('nav.messages') || 'Messages'}
-                          </Link>
-                          <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                            <User size={16} className="text-slate-400" />
-                            {t('nav.profile')}
-                          </Link>
-                          {user?.role === 'admin' && (
-                            <Link to="/admin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                              <LayoutDashboard size={16} className="text-purple-600" />
-                              Admin Panel
-                            </Link>
-                          )}
-                          {(user?.role === 'host' || user?.role === 'admin') && (
-                            <Link to="/host/dashboard" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                              <LayoutDashboard size={16} className="text-teal-500" />
-                              Host Dashboard
-                            </Link>
-                          )}
-                          <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
-                          <button onClick={() => { logout(); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">
-                            <LogOut size={16} />
-                            {t('auth.logout')}
-                          </button>
-                        </>
-                      )}
-
-                      {!isAuthenticated && (
-                        <div className="md:hidden">
-                          {/* Mobile Auth Actions if accessed via ProfileDropdown (unlikely as we use MobileMenu for guests, but nice fallback) */}
-                          <button onClick={() => { openLogin(); setIsProfileOpen(false); }} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">Login</button>
-                          <button onClick={() => { openRegister(); setIsProfileOpen(false); }} className="w-full text-left px-3 py-2 text-sm font-bold text-teal-600">Register</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <UserDropdown isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
               </div>
 
             </div>
@@ -356,6 +126,9 @@ export const Navbar: React.FC = () => {
       </div>
 
       <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+
+      {/* Host Upgrade Modal */}
+      {/* Host Upgrade Modal - Now inside ListPropertyAction */}
     </nav>
   );
 };

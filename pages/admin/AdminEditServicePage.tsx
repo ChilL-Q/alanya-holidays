@@ -261,6 +261,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="number"
                                 value={features.seats || ''}
                                 onChange={e => updateFeature('seats', Number(e.target.value))}
+                                onWheel={(e) => e.currentTarget.blur()}
                                 className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
                             />
                         </div>

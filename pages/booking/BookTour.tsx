@@ -56,13 +56,13 @@ export const BookTour: React.FC = () => {
     if (loading) return <div className="pt-32 text-center">Loading...</div>;
     if (!service) return <div className="pt-32 text-center">Tour not found</div>;
 
-    const isWhatsAppBooking = service.features?.subcategory === 'atv' || service.title.toLowerCase().includes('atv') || service.title.toLowerCase().includes('buggy');
+    const isWhatsAppBooking = true;
 
 
     const handleBook = () => {
         if (!service || !date) return;
 
-        const formatDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const formatDate = (d: Date) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
         const dateStr = formatDate(date);
 
         if (isWhatsAppBooking) {
@@ -128,7 +128,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                 {service.features?.groupSize && (
                                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                                         <Users size={16} className="text-teal-500" />
-                                        <span>Max {service.features.groupSize}</span>
+                                        <span>Group Size: {service.features.groupSize}</span>
                                     </div>
                                 )}
                             </div>
@@ -233,18 +233,16 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                 </div>
                             </div>
 
-                            {!isWhatsAppBooking && (
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2">
-                                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                                        <span>{formatPrice(convertPrice(service.price, 'EUR'))} x {guests} {guests === 1 ? t('prop.guest_option', { count: 1 }) : t('prop.guests_option', { count: guests })}</span>
-                                        <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-600">
-                                        <span>{t('prop.total') || 'Total'}</span>
-                                        <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
-                                    </div>
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2">
+                                <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                                    <span>{formatPrice(convertPrice(service.price, 'EUR'))} x {guests === 1 ? t('prop.guest_option', { count: 1 }) : t('prop.guests_option', { count: guests })}</span>
+                                    <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
                                 </div>
-                            )}
+                                <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-600">
+                                    <span>{t('prop.total') || 'Total'}</span>
+                                    <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
+                                </div>
+                            </div>
 
                             <button
                                 onClick={handleBook}

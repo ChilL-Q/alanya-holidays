@@ -496,7 +496,7 @@ export const propertiesService = {
                 throw softError; 
             }
             
-            console.log('Property soft-deleted successfully');
+
             return; 
         }
     },

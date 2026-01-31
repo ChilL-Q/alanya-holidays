@@ -9,6 +9,7 @@ export interface CarGroup {
     model: string;
     year: string;
     minPrice: number;
+    maxPrice: number;
     image: string;
     count: number;
     features: string[];
@@ -34,8 +35,9 @@ export const useCarAggregation = (services: ServiceData[]) => {
                     title: title,
                     brand: brand,
                     model: model,
-                    year: features.year || '',
+                    year: String(features.year || ''),
                     minPrice: price,
+                    maxPrice: price,
                     image: image,
                     count: 1,
                     features: [features.transmission, features.fuel].filter(Boolean) as string[]
@@ -45,10 +47,10 @@ export const useCarAggregation = (services: ServiceData[]) => {
                 if (price < groups[key].minPrice) {
                     groups[key].minPrice = price;
                 }
-                // Update image if we have a better one (e.g. from utility vs fallback)
-                // But getCarImage already handles priority.
-                // We just want to ensure we don't overwrite a good image with a bad one if logic changes,
-                // but since key is same, image should be same.
+                if (price > groups[key].maxPrice) {
+                    groups[key].maxPrice = price;
+                }
+                // Update image logic...
                 groups[key].image = image;
             }
         });

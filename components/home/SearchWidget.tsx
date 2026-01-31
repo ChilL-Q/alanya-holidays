@@ -121,6 +121,7 @@ export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocatio
                     min={1}
                     value={guests}
                     onChange={(e) => setGuests(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-full h-12 md:h-14 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-none focus:ring-2 focus:ring-primary outline-none text-slate-700 dark:text-slate-200 font-medium placeholder-slate-400 dark:placeholder-slate-500 transition-colors text-sm md:text-base"
                 />
             </div>

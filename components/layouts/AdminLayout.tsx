@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -33,6 +33,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/properties', label: 'Properties', icon: Home },
         { path: '/admin/services', label: 'Fleet & Services', icon: Car },
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
+        { path: '/shop', label: 'Shop', icon: ShoppingBag },
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
@@ -56,7 +57,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         </div>
                         <div>
                             <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-none">Admin</h1>
-                            <span className="text-xs text-slate-500 font-medium">Panel 3.0</span>
+                            <span className="text-xs text-slate-500 font-medium">Panel</span>
                         </div>
                     </div>
                     <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-slate-400">

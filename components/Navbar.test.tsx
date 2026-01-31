@@ -129,6 +129,10 @@ describe('Navbar', () => {
         expect(screen.getByText('Test User')).toBeDefined();
         expect(screen.getByText('test@test.com')).toBeDefined();
         expect(screen.getByText('auth.logout')).toBeDefined();
+
+        // Verify "List Property" / "Upgrade" is NOT in the dropdown, but IS in the header (count = 1)
+        expect(screen.queryByText('nav.list_property')).toBeNull();
+        expect(screen.getAllByText('profile.upgrade_btn')).toHaveLength(1);
     });
 
     it('toggles currency dropdown', () => {

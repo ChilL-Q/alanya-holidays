@@ -368,36 +368,6 @@ export const AddService: React.FC = () => {
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     />
                                 </div>
-                                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 mt-2">
-                                    <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg text-green-700 dark:text-green-300">
-                                        <Banknote size={24} />
-                                    </div>
-                                    <label className="flex-grow cursor-pointer">
-                                        <span className="block font-bold text-slate-900 dark:text-white">Pay Cash on Arrival</span>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400">Allow customers to pay when they arrive.</span>
-                                    </label>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.payOnArrival}
-                                        onChange={(e) => setFormData({ ...formData, payOnArrival: e.target.checked })}
-                                        className="w-5 h-5 rounded text-teal-600 focus:ring-teal-500"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 mt-2">
-                                    <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg text-green-700 dark:text-green-300">
-                                        <Banknote size={24} />
-                                    </div>
-                                    <label className="flex-grow cursor-pointer">
-                                        <span className="block font-bold text-slate-900 dark:text-white">Pay Cash on Arrival</span>
-                                        <span className="text-xs text-slate-500 dark:text-slate-400">Allow customers to pay when they arrive.</span>
-                                    </label>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.payOnArrival}
-                                        onChange={(e) => setFormData({ ...formData, payOnArrival: e.target.checked })}
-                                        className="w-5 h-5 rounded text-teal-600 focus:ring-teal-500"
-                                    />
-                                </div>
                                 <div className="mt-6">
                                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Photos</h3>
                                     <p className="text-xs text-slate-500 mb-3">Add at least one photo. First photo will be the cover.</p>

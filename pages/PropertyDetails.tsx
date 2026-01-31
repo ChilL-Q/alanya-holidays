@@ -159,14 +159,6 @@ export const PropertyDetails: React.FC = () => {
     }
   }, [checkIn, checkOut]);
 
-  console.log('DEBUG: PropertyDetails state:', {
-    hasProperty: !!property,
-    loading,
-    propertyId: property?.id,
-    imagesCount: property?.images?.length,
-    amenitiesCount: property?.amenities?.length
-  });
-
   if (loading) {
     return (
       <div className="p-20 text-center flex flex-col items-center gap-4">

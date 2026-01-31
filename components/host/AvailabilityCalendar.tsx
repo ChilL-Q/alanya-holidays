@@ -422,6 +422,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                                         type="number"
                                                         value={price}
                                                         onChange={(e) => setPrice(e.target.value)}
+                                                        onWheel={(e) => e.currentTarget.blur()}
                                                         placeholder="Base Price"
                                                         className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-900 border-none rounded-lg text-sm focus:ring-2 focus:ring-slate-900 outline-none"
                                                     />
