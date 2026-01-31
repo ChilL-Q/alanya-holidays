@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Property, PropertyDB } from '../types/models';
 import { propertiesService } from '../services/api/properties';
 
@@ -21,13 +22,20 @@ interface UsePropertyFiltersProps {
 }
 
 export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UsePropertyFiltersProps) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isMounted = useRef(false);
+    
+    // Initialize state from URL params
+    const initialPage = parseInt(searchParams.get('page') || '1');
+    const initialSort = searchParams.get('sort') || 'recommended';
+    
     const [properties, setProperties] = useState<Property[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const [page, setPage] = useState(1);
+    const [page, setPageState] = useState(initialPage);
     const [hasMore, setHasMore] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
-    const [sort, setSort] = useState('recommended');
+    const [sort, setSortState] = useState(initialSort);
     const LIMIT = 12;
 
     const [filters, setFilters] = useState<FilterState>({
@@ -41,11 +49,56 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
         hasPhotos: false
     });
 
-    // Reset pagination when filters/sort change
+    // Sync Page with URL
+    const setPage = (newPage: number | ((prev: number) => number)) => {
+        const value = typeof newPage === 'function' ? newPage(page) : newPage;
+        setPageState(value);
+        setSearchParams(prev => {
+            prev.set('page', value.toString());
+            return prev;
+        });
+    };
+
+    // Sync Sort with URL
+    const setSort = (newSort: string) => {
+        setSortState(newSort);
+        setSearchParams(prev => {
+            prev.set('sort', newSort);
+            return prev;
+        });
+    };
+
+    // Track previous dependencies to prevent unwanted page resets (Strict Mode / Initial Mount)
+    const prevDeps = useRef({
+        location,
+        checkIn,
+        checkOut,
+        filters,
+        sort
+    });
+
+    // Reset pagination ONLY when filters/sort/location/dates actually change
     useEffect(() => {
-        setPage(1);
-        setProperties([]);
-        setHasMore(true);
+        const prev = prevDeps.current;
+        const hasLocationChanged = prev.location !== location;
+        const hasDatesChanged = prev.checkIn !== checkIn || prev.checkOut !== checkOut;
+        const hasSortChanged = prev.sort !== sort;
+        // Simple shallow comparison for filters object usually sufficient if treated immutably, 
+        // but let's stringify to be safe as it contains arrays
+        const hasFiltersChanged = JSON.stringify(prev.filters) !== JSON.stringify(filters);
+
+        if (hasLocationChanged || hasDatesChanged || hasSortChanged || hasFiltersChanged) {
+            setPage(1);
+            
+            // Update refs after change detected
+            prevDeps.current = {
+                location,
+                checkIn,
+                checkOut,
+                filters,
+                sort
+            };
+        }
     }, [location, checkIn, checkOut, filters, sort]); 
 
     // Fetch Properties
@@ -106,22 +159,14 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     type: p.type
                 }));
 
-                if (page === 1) {
-                    setProperties(mappedProps);
-                } else {
-                    // Replace properties for pagination (Standard Pages)
-                    setProperties(mappedProps);
-                }
+                setProperties(mappedProps);
                 
-                // Check if we reached the end relative to total count
-                // Not strictly needed for page-based solving, but good for hasMore check if kept
+                // Check if we reached the end
                 if (result.data.length < LIMIT) {
                     setHasMore(false);
                 } else {
                      setHasMore(true);
                 }
-                
-                // Initialize text search filters if needed? No, separate state.
 
             } catch (err) {
                 console.error(err);
@@ -132,13 +177,7 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
         };
 
         fetchProperties();
-    }, [page, location, checkIn, checkOut, filters, sort]); // Re-fetch when filters/sort change 
-
-    const loadMore = () => {
-        if (!isLoading && hasMore) {
-            setPage(prev => prev + 1);
-        }
-    };
+    }, [page, location, checkIn, checkOut, filters, sort]);
 
     // Client-side filtering removed - properties are now already filtered from backend
     const filteredProperties = properties;
