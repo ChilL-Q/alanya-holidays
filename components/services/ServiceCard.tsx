@@ -62,24 +62,15 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 )}
                 <p className="text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{description}</p>
 
-                <div className="flex items-center justify-between mt-auto">
-                    {displayPrice && (
-                        <div>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider block">Starts from</span>
-                            <span className="text-lg font-bold text-primary dark:text-teal-400">{displayPrice}</span>
-                        </div>
-                    )}
+                <div className="flex-1" />
 
-                    <button
-                        onClick={onClick}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${displayPrice
-                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 hover:shadow-md'
-                            : 'w-full bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30'
-                            }`}
-                    >
-                        {actionLabel || 'View Details'}
-                    </button>
-                </div>
+                <button
+                    onClick={onClick}
+                    className="w-full bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
+                >
+                    {actionLabel || 'View Details'}
+                </button>
+
             </div>
         </div>
     );

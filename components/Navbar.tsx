@@ -247,6 +247,7 @@ export const Navbar: React.FC = () => {
                       setIsProfileOpen(!isProfileOpen);
                     }
                   }}
+                  data-testid="profile-button"
                   className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800"
                 >
                   <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden ring-2 ring-white dark:ring-slate-900">

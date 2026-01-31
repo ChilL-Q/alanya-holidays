@@ -13,7 +13,8 @@ export const propertySchema = z.object({
     bathrooms: z.number().int().min(1),
     amenities: z.array(z.string()).default([]),
     images: z.array(z.string()).min(1, "At least one image is required"),
-    host_id: z.string().uuid("Invalid host ID")
+    host_id: z.string().uuid("Invalid host ID"),
+    cleaning_fee: z.number().nonnegative("Cleaning fee must be positive").optional(),
 });
 
 export const bookingSchema = z.object({
@@ -32,7 +33,7 @@ export const serviceSchema = z.object({
     title: z.string().min(3),
     description: z.string().min(10),
     price: z.number().positive(),
-    type: z.enum(['car', 'bike', 'tour', 'transfer', 'visa', 'esim']),
+    type: z.enum(['car', 'bike', 'tour', 'transfer', 'visa', 'esim', 'wellness']),
     provider_id: z.string().uuid(),
     features: z.any().default({}),
     images: z.array(z.string()).default([])

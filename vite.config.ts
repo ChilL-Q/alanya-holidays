@@ -8,6 +8,17 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        '/calendar': {
+          target: 'https://mdmizeyiyebvhkujjyjg.supabase.co/functions/v1/export-ical',
+          changeOrigin: true,
+          rewrite: (path) => {
+            const idMatch = path.match(/\/calendar\/([^/?]+)/);
+            const id = idMatch ? idMatch[1] : '';
+            return `?id=${id}`;
+          }
+        }
+      }
     },
     plugins: [react()],
     define: {

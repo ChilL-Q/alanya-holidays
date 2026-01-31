@@ -105,7 +105,8 @@ export const PropertyDetails: React.FC = () => {
             hostName: data.host?.full_name || ((data as any).profiles ? ((data as any).profiles.full_name || (data as any).profiles.username) : 'Alanya Holidays'),
             hostAvatar: data.host?.avatar_url || ((data as any).profiles ? (data as any).profiles.avatar_url : null),
             rating: data.rating || 5.0,
-            reviewsCount: data.reviews_count || 0
+            reviewsCount: data.reviews_count || 0,
+            cleaning_fee: Number(data.cleaning_fee) || 0
           } as unknown as PropertyDetailsData;
 
           setProperty(normalizedData);
@@ -205,7 +206,7 @@ export const PropertyDetails: React.FC = () => {
       id: property.id,
       type: 'property',
       title: property.title,
-      price: totalPrice,
+      price: totalPrice + (property.cleaning_fee || 0),
       image: property.images?.[0],
       details: `${nights} nights`,
       startDate: checkIn ? `${checkIn.getFullYear()}-${String(checkIn.getMonth() + 1).padStart(2, '0')}-${String(checkIn.getDate()).padStart(2, '0')}` : undefined,
@@ -494,8 +495,13 @@ export const PropertyDetails: React.FC = () => {
             {/* Price breakdown */}
             <div className="mt-6 space-y-3">
               <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{displayPrice(property?.pricePerNight || 0)} x {nights} nights</span><span>{displayPrice(totalPrice)}</span></div>
-              <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{t('prop.cleaning_fee')}</span><span>{displayPrice(40)}</span></div>
-              <div className="flex justify-between font-bold text-slate-900 dark:text-white mt-4 pt-4 border-t border-slate-200 dark:border-slate-800"><span>{t('prop.total')}</span><span>{displayPrice(totalPrice + 40)}</span></div>
+              {(property?.cleaning_fee || 0) > 0 && (
+                <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{t('prop.cleaning_fee')}</span><span>{displayPrice(property?.cleaning_fee || 0)}</span></div>
+              )}
+              <div className="flex justify-between font-bold text-slate-900 dark:text-white mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <span>{t('prop.total')}</span>
+                <span>{displayPrice(totalPrice + (property?.cleaning_fee || 0))}</span>
+              </div>
             </div>
           </div>
         </div>

@@ -14,7 +14,8 @@ import {
     XCircle,
     AlertCircle,
     Search,
-    Trash2
+    Trash2,
+    ShoppingBag
 } from 'lucide-react';
 import {
     AreaChart,
@@ -33,7 +34,7 @@ import { AdminExplorer, ExplorerItem } from '../../components/admin/AdminExplore
 export const AdminPage: React.FC = () => {
     const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'users' | 'bookings' | 'services'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'properties' | 'users' | 'bookings' | 'services' | 'shop'>('dashboard');
     const [stats, setStats] = useState<{
         pending: number;
         total_properties: number;
@@ -457,6 +458,15 @@ export const AdminPage: React.FC = () => {
                 </div>
             );
         }
+        if (activeTab === 'shop') {
+            return (
+                <div className="text-center py-20 text-slate-500">
+                    <ShoppingBag size={48} className="mx-auto mb-4 opacity-20" />
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Shop Management</h3>
+                    <p>Product management coming soon.</p>
+                </div>
+            );
+        }
     };
 
     if (!user) return null;
@@ -486,6 +496,9 @@ export const AdminPage: React.FC = () => {
                     </button>
                     <button onClick={() => setActiveTab('services')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'services' ? 'bg-accent text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
                         <Car size={20} /> Services
+                    </button>
+                    <button onClick={() => setActiveTab('shop')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'shop' ? 'bg-accent text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+                        <ShoppingBag size={20} /> Shop
                     </button>
                 </nav>
             </aside>

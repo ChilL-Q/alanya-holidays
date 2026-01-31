@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, AlertCircle, Loader2, ArrowLeft, KeyRound } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
+import toast from 'react-hot-toast';
 
 export const LoginModal: React.FC = () => {
     const { activeModal, closeModal, openRegister } = useModal();
@@ -81,8 +82,26 @@ export const LoginModal: React.FC = () => {
             const result = await verifyOtp(email, otp, 'email');
             if (result.success) {
                 closeModal();
+                toast.success('Successfully logged in!');
             } else {
                 setError(result.error || 'Invalid code');
+            }
+        } catch (err) {
+            setError('An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const result = await sendOtp(email);
+            if (result.success) {
+                toast.success('Code resent to your email!');
+            } else {
+                setError(result.error || 'Failed to resend code');
             }
         } catch (err) {
             setError('An unexpected error occurred');
@@ -255,11 +274,11 @@ export const LoginModal: React.FC = () => {
                         <div className="text-center">
                             <button
                                 type="button"
-                                onClick={() => sendOtp(email)}
+                                onClick={handleResend}
                                 disabled={loading}
-                                className="text-sm text-slate-500 hover:text-primary transition-colors"
+                                className="text-sm text-slate-500 hover:text-primary transition-colors disabled:opacity-50"
                             >
-                                Resend Code
+                                {loading ? 'Sending...' : 'Resend Code'}
                             </button>
                         </div>
                     </form>

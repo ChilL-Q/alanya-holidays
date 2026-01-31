@@ -40,6 +40,7 @@ export interface PropertyDB {
     rental_license?: string;
     status?: ApprovalStatus | 'approved' | 'pending' | 'rejected';
     rejection_reason?: string;
+    cleaning_fee?: number;
     
     // Hospitality Details
     arrival_guide?: string;
@@ -124,7 +125,7 @@ export interface ServiceDB {
     title: string;
     description: string;
     price: number;
-    type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer';
+    type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness';
     provider_id: string;
     features: { [key: string]: any };
     images: string[];
@@ -279,6 +280,7 @@ export interface Property {
   amenities: string[];
   hostName: string;
   type?: string; 
+  cleaning_fee?: number;
 }
 
 export interface Service {

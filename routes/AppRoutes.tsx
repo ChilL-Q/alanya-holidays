@@ -26,6 +26,7 @@ import { AddProduct } from '../pages/AddProduct';
 import { Profile } from '../pages/Profile';
 import { BookVehicle } from '../pages/booking/BookVehicle';
 import { BookTour } from '../pages/booking/BookTour';
+import { BookWellness } from '../pages/booking/BookWellness';
 import { BookingSuccess } from '../pages/booking/Success';
 import { InboxPage } from '../pages/InboxPage';
 
@@ -88,6 +89,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/bookmarks" element={<FavoritesPage />} />
             <Route path="/book-vehicle/:id" element={<BookVehicle />} />
             <Route path="/book-tour/:id" element={<BookTour />} />
+            <Route path="/book-wellness/:id" element={<BookWellness />} />
             <Route path="/inbox" element={<InboxPage />} />
 
             {/* Host Routes - Protected */}

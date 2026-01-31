@@ -354,10 +354,7 @@ export const Checkout: React.FC = () => {
                   <span>{t('checkout.subtotal')}</span>
                   <span>{convertAndFormat(total)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-teal-700 dark:text-teal-400 font-medium">
-                  <span>{t('prop.guest_fee')}</span>
-                  <span>{convertAndFormat(0)}</span>
-                </div>
+
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">

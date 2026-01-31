@@ -38,6 +38,7 @@ export const AdminEditPropertyPage: React.FC = () => {
         location: '',
         address: '',
         price: '',
+        cleaningFee: '',
         description: '',
         imageUrl: '',
         amenities: [] as string[],
@@ -71,10 +72,11 @@ export const AdminEditPropertyPage: React.FC = () => {
                     title: data.title,
                     description: data.description,
                     price: data.price_per_night.toString(),
+                    cleaningFee: (data.cleaning_fee || 0).toString(),
                     location: data.location,
                     address: data.address || '',
                     propertyType: data.type || 'apartment',
-                    amenities: (data.amenities || []).map(a => a.label),
+                    amenities: (data.amenities || []).map((a: any) => typeof a === 'string' ? a : a.label),
                     name: data.host?.full_name || '',
                     email: '',
                     // Hospitality Details
@@ -143,13 +145,11 @@ export const AdminEditPropertyPage: React.FC = () => {
                 title: formData.title,
                 description: formData.description,
                 price_per_night: Number(formData.price),
+                cleaning_fee: Number(formData.cleaningFee),
                 location: formData.location,
                 address: formData.address,
                 type: formData.propertyType as 'villa' | 'apartment',
-                amenities: formData.amenities.map(label => {
-                    const found = AMENITIES_LIST.find(a => a.label === label);
-                    return found || { icon: 'box', label };
-                }),
+                amenities: formData.amenities,
                 images: finalImages,
                 // Hospitality Details
                 arrival_guide: formData.arrivalGuide,
@@ -276,6 +276,20 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             required
                                             min="1"
                                             value={formData.price}
+                                            onChange={handleChange}
+                                            onWheel={(e) => e.currentTarget.blur()}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                            Cleaning Fee (One-time)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="cleaningFee"
+                                            min="0"
+                                            value={formData.cleaningFee}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"

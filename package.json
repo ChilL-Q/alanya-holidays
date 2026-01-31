@@ -43,6 +43,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "dotenv": "^17.2.3",
     "jsdom": "^27.4.0",
     "postcss": "^8.5.6",

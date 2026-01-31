@@ -58,6 +58,7 @@ export const ListProperty: React.FC = () => {
         title: '',
         description: '',
         price: '',
+        cleaningFee: '',
         propertyType: '',
         maxGuests: 4,
         bedrooms: 2,
@@ -143,6 +144,7 @@ export const ListProperty: React.FC = () => {
                 location: formData.location,
                 address: formData.address,
                 type: formData.propertyType as any, // 'apartment' | 'villa'
+                cleaning_fee: formData.cleaningFee ? parseFloat(formData.cleaningFee) : undefined,
                 max_guests: formData.maxGuests,
                 bedrooms: formData.bedrooms,
                 beds: formData.beds,
@@ -387,6 +389,22 @@ export const ListProperty: React.FC = () => {
                                                 />
                                             </div>
                                             <p className="text-sm text-slate-500 mt-2">{t('list_prop.per_night')}</p>
+                                        </div>
+
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 mt-4">
+                                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cleaning Fee (One-time)</label>
+                                            <div className="relative max-w-xs">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">€</span>
+                                                <input
+                                                    type="number"
+                                                    name="cleaningFee"
+                                                    value={formData.cleaningFee}
+                                                    onChange={handleChange}
+                                                    placeholder="0"
+                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-xl"
+                                                />
+                                            </div>
+                                            <p className="text-sm text-slate-500 mt-2">Added once per reservation</p>
                                         </div>
                                     </div>
 

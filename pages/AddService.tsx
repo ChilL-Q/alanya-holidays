@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../services';
-import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Heart, Banknote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import toast from 'react-hot-toast';
 import { CAR_CATALOG, BIKE_CATALOG, CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 
-type ServiceCategory = 'transportation' | 'adventure' | null;
-type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim';
+type ServiceCategory = 'transportation' | 'adventure' | 'health' | null;
+type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness';
 
 interface ItineraryItem {
     time: string;
@@ -49,6 +49,10 @@ export const AddService: React.FC = () => {
         included: '',
         languages: '',
         requirements: '',
+        // Health & Wellness Specific
+        whatsapp: '',
+        // Payment
+        payOnArrival: false
     });
 
     const [files, setFiles] = useState<File[]>([]);
@@ -67,7 +71,7 @@ export const AddService: React.FC = () => {
         setCategory(cat);
         setFormData(prev => ({
             ...prev,
-            type: cat === 'transportation' ? 'car' : 'tour'
+            type: cat === 'transportation' ? 'car' : (cat === 'adventure' ? 'tour' : 'wellness')
         }));
         setStep(1);
     };
@@ -159,7 +163,15 @@ export const AddService: React.FC = () => {
                     requirements: formData.requirements,
                     itinerary: itinerary.filter(i => i.description) // Only save items with description
                 };
+            } else if (category === 'health') {
+                features = {
+                    whatsapp: formData.whatsapp,
+                    subcategory: formData.subcategory // Reuse subcategory for health types (Hair, Dental, etc)
+                };
             }
+
+            // Common features
+            features.payOnArrival = formData.payOnArrival;
 
 
 
@@ -221,7 +233,7 @@ export const AddService: React.FC = () => {
 
                 {/* Step 0: Category Selection */}
                 {step === 0 && (
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-3 gap-6">
                         <button
                             onClick={() => handleCategorySelect('transportation')}
                             className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
@@ -243,6 +255,17 @@ export const AddService: React.FC = () => {
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Adventure & Activities</h3>
                             <p className="text-slate-500 dark:text-slate-400 text-sm">List tours, excursions, experiences, and guided trips.</p>
                         </button>
+
+                        <button
+                            onClick={() => handleCategorySelect('health')}
+                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:ring-2 hover:ring-rose-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                        >
+                            <div className="w-14 h-14 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <Heart size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Health & Wellness</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">Medical tourism, spa, dental, and cosmetic services.</p>
+                        </button>
                     </div>
                 )}
 
@@ -251,16 +274,15 @@ export const AddService: React.FC = () => {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                         <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                {category === 'transportation' ? 'Vehicle Details' : 'Activity Details'}
+                                {category === 'transportation' ? 'Vehicle Details' : (category === 'adventure' ? 'Activity Details' : 'Service Details')}
                             </h2>
-                            <span className="px-3 py-1 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs font-semibold uppercase tracking-wide border border-slate-200 dark:border-slate-600">
+                            <span className={`px-3 py-1 text-white rounded-full text-xs font-semibold uppercase tracking-wide ${category === 'transportation' ? 'bg-blue-500' : (category === 'adventure' ? 'bg-orange-500' : 'bg-rose-500')}`}>
                                 {category}
                             </span>
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-8 space-y-8">
 
-                            {/* Service Helper Type Selection */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Service Type</label>
                                 <div className="flex flex-wrap gap-3">
@@ -285,7 +307,12 @@ export const AddService: React.FC = () => {
                                             ))}
                                         </>
                                     ) : (
-                                        <button type="button" className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium">Tour / Activity</button>
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium capitalize"
+                                        >
+                                            {category === 'adventure' ? 'Tour / Activity' : 'Wellness Service'}
+                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -341,7 +368,37 @@ export const AddService: React.FC = () => {
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 mt-2">
+                                    <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg text-green-700 dark:text-green-300">
+                                        <Banknote size={24} />
+                                    </div>
+                                    <label className="flex-grow cursor-pointer">
+                                        <span className="block font-bold text-slate-900 dark:text-white">Pay Cash on Arrival</span>
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">Allow customers to pay when they arrive.</span>
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.payOnArrival}
+                                        onChange={(e) => setFormData({ ...formData, payOnArrival: e.target.checked })}
+                                        className="w-5 h-5 rounded text-teal-600 focus:ring-teal-500"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 mt-2">
+                                    <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg text-green-700 dark:text-green-300">
+                                        <Banknote size={24} />
+                                    </div>
+                                    <label className="flex-grow cursor-pointer">
+                                        <span className="block font-bold text-slate-900 dark:text-white">Pay Cash on Arrival</span>
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">Allow customers to pay when they arrive.</span>
+                                    </label>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.payOnArrival}
+                                        onChange={(e) => setFormData({ ...formData, payOnArrival: e.target.checked })}
+                                        className="w-5 h-5 rounded text-teal-600 focus:ring-teal-500"
+                                    />
+                                </div>
+                                <div className="mt-6">
                                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Photos</h3>
                                     <p className="text-xs text-slate-500 mb-3">Add at least one photo. First photo will be the cover.</p>
                                     <PhotoUploader files={files} onChange={setFiles} maxFiles={5} />
@@ -483,6 +540,7 @@ export const AddService: React.FC = () => {
                                                 <option value="water">Water (Boat, Jet Ski, Diving)</option>
                                                 <option value="safari">Safari & Off-road</option>
                                                 <option value="atv">ATV & Buggy</option>
+                                                <option value="ebike">E-Bikes</option>
                                                 <option value="air">Air (Paragliding, Balloon)</option>
                                                 <option value="land">Land Tours (City, Historical)</option>
                                                 <option value="wellness">Wellness (Hamam, Spa)</option>
@@ -554,6 +612,39 @@ export const AddService: React.FC = () => {
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Requirements</label>
                                         <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="e.g. Driving License, Comfortable shoes" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Specific Fields: Health & Wellness */}
+                            {category === 'health' && (
+                                <div className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
+                                            <select
+                                                name="subcategory"
+                                                value={formData.subcategory}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
+                                            >
+                                                <option value="hair">Hair Transplant</option>
+                                                <option value="dental">Dental</option>
+                                                <option value="spa">Spa & Massage</option>
+                                                <option value="cosmetic">Cosmetic Surgery</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">WhatsApp Number</label>
+                                            <input
+                                                name="whatsapp"
+                                                value={formData.whatsapp}
+                                                onChange={handleChange}
+                                                placeholder="+90 555 123 45 67"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1">Clients will contact you directly via WhatsApp.</p>
+                                        </div>
                                     </div>
                                 </div>
                             )}

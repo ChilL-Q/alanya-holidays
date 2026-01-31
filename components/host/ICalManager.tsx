@@ -108,7 +108,8 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
         }
     };
 
-    const exportUrl = `https://mdmizeyiyebvhkujjyjg.supabase.co/functions/v1/export-ical?id=${propertyId}&token=${icalToken}`;
+    // Use window.location.origin to support both dev (via proxy) and prod (via vercel rewrite)
+    const exportUrl = `${window.location.origin}/calendar/${propertyId}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(exportUrl);

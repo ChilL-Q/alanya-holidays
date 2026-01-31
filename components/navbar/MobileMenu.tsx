@@ -68,6 +68,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                     <Banknote size={18} />
                     {t('value.zero_fees.title')}
                 </Link>
+                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-200">
+                    <Home size={18} className="text-slate-400" />
+                    Become a host
+                </Link>
 
                 {/* User Links (if auth) */}
                 {isAuthenticated && (
