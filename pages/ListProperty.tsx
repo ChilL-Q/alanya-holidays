@@ -185,7 +185,7 @@ export const ListProperty: React.FC = () => {
                 <div className="relative bg-slate-900 text-white py-24 overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80')] bg-cover bg-center opacity-20"></div>
                     <div className="relative max-w-7xl mx-auto px-4 text-center">
-                        <h1 className="text-4xl md:text-6xl font-bold mb-6">{t('list.hero.title')}</h1>
+                        <h1 className="text-4xl md:text-6xl font-bold mb-6" dangerouslySetInnerHTML={{ __html: t('list.hero.title') }} />
                         <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
                             {t('list.hero.desc')}
                         </p>
