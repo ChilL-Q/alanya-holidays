@@ -21,6 +21,23 @@ export default defineConfig(({ mode }) => {
       }
     },
     plugins: [react()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('@react-google-maps')) return 'vendor-maps';
+              if (id.includes('@supabase')) return 'vendor-db';
+              if (id.includes('react-datepicker') || id.includes('date-fns')) return 'vendor-date';
+              if (id.includes('zod')) return 'vendor-validation';
+              return 'vendor-core'; // react, react-router, etc.
+            }
+          }
+        }
+      }
+    },
     define: {
       'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
     },
