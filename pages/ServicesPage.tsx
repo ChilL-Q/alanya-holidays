@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain } from 'lucide-react';
+import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain, Bike } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ServiceGrid } from '../components/services/ServiceGrid';
@@ -85,6 +85,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.land')}
                             description={t('services.adventure.land_desc')}
                             icon={Mountain}
+                            imageUrl="/images/experiences/land_tours_hero.png"
                             rawPrice={minPrices['land'] || 30}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences/land')}
@@ -93,6 +94,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.water')}
                             description={t('services.adventure.water_desc')}
                             icon={Anchor}
+                            imageUrl="/images/experiences/water_sports_hero.png"
                             rawPrice={minPrices['water'] || 50}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences/water')}
@@ -101,6 +103,7 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.safari')}
                             description={t('services.adventure.safari_desc')}
                             icon={Car}
+                            imageUrl="/images/experiences/safari_expedition_hero.png"
                             rawPrice={minPrices['safari'] || 35}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences/safari')}
@@ -109,6 +112,7 @@ export const ServicesPage: React.FC = () => {
                             title="ATV & Buggy"
                             description="Hourly rentals for off-road fun"
                             icon={Car}
+                            imageUrl="/images/experiences/atv_buggy_hero.png"
                             rawPrice={minPrices['atv'] || 45}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences/atv')}
@@ -117,9 +121,20 @@ export const ServicesPage: React.FC = () => {
                             title={t('services.adventure.air')}
                             description={t('services.adventure.air_desc')}
                             icon={Cloud}
+                            imageUrl="/images/experiences/air_adventures_hero.png"
                             rawPrice={minPrices['air'] || 80}
                             actionLabel={t('book_button')}
                             onClick={() => navigate('/experiences/air')}
+                        />
+
+                        <ServiceCard
+                            title="Bikes & E-bikes"
+                            description="Premium mountain and city bikes"
+                            icon={Bike}
+                            imageUrl="/images/experiences/bikes_hero.png"
+                            rawPrice={10}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/services/bicycle-rental')}
                         />
                     </ServiceGrid>
                 )}
@@ -132,7 +147,7 @@ export const ServicesPage: React.FC = () => {
                             icon={Anchor}
                             rawPrice={50}
                             actionLabel="Consult"
-                            onClick={() => navigate('/contact')}
+                            onClick={() => navigate('/partner-contact')}
                         />
                         <ServiceCard
                             title={t('services.visa.residence')}
@@ -140,7 +155,7 @@ export const ServicesPage: React.FC = () => {
                             icon={Anchor}
                             rawPrice={250}
                             actionLabel="Consult"
-                            onClick={() => navigate('/contact')}
+                            onClick={() => navigate('/partner-contact')}
                         />
                     </ServiceGrid>
                 )}
@@ -148,12 +163,12 @@ export const ServicesPage: React.FC = () => {
                 {activeCategory === 'connectivity' && (
                     <ServiceGrid id="sim" title={t('services.connectivity.title')}>
                         <ServiceCard
-                            title={t('services.connectivity.esim')}
+                            title="Tourist SIM Card"
                             description={t('services.connectivity.esim_desc')}
                             icon={Anchor}
                             rawPrice={15}
                             actionLabel="Buy Now"
-                            onClick={() => navigate('/services/esim')}
+                            onClick={() => navigate('/services/tourist-sim-card')}
                         />
                     </ServiceGrid>
                 )}

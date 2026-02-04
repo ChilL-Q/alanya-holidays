@@ -10,10 +10,12 @@ import { SearchResultsPage } from '../pages/SearchResultsPage';
 import { FavoritesPage } from '../pages/FavoritesPage';
 import { About } from '../pages/About';
 import { Contact } from '../pages/Contact';
+import { PartnerContact } from '../pages/PartnerContact';
 import { FAQ } from '../pages/FAQ';
 import { CarRental } from '../pages/CarRental';
 import { CarModelDetails } from '../pages/CarModelDetails';
 import { BikeRental } from '../pages/BikeRental';
+import { BicycleRental } from '../pages/BicycleRental';
 import { Visa } from '../pages/Visa';
 import { Esim } from '../pages/Esim';
 import { Privacy } from '../pages/Privacy';
@@ -74,6 +76,7 @@ export const AppRoutes: React.FC = () => {
             <Route path="/zero-fees" element={<ZeroFeesPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/partner-contact" element={<PartnerContact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/experiences/:category" element={<ExperienceCategoryPage />} />
@@ -82,7 +85,9 @@ export const AppRoutes: React.FC = () => {
             <Route path="/services/car-rental" element={<CarRental />} />
             <Route path="/services/car-rental/:modelId" element={<CarModelDetails />} />
             <Route path="/services/bike-rental" element={<BikeRental />} />
-            <Route path="/services/esim" element={<Esim />} />
+            <Route path="/services/bicycle-rental" element={<BicycleRental />} />
+            <Route path="/services/tourist-sim-card" element={<Esim />} />
+            <Route path="/services/visa-legal" element={<Visa />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/add-service" element={<AddService />} />

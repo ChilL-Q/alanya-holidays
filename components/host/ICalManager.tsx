@@ -109,7 +109,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
     };
 
     // Use window.location.origin to support both dev (via proxy) and prod (via vercel rewrite)
-    const exportUrl = `${window.location.origin}/calendar/${propertyId}`;
+    const exportUrl = `${window.location.origin}/calendar/${propertyId}.ics`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(exportUrl);

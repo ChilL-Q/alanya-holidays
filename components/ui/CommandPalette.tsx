@@ -18,7 +18,19 @@ import {
     CreditCard,
     LogIn,
     UserPlus,
-    Car
+    Car,
+    Bike,
+    Wifi,
+    Info,
+    Phone,
+    Percent,
+    HelpCircle,
+    Briefcase,
+    FileCheck,
+    Plane,
+    Mountain,
+    Waves,
+    Compass
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
@@ -130,6 +142,104 @@ export const CommandPalette = () => {
                         >
                             <Heart className="w-4 h-4 mr-3" />
                             Favorites
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Sparkles className="w-4 h-4 mr-3" />
+                            Services
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services/car-rental'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Car className="w-4 h-4 mr-3" />
+                            Car Rental
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services/bike-rental'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Bike className="w-4 h-4 mr-3" />
+                            Motorbike Rental
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services/bicycle-rental'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Bike className="w-4 h-4 mr-3" />
+                            Bicycle Rental
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/experiences/land'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Mountain className="w-4 h-4 mr-3" />
+                            Land Tours
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/experiences/water'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Waves className="w-4 h-4 mr-3" />
+                            Water Sports
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/experiences/safari'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Compass className="w-4 h-4 mr-3" />
+                            Safari Expeditions
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services/visa'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <FileCheck className="w-4 h-4 mr-3" />
+                            Visa & Legal
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/services/tourist-sim-card'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Wifi className="w-4 h-4 mr-3" />
+                            Tourist SIM Card
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/shop'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <ShoppingCart className="w-4 h-4 mr-3" />
+                            Shop
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/zero-fees'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Percent className="w-4 h-4 mr-3" />
+                            Zero Guest Fees
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/about'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Info className="w-4 h-4 mr-3" />
+                            About Us
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/contact'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <Phone className="w-4 h-4 mr-3" />
+                            Contact
+                        </Command.Item>
+                        <Command.Item
+                            onSelect={() => runCommand(() => navigate('/help'))}
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                        >
+                            <HelpCircle className="w-4 h-4 mr-3" />
+                            Help & FAQ
                         </Command.Item>
                     </Command.Group>
 

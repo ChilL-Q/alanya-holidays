@@ -142,6 +142,30 @@ export const Profile: React.FC = () => {
         }
     };
 
+    const handleCancelBooking = async (bookingId: string, createdAt: string) => {
+        const createdTime = new Date(createdAt).getTime();
+        const now = Date.now();
+        const diffHours = (now - createdTime) / (1000 * 60 * 60);
+
+        const isFree = diffHours <= 48;
+        const message = isFree
+            ? t('profile.cancel_free') || "Are you sure? You are within the 48-hour free cancellation window."
+            : t('profile.cancel_fee') || "Are you sure? The 48-hour free cancellation window has passed. Standard cancellation policies apply.";
+
+        if (!window.confirm(message)) return;
+
+        const toastId = toast.loading('Cancelling booking...');
+        try {
+            await db.cancelBooking(bookingId);
+            toast.success('Booking cancelled successfully', { id: toastId });
+            // Refresh bookings locally
+            setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+        } catch (error: any) {
+            console.error('Cancellation error:', error);
+            toast.error(error.message || 'Failed to cancel booking', { id: toastId });
+        }
+    };
+
     const handleChangeEmail = async (e: React.FormEvent) => {
         e.preventDefault();
         if (emailForm.email === user?.email) return;
@@ -411,6 +435,16 @@ export const Profile: React.FC = () => {
                                                                 {t('profile.view_details')}
                                                                 <Package size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
                                                             </button>
+
+                                                            {/* Cancel Button */}
+                                                            {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                                                                <button
+                                                                    onClick={() => handleCancelBooking(booking.id, booking.created_at)}
+                                                                    className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1 ml-4"
+                                                                >
+                                                                    {t('profile.cancel') || 'Cancel'}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

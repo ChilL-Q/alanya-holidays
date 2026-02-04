@@ -315,5 +315,38 @@ export const bookingsService = {
                 }
             }
         }
+    },
+
+    async cancelBooking(id: string) {
+        // 1. Fetch booking to check created_at time
+        const { data: booking, error: fetchError } = await supabase
+            .from('bookings')
+            .select('created_at, status')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw fetchError;
+        if (!booking) throw new Error('Booking not found');
+
+        // 2. Check 48-hour window
+        const createdAt = new Date(booking.created_at).getTime();
+        const now = Date.now();
+        const diffHours = (now - createdAt) / (1000 * 60 * 60);
+
+        // 3. Update status
+        // Note: In a real system, if diffHours > 48, we might apply a fee/reduce refund.
+        // For this MVP, we just mark it as cancelled, but we could add a 'cancellation_reason' or similar.
+        // The policy says "Free cancellation for 48 hours", implying logic typically changes afterwards.
+        // We will proceed with cancellation but log/notify based on time.
+        
+        let reason = 'User requested cancellation';
+        if (diffHours <= 48) {
+             reason = 'Free Cancellation (within 48h)';
+        } else {
+             reason = 'Standard Cancellation (after 48h)';
+             // potentially trigger partial refund logic here in future
+        }
+
+        return this.updateBookingStatus(id, 'cancelled', reason);
     }
 };

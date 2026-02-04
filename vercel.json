@@ -1,6 +1,10 @@
 {
     "rewrites": [
         {
+            "source": "/calendar/:id.ics",
+            "destination": "https://mdmizeyiyebvhkujjyjg.supabase.co/functions/v1/export-ical?id=:id"
+        },
+        {
             "source": "/calendar/:id",
             "destination": "https://mdmizeyiyebvhkujjyjg.supabase.co/functions/v1/export-ical?id=:id"
         },

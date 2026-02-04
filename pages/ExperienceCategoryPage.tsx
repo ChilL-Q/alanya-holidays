@@ -25,42 +25,42 @@ export const ExperienceCategoryPage: React.FC = () => {
         water: {
             title: t('services.adventure.water'),
             subtitle: t('services.adventure.water_desc'),
-            heroImage: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2940&auto=format&fit=crop',
+            heroImage: '/images/experiences/water_sports_hero.png',
             features: ['Professional Guides', 'Safety Gear Included', 'Hotel Pickup'],
             icon: Anchor
         },
         safari: {
             title: t('services.adventure.safari'),
             subtitle: t('services.adventure.safari_desc'),
-            heroImage: 'https://images.unsplash.com/photo-1533669955142-6a73332af4db?q=80&w=2912&auto=format&fit=crop', // Jeep/Offroad
+            heroImage: '/images/experiences/safari_expedition_hero.png',
             features: ['Off-road Adventure', 'Lunch Included', 'Photo Stops'],
             icon: Map
         },
         air: {
             title: t('services.adventure.air'),
             subtitle: t('services.adventure.air_desc'),
-            heroImage: 'https://images.unsplash.com/photo-1474302770737-173ee21bab86?q=80&w=2692&auto=format&fit=crop', // Paragliding
+            heroImage: '/images/experiences/air_adventures_hero.png',
             features: ['Certified Pilots', 'HD Video Available', 'Insurance Included'],
             icon: Cloud
         },
         land: {
             title: t('services.adventure.land'),
             subtitle: t('services.adventure.land_desc'),
-            heroImage: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=2940&auto=format&fit=crop', // Canyon/Ruins
+            heroImage: '/images/experiences/land_tours_hero.png',
             features: ['Cultural Sites', 'Expert Guide', 'Comfortable Transport'],
             icon: Mountain
         },
         wellness: {
             title: t('services.health.title'),
             subtitle: t('services.health.subtitle'),
-            heroImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=2940&auto=format&fit=crop', // Spa
+            heroImage: '/images/experiences/wellness_hero.png',
             features: ['Certified Specialists', 'Relaxing Atmosphere', 'Premium Products'],
             icon: Heart
         },
         atv: {
             title: "ATV & Buggy",
             subtitle: "Adrenaline-filled off-road adventures",
-            heroImage: 'https://images.unsplash.com/photo-1599401763784-5f53d2d603a1?q=80&w=2940&auto=format&fit=crop', // ATV
+            heroImage: '/images/experiences/atv_buggy_hero.png',
             features: ['Hourly Rentals', 'Safety Briefing', 'Helmet Included'],
             icon: Car
         }
@@ -168,7 +168,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                             >
                                 <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     <img
-                                        src={service.images?.[0] || 'https://images.unsplash.com/photo-1544521750-97f9ff30eb9c?q=80&w=2692&auto=format&fit=crop'}
+                                        src={service.images?.[0] || config.heroImage}
                                         alt={service.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
@@ -201,7 +201,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                                             </span>
                                         </div>
                                         <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
-                                            Book Now
+                                            {t('request_details')}
                                         </button>
                                     </div>
                                 </div>

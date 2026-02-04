@@ -305,6 +305,9 @@ export interface CartItem {
   startDate?: string;
   endDate?: string;
   guests?: number;
+  cleaningFee?: number;
+  pricePerNight?: number;
+  nights?: number;
 }
 
 export interface SearchFilters {

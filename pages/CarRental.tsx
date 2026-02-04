@@ -29,11 +29,7 @@ export const CarRental: React.FC = () => {
                             ))}
                         </div>
 
-                        <div className="flex gap-4">
-                            <button className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-teal-600/20 transition-all duration-300 hover:shadow-teal-600/40 hover:scale-105 active:scale-95 flex items-center gap-2">
-                                {t('car.button')} <ChevronRight size={18} />
-                            </button>
-                        </div>
+
                     </div>
 
                     <div className="relative">

@@ -17,7 +17,7 @@ export const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'crypto' | 'cash'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'crypto' | 'cash' | 'swift'>('card');
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = (text: string) => {
@@ -28,8 +28,6 @@ export const Checkout: React.FC = () => {
 
   const handlePayment = async () => {
     if (!isAuthenticated) {
-      // In a real app, open login modal here
-      // For now, redirect to login or show alert
       alert("Please login to complete booking");
       return;
     }
@@ -37,28 +35,38 @@ export const Checkout: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // Simulate payment delay? No, proceed to creation
-      // await new Promise(resolve => setTimeout(resolve, 2000));
-
       const bookingItemsForStripe: any[] = [];
+      const wpItem = items.find(i => i.id === 'rec-2');
+      let wpHandled = false;
+
+      // Filter out the Welcome Pack from main iteration to avoid creating a standalone booking for it
+      const bookingItems = items.filter(i => i.id !== 'rec-2');
 
       // Create bookings in DB
-      for (const item of items) {
-        // Determine status based on payment method
+      for (const item of bookingItems) {
         let bookingStatus: 'confirmed' | 'pending' = 'pending';
         let paymentStatus: 'paid' | 'pending' = 'pending';
 
-        if (paymentMethod === 'card') {
-          // For card, we set to pending until Stripe confirms via webhook
+        // Payment status logic
+        if (paymentMethod === 'card' || paymentMethod === 'cash') {
+          // Deposit or Card: Pending until webhook
           bookingStatus = 'pending';
           paymentStatus = 'pending';
-        } else if (paymentMethod === 'cash') {
-          bookingStatus = 'confirmed'; // Instant confirmation for cash on arrival
-          paymentStatus = 'pending';
-        } else {
-          // Bank / Crypto need verification
-          bookingStatus = 'pending';
-          paymentStatus = 'pending';
+        }
+
+        // Merge Welcome Pack into the FIRST property booking found
+        let extraMessage = '';
+        let bookingTotalPrice = item.price;
+
+        if (!wpHandled && wpItem && (item.type === 'RENTAL' || item.type === 'property')) {
+          extraMessage = `\n\n[EXTRAS]: Includes Welcome Pack (Essentials) - €${wpItem.price}. Please prepare fridge.`;
+          // Note: We don't increase bookingTotalPrice here for the DB record if we rely on Stripe to sum it up,
+          // BUT for the database to reflect the total value of the "Booking + Extras", we SHOULD add it.
+          // However, separating it is cleaner for reporting. 
+          // Let's keep the booking price as the property price, but rely on the message for the host.
+          // OR: Add to price so the 'Total' in dashboard matches.
+          bookingTotalPrice += wpItem.price;
+          wpHandled = true;
         }
 
         const result = await db.createBooking({
@@ -70,23 +78,41 @@ export const Checkout: React.FC = () => {
           payment_status: paymentStatus,
           check_in: item.startDate || item.date || new Date().toISOString(),
           check_out: item.endDate || item.date || new Date(Date.now() + 86400000).toISOString(),
-          total_price: item.price,
-          guests: item.guests || 1
+          total_price: bookingTotalPrice,
+          guests: item.guests || 1,
+          message: extraMessage // Pass the extra info
         });
 
-        if (result && result.id && paymentMethod === 'card') {
+        if (result && result.id && (paymentMethod === 'card' || paymentMethod === 'cash')) {
+          const isDeposit = paymentMethod === 'cash';
+
+          // Add Main Item to Stripe
           bookingItemsForStripe.push({
             bookingId: result.id,
             listingId: item.id,
-            title: item.title,
-            price: item.price,
+            title: isDeposit ? `Deposit (20%): ${item.title}` : item.title,
+            price: isDeposit ? item.price * 0.2 : item.price,
             image: item.image
           });
+
+          // If we handled WP here, add it as a line item to Stripe too
+          if (wpHandled && wpItem && (item.type === 'RENTAL' || item.type === 'property')) {
+            // For Welcome Pack, we likely want full payment even if Deposit? 
+            // Let's assume Welcome Pack is 100% due or follows the same rule. 
+            // Usually extras are paid in full or part of deposit. Let's keep it simple: It's part of the total.
+            bookingItemsForStripe.push({
+              bookingId: result.id, // Link to same booking
+              listingId: wpItem.id,
+              title: isDeposit ? `Deposit (20%): ${wpItem.title}` : wpItem.title,
+              price: isDeposit ? wpItem.price * 0.2 : wpItem.price,
+              image: wpItem.image
+            });
+          }
         }
       }
 
-      // If Card payment, redirect to Stripe
-      if (paymentMethod === 'card' && bookingItemsForStripe.length > 0) {
+      // If Card or Cash payment, redirect to Stripe
+      if ((paymentMethod === 'card' || paymentMethod === 'cash') && bookingItemsForStripe.length > 0) {
         const { data, error } = await supabase.functions.invoke('create-checkout-session', {
           body: {
             items: bookingItemsForStripe,
@@ -99,7 +125,7 @@ export const Checkout: React.FC = () => {
         if (error) throw error;
         if (data?.url) {
           window.location.href = data.url;
-          return; // Halt execution for redirect
+          return;
         }
       }
 
@@ -113,10 +139,7 @@ export const Checkout: React.FC = () => {
       console.error("Booking error:", error);
       alert(error.message || "Payment failed. Please try again.");
     } finally {
-      if (paymentMethod !== 'card') {
-        setIsProcessing(false);
-      }
-      // If card, we leave processing true until redirect happens or error caught
+      setIsProcessing(false);
     }
   };
 
@@ -197,54 +220,43 @@ export const Checkout: React.FC = () => {
               )}
             </div>
 
-            {/* Recommended Extras */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('checkout.recommended')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { id: 'rec-1', type: ServiceType.OTHER, title: 'Airport Transfer', price: 45, currency: 'EUR', icon: '🚗', desc: 'S-Class comfort for your arrival', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=200&h=200&fit=crop' },
-                  { id: 'rec-2', type: ServiceType.OTHER, title: 'Welcome Pack', price: 30, currency: 'EUR', icon: '🧺', desc: 'Essentials waiting in your fridge', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop' },
-                ].map((rec) => {
-                  const isInCart = items.some(i => i.id === rec.id);
-                  return (
-                    <div
-                      key={rec.id}
-                      className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all group cursor-pointer"
-                      onClick={() => {
-                        if (!isInCart) {
-                          // Base currency is EUR, no conversion needed for cart
-                          addToCart({
-                            id: rec.id,
-                            type: ServiceType.OTHER,
-                            title: rec.title,
-                            price: rec.price,
-                            image: rec.image,
-                            details: 'One-time service'
-                          });
-                        }
-                      }}
-                    >
-                      <div className="text-2xl bg-slate-50 dark:bg-slate-700 w-12 h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">{rec.icon}</div>
-                      <div className="flex-grow">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-semibold text-slate-900 dark:text-white">{rec.title}</h4>
-                          <span className="font-bold text-primary dark:text-teal-400">{formatPrice(convertPrice(rec.price, 'EUR'))}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{rec.desc}</p>
-                        <button
-                          disabled={isInCart}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 w-full justify-center ${isInCart
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-primary text-white hover:bg-primary-dark'
-                            }`}
-                        >
-                          {isInCart ? 'Added to Cart' : 'Add to Order'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Welcome Pack Special Offer */}
+            {/* Welcome Pack Special Offer */}
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm border border-teal-100 dark:border-teal-800/50 p-4 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">
+                🧺
               </div>
+              <div className="flex-grow text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('checkout.welcome_pack_title') || 'Arrive in Comfort'}</h3>
+                  <span className="font-bold text-teal-700 dark:text-teal-400 text-sm">€30</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
+                  {t('checkout.welcome_pack_desc') || 'Don\'t worry about shopping immediately. We\'ll stock your fridge with essentials: bread, water, milk, eggs, cheese, and seasonal fruit.'}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const wpId = 'rec-2';
+                  const isInCart = items.some(i => i.id === wpId);
+                  if (!isInCart) {
+                    addToCart({
+                      id: wpId,
+                      type: ServiceType.OTHER,
+                      title: 'Welcome Pack',
+                      price: 30,
+                      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop',
+                      details: 'Fridge essentials'
+                    });
+                  }
+                }}
+                disabled={items.some(i => i.id === 'rec-2')}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm whitespace-nowrap ${items.some(i => i.id === 'rec-2')
+                  ? 'bg-green-100 text-green-700 cursor-default'
+                  : 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-md active:scale-95'}`}
+              >
+                {items.some(i => i.id === 'rec-2') ? (t('checkout.added') || 'Added') : (t('checkout.add_welcome') || 'Add')}
+              </button>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
@@ -268,7 +280,7 @@ export const Checkout: React.FC = () => {
                     }`}
                 >
                   <Banknote className={paymentMethod === 'cash' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.cash')}</span>
+                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>Cash on Arrival</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod('bank')}
@@ -290,6 +302,18 @@ export const Checkout: React.FC = () => {
                   <Bitcoin className={paymentMethod === 'crypto' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
                   <span className={`text-sm font-bold ${paymentMethod === 'crypto' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.crypto')}</span>
                 </button>
+                <div className="col-span-2 sm:col-span-1">
+                  <button
+                    onClick={() => setPaymentMethod('swift')}
+                    className={`w-full p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'swift'
+                      ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      }`}
+                  >
+                    <Banknote className={paymentMethod === 'swift' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
+                    <span className={`text-sm font-bold ${paymentMethod === 'swift' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>SWIFT Transfer</span>
+                  </button>
+                </div>
               </div>
 
               {paymentMethod === 'card' && (
@@ -300,9 +324,11 @@ export const Checkout: React.FC = () => {
               )}
 
               {paymentMethod === 'cash' && (
-                <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-700/50 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-slate-600 dark:text-slate-300 font-medium mb-1">{t('checkout.method.cash')}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkout.method.cash_desc')}</p>
+                <div className="p-4 border border-orange-200 dark:border-orange-900/50 rounded-lg bg-orange-50 dark:bg-orange-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-orange-800 dark:text-orange-300 font-medium mb-1">20% Non-refundable Deposit Required</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                    To secure your reservation with Cash on Arrival, we require a 20% deposit now via secure online payment. The remaining balance will be paid in cash upon arrival.
+                  </p>
                 </div>
               )}
 
@@ -329,6 +355,32 @@ export const Checkout: React.FC = () => {
                   </div>
                 </div>
               )}
+              {paymentMethod === 'swift' && (
+                <div className="p-4 border border-blue-100 dark:border-blue-900/50 rounded-lg bg-blue-50 dark:bg-blue-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">International SWIFT Transfer Details</p>
+                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-blue-900">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Bank Name</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Garanti Bank</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">SWIFT / BIC</span>
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-slate-700 dark:text-slate-300">GATRTRI2</code>
+                        <button onClick={() => copyToClipboard('GATRTRI2')} className="text-blue-600 hover:text-blue-700"><Copy size={12} /></button>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">IBAN</span>
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-slate-700 dark:text-slate-300">TR00 1234 5678 9000 0000 0000 00</code>
+                        <button onClick={() => copyToClipboard('TR00 1234 5678 9000 0000 0000 00')} className="text-blue-600 hover:text-blue-700"><Copy size={12} /></button>
+                      </div>
+                    </div>
+                    <p className="pt-2 text-[10px] text-slate-400 italic">Please include your Booking Reference in the transfer description.</p>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={handlePayment}
                 disabled={items.length === 0 || isProcessing}
@@ -338,7 +390,9 @@ export const Checkout: React.FC = () => {
                 {isProcessing ? (
                   <>Processing...</>
                 ) : (
-                  <>{t('checkout.pay')} {convertAndFormat(total)}</>
+                  <>
+                    {paymentMethod === 'cash' ? `Pay Deposit ${convertAndFormat(total * 0.2)}` : `${t('checkout.pay')} ${convertAndFormat(total)}`}
+                  </>
                 )}
               </button>
             </div>
@@ -350,16 +404,45 @@ export const Checkout: React.FC = () => {
               <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-6">{t('checkout.price_details')}</h3>
 
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
-                  <span>{t('checkout.subtotal')}</span>
-                  <span>{convertAndFormat(total)}</span>
-                </div>
+                {items.map((item, idx) => {
+                  const itemCleaningFee = item.cleaningFee || 0;
+                  const itemTotal = item.price;
+                  // If it's a property with a cleaning fee, the rental part is total - cleaning
+                  const rentalPrice = item.type === 'property' || item.type === 'RENTAL' ? (itemTotal - itemCleaningFee) : itemTotal;
 
+                  return (
+                    <div key={idx} className="flex flex-col gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0 last:pb-0">
+                      {/* Base Item Price / Rental Price */}
+                      <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                        <span>
+                          {item.type === 'property' || item.type === 'RENTAL'
+                            ? `${convertAndFormat((item.pricePerNight || 0), 'EUR')} x ${item.nights || 0} ${t('featured.night') || 'nights'}`
+                            : item.title
+                          }
+                        </span>
+                        <span>{convertAndFormat(rentalPrice)}</span>
+                      </div>
+
+                      {/* Cleaning Fee Line for this item */}
+                      {(item.type === 'property' || item.type === 'RENTAL') && itemCleaningFee > 0 && (
+                        <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                          <div className="flex flex-col">
+                            <span>{t('checkout.cleaning_fee') || 'Cleaning Fee'}</span>
+                            <span className="text-[10px] text-slate-400">({t('checkout.set_by_host') || 'set by host'})</span>
+                          </div>
+                          <span>{convertAndFormat(itemCleaningFee)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
                 <span className="font-bold text-lg text-slate-900 dark:text-white">{t('prop.total')} ({currency})</span>
-                <span className="font-bold text-xl text-slate-900 dark:text-white">{convertAndFormat(total)}</span>
+                <span className="font-bold text-xl text-slate-900 dark:text-white">
+                  {convertAndFormat(total)}
+                </span>
               </div>
 
               <div className="mt-6 bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg flex gap-3 items-start">

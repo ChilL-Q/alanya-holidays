@@ -25,7 +25,7 @@ export const bookingSchema = z.object({
     total_price: z.number().positive("Total price must be positive"),
     guests: z.number().int().min(1),
     message: z.string().max(500).optional(),
-    payment_method: z.enum(['card', 'cash']).default('card'),
+    payment_method: z.enum(['card', 'cash', 'bank', 'crypto', 'swift']).default('card'),
     type: z.enum(['property', 'service'])
 });
 

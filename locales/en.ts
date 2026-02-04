@@ -104,6 +104,12 @@ export const en = {
   'checkout.bank_details': 'Bank Details: IBAN TR00 0000 0000 0000 0000',
   'checkout.crypto_address': 'USDT (TRC20): TTrs...',
   'checkout.copy': 'Copy',
+  'checkout.cleaning_fee': 'Cleaning Fee',
+  'checkout.set_by_host': 'Set by host',
+  'checkout.welcome_pack_title': 'Arrive in Comfort',
+  'checkout.welcome_pack_desc': "Don't worry about shopping immediately. We'll stock your fridge with essentials: bread, water, milk, eggs, cheese, and seasonal fruit.",
+  'checkout.add_welcome': 'Add Welcome Pack',
+  'checkout.added': 'Added',
 
   // Trip Assistant
   'ai.button': 'Ask AI Guide',
@@ -164,9 +170,10 @@ export const en = {
   'services.visa.residence_desc': 'Consultation for long-term stays.',
 
   'services.connectivity.title': 'Connectivity',
-  'services.connectivity.esim': 'eSIM Packages',
+  'services.connectivity.esim': 'Tourist SIM Card',
   'services.connectivity.esim_desc': 'Instant data connectivity for your trip.',
 
+  'request_details': 'Request details',
   'book_button': 'Book Now',
   'consult_button': 'Free Consultation',
   'view_shop': 'Visit Shop',
@@ -333,8 +340,8 @@ export const en = {
   'visa.faq.desc': 'Rules change frequently. We stay updated with the latest regulations from the Presidency of Migration Management to ensure your application has the highest chance of approval.',
 
   // eSIM Page
-  'esim.hero.title': 'Stay Connected <span class="text-teal-600">Instantly</span>',
-  'esim.hero.title_plain': 'Stay Connected Instantly',
+  'esim.hero.title': 'Tourist SIM Card',
+  'esim.hero.title_plain': 'Tourist SIM Card',
   'esim.hero.subtitle': 'No roaming fees. No swapping plastic cards. Download your Turkish eSIM in minutes and get online the moment you land.',
   'esim.btn.install': 'Install App',
   'esim.btn.plans': 'View Plans',
@@ -457,6 +464,9 @@ export const en = {
   'reviews.add_photo': 'Add',
   'reviews.submit': 'Submit Review',
   'reviews.submitting': 'Submitting...',
+
+  'profile.cancel_free': 'Are you sure? You are within the 48-hour free cancellation window.',
+  'profile.cancel_fee': 'Are you sure? The 48-hour free cancellation window has passed. Standard cancellation policies apply.',
 
   // About Page
   'about.hero.title': 'Discover Alanya',
