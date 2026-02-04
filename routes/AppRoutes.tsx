@@ -6,28 +6,30 @@ import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 
-// Public Pages
-const Home = React.lazy(() => import('../pages/Home').then(module => ({ default: module.Home })));
+// Public Pages - Direct Imports (for critical navigation speed)
+import { Home } from '../pages/Home';
+import { SearchResultsPage } from '../pages/SearchResultsPage';
+import { ServicesPage } from '../pages/ServicesPage';
+import { About } from '../pages/About';
+import { Contact } from '../pages/Contact';
+import { FAQ } from '../pages/FAQ';
+import { Privacy } from '../pages/Privacy';
+import { Terms } from '../pages/Terms';
+import { Esim } from '../pages/Esim';
+import { ListProperty } from '../pages/ListProperty';
+
+// Public Pages - Lazy Loaded
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
-const Checkout = React.lazy(() => import('../pages/Checkout').then(module => ({ default: module.Checkout })));
-const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
-const ZeroFeesPage = React.lazy(() => import('../pages/ZeroFeesPage').then(module => ({ default: module.ZeroFeesPage })));
-const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
-const FavoritesPage = React.lazy(() => import('../pages/FavoritesPage').then(module => ({ default: module.FavoritesPage })));
-const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
-const Contact = React.lazy(() => import('../pages/Contact').then(module => ({ default: module.Contact })));
 const VisaConsult = React.lazy(() => import('../pages/VisaConsult').then(module => ({ default: module.VisaConsult })));
-const FAQ = React.lazy(() => import('../pages/FAQ').then(module => ({ default: module.FAQ })));
 const CarRental = React.lazy(() => import('../pages/CarRental').then(module => ({ default: module.CarRental })));
 const CarModelDetails = React.lazy(() => import('../pages/CarModelDetails').then(module => ({ default: module.CarModelDetails })));
 const BikeRental = React.lazy(() => import('../pages/BikeRental').then(module => ({ default: module.BikeRental })));
 const BicycleRental = React.lazy(() => import('../pages/BicycleRental').then(module => ({ default: module.BicycleRental })));
 const Visa = React.lazy(() => import('../pages/Visa').then(module => ({ default: module.Visa })));
-const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
-const Privacy = React.lazy(() => import('../pages/Privacy').then(module => ({ default: module.Privacy })));
-const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ default: module.Terms })));
+const Checkout = React.lazy(() => import('../pages/Checkout').then(module => ({ default: module.Checkout })));
+const ZeroFeesPage = React.lazy(() => import('../pages/ZeroFeesPage').then(module => ({ default: module.ZeroFeesPage })));
+const FavoritesPage = React.lazy(() => import('../pages/FavoritesPage').then(module => ({ default: module.FavoritesPage })));
 const ExperienceCategoryPage = React.lazy(() => import('../pages/ExperienceCategoryPage').then(module => ({ default: module.ExperienceCategoryPage })));
-const ListProperty = React.lazy(() => import('../pages/ListProperty').then(module => ({ default: module.ListProperty })));
 const AddService = React.lazy(() => import('../pages/AddService').then(module => ({ default: module.AddService })));
 const Shop = React.lazy(() => import('../pages/Shop').then(module => ({ default: module.Shop })));
 const AddProduct = React.lazy(() => import('../pages/AddProduct').then(module => ({ default: module.AddProduct })));
