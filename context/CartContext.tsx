@@ -38,16 +38,22 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, [items]);
 
   const addToCart = (item: CartItem) => {
-    // Avoid duplicates for simplicity in this demo
-    if (!items.find(i => i.id === item.id)) {
-      setItems(prev => [...prev, item]);
-      // Only auto-open if it's the first item
-      if (items.length === 0) {
-        setIsCartOpen(true);
+    setItems(prev => {
+      // Avoid duplicates
+      if (prev.some(i => i.id === item.id)) {
+        return prev;
       }
-    } else {
-      // Don't auto-open if item already exists (just updates quantity logic if we had it, or does nothing)
-      // setIsCartOpen(true); // Removed auto-open for existing items
+      // logic for auto-open needs to know if it was empty, but here we are in setter.
+      // We can check prev.length inside.
+      return [...prev, item];
+    });
+
+    // Side effect for cart open: relies on current 'items' which is stale, but logic:
+    // "Only auto-open if it's the first item".
+    // If items.length is 0, we are adding one. 
+    // If we call twice, items.length is 0 both times. Open called twice. Harmless.
+    if (items.length === 0) {
+      setIsCartOpen(true);
     }
   };
 

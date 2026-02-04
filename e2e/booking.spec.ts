@@ -11,7 +11,8 @@ test.describe('Booking Flow', () => {
     // If empty, this test fails (requires seeded data or mock).
     
     // For now, check if the grid is present
-    const grid = page.locator('.grid');
+    // For now, check if the grid is present (use first to avoid strict mode if multiple grids exist)
+    const grid = page.locator('.grid').first();
     await expect(grid).toBeVisible();
 
     // 3. Click first property

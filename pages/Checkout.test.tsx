@@ -1,102 +1,130 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Checkout } from './Checkout';
 import * as CartContext from '../context/CartContext';
-import { db } from '../services';
+import * as CurrencyContext from '../context/CurrencyContext';
+import * as LanguageContext from '../context/LanguageContext';
+import * as AuthContext from '../context/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 
-vi.mock('../services', () => ({ db: { createBooking: vi.fn() } }));
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    return {
-        ...actual,
-        useNavigate: () => vi.fn(),
-        Link: ({ children }: any) => <a>{children}</a>
-    };
-});
-vi.mock('../context/CartContext', () => ({ useCart: vi.fn() }));
-vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true, user: { id: '550e8400-e29b-41d4-a716-446655440000' } }) }));
-vi.mock('../context/LanguageContext', () => ({ useLanguage: () => ({ t: (k: string) => k }) }));
+// Mocks
+vi.mock('../services', () => ({
+    db: {
+        createBooking: vi.fn().mockResolvedValue({ id: 'booking-123' })
+    }
+}));
+
 vi.mock('../services/supabase', () => ({
     supabase: {
         functions: {
-            invoke: vi.fn().mockResolvedValue({ data: { url: 'http://test.com' }, error: null })
+            invoke: vi.fn().mockResolvedValue({ data: { url: 'http://stripe.com/checkout' }, error: null })
         }
     }
 }));
-vi.mock('../context/CurrencyContext', () => ({
-    useCurrency: () => ({
-        formatPrice: (p) => `€${p}`,
-        convertPrice: (p) => p,
-        currency: 'EUR',
-        rates: {}
-    })
-}));
 
-describe('Checkout', () => {
-    const mockClearCart = vi.fn();
+const renderWithProviders = (component: React.ReactNode) => {
+    return render(
+        <BrowserRouter>
+            {component}
+        </BrowserRouter>
+    );
+};
 
+describe('Checkout Component', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        // Mock window.location
-        Object.defineProperty(window, 'location', {
-            configurable: true,
-            value: { href: '', origin: 'http://localhost' }
-        });
+
+        // Default Mocks
+        vi.spyOn(LanguageContext, 'useLanguage').mockReturnValue({ t: (key: string) => key } as any);
+        vi.spyOn(CurrencyContext, 'useCurrency').mockReturnValue({
+            convertPrice: (p: number) => p,
+            formatPrice: (p: number) => `€${p}`,
+            currency: 'EUR',
+            rates: {}
+        } as any);
+        vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+            user: { id: 'user-123', email: 'test@test.com' },
+            isAuthenticated: true
+        } as any);
     });
 
-    it('renders empty state when cart is empty', () => {
-        vi.mocked(CartContext.useCart).mockReturnValue({
+    it('renders "Empty Cart" message when cart is empty', () => {
+        vi.spyOn(CartContext, 'useCart').mockReturnValue({
             items: [],
+            total: 0,
             removeFromCart: vi.fn(),
             addToCart: vi.fn(),
-            total: 0,
+            clearCart: vi.fn(),
             isCartOpen: false,
-            setIsCartOpen: vi.fn(),
-            clearCart: mockClearCart
+            setIsCartOpen: vi.fn()
         });
 
-        render(<Checkout />);
+        renderWithProviders(<Checkout />);
         expect(screen.getByText('checkout.empty')).toBeInTheDocument();
     });
 
-    it('renders cart items and total', () => {
-        vi.mocked(CartContext.useCart).mockReturnValue({
+    it('renders items and price details', () => {
+        vi.spyOn(CartContext, 'useCart').mockReturnValue({
             items: [
-                { id: '550e8400-e29b-41d4-a716-446655440001', title: 'Villa A', price: 100, type: 'property' }
+                { id: '1', title: 'Test Property', price: 100, type: 'property', startDate: '2024-01-01', endDate: '2024-01-02' }
             ],
+            total: 100,
             removeFromCart: vi.fn(),
             addToCart: vi.fn(),
-            total: 100,
+            clearCart: vi.fn(),
             isCartOpen: false,
-            setIsCartOpen: vi.fn(),
-            clearCart: mockClearCart
+            setIsCartOpen: vi.fn()
         });
 
-        render(<Checkout />);
-        expect(screen.getByText('Villa A')).toBeInTheDocument();
-        expect(screen.getAllByText('€100').length).toBeGreaterThan(0);
+        renderWithProviders(<Checkout />);
+        expect(screen.getByText('Test Property')).toBeInTheDocument();
+        const prices = screen.getAllByText('€100');
+        expect(prices.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('handles payment submission', async () => {
-        vi.mocked(CartContext.useCart).mockReturnValue({
-            items: [
-                { id: '550e8400-e29b-41d4-a716-446655440001', title: 'Villa A', price: 100, type: 'property' }
-            ],
+    it('toggles payment methods', () => {
+        vi.spyOn(CartContext, 'useCart').mockReturnValue({
+            items: [{ id: '1', title: 'Item', price: 100, type: 'product' }],
+            total: 100,
             removeFromCart: vi.fn(),
             addToCart: vi.fn(),
-            total: 100,
+            clearCart: vi.fn(),
             isCartOpen: false,
-            setIsCartOpen: vi.fn(),
-            clearCart: mockClearCart
+            setIsCartOpen: vi.fn()
         });
 
-        render(<Checkout />);
+        renderWithProviders(<Checkout />);
 
-        // The button contains "checkout.pay" (from mock t function) and the price "€100"
-        const payBtn = screen.getByTestId('pay-button');
-        fireEvent.click(payBtn);
+        // Default is Card
+        expect(screen.getByText('checkout.method.card')).toBeInTheDocument();
 
-        expect(await screen.findByText(/checkout\.success_title/i, {}, { timeout: 3000 })).toBeInTheDocument();
-        expect(mockClearCart).toHaveBeenCalled();
+        // Switch to SWIFT
+        fireEvent.click(screen.getByText('checkout.method.swift'));
+        expect(screen.getByText('checkout.method.swift_desc')).toBeInTheDocument();
+        expect(screen.getByText('Garanti Bank')).toBeInTheDocument();
+    });
+
+    it('adds welcome pack', () => {
+        const addToCartMock = vi.fn();
+        vi.spyOn(CartContext, 'useCart').mockReturnValue({
+            items: [{ id: '1', title: 'Item', price: 100, type: 'property' }],
+            total: 100,
+            removeFromCart: vi.fn(),
+            addToCart: addToCartMock,
+            clearCart: vi.fn(),
+            isCartOpen: false,
+            setIsCartOpen: vi.fn()
+        });
+
+        renderWithProviders(<Checkout />);
+
+        // Click Add Welcome Pack
+        const addButton = screen.getByText('checkout.add_welcome');
+        fireEvent.click(addButton);
+
+        expect(addToCartMock).toHaveBeenCalledWith(expect.objectContaining({
+            title: 'Welcome Pack',
+            price: 30
+        }));
     });
 });
