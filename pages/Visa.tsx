@@ -1,9 +1,11 @@
 import React from 'react';
 import { FileCheck, Clock, ShieldCheck, Globe, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { useLanguage } from '../context/LanguageContext';
 
 export const Visa: React.FC = () => {
+    const navigate = useNavigate();
     const { t } = useLanguage();
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -41,8 +43,10 @@ export const Visa: React.FC = () => {
                                 <div className="text-xs text-slate-500 uppercase tracking-wide">{t('visa.tourist.price')}</div>
                                 <div className="text-2xl font-bold text-teal-600">€50</div>
                             </div>
-                            <button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
-                                Apply
+                            <button
+                                onClick={() => navigate('/visa-consult')}
+                                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                                {t('visa.btn_consult')}
                             </button>
                         </div>
                     </div >
@@ -71,8 +75,10 @@ export const Visa: React.FC = () => {
                                 <div className="text-xs text-slate-500 uppercase tracking-wide">{t('visa.residence.price')}</div>
                                 <div className="text-2xl font-bold text-purple-600">€250</div>
                             </div>
-                            <button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
-                                Consult
+                            <button
+                                onClick={() => navigate('/visa-consult')}
+                                className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                                {t('visa.btn_consult')}
                             </button>
                         </div>
                     </div>

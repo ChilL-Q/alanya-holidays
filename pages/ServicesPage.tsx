@@ -147,7 +147,7 @@ export const ServicesPage: React.FC = () => {
                             icon={Anchor}
                             rawPrice={50}
                             actionLabel="Consult"
-                            onClick={() => navigate('/partner-contact')}
+                            onClick={() => navigate('/visa-consult')}
                         />
                         <ServiceCard
                             title={t('services.visa.residence')}
@@ -155,7 +155,7 @@ export const ServicesPage: React.FC = () => {
                             icon={Anchor}
                             rawPrice={250}
                             actionLabel="Consult"
-                            onClick={() => navigate('/partner-contact')}
+                            onClick={() => navigate('/visa-consult')}
                         />
                     </ServiceGrid>
                 )}

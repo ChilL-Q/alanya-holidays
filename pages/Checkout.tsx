@@ -280,7 +280,7 @@ export const Checkout: React.FC = () => {
                     }`}
                 >
                   <Banknote className={paymentMethod === 'cash' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>Cash on Arrival</span>
+                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.cash')}</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod('bank')}
@@ -311,7 +311,7 @@ export const Checkout: React.FC = () => {
                       }`}
                   >
                     <Banknote className={paymentMethod === 'swift' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                    <span className={`text-sm font-bold ${paymentMethod === 'swift' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>SWIFT Transfer</span>
+                    <span className={`text-sm font-bold ${paymentMethod === 'swift' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.swift')}</span>
                   </button>
                 </div>
               </div>
@@ -357,27 +357,27 @@ export const Checkout: React.FC = () => {
               )}
               {paymentMethod === 'swift' && (
                 <div className="p-4 border border-blue-100 dark:border-blue-900/50 rounded-lg bg-blue-50 dark:bg-blue-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">International SWIFT Transfer Details</p>
+                  <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">{t('checkout.method.swift_desc')}</p>
                   <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-blue-900">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">Bank Name</span>
+                      <span className="text-slate-500">{t('checkout.bank_name')}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Garanti Bank</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">SWIFT / BIC</span>
+                      <span className="text-slate-500">{t('checkout.swift_bic')}</span>
                       <div className="flex items-center gap-2">
                         <code className="font-mono text-slate-700 dark:text-slate-300">GATRTRI2</code>
                         <button onClick={() => copyToClipboard('GATRTRI2')} className="text-blue-600 hover:text-blue-700"><Copy size={12} /></button>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500">IBAN</span>
+                      <span className="text-slate-500">{t('checkout.iban')}</span>
                       <div className="flex items-center gap-2">
                         <code className="font-mono text-slate-700 dark:text-slate-300">TR00 1234 5678 9000 0000 0000 00</code>
                         <button onClick={() => copyToClipboard('TR00 1234 5678 9000 0000 0000 00')} className="text-blue-600 hover:text-blue-700"><Copy size={12} /></button>
                       </div>
                     </div>
-                    <p className="pt-2 text-[10px] text-slate-400 italic">Please include your Booking Reference in the transfer description.</p>
+                    <p className="pt-2 text-[10px] text-slate-400 italic">{t('checkout.swift_ref')}</p>
                   </div>
                 </div>
               )}
