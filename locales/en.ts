@@ -354,7 +354,7 @@ export const en = {
   'visa.consult.subtitle': 'Visa & Residence Permit Support',
   'visa.consult.desc': 'For professional assistance with Tourist Visas and Residence Permits (Ikamet), we partner with certified legal experts in Alanya.',
   'visa.consult.agent': 'Harith',
-  'visa.consult.availability': 'Available on WhatsApp • English / Russian / Turkish',
+  'visa.consult.availability': 'Available on WhatsApp • English / Arabic / Turkish',
   'visa.consult.disclaimer': 'By contacting our partner, you acknowledge that services are provided by an independent third party.',
 
   // eSIM Page

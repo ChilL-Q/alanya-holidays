@@ -353,7 +353,7 @@ export const tr = {
     'visa.consult.subtitle': 'Vize ve İkamet İzni Desteği',
     'visa.consult.desc': 'Turist Vizeleri ve İkamet İzni (İkamet) konularında profesyonel yardım için Alanya\'daki yetkili yasa uzmanlarıyla iş birliği yapıyoruz.',
     'visa.consult.agent': 'Harith',
-    'visa.consult.availability': 'WhatsApp\'ta müsait • İngilizce / Rusça / Türkçe',
+    'visa.consult.availability': 'WhatsApp\'ta müsait • İngilizce / Arapça / Türkçe',
     'visa.consult.disclaimer': 'Ortağımızla iletişime geçerek, hizmetlerin bağımsız bir üçüncü tarafça sağlandığını kabul edersiniz.',
 
     // eSIM Page

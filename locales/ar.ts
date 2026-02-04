@@ -353,7 +353,7 @@ export const ar = {
     'visa.consult.subtitle': 'دعم التأشيرة وتصريح الإقامة',
     'visa.consult.desc': 'للمساعدة المهنية في التأشيرات السياحية وتصاريح الإقامة (إقامة)، نتعاون مع خبراء قانونيين معتمدين في ألانيا.',
     'visa.consult.agent': 'حارث',
-    'visa.consult.availability': 'متاح على واتساب • إنجليزي / روسي / تركي',
+    'visa.consult.availability': 'متاح على واتساب • إنجليزي / عربي / تركي',
     'visa.consult.disclaimer': 'بالاتصال بشريكنا، فإنك تقر بأن الخدمات مقدمة من قبل طرف ثالث مستقل.',
 
     // eSIM Page
