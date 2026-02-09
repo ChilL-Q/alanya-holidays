@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, ServiceData } from '../../services';
+import { db, ServiceData } from '../../api-services';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Calendar, ArrowLeft, Clock, Heart, Phone, MessageCircle } from 'lucide-react';

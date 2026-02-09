@@ -2,7 +2,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePropertyFilters } from './usePropertyFilters';
-import { propertiesService } from '../services/api/properties';
+import { propertiesService } from '../api-services/api/properties';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock the properties service

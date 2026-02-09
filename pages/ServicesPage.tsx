@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain, Bike } from 'lucide-react';
+import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain, Bike, Camera, Video } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ServiceGrid } from '../components/services/ServiceGrid';
@@ -38,6 +38,7 @@ export const ServicesPage: React.FC = () => {
         { id: 'experiences', label: t('footer.experiences') },
         { id: 'health', label: t('services.health.title') },
         { id: 'visa', label: t('services.visa.title') },
+        { id: 'creative', label: t('services.creative.title') },
         { id: 'connectivity', label: t('services.connectivity.title') },
     ];
 
@@ -109,8 +110,8 @@ export const ServicesPage: React.FC = () => {
                             onClick={() => navigate('/experiences/safari')}
                         />
                         <ServiceCard
-                            title="ATV & Buggy"
-                            description="Hourly rentals for off-road fun"
+                            title={t('services.adventure.atv_title')}
+                            description={t('services.adventure.atv_subtitle')}
                             icon={Car}
                             imageUrl="/images/experiences/atv_buggy_hero.png"
                             rawPrice={minPrices['atv'] || 45}
@@ -128,8 +129,8 @@ export const ServicesPage: React.FC = () => {
                         />
 
                         <ServiceCard
-                            title="Bikes & E-bikes"
-                            description="Premium mountain and city bikes"
+                            title={t('services.adventure.bikes_title')}
+                            description={t('services.adventure.bikes_subtitle')}
                             icon={Bike}
                             imageUrl="/images/experiences/bikes_hero.png"
                             rawPrice={10}
@@ -163,12 +164,41 @@ export const ServicesPage: React.FC = () => {
                 {activeCategory === 'connectivity' && (
                     <ServiceGrid id="sim" title={t('services.connectivity.title')}>
                         <ServiceCard
-                            title="Tourist SIM Card"
+                            title={t('services.connectivity.esim')}
                             description={t('services.connectivity.esim_desc')}
                             icon={Anchor}
                             rawPrice={15}
-                            actionLabel="Buy Now"
+                            actionLabel={t('book_button')}
                             onClick={() => navigate('/services/tourist-sim-card')}
+                        />
+                    </ServiceGrid>
+                )}
+
+                {activeCategory === 'creative' && (
+                    <ServiceGrid id="creative" title={t('services.creative.title')}>
+                        <ServiceCard
+                            title={t('services.creative.photo')}
+                            description={t('services.creative.photo_desc')}
+                            icon={Camera}
+                            rawPrice={100}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/creative-professionals/photographer')}
+                        />
+                        <ServiceCard
+                            title={t('services.creative.video')}
+                            description={t('services.creative.video_desc')}
+                            icon={Video}
+                            rawPrice={200}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/creative-professionals/videographer')}
+                        />
+                        <ServiceCard
+                            title={t('services.creative.content')}
+                            description={t('services.creative.content_desc')}
+                            icon={Camera}
+                            rawPrice={150}
+                            actionLabel={t('book_button')}
+                            onClick={() => navigate('/creative-professionals/content_creator')}
                         />
                     </ServiceGrid>
                 )}

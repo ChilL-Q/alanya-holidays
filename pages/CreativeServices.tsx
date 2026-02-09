@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
+import { Check, Camera, Video, Instagram, Smartphone, Sparkles, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
 
-export const ExperienceCategoryPage: React.FC = () => {
-    const { category } = useParams<{ category: string }>();
+export const CreativeServices: React.FC = () => {
+    const { subcategory } = useParams<{ subcategory: string }>();
     const { t } = useLanguage();
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
@@ -14,74 +14,49 @@ export const ExperienceCategoryPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [services, setServices] = useState<ServiceData[]>([]);
 
-    // Configuration for each category
-    const categoryConfig: Record<string, {
+    const config: Record<string, {
         title: string;
         subtitle: string;
         heroImage: string;
         features: string[];
         icon: any;
     }> = {
-        water: {
-            title: t('services.adventure.water'),
-            subtitle: t('services.adventure.water_desc'),
-            heroImage: '/images/experiences/water_sports_hero.png',
-            features: ['Professional Guides', 'Safety Gear Included', 'Hotel Pickup'],
-            icon: Anchor
+        photographer: {
+            title: t('services.creative.photo'),
+            subtitle: t('services.creative.photo_desc'),
+            heroImage: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&q=80',
+            features: ['High-res Editing', 'All Originals Included', 'Alanya Hidden Gems'],
+            icon: Camera
         },
-        safari: {
-            title: t('services.adventure.safari'),
-            subtitle: t('services.adventure.safari_desc'),
-            heroImage: '/images/experiences/safari_expedition_hero.png',
-            features: ['Off-road Adventure', 'Lunch Included', 'Photo Stops'],
-            icon: Map
+        videographer: {
+            title: t('services.creative.video'),
+            subtitle: t('services.creative.video_desc'),
+            heroImage: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&q=80',
+            features: ['Drone 4K Footage', 'Cinematic Editing', 'Sound Design'],
+            icon: Video
         },
-        air: {
-            title: t('services.adventure.air'),
-            subtitle: t('services.adventure.air_desc'),
-            heroImage: '/images/experiences/air_adventures_hero.png',
-            features: ['Certified Pilots', 'HD Video Available', 'Insurance Included'],
-            icon: Cloud
-        },
-        land: {
-            title: t('services.adventure.land'),
-            subtitle: t('services.adventure.land_desc'),
-            heroImage: '/images/experiences/land_tours_hero.png',
-            features: ['Cultural Sites', 'Expert Guide', 'Comfortable Transport'],
-            icon: Mountain
-        },
-        wellness: {
-            title: t('services.health.title'),
-            subtitle: t('services.health.subtitle'),
-            heroImage: '/images/experiences/wellness_hero.png',
-            features: ['Certified Specialists', 'Relaxing Atmosphere', 'Premium Products'],
-            icon: Heart
-        },
-        atv: {
-            title: "ATV & Buggy",
-            subtitle: "Adrenaline-filled off-road adventures",
-            heroImage: '/images/experiences/atv_buggy_hero.png',
-            features: ['Hourly Rentals', 'Safety Briefing', 'Helmet Included'],
-            icon: Car
+        content_creator: {
+            title: t('services.creative.content'),
+            subtitle: t('services.creative.content_desc'),
+            heroImage: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80',
+            features: ['Reels & TikTok Ready', 'Fast Delivery', 'Viral Aesthetics'],
+            icon: Sparkles
         }
     };
 
-    const config = category ? categoryConfig[category] : null;
+    const currentConfig = subcategory ? config[subcategory] : null;
 
     useEffect(() => {
         const fetchServices = async () => {
-            if (!category) return;
+            if (!subcategory) return;
             try {
-                // Fetch all tours and filter by subcategory
-                // Ideally backend would support filtering by subcategory directly
-                const { data } = await db.getServices('tour', 1, 100);
+                const { data } = await db.getServices('creative', 1, 100);
                 if (data) {
-                    // Filter locally for now effectively
-                    const filtered = data.filter(s => s.features?.subcategory === category);
+                    const filtered = data.filter(s => s.features?.subcategory === subcategory);
                     setServices(filtered);
                 }
             } catch (err) {
-                console.error('Failed to fetch services', err);
+                console.error('Failed to fetch creative services', err);
             } finally {
                 setLoading(false);
             }
@@ -89,9 +64,9 @@ export const ExperienceCategoryPage: React.FC = () => {
 
         fetchServices();
         window.scrollTo(0, 0);
-    }, [category]);
+    }, [subcategory]);
 
-    if (!config) {
+    if (!currentConfig) {
         return (
             <div className="pt-32 pb-16 min-h-screen text-center">
                 <h1 className="text-2xl font-bold">Category not found</h1>
@@ -109,21 +84,21 @@ export const ExperienceCategoryPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg text-teal-600 dark:text-teal-400">
-                                <config.icon size={24} />
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                                <currentConfig.icon size={24} />
                             </div>
-                            <span className="text-sm font-bold text-teal-600 tracking-wider uppercase">{t('footer.experiences')}</span>
+                            <span className="text-sm font-bold text-purple-600 tracking-wider uppercase">{t('add_service.cat.creative')}</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6 leading-tight">
-                            {config.title}
+                            {currentConfig.title}
                         </h1>
 
                         <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                            {config.subtitle}
+                            {currentConfig.subtitle}
                         </p>
 
                         <div className="flex flex-wrap gap-4 mb-10">
-                            {config.features.map((feature, idx) => (
+                            {currentConfig.features.map((feature, idx) => (
                                 <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
                                     <Check size={16} className="text-teal-500" />
                                     {feature}
@@ -133,11 +108,11 @@ export const ExperienceCategoryPage: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -inset-4 bg-purple-100 dark:bg-purple-900/30 rounded-full blur-3xl opacity-50"></div>
                         <img
-                            src={config.heroImage}
-                            alt={config.title}
-                            className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 w-full object-cover max-h-[500px]"
+                            src={currentConfig.heroImage}
+                            alt={currentConfig.title}
+                            className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 w-full aspect-[4/3] object-cover"
                         />
                     </div>
                 </div>
@@ -145,48 +120,40 @@ export const ExperienceCategoryPage: React.FC = () => {
 
             {/* Services Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-serif text-slate-900 dark:text-white mb-8">Available Packages</h2>
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-3xl font-serif text-slate-900 dark:text-white">Creative Professionals</h2>
+                    <p className="text-slate-500 text-sm">{services.length} professionals found</p>
+                </div>
 
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
-                        <div className="w-12 h-12 border-4 border-slate-200 border-t-teal-600 rounded-full animate-spin mb-4"></div>
-                        <p className="text-slate-400 text-sm animate-pulse">Finding adventures...</p>
+                        <div className="w-12 h-12 border-4 border-slate-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+                        <p className="text-slate-400 text-sm animate-pulse">Scanning portfolio...</p>
                     </div>
                 ) : services.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {services.map((service) => (
                             <div
                                 key={service.id}
                                 className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
-                                onClick={() => {
-                                    if (category === 'wellness') {
-                                        navigate(`/book-wellness/${service.service_ref || service.id}`);
-                                    } else {
-                                        navigate(`/book-tour/${service.service_ref || service.id}`);
-                                    }
-                                }}
+                                onClick={() => navigate(`/contact?service=${service.id}`)}
                             >
                                 <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
                                     <img
-                                        src={service.images?.[0] || config.heroImage}
+                                        src={service.images?.[0] || currentConfig.heroImage}
                                         alt={service.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300" />
-
-                                    <div className="absolute top-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm flex items-center gap-1">
-                                        <Sun size={10} className="text-orange-500" />
-                                        {service.features?.duration ? `${service.features.duration}h` : 'Half Day'}
-                                    </div>
                                 </div>
 
                                 <div className="p-5 flex flex-col flex-grow">
-                                    {(service.provider?.company_name || service.provider?.full_name) && (
-                                        <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider mb-1">
+                                    {(service.provider?.full_name || service.provider?.company_name) && (
+                                        <p className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider mb-1">
                                             {service.provider.company_name || service.provider.full_name}
                                         </p>
                                     )}
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-teal-600 transition-colors">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-purple-600 transition-colors">
                                         {service.title}
                                     </h3>
                                     <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4 flex-grow leading-relaxed">
@@ -195,13 +162,13 @@ export const ExperienceCategoryPage: React.FC = () => {
 
                                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
                                         <div className="flex flex-col">
-                                            <span className="text-xs text-slate-400 font-medium">From</span>
+                                            <span className="text-xs text-slate-400 font-medium">Starting from</span>
                                             <span className="text-lg font-bold text-slate-900 dark:text-white">
                                                 {formatPrice(convertPrice(service.price, 'EUR'))}
                                             </span>
                                         </div>
                                         <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
-                                            {t('request_details')}
+                                            Book Now
                                         </button>
                                     </div>
                                 </div>
@@ -213,13 +180,13 @@ export const ExperienceCategoryPage: React.FC = () => {
                         <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
                             <Compass size={32} />
                         </div>
-                        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No adventures found</h3>
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No professionals found</h3>
                         <p className="text-slate-500 max-w-sm mx-auto">
-                            We currently don't have any listings in this category. Check back soon!
+                            We currently don't have any professionals listed for this category. Check back soon!
                         </p>
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 };

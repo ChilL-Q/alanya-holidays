@@ -39,6 +39,7 @@ const BookTour = React.lazy(() => import('../pages/booking/BookTour').then(modul
 const BookWellness = React.lazy(() => import('../pages/booking/BookWellness').then(module => ({ default: module.BookWellness })));
 const BookingSuccess = React.lazy(() => import('../pages/booking/Success').then(module => ({ default: module.BookingSuccess })));
 const InboxPage = React.lazy(() => import('../pages/InboxPage').then(module => ({ default: module.InboxPage })));
+const CreativeServices = React.lazy(() => import('../pages/CreativeServices').then(module => ({ default: module.CreativeServices })));
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -96,6 +97,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/services/bicycle-rental" element={<BicycleRental />} />
                 <Route path="/services/tourist-sim-card" element={<Esim />} />
                 <Route path="/services/visa-legal" element={<Visa />} />
+                <Route path="/creative-professionals/:subcategory" element={<CreativeServices />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/add-service" element={<AddService />} />

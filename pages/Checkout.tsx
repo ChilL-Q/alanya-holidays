@@ -6,8 +6,8 @@ import { Trash2, Shield, CreditCard, CheckCircle, Smartphone, Banknote, Bitcoin,
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../services';
-import { supabase } from '../services/supabase';
+import { db } from '../api-services';
+import { supabase } from '../api-services/supabase';
 
 export const Checkout: React.FC = () => {
   const { items, total, removeFromCart, addToCart, clearCart } = useCart();

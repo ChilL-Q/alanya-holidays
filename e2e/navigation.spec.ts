@@ -21,7 +21,7 @@ test.describe('Navigation Flow', () => {
         await expect(page).toHaveURL(/\/services\/health/);
         
         // Click on Visa
-        await page.getByText('Visa & Legal').click();
+        await page.getByText('Consulting').click();
         await expect(page).toHaveURL(/\/services\/visa/);
     });
 });

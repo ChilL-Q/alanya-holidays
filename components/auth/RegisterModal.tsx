@@ -5,7 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { AlertCircle, Loader2, ArrowLeft, Mail, User, Lock } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../api-services/supabase';
 
 export const RegisterModal: React.FC = () => {
     const { activeModal, closeModal, openLogin } = useModal();

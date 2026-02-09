@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
 import { BarChart3, Calendar, DollarSign, Home, Plus, ExternalLink, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';

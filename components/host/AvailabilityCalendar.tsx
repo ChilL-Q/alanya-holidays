@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { PropertyAvailability } from '../../types/models';
 import { Loader2, Lock, DollarSign, Calendar as CalendarIcon, RefreshCw, X } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';

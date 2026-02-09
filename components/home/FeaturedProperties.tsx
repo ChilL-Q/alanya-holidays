@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { PropertyCard } from '../ui/PropertyCard';
 
 export const FeaturedProperties: React.FC = () => {

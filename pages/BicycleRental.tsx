@@ -3,7 +3,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services';
+import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
 
@@ -47,7 +47,7 @@ export const BicycleRental: React.FC = () => {
                     minPrice: service.price,
                     image: service.images?.[0] || '/images/experiences/bikes_hero.png',
                     count: 1,
-                    features: service.features?.included ? service.features.included.split(',') : ['Helmet', 'Lock', 'Map']
+                    features: service.features?.included ? service.features.included.split(',') : []
                 }));
 
                 setBikeGroups(formattedBikes);

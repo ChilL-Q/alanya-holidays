@@ -1,6 +1,9 @@
 import React from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { messagesService } from '../services/api/misc';
+import { useSearchParams } from 'react-router-dom';
+import { messagesService } from '../api-services/api/misc';
+import { db } from '../api-services';
+import { useAuth } from '../context/AuthContext';
 
 export const Contact: React.FC = () => {
     return (
@@ -52,7 +55,45 @@ export const Contact: React.FC = () => {
 };
 
 const ContactForm: React.FC = () => {
-    const [formData, setFormData] = React.useState({ name: '', email: '', subject: '', message: '' });
+    const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const serviceId = searchParams.get('service');
+    const category = searchParams.get('category');
+
+    const [formData, setFormData] = React.useState({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+    });
+
+    React.useEffect(() => {
+        // Pre-fill user data if available
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                name: user.name || '',
+                email: user.email || ''
+            }));
+        }
+
+        const prefillSubject = async () => {
+            if (serviceId) {
+                try {
+                    const service = await db.getService(serviceId);
+                    if (service) {
+                        setFormData(prev => ({ ...prev, subject: `Inquiry: ${service.title}` }));
+                    }
+                } catch (e) {
+                    console.error('Failed to pre-fill service', e);
+                }
+            } else if (category) {
+                setFormData(prev => ({ ...prev, subject: `Inquiry: ${category.charAt(0).toUpperCase() + category.slice(1)} Services` }));
+            }
+        };
+        prefillSubject();
+    }, [serviceId, category, user]);
+
     const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -94,9 +135,13 @@ const ContactForm: React.FC = () => {
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
                     <input
                         required
-                        className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                        readOnly={!!user}
+                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 outline-none transition-all ${user
+                            ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-slate-500'
+                            : 'bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500'
+                            }`}
                         value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                        onChange={e => !user && setFormData({ ...formData, name: e.target.value })}
                         placeholder="Your name"
                     />
                 </div>
@@ -105,9 +150,13 @@ const ContactForm: React.FC = () => {
                     <input
                         required
                         type="email"
-                        className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                        readOnly={!!user}
+                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 outline-none transition-all ${user
+                            ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-slate-500'
+                            : 'bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500'
+                            }`}
                         value={formData.email}
-                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        onChange={e => !user && setFormData({ ...formData, email: e.target.value })}
                         placeholder="your@email.com"
                     />
                 </div>

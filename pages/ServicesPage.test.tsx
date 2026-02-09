@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ServicesPage } from './ServicesPage';
 import { MemoryRouter } from 'react-router-dom';
-import { db } from '../services';
+import { db } from '../api-services';
 
 // Mock DB
 vi.mock('../services', () => ({

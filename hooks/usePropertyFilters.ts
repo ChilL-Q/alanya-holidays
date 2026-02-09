@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Property, PropertyDB } from '../types/models';
-import { propertiesService } from '../services/api/properties';
+import { propertiesService } from '../api-services/api/properties';
 
 export interface FilterState {
     priceRange: [number, number];

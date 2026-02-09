@@ -125,7 +125,7 @@ export interface ServiceDB {
     title: string;
     description: string;
     price: number;
-    type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness';
+    type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative';
     provider_id: string;
     features: { [key: string]: any };
     images: string[];

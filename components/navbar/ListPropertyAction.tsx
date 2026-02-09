@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { BecomeHostModal } from '../modals/BecomeHostModal';
 
@@ -78,8 +78,8 @@ export const ListPropertyAction: React.FC = () => {
                                 <Home size={20} />
                             </div>
                             <div>
-                                <span className="block text-sm font-bold text-slate-900 dark:text-white">List a Property</span>
-                                <span className="block text-xs text-slate-500 font-medium">Earn money as a host</span>
+                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_property')}</span>
+                                <span className="block text-xs text-slate-500 font-medium">{t('nav.list_desc')}</span>
                             </div>
                         </Link>
                         <Link to="/add-service" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group">
@@ -87,8 +87,8 @@ export const ListPropertyAction: React.FC = () => {
                                 <Car size={20} />
                             </div>
                             <div>
-                                <span className="block text-sm font-bold text-slate-900 dark:text-white">List a Service</span>
-                                <span className="block text-xs text-slate-500 font-medium">Cars, tours, and more</span>
+                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_service')}</span>
+                                <span className="block text-xs text-slate-500 font-medium">{t('nav.service_desc')}</span>
                             </div>
                         </Link>
                     </div>

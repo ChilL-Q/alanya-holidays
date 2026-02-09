@@ -34,13 +34,13 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose }) =
                         onClick={() => { openLogin(); onClose(); }}
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
-                        Login
+                        {t('nav.login')}
                     </button>
                     <button
                         onClick={() => { openRegister(); onClose(); }}
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors"
                     >
-                        Register
+                        {t('nav.signup')}
                     </button>
                 </div>
             )}
@@ -63,13 +63,13 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose }) =
                         {user?.role === 'admin' && (
                             <Link to="/admin" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                                 <LayoutDashboard size={16} className="text-purple-600" />
-                                Admin Panel
+                                {t('nav.admin_panel')}
                             </Link>
                         )}
                         {(user?.role === 'host' || user?.role === 'admin') && (
                             <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
                                 <LayoutDashboard size={16} className="text-teal-500" />
-                                Host Dashboard
+                                {t('nav.host_dashboard')}
                             </Link>
                         )}
                         <div className="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
@@ -83,8 +83,8 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose }) =
                 {!isAuthenticated && (
                     <div className="md:hidden">
                         {/* Redundant if hidden md:block on container, but keeping structure */}
-                        <button onClick={() => { openLogin(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">Login</button>
-                        <button onClick={() => { openRegister(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-bold text-teal-600">Register</button>
+                        <button onClick={() => { openLogin(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">{t('nav.login')}</button>
+                        <button onClick={() => { openRegister(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-bold text-teal-600">{t('nav.signup')}</button>
                     </div>
                 )}
             </div>

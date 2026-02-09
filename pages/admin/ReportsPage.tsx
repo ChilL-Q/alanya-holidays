@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../api-services/supabase';
 import { createPortal } from 'react-dom';
 import { Flag, CheckCircle, Clock, XCircle, MessageSquare, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';

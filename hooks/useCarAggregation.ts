@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ServiceData } from '../services';
+import { ServiceData } from '../api-services';
 import { getCarImage } from '../utils/carImages';
 
 export interface CarGroup {

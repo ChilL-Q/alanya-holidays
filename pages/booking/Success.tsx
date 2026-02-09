@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Home, Calendar } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../api-services/supabase';
 
 export const BookingSuccess: React.FC = () => {
     const [searchParams] = useSearchParams();

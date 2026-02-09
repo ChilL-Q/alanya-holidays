@@ -35,7 +35,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         : price;
 
     return (
-        <div className="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+        <div
+            onClick={onClick}
+            className={`group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
+        >
             {imageUrl && (
                 <div className="relative h-48 overflow-hidden shrink-0">
                     <img
@@ -65,7 +68,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 <div className="flex-1" />
 
                 <button
-                    onClick={onClick}
                     className="w-full bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
                 >
                     {actionLabel || 'View Details'}

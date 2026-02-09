@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { db } from '../services';
+import { db } from '../api-services';
 
 interface FavoritesContextType {
     favorites: string[];

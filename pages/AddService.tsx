@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../services';
-import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Heart, Banknote } from 'lucide-react';
+import { db } from '../api-services';
+import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Heart, Banknote, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import toast from 'react-hot-toast';
 import { CAR_CATALOG, BIKE_CATALOG, CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 
-type ServiceCategory = 'transportation' | 'adventure' | 'health' | null;
-type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness';
+type ServiceCategory = 'transportation' | 'adventure' | 'health' | 'creative' | null;
+type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness' | 'creative';
 
 interface ItineraryItem {
     time: string;
@@ -71,7 +71,7 @@ export const AddService: React.FC = () => {
         setCategory(cat);
         setFormData(prev => ({
             ...prev,
-            type: cat === 'transportation' ? 'car' : (cat === 'adventure' ? 'tour' : 'wellness')
+            type: cat === 'transportation' ? 'car' : (cat === 'adventure' ? 'tour' : (cat === 'health' ? 'wellness' : 'creative'))
         }));
         setStep(1);
     };
@@ -168,6 +168,11 @@ export const AddService: React.FC = () => {
                     whatsapp: formData.whatsapp,
                     subcategory: formData.subcategory // Reuse subcategory for health types (Hair, Dental, etc)
                 };
+            } else if (category === 'creative') {
+                features = {
+                    subcategory: formData.subcategory,
+                    whatsapp: formData.whatsapp
+                };
             }
 
             // Common features
@@ -204,10 +209,10 @@ export const AddService: React.FC = () => {
                     <p className="text-slate-500 dark:text-slate-400 mb-8">Your service has been submitted for approval. You will be notified once it is live.</p>
                     <div className="flex flex-col gap-3">
                         <button onClick={() => navigate('/services')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-3 rounded-xl transition-colors">
-                            View All Services
+                            {t('add_service.view_all')}
                         </button>
                         <button onClick={() => { setStep(0); setCategory(null); }} className="w-full text-slate-500 hover:text-slate-900 font-medium py-2 transition-colors">
-                            Add Another Service
+                            {t('add_service.add_another')}
                         </button>
                     </div>
                 </div>
@@ -226,45 +231,56 @@ export const AddService: React.FC = () => {
                         </button>
                     )}
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">List Your Service</h1>
-                        <p className="text-slate-500 dark:text-slate-400">Reach thousands of travelers in Alanya</p>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('add_service.title')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400">{t('add_service.subtitle')}</p>
                     </div>
                 </div>
 
                 {/* Step 0: Category Selection */}
                 {step === 0 && (
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <button
                             onClick={() => handleCategorySelect('transportation')}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Car size={32} />
+                            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Car size={28} />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Transportation</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Rent out cars, scooters, bikes, or offer transfer services.</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.transportation')}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2">{t('add_service.desc.transportation')}</p>
                         </button>
 
                         <button
                             onClick={() => handleCategorySelect('adventure')}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-14 h-14 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Map size={32} />
+                            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Map size={28} />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Adventure & Activities</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">List tours, excursions, experiences, and guided trips.</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.adventure')}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2">{t('add_service.desc.adventure')}</p>
                         </button>
 
                         <button
                             onClick={() => handleCategorySelect('health')}
-                            className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:ring-2 hover:ring-rose-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:ring-2 hover:ring-rose-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-14 h-14 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Heart size={32} />
+                            <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Heart size={28} />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Health & Wellness</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Medical tourism, spa, dental, and cosmetic services.</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.health')}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2">{t('add_service.desc.health')}</p>
+                        </button>
+
+                        <button
+                            onClick={() => handleCategorySelect('creative')}
+                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:ring-2 hover:ring-purple-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                        >
+                            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <Camera size={28} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.creative')}</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2">{t('add_service.desc.creative')}</p>
                         </button>
                     </div>
                 )}
@@ -612,6 +628,39 @@ export const AddService: React.FC = () => {
                                                 onChange={handleChange}
                                                 placeholder="+90 555 123 45 67"
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-1">Clients will contact you directly via WhatsApp.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Specific Fields: Creative */}
+                            {category === 'creative' && (
+                                <div className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Service Category</label>
+                                            <select
+                                                name="subcategory"
+                                                value={formData.subcategory}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-purple-500"
+                                            >
+                                                <option value="photographer">{t('add_service.creative.photographer')}</option>
+                                                <option value="videographer">{t('add_service.creative.videographer')}</option>
+                                                <option value="content_creator">{t('add_service.creative.content_creator')}</option>
+                                                <option value="other">{t('add_service.creative.other')}</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">WhatsApp Number</label>
+                                            <input
+                                                name="whatsapp"
+                                                value={formData.whatsapp}
+                                                onChange={handleChange}
+                                                placeholder="+90 555 123 45 67"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-purple-500"
                                             />
                                             <p className="text-xs text-slate-500 mt-1">Clients will contact you directly via WhatsApp.</p>
                                         </div>

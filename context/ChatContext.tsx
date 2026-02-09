@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { chatService } from '../services/api/chat';
-import { supabase } from '../services/supabase';
+import { chatService } from '../api-services/api/chat';
+import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
-import { db } from '../services';
+import { db } from '../api-services';
 import { PropertyCard } from '../components/ui/PropertyCard';
 
 export const FavoritesPage: React.FC = () => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { db, ServiceData } from '../../services';
-import { supabase } from '../../services/supabase';
+import { db, ServiceData } from '../../api-services';
+import { supabase } from '../../api-services/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Save, Trash2, Plus, X, Edit2 } from 'lucide-react';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';

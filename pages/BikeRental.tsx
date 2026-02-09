@@ -3,7 +3,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services';
+import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
 
@@ -57,7 +57,7 @@ export const BikeRental: React.FC = () => {
                             minPrice: price,
                             image: image,
                             count: 1,
-                            features: ['Helmet', 'Insurance'] // Default features if not in DB, or extract from service
+                            features: service.features?.included ? service.features.included.split(',') : []
                         };
                     } else {
                         groups[key].count += 1;

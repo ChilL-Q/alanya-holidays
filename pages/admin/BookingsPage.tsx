@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { Filter, Search, CheckCircle, XCircle, Clock, Eye, Calendar, DollarSign, User, Euro } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { useCurrency } from '../../context/CurrencyContext';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../api-services/supabase';
 
 export const BookingsPage: React.FC = () => {
     const { convertPrice, formatPrice } = useCurrency();

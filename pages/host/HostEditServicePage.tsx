@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { db, ServiceData } from '../../services';
+import { db, ServiceData } from '../../api-services';
 import { Car, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Save } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';

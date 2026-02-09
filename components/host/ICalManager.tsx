@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, RefreshCw, Check, Link as LinkIcon, DownloadCloud, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../../services';
+import { db } from '../../api-services';
 
 interface ICalManagerProps {
     propertyId: string;

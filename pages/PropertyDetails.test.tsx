@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { PropertyDetails } from './PropertyDetails';
-import { db } from '../services';
+import { db } from '../api-services';
 import * as RouterModule from 'react-router-dom';
 import * as CartContext from '../context/CartContext';
 

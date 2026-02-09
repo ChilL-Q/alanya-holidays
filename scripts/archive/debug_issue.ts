@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
-import { propertiesService } from '../services/api/properties';
-import { supabase } from '../services/supabase';
+import { propertiesService } from '../api-services/api/properties';
+import { supabase } from '../api-services/supabase';
 
 async function debugNarVillaAndPagination() {
     console.log('--- Debugging Nar Villa & Pagination ---');

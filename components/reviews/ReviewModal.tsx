@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Star, Upload, X } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../services';
+import { db } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
 

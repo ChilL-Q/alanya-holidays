@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../services';
+import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import {
     User, Mail, Calendar, MapPin, Package, LogOut, Edit2, Save, X,
@@ -105,15 +105,15 @@ export const Profile: React.FC = () => {
         if (!file || !user) return;
 
         setUploading(true);
-        const toastId = toast.loading('Uploading avatar...');
+        const toastId = toast.loading(t('auth.avatar_uploading'));
         try {
             const publicUrl = await db.uploadAvatar(file);
             await db.updateUserProfile(user.id, { avatar_url: publicUrl });
             await updateUser({ avatar: publicUrl });
-            toast.success('Avatar updated successfully', { id: toastId });
+            toast.success(t('auth.avatar_success'), { id: toastId });
         } catch (error: any) {
             console.error('Avatar upload error:', error);
-            toast.error(error.message || 'Failed to upload avatar', { id: toastId });
+            toast.error(error.message || t('auth.avatar_error'), { id: toastId });
         } finally {
             setUploading(false);
         }
@@ -154,15 +154,15 @@ export const Profile: React.FC = () => {
 
         if (!window.confirm(message)) return;
 
-        const toastId = toast.loading('Cancelling booking...');
+        const toastId = toast.loading(t('booking.cancelling') || 'Cancelling booking...');
         try {
             await db.cancelBooking(bookingId);
-            toast.success('Booking cancelled successfully', { id: toastId });
+            toast.success(t('profile.cancel_success'), { id: toastId });
             // Refresh bookings locally
             setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
         } catch (error: any) {
             console.error('Cancellation error:', error);
-            toast.error(error.message || 'Failed to cancel booking', { id: toastId });
+            toast.error(error.message || t('profile.cancel_error'), { id: toastId });
         }
     };
 
@@ -173,7 +173,7 @@ export const Profile: React.FC = () => {
         setChangingEmail(true);
         try {
             await updateEmail(emailForm.email);
-            toast.success('Confirmation link sent to both new and old email addresses.');
+            toast.success(t('profile.email_verify_sent'));
         } catch (error: any) {
             toast.error(error.message || 'Failed to update email');
         } finally {
@@ -184,14 +184,14 @@ export const Profile: React.FC = () => {
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            toast.error('Passwords do not match');
+            toast.error(t('auth.error.password_match'));
             return;
         }
 
         setChangingPassword(true);
         try {
             await updatePassword(passwordForm.newPassword);
-            toast.success('Password updated successfully');
+            toast.success(t('auth.password_success'));
             setPasswordForm({ newPassword: '', confirmPassword: '' });
         } catch (error: any) {
             toast.error(error.message || 'Failed to update password');
@@ -297,14 +297,14 @@ export const Profile: React.FC = () => {
                                 className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'settings' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                             >
                                 <Settings size={20} />
-                                <span className="font-medium">{t('profile.settings') || 'Personal Info'}</span>
+                                <span className="font-medium">{t('profile.settings')}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('security')}
                                 className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                             >
                                 <Shield size={20} />
-                                <span className="font-medium">{t('profile.security') || 'Security'}</span>
+                                <span className="font-medium">{t('profile.security')}</span>
                             </button>
                             <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2">
                                 <button
@@ -332,7 +332,7 @@ export const Profile: React.FC = () => {
                                     disabled={loading}
                                     className="w-full bg-white text-primary font-bold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition-colors relative z-10"
                                 >
-                                    {loading ? 'Updating...' : (t('profile.upgrade_btn') || 'Upgrade to Host')}
+                                    {loading ? t('auth.submitting') : t('profile.upgrade_btn')}
                                 </button>
                             </div>
                         )}
@@ -533,7 +533,7 @@ export const Profile: React.FC = () => {
                                                                 onClick={() => navigate(`/properties/${property.id}`)}
                                                                 className="text-white bg-slate-900 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
                                                             >
-                                                                View Page
+                                                                {t('profile.view_page') || 'View Page'}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -620,7 +620,7 @@ export const Profile: React.FC = () => {
                                                                 }}
                                                                 className="text-white bg-slate-900 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
                                                             >
-                                                                View Listing
+                                                                {t('profile.view_listing') || 'View Listing'}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -635,7 +635,7 @@ export const Profile: React.FC = () => {
                         {/* TAB: SETTINGS (PERSONAL INFO) */}
                         {activeTab === 'settings' && (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
-                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Personal Information</h2>
+                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('profile.personal_info')}</h2>
                                 <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-2xl">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
@@ -674,7 +674,7 @@ export const Profile: React.FC = () => {
                                     {(user.role === 'host' || user.role === 'admin') && (
                                         <div>
                                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                                                Company Name
+                                                {t('profile.company_name')}
                                             </label>
                                             <div className="relative">
                                                 <input
@@ -695,10 +695,10 @@ export const Profile: React.FC = () => {
                                             disabled={savingProfile}
                                             className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
                                         >
-                                            {savingProfile ? 'Saving...' : (
+                                            {savingProfile ? t('auth.submitting') : (
                                                 <>
                                                     <Save size={18} />
-                                                    Save Changes
+                                                    {t('profile.save_btn')}
                                                 </>
                                             )}
                                         </button>
@@ -717,14 +717,14 @@ export const Profile: React.FC = () => {
                                             <Key size={24} />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Change Password</h2>
-                                            <p className="text-slate-500 text-sm">Update your password to keep your account secure</p>
+                                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('profile.change_password')}</h2>
+                                            <p className="text-slate-500 text-sm">{t('profile.password_subtitle')}</p>
                                         </div>
                                     </div>
 
                                     <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">New Password</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_password')}</label>
                                             <input
                                                 type="password"
                                                 value={passwordForm.newPassword}
@@ -735,7 +735,7 @@ export const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Confirm New Password</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.confirm_password')}</label>
                                             <input
                                                 type="password"
                                                 value={passwordForm.confirmPassword}
@@ -751,7 +751,7 @@ export const Profile: React.FC = () => {
                                                 disabled={changingPassword}
                                                 className="bg-slate-900 dark:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-800 disabled:opacity-50"
                                             >
-                                                {changingPassword ? 'Updating...' : 'Update Password'}
+                                                {changingPassword ? t('auth.submitting') : t('profile.update_password')}
                                             </button>
                                         </div>
                                     </form>
@@ -764,21 +764,21 @@ export const Profile: React.FC = () => {
                                             <Mail size={24} />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Email Address</h2>
-                                            <p className="text-slate-500 text-sm">Update your email address</p>
+                                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('profile.email_verify_title')}</h2>
+                                            <p className="text-slate-500 text-sm">{t('profile.email_verify_subtitle')}</p>
                                         </div>
                                     </div>
 
                                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/50 rounded-xl p-4 mb-6 flex gap-3">
                                         <AlertTriangle className="text-amber-600 dark:text-amber-500 shrink-0" size={20} />
                                         <p className="text-sm text-amber-800 dark:text-amber-200">
-                                            Changing your email address requires verification. You will need to confirm the change via a link sent to <strong>both</strong> your old and new email addresses.
+                                            {t('profile.email_verify_notice')}
                                         </p>
                                     </div>
 
                                     <form onSubmit={handleChangeEmail} className="space-y-4 max-w-md">
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Current Email</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.current_email')}</label>
                                             <input
                                                 type="email"
                                                 value={user.email}
@@ -787,7 +787,7 @@ export const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">New Email Address</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_email')}</label>
                                             <input
                                                 type="email"
                                                 value={emailForm.email}
@@ -802,7 +802,7 @@ export const Profile: React.FC = () => {
                                                 disabled={changingEmail || emailForm.email === user.email}
                                                 className="bg-primary text-white px-6 py-2.5 rounded-xl font-medium transition-colors hover:bg-primary-dark disabled:opacity-50 disabled:grayscale"
                                             >
-                                                {changingEmail ? 'Sending...' : 'Request Change'}
+                                                {changingEmail ? t('auth.submitting') : t('profile.save_btn')}
                                             </button>
                                         </div>
                                     </form>

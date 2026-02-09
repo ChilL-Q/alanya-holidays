@@ -11,7 +11,7 @@ import { useChat } from '../context/ChatContext';
 import { ChatWindow } from '../components/chat/ChatWindow';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../services';
+import { db } from '../api-services';
 import { Property, Amenity } from '../types/models';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../services';
+import { db } from '../api-services';
 
 export const useServicePrices = () => {
     const [minPrices, setMinPrices] = useState<Record<string, number>>({});

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { ChatMessage } from '../../types/models';
-import { chatService } from '../../services/api/chat';
+import { chatService } from '../../api-services/api/chat';
 import { toast } from 'react-hot-toast';
 
 // Subcomponents
