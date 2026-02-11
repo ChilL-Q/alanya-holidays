@@ -102,7 +102,8 @@ export const ListProperty: React.FC = () => {
         if (step === 4 && files.length < 1) return toast.error(t('list_prop.error.photo'));
         if (step === 5) {
             if (!formData.title || formData.title.length < 5) return toast.error(t('Title must be at least 5 characters'));
-            if (!formData.description || formData.description.length < 20) return toast.error(t('Description must be at least 20 characters'));
+            // Description is now optional
+            // if (!formData.description || formData.description.length < 20) return toast.error(t('Description must be at least 20 characters'));
         }
 
         if (step < STEPS.length - 1) {

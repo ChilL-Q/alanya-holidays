@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const propertySchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
-    description: z.string().min(20, "Description must be at least 20 characters"),
+    description: z.string().optional(),
     price_per_night: z.number().positive("Price must be positive"),
     location: z.string().min(2, "Location is required"),
     address: z.string().optional(),
@@ -31,7 +31,7 @@ export const bookingSchema = z.object({
 
 export const serviceSchema = z.object({
     title: z.string().min(3),
-    description: z.string().min(10),
+    description: z.string().optional(),
     price: z.number().positive(),
     type: z.enum(['car', 'bike', 'tour', 'transfer', 'visa', 'esim', 'wellness', 'creative']),
     provider_id: z.string().uuid(),

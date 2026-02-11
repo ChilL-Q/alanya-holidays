@@ -110,7 +110,7 @@ export const CartDrawer: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="font-bold text-teal-600 dark:text-white">{formatPrice(item.price)}</span>
+                                            <span className="font-bold text-teal-600 dark:text-accent">{formatPrice(item.price)}</span>
                                             <button
                                                 onClick={() => removeFromCart(item.id)}
                                                 className="text-slate-400 hover:text-rose-500 p-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors opacity-0 group-hover:opacity-100"
@@ -129,7 +129,7 @@ export const CartDrawer: React.FC = () => {
                         <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                             <div className="flex items-center justify-between mb-4">
                                 <span className="text-slate-600 dark:text-slate-400 font-medium">Subtotal</span>
-                                <span className="text-2xl font-bold font-serif text-slate-900 dark:text-white">{formatPrice(total)}</span>
+                                <span className="text-2xl font-bold font-serif text-slate-900 dark:text-accent">{formatPrice(total)}</span>
                             </div>
                             <button
                                 onClick={() => {

@@ -168,3 +168,75 @@ body {
         transform: scale(0.95);
     }
 }
+
+/* React Datepicker Customization */
+.react-datepicker {
+    @apply font-sans border-none bg-transparent w-full !important;
+}
+
+.react-datepicker__month-container {
+    @apply w-full float-none !important;
+}
+
+.react-datepicker__header {
+    @apply bg-transparent border-none pt-4 !important;
+}
+
+.react-datepicker__current-month {
+    @apply text-slate-900 dark:text-white text-lg font-bold mb-4 !important;
+}
+
+.react-datepicker__day-name {
+    @apply text-slate-400 dark:text-slate-500 w-12 leading-[3rem] m-1 !important;
+}
+
+.react-datepicker__day {
+    @apply w-12 leading-[3rem] m-1 rounded-xl transition-all duration-200 !important;
+    @apply text-slate-700 dark:text-slate-300 !important;
+}
+
+.react-datepicker__day:hover {
+    @apply bg-slate-100 dark:bg-slate-800 !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+    @apply bg-transparent text-inherit !important;
+}
+
+.react-datepicker__day--disabled {
+    @apply text-slate-300 dark:text-slate-700 !important;
+}
+
+.react-datepicker__navigation {
+    @apply top-5 !important;
+}
+
+.react-datepicker__navigation-icon::before {
+    @apply border-slate-400 dark:border-slate-500 !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    @apply border-teal-600 dark:border-teal-400 !important;
+}
+
+/* Custom Day Classes managed by component */
+.rdp-day-selected {
+    @apply bg-teal-600 text-white font-bold shadow-md shadow-teal-500/20 transform scale-105 !important;
+}
+
+.rdp-day-blocked {
+    @apply bg-slate-100 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 decoration-slate-400 line-through !important;
+}
+
+.rdp-day-booked {
+    @apply bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 font-bold !important;
+}
+
+.rdp-day-custom {
+    @apply bg-teal-50 dark:bg-teal-900/10 text-teal-700 dark:text-teal-300 font-medium !important;
+}
+
+.rdp-day-external {
+    @apply bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 !important;
+}

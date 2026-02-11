@@ -130,27 +130,30 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
         const entry = availability.find(a => a.date === dateStr);
         const isSelected = selectedDates.includes(dateStr);
 
-        // Explicit inline style to prevent "white on white" issues by forcing background
-        const style: React.CSSProperties = isSelected ? {
-            backgroundColor: '#0d9488', // teal-600
-            color: 'white',
-            borderRadius: '0.5rem',
-            fontWeight: 'bold'
-        } : {};
+        let classes = "relative w-full h-full flex flex-col items-center justify-center text-sm rounded-xl transition-all";
+
+        if (isSelected) {
+            classes += " rdp-day-selected";
+        } else if (entry) {
+            if (entry.status === 'blocked') {
+                classes += entry.source === 'ical' ? " rdp-day-external" : " rdp-day-blocked";
+            } else if (entry.status === 'booked') {
+                classes += " rdp-day-booked";
+            } else if (entry.price) {
+                classes += " rdp-day-custom";
+            }
+        }
 
         return (
-            <div
-                className={`relative w-full h-full flex flex-col items-center justify-center text-sm`}
-                style={style}
-            >
+            <div className={classes}>
                 <span>{day}</span>
                 {entry?.price && !isSelected && (
-                    <span className="text-[10px] leading-none mt-0.5 font-bold text-teal-600">
+                    <span className="text-[10px] leading-none mt-0.5 font-bold opacity-80">
                         {formatPrice(entry.price).replace(/[^0-9.,]/g, '')}
                     </span>
                 )}
                 {entry?.source === 'ical' && !isSelected && (
-                    <div className="absolute top-0 right-0 w-2 h-2 bg-purple-500 rounded-full" />
+                    <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-purple-500 rounded-full" />
                 )}
             </div>
         );
@@ -187,44 +190,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Calendar */}
                 <div className="flex-1">
-                    <style>{`
-                        .react-datepicker {
-                            font-family: inherit;
-                            border: none;
-                            width: 100%;
-                        }
-                        .react-datepicker__month-container {
-                            width: 100%;
-                            float: none;
-                        }
-                        .react-datepicker__header {
-                            background: transparent;
-                            border-bottom: none;
-                            padding-top: 1rem;
-                        }
-                        .react-datepicker__day-name {
-                            color: #64748b;
-                            width: 3rem;
-                            line-height: 3rem;
-                            margin: 0.2rem;
-                        }
-                        .react-datepicker__day {
-                            width: 3rem;
-                            line-height: 3rem;
-                            margin: 0.2rem;
-                            border-radius: 0.5rem;
-                            transition: all 0.2s;
-                        }
-                        .react-datepicker__day:hover {
-                            background-color: #f1f5f9;
-                        }
-                        /* Disable default selected styles to use our own */
-                        .react-datepicker__day--selected, 
-                        .react-datepicker__day--keyboard-selected {
-                            background-color: transparent !important;
-                            color: inherit !important;
-                        }
-                    `}</style>
+                    {/* Styles moved to index.css for better dark mode support */}
                     <DatePicker
                         onChange={handleDateChange}
                         // We control selection visually via dayClassName/renderDayContents

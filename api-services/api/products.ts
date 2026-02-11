@@ -24,5 +24,33 @@ export const productsService = {
 
         if (error) throw error;
         return data as Product[];
+    },
+    async getProduct(id: string) {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*, artisan:profiles(full_name)')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data as Product;
+    },
+
+    async updateProduct(id: string, updates: Partial<Product>) {
+        const { error } = await supabase
+            .from('products')
+            .update(updates)
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    async deleteProduct(id: string) {
+        const { error } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
     }
 };

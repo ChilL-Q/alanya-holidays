@@ -15,7 +15,7 @@ export const buttonVariants = {
         secondary: "bg-white text-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white",
         accent: "bg-accent hover:bg-accent-hover text-white shadow-lg hover:shadow-accent/30",
         ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300",
-        outline: "border-2 border-primary text-primary hover:bg-primary/5",
+        outline: "border-2 border-primary text-primary dark:text-teal-400 dark:border-teal-400 hover:bg-primary/5 dark:hover:bg-teal-400/10",
         danger: "bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/30"
     },
     size: {

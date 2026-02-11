@@ -22,6 +22,8 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 <img
                     src={car.image}
                     alt={car.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
@@ -37,11 +39,11 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">{car.title}</h3>
                     <div className="text-right">
-                        <div className="text-sm text-slate-500">from</div>
-                        <div className="text-xl font-bold text-teal-600">
+                        <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
+                        <div className="text-xl font-bold text-teal-600 dark:text-accent">
                             {formatPrice(convertPrice(car.minPrice, 'EUR'))}
                         </div>
-                        <div className="text-xs text-slate-500">{t('car.per_day')}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-6">

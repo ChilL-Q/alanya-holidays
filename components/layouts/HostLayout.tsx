@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car } from 'lucide-react';
+import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
@@ -35,7 +35,8 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
     const navItems = [
         { path: '/host', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/host/properties', label: 'My Properties', icon: Home },
-        { path: '/host/services', label: 'My Services', icon: Car },
+        { path: '/host/fleet', label: 'My Fleet', icon: Car },
+        { path: '/host/services', label: 'My Services', icon: MapIcon },
         { path: '/host/bookings', label: 'Reservations', icon: Calendar },
         { path: '/host/messages', label: 'Inbox', icon: Inbox },
     ];

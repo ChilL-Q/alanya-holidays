@@ -200,7 +200,7 @@ export const LoginModal: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={openRegister}
-                                className="text-primary dark:text-teal-400 font-semibold hover:underline"
+                                className="text-teal-600 dark:text-teal-400 font-semibold hover:underline"
                             >
                                 {t('auth.submit.register')}
                             </button>

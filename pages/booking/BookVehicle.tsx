@@ -139,8 +139,8 @@ export const BookVehicle: React.FC = () => {
                     <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
-                            <span className="text-slate-500">{t('car.per_day') || 'per day'}</span>
+                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('car.per_day') || 'per day'}</span>
                         </div>
 
                         <div className="space-y-6">

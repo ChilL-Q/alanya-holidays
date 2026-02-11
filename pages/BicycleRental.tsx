@@ -89,6 +89,9 @@ export const BicycleRental: React.FC = () => {
                         <img
                             src="/images/experiences/bikes_hero.png"
                             alt="E-Bike Rental"
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
                             className="relative rounded-3xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
                         />
                     </div>
@@ -117,6 +120,8 @@ export const BicycleRental: React.FC = () => {
                                     <img
                                         src={bike.image}
                                         alt={bike.title}
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                 </div>

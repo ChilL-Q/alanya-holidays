@@ -51,6 +51,9 @@ export const AddService: React.FC = () => {
         requirements: '',
         // Health & Wellness Specific
         whatsapp: '',
+        // Availability
+        availableFrom: '',
+        availableTo: '',
         // Payment
         payOnArrival: false
     });
@@ -174,6 +177,10 @@ export const AddService: React.FC = () => {
                     whatsapp: formData.whatsapp
                 };
             }
+
+            // Availability
+            if (formData.availableFrom) features.availableFrom = formData.availableFrom;
+            if (formData.availableTo) features.availableTo = formData.availableTo;
 
             // Common features
             features.payOnArrival = formData.payOnArrival;
@@ -358,7 +365,7 @@ export const AddService: React.FC = () => {
                                             name="description"
                                             value={formData.description}
                                             onChange={handleChange}
-                                            required
+                                            // required
                                             rows={3}
                                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
                                         />
@@ -388,6 +395,32 @@ export const AddService: React.FC = () => {
                                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Photos</h3>
                                     <p className="text-xs text-slate-500 mb-3">Add at least one photo. First photo will be the cover.</p>
                                     <PhotoUploader files={files} onChange={setFiles} maxFiles={5} />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Availability (Optional)</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Available From</label>
+                                            <input
+                                                type="date"
+                                                name="availableFrom"
+                                                value={formData.availableFrom}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Available To</label>
+                                            <input
+                                                type="date"
+                                                name="availableTo"
+                                                value={formData.availableTo}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -523,6 +556,7 @@ export const AddService: React.FC = () => {
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500"
                                             >
+                                                <option value="">None</option>
                                                 <option value="water">Water (Boat, Jet Ski, Diving)</option>
                                                 <option value="safari">Safari & Off-road</option>
                                                 <option value="atv">ATV & Buggy</option>
@@ -614,6 +648,7 @@ export const AddService: React.FC = () => {
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
                                             >
+                                                <option value="">None</option>
                                                 <option value="hair">Hair Transplant</option>
                                                 <option value="dental">Dental</option>
                                                 <option value="spa">Spa & Massage</option>
@@ -647,6 +682,7 @@ export const AddService: React.FC = () => {
                                                 onChange={handleChange}
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-purple-500"
                                             >
+                                                <option value="">None</option>
                                                 <option value="photographer">{t('add_service.creative.photographer')}</option>
                                                 <option value="videographer">{t('add_service.creative.videographer')}</option>
                                                 <option value="content_creator">{t('add_service.creative.content_creator')}</option>

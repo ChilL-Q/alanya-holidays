@@ -173,10 +173,13 @@ export const servicesService = {
         await this.updateServiceStatus(id, 'approved');
     },
 
-    async getAdminServices(statusFilter?: string, page = 1, limit = 50) {
+    async getAdminServices(statusFilter?: string, typesFilter?: string[], page = 1, limit = 50) {
         let query = supabase.from('services').select('*, provider:profiles(full_name)', { count: 'exact' });
         if (statusFilter && statusFilter !== 'all') {
             query = query.eq('status', statusFilter);
+        }
+        if (typesFilter && typesFilter.length > 0) {
+            query = query.in('type', typesFilter);
         }
         
         const from = (page - 1) * limit;

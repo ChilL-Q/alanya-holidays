@@ -4,7 +4,8 @@ import { ReportsPage } from './ReportsPage';
 import { supabase } from '../../api-services/supabase';
 
 // Mock Supabase
-vi.mock('../../services/supabase', () => ({
+// Mock Supabase
+vi.mock('../../api-services/supabase', () => ({
     supabase: {
         from: vi.fn(() => ({
             select: vi.fn().mockReturnThis(),

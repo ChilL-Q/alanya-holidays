@@ -57,6 +57,7 @@ export const AdminEditPropertyPage: React.FC = () => {
         maxGuests: '2',
         beds: '1',
         bedrooms: '1',
+        isPromoted: false,
         bathrooms: '1'
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +95,8 @@ export const AdminEditPropertyPage: React.FC = () => {
                     maxGuests: (data.max_guests ?? 2).toString(),
                     beds: (data.beds ?? 1).toString(),
                     bedrooms: (data.bedrooms ?? 1).toString(),
-                    bathrooms: (data.bathrooms ?? 1).toString()
+                    bathrooms: (data.bathrooms ?? 1).toString(),
+                    isPromoted: data.is_promoted || false
                 }));
                 setExistingImages(data.images || []);
                 setIcalData({
@@ -166,7 +168,8 @@ export const AdminEditPropertyPage: React.FC = () => {
                 max_guests: Number(formData.maxGuests),
                 beds: Number(formData.beds),
                 bedrooms: Number(formData.bedrooms),
-                bathrooms: Number(formData.bathrooms)
+                bathrooms: Number(formData.bathrooms),
+                is_promoted: formData.isPromoted
             };
 
             if (id) {
@@ -416,6 +419,20 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                 </div>
 
+                                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        id="isPromoted"
+                                        checked={formData.isPromoted}
+                                        onChange={(e) => setFormData({ ...formData, isPromoted: e.target.checked })}
+                                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                                    />
+                                    <label htmlFor="isPromoted" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        Promote this Property
+                                        <span className="block text-xs font-normal text-slate-500">Property will appear with a 'Featured' badge</span>
+                                    </label>
+                                </div>
+
                                 {/* Hospitality & Guest Guide Section */}
                                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -604,7 +621,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     <textarea
                                         name="description"
                                         rows={4}
-                                        required
+                                        // required
                                         value={formData.description}
                                         onChange={handleChange}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"

@@ -14,6 +14,7 @@ interface ServiceCardProps {
     actionLabel?: string;
     onClick?: () => void;
     providerName?: string;
+    isPromoted?: boolean;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = ({
@@ -26,7 +27,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
     baseCurrency = 'EUR',
     actionLabel,
     onClick,
-    providerName
+    providerName,
+    isPromoted
 }) => {
     const { convertPrice, formatPrice } = useCurrency();
 
@@ -44,11 +46,18 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                     <img
                         src={imageUrl}
                         alt={title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-xl shadow-sm">
-                        <Icon className="w-5 h-5 text-primary dark:text-white" />
+                        <Icon className="w-5 h-5 text-primary dark:text-teal-400" />
                     </div>
+                    {isPromoted && (
+                        <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+                            Promoted
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -61,9 +70,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
                 {providerName && (
-                    <p className="text-xs text-slate-500 font-medium mb-1 uppercase tracking-wide">{providerName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1 uppercase tracking-wide">{providerName}</p>
                 )}
                 <p className="text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{description}</p>
+
+                {displayPrice && (
+                    <div className="mb-4">
+                        <span className="text-lg font-bold text-teal-600 dark:text-accent">
+                            {displayPrice}
+                        </span>
+                    </div>
+                )}
 
                 <div className="flex-1" />
 

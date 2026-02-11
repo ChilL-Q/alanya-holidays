@@ -85,7 +85,7 @@ export const AdminPage: React.FC = () => {
             // Optimized Stats Loading
             const { count: totalProperties } = await db.getAdminProperties('all', 1, 1);
             const { count: pendingProperties } = await db.getAdminProperties('pending', 1, 1);
-            const { count: totalServices } = await db.getAdminServices('all', 1, 1);
+            const { count: totalServices } = await db.getAdminServices('all', [], 1, 1);
             const users = await db.getAllUsers() || [];
 
             // Fetch bookings for stats
@@ -517,7 +517,7 @@ export const AdminPage: React.FC = () => {
                                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
                                         €{stats.revenue?.toLocaleString() || '0'}
                                     </h3>
-                                    <div className="flex items-center gap-1 text-green-500 text-sm font-medium mt-2">
+                                    <div className="flex items-center gap-1 text-green-500 dark:text-green-400 text-sm font-medium mt-2">
                                         <span>+12.5%</span>
                                         <span className="text-slate-400 font-normal">from last month</span>
                                     </div>
@@ -529,7 +529,7 @@ export const AdminPage: React.FC = () => {
                                 <div className="relative">
                                     <p className="text-slate-500 font-medium mb-1">Active Bookings</p>
                                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.active_bookings || 0}</h3>
-                                    <div className="flex items-center gap-1 text-blue-500 text-sm font-medium mt-2">
+                                    <div className="flex items-center gap-1 text-blue-500 dark:text-blue-400 text-sm font-medium mt-2">
                                         <span>{stats.pending} pending</span>
                                     </div>
                                 </div>
@@ -540,7 +540,7 @@ export const AdminPage: React.FC = () => {
                                 <div className="relative">
                                     <p className="text-slate-500 font-medium mb-1">Total Users</p>
                                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_users}</h3>
-                                    <div className="flex items-center gap-1 text-purple-500 text-sm font-medium mt-2">
+                                    <div className="flex items-center gap-1 text-purple-500 dark:text-purple-400 text-sm font-medium mt-2">
                                         <span>+5 new</span>
                                         <span className="text-slate-400 font-normal">this week</span>
                                     </div>
@@ -552,7 +552,7 @@ export const AdminPage: React.FC = () => {
                                 <div className="relative">
                                     <p className="text-slate-500 font-medium mb-1">Services</p>
                                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_services}</h3>
-                                    <div className="flex items-center gap-1 text-orange-500 text-sm font-medium mt-2">
+                                    <div className="flex items-center gap-1 text-orange-500 dark:text-orange-400 text-sm font-medium mt-2">
                                         <span>Active Fleet</span>
                                     </div>
                                 </div>
@@ -644,7 +644,7 @@ export const AdminPage: React.FC = () => {
                             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                                 <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Real Bookings</h3>
-                                    <button onClick={() => setActiveTab('bookings')} className="text-sm text-teal-600 font-medium hover:underline">View All</button>
+                                    <button onClick={() => setActiveTab('bookings')} className="text-sm text-teal-600 dark:text-teal-400 font-medium hover:underline">View All</button>
                                 </div>
                                 <div className="div">
                                     {stats.recent_bookings && stats.recent_bookings.length > 0 ? (

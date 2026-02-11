@@ -33,6 +33,18 @@ describe('ServiceCard', () => {
         expect(screen.getByText('Description')).toBeInTheDocument();
     });
 
+    it('renders image with lazy loading', () => {
+        render(
+            <BrowserRouter>
+                <ServiceCard {...defaultProps} imageUrl="test.jpg" />
+            </BrowserRouter>
+        );
+        const img = screen.getByRole('img');
+        expect(img).toHaveAttribute('src', 'test.jpg');
+        expect(img).toHaveAttribute('loading', 'lazy');
+        expect(img).toHaveAttribute('decoding', 'async');
+    });
+
     it('does NOT render price', () => {
         render(
             <BrowserRouter>

@@ -99,7 +99,7 @@ describe('Navbar', () => {
         fireEvent.click(screen.getByTestId('profile-button'));
 
         // Should show Login / Register buttons
-        const loginBtns = screen.getAllByText('Login');
+        const loginBtns = screen.getAllByText('nav.login');
         expect(loginBtns.length).toBeGreaterThan(0);
 
         fireEvent.click(loginBtns[0]);

@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { CAR_CATALOG, BIKE_CATALOG, CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../../data/cars';
 
 type ServiceCategory = 'transportation' | 'adventure' | null;
-type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim';
+type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness' | 'creative';
 
 interface ItineraryItem {
     time: string;
@@ -53,6 +53,9 @@ export const HostEditServicePage: React.FC = () => {
         included: '',
         languages: '',
         requirements: '',
+        // Availability
+        availableFrom: '',
+        availableTo: '',
     });
 
     const [files, setFiles] = useState<File[]>([]);
@@ -96,6 +99,8 @@ export const HostEditServicePage: React.FC = () => {
                     included: features.included || '',
                     languages: features.languages || '',
                     requirements: features.requirements || '',
+                    availableFrom: features.availableFrom || '',
+                    availableTo: features.availableTo || '',
                 });
 
                 if (features.itinerary) {
@@ -189,6 +194,10 @@ export const HostEditServicePage: React.FC = () => {
                 };
             }
 
+            // Availability
+            if (formData.availableFrom) features.availableFrom = formData.availableFrom;
+            if (formData.availableTo) features.availableTo = formData.availableTo;
+
             const updates: Partial<ServiceData> = {
                 title: formData.title,
                 description: formData.description,
@@ -198,8 +207,56 @@ export const HostEditServicePage: React.FC = () => {
                 images: finalImages
             };
 
-            await db.requestServiceUpdate(id, updates);
-            setSuccess(true);
+            // Auto-Approval Logic
+            const isMinorUpdate = () => {
+                if (!originalService) return false;
+
+                // Fields that trigger approval
+                const criticalFields = ['title', 'type', 'images'];
+                // Description? Maybe allow minor edits, but easier to just flag it as critical for now.
+                // Let's allow Description edits to be auto-approved too if avoiding "Every edit"
+                // Actually, let's include 'description' in critical for now to be safe, or safe?
+                // The task says "not every edit needs admin approval".
+                // Let's say: Title, Type, Images, Intinerary -> Critical.
+                // Price, Description, Availability, Features (minor) -> Safe.
+
+                // Check basics
+                if (formData.title !== originalService.title) return false;
+                if (formData.type !== originalService.type) return false;
+
+                // Check images (length or content)
+                if (finalImages.length !== (originalService.images?.length || 0)) return false;
+                // Deep check images? simple length check + order usually enough for "change"
+                // If user added/removed images, it's critical.
+
+                return true;
+            };
+
+            // Simplified Check: If only Price or Availability changed, it's minor.
+            // But we are sending the WHOLE object to requestServiceUpdate usually.
+            // We need to construct a partial update for updateService if minor.
+
+            // Let's refine the logic:
+            // If the user changed Title, Type, or Images -> Approval Needed.
+            // Else -> Direct Update.
+
+            const needsApproval =
+                formData.title !== originalService?.title ||
+                formData.type !== originalService?.type ||
+                // Check if images changed (naive check: count or different urls)
+                finalImages.length !== (originalService?.images?.length || 0) ||
+                !finalImages.every((img, i) => img === originalService?.images?.[i]);
+
+            if (needsApproval) {
+                await db.requestServiceUpdate(id, updates);
+                setSuccess(true);
+            } else {
+                // Direct specific update to avoid overriding other pending things?
+                // Or just update content.
+                await db.updateService(id, updates);
+                toast.success('Service updated successfully');
+                navigate('/host/services');
+            }
         } catch (error) {
             console.error(error);
             toast.error('Failed to submit changes');
@@ -310,6 +367,32 @@ export const HostEditServicePage: React.FC = () => {
                                 <p className="text-xs text-slate-500 mb-3">Upload new photos to append.</p>
                                 <PhotoUploader files={files} onChange={setFiles} maxFiles={5} />
                             </div>
+
+                            <div className="md:col-span-2">
+                                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Availability (Optional)</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Available From</label>
+                                        <input
+                                            type="date"
+                                            name="availableFrom"
+                                            value={formData.availableFrom}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Available To</label>
+                                        <input
+                                            type="date"
+                                            name="availableTo"
+                                            value={formData.availableTo}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <hr className="border-slate-100 dark:border-slate-700" />
@@ -347,6 +430,7 @@ export const HostEditServicePage: React.FC = () => {
                                         onChange={handleChange}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     >
+                                        <option value="">None</option>
                                         <option value="water">Water (Boat, Jet Ski, Diving)</option>
                                         <option value="safari">Safari & Off-road</option>
                                         <option value="atv">ATV & Buggy</option>
@@ -377,7 +461,7 @@ export const HostEditServicePage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg uppercase tracking-wide ring-4 ring-teal-500/20 flex items-center justify-center gap-2"
                         >
                             {submitting ? 'Saving...' : 'Submit Changes'}
                             <Save />

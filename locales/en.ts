@@ -146,6 +146,10 @@ export const en = {
   'services.transport.car_desc': 'Modern fleet, full insurance, delivered to your door.',
   'services.transport.bike': 'Scooter & Bike',
   'services.transport.bike_desc': 'Zip through the city streets with ease.',
+  'services.transport.transfer_airport': 'Airport Transfer',
+  'services.transport.transfer_airport_desc': 'Reliable shuttle service to/from Antalya (AYT) and Gazipasa (GZP).',
+  'services.transport.transfer_vip': 'VIP Transfer',
+  'services.transport.transfer_vip_desc': 'Luxury private transfer with Mercedes Vito or Sprinter.',
 
   'services.adventure.title': 'Adventure & Activities',
   'services.adventure.subtitle': 'Make memories that last a lifetime.',
@@ -187,6 +191,8 @@ export const en = {
   'services.visa.tourist_desc': 'Assistance with tourist visa applications and extensions.',
   'services.visa.residence': 'Residence Permit',
   'services.visa.residence_desc': 'Consultation for long-term stays.',
+  'services.visa.luxury': 'Luxury Tour Package',
+  'services.visa.luxury_desc': 'Exclusive private tours, yacht charters, and VIP experiences.',
   'services.creative.title': 'Creative Services',
   'services.creative.subtitle': 'Professional photo and video for your memories.',
   'services.creative.photo': 'Photography',
@@ -201,7 +207,7 @@ export const en = {
   'services.adventure.bikes_subtitle': 'Premium mountain and city bikes',
 
   'services.connectivity.title': 'Connectivity',
-  'services.connectivity.esim': 'Tourist SIM Card',
+  'services.connectivity.esim': 'eSIM',
   'services.connectivity.esim_desc': 'Instant data connectivity for your trip.',
 
   'request_details': 'Request details',

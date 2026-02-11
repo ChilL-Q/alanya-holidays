@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag, ShoppingBag, Map as MapIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -31,9 +31,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/admin/properties', label: 'Properties', icon: Home },
-        { path: '/admin/services', label: 'Fleet & Services', icon: Car },
+        { path: '/admin/fleet', label: 'Fleet', icon: Car },
+        { path: '/admin/services', label: 'Services', icon: MapIcon },
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
-        { path: '/shop', label: 'Shop', icon: ShoppingBag },
+        { path: '/admin/products', label: 'Products', icon: ShoppingBag },
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];

@@ -104,6 +104,9 @@ export const BikeRental: React.FC = () => {
                         <img
                             src="/images/transportation/bike/rent-a-bike-page.png"
                             alt="Scooter Rental"
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
                             className="relative rounded-3xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
                         />
                     </div>
@@ -128,6 +131,8 @@ export const BikeRental: React.FC = () => {
                                     <img
                                         src={bike.image}
                                         alt={bike.title}
+                                        loading="lazy"
+                                        decoding="async"
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                     <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
@@ -143,11 +148,11 @@ export const BikeRental: React.FC = () => {
                                     <div className="flex justify-between items-start mb-4">
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white">{bike.title}</h3>
                                         <div className="text-right">
-                                            <div className="text-sm text-slate-500">from</div>
-                                            <div className="text-xl font-bold text-teal-600">
+                                            <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
+                                            <div className="text-xl font-bold text-teal-600 dark:text-accent">
                                                 {formatPrice(convertPrice(bike.minPrice, 'EUR'))}
                                             </div>
-                                            <div className="text-xs text-slate-500">{t('car.per_day')}</div>
+                                            <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap gap-2 mb-6">

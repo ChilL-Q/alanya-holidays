@@ -5,7 +5,11 @@ import { Plus, Search, Filter, Edit, Trash2, Car, Map, Smartphone, CreditCard } 
 import { Link, useNavigate } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
 
-export const HostServicesPage = () => {
+interface HostServicesPageProps {
+    mode?: 'fleet' | 'services';
+}
+
+export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'services' }) => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { convertPrice, formatPrice } = useCurrency();
@@ -14,6 +18,38 @@ export const HostServicesPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredServices.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredServices.map(s => s.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedIds.size} services?`)) return;
+
+        try {
+            await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
+            setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
+            setSelectedIds(new Set());
+        } catch (error) {
+            console.error('Failed to bulk delete:', error);
+            alert('Some services could not be deleted.');
+        }
+    };
 
     useEffect(() => {
         loadServices();
@@ -54,6 +90,13 @@ export const HostServicesPage = () => {
     const filteredServices = services.filter(s => {
         const matchesSearch = s.title.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filterType === 'all' || s.type === filterType;
+
+        const FLEET_TYPES = ['car', 'bike', 'transfer'];
+        const isFleet = FLEET_TYPES.includes(s.type);
+
+        if (mode === 'fleet' && !isFleet) return false;
+        if (mode === 'services' && isFleet) return false;
+
         return matchesSearch && matchesFilter;
     });
 
@@ -71,8 +114,8 @@ export const HostServicesPage = () => {
         <div className="space-y-6 animate-fade-up">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Services</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Manage your fleet, tours, and other services</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{mode === 'fleet' ? 'My Fleet' : 'My Services'}</h1>
+                    <p className="text-slate-500 dark:text-slate-400">Manage your {mode === 'fleet' ? 'vehicles and transfers' : 'tours and experiences'}</p>
                 </div>
                 <button
                     onClick={() => navigate('/add-service')}
@@ -103,13 +146,40 @@ export const HostServicesPage = () => {
                         className="bg-slate-50 dark:bg-slate-700/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white capitalize"
                     >
                         <option value="all">All Types</option>
-                        <option value="car">Cars</option>
-                        <option value="bike">Bikes</option>
-                        <option value="tour">Tours</option>
-                        <option value="transfer">Transfers</option>
+                        {mode === 'fleet' ? (
+                            <>
+                                <option value="car">Cars</option>
+                                <option value="bike">Bikes</option>
+                                <option value="transfer">Transfers</option>
+                            </>
+                        ) : (
+                            <>
+                                <option value="tour">Tours</option>
+                                <option value="wellness">Wellness</option>
+                                <option value="creative">Creative</option>
+                                <option value="visa">Consulting</option>
+                                <option value="esim">Connectivity</option>
+                            </>
+                        )}
                     </select>
                 </div>
             </div>
+
+            {/* Bulk Actions */}
+            {selectedIds.size > 0 && (
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center justify-between animate-in slide-in-from-top-2">
+                    <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
+                        {selectedIds.size} service{selectedIds.size > 1 ? 's' : ''} selected
+                    </span>
+                    <button
+                        onClick={handleBulkDelete}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition"
+                    >
+                        <Trash2 size={16} />
+                        Delete Selected
+                    </button>
+                </div>
+            )}
 
             {/* List */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -117,7 +187,15 @@ export const HostServicesPage = () => {
                     <table className="w-full text-left">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 text-slate-500 font-semibold text-sm">
                             <tr>
-                                <th className="p-4 pl-6">Service</th>
+                                <th className="p-4 pl-6 w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={filteredServices.length > 0 && selectedIds.size === filteredServices.length}
+                                        onChange={toggleSelectAll}
+                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                </th>
+                                <th className="p-4">Service</th>
                                 <th className="p-4">Type</th>
                                 <th className="p-4">Price</th>
                                 <th className="p-4">Status</th>
@@ -136,8 +214,16 @@ export const HostServicesPage = () => {
                                 ))
                             ) : filteredServices.length > 0 ? (
                                 filteredServices.map((service) => (
-                                    <tr key={service.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                    <tr key={service.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${selectedIds.has(service.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
                                         <td className="p-4 pl-6">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.has(service.id)}
+                                                onChange={() => toggleSelect(service.id)}
+                                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                        </td>
+                                        <td className="p-4">
                                             <div className="flex items-center gap-3">
                                                 <img
                                                     src={service.images?.[0] || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=100&q=80'}
@@ -200,7 +286,7 @@ export const HostServicesPage = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={4} className="p-8 text-center text-slate-500 dark:text-slate-400">
+                                    <td colSpan={6} className="p-8 text-center text-slate-500 dark:text-slate-400">
                                         No services found. <Link to="/add-service" className="text-indigo-600 hover:underline">Add your first service</Link>
                                     </td>
                                 </tr>

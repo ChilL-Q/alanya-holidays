@@ -142,8 +142,8 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                         <ul className="space-y-3">
                                             {service.features.itinerary.map((item: any, idx: number) => (
                                                 <li key={idx} className="flex gap-3 text-sm">
-                                                    <span className="font-bold text-teal-600 min-w-[60px]">{item.time || `Stop ${idx + 1}`}</span>
-                                                    <span className="text-slate-600 dark:text-slate-400">{item.activity || item.description}</span>
+                                                    <span className="font-bold text-teal-600 dark:text-teal-400 min-w-[60px]">{item.time || `Stop ${idx + 1}`}</span>
+                                                    <span className="text-slate-600 dark:text-slate-300">{item.activity || item.description}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -160,11 +160,11 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                         <ul className="grid grid-cols-1 gap-2">
                                             {Array.isArray(service.features.included)
                                                 ? service.features.included.map((item: string, i: number) => (
-                                                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                                        <span className="text-green-500 mt-0.5">✓</span> {item}
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-white">
+                                                        <span className="text-teal-500 mt-0.5">✓</span> {item}
                                                     </li>
                                                 ))
-                                                : <p className="text-sm text-slate-600 dark:text-slate-400">{service.features.included}</p>
+                                                : <p className="text-sm text-slate-600 dark:text-white">{service.features.included}</p>
                                             }
                                         </ul>
                                     </div>
@@ -177,7 +177,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                     <div className="h-px bg-slate-100 dark:bg-slate-700" />
                                     <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-800/30">
                                         <h4 className="font-bold text-amber-800 dark:text-amber-400 text-xs uppercase tracking-wide mb-2">Important Information</h4>
-                                        <p className="text-sm text-amber-900/80 dark:text-amber-200/80">
+                                        <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
                                             {service.features.requirements}
                                         </p>
                                     </div>
@@ -190,8 +190,8 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                     <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
-                            <span className="text-slate-500">per person</span>
+                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
+                            <span className="text-slate-500 dark:text-accent">per person</span>
                         </div>
 
                         <div className="space-y-6">

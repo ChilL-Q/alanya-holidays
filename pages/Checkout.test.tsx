@@ -101,7 +101,7 @@ describe('Checkout Component', () => {
         // Switch to SWIFT
         fireEvent.click(screen.getByText('checkout.method.swift'));
         expect(screen.getByText('checkout.method.swift_desc')).toBeInTheDocument();
-        expect(screen.getByText('Garanti Bank')).toBeInTheDocument();
+        expect(screen.getByText('Garanti BBVA')).toBeInTheDocument();
     });
 
     it('adds welcome pack', () => {

@@ -51,6 +51,8 @@ const PropertiesPage = React.lazy(() => import('../pages/admin/PropertiesPage').
 const UsersPage = React.lazy(() => import('../pages/admin/UsersPage').then(module => ({ default: module.UsersPage })));
 const AdminServicesPage = React.lazy(() => import('../pages/admin/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const ReportsPage = React.lazy(() => import('../pages/admin/ReportsPage').then(module => ({ default: module.ReportsPage })));
+const AdminProductsPage = React.lazy(() => import('../pages/admin/ProductsPage').then(module => ({ default: module.ProductsPage })));
+const AdminEditProductPage = React.lazy(() => import('../pages/admin/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -123,10 +125,17 @@ export const AppRoutes: React.FC = () => {
                         </HostLayout>
                     </HostRoute>
                 } />
+                <Route path="/host/fleet" element={
+                    <HostRoute>
+                        <HostLayout>
+                            <HostServicesPage mode="fleet" />
+                        </HostLayout>
+                    </HostRoute>
+                } />
                 <Route path="/host/services" element={
                     <HostRoute>
                         <HostLayout>
-                            <HostServicesPage />
+                            <HostServicesPage mode="services" />
                         </HostLayout>
                     </HostRoute>
                 } />
@@ -202,10 +211,17 @@ export const AppRoutes: React.FC = () => {
                         </AdminLayout>
                     </AdminRoute>
                 } />
+                <Route path="/admin/fleet" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminServicesPage type="fleet" />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
                 <Route path="/admin/services" element={
                     <AdminRoute>
                         <AdminLayout>
-                            <AdminServicesPage />
+                            <AdminServicesPage type="services" />
                         </AdminLayout>
                     </AdminRoute>
                 } />
@@ -213,6 +229,20 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <ReportsPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/products" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminProductsPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/products/:id" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminEditProductPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

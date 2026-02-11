@@ -16,10 +16,10 @@ export const Esim: React.FC = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <button
-                                onClick={() => window.open('https://www.airalo.com/turkey-esim', '_blank')}
+                                onClick={() => window.open('https://yesim.app/', '_blank')} // TODO: Replace with your Yesim affiliate link (e.g., https://yesim.app/ref/YOURCODE)
                                 className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-800 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
                             >
-                                <Download size={20} /> Purchase SIM Card
+                                <Download size={20} /> Get Yesim eSIM
                             </button>
                         </div>
                     </div>

@@ -37,6 +37,9 @@ export const CarRental: React.FC = () => {
                         <img
                             src="/images/transportation/cars/Rent-a-Car-Services-page.jpg"
                             alt="Luxury Car Rental"
+                            loading="eager"
+                            fetchPriority="high"
+                            decoding="async"
                             className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500"
                         />
                     </div>

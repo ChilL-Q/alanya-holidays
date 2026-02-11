@@ -67,7 +67,7 @@ export const Dashboard: React.FC = () => {
         try {
             // Optimized Stats Loading
             const { count: totalProperties } = await db.getAdminProperties('all', 1, 1);
-            const { count: totalServices } = await db.getAdminServices('all', 1, 1);
+            const { count: totalServices } = await db.getAdminServices('all', [], 1, 1);
             const users = await db.getAllUsers() || [];
 
             // Fetch bookings
@@ -141,7 +141,7 @@ export const Dashboard: React.FC = () => {
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Total Revenue</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">€{stats.revenue.toLocaleString()}</h3>
-                        <div className="flex items-center gap-1 text-teal-600 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-teal-600 dark:text-teal-400 text-sm font-medium mt-2">
                             <TrendingUp size={16} />
                             <span>+12.5%</span>
                             <span className="text-slate-400 font-normal">vs last month</span>
@@ -154,7 +154,7 @@ export const Dashboard: React.FC = () => {
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Users</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_users}</h3>
-                        <div className="flex items-center gap-1 text-blue-600 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm font-medium mt-2">
                             <span>Active Customers</span>
                         </div>
                     </div>
@@ -165,7 +165,7 @@ export const Dashboard: React.FC = () => {
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Properties</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_properties}</h3>
-                        <div className="flex items-center gap-1 text-purple-600 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 text-sm font-medium mt-2">
                             <span>Listed</span>
                         </div>
                     </div>
@@ -176,7 +176,7 @@ export const Dashboard: React.FC = () => {
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Services</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_services}</h3>
-                        <div className="flex items-center gap-1 text-orange-600 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400 text-sm font-medium mt-2">
                             <span>Fleet Size</span>
                         </div>
                     </div>
@@ -250,7 +250,7 @@ export const Dashboard: React.FC = () => {
                 <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Real Bookings</h3>
-                        <NavLink to="/admin/bookings" className="text-sm text-teal-600 font-medium hover:underline">View All</NavLink>
+                        <NavLink to="/admin/bookings" className="text-sm text-teal-600 dark:text-teal-400 font-medium hover:underline">View All</NavLink>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">

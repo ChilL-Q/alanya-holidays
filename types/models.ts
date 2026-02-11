@@ -65,6 +65,7 @@ export interface PropertyDB {
     host?: Partial<UserProfile>;
     created_at?: string;
     updated_at?: string;
+    is_promoted?: boolean;
     
     // iCal & Sync
     ical_url?: string;
@@ -115,6 +116,10 @@ export interface ServiceFeatures {
     languages?: string;
     requirements?: string;
     itinerary?: any[];
+
+    // Availability
+    availableFrom?: string;
+    availableTo?: string;
     
     [key: string]: any;
 }
@@ -134,6 +139,7 @@ export interface ServiceDB {
     
     provider?: Partial<UserProfile>;
     created_at?: string;
+    is_promoted?: boolean;
 }
 
 export interface ServiceModel {
@@ -281,6 +287,7 @@ export interface Property {
   hostName: string;
   type?: string; 
   cleaning_fee?: number;
+  isPromoted?: boolean;
 }
 
 export interface Service {
@@ -292,6 +299,7 @@ export interface Service {
   image: string;
   duration?: string; // For tours
   vehicleType?: string; // For transfers
+  isPromoted?: boolean;
 }
 
 export interface CartItem {

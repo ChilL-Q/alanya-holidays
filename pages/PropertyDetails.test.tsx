@@ -10,7 +10,7 @@ vi.mock('../components/reviews/ReviewsSection', () => ({
 }));
 
 // Mock dependencies
-vi.mock('../services', () => ({
+vi.mock('../api-services', () => ({
     db: {
         getProperty: vi.fn(),
         getUnavailableDates: vi.fn(),

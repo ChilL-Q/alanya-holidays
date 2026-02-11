@@ -41,6 +41,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                     {property.reviewsCount > 0 ? property.rating.toFixed(1) : 'New'}
                 </div>
 
+                {property.isPromoted && (
+                    <div className="absolute top-12 left-3 bg-amber-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-sm z-10">
+                        Featured
+                    </div>
+                )}
+
                 {/* Favorite Button */}
                 <button
                     onClick={(e) => {
@@ -61,7 +67,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-slate-900 dark:text-white text-lg line-clamp-1 group-hover:text-primary transition">{property.title}</h3>
                 </div>
-                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+                <div className="flex items-center gap-1 text-teal-500 dark:text-teal-400 text-sm mb-4">
                     <MapPin size={14} />
                     {property.location}
                 </div>
@@ -70,7 +76,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                         <span className="font-medium text-slate-900 dark:text-white">{property.beds || property.bedrooms}</span> {property.beds === 1 ? 'bed' : 'beds'} • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> {property.guests === 1 ? 'guest' : 'guests'}
                     </div>
                     <div className="text-right">
-                        <p className="font-bold text-slate-900 dark:text-white text-lg">
+                        <p className="font-bold text-teal-600 dark:text-accent text-lg">
                             {formatPrice(convertPrice(property.pricePerNight, 'EUR'))}
                         </p>
                         <p className="text-xs text-slate-400">{t('featured.night')}</p>

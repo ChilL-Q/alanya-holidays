@@ -81,6 +81,7 @@ export const AdminEditServicePage: React.FC = () => {
                 description: service.description,
                 price: parseFloat(service.price?.toString() || '0'),
                 type: service.type,
+                is_promoted: service.is_promoted,
                 features: service.features, // Use features directly
                 images: newImageUrls,
                 provider_id: service.provider_id
@@ -520,6 +521,19 @@ export const AdminEditServicePage: React.FC = () => {
                                 onChange={e => setService({ ...service, provider_id: e.target.value })}
                                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                             />
+                        </div>
+                        <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                            <input
+                                type="checkbox"
+                                id="is_promoted"
+                                checked={service.is_promoted || false}
+                                onChange={e => setService({ ...service, is_promoted: e.target.checked })}
+                                className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                            />
+                            <label htmlFor="is_promoted" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                                Promote this Service
+                                <span className="block text-xs font-normal text-slate-500">Service will appear with a badge</span>
+                            </label>
                         </div>
                     </div>
 

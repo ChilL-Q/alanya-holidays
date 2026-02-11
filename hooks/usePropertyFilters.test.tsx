@@ -6,28 +6,28 @@ import { propertiesService } from '../api-services/api/properties';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock the properties service
-vi.mock('../services/api/properties', () => ({
-  propertiesService: {
-    getProperties: vi.fn(),
-    getAvailableProperties: vi.fn(),
-  },
+vi.mock('../api-services/api/properties', () => ({
+    propertiesService: {
+        getProperties: vi.fn(),
+        getAvailableProperties: vi.fn(),
+    },
 }));
 
 describe('usePropertyFilters', () => {
     const mockProperties = [
-        { 
-            id: '1', 
-            title: 'Test Villa', 
-            price_per_night: 100, 
-            type: 'villa', 
-            host: { full_name: 'Test Host' } 
+        {
+            id: '1',
+            title: 'Test Villa',
+            price_per_night: 100,
+            type: 'villa',
+            host: { full_name: 'Test Host' }
         },
-        { 
-            id: '2', 
-            title: 'Test Apartment', 
-            price_per_night: 50, 
-            type: 'apartment', 
-            host: { full_name: 'Test Host' } 
+        {
+            id: '2',
+            title: 'Test Apartment',
+            price_per_night: 50,
+            type: 'apartment',
+            host: { full_name: 'Test Host' }
         }
     ];
 
@@ -58,7 +58,7 @@ describe('usePropertyFilters', () => {
         expect(result.current.page).toBe(1);
 
         await waitFor(() => {
-             expect(result.current.isLoading).toBe(false);
+            expect(result.current.isLoading).toBe(false);
         });
 
         expect(result.current.filteredProperties).toHaveLength(2);
@@ -88,7 +88,7 @@ describe('usePropertyFilters', () => {
 
         // Page should reset to 1
         expect(result.current.page).toBe(1);
-        expect(propertiesService.getProperties).toHaveBeenCalled(); 
+        expect(propertiesService.getProperties).toHaveBeenCalled();
     });
 
     it('should fetch properties with correct parameters', async () => {

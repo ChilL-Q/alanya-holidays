@@ -206,7 +206,7 @@ export const Checkout: React.FC = () => {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className="font-medium text-slate-900 dark:text-white">{convertAndFormat(item.price, 'EUR')}</span>
+                        <span className="font-medium text-teal-600 dark:text-accent">{convertAndFormat(item.price, 'EUR')}</span>
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition"
@@ -229,7 +229,7 @@ export const Checkout: React.FC = () => {
               <div className="flex-grow text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('checkout.welcome_pack_title') || 'Arrive in Comfort'}</h3>
-                  <span className="font-bold text-teal-700 dark:text-teal-400 text-sm">€30</span>
+                  <span className="font-bold text-teal-700 dark:text-accent text-sm">€30</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
                   {t('checkout.welcome_pack_desc') || 'Don\'t worry about shopping immediately. We\'ll stock your fridge with essentials: bread, water, milk, eggs, cheese, and seasonal fruit.'}
@@ -335,11 +335,22 @@ export const Checkout: React.FC = () => {
               {paymentMethod === 'bank' && (
                 <div className="p-4 border border-teal-100 dark:border-teal-900/50 rounded-lg bg-teal-50 dark:bg-teal-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
                   <p className="text-sm text-teal-800 dark:text-teal-300 font-medium mb-2">{t('checkout.method.bank_desc')}</p>
-                  <div className="flex items-center justify-between text-xs bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-teal-900">
-                    <code className="text-slate-600 dark:text-slate-300 font-mono">TR00 0000 0000 0000 0000</code>
-                    <button onClick={() => copyToClipboard('TR00 0000 0000 0000 0000')} className="text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 flex items-center gap-1">
-                      <Copy size={14} /> {copied ? 'Copied' : t('checkout.copy')}
-                    </button>
+                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-teal-900">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Bank Name</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Ziraat Bankası</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Account Holder</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Alanya Holidays Ltd.</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">IBAN</span>
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-slate-700 dark:text-slate-300">TR12 3456 7890 1234 5678 9012 34</code>
+                        <button onClick={() => copyToClipboard('TR12 3456 7890 1234 5678 9012 34')} className="text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300"><Copy size={12} /></button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -347,11 +358,19 @@ export const Checkout: React.FC = () => {
               {paymentMethod === 'crypto' && (
                 <div className="p-4 border border-indigo-100 dark:border-indigo-900/50 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
                   <p className="text-sm text-indigo-800 dark:text-indigo-300 font-medium mb-2">{t('checkout.method.crypto_desc')}</p>
-                  <div className="flex items-center justify-between text-xs bg-white dark:bg-slate-900 p-3 rounded border border-indigo-100 dark:border-indigo-900">
-                    <code className="text-slate-600 dark:text-slate-300 font-mono truncate max-w-[200px]">TTrsS...</code>
-                    <button onClick={() => copyToClipboard('TTrsSkD...')} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1">
-                      <Copy size={14} /> {copied ? 'Copied' : t('checkout.copy')}
-                    </button>
+                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-indigo-100 dark:border-indigo-900">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">Network</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">TRC20 (Tron)</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">USDT Address</span>
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[200px]">TVj...xYz</code>
+                        <button onClick={() => copyToClipboard('TVj7...ExampleAddress...xYz')} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"><Copy size={12} /></button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-amber-600 mt-1">⚠️ Please ensure you send only USDT on the TRC20 network.</p>
                   </div>
                 </div>
               )}
@@ -361,7 +380,7 @@ export const Checkout: React.FC = () => {
                   <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-blue-900">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">{t('checkout.bank_name')}</span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">Garanti Bank</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Garanti BBVA</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">{t('checkout.swift_bic')}</span>

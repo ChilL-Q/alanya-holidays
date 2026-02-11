@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
-import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain, Bike, Camera, Video } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ServiceGrid } from '../components/services/ServiceGrid';
 import { ServiceCard } from '../components/services/ServiceCard';
 import { CategoryTabs } from '../components/services/CategoryTabs';
-
-
-
 import { useServicePrices } from '../hooks/useServicePrices';
+import { SERVICES_DATA } from '../data/services';
+import { Filter, X } from 'lucide-react';
 
 export const ServicesPage: React.FC = () => {
     const { t } = useLanguage();
@@ -16,6 +14,11 @@ export const ServicesPage: React.FC = () => {
     const { category } = useParams<{ category: string }>();
     const [activeCategory, setActiveCategory] = useState(category || 'transport');
     const { minPrices } = useServicePrices();
+
+    // Filter State
+    const [showFilters, setShowFilters] = useState(false);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Sync activeCategory with URL params
     React.useEffect(() => {
@@ -42,6 +45,45 @@ export const ServicesPage: React.FC = () => {
         { id: 'connectivity', label: t('services.connectivity.title') },
     ];
 
+    const [transportFilter, setTransportFilter] = useState<'all' | 'rental' | 'transfer'>('all');
+
+    const filteredServices = useMemo(() => {
+        return SERVICES_DATA.filter(service => {
+            // 1. Category Filter
+            if (activeCategory === 'transport' && service.category !== 'transport') return false;
+            if (activeCategory !== 'transport' && service.category !== activeCategory) return false;
+
+            // 1.1 Transport Sub-filter
+            if (activeCategory === 'transport' && transportFilter !== 'all') {
+                // @ts-ignore - subcategory depends on data update
+                if (service.subcategory && service.subcategory !== transportFilter) return false;
+                // Fallback for items without subcategory if any (though we updated data)
+                if (!service.subcategory) return false;
+            }
+
+            // 2. Price Filter (if price exists)
+            if (service.price !== undefined) {
+                // Use dynamic minPrice if available for experiences
+                let effectivePrice = service.price;
+                if (service.category === 'experiences' && minPrices[service.id]) {
+                    effectivePrice = minPrices[service.id];
+                }
+
+                if (effectivePrice < priceRange.min || effectivePrice > priceRange.max) return false;
+            }
+
+            // 3. Search Filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                const title = t(service.title).toLowerCase();
+                const desc = t(service.description).toLowerCase();
+                if (!title.includes(query) && !desc.includes(query)) return false;
+            }
+
+            return true;
+        });
+    }, [activeCategory, priceRange, searchQuery, minPrices, t, transportFilter]);
+
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-20 pt-24">
             <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
@@ -53,198 +95,110 @@ export const ServicesPage: React.FC = () => {
                     activeCategory={activeCategory}
                     onSelect={handleCategorySelect}
                 />
+
+                {/* Transport Sub-filters */}
+                {activeCategory === 'transport' && (
+                    <div className="flex justify-center mt-8 animate-in fade-in slide-in-from-top-4">
+                        <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/50 backdrop-blur-sm">
+                            {[
+                                { id: 'all', label: 'All Transport' },
+                                { id: 'rental', label: 'Rentals' },
+                                { id: 'transfer', label: 'Transfers' }
+                            ].map((filter) => (
+                                <button
+                                    key={filter.id}
+                                    onClick={() => setTransportFilter(filter.id as any)}
+                                    className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${transportFilter === filter.id
+                                        ? 'bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm shadow-slate-200/50 dark:shadow-none translate-y-[-1px]'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30'
+                                        }`}
+                                >
+                                    {filter.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Filters Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        <Filter size={18} />
+                        {showFilters ? 'Hide Filters' : 'Show Filters'}
+                    </button>
+                </div>
+
+                {showFilters && (
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-down grid md:grid-cols-3 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Search</label>
+                            <input
+                                type="text"
+                                placeholder="Search services..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Min Price (€)</label>
+                            <input
+                                type="number"
+                                value={priceRange.min}
+                                onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Max Price (€)</label>
+                            <input
+                                type="number"
+                                value={priceRange.max}
+                                onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {activeCategory === 'transport' && (
-                    <ServiceGrid id="cars" title={t('services.transport.title')}>
-                        <ServiceCard
-                            title={t('services.transport.car')}
-                            description={t('services.transport.car_desc')}
-                            icon={Car}
-                            rawPrice={25}
-                            price="/day"
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/car-rental')}
-                        />
-                        <ServiceCard
-                            title={t('services.transport.bike')}
-                            description={t('services.transport.bike_desc')}
-                            icon={Car}
-                            rawPrice={10}
-                            price="/day"
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/bike-rental')}
-                        />
-                    </ServiceGrid>
-                )}
+                <ServiceGrid id={activeCategory} title={categories.find(c => c.id === activeCategory)?.label || ''}>
+                    {filteredServices.length > 0 ? (
+                        filteredServices.map(service => {
+                            // Determine price to show
+                            let displayPrice = service.price;
+                            if (service.category === 'experiences' && minPrices[service.id]) {
+                                displayPrice = minPrices[service.id];
+                            }
 
-
-                {activeCategory === 'experiences' && (
-                    <ServiceGrid id="experiences" title={t('footer.experiences')}>
-                        <ServiceCard
-                            title={t('services.adventure.land')}
-                            description={t('services.adventure.land_desc')}
-                            icon={Mountain}
-                            imageUrl="/images/experiences/land_tours_hero.png"
-                            rawPrice={minPrices['land'] || 30}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/land')}
-                        />
-                        <ServiceCard
-                            title={t('services.adventure.water')}
-                            description={t('services.adventure.water_desc')}
-                            icon={Anchor}
-                            imageUrl="/images/experiences/water_sports_hero.png"
-                            rawPrice={minPrices['water'] || 50}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/water')}
-                        />
-                        <ServiceCard
-                            title={t('services.adventure.safari')}
-                            description={t('services.adventure.safari_desc')}
-                            icon={Car}
-                            imageUrl="/images/experiences/safari_expedition_hero.png"
-                            rawPrice={minPrices['safari'] || 35}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/safari')}
-                        />
-                        <ServiceCard
-                            title={t('services.adventure.atv_title')}
-                            description={t('services.adventure.atv_subtitle')}
-                            icon={Car}
-                            imageUrl="/images/experiences/atv_buggy_hero.png"
-                            rawPrice={minPrices['atv'] || 45}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/atv')}
-                        />
-                        <ServiceCard
-                            title={t('services.adventure.air')}
-                            description={t('services.adventure.air_desc')}
-                            icon={Cloud}
-                            imageUrl="/images/experiences/air_adventures_hero.png"
-                            rawPrice={minPrices['air'] || 80}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/air')}
-                        />
-
-                        <ServiceCard
-                            title={t('services.adventure.bikes_title')}
-                            description={t('services.adventure.bikes_subtitle')}
-                            icon={Bike}
-                            imageUrl="/images/experiences/bikes_hero.png"
-                            rawPrice={10}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/bicycle-rental')}
-                        />
-                    </ServiceGrid>
-                )}
-
-                {activeCategory === 'visa' && (
-                    <ServiceGrid id="visa" title={t('services.visa.title')}>
-                        <ServiceCard
-                            title={t('services.visa.tourist')}
-                            description={t('services.visa.tourist_desc')}
-                            icon={Anchor}
-                            rawPrice={50}
-                            actionLabel="Consult"
-                            onClick={() => navigate('/visa-consult')}
-                        />
-                        <ServiceCard
-                            title={t('services.visa.residence')}
-                            description={t('services.visa.residence_desc')}
-                            icon={Anchor}
-                            rawPrice={250}
-                            actionLabel="Consult"
-                            onClick={() => navigate('/visa-consult')}
-                        />
-                    </ServiceGrid>
-                )}
-
-                {activeCategory === 'connectivity' && (
-                    <ServiceGrid id="sim" title={t('services.connectivity.title')}>
-                        <ServiceCard
-                            title={t('services.connectivity.esim')}
-                            description={t('services.connectivity.esim_desc')}
-                            icon={Anchor}
-                            rawPrice={15}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/services/tourist-sim-card')}
-                        />
-                    </ServiceGrid>
-                )}
-
-                {activeCategory === 'creative' && (
-                    <ServiceGrid id="creative" title={t('services.creative.title')}>
-                        <ServiceCard
-                            title={t('services.creative.photo')}
-                            description={t('services.creative.photo_desc')}
-                            icon={Camera}
-                            rawPrice={100}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/creative-professionals/photographer')}
-                        />
-                        <ServiceCard
-                            title={t('services.creative.video')}
-                            description={t('services.creative.video_desc')}
-                            icon={Video}
-                            rawPrice={200}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/creative-professionals/videographer')}
-                        />
-                        <ServiceCard
-                            title={t('services.creative.content')}
-                            description={t('services.creative.content_desc')}
-                            icon={Camera}
-                            rawPrice={150}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/creative-professionals/content_creator')}
-                        />
-                    </ServiceGrid>
-                )}
-
-                {activeCategory === 'health' && (
-                    <ServiceGrid id="health" title={t('services.health.title')}>
-                        <ServiceCard
-                            title={t('services.health.spa')}
-                            description={t('services.health.spa_desc')}
-                            icon={Heart}
-                            rawPrice={40}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/experiences/wellness')}
-                        />
-                        <ServiceCard
-                            title={t('services.health.dental')}
-                            description={t('services.health.dental_desc')}
-                            icon={Stethoscope}
-                            actionLabel={t('consult_button')}
-                            onClick={() => navigate('/contact')}
-                        />
-                        <ServiceCard
-                            title={t('services.health.hair')}
-                            description={t('services.health.hair_desc')}
-                            icon={Heart}
-                            actionLabel={t('consult_button')}
-                            onClick={() => navigate('/contact')}
-                        />
-                        <ServiceCard
-                            title={t('services.health.cosmetic')}
-                            description={t('services.health.cosmetic_desc')}
-                            icon={Heart}
-                            actionLabel={t('consult_button')}
-                            onClick={() => navigate('/contact')}
-                        />
-                        <ServiceCard
-                            title={t('services.health.cave')}
-                            description={t('services.health.cave_desc')}
-                            icon={Heart}
-                            rawPrice={10}
-                            actionLabel={t('book_button')}
-                            onClick={() => navigate('/contact')}
-                        />
-                    </ServiceGrid>
-                )}
+                            return (
+                                <ServiceCard
+                                    key={service.id}
+                                    title={t(service.title)}
+                                    description={t(service.description)}
+                                    icon={service.icon}
+                                    imageUrl={service.image}
+                                    rawPrice={displayPrice}
+                                    price={service.priceLabel}
+                                    actionLabel={t(service.actionLabel || 'book_button')}
+                                    onClick={() => navigate(service.route)}
+                                />
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-full text-center py-12 text-slate-500 dark:text-slate-400">
+                            No services found matching your criteria.
+                        </div>
+                    )}
+                </ServiceGrid>
             </div>
         </div>
     );
 };
+

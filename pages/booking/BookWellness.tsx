@@ -118,10 +118,10 @@ export const BookWellness: React.FC = () => {
                     <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600">
+                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">
                                 {service.price > 0 ? formatPrice(convertPrice(service.price, 'EUR')) : 'Contact for Price'}
                             </span>
-                            {service.price > 0 && <span className="text-slate-500">approx. cost</span>}
+                            {service.price > 0 && <span className="text-slate-500 dark:text-slate-400">approx. cost</span>}
                         </div>
 
                         <div className="space-y-6">

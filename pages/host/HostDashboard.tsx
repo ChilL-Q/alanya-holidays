@@ -4,6 +4,10 @@ import { db } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
 import { BarChart3, Calendar, DollarSign, Home, Plus, ExternalLink, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell
+} from 'recharts';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Button, buttonVariants, buttonBase } from '../../components/ui/Button';
 import { cn } from '../../utils/cn';
@@ -47,6 +51,33 @@ export const HostDashboard: React.FC = () => {
 
         fetchData();
     }, [user, isAuthenticated, navigate]);
+
+    // Chart Data Preparation
+    const months = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        return d.toLocaleString('default', { month: 'short' });
+    }).reverse();
+
+    const revenueHistory = months.map(month => {
+        const monthlyBookings = bookings.filter(b => {
+            // Use host_payout_amount for host revenue, not total_price
+            const amount = Number(b.host_payout_amount) || 0;
+            if (amount <= 0) return false;
+
+            const d = new Date(b.created_at);
+            return d.toLocaleString('default', { month: 'short' }) === month && b.payment_status === 'paid';
+        });
+        const monthlyRevenue = monthlyBookings.reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
+        return { name: month, value: monthlyRevenue };
+    });
+
+    const bookingStatusDistribution = [
+        { name: 'Pending', value: bookings.filter(b => b.status === 'pending').length, color: '#F59E0B' },
+        { name: 'Confirmed', value: bookings.filter(b => b.status === 'confirmed').length, color: '#10B981' },
+        { name: 'Completed', value: bookings.filter(b => b.status === 'completed').length, color: '#3B82F6' },
+        { name: 'Cancelled', value: bookings.filter(b => b.status === 'cancelled').length, color: '#EF4444' }
+    ].filter(item => item.value > 0);
 
     // Stats Calculation
     const totalEarnings = bookings
@@ -121,6 +152,63 @@ export const HostDashboard: React.FC = () => {
                     </div>
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('host.stats.properties')}</p>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{properties.length}</h3>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 h-[350px]">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Earnings Trend</h3>
+                    <div className="h-[280px] w-full min-w-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={revenueHistory}>
+                                <defs>
+                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#0D9488" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#0D9488" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} tickFormatter={(value) => `€${value}`} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#000' }}
+                                    itemStyle={{ color: '#0F172A', fontWeight: 'bold' }}
+                                    formatter={(value: number) => [`€${value.toLocaleString()}`, 'Earnings']}
+                                />
+                                <Area type="monotone" dataKey="value" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 h-[350px] flex flex-col">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Booking Status</h3>
+                    <div className="flex-1 w-full min-h-[200px] min-w-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={bookingStatusDistribution}
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {bookingStatusDistribution.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#000' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-3 mt-4">
+                        {bookingStatusDistribution.map((entry) => (
+                            <div key={entry.name} className="flex items-center gap-1.5">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                <span className="text-xs text-slate-500 font-medium">{entry.name}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

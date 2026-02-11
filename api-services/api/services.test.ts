@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { servicesService } from './api-services';
+import { servicesService } from './services';
 import { notificationsService } from './notifications';
 
 const { mockSupabase } = vi.hoisted(() => {

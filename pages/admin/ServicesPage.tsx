@@ -4,18 +4,23 @@ import { Search, Edit2, CheckCircle, Trash2, Home, Car, Map, Smartphone, CreditC
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 
-export const ServicesPage: React.FC = () => {
+interface AdminServicesPageProps {
+    type?: 'fleet' | 'services';
+}
+
+export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
     const navigate = useNavigate();
     const [services, setServices] = useState<any[]>([]);
     const [pendingEdits, setPendingEdits] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // Modal State
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
-        type: 'approve' | 'reject' | 'delete' | null;
+        type: 'approve' | 'reject' | 'delete' | 'bulk_delete' | null;
         itemId: string | null;
         title: string;
         message: string;
@@ -35,10 +40,70 @@ export const ServicesPage: React.FC = () => {
         loadServices();
     }, []);
 
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredServices.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredServices.map(s => s.id)));
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleBulkAction = async (action: 'approve' | 'reject' | 'delete') => {
+        if (selectedIds.size === 0) return;
+
+        if (action === 'delete') {
+            if (confirm(`Are you sure you want to delete ${selectedIds.size} services? This cannot be undone.`)) {
+                try {
+                    await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
+                    setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
+                    setSelectedIds(new Set());
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to delete some services.');
+                }
+            }
+            return;
+        }
+
+        if (confirm(`Are you sure you want to ${action} ${selectedIds.size} services?`)) {
+            try {
+                const updates = Array.from(selectedIds).map(id => {
+                    if (action === 'approve') return db.approveService(id);
+                    if (action === 'reject') return db.updateServiceStatus(id, 'rejected'); // Bulk reject no reason for now
+                    return Promise.resolve();
+                });
+                await Promise.all(updates);
+                loadServices();
+                setSelectedIds(new Set());
+            } catch (e) {
+                console.error(e);
+                alert(`Failed to ${action} services.`);
+            }
+        }
+    };
+
     const loadServices = async () => {
         try {
+            const FLEET_TYPES = ['car', 'bike', 'transfer'];
+            const SERVICE_TYPES = ['tour', 'wellness', 'creative', 'visa', 'esim'];
+
+            // Determine which types to filter
+            let typesToFilter: string[] = [];
+            if (type === 'fleet') typesToFilter = FLEET_TYPES;
+            if (type === 'services') typesToFilter = SERVICE_TYPES;
+
             const [{ data: servicesData }, editsData] = await Promise.all([
-                db.getAdminServices('all', 1, 100),
+                db.getAdminServices('all', typesToFilter, 1, 100),
                 db.getPendingServiceEdits()
             ]);
             setServices(servicesData || []);
@@ -152,12 +217,52 @@ export const ServicesPage: React.FC = () => {
                 </div>
             </div>
 
+            {/* Bulk Actions */}
+            {
+                selectedIds.size > 0 && (
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center justify-between animate-in slide-in-from-top-2">
+                        <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
+                            {selectedIds.size} service{selectedIds.size > 1 ? 's' : ''} selected
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleBulkAction('approve')}
+                                className="px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 rounded-lg text-sm font-medium hover:bg-emerald-200 transition"
+                            >
+                                Approve Selected
+                            </button>
+                            <button
+                                onClick={() => handleBulkAction('reject')}
+                                className="px-3 py-1.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 rounded-lg text-sm font-medium hover:bg-amber-200 transition"
+                            >
+                                Reject Selected
+                            </button>
+                            <button
+                                onClick={() => handleBulkAction('delete')}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 transition"
+                            >
+                                <Trash2 size={16} />
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
             {/* Table */}
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase font-semibold">
                             <tr>
+                                <th className="p-4 pl-6 w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={filteredServices.length > 0 && selectedIds.size === filteredServices.length}
+                                        onChange={toggleSelectAll}
+                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                </th>
                                 <th className="p-4 pl-6 w-20">Image</th>
                                 <th className="p-4">Service</th>
                                 <th className="p-4">Type</th>
@@ -170,7 +275,7 @@ export const ServicesPage: React.FC = () => {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-slate-400">Loading services...</td>
+                                    <td colSpan={8} className="p-8 text-center text-slate-400">Loading services...</td>
                                 </tr>
                             ) : filterStatus === 'updates' ? (
                                 pendingEdits.length === 0 ? (
@@ -206,11 +311,19 @@ export const ServicesPage: React.FC = () => {
                                 )
                             ) : filteredServices.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="p-8 text-center text-slate-400">No services found.</td>
+                                    <td colSpan={8} className="p-8 text-center text-slate-400">No services found.</td>
                                 </tr>
                             ) : (
                                 filteredServices.map((s) => (
-                                    <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                    <tr key={s.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group ${selectedIds.has(s.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+                                        <td className="p-4 pl-6">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.has(s.id)}
+                                                onChange={() => toggleSelect(s.id)}
+                                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                        </td>
                                         <td className="p-4 pl-6">
                                             <div className="w-16 h-12 rounded-lg bg-slate-200 overflow-hidden">
                                                 {s.images && s.images[0] ? (
@@ -319,6 +432,6 @@ export const ServicesPage: React.FC = () => {
                 confirmLabel={modalConfig.type === 'delete' ? 'Delete' : modalConfig.type === 'reject' ? 'Reject' : 'Approve'}
                 reasonPlaceholder={modalConfig.type === 'delete' ? 'Why are you deleting this service?' : 'Why are you rejecting this service?'}
             />
-        </div>
+        </div >
     );
 };
