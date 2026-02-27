@@ -1,0 +1,495 @@
+
+> alanya-holidays@0.0.0 test
+> vitest components/chat/ChatWindow.test.tsx --environment=jsdom
+
+
+[1m[44m DEV [49m[22m [34mv4.0.17 [39m[90m/Users/kachevn1k/Projects/alanya-holidays[39m
+
+ [31m❯[39m components/chat/ChatWindow.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 1131[2mms[22m[39m
+     [32m✓[39m returns null if no active conversation[32m 8[2mms[22m[39m
+     [32m✓[39m loads and renders messages[32m 69[2mms[22m[39m
+[31m     [31m×[31m sends a message optimistically[39m[32m 14[2mms[22m[39m
+[31m     [31m×[31m handles message send failure by reverting optimistic message[39m[33m 1014[2mms[22m[39m
+     [32m✓[39m handles real-time incoming messages[32m 7[2mms[22m[39m
+     [32m✓[39m unsubscribes on unmount[32m 5[2mms[22m[39m
+     [32m✓[39m clears history via header menu[32m 9[2mms[22m[39m
+     [32m✓[39m sets active conversation to null when closing chat[32m 5[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m components/chat/ChatWindow.test.tsx[2m > [22mChatWindow[2m > [22msends a message optimistically
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element by: [data-testid="chat-form"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden fixed top-[72px] bottom-0 left-0 right-0 sm:top-28 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[400px] rounded-t-3xl sm:rounded-3xl z-50  font-sans"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"relative z-10 p-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex justify-between items-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"relative"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m""[39m
+                [33mclass[39m=[32m"w-12 h-12 rounded-full object-cover shadow-md border-2 border-white/30"[39m
+                [33msrc[39m=[32m"avatar.jpg"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full shadow-sm"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"font-bold text-lg leading-tight text-white"[39m
+              [36m>[39m
+                [0mHost User[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"text-xs font-medium flex items-center gap-1.5 text-teal-50/90"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"w-1.5 h-1.5 rounded-full bg-current opacity-70"[39m
+                [36m/>[39m
+                [0mTest Property[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-1 relative"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"relative"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"p-2 rounded-full transition-colors relative text-white/90 hover:bg-white/10"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"chat-menu-trigger"[39m
+                [36m/>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"p-2 hover:bg-white/10 rounded-full transition-colors text-white/90 ml-1"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mdata-testid[39m=[32m"close-icon"[39m
+              [36m/>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth relative"[39m
+        [33mstyle[39m=[32m"background-image: radial-gradient(circle, rgba(20, 184, 166, 0.05) 0%, transparent 70%);"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex justify-center mb-4"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase tracking-widest shadow-sm"[39m
+          [36m>[39m
+            [0mToday[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex justify-start animate-in slide-in-from-bottom-2 duration-300"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"w-8 mr-3 flex flex-col justify-end visible"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m""[39m
+              [33mclass[39m=[32m"w-8 h-8 rounded-full shadow-sm object-cover"[39m
+              [33msrc[39m=[32m"avatar.jpg"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col items-start max-w-[75%] group"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"
+                                px-5 py-3.5 shadow-sm text-[15px] leading-relaxed relative transition-all duration-200
+                                bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-2xl rounded-bl-2xl rounded-r-2xl border border-slate-100 dark:border-slate-700
+                            "[39m
+            [36m>[39m
+              [0mHello[0m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"
+                                flex items-center gap-1.5 mt-1 text-[10px] font-medium transition-opacity duration-200
+                                text-slate-400 justify-start
+                                opacity-100
+                            "[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0m12:23 AM[0m
+              [36m</span>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800"[39m
+      [36m>[39m
+        [36m<form[39m
+          [33mclass[39m=[32m"relative flex items-end gap-2 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-[24px] border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500 transition-all"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"p-3 text-slate-400 hover:text-teal-600 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors flex-shrink-0"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-paperclip"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"20"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"20"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</button>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"flex-1 py-3 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-sm max-h-32 resize-none overflow-auto"[39m
+            [33mplaceholder[39m=[32m"Type a message..."[39m
+            [33mtype[39m=[32m"text"[39m
+            [33mvalue[39m=[32m"Testing send"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-1 pr-1"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"p-3 rounded-full shadow-sm flex-shrink-0 transform transition-all duration-200 bg-teal-600 text-white hover:bg-teal-700 scale-100 rotate-0"[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mdata-testid[39m=[32m"send-icon"[39m
+              [36m/>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</form>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m components/chat/ChatWindow.test.tsx:[2m125:37[22m[39m
+    [90m123| [39m        [35mawait[39m [34mact[39m([35masync[39m () [33m=>[39m {
+    [90m124| [39m            fireEvent.change(input, { target: { value: 'Testing send' …
+    [90m125| [39m            fireEvent.submit(screen.getByTestId('chat-form') || input.…
+    [90m   | [39m                                    [31m^[39m
+    [90m126| [39m        })[33m;[39m
+    [90m127| [39m
+[90m [2m❯[22m node_modules/@testing-library/react/dist/act-compat.js:[2m47:24[22m[39m
+[90m [2m❯[22m process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:[2m814:22[22m[39m
+[90m [2m❯[22m Proxy.<anonymous> node_modules/@testing-library/react/dist/act-compat.js:[2m46:25[22m[39m
+[90m [2m❯[22m components/chat/ChatWindow.test.tsx:[2m123:15[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m components/chat/ChatWindow.test.tsx[2m > [22mChatWindow[2m > [22mhandles message send failure by reverting optimistic message
+[31m[1mAssertionError[22m[39m: expected '' to be 'Fail message' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden fixed top-[72px] bottom-0 left-0 right-0 sm:top-28 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[400px] rounded-t-3xl sm:rounded-3xl z-50  font-sans"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative z-10 p-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-between items-center"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-4"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"relative"[39m
+              [36m>[39m
+                [36m<img[39m
+                  [33malt[39m=[32m""[39m
+                  [33mclass[39m=[32m"w-12 h-12 rounded-full object-cover shadow-md border-2 border-white/30"[39m
+                  [33msrc[39m=[32m"avatar.jpg"[39m
+                [36m/>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full shadow-sm"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-bold text-lg leading-tight text-white"[39m
+                [36m>[39m
+                  [0mHost User[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs font-medium flex items-center gap-1.5 text-teal-50/90"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"w-1.5 h-1.5 rounded-full bg-current opacity-70"[39m
+                  [36m/>[39m
+                  [0mTest Property[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-1 relative"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"relative"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"p-2 rounded-full transition-colors relative text-white/90 hover:bg-white/10"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mdata-testid[39m=[32m"chat-menu-trigger"[39m
+                  [36m/>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"p-2 hover:bg-white/10 rounded-full transition-colors text-white/90 ml-1"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"close-icon"[39m
+                [36m/>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth relative"[39m
+          [33mstyle[39m=[32m"background-image: radial-gradient(circle, rgba(20, 184, 166, 0.05) 0%, transparent 70%);"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-center mb-4"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase tracking-widest shadow-sm"[39m
+            [36m>[39m
+              [0mToday[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-start animate-in slide-in-from-bottom-2 duration-300"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-8 mr-3 flex flex-col justify-end visible"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m""[39m
+                [33mclass[39m=[32m"w-8 h-8 rounded-full shadow-sm object-cover"[39m
+                [33msrc[39m=[32m"avatar.jpg"[39m
+              [36m/>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col items-start max-w-[75%] group"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"
+                                px-5 py-3.5 shadow-sm text-[15px] leading-relaxed relative transition-all duration-200
+                                bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-2xl rounded-bl-2xl rounded-r-2xl border border-slate-100 dark:border-slate-700
+                            "[39m
+              [36m>[39m
+                [0mHello[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"
+                                flex items-center gap-1.5 mt-1 text-[10px] font-medium transition-opacity duration-200
+                                text-slate-400 justify-start
+                                opacity-100
+                            "[39m
+              [36m>[39m
+                [36m<span>[39m
+                  [0m12:23 AM[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex justify-end animate-in slide-in-from-bottom-2 duration-300"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-col items-end max-w-[75%] group"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"
+                                px-5 py-3.5 shadow-sm text-[15px] leading-relaxed relative transition-all duration-200
+                                bg-teal-600 text-white rounded-tr-2xl rounded-br-2xl rounded-l-2xl
+                            "[39m
+              [36m>[39m
+                [0mTesting send[0m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"
+                                flex items-center gap-1.5 mt-1 text-[10px] font-medium transition-opacity duration-200
+                                text-slate-400 justify-end
+                                opacity-100
+                            "[39m
+              [36m>[39m
+                [36m<span>[39m
+                  [0m12:23 AM[0m
+                [36m</span>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-check"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"12"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"12"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800"[39m
+        [36m>[39m
+          [36m<form[39m
+            [33mclass[39m=[32m"relative flex items-end gap-2 bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-[24px] border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500 transition-all"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"p-3 text-slate-400 hover:text-teal-600 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors flex-shrink-0"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-paperclip"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"20"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<input[39m
+              [33mclass[39m=[32m"flex-1 py-3 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 text-sm max-h-32 resize-none overflow-auto"[39m
+              [33mplaceholder[39m=[32m"Type a message..."[39m
+              [33mtype[39m=[32m"text"[39m
+              [33mvalue[39m=[32m""[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-1 pr-1"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"p-3 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-full transition-colors flex-shrink-0"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-smile"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"20"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"12"[39m
+                    [33mcy[39m=[32m"12"[39m
+                    [33mr[39m=[32m"10"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M8 14s1.5 2 4 2 4-2 4-2"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"9"[39m
+                    [33mx2[39m=[32m"9.01"[39m
+                    [33my1[39m=[32m"9"[39m
+                    [33my2[39m=[32m"9"[39m
+                  [36m/>[39m
+                  [36m<line[39m
+                    [33mx1[39m=[32m"15"[39m
+                    [33mx2[39m=[32m"15.01"[39m
+                    [33my1[39m=[32m"9"[39m
+                    [33my2[39m=[32m"9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33mclass[39m=[32m"p-3 rounded-full shadow-sm flex-shrink-0 transform transition-all duration-200 bg-slate-200 dark:bg-slate-700 text-slate-400 scale-90 rotate-90 disabled:cursor-not-allowed"[39m
+                [33mdisabled[39m=[32m""[39m
+                [33mtype[39m=[32m"submit"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mdata-testid[39m=[32m"send-icon"[39m
+                [36m/>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Fail message[39m
+
+[36m [2m❯[22m components/chat/ChatWindow.test.tsx:[2m154:55[22m[39m
+    [90m152| [39m        [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m153| [39m            expect(screen.queryByText('Fail message')).not.toBeInTheDo…
+    [90m154| [39m            expect((input as HTMLInputElement).value).toBe('Fail messa…
+    [90m   | [39m                                                      [31m^[39m
+    [90m155| [39m        })[33m;[39m
+    [90m156| [39m    })[33m;[39m
+[90m [2m❯[22m runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:[2m47:12[22m[39m
+[90m [2m❯[22m checkCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m124:77[22m[39m
+[90m [2m❯[22m Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:[2m118:16[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 00:23:35
+[2m   Duration [22m 1.76s[2m (transform 97ms, setup 111ms, import 163ms, tests 1.13s, environment 272ms)[22m
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+[31mCancelling test run. Press CTRL+c again to exit forcefully.
+[39m

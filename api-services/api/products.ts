@@ -14,7 +14,18 @@ export const productsService = {
     },
 
     async getProducts(category?: string) {
-        let query = supabase.from('products').select('*, artisan:profiles(full_name)');
+        let query = supabase.from('products').select(`
+            id, 
+            title, 
+            description, 
+            price, 
+            stock, 
+            category, 
+            images, 
+            seller_id, 
+            created_at,
+            seller:profiles!products_seller_id_fkey(full_name)
+        `);
 
         if (category) {
             query = query.eq('category', category);
@@ -28,7 +39,18 @@ export const productsService = {
     async getProduct(id: string) {
         const { data, error } = await supabase
             .from('products')
-            .select('*, artisan:profiles(full_name)')
+            .select(`
+                id, 
+                title, 
+                description, 
+                price, 
+                stock, 
+                category, 
+                images, 
+                seller_id, 
+                created_at,
+                seller:profiles!products_seller_id_fkey(full_name)
+            `)
             .eq('id', id)
             .single();
 

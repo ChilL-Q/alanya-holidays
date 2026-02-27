@@ -7,6 +7,7 @@ export const SERVICES_DATA = [
         id: 'car-rental',
         category: 'transport',
         subcategory: 'rental',
+        brand: 'Renault',
         title: 'services.transport.car',
         description: 'services.transport.car_desc',
         icon: Car,
@@ -19,6 +20,7 @@ export const SERVICES_DATA = [
         id: 'bike-rental',
         category: 'transport',
         subcategory: 'rental',
+        brand: 'Honda',
         title: 'services.transport.bike',
         description: 'services.transport.bike_desc',
         icon: Car,
@@ -157,7 +159,7 @@ export const SERVICES_DATA = [
         icon: Anchor,
         price: 15,
         route: '/services/tourist-sim-card',
-        actionLabel: 'book_button'
+        actionLabel: 'buy_button'
     },
     // Creative
     {

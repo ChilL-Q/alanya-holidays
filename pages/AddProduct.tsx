@@ -31,7 +31,7 @@ export const AddProduct: React.FC = () => {
                 price: Number(formData.price),
                 stock: Number(formData.stock),
                 category: formData.category,
-                artisan_id: user.id,
+                seller_id: user.id,
                 images: []
             });
             setSuccess(true);

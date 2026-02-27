@@ -13,65 +13,18 @@
   <meta property="og:type" content="website">
   <meta property="og:image" content="/og-image.jpg">
   <link rel="icon" type="image/png" href="/logo.png" />
+
+  <link rel="preload" as="image" href="/images/hero-bg.jpg" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload"
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@100..900&display=swap"
+    as="style">
   <link
-    href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=Inter:wght@100..900&family=Jost:ital,wght@0,100..900&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@100..900&display=swap"
     rel="stylesheet">
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
-  <script>
-    // Suppress Tailwind CDN production warning
-    // Suppress Tailwind CDN warning and React DevTools message
-    const originalWarn = console.warn;
-    console.warn = (...args) => {
-      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
-      originalWarn.apply(console, args);
-    };
-
-    const originalInfo = console.info;
-    console.info = (...args) => {
-      if (args[0] && typeof args[0] === 'string' && args[0].includes('Download the React DevTools')) return;
-      originalInfo.apply(console, args);
-    };
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['DM Serif Display', 'serif'],
-          },
-          colors: {
-            primary: {
-              DEFAULT: '#05445E', // Deep Ocean Blue (Restored Holidays Color)
-              dark: '#032B3B',
-              light: '#189AB4',
-            },
-            teal: {
-              50: '#E6F3F5',
-              100: '#C1E1E6',
-              200: '#95CAD4',
-              300: '#64AEBD',
-              400: '#3D8F9F',
-              500: '#05445E', // Main Brand (Holidays) Color
-              600: '#04364B',
-              700: '#032B3B',
-              800: '#02202C',
-              900: '#01151D',
-            },
-            accent: {
-              DEFAULT: '#D88C51', // Warm Sand/Terracotta
-              hover: '#C2763A',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
+  <link rel="stylesheet" href="/index.css">
 </head>
 
 

@@ -22,6 +22,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
                         }}
                         alt="Alanya Coastline"
                         className="w-full h-full object-cover"
+                        fetchPriority="high"
+                        loading="eager"
                     />
                     {/* Darker overlay for better text contrast */}
                     <div className="absolute inset-0 bg-black/40 md:bg-black/20"></div>

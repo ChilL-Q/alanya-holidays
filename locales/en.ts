@@ -212,6 +212,7 @@ export const en = {
 
   'request_details': 'Request details',
   'book_button': 'Book Now',
+  'buy_button': 'Buy',
   'consult_button': 'Free Consultation',
   'view_shop': 'Visit Shop',
   'shop.view_all_products': 'View all products',
@@ -320,6 +321,9 @@ export const en = {
   'profile.personal_info': 'Personal Information',
   'profile.company_name': 'Company Name',
   'profile.save_btn': 'Save Changes',
+  'profile.settings': 'Settings',
+  'profile.security': 'Security',
+  'profile.payout_details': 'Payout Details',
   'profile.change_password': 'Change Password',
   'profile.update_password': 'Update Password',
   'profile.new_password': 'New Password',

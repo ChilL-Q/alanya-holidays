@@ -15,7 +15,7 @@ interface Product {
     category: string;
     stock?: number;
     images: string[];
-    artisan: {
+    seller: {
         full_name: string;
     };
 }
@@ -68,53 +68,53 @@ export const Shop: React.FC = () => {
             id: 'm1', title: 'Handblown Glass Evil Eye', price: 15, category: 'souvenir', stock: 10,
             description: 'Traditional Nazar amulet to protect against the evil eye. Handblown by local artisans.',
             images: ['https://images.unsplash.com/photo-1634225254848-6b8014e04991?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Ahmet Yılmaz' }
+            seller: { full_name: 'Ahmet Yılmaz' }
         },
         {
             id: 'm2', title: 'Alanya Castle Ceramic Plate', price: 25, category: 'souvenir', stock: 5,
             description: 'Hand-painted ceramic plate featuring the iconic Red Tower and Castle.',
             images: ['https://images.unsplash.com/photo-1624558481358-19e0cf94ffdf?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Fatma Demir' }
+            seller: { full_name: 'Fatma Demir' }
         },
         // Textile
         {
             id: 'm3', title: 'Organic Cotton Peshtemal', price: 35, category: 'textile', stock: 20,
             description: 'Lightweight, absorbent Turkish towel. Perfect for the beach or hammam.',
             images: ['https://images.unsplash.com/photo-1596395717069-b5f4be81f9b9?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Textile Co-op' }
+            seller: { full_name: 'Textile Co-op' }
         },
         {
             id: 'm4', title: 'Silk Ottoman Scarf', price: 60, category: 'textile', stock: 8,
             description: '100% Bursa silk scarf with traditional Ottoman tulip motifs.',
             images: ['https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Ayşe Gül' }
+            seller: { full_name: 'Ayşe Gül' }
         },
         // Food
         {
             id: 'm5', title: 'Premium Turkish Delight Box', price: 18, category: 'food', stock: 50,
             description: 'Assorted Lokum with double-roasted pistachios, rose, and pomegranate.',
             images: ['https://images.unsplash.com/photo-1589136701168-5256b3e8d99c?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Hacı Baba' }
+            seller: { full_name: 'Hacı Baba' }
         },
         {
             id: 'm6', title: 'Village Spices Set', price: 12, category: 'food', stock: 30,
             description: 'Collection of Sumac, Pul Biber (Chili), and Oregano harvested from the Taurus Mountains.',
             images: ['https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Spice Market' }
+            seller: { full_name: 'Spice Market' }
         },
         // Jewelry
         {
             id: 'm7', title: 'Silver Turquoise Ring', price: 45, category: 'jewelry', stock: 3,
             description: '925 Sterling Silver ring with a natural Turkish Turquoise stone.',
             images: ['https://images.unsplash.com/photo-1611085583191-a3b181a88401?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Mehmet Silver' }
+            seller: { full_name: 'Mehmet Silver' }
         },
         // Art
         {
             id: 'm8', title: 'Red Tower Watercolor', price: 80, category: 'art', stock: 1,
             description: 'Original watercolor painting of the Alanya harbor at sunset.',
             images: ['https://images.unsplash.com/photo-1576495123999-56c4d70e4e2c?auto=format&fit=crop&q=80&w=600'],
-            artisan: { full_name: 'Elena Art' }
+            seller: { full_name: 'Elena Art' }
         }
     ];
 
@@ -263,7 +263,7 @@ export const Shop: React.FC = () => {
                                                 <User size={14} />
                                             </div>
                                             <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px]">
-                                                {product.artisan?.full_name || 'Artisan'}
+                                                {product.seller?.full_name || 'Artisan'}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-3">

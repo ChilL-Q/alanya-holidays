@@ -25,6 +25,7 @@ import { messagesService, favoritesService } from './api/misc';
 import { storageService } from './api/storage';
 import { notificationsService } from './api/notifications';
 import { chatService } from './api/chat';
+import { yesimService } from './api/yesim';
 
 export const db = {
     ...propertiesService,
@@ -36,5 +37,6 @@ export const db = {
     ...favoritesService,
     ...storageService,
     ...notificationsService,
-    ...chatService
+    ...chatService,
+    yesimService
 };

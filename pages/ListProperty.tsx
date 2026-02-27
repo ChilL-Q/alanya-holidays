@@ -79,7 +79,9 @@ export const ListProperty: React.FC = () => {
         houseRules: '',
         checkoutInstructions: '',
         guidebooks: '',
-        interactionPreferences: ''
+        interactionPreferences: '',
+        promotionPrice: '',
+        promotionDescription: ''
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -165,6 +167,9 @@ export const ListProperty: React.FC = () => {
                 checkout_instructions: formData.checkoutInstructions,
                 guidebooks: formData.guidebooks,
                 interaction_preferences: formData.interactionPreferences,
+                is_promoted: !!formData.promotionPrice,
+                promotion_price: formData.promotionPrice ? parseFloat(formData.promotionPrice) : undefined,
+                promotion_description: formData.promotionDescription,
 
                 status: 'pending'
             });
@@ -408,6 +413,40 @@ export const ListProperty: React.FC = () => {
                                                 />
                                             </div>
                                             <p className="text-sm text-slate-500 mt-2">Added once per reservation</p>
+                                        </div>
+
+                                        <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Promotions (Optional)</h3>
+                                            <div className="space-y-6">
+                                                <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-2xl border border-orange-100 dark:border-orange-800">
+                                                    <label className="block text-sm font-bold text-orange-800 dark:text-orange-300 mb-2">Promotion Price</label>
+                                                    <div className="relative max-w-xs">
+                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500 font-bold text-lg">€</span>
+                                                        <input
+                                                            type="number"
+                                                            name="promotionPrice"
+                                                            value={formData.promotionPrice}
+                                                            onChange={handleChange}
+                                                            onWheel={(e) => e.currentTarget.blur()}
+                                                            placeholder="0"
+                                                            className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-orange-200 dark:border-orange-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-orange-500 outline-none font-bold text-xl"
+                                                        />
+                                                    </div>
+                                                    <p className="text-sm text-orange-600 dark:text-orange-400 mt-2">Set a lower price to attract more guests</p>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Promotion Description</label>
+                                                    <textarea
+                                                        name="promotionDescription"
+                                                        value={formData.promotionDescription}
+                                                        onChange={handleChange}
+                                                        rows={2}
+                                                        placeholder="e.g. Early bird discount for summer bookings"
+                                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 

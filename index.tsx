@@ -9,6 +9,14 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+// Global fix to prevent mouse wheel from changing numerical input values
+document.addEventListener('wheel', (e) => {
+  if (document.activeElement?.tagName === 'INPUT' && (document.activeElement as HTMLInputElement).type === 'number') {
+    (document.activeElement as HTMLElement).blur();
+  }
+}, { passive: false });
+
 root.render(
   <React.StrictMode>
     <App />

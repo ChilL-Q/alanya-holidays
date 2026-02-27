@@ -48,19 +48,19 @@ const ScrollToTop = () => {
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <CurrencyProvider>
-            <NotificationProvider>
-              <CartProvider>
-                <FavoritesProvider>
-                  <ModalProvider>
-                    <LightboxProvider>
-                      <ChatProvider>
-                        <BrowserRouter>
-                          <Toaster position="bottom-left" />
-                          <ScrollToTop />
+    <BrowserRouter>
+      <Toaster position="bottom-left" />
+      <ScrollToTop />
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <NotificationProvider>
+                <CartProvider>
+                  <FavoritesProvider>
+                    <ModalProvider>
+                      <LightboxProvider>
+                        <ChatProvider>
                           <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
                             <Navbar />
                             <main className="flex-grow">
@@ -79,17 +79,17 @@ const App: React.FC = () => {
                           <TripAssistant />
                           <CookieConsent />
                           <CommandPalette />
-                        </BrowserRouter>
-                      </ChatProvider>
-                    </LightboxProvider>
-                  </ModalProvider>
-                </FavoritesProvider>
-              </CartProvider>
-            </NotificationProvider>
-          </CurrencyProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider >
+                        </ChatProvider>
+                      </LightboxProvider>
+                    </ModalProvider>
+                  </FavoritesProvider>
+                </CartProvider>
+              </NotificationProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider >
+    </BrowserRouter>
   );
 };
 

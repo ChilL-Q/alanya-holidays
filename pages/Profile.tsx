@@ -4,7 +4,7 @@ import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import {
     User, Mail, Calendar, MapPin, Package, LogOut, Edit2, Save, X,
-    Phone, UserCircle, Camera, Shield, Settings, Grid, Key, AlertTriangle, Check, Home, Car
+    Phone, UserCircle, Camera, Shield, Settings, Grid, Key, AlertTriangle, Check, Home, Car, Banknote, Wallet
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'react-hot-toast';
@@ -22,7 +22,7 @@ export const Profile: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     // UI State
-    const [activeTab, setActiveTab] = useState<'overview' | 'my_properties' | 'my_services' | 'settings' | 'security'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'my_properties' | 'my_services' | 'payouts' | 'settings' | 'security'>('overview');
     const [uploading, setUploading] = useState(false);
     const [isHostModalOpen, setIsHostModalOpen] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -43,6 +43,15 @@ export const Profile: React.FC = () => {
         newPassword: '',
         confirmPassword: ''
     });
+
+    const [payoutForm, setPayoutForm] = useState({
+        iban: '',
+        bankName: '',
+        bankAccountHolderName: '',
+        cryptoWallet: ''
+    });
+
+    const [savingPayout, setSavingPayout] = useState(false);
 
     const [savingProfile, setSavingProfile] = useState(false);
     const [changingEmail, setChangingEmail] = useState(false);
@@ -76,6 +85,12 @@ export const Profile: React.FC = () => {
                             phone: profile.phone || '',
                             companyName: profile.company_name || user.company_name || ''
                         }));
+                        setPayoutForm({
+                            iban: profile.iban || '',
+                            bankName: profile.bank_name || '',
+                            bankAccountHolderName: profile.bank_account_holder_name || '',
+                            cryptoWallet: (profile as any).crypto_wallet || ''
+                        });
                         // Update email form initial value
                         setEmailForm(prev => ({
                             ...prev,
@@ -139,6 +154,27 @@ export const Profile: React.FC = () => {
             toast.error(error.message || 'Failed to update profile');
         } finally {
             setSavingProfile(false);
+        }
+    };
+
+    const handleUpdatePayout = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+
+        setSavingPayout(true);
+        try {
+            await db.updateUserProfile(user.id, {
+                iban: payoutForm.iban,
+                bank_name: payoutForm.bankName,
+                bank_account_holder_name: payoutForm.bankAccountHolderName,
+                // @ts-ignore - added to DB but maybe not all types yet
+                crypto_wallet: payoutForm.cryptoWallet
+            });
+            toast.success('Payout details updated successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to update payout details');
+        } finally {
+            setSavingPayout(false);
         }
     };
 
@@ -288,6 +324,13 @@ export const Profile: React.FC = () => {
                                     >
                                         <Car size={20} />
                                         <span className="font-medium">{t('profile.my_services')}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('payouts')}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'payouts' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                    >
+                                        <Banknote size={20} />
+                                        <span className="font-medium">{t('profile.payout_details')}</span>
                                     </button>
                                 </>
                             )}
@@ -803,6 +846,88 @@ export const Profile: React.FC = () => {
                                                 className="bg-primary text-white px-6 py-2.5 rounded-xl font-medium transition-colors hover:bg-primary-dark disabled:opacity-50 disabled:grayscale"
                                             >
                                                 {changingEmail ? t('auth.submitting') : t('profile.save_btn')}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB: PAYOUT DETAILS */}
+                        {activeTab === 'payouts' && (
+                            <div className="space-y-8 animate-fade-in">
+                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Payout Details</h2>
+                                    <p className="text-slate-500 mb-8">Set up how you want to receive your earnings from listings.</p>
+
+                                    <form onSubmit={handleUpdatePayout} className="space-y-8 max-w-2xl">
+                                        <div className="space-y-6">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                <Banknote className="text-teal-600" size={20} />
+                                                Bank Transfer (IBAN)
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="md:col-span-2">
+                                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">IBAN</label>
+                                                    <input
+                                                        type="text"
+                                                        value={payoutForm.iban}
+                                                        onChange={(e) => setPayoutForm({ ...payoutForm, iban: e.target.value })}
+                                                        placeholder="TR00 0000 0000 0000 0000 0000 00"
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Bank Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={payoutForm.bankName}
+                                                        onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Account Holder Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={payoutForm.bankAccountHolderName}
+                                                        onChange={(e) => setPayoutForm({ ...payoutForm, bankAccountHolderName: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-700 space-y-6">
+                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                                <Wallet className="text-orange-500" size={20} />
+                                                Crypto Wallet (USDT/USDC)
+                                            </h3>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Wallet Address (TRC20 / ERC20 / BEP20)</label>
+                                                <input
+                                                    type="text"
+                                                    value={payoutForm.cryptoWallet}
+                                                    onChange={(e) => setPayoutForm({ ...payoutForm, cryptoWallet: e.target.value })}
+                                                    placeholder="0x... or T..."
+                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
+                                                />
+                                                <p className="text-xs text-slate-500 mt-2">Please ensure the network type is clearly specified if needed in notes.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
+                                            <button
+                                                type="submit"
+                                                disabled={savingPayout}
+                                                className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                {savingPayout ? t('auth.submitting') : (
+                                                    <>
+                                                        <Save size={18} />
+                                                        Save Payout Details
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </form>

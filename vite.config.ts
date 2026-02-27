@@ -26,10 +26,16 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('recharts') || id.includes('@react-google-maps')) return 'vendor-heavy';
-              if (id.includes('@supabase') || id.includes('@google/generative-ai')) return 'vendor-api';
-              if (id.includes('lucide-react') || id.includes('@headlessui')) return 'vendor-ui';
-              return 'vendor'; // react, router, date-fns, zod, etc.
+              if (id.includes('@react-google-maps')) return 'vendor-maps';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('@supabase')) return 'vendor-supabase';
+              if (id.includes('@google/generative-ai')) return 'vendor-ai';
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              if (id.includes('date-fns') || id.includes('react-datepicker') || id.includes('react-imask')) return 'vendor-forms-dates';
+              if (id.includes('react-dom') || id.includes('react-router') || id.includes('@remix-run')) return 'vendor-react';
+              if (id.includes('framer-motion')) return 'vendor-motion';
+              if (id.includes('@headlessui')) return 'vendor-ui';
+              return 'vendor-core';
             }
           }
         }

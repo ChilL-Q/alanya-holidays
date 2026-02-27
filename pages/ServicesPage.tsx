@@ -17,8 +17,9 @@ export const ServicesPage: React.FC = () => {
 
     // Filter State
     const [showFilters, setShowFilters] = useState(false);
-    const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 1000 });
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 2000 });
     const [searchQuery, setSearchQuery] = useState('');
+    const [brandFilter, setBrandFilter] = useState('all');
 
     // Sync activeCategory with URL params
     React.useEffect(() => {
@@ -47,6 +48,17 @@ export const ServicesPage: React.FC = () => {
 
     const [transportFilter, setTransportFilter] = useState<'all' | 'rental' | 'transfer'>('all');
 
+    const availableBrands = useMemo(() => {
+        if (activeCategory !== 'transport') return [];
+        const brands = new Set<string>();
+        SERVICES_DATA.forEach(s => {
+            if (s.category === 'transport' && (s as any).brand) {
+                brands.add((s as any).brand);
+            }
+        });
+        return Array.from(brands).sort();
+    }, [activeCategory]);
+
     const filteredServices = useMemo(() => {
         return SERVICES_DATA.filter(service => {
             // 1. Category Filter
@@ -55,10 +67,15 @@ export const ServicesPage: React.FC = () => {
 
             // 1.1 Transport Sub-filter
             if (activeCategory === 'transport' && transportFilter !== 'all') {
-                // @ts-ignore - subcategory depends on data update
-                if (service.subcategory && service.subcategory !== transportFilter) return false;
-                // Fallback for items without subcategory if any (though we updated data)
-                if (!service.subcategory) return false;
+                const subcategory = (service as any).subcategory;
+                if (subcategory && subcategory !== transportFilter) return false;
+                if (!subcategory) return false;
+            }
+
+            // 1.2 Brand Filter
+            if (activeCategory === 'transport' && brandFilter !== 'all') {
+                const brand = (service as any).brand;
+                if (!brand || brand.toLowerCase() !== brandFilter) return false;
             }
 
             // 2. Price Filter (if price exists)
@@ -134,7 +151,7 @@ export const ServicesPage: React.FC = () => {
                 </div>
 
                 {showFilters && (
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-down grid md:grid-cols-3 gap-6">
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-down grid md:grid-cols-4 gap-6">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Search</label>
                             <input
@@ -145,6 +162,21 @@ export const ServicesPage: React.FC = () => {
                                 className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
+                        {activeCategory === 'transport' && (
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Brand</label>
+                                <select
+                                    value={brandFilter}
+                                    onChange={(e) => setBrandFilter(e.target.value)}
+                                    className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                >
+                                    <option value="all">All Brands</option>
+                                    {availableBrands.map(brand => (
+                                        <option key={brand} value={brand.toLowerCase()}>{brand}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Min Price (€)</label>
                             <input

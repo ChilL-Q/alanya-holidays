@@ -66,6 +66,8 @@ export interface PropertyDB {
     created_at?: string;
     updated_at?: string;
     is_promoted?: boolean;
+    promotion_price?: number;
+    promotion_description?: string;
     
     // iCal & Sync
     ical_url?: string;
@@ -140,6 +142,8 @@ export interface ServiceDB {
     provider?: Partial<UserProfile>;
     created_at?: string;
     is_promoted?: boolean;
+    promotion_price?: number;
+    promotion_description?: string;
 }
 
 export interface ServiceModel {
@@ -158,10 +162,10 @@ export interface Product {
     price: number;
     category: string;
     stock: number;
-    artisan_id: string;
+    seller_id: string;
     images: string[];
     
-    artisan?: Partial<UserProfile>;
+    seller?: Partial<UserProfile>;
     created_at?: string;
 }
 
@@ -288,6 +292,8 @@ export interface Property {
   type?: string; 
   cleaning_fee?: number;
   isPromoted?: boolean;
+  promotionPrice?: number;
+  promotionDescription?: string;
 }
 
 export interface Service {
@@ -300,6 +306,8 @@ export interface Service {
   duration?: string; // For tours
   vehicleType?: string; // For transfers
   isPromoted?: boolean;
+  promotionPrice?: number;
+  promotionDescription?: string;
 }
 
 export interface CartItem {

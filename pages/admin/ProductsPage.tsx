@@ -174,7 +174,7 @@ export const ProductsPage: React.FC = () => {
                                             {p.stock}
                                         </td>
                                         <td className="p-4 text-sm text-slate-500">
-                                            {p.artisan?.full_name || 'Unknown'}
+                                            {p.seller?.full_name || 'Unknown'}
                                         </td>
                                         <td className="p-4">
                                             <div className="flex justify-center gap-2">

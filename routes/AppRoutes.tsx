@@ -6,17 +6,19 @@ import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 
-// Public Pages - Direct Imports (for critical navigation speed)
+// Public Pages - Direct Imports (critical for immediate FCP)
 import { Home } from '../pages/Home';
-import { SearchResultsPage } from '../pages/SearchResultsPage';
-import { ServicesPage } from '../pages/ServicesPage';
-import { About } from '../pages/About';
-import { Contact } from '../pages/Contact';
-import { FAQ } from '../pages/FAQ';
-import { Privacy } from '../pages/Privacy';
-import { Terms } from '../pages/Terms';
-import { Esim } from '../pages/Esim';
-import { ListProperty } from '../pages/ListProperty';
+
+// Public Pages - Lazy Loaded
+const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
+const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
+const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
+const Contact = React.lazy(() => import('../pages/Contact').then(module => ({ default: module.Contact })));
+const FAQ = React.lazy(() => import('../pages/FAQ').then(module => ({ default: module.FAQ })));
+const Privacy = React.lazy(() => import('../pages/Privacy').then(module => ({ default: module.Privacy })));
+const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ default: module.Terms })));
+const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
+const ListProperty = React.lazy(() => import('../pages/ListProperty').then(module => ({ default: module.ListProperty })));
 
 // Public Pages - Lazy Loaded
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));

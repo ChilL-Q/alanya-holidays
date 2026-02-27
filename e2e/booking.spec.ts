@@ -1,45 +1,74 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Booking Flow', () => {
-  test('should allow user to view property and check availability', async ({ page }) => {
-    // 1. Navigate to search/list page
-    await page.goto('/list-property');
-    
-    // 2. Wait for properties to load
-    // Assuming PropertyCard renders with specific class or test-id. 
-    // We'll look for a "View Details" or similar link/button.
-    // If empty, this test fails (requires seeded data or mock).
-    
-    // For now, check if the grid is present
-    // For now, check if the grid is present (use first to avoid strict mode if multiple grids exist)
-    const grid = page.locator('.grid').first();
-    await expect(grid).toBeVisible();
+  test('should view property details and open reservation', async ({ page }) => {
+    // 1. Go to Home page
+    await page.goto('/');
 
-    // 3. Click first property
-    // We assume there is at least one.
-    // await page.locator('article').first().click(); // simplistic selector
-    
-    // Since we don't know if data exists, let's verify the *route* works at least.
-    await expect(page).toHaveURL(/.*list-property/);
+    // Ensure the page loaded and shows headings or search
+    await expect(page.locator('text=Alanya').first()).toBeVisible();
+
+    // 2. Click the first property card
+    const firstPropertyLink = page.locator('a[href*="/property/"]').first();
+    await firstPropertyLink.click();
+
+    // 3. Verify Property Details page is visible
+    // Wait for the property title to appear (H1 tag usually)
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
+
+    // Ensure we can see price format e.g. "€", "₺" or "night"
+    await expect(page.locator('text=night').first()).toBeVisible();
+
+    // 4. Try choosing dates in the calendar
+    // In our app, there is usually a DatePicker or 'Check-in' 'Check-out' buttons
+    const checkInBtn = page.locator('button', { hasText: 'Check-in' }).or(page.locator('text=Select Dates'));
+    if (await checkInBtn.count() > 0) {
+      await checkInBtn.first().click();
+      // Click some day in the calendar (e.g. 15 or 20)
+      const day15 = page.locator('.react-datepicker__day:not(.react-datepicker__day--disabled)').nth(10);
+      if (await day15.count() > 0) {
+         await day15.click();
+         const day20 = page.locator('.react-datepicker__day:not(.react-datepicker__day--disabled)').nth(15);
+         if (await day20.count() > 0) await day20.click();
+      }
+    }
+
+    // 5. Click Reserve
+    const reserveBtn = page.locator('button', { hasText: 'Reserve' }).or(page.locator('button', { hasText: 'Book now' }));
+    await reserveBtn.first().click();
+
+    // 6. Verify Cart opens or Checkout modal
+    // Check for text 'Cart' or 'Checkout' or 'Added to cart'
+    await expect(page.locator('text=Cart').or(page.locator('text=Summary'))).toBeVisible({ timeout: 10000 });
   });
 
-  // A full booking E2E test typically requires:
-  // - Seeding the DB with a known property "Test Villa"
-  // - Creating a known user
-  // - Logging in programmatically
-  // 
-  // Since we are against a production/dev DB without dedicated seed in this environment,
-  // we will write the detailed test case but comment out the execution parts that rely on specific data id.
-  
-  /*
-  test('full booking journey', async ({ page }) => {
-      await page.goto('/property/test-villa-id');
-      await page.fill('input[name="checkIn"]', '2024-06-01');
-      await page.fill('input[name="checkOut"]', '2024-06-07');
-      await page.click('button:has-text("Reserve")');
-      await expect(page.locator('.cart-drawer')).toBeVisible();
-      await page.click('button:has-text("Checkout")');
-      await expect(page).toHaveURL('/checkout');
+  test('should use search filters', async ({ page }) => {
+    // Go to Search page
+    await page.goto('/stays');
+
+    // Wait for properties
+    const propertyCards = page.locator('a[href*="/property/"]');
+    await expect(propertyCards.first()).toBeVisible({ timeout: 10000 });
+
+    // Try a filter
+    const filtersBtn = page.locator('button', { hasText: 'Filters' });
+    if (await filtersBtn.count() > 0) {
+      await filtersBtn.first().click();
+      
+      // Select something like 'Villa'
+      const villaOption = page.locator('button, label', { hasText: 'Villa' });
+      if (await villaOption.count() > 0) {
+         await villaOption.first().click();
+      }
+
+      // Apply
+      const showResultsBtn = page.locator('button', { hasText: /Show \d+ homes/i }).or(page.locator('button', { hasText: 'Apply' }));
+      if (await showResultsBtn.count() > 0) {
+         await showResultsBtn.first().click();
+      }
+    }
+
+    // Ensure results still appear
+    await expect(propertyCards.first()).toBeVisible({ timeout: 5000 });
   });
-  */
 });

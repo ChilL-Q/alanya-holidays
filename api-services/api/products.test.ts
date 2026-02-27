@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { productsService } from './products';
 
-// Mock supabase client
 const { mockSupabase } = vi.hoisted(() => {
     return {
         mockSupabase: {
@@ -19,82 +18,124 @@ describe('productsService', () => {
         vi.clearAllMocks();
     });
 
+    const createMockChain = (data: any = null, error: any = null) => {
+        const chain: any = {
+            select: vi.fn().mockReturnThis(),
+            insert: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            order: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data, error }),
+            then: (resolve: any) => resolve({ data, error })
+        };
+        return chain;
+    };
+
     describe('getProducts', () => {
-        it('fetches visible products', async () => {
-             const mockProducts = [{ id: 'prod-1', name: 'Product 1' }];
-             const mockOrder = vi.fn().mockResolvedValue({ data: mockProducts, error: null });
+        it('fetches products without category', async () => {
+             const mockProducts = [{ id: '1', title: 'Product 1' }];
+             const chain = createMockChain(mockProducts);
+             chain.order = vi.fn().mockResolvedValue({ data: mockProducts, error: null });
              
-             // Chain: from().select().[if category].order()
-             // Actually select() happens first.
-             // If no category, it chains select().order().
-             
-             // BUT, the implementation:
-             // let query = supabase.from('products').select(...);
-             // if (category) query = query.eq(...);
-             // await query.order(...)
-             
-             const mockSelect = vi.fn().mockReturnThis();
-             const mockEq = vi.fn().mockReturnThis();
-             const mockOrderFn = vi.fn().mockResolvedValue({ data: mockProducts, error: null });
-             
-             // We need to return an object that has eq, order etc.
-             const mockQueryBuilder = {
-                 select: mockSelect,
-                 eq: mockEq,
-                 order: mockOrderFn,
-                 then: (resolve: any) => resolve({ data: mockProducts, error: null }) // Make it thenable if needed, though await works on promise returned by order
-             };
-             
-             // To support "await query.order()", order must return a Promise (or a Builder that is thenable).
-             // In implementation: `await query.order(...)`. So order() returns the Result.
-             
-             mockSelect.mockReturnValue(mockQueryBuilder);
-             mockEq.mockReturnValue(mockQueryBuilder); // If chained
-             mockSupabase.from.mockReturnValue(mockQueryBuilder); // from returns builder
+             mockSupabase.from.mockReturnValue(chain);
 
              const result = await productsService.getProducts();
 
              expect(mockSupabase.from).toHaveBeenCalledWith('products');
-             // In default case, no eq is called for 'is_visible' based on code I saw?
-             // Checking code: `supabase.from('products').select('*, artisan:profiles(full_name)')`.
-             // `if (category) query = query.eq('category', category)`.
-             // So no 'is_visible' filter by default in implementation I saw.
-             
+             expect(chain.order).toHaveBeenCalledWith('created_at', { ascending: false });
+             expect(result).toEqual(mockProducts);
+        });
+
+        it('fetches products with category filter', async () => {
+             const mockProducts = [{ id: '1' }];
+             const chain = createMockChain(mockProducts);
+             chain.order = vi.fn().mockResolvedValue({ data: mockProducts, error: null });
+
+             mockSupabase.from.mockReturnValue(chain);
+
+             const result = await productsService.getProducts('electronics');
+
+             expect(chain.eq).toHaveBeenCalledWith('category', 'electronics');
              expect(result).toEqual(mockProducts);
         });
 
         it('throws error when fetch fails', async () => {
-             const mockSelect = vi.fn().mockReturnThis();
-             const mockOrder = vi.fn().mockResolvedValue({ data: null, error: 'DB Error' });
-             
-             mockSupabase.from.mockReturnValue({
-                 select: mockSelect,
-                 order: mockOrder,
-                 eq: vi.fn().mockReturnThis()
-             });
-             mockSelect.mockReturnValue({ order: mockOrder });
+             const chain = createMockChain(null, new Error('DB Error'));
+             chain.order = vi.fn().mockResolvedValue({ data: null, error: new Error('DB Error') });
+             mockSupabase.from.mockReturnValue(chain);
 
-             await expect(productsService.getProducts()).rejects.toBe('DB Error');
+             await expect(productsService.getProducts()).rejects.toThrow('DB Error');
+        });
+    });
+
+    describe('getProduct', () => {
+        it('fetches a single product', async () => {
+            const mockProduct = { id: '1', title: 'P1' };
+            const chain = createMockChain(mockProduct);
+            mockSupabase.from.mockReturnValue(chain);
+
+            const result = await productsService.getProduct('1');
+            expect(chain.eq).toHaveBeenCalledWith('id', '1');
+            expect(result).toEqual(mockProduct);
+        });
+
+        it('throws on db error', async () => {
+            mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
+            await expect(productsService.getProduct('1')).rejects.toThrow('DB Error');
         });
     });
 
     describe('createProduct', () => {
         it('inserts product', async () => {
-             const mockProduct = { name: 'New Product', price: 100 };
-             const mockSingle = vi.fn().mockResolvedValue({ data: { id: '1', ...mockProduct }, error: null });
-             const mockSelect = vi.fn().mockReturnValue({ single: mockSingle });
-             const mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
-             
-             const mockQueryBuilder = {
-                 insert: mockInsert
-             };
-             mockSupabase.from.mockReturnValue(mockQueryBuilder as any);
+             const mockProduct = { title: 'New Product', price: 100 };
+             const chain = createMockChain({ id: '1', ...mockProduct });
+             mockSupabase.from.mockReturnValue(chain);
              
              const result = await productsService.createProduct(mockProduct as any);
              
              expect(mockSupabase.from).toHaveBeenCalledWith('products');
-             expect(mockInsert).toHaveBeenCalledWith([mockProduct]);
-             expect(result).toEqual(expect.objectContaining(mockProduct));
+             expect(chain.insert).toHaveBeenCalledWith([mockProduct]);
+             expect(result).toEqual({ id: '1', ...mockProduct });
+        });
+
+        it('throws on db error', async () => {
+             mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
+             await expect(productsService.createProduct({} as any)).rejects.toThrow('DB Error');
+        });
+    });
+
+    describe('updateProduct', () => {
+        it('updates product', async () => {
+            const chain = createMockChain();
+            mockSupabase.from.mockReturnValue(chain);
+            await productsService.updateProduct('1', { price: 200 });
+            expect(chain.update).toHaveBeenCalledWith({ price: 200 });
+            expect(chain.eq).toHaveBeenCalledWith('id', '1');
+        });
+
+        it('throws on db error', async () => {
+            const chain = createMockChain();
+            chain.eq = vi.fn().mockResolvedValue({ error: new Error('DB Error') });
+            mockSupabase.from.mockReturnValue(chain);
+            await expect(productsService.updateProduct('1', {})).rejects.toThrow('DB Error');
+        });
+    });
+
+    describe('deleteProduct', () => {
+        it('deletes product', async () => {
+            const chain = createMockChain();
+            mockSupabase.from.mockReturnValue(chain);
+            await productsService.deleteProduct('1');
+            expect(chain.delete).toHaveBeenCalled();
+            expect(chain.eq).toHaveBeenCalledWith('id', '1');
+        });
+
+        it('throws on db error', async () => {
+            const chain = createMockChain();
+            chain.eq = vi.fn().mockResolvedValue({ error: new Error('DB Error') });
+            mockSupabase.from.mockReturnValue(chain);
+            await expect(productsService.deleteProduct('1')).rejects.toThrow('DB Error');
         });
     });
 });

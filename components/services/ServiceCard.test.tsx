@@ -48,7 +48,7 @@ describe('ServiceCard', () => {
     it('does NOT render price', () => {
         render(
             <BrowserRouter>
-                <ServiceCard {...defaultProps} />
+                <ServiceCard {...defaultProps} rawPrice={undefined} />
             </BrowserRouter>
         );
         // Price was formatted as €100

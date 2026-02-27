@@ -69,46 +69,50 @@ export const AdminEditProductPage: React.FC = () => {
         try {
             let uploadedUrls: string[] = [];
             if (files.length > 0) {
-                // Upload images
-                // Assuming we have a bucket for products or generic
-                // Or just use 'services' bucket for now? Or 'common'?
-                // Let's assume 'services' bucket works for everything user uploads or check db logic
-                // uploadImage takes (file, bucket).
+                // Rely on db.uploadImage's internal fallback logic
                 uploadedUrls = await Promise.all(
-                    files.map(file => db.uploadImage(file, 'services'))
+                    files.map(file => db.uploadImage(file, 'products'))
                 );
             }
 
             const finalImages = [...existingImages, ...uploadedUrls];
 
-            const productData = {
+            if (!user) {
+                toast.error('You must be logged in to save products');
+                throw new Error('User not found');
+            }
+
+            const productData: any = {
                 title: formData.title,
                 description: formData.description,
-                price: parseFloat(formData.price),
-                stock: parseInt(formData.stock),
+                price: parseFloat(formData.price) || 0,
+                stock: parseInt(formData.stock) || 0,
                 category: formData.category,
                 images: finalImages,
-                artisan_id: user?.id // If creating new, assign to current admin? Or generic?
-                // For editing, we might want to keep original artisan?
-                // The DB update needs artisan_id if creating.
+                seller_id: user.id
             };
+
+            // Runtime sanity check to prevent schema mismatch leaks
+            if ('artisan_id' in productData) {
+                console.warn('DEBUG: detected legacy artisan_id in payload, deleting it.');
+                delete productData.artisan_id;
+            }
+
+            console.log('DEBUG: Final product payload:', productData);
 
             if (isEditing) {
                 await db.updateProduct(id!, productData);
                 toast.success('Product updated successfully');
             } else {
-                if (!user) throw new Error('User not found');
-                await db.createProduct({
-                    ...productData,
-                    artisan_id: user.id // Default to admin for now
-                });
+                await db.createProduct(productData);
                 toast.success('Product created successfully');
             }
 
             navigate('/admin/products');
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to save product');
+        } catch (error: any) {
+            console.error('Save Product Error:', error);
+            const message = error.message || 'Failed to save product';
+            toast.error(message);
         } finally {
             setSubmitting(false);
         }

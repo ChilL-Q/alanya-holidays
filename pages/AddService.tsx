@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
-import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Heart, Banknote, Camera } from 'lucide-react';
+import { Car, Bike, Map, ArrowLeft, CheckCircle2, ChevronRight, Plus, Trash2, Heart, Banknote, Camera, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import toast from 'react-hot-toast';
@@ -55,7 +55,9 @@ export const AddService: React.FC = () => {
         availableFrom: '',
         availableTo: '',
         // Payment
-        payOnArrival: false
+        payOnArrival: false,
+        promotionPrice: '',
+        promotionDescription: ''
     });
 
     const [files, setFiles] = useState<File[]>([]);
@@ -128,18 +130,11 @@ export const AddService: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            // Upload images
-            const uploadedUrls = [];
-            for (const file of files) {
-                // Fallback catch handled inside db function if set up, or here
-                try {
-                    const url = await db.uploadImage(file, 'services');
-                    uploadedUrls.push(url);
-                } catch (err) {
-
-                    const url = await db.uploadImage(file, 'properties'); // Fallback
-                    uploadedUrls.push(url);
-                }
+            let uploadedUrls: string[] = [];
+            if (files.length > 0) {
+                uploadedUrls = await Promise.all(
+                    files.map(file => db.uploadImage(file, 'services'))
+                );
             }
 
             // Construct features object based on category
@@ -194,7 +189,10 @@ export const AddService: React.FC = () => {
                 type: formData.type,
                 provider_id: user.id,
                 features: features,
-                images: uploadedUrls
+                images: uploadedUrls,
+                is_promoted: !!formData.promotionPrice,
+                promotion_price: formData.promotionPrice ? parseFloat(formData.promotionPrice) : undefined,
+                promotion_description: formData.promotionDescription
             });
             setStep(2);
         } catch (error) {
@@ -417,6 +415,37 @@ export const AddService: React.FC = () => {
                                                 name="availableTo"
                                                 value={formData.availableTo}
                                                 onChange={handleChange}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-slate-700">
+                                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                                        <Tag size={18} className="text-orange-500" />
+                                        Promotions (Optional)
+                                    </h3>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800">
+                                            <label className="block text-xs font-bold text-orange-800 dark:text-orange-300 mb-1">Promotion Price (€)</label>
+                                            <input
+                                                type="number"
+                                                name="promotionPrice"
+                                                value={formData.promotionPrice}
+                                                onChange={handleChange}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                placeholder="0.00"
+                                                className="w-full px-4 py-2 rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-slate-800 focus:ring-0 focus:border-orange-500 outline-none font-bold text-lg dark:text-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Promotion Description</label>
+                                            <input
+                                                name="promotionDescription"
+                                                value={formData.promotionDescription}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Flash sale!"
                                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             />
                                         </div>

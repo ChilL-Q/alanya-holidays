@@ -204,6 +204,7 @@ export const ru = {
     'services.connectivity.esim_desc': 'Мгновенная мобильная связь для вашей поездки.',
 
     'book_button': 'Забронировать сейчас',
+    'buy_button': 'Купить',
     'consult_button': 'Консультация',
     'view_shop': 'В магазин',
     'shop.view_all_products': 'Смотреть все товары',
@@ -281,8 +282,9 @@ export const ru = {
     'profile.title': 'Мой профиль',
     'profile.edit': 'Редактировать',
     'profile.save': 'Сохранить изменения',
-    'profile.settings': 'Личные данные',
+    'profile.settings': 'Настройки',
     'profile.security': 'Безопасность',
+    'profile.payout_details': 'Детали выплат',
     'profile.my_properties': 'Мои объекты',
     'profile.my_services': 'Мои услуги',
     'profile.no_properties': 'Нет добавленных объектов',
