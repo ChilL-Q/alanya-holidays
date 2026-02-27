@@ -21,13 +21,15 @@
 
     --color-accent: #D88C51;
     --color-accent-hover: #C2763A;
+
+    /* Tailwind v4 custom shadows */
+    --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+    --shadow-premium: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
 }
 
 @layer base {
     --color-primary-rgb: 5 68 94;
-    --soft-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
-    --medium-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-    --premium-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
 }
 
 /* Hide HTML5 number input spin buttons */
@@ -48,7 +50,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
-    @apply --bg-[#F7F7F7] dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300;
+    @apply bg-[#F7F7F7] dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300;
 }
 
 /* Custom Typography */
@@ -57,61 +59,16 @@ h2,
 h3,
 h4,
 .font-serif {
-    @apply --tracking-tight;
+    @apply tracking-tight;
 }
 
 /* Soft Link Styles */
 a {
-    @apply --transition-all duration-200;
+    @apply transition-all duration-200;
 }
 
 /* Custom Animations */
 @layer utilities {
-    .shadow-soft {
-        box-shadow: var(--soft-shadow);
-    }
-
-    .shadow-medium {
-        box-shadow: var(--medium-shadow);
-    }
-
-    .shadow-premium {
-        box-shadow: var(--premium-shadow);
-    }
-
-    @keyframes page-enter {
-        0% {
-            opacity: 0;
-            transform: translateY(12px) scale(0.99);
-        }
-
-        100% {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    @keyframes stagger-enter {
-        0% {
-            opacity: 0;
-            transform: translateY(15px);
-        }
-
-        100% {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animate-page-enter {
-        animation: page-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .animate-stagger-enter {
-        opacity: 0;
-        animation: stagger-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
     .font-arabic {
         font-family: 'Cairo', sans-serif !important;
     }
@@ -222,7 +179,7 @@ a {
 
     .hover-lift:hover {
         transform: translateY(-4px);
-        box-shadow: var(--medium-shadow);
+        @apply shadow-medium;
     }
 
     /* Micro-interactions */
@@ -233,70 +190,70 @@ a {
 
 /* React Datepicker Customization - Airbnb Style */
 .react-datepicker {
-    @apply --font-sans border-none bg-white dark:bg-slate-800 rounded-3xl p-4 shadow-premium !important;
+    @apply font-sans border-none bg-white dark:bg-slate-800 rounded-3xl p-4 shadow-premium;
 }
 
 .react-datepicker__month-container {
-    @apply --w-full float-none !important;
+    @apply w-full float-none;
 }
 
 .react-datepicker__header {
-    @apply --bg-transparent border-none pt-4 !important;
+    @apply bg-transparent border-none pt-4;
 }
 
 .react-datepicker__current-month {
-    @apply --text-slate-900 dark:text-white text-base font-bold mb-6 !important;
+    @apply text-slate-900 dark:text-white text-base font-bold mb-6;
 }
 
 .react-datepicker__day-name {
-    @apply --text-slate-400 dark:text-slate-500 w-10 leading-[2.5rem] m-0.5 text-xs font-bold uppercase !important;
+    @apply text-slate-400 dark:text-slate-500 w-10 leading-[2.5rem] m-0.5 text-xs font-bold uppercase;
 }
 
 .react-datepicker__day {
-    @apply --w-10 leading-[2.5rem] m-0.5 rounded-full transition-all duration-200 font-medium !important;
-    @apply --text-slate-700 dark:text-slate-200 !important;
+    @apply w-10 leading-[2.5rem] m-0.5 rounded-full transition-all duration-200 font-medium;
+    @apply text-slate-700 dark:text-slate-200;
 }
 
 .react-datepicker__day:hover {
-    @apply --bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white !important;
-    @apply --ring-1 ring-slate-900/5 dark:ring-white/10 !important;
+    @apply bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white;
+    @apply ring-1 ring-slate-900/5 dark:ring-white/10;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-    @apply --bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold !important;
+    @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold;
 }
 
 .react-datepicker__day--disabled {
-    @apply --text-slate-200 dark:text-slate-700 cursor-not-allowed line-through !important;
+    @apply text-slate-200 dark:text-slate-700 cursor-not-allowed line-through;
 }
 
 .react-datepicker__navigation {
-    @apply --top-8 !important;
+    @apply top-8;
 }
 
 .react-datepicker__navigation-icon::before {
-    @apply --border-slate-900 dark:border-white !important;
-    @apply --border-2 !important;
+    @apply border-slate-900 dark:border-white;
+    @apply border-2;
 }
 
 /* Custom Day Classes managed by component */
 .rdp-day-selected {
-    @apply --bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg transform scale-105 !important;
+    @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg transform scale-105;
 }
 
 .rdp-day-blocked {
-    @apply --bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 line-through !important;
+    @apply bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 line-through;
 }
 
 .rdp-day-booked {
-    @apply --bg-rose-50 dark:bg-rose-900/10 text-rose-500 dark:text-rose-400 font-medium !important;
+    @apply bg-rose-50 dark:bg-rose-900/10 text-rose-500 dark:text-rose-400 font-medium;
 }
 
 .rdp-day-custom {
-    @apply --bg-teal-50 dark:bg-teal-900/10 text-teal-600 dark:text-teal-400 font-bold !important;
+    @apply bg-teal-50 dark:bg-teal-900/10 text-teal-600 dark:text-teal-400 font-bold;
 }
 
 .rdp-day-external {
-    @apply --bg-purple-50 dark:bg-purple-900/10 text-purple-600 dark:text-purple-400 !important;
+    @apply bg-purple-50 dark:bg-purple-900/10 text-purple-600 dark:text-purple-400;
 }
