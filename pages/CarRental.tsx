@@ -22,8 +22,8 @@ export const CarRental: React.FC = () => {
 
                         <div className="flex flex-wrap gap-4 mb-10">
                             {[t('car.features.delivery'), t('car.features.deposit'), t('car.features.support')].map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    <Check size={16} className="text-teal-500" />
+                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800/80 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    <Check size={16} className="text-teal-500 dark:text-cyan-400 " />
                                     {feature}
                                 </div>
                             ))}
@@ -33,7 +33,7 @@ export const CarRental: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
                         <img
                             src="/images/transportation/cars/Rent-a-Car-Services-page.jpg"
                             alt="Luxury Car Rental"

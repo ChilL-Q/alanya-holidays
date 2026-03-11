@@ -24,22 +24,22 @@ export const Privacy: React.FC = () => {
 
             <section id="collection" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Eye size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">1. Information We Collect</h2>
                 </div>
                 <p>We collect information you provide directly to us when you use our services:</p>
                 <div className="grid md:grid-cols-2 gap-6 not-prose mt-6">
-                    <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-800/80 p-6 rounded-xl border border-slate-100 dark:border-slate-800/50">
                         <h4 className="font-bold text-slate-900 dark:text-white mb-2">Personal Information</h4>
                         <p className="text-sm text-slate-600 dark:text-slate-400">Name, email address, phone number, and government ID (strictly for legal reporting requirements in Turkey).</p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-800/80 p-6 rounded-xl border border-slate-100 dark:border-slate-800/50">
                         <h4 className="font-bold text-slate-900 dark:text-white mb-2">Booking Details</h4>
                         <p className="text-sm text-slate-600 dark:text-slate-400">Dates of stay, property preferences, special requests, and companion details.</p>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-800/80 p-6 rounded-xl border border-slate-100 dark:border-slate-800/50">
                         <h4 className="font-bold text-slate-900 dark:text-white mb-2">Payment Information</h4>
                         <p className="text-sm text-slate-600 dark:text-slate-400">We do not store credit card details. All payments are processed through secure third-party payment providers (Stripe/Iyzico).</p>
                     </div>
@@ -48,7 +48,7 @@ export const Privacy: React.FC = () => {
 
             <section id="usage" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <RefreshCw size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">2. How We Use Information</h2>
@@ -64,7 +64,7 @@ export const Privacy: React.FC = () => {
 
             <section id="sharing" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Server size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">3. Data Sharing</h2>
@@ -79,7 +79,7 @@ export const Privacy: React.FC = () => {
 
             <section id="security" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Lock size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">4. Data Security</h2>
@@ -92,7 +92,7 @@ export const Privacy: React.FC = () => {
 
             <section id="rights" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Shield size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">5. Your Rights</h2>
@@ -101,10 +101,10 @@ export const Privacy: React.FC = () => {
                     You have the right to access, correct, or delete your personal information held by us.
                     You may also object to the processing of your data or request data portability.
                 </p>
-                <div className="bg-accent/10 p-6 rounded-xl border border-accent/20 not-prose">
+                <div className="bg-accent dark:bg-amber-600 /10 p-6 rounded-xl border border-accent/20 not-prose">
                     <p className="text-slate-800 dark:text-slate-200 font-medium mb-2">Have a privacy request?</p>
                     <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Contact our Data Protection Officer directly.</p>
-                    <a href="mailto:privacy@alanyaholidays.com" className="inline-block bg-accent hover:bg-accent-hover text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <a href="mailto:privacy@alanyaholidays.com" className="inline-block bg-accent dark:bg-amber-600 hover:bg-accent dark:bg-amber-600 -hover text-white px-6 py-2 rounded-lg font-medium transition-colors">
                         privacy@alanyaholidays.com
                     </a>
                 </div>

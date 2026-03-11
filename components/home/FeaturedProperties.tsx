@@ -53,7 +53,7 @@ export const FeaturedProperties: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="bg-slate-100 dark:bg-slate-800 rounded-xl h-[400px] animate-pulse"></div>
+                        <div key={i} className="bg-slate-100 dark:bg-slate-800/80 rounded-xl h-[400px] animate-pulse"></div>
                     ))}
                 </div>
             </section>
@@ -67,7 +67,7 @@ export const FeaturedProperties: React.FC = () => {
                     <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white">{t('featured.title')}</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">{t('featured.subtitle')}</p>
                 </div>
-                <Link to="/stays" className="hidden md:block text-teal-700 font-medium hover:text-teal-900 hover:underline transition-colors duration-300">{t('featured.view_all')}</Link>
+                <Link to="/stays" className="hidden md:block text-teal-700 dark:text-cyan-400 font-medium hover:text-teal-900 hover:underline transition-colors duration-300">{t('featured.view_all')}</Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

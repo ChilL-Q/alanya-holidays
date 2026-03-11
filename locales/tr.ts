@@ -333,7 +333,7 @@ export const tr = {
     'nav.service_desc': 'Arabalar, turlar ve daha fazlası',
 
     // Car Rental Page
-    'car.hero.title': 'Alanya\'yı <span class="text-teal-600">Kendi Tarzınla</span> Keşfet',
+    'car.hero.title': 'Alanya\'yı <span class="text-teal-600 dark:text-cyan-400 ">Kendi Tarzınla</span> Keşfet',
     'car.hero.subtitle': 'Kompakt şehir araçlarından dağ maceraları için güçlü 4x4\'lere. Şeffaf fiyatlandırma, tam kasko ve gizli ücret yok.',
     'car.features.delivery': 'Ücretsiz Teslimat',
     'car.features.deposit': 'Depozitosuz Seçenekler',
@@ -362,7 +362,7 @@ export const tr = {
     'offer.close': 'Kapat',
 
     // Bike Rental Page
-    'bike.hero.title': 'Alanya\'yı <span class="text-teal-600">İki Tekerle</span> Gez',
+    'bike.hero.title': 'Alanya\'yı <span class="text-teal-600 dark:text-cyan-400 ">İki Tekerle</span> Gez',
     'bike.hero.subtitle': 'Trafiğe takılma, gizli yerleri keşfet. Her sürücü için uygun fiyatlı scooterlar ve güçlü motosikletler.',
     'bike.features.helmet': 'Kask Ücretsiz',
     'bike.features.mileage': 'Sınırsız Kilometre',
@@ -406,7 +406,7 @@ export const tr = {
     'visa.consult.disclaimer': 'Ortağımızla iletişime geçerek, hizmetlerin bağımsız bir üçüncü tarafça sağlandığını kabul edersiniz.',
 
     // eSIM Page
-    'esim.hero.title': '<span class="text-teal-600">Anında</span> Bağlanın',
+    'esim.hero.title': '<span class="text-teal-600 dark:text-cyan-400 ">Anında</span> Bağlanın',
     'esim.hero.title_plain': 'Anında Bağlanın',
     'esim.hero.subtitle': 'Roaming ücreti yok. Fiziksel kart değiştirmek yok. Türk eSIM\'ini dakikalar içinde indirin ve iner inmez online olun.',
     'esim.btn.install': 'Uygulamayı İndir',
@@ -425,7 +425,7 @@ export const tr = {
     'esim.days': 'Gün',
 
     // List Your Property
-    'list.hero.title': 'Mülkünüzü <span class="text-accent">Pasif Gelire</span> dönüştürün',
+    'list.hero.title': 'Mülkünüzü <span class="text-accent dark:text-amber-400 ">Pasif Gelire</span> dönüştürün',
     'list.hero.subtitle': 'Alanya\'nın en özel tatil kiralama koleksiyonuna katılın. Rezervasyondan temizliğe kadar her şeyi biz hallediyoruz.',
     'list.hero.cta': 'Kazanmaya Başla',
     'list.benefit.verified.title': 'Onaylı Misafirler',
@@ -705,4 +705,51 @@ export const tr = {
     'add_service.success.desc': 'Hizmetiniz onay için gönderildi. Yayına girdiğinde size haber vereceğiz.',
     'add_service.view_all': 'Tüm Hizmetleri Görüntüle',
     'add_service.add_another': 'Başka Bir Hizmet Ekle',
+
+    // Directory Home
+    'dir.hero.page_title': 'Alanya Holidays – Alanya Türkiye Tatil Kiralama, Turlar ve Seyahat Rehberi',
+    'dir.hero.meta_desc': 'En iyi sağlık hizmetleri, konaklama, turlar, restoranlar, ulaşım ve yerleşim hizmetlerini tek bir güvenilir yerde bulun.',
+    'dir.hero.badge': 'Kusursuz Alanya Tatilinizi Planlayın',
+    'dir.hero.title1': 'Türkiye\'nin En Kapsamlı Turizm Rehberi',
+    'dir.hero.title2': 'Alanya ve Antalya İçin',
+    'dir.hero.subtitle': 'En iyi sağlık hizmetleri, konaklama, turlar, restoranlar, ulaşım ve yerleşim hizmetlerini aynı yerde bulun.',
+    'dir.search.placeholder': 'Ne arıyorsunuz?',
+    'dir.search.cat_all': 'Tüm Kategoriler',
+    'dir.search.loc_all': 'Tüm Konumlar',
+    'dir.search.loc_center': 'Alanya Merkez',
+    'dir.search.loc_mahmutlar': 'Mahmutlar',
+    'dir.search.loc_oba': 'Oba',
+    'dir.search.loc_kestel': 'Kestel',
+    'dir.search.btn': 'Ara',
+    'dir.cta.explore': 'Alanya\'yı Keşfet',
+    'dir.cta.categories': 'Kategoriler',
+    'dir.cta.list': 'İşletme Ekle',
+    'dir.cta.ai': 'Yapay Zeka Tatil Planlayıcı',
+    'dir.cat.medical': 'Sağlık Turizmi',
+    'dir.cat.accommodations': 'Konaklama',
+    'dir.cat.tours': 'Turlar ve Deneyimler',
+    'dir.cat.transport': 'Ulaşım',
+    'dir.cat.restaurants': 'Restoranlar ve Kafeler',
+    'dir.cat.realestate': 'Emlak',
+    'dir.cat.visa': 'Vize ve İkamet',
+    'dir.cat.shopping': 'Alışveriş ve Hediyelik',
+    'dir.cat.nature': 'Doğal Güzellikler',
+    'dir.cat.title': 'Kategorileri Keşfedin',
+    'dir.cat.subtitle': 'Kusursuz bir konaklama için ihtiyacınız olan her şeyi bulun.',
+    'dir.trust.title': 'Neden Alanya Holidays Hub?',
+    'dir.trust.subtitle': 'Türk Rivierası\'nın en kapsamlı ve doğrulanmış turizm kaynağını inşa ediyoruz.',
+    'dir.trust.b1.title': 'Doğrulanmış İşletmeler',
+    'dir.trust.b1.desc': 'Her premium listeleme, kullanıcılarımız için kalite ve güvenilirlik sağlamak üzere sıkı bir süreçten geçer.',
+    'dir.trust.b2.title': 'Doğrudan İletişim',
+    'dir.trust.b2.desc': 'Gizli ücret yok! Sizi doğrudan WhatsApp üzerinden hizmet sağlayıcılarla iletişime geçiriyoruz.',
+    'dir.trust.b3.title': 'Yerel Ekosistem',
+    'dir.trust.b3.desc': 'Havaalanı transferinden emlak yatırımlarına kadar her şeyi bulun.',
+    'dir.testi.title': 'Alanya\'nın En Kapsamlı Turizm Kaynağı',
+    'dir.testi.subtitle': 'Kullanıcılarımız ve iş ortaklarımız bizim hakkımızda ne düşünüyor?',
+    'dir.testi.t1.text': '"5 dakika içinde muhteşem bir diş kliniği buldum. WhatsApp entegrasyonu her şeyi çok kolaylaştırıyor."',
+    'dir.testi.t1.name': 'Sarah M.',
+    'dir.testi.t1.role': 'İngiltere\'den Ziyaretçi',
+    'dir.testi.t2.text': '"Bir tur operatörü olarak, burada listelenmek bize doğrudan nitelikli müşteriler getirdi."',
+    'dir.testi.t2.name': 'Ahmet K.',
+    'dir.testi.t2.role': 'Alanya Tours'
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
 import { HostLayout } from '../components/layouts/HostLayout';
@@ -7,9 +7,11 @@ import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 
 // Public Pages - Direct Imports (critical for immediate FCP)
-import { Home } from '../pages/Home';
+import { DirectoryHome } from '../pages/DirectoryHome';
+import { DirectoryCategoryPage } from '../pages/DirectoryCategoryPage';
 
 // Public Pages - Lazy Loaded
+const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => ({ default: module.AiPlanner })));
 const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
 const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
@@ -55,6 +57,8 @@ const AdminServicesPage = React.lazy(() => import('../pages/admin/ServicesPage')
 const ReportsPage = React.lazy(() => import('../pages/admin/ReportsPage').then(module => ({ default: module.ReportsPage })));
 const AdminProductsPage = React.lazy(() => import('../pages/admin/ProductsPage').then(module => ({ default: module.ProductsPage })));
 const AdminEditProductPage = React.lazy(() => import('../pages/admin/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
+const DirectoryAdminPage = React.lazy(() => import('../pages/admin/DirectoryAdminPage').then(module => ({ default: module.DirectoryAdminPage })));
+const AdminEditDirectoryPage = React.lazy(() => import('../pages/admin/AdminEditDirectoryPage').then(module => ({ default: module.AdminEditDirectoryPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -66,7 +70,7 @@ const HostCalendarPage = React.lazy(() => import('../pages/host/HostCalendarPage
 const HostMessagesPage = React.lazy(() => import('../pages/host/HostMessagesPage').then(module => ({ default: module.HostMessagesPage })));
 
 const PageLoader = () => (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
 );
@@ -75,7 +79,25 @@ export const AppRoutes: React.FC = () => {
     return (
         <React.Suspense fallback={<PageLoader />}>
             <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<DirectoryHome />} />
+                <Route path="/ai-planner" element={<AiPlanner />} />
+
+                {/* SEO-Optimized Directory Category Routes */}
+                <Route path="/medical-tourism-alanya" element={<DirectoryCategoryPage categoryId="medical" />} />
+                <Route path="/alanya-hotels" element={<DirectoryCategoryPage categoryId="accommodations" />} />
+                <Route path="/alanya-villas" element={<DirectoryCategoryPage categoryId="villas" />} />
+                <Route path="/alanya-apartments" element={<DirectoryCategoryPage categoryId="apartments" />} />
+                <Route path="/things-to-do-in-alanya" element={<DirectoryCategoryPage categoryId="tours" />} />
+                <Route path="/tours" element={<Navigate to="/things-to-do-in-alanya" replace />} />
+                <Route path="/airport-transfer" element={<DirectoryCategoryPage categoryId="transport" />} />
+                <Route path="/car-rental" element={<DirectoryCategoryPage categoryId="transport" />} />
+                <Route path="/restaurants" element={<DirectoryCategoryPage categoryId="restaurants" />} />
+                <Route path="/alanya-restaurants" element={<Navigate to="/restaurants" replace />} />
+                <Route path="/alanya-real-estate" element={<DirectoryCategoryPage categoryId="real-estate" />} />
+                <Route path="/alanya-residency-guide" element={<DirectoryCategoryPage categoryId="visa" />} />
+                <Route path="/alanya-shopping-guide" element={<DirectoryCategoryPage categoryId="shopping" />} />
+                <Route path="/alanya-nature-attractions" element={<DirectoryCategoryPage categoryId="nature" />} />
+                <Route path="/nightlife" element={<DirectoryCategoryPage categoryId="nightlife" />} />
 
                 <Route path="/list-property" element={<ListProperty />} />
 
@@ -248,6 +270,20 @@ export const AppRoutes: React.FC = () => {
                         </AdminLayout>
                     </AdminRoute>
                 } />
+                <Route path="/admin/directory" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <DirectoryAdminPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/directory/:id" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminEditDirectoryPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
 
                 {/* Edit Routes (Wrapped in Layout) */}
                 <Route path="/admin/edit-property/:id" element={
@@ -274,7 +310,7 @@ export const AppRoutes: React.FC = () => {
 
                 <Route path="/add-product" element={<AddProduct />} />
 
-                <Route path="*" element={<Home />} />
+                <Route path="*" element={<DirectoryHome />} />
             </Routes>
         </React.Suspense>
     );

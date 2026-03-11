@@ -106,8 +106,8 @@ export const PropertiesPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
                     {['all', 'pending', 'approved', 'rejected'].map(status => (
                         <button
                             key={status}
@@ -129,16 +129,16 @@ export const PropertiesPage: React.FC = () => {
                         placeholder="Search properties..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     />
                 </div>
             </div>
 
             {/* Table */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase font-semibold">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs uppercase font-semibold">
                             <tr>
                                 <th className="p-4 pl-6 w-20">Image</th>
                                 <th className="p-4">Property</th>
@@ -148,7 +148,7 @@ export const PropertiesPage: React.FC = () => {
                                 <th className="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {loading ? (
                                 <tr>
                                     <td colSpan={6} className="p-8 text-center text-slate-400">Loading properties...</td>
@@ -159,7 +159,7 @@ export const PropertiesPage: React.FC = () => {
                                 </tr>
                             ) : (
                                 filteredProperties.map((p) => (
-                                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors group">
                                         <td className="p-4 pl-6">
                                             <div className="w-16 h-12 rounded-lg bg-slate-200 overflow-hidden">
                                                 {p.images && p.images[0] ? (
@@ -186,7 +186,7 @@ export const PropertiesPage: React.FC = () => {
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${p.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                p.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                p.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 ' :
                                                     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                                                 }`}>
                                                 {p.status.toUpperCase()}
@@ -196,7 +196,7 @@ export const PropertiesPage: React.FC = () => {
                                             <div className="flex justify-center gap-2">
                                                 <button
                                                     onClick={() => navigate(`/property/${p.id}`)}
-                                                    className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                                    className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg transition-colors"
                                                     title="View Public Page"
                                                 >
                                                     <ExternalLink size={16} />

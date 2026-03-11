@@ -272,7 +272,7 @@ export const HostEditServicePage: React.FC = () => {
     if (success) {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-20 px-4 flex items-center justify-center">
-                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 text-center">
+                <div className="max-w-md w-full bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800/50 text-center">
                     <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 size={32} />
                     </div>
@@ -293,7 +293,7 @@ export const HostEditServicePage: React.FC = () => {
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    <button onClick={() => navigate('/host/services')} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all duration-300">
+                    <button onClick={() => navigate('/host/services')} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800/90 rounded-full transition-all duration-300">
                         <ArrowLeft size={24} className="text-slate-600 dark:text-slate-400" />
                     </button>
                     <div>
@@ -302,7 +302,7 @@ export const HostEditServicePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden">
                     <form onSubmit={handleSubmit} className="p-8 space-y-8">
 
                         {/* Common Fields */}
@@ -314,7 +314,7 @@ export const HostEditServicePage: React.FC = () => {
                                     value={formData.title}
                                     onChange={handleChange}
                                     required
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                 />
                             </div>
 
@@ -326,7 +326,7 @@ export const HostEditServicePage: React.FC = () => {
                                     onChange={handleChange}
                                     required
                                     rows={4}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
                                 />
                             </div>
 
@@ -339,7 +339,7 @@ export const HostEditServicePage: React.FC = () => {
                                     onChange={handleChange}
                                     onWheel={(e) => e.currentTarget.blur()}
                                     required
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                 />
                             </div>
 
@@ -378,7 +378,7 @@ export const HostEditServicePage: React.FC = () => {
                                             name="availableFrom"
                                             value={formData.availableFrom}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                         />
                                     </div>
                                     <div>
@@ -388,33 +388,33 @@ export const HostEditServicePage: React.FC = () => {
                                             name="availableTo"
                                             value={formData.availableTo}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                         />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <hr className="border-slate-100 dark:border-slate-700" />
+                        <hr className="border-slate-100 dark:border-slate-800/50" />
 
                         {/* Transport Fields */}
                         {category === 'transportation' && (
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Brand</label>
-                                    <input name="brand" value={formData.brand} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                    <input name="brand" value={formData.brand} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Model</label>
-                                    <input name="model" value={formData.model} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                    <input name="model" value={formData.model} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Year</label>
-                                    <input name="year" type="number" value={formData.year} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                    <input name="year" type="number" value={formData.year} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Seats</label>
-                                    <input name="seats" type="number" value={formData.seats} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                    <input name="seats" type="number" value={formData.seats} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                 </div>
                             </div>
                         )}
@@ -428,7 +428,7 @@ export const HostEditServicePage: React.FC = () => {
                                         name="subcategory"
                                         value={formData.subcategory}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     >
                                         <option value="">None</option>
                                         <option value="water">Water (Boat, Jet Ski, Diving)</option>
@@ -443,17 +443,17 @@ export const HostEditServicePage: React.FC = () => {
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Duration (Hours)</label>
-                                        <input name="duration" type="number" value={formData.duration} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                        <input name="duration" type="number" value={formData.duration} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Group Size</label>
-                                        <input name="groupSize" type="number" value={formData.groupSize} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                        <input name="groupSize" type="number" value={formData.groupSize} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" />
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">What is Included?</label>
-                                    <textarea name="included" value={formData.included} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                    <textarea name="included" value={formData.included} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" />
                                 </div>
                             </div>
                         )}

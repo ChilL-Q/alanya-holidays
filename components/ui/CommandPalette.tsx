@@ -103,11 +103,11 @@ export const CommandPalette = () => {
             onClick={() => setOpen(false)}
         >
             <Command
-                className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-scale-in"
+                className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden animate-scale-in"
                 loop
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center border-b border-slate-100 dark:border-slate-800 px-4">
+                <div className="flex items-center border-b border-slate-100 dark:border-slate-800/50 px-4">
                     <Search className="w-5 h-5 text-slate-400 mr-3" />
                     <Command.Input
                         autoFocus
@@ -126,119 +126,119 @@ export const CommandPalette = () => {
                     <Command.Group heading="Pages" className="text-xs font-medium text-slate-400 mb-2 px-2">
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Home className="w-4 h-4 mr-3" />
                             {t('nav.home')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/stays'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Building className="w-4 h-4 mr-3" />
                             {t('nav.stays')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/favorites'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Heart className="w-4 h-4 mr-3" />
                             {t('nav.favorites')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Sparkles className="w-4 h-4 mr-3" />
                             {t('nav.services')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services/car-rental'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Car className="w-4 h-4 mr-3" />
                             {t('services.transport.car')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services/bike-rental'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Bike className="w-4 h-4 mr-3" />
                             {t('nav.motorbike')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services/bicycle-rental'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Bike className="w-4 h-4 mr-3" />
                             {t('nav.bicycle')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/experiences/land'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Mountain className="w-4 h-4 mr-3" />
                             {t('services.adventure.land')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/experiences/water'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Waves className="w-4 h-4 mr-3" />
                             {t('services.adventure.water')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/experiences/safari'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Compass className="w-4 h-4 mr-3" />
                             {t('services.adventure.safari')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services/visa'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <FileCheck className="w-4 h-4 mr-3" />
                             {t('services.visa.title')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/services/tourist-sim-card'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Wifi className="w-4 h-4 mr-3" />
                             {t('services.connectivity.esim')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/shop'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <ShoppingCart className="w-4 h-4 mr-3" />
                             {t('shop')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/zero-fees'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Percent className="w-4 h-4 mr-3" />
                             {t('value.zero_fees.title')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/about'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Info className="w-4 h-4 mr-3" />
                             {t('nav.about')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/contact'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Phone className="w-4 h-4 mr-3" />
                             {t('footer.contact')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => navigate('/help'))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <HelpCircle className="w-4 h-4 mr-3" />
                             {t('footer.faqs')}
@@ -249,14 +249,14 @@ export const CommandPalette = () => {
                         <Command.Group heading="User" className="text-xs font-medium text-slate-400 mb-2 px-2 mt-2">
                             <Command.Item
                                 onSelect={() => runCommand(() => navigate('/profile'))}
-                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                             >
                                 <User className="w-4 h-4 mr-3" />
                                 {t('nav.profile')}
                             </Command.Item>
                             <Command.Item
                                 onSelect={() => runCommand(() => navigate(user.role === 'admin' ? '/admin/dashboard' : '/host/dashboard'))}
-                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                             >
                                 <LayoutDashboard className="w-4 h-4 mr-3" />
                                 {t('nav.dashboard')}
@@ -266,21 +266,21 @@ export const CommandPalette = () => {
                                 <>
                                     <Command.Item
                                         onSelect={() => runCommand(() => navigate('/list-property'))}
-                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                                     >
-                                        <Building className="w-4 h-4 mr-3 text-teal-500" />
+                                        <Building className="w-4 h-4 mr-3 text-teal-500 dark:text-cyan-400 " />
                                         {t('nav.list_property')}
                                     </Command.Item>
                                     <Command.Item
                                         onSelect={() => runCommand(() => navigate('/add-service'))}
-                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                                     >
                                         <Car className="w-4 h-4 mr-3 text-purple-500" />
                                         {t('nav.list_service')}
                                     </Command.Item>
                                     <Command.Item
                                         onSelect={() => runCommand(() => navigate(user.role === 'admin' ? '/admin/bookings' : '/host/bookings'))}
-                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                        className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                                     >
                                         <Calendar className="w-4 h-4 mr-3 text-blue-500" />
                                         {t('profile.bookings')}
@@ -294,14 +294,14 @@ export const CommandPalette = () => {
                         <Command.Group heading="Account" className="text-xs font-medium text-slate-400 mb-2 px-2 mt-2">
                             <Command.Item
                                 onSelect={() => runCommand(() => openLogin())}
-                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                             >
                                 <LogIn className="w-4 h-4 mr-3" />
                                 {t('auth.submit.login')}
                             </Command.Item>
                             <Command.Item
                                 onSelect={() => runCommand(() => openRegister())}
-                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                             >
                                 <UserPlus className="w-4 h-4 mr-3" />
                                 {t('auth.submit.register')}
@@ -312,21 +312,21 @@ export const CommandPalette = () => {
                     <Command.Group heading="Actions" className="text-xs font-medium text-slate-400 mb-2 px-2 mt-2">
                         <Command.Item
                             onSelect={() => runCommand(() => toggleTheme())}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
                             {t('nav.toggle_theme')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => setIsCartOpen(true))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <ShoppingCart className="w-4 h-4 mr-3" />
                             {t('nav.open_cart')}
                         </Command.Item>
                         <Command.Item
                             onSelect={() => runCommand(() => setChatOpen(true))}
-                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                            className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                         >
                             <Sparkles className="w-4 h-4 mr-3 text-purple-500" />
                             {t('nav.ai_assistant')}
@@ -351,9 +351,9 @@ export const CommandPalette = () => {
                                 key={property.id}
                                 onSelect={() => runCommand(() => navigate(`/property/${property.id}`))}
                                 value={property.title} // Crucial for search filtering
-                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
+                                className="flex items-center px-4 py-3 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 cursor-pointer transition-colors aria-selected:bg-slate-100 dark:aria-selected:bg-slate-800 text-sm"
                             >
-                                <Building className="w-4 h-4 mr-3 text-teal-500" />
+                                <Building className="w-4 h-4 mr-3 text-teal-500 dark:text-cyan-400 " />
                                 <span className="flex-1 truncate">{property.title}</span>
                                 <span className="text-xs text-slate-400 ml-2">€{property.price_per_night}</span>
                             </Command.Item>

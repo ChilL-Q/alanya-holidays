@@ -94,7 +94,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-4xl mx-auto px-4">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 mb-8 transition-colors">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 dark:text-cyan-400 mb-8 transition-colors">
                     <ArrowLeft size={20} />
                     {t('auth.close') || 'Back'}
                 </button>
@@ -107,7 +107,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                             alt={service.title}
                             className="w-full rounded-2xl shadow-md object-cover aspect-[4/3] mb-6"
                         />
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-6">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 space-y-6">
 
                             {/* Description */}
                             <div>
@@ -117,17 +117,17 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                 </p>
                             </div>
 
-                            <div className="h-px bg-slate-100 dark:bg-slate-700" />
+                            <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
 
                             {/* Key Stats */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                    <Clock size={16} className="text-teal-500" />
+                                    <Clock size={16} className="text-teal-500 dark:text-cyan-400 " />
                                     <span>~{service.features?.duration || '4 hours'}</span>
                                 </div>
                                 {service.features?.groupSize && (
                                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                        <Users size={16} className="text-teal-500" />
+                                        <Users size={16} className="text-teal-500 dark:text-cyan-400 " />
                                         <span>Group Size: {service.features.groupSize}</span>
                                     </div>
                                 )}
@@ -136,13 +136,13 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                             {/* Itinerary */}
                             {service.features?.itinerary && Array.isArray(service.features.itinerary) && service.features.itinerary.length > 0 && (
                                 <>
-                                    <div className="h-px bg-slate-100 dark:bg-slate-700" />
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
                                     <div>
                                         <h3 className="font-bold text-slate-900 dark:text-white mb-3">Schedule</h3>
                                         <ul className="space-y-3">
                                             {service.features.itinerary.map((item: any, idx: number) => (
                                                 <li key={idx} className="flex gap-3 text-sm">
-                                                    <span className="font-bold text-teal-600 dark:text-teal-400 min-w-[60px]">{item.time || `Stop ${idx + 1}`}</span>
+                                                    <span className="font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200 min-w-[60px]">{item.time || `Stop ${idx + 1}`}</span>
                                                     <span className="text-slate-600 dark:text-slate-300">{item.activity || item.description}</span>
                                                 </li>
                                             ))}
@@ -154,14 +154,14 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                             {/* Included */}
                             {service.features?.included && (
                                 <>
-                                    <div className="h-px bg-slate-100 dark:bg-slate-700" />
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
                                     <div>
                                         <h3 className="font-bold text-slate-900 dark:text-white mb-3">Included</h3>
                                         <ul className="grid grid-cols-1 gap-2">
                                             {Array.isArray(service.features.included)
                                                 ? service.features.included.map((item: string, i: number) => (
                                                     <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-white">
-                                                        <span className="text-teal-500 mt-0.5">✓</span> {item}
+                                                        <span className="text-teal-500 dark:text-cyan-400 mt-0.5">✓</span> {item}
                                                     </li>
                                                 ))
                                                 : <p className="text-sm text-slate-600 dark:text-white">{service.features.included}</p>
@@ -174,8 +174,8 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                             {/* Requirements/Notes */}
                             {service.features?.requirements && (
                                 <>
-                                    <div className="h-px bg-slate-100 dark:bg-slate-700" />
-                                    <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-800/30">
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
+                                    <div className="bg-amber-50 dark:bg-slate-800/30 p-4 rounded-xl border border-amber-100 dark:border-amber-800/30">
                                         <h4 className="font-bold text-amber-800 dark:text-amber-400 text-xs uppercase tracking-wide mb-2">Important Information</h4>
                                         <p className="text-sm text-amber-900/80 dark:text-amber-100/80">
                                             {service.features.requirements}
@@ -187,11 +187,11 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                     </div>
 
                     {/* Booking Form */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-800/50 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
-                            <span className="text-slate-500 dark:text-accent">per person</span>
+                            <span className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
+                            <span className="text-slate-500 dark:text-accent dark:text-amber-400 ">per person</span>
                         </div>
 
                         <div className="space-y-6">
@@ -208,37 +208,37 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                         placeholderText={t('date_format')}
                                         dateFormat="dd.MM.yyyy"
                                         locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
-                                        customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
+                                        customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
                                     />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('search.guests') || 'Guests'}</label>
-                                <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl p-2 px-4">
+                                <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl p-2 px-4">
                                     <Users size={20} className="text-slate-400" />
                                     <button
                                         onClick={() => setGuests(Math.max(1, guests - 1))}
-                                        className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-teal-600 font-bold"
+                                        className="w-8 h-8 rounded-full bg-white dark:bg-slate-800/80 shadow-sm flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold"
                                     >
                                         -
                                     </button>
                                     <span className="flex-1 text-center font-bold text-lg dark:text-white">{guests}</span>
                                     <button
                                         onClick={() => setGuests(guests + 1)}
-                                        className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-teal-600 font-bold"
+                                        className="w-8 h-8 rounded-full bg-white dark:bg-slate-800/80 shadow-sm flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold"
                                     >
                                         +
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2">
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 space-y-2">
                                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                     <span>{formatPrice(convertPrice(service.price, 'EUR'))} x {guests === 1 ? t('prop.guest_option', { count: 1 }) : t('prop.guests_option', { count: guests })}</span>
                                     <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
                                 </div>
-                                <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-600">
+                                <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700/50">
                                     <span>{t('prop.total') || 'Total'}</span>
                                     <span>{formatPrice(convertPrice(service.price * guests, 'EUR'))}</span>
                                 </div>
@@ -249,7 +249,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                 disabled={!date || guests <= 0}
                                 className={`w-full text-white font-bold py-4 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isWhatsAppBooking
                                     ? 'bg-green-600 hover:bg-green-700'
-                                    : 'bg-teal-600 hover:bg-teal-700'
+                                    : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 '
                                     }`}
                             >
                                 {isWhatsAppBooking ? (

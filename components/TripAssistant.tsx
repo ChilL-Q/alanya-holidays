@@ -76,7 +76,7 @@ export const TripAssistant: React.FC = () => {
           e.stopPropagation();
           setIsOpen(true);
         }}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 ${isFooterVisible ? 'bg-teal-600' : 'bg-slate-900 dark:bg-teal-600'} text-white px-4 py-3 md:px-5 rounded-full shadow-xl hover:scale-105 transition-all duration-300 group max-w-[calc(100vw-3rem)]`}
+        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 ${isFooterVisible ? 'bg-teal-600 dark:bg-cyan-600 ' : 'bg-slate-900 dark:bg-slate-800/50'} text-white px-4 py-3 md:px-5 rounded-full shadow-xl hover:scale-105 transition-all duration-300 group max-w-[calc(100vw-3rem)]`}
       >
         <Sparkles size={18} className="group-hover:animate-pulse shrink-0" />
         <span className="font-medium truncate">{t('ai.button')}</span>
@@ -87,10 +87,10 @@ export const TripAssistant: React.FC = () => {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="fixed bottom-6 right-4 left-4 md:left-auto md:right-6 z-50 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-5 flex flex-col max-h-[80vh] md:max-h-[600px] h-[500px]"
+      className="fixed bottom-6 right-4 left-4 md:left-auto md:right-6 z-50 md:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in slide-in-from-bottom-5 flex flex-col max-h-[80vh] md:max-h-[600px] h-[500px]"
     >
       {/* Header */}
-      <div className="bg-slate-900 dark:bg-teal-600 p-4 flex justify-between items-center text-white shrink-0">
+      <div className="bg-slate-900 dark:bg-slate-800/50 p-4 flex justify-between items-center text-white shrink-0">
         <div className="flex items-center gap-2">
           <Sparkles size={18} />
           <div>
@@ -124,7 +124,7 @@ export const TripAssistant: React.FC = () => {
       <div className="p-4 flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 flex flex-col gap-3">
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 space-y-3 opacity-80">
-            <Sparkles size={32} className="text-teal-500" />
+            <Sparkles size={32} className="text-teal-500 dark:text-cyan-400 " />
             <p className="text-sm max-w-[200px]">
               {t('ai.welcome')}
             </p>
@@ -135,8 +135,8 @@ export const TripAssistant: React.FC = () => {
           <div
             key={index}
             className={`p-3 rounded-2xl max-w-[85%] text-sm leading-relaxed ${msg.role === 'user'
-              ? 'bg-slate-900 dark:bg-teal-600 text-white self-end rounded-br-none'
-              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm self-start rounded-bl-none'
+              ? 'bg-slate-900 dark:bg-slate-800/50 text-white self-end rounded-br-none'
+              : 'bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800/50 shadow-sm self-start rounded-bl-none'
               }`}
           >
             {msg.content}
@@ -144,7 +144,7 @@ export const TripAssistant: React.FC = () => {
         ))}
 
         {isLoading && (
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm self-start rounded-bl-none w-16 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm self-start rounded-bl-none w-16 flex items-center justify-center">
             <div className="flex space-x-1">
               <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
               <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></div>
@@ -156,19 +156,19 @@ export const TripAssistant: React.FC = () => {
       </div>
 
       {/* Input */}
-      <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex gap-2 shrink-0">
+      <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 flex gap-2 shrink-0">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
           placeholder={t('ai.placeholder')}
-          className="flex-1 text-sm bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white dark:placeholder-slate-500 transition-all"
+          className="flex-1 text-sm bg-slate-100 dark:bg-slate-800/80 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white dark:placeholder-slate-500 transition-all"
         />
         <button
           onClick={handleAsk}
           disabled={isLoading || !query.trim()}
-          className="bg-teal-600 text-white p-3 rounded-xl hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-md shadow-teal-500/20"
+          className="bg-teal-600 dark:bg-cyan-600 text-white p-3 rounded-xl hover:bg-teal-700 dark:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-md shadow-teal-500/20"
         >
           <Send size={18} />
         </button>

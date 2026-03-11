@@ -27,7 +27,7 @@ export const LegalLayout: React.FC<LegalLayoutProps> = ({ title, lastUpdated, se
                         {title}
                     </h1>
                     <div className="flex items-center text-slate-300 text-sm md:text-base">
-                        <Calendar size={18} className="mr-2 text-accent" />
+                        <Calendar size={18} className="mr-2 text-accent dark:text-amber-400 " />
                         <span>Last updated: {lastUpdated}</span>
                     </div>
                 </div>
@@ -38,7 +38,7 @@ export const LegalLayout: React.FC<LegalLayoutProps> = ({ title, lastUpdated, se
                     {/* Sidebar / Table of Contents */}
                     <div className="lg:w-1/4">
                         <div className="sticky top-24">
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-800/50 pb-2">
                                 Table of Contents
                             </h3>
                             <nav className="space-y-1">
@@ -46,9 +46,9 @@ export const LegalLayout: React.FC<LegalLayoutProps> = ({ title, lastUpdated, se
                                     <a
                                         key={section.id}
                                         href={`#${section.id}`}
-                                        className="group flex items-center py-2 px-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-accent transition-colors text-sm"
+                                        className="group flex items-center py-2 px-3 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-accent dark:text-amber-400 transition-colors text-sm"
                                     >
-                                        <ChevronRight size={14} className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity text-accent" />
+                                        <ChevronRight size={14} className="mr-2 opacity-0 group-hover:opacity-100 transition-opacity text-accent dark:text-amber-400 " />
                                         {section.title}
                                     </a>
                                 ))}
@@ -58,7 +58,7 @@ export const LegalLayout: React.FC<LegalLayoutProps> = ({ title, lastUpdated, se
 
                     {/* Main Content */}
                     <div className="lg:w-3/4">
-                        <div className="prose dark:prose-invert prose-lg max-w-none prose-headings:font-serif prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-a:text-accent hover:prose-a:text-accent-hover">
+                        <div className="prose dark:prose-invert prose-lg max-w-none prose-headings:font-serif prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-li:text-slate-600 dark:prose-li:text-slate-300 prose-a:text-accent dark:text-amber-400 hover:prose-a:text-accent dark:text-amber-400 -hover">
                             {children}
                         </div>
                     </div>

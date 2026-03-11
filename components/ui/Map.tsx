@@ -146,7 +146,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
         // cleanup
     }, []);
 
-    if (!isLoaded) return <div className="w-full h-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-2xl"></div>;
+    if (!isLoaded) return <div className="w-full h-full bg-slate-100 dark:bg-slate-800/80 animate-pulse rounded-2xl"></div>;
 
     const mapOptions = {
         styles: theme === 'dark' ? darkMapStyles : undefined,
@@ -159,7 +159,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
     };
 
     return (
-        <div className="h-full w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800">
+        <div className="h-full w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800/50">
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={center}
@@ -190,16 +190,16 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                 <div className={`
                                     absolute top-full left-1/2 -translate-x-1/2 -mt-2 w-3 h-3 rotate-45 transition-colors duration-200
                                     ${isSelected
-                                        ? 'bg-teal-600'
-                                        : 'bg-white dark:bg-slate-800 border-r border-b border-slate-200 dark:border-slate-700'}
+                                        ? 'bg-teal-600 dark:bg-cyan-600 '
+                                        : 'bg-white dark:bg-slate-800/80 border-r border-b border-slate-200 dark:border-slate-800/50'}
                                 `}></div>
 
                                 {/* Price Pill */}
                                 <div className={`
                                     relative flex items-center justify-center px-4 py-2 rounded-full shadow-lg font-bold text-sm transition-all duration-200 z-10
                                     ${isSelected
-                                        ? 'bg-teal-600 text-white ring-2 ring-white dark:ring-slate-900'
-                                        : 'bg-white text-slate-900 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-slate-700'}
+                                        ? 'bg-teal-600 dark:bg-cyan-600 text-white ring-2 ring-white dark:ring-slate-900'
+                                        : 'bg-white text-slate-900 dark:bg-slate-800/80 dark:text-white border border-slate-200 dark:border-slate-800/50'}
                                 `}>
                                     €{Math.round(property.pricePerNight)}
                                 </div>
@@ -207,7 +207,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                 {/* Detail Card (Click Sticky) */}
                                 {isSelected && (
                                     <div
-                                        className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[60]"
+                                        className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 bg-white dark:bg-slate-950 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[60]"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             navigate(`/property/${property.id}`);
@@ -236,11 +236,11 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                             </div>
 
                                             <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-3 flex items-center gap-1">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-teal-500 dark:bg-cyan-600 "></span>
                                                 {property.location}
                                             </p>
 
-                                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-xs font-medium border-t border-slate-100 dark:border-slate-800 pt-3">
+                                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-xs font-medium border-t border-slate-100 dark:border-slate-800/50 pt-3">
                                                 <div className="flex items-center gap-1">
                                                     <Users size={14} />
                                                     <span>{property.guests} Guests</span>
@@ -249,7 +249,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
                                                     <Bed size={14} />
                                                     <span>{property.bedrooms} Bed</span>
                                                 </div>
-                                                <div className="ml-auto font-bold text-teal-600 dark:text-teal-400">
+                                                <div className="ml-auto font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200">
                                                     View Details →
                                                 </div>
                                             </div>

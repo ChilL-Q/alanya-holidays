@@ -127,7 +127,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                 <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
@@ -135,7 +135,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                         placeholder="Search services..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700/50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-700/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white capitalize"
+                        className="bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white capitalize"
                     >
                         <option value="all">All Types</option>
                         {mode === 'fleet' ? (
@@ -167,8 +167,8 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
 
             {/* Bulk Actions */}
             {selectedIds.size > 0 && (
-                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center justify-between animate-in slide-in-from-top-2">
-                    <span className="text-sm font-medium text-indigo-900 dark:text-indigo-200">
+                <div className="bg-indigo-50 dark:bg-slate-800/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center justify-between animate-in slide-in-from-top-2">
+                    <span className="text-sm font-medium text-indigo-900 dark:text-slate-200">
                         {selectedIds.size} service{selectedIds.size > 1 ? 's' : ''} selected
                     </span>
                     <button
@@ -182,10 +182,10 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
             )}
 
             {/* List */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 text-slate-500 font-semibold text-sm">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800/50 text-slate-500 font-semibold text-sm">
                             <tr>
                                 <th className="p-4 pl-6 w-10">
                                     <input
@@ -202,19 +202,19 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                                 <th className="p-4 text-right pr-6">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {isLoading ? (
                                 [...Array(3)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="p-4 pl-6"><div className="h-12 w-48 bg-slate-100 dark:bg-slate-700 rounded-lg"></div></td>
-                                        <td className="p-4"><div className="h-6 w-16 bg-slate-100 dark:bg-slate-700 rounded-full"></div></td>
-                                        <td className="p-4"><div className="h-4 w-16 bg-slate-100 dark:bg-slate-700 rounded"></div></td>
+                                        <td className="p-4 pl-6"><div className="h-12 w-48 bg-slate-100 dark:bg-slate-800/50 rounded-lg"></div></td>
+                                        <td className="p-4"><div className="h-6 w-16 bg-slate-100 dark:bg-slate-800/50 rounded-full"></div></td>
+                                        <td className="p-4"><div className="h-4 w-16 bg-slate-100 dark:bg-slate-800/50 rounded"></div></td>
                                         <td className="p-4"></td>
                                     </tr>
                                 ))
                             ) : filteredServices.length > 0 ? (
                                 filteredServices.map((service) => (
-                                    <tr key={service.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors ${selectedIds.has(service.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+                                    <tr key={service.id} className={`hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors ${selectedIds.has(service.id) ? 'bg-indigo-50/50 dark:bg-slate-800/50' : ''}`}>
                                         <td className="p-4 pl-6">
                                             <input
                                                 type="checkbox"
@@ -234,7 +234,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                                                     <div className="font-medium text-slate-900 dark:text-white truncate max-w-[200px]">{service.title}</div>
                                                     <div className="text-xs text-slate-500 truncate max-w-[200px]">{service.description?.slice(0, 50)}...</div>
                                                     {pendingEdits.has(service.id) && (
-                                                        <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 text-[10px] rounded-full font-medium">
+                                                        <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-slate-800/50 dark:text-slate-200 text-[10px] rounded-full font-medium">
                                                             Pending Update
                                                         </span>
                                                     )}
@@ -243,7 +243,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
-                                                <span className="p-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                                <span className="p-1 rounded bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400">
                                                     {getServiceIcon(service.type)}
                                                 </span>
                                                 <span className="capitalize text-slate-700 dark:text-slate-300 font-medium">{service.type}</span>
@@ -268,7 +268,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                                             <div className="flex justify-end items-center gap-2">
                                                 <Link
                                                     to={`/host/edit-service/${service.id}`}
-                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition"
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg transition"
                                                     title="Edit"
                                                 >
                                                     <Edit size={18} />

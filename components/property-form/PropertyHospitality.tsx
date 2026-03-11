@@ -10,11 +10,11 @@ interface PropertyHospitalityProps {
 export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formData, handleChange }) => {
     const { t } = useLanguage();
     return (
-        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <ShieldCheck className="text-accent" size={20} />
+                <ShieldCheck className="text-accent dark:text-amber-400 " size={20} />
                 {t('prop_form.section_hospitality')}
-                <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
+                <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -25,7 +25,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         placeholder={t('prop_form.checkin_time')}
                         value={formData.checkInTime}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div>
@@ -36,7 +36,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         placeholder={t('prop_form.checkout_time')}
                         value={formData.checkOutTime}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -47,7 +47,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         placeholder={t('prop_form.checkin_method')}
                         value={formData.checkInMethod}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -58,7 +58,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={2}
                         value={formData.wifiDetails}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -69,7 +69,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={3}
                         value={formData.arrivalGuide}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -80,7 +80,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={2}
                         value={formData.directions}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -91,7 +91,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={3}
                         value={formData.houseManual}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -102,7 +102,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={3}
                         value={formData.houseRules}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -113,7 +113,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={2}
                         value={formData.checkoutInstructions}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -124,7 +124,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={2}
                         value={formData.guidebooks}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -135,12 +135,12 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         rows={2}
                         value={formData.interactionPreferences}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />
                 </div>
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                        <Calendar size={16} className="text-teal-600" />
+                        <Calendar size={16} className="text-teal-600 dark:text-cyan-400 " />
                         {t('prop_form.sync_calendar')}
                     </label>
                     <input
@@ -149,7 +149,7 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         placeholder="e.g. https://www.airbnb.com/calendar/ical/..."
                         value={formData.icalUrl}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                     />
                     <p className="text-xs text-slate-500 mt-1">{t('prop_form.sync_desc')}</p>
                 </div>

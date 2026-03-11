@@ -82,7 +82,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
     if (loading) return <div className="py-8 text-center text-slate-500">Loading reviews...</div>;
 
     return (
-        <section id="reviews-section" className="py-12 border-t border-slate-200 dark:border-slate-800">
+        <section id="reviews-section" className="py-12 border-t border-slate-200 dark:border-slate-800/50">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -98,7 +98,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
 
                 <button
                     onClick={handleWriteReview}
-                    className="px-6 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-700 dark:text-slate-200 hover:border-teal-500 hover:text-teal-600 transition"
+                    className="px-6 py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl font-semibold text-slate-700 dark:text-slate-200 hover:border-teal-500 hover:text-teal-600 dark:text-cyan-400 transition"
                 >
                     Write a Review
                 </button>
@@ -107,10 +107,10 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {reviews.length > 0 ? (
                     reviews.map((review, idx) => (
-                        <div key={review.id || idx} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div key={review.id || idx} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
                                         {review.user?.avatar_url ? (
                                             <img src={review.user.avatar_url} alt={review.user.full_name} className="w-full h-full object-cover" />
                                         ) : (
@@ -130,7 +130,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
                                             <Star
                                                 key={i}
                                                 size={14}
-                                                className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300 dark:text-slate-700"}
+                                                className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-300 dark:text-slate-300"}
                                             />
                                         ))}
                                     </div>
@@ -157,7 +157,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
                                     {review.images.map((img, i) => (
                                         <div
                                             key={i}
-                                            className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-zoom-in border border-slate-100 dark:border-slate-700"
+                                            className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-zoom-in border border-slate-100 dark:border-slate-800/50"
                                             onClick={() => openLightbox(review.images!, i)}
                                         >
                                             <img src={img} alt="Review" className="w-full h-full object-cover hover:scale-110 transition duration-500" />
@@ -168,8 +168,8 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-2 text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                        <div className="mx-auto w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-3">
+                    <div className="col-span-2 text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800/50">
+                        <div className="mx-auto w-12 h-12 bg-white dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-300 mb-3">
                             <Star size={24} />
                         </div>
                         <p className="text-slate-500 dark:text-slate-400">No reviews yet. Be the first to share your experience!</p>

@@ -13,9 +13,9 @@ export const StepsIndicator: React.FC<StepsIndicatorProps> = ({ currentStep, tot
     return (
         <div className="w-full">
             {/* Progress Bar (Mobile/Simple) */}
-            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-6">
+            <div className="h-2 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden mb-6">
                 <div
-                    className="h-full bg-teal-600 transition-all duration-500 ease-out"
+                    className="h-full bg-teal-600 dark:bg-cyan-600 transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -32,17 +32,17 @@ export const StepsIndicator: React.FC<StepsIndicatorProps> = ({ currentStep, tot
                                 <div className={`
                             w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 border-2
                             ${isCompleted
-                                        ? 'bg-teal-600 border-teal-600 text-white'
+                                        ? 'bg-teal-600 dark:bg-cyan-600 border-teal-600 text-white'
                                         : isActive
-                                            ? 'bg-white dark:bg-slate-900 border-teal-600 text-teal-600 scale-110'
-                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400'
+                                            ? 'bg-white dark:bg-slate-900 border-teal-600 text-teal-600 dark:text-cyan-400 scale-110'
+                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800/50 text-slate-400'
                                     }
                         `}>
                                     {isCompleted ? <Check size={14} /> : index + 1}
                                 </div>
                                 <span className={`
                             absolute top-10 text-xs font-medium whitespace-nowrap transition-colors duration-300
-                            ${isActive ? 'text-teal-600' : 'text-slate-500 dark:text-slate-400'}
+                            ${isActive ? 'text-teal-600 dark:text-cyan-400 ' : 'text-slate-500 dark:text-slate-400'}
                         `}>
                                     {label}
                                 </span>
@@ -50,7 +50,7 @@ export const StepsIndicator: React.FC<StepsIndicatorProps> = ({ currentStep, tot
                         );
                     })}
                     {/* Connector Lines */}
-                    <div className="absolute top-4 left-0 right-0 h-0.5 bg-slate-100 dark:bg-slate-800 -z-0 mx-6"></div>
+                    <div className="absolute top-4 left-0 right-0 h-0.5 bg-slate-100 dark:bg-slate-800/80 -z-0 mx-6"></div>
                 </div>
             )}
         </div>

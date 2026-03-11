@@ -48,16 +48,16 @@ export const UsersPage: React.FC = () => {
     const getRoleBadge = (role: string) => {
         switch (role) {
             case 'admin': return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
-            case 'host': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
-            default: return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'host': return 'bg-purple-100 text-purple-700 dark:bg-slate-800/50 dark:text-slate-200';
+            default: return 'bg-blue-100 text-blue-700 dark:bg-slate-800/50 dark:text-slate-200';
         }
     };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl">
                     {['all', 'admin', 'host', 'guest'].map(role => (
                         <button
                             key={role}
@@ -79,16 +79,16 @@ export const UsersPage: React.FC = () => {
                         placeholder="Search users..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     />
                 </div>
             </div>
 
             {/* Table */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase font-semibold">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs uppercase font-semibold">
                             <tr>
                                 <th className="p-4 pl-6">Profile</th>
                                 <th className="p-4">Contact</th>
@@ -97,7 +97,7 @@ export const UsersPage: React.FC = () => {
                                 <th className="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {loading ? (
                                 <tr>
                                     <td colSpan={5} className="p-8 text-center text-slate-400">Loading users...</td>
@@ -108,7 +108,7 @@ export const UsersPage: React.FC = () => {
                                 </tr>
                             ) : (
                                 filteredUsers.map((u) => (
-                                    <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                    <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors group">
                                         <td className="p-4 pl-6">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">

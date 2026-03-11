@@ -207,8 +207,8 @@ export const AdminEditPropertyPage: React.FC = () => {
                     {backText}
                 </button>
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 dark:border-slate-700">
+                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 overflow-hidden">
+                    <div className="p-8 border-b border-slate-100 dark:border-slate-800/50">
                         <div className="flex justify-between items-start">
                             <div>
                                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('admin_prop.edit_title')}</h1>
@@ -216,17 +216,17 @@ export const AdminEditPropertyPage: React.FC = () => {
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
+                            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
                                 <button
                                     onClick={() => setActiveTab('details')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'details' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'details' ? 'bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     <Settings size={16} />
                                     {t('admin_prop.tab_details')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('calendar')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                                 >
                                     <Calendar size={16} />
                                     {t('admin_prop.tab_calendar')}
@@ -263,7 +263,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             required
                                             value={formData.title}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                 </div>
@@ -281,7 +281,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.price}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
@@ -295,7 +295,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.cleaningFee}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
@@ -307,7 +307,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 name="propertyType"
                                                 value={formData.propertyType}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
                                             >
                                                 <option value="apartment">Apartment</option>
                                                 <option value="villa">Villa</option>
@@ -327,7 +327,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.maxGuests}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
@@ -342,7 +342,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.beds}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
@@ -357,7 +357,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.bedrooms}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                     <div>
@@ -372,7 +372,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             value={formData.bathrooms}
                                             onChange={handleChange}
                                             onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                         />
                                     </div>
                                 </div>
@@ -389,7 +389,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         required
                                         value={formData.address}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                 </div>
 
@@ -399,7 +399,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </label>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                         {AMENITIES_LIST.map(am => (
-                                            <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                            <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors">
                                                 <input
                                                     type="checkbox"
                                                     checked={(formData.amenities as string[] || []).includes(am.label)}
@@ -411,7 +411,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                             setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
                                                         }
                                                     }}
-                                                    className="w-4 h-4 text-accent rounded focus:ring-accent border-gray-300"
+                                                    className="w-4 h-4 text-accent dark:text-amber-400 rounded focus:ring-accent border-gray-300"
                                                 />
                                                 <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
                                             </label>
@@ -419,7 +419,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
+                                <div className="bg-indigo-50 dark:bg-slate-800/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
                                     <input
                                         type="checkbox"
                                         id="isPromoted"
@@ -434,10 +434,10 @@ export const AdminEditPropertyPage: React.FC = () => {
                                 </div>
 
                                 {/* Hospitality & Guest Guide Section */}
-                                <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                                         {t('prop_form.section_hospitality')}
-                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
+                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
                                     </h3>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div>
@@ -448,7 +448,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 placeholder={t('prop_form.checkin_time')}
                                                 value={formData.checkInTime}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div>
@@ -459,7 +459,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 placeholder={t('prop_form.checkout_time')}
                                                 value={formData.checkOutTime}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -470,7 +470,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 placeholder={t('prop_form.checkin_method')}
                                                 value={formData.checkInMethod}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -481,7 +481,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={2}
                                                 value={formData.wifiDetails}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -492,7 +492,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={3}
                                                 value={formData.arrivalGuide}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -503,7 +503,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={2}
                                                 value={formData.directions}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -514,7 +514,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={3}
                                                 value={formData.houseManual}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -525,7 +525,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={3}
                                                 value={formData.houseRules}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -536,7 +536,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={2}
                                                 value={formData.checkoutInstructions}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -547,7 +547,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={2}
                                                 value={formData.guidebooks}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                         <div className="md:col-span-2">
@@ -558,7 +558,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                 rows={2}
                                                 value={formData.interactionPreferences}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                             />
                                         </div>
                                     </div>
@@ -568,7 +568,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                         {t('admin_prop.upload_title')}
                                     </label>
-                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer relative">
+                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-700/50 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/90/50 transition-colors cursor-pointer relative">
                                         <input
                                             type="file"
                                             multiple
@@ -580,7 +580,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                             }}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                         />
-                                        <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-12 h-12 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <Camera size={24} />
                                         </div>
                                         <p className="text-sm font-medium text-slate-900 dark:text-white">{t('admin_prop.upload_text')}</p>
@@ -605,7 +605,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                                                     </div>
                                                 ))}
                                                 {files.map((f, i) => (
-                                                    <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
+                                                    <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-800/50 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
                                                         {f.name}
                                                     </span>
                                                 ))}
@@ -624,14 +624,14 @@ export const AdminEditPropertyPage: React.FC = () => {
                                         // required
                                         value={formData.description}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                                     ></textarea>
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
+                                    className="w-full bg-accent dark:bg-amber-600 hover:bg-accent dark:bg-amber-600 -hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
                                 >
                                     {isLoading ? t('admin_prop.save_loading') : t('admin_prop.save')}
                                 </button>

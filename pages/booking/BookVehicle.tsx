@@ -97,7 +97,7 @@ export const BookVehicle: React.FC = () => {
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-4xl mx-auto px-4">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 mb-8 transition-colors">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 dark:text-cyan-400 mb-8 transition-colors">
                     <ArrowLeft size={20} />
                     {t('auth.close') || 'Back'}
                 </button>
@@ -110,7 +110,7 @@ export const BookVehicle: React.FC = () => {
                             alt={service.title}
                             className="w-full rounded-2xl shadow-md object-cover aspect-[4/3] mb-6"
                         />
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
                             <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('offer.features') || 'Vehicle Features'}</h3>
                             <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                                 {service.features?.fuel && (
@@ -136,10 +136,10 @@ export const BookVehicle: React.FC = () => {
                     </div>
 
                     {/* Booking Form */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-800/50 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
+                            <span className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{formatPrice(convertPrice(service.price, 'EUR'))}</span>
                             <span className="text-slate-500 dark:text-slate-400">{t('car.per_day') || 'per day'}</span>
                         </div>
 
@@ -161,7 +161,7 @@ export const BookVehicle: React.FC = () => {
                                             placeholderText={t('date_format')}
                                             dateFormat="dd.MM.yyyy"
                                             locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
-                                            customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
+                                            customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
                                         />
                                     </div>
                                     <div className="relative">
@@ -178,19 +178,19 @@ export const BookVehicle: React.FC = () => {
                                             placeholderText={t('date_format')}
                                             dateFormat="dd.MM.yyyy"
                                             locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
-                                            customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
+                                            customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             {days > 0 && (
-                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2">
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 space-y-2">
                                     <div className="flex justify-between text-slate-600 dark:text-slate-400">
                                         <span>{formatPrice(convertPrice(service.price, 'EUR'))} x {days} {t('esim.days') || 'days'}</span>
                                         <span>{formatPrice(convertPrice(service.price * days, 'EUR'))}</span>
                                     </div>
-                                    <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-600">
+                                    <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700/50">
                                         <span>{t('prop.total') || 'Total'}</span>
                                         <span>{formatPrice(convertPrice(service.price * days, 'EUR'))}</span>
                                     </div>

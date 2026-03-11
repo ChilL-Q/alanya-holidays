@@ -25,9 +25,9 @@ export const CookieConsent: React.FC = () => {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 p-4 z-[9999] animate-fade-up">
-            <div className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 md:flex items-center justify-between gap-6">
+            <div className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 rounded-2xl shadow-2xl p-6 md:flex items-center justify-between gap-6">
                 <div className="flex items-start gap-4 mb-4 md:mb-0">
-                    <div className="p-3 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-xl shrink-0">
+                    <div className="p-3 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-xl shrink-0">
                         <Cookie size={24} />
                     </div>
                     <div>
@@ -37,7 +37,7 @@ export const CookieConsent: React.FC = () => {
                         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                             {t('cookies.desc') || 'We use cookies to improve your experience and analyze our traffic. By clicking "Accept", you agree to our use of cookies.'}
                             {' '}
-                            <Link to="/privacy" className="text-teal-600 hover:text-teal-700 underline font-medium">
+                            <Link to="/privacy" className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 underline font-medium">
                                 {t('footer.privacy')}
                             </Link>
                         </p>
@@ -46,13 +46,13 @@ export const CookieConsent: React.FC = () => {
                 <div className="flex items-center gap-3 shrink-0">
                     <button
                         onClick={handleAccept}
-                        className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
+                        className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-white font-bold rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
                     >
                         {t('cookies.accept') || 'Accept All'}
                     </button>
                     <button
                         onClick={() => setIsVisible(false)}
-                        className="p-3 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                        className="p-3 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-xl transition-colors"
                     >
                         ✕
                     </button>

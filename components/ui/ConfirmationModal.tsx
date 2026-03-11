@@ -51,7 +51,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         >
             <div className="flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start shrink-0">
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-start shrink-0">
                     <div className="flex gap-4">
                         {isDestructive && (
                             <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
@@ -72,7 +72,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 {/* Close Button Absolute (retained functionality but inside Modal content) */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-full transition-colors"
                 >
                     <X size={20} />
                 </button>
@@ -94,7 +94,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                     }
                                 }}
                                 placeholder={reasonPlaceholder}
-                                className="w-full h-32 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all resize-none text-sm"
+                                className="w-full h-32 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all resize-none text-sm"
                                 autoFocus
                             />
                         </div>
@@ -105,7 +105,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 rounded-xl transition-all"
+                        className="px-5 py-2.5 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800/90 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 rounded-xl transition-all"
                     >
                         Cancel
                     </button>
@@ -115,7 +115,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         className={`px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all flex items-center gap-2
                             ${isDestructive
                                 ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
-                                : 'bg-teal-600 hover:bg-teal-700 shadow-teal-500/20'
+                                : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 shadow-teal-500/20'
                             }
                             ${(requireReason && !reason.trim()) ? 'opacity-50 cursor-not-allowed shadow-none' : ''}
                         `}

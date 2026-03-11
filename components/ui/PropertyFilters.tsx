@@ -90,11 +90,11 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
                 ${isOpen ? 'translate-x-0' : 'translate-x-full'}
             `}>
-                <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800/50">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Filters</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-full transition-colors"
                     >
                         <X size={24} className="text-slate-500" />
                     </button>
@@ -115,7 +115,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     onChange={(e) => handlePriceChange(0, e.target.value)}
                                     onWheel={(e) => e.currentTarget.blur()}
                                     placeholder="0"
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800/50 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                                 />
                             </div>
                             <div className="flex-1">
@@ -128,13 +128,13 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                     onChange={(e) => handlePriceChange(1, e.target.value)}
                                     onWheel={(e) => e.currentTarget.blur()}
                                     placeholder="Any"
-                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800/50 rounded-lg bg-transparent dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                                 />
                             </div>
                         </div>
                     </section>
 
-                    <hr className="border-slate-100 dark:border-slate-800" />
+                    <hr className="border-slate-100 dark:border-slate-800/50" />
 
                     {/* Capacity */}
                     <section>
@@ -164,7 +164,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         </div>
                     </section>
 
-                    <hr className="border-slate-100 dark:border-slate-800" />
+                    <hr className="border-slate-100 dark:border-slate-800/50" />
 
                     {/* Property Type */}
                     <section>
@@ -173,8 +173,8 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                             {PROPERTY_TYPES.map(type => (
                                 <label key={type} htmlFor={`filter-type-${type}`} className="flex items-center cursor-pointer group">
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.types.includes(type)
-                                        ? 'bg-teal-600 border-teal-600'
-                                        : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
+                                        ? 'bg-teal-600 dark:bg-cyan-600 border-teal-600'
+                                        : 'border-slate-300 dark:border-slate-700/50 group-hover:border-teal-500'
                                         }`}>
                                         {filters.types.includes(type) && <Check size={12} className="text-white" />}
                                     </div>
@@ -187,7 +187,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                         checked={filters.types.includes(type)}
                                         onChange={() => handleTypeToggle(type)}
                                     />
-                                    <span className="text-slate-700 dark:text-slate-300 group-hover:text-teal-600 transition-colors">
+                                    <span className="text-slate-700 dark:text-slate-300 group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
                                         {type}
                                     </span>
                                 </label>
@@ -195,15 +195,15 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         </div>
                     </section>
 
-                    <hr className="border-slate-100 dark:border-slate-800" />
+                    <hr className="border-slate-100 dark:border-slate-800/50" />
 
                     {/* Features */}
                     <section>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Features</h3>
                         <label htmlFor="filter-has-photos" className="flex items-center cursor-pointer group">
                             <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.hasPhotos
-                                ? 'bg-teal-600 border-teal-600'
-                                : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
+                                ? 'bg-teal-600 dark:bg-cyan-600 border-teal-600'
+                                : 'border-slate-300 dark:border-slate-700/50 group-hover:border-teal-500'
                                 }`}>
                                 {filters.hasPhotos && <Check size={12} className="text-white" />}
                             </div>
@@ -215,13 +215,13 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                 checked={filters.hasPhotos}
                                 onChange={() => onFilterChange({ ...filters, hasPhotos: !filters.hasPhotos })}
                             />
-                            <span className="text-slate-700 dark:text-slate-300 group-hover:text-teal-600 transition-colors">
+                            <span className="text-slate-700 dark:text-slate-300 group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
                                 Has Photos
                             </span>
                         </label>
                     </section>
 
-                    <hr className="border-slate-100 dark:border-slate-800" />
+                    <hr className="border-slate-100 dark:border-slate-800/50" />
 
 
                     {/* Amenities */}
@@ -231,8 +231,8 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                             {AMENITIES_LIST.map(amenity => (
                                 <label key={amenity.label} htmlFor={`filter-amenity-${amenity.label}`} className="flex items-center cursor-pointer group">
                                     <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors mr-3 ${filters.amenities.includes(amenity.label)
-                                        ? 'bg-teal-600 border-teal-600'
-                                        : 'border-slate-300 dark:border-slate-600 group-hover:border-teal-500'
+                                        ? 'bg-teal-600 dark:bg-cyan-600 border-teal-600'
+                                        : 'border-slate-300 dark:border-slate-700/50 group-hover:border-teal-500'
                                         }`}>
                                         {filters.amenities.includes(amenity.label) && <Check size={12} className="text-white" />}
                                     </div>
@@ -245,7 +245,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                                         checked={filters.amenities.includes(amenity.label)}
                                         onChange={() => handleAmenityToggle(amenity.label)}
                                     />
-                                    <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-teal-600 transition-colors">
+                                    <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
                                         {t(amenity.label)}
                                     </span>
                                 </label>
@@ -254,7 +254,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                     </section>
                 </div>
 
-                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
                     <div className="flex gap-4">
                         <button
                             onClick={() => onFilterChange({
@@ -273,7 +273,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         </button>
                         <button
                             onClick={onClose}
-                            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-500/30 transition-all active:scale-[0.98]"
+                            className="flex-1 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-500/30 transition-all active:scale-[0.98]"
                         >
                             Show Results
                         </button>

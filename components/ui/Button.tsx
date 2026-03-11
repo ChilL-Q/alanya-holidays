@@ -12,10 +12,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const buttonVariants = {
     variant: {
         primary: "bg-primary hover:bg-primary-dark text-white shadow-lg hover:shadow-primary/30",
-        secondary: "bg-white text-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white",
-        accent: "bg-accent hover:bg-accent-hover text-white shadow-lg hover:shadow-accent/30",
-        ghost: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300",
-        outline: "border-2 border-primary text-primary dark:text-teal-400 dark:border-teal-400 hover:bg-primary/5 dark:hover:bg-teal-400/10",
+        secondary: "bg-white text-slate-700 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/90 dark:text-white",
+        accent: "bg-accent dark:bg-amber-600 hover:bg-accent dark:bg-amber-600 -hover text-white shadow-lg hover:shadow-accent/30",
+        ghost: "hover:bg-slate-100 dark:hover:bg-slate-800/90 text-slate-700 dark:text-slate-300",
+        outline: "border-2 border-primary text-primary dark:text-slate-200 dark:border-slate-700/50 hover:bg-primary/5 dark:hover:bg-teal-400 dark:bg-cyan-600 /10",
         danger: "bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/30"
     },
     size: {

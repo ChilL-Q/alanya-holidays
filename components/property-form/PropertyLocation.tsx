@@ -19,7 +19,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                     {t('list.form.license')}
                     <div className="group relative">
-                        <Info size={16} className="text-slate-400 hover:text-accent cursor-help" />
+                        <Info size={16} className="text-slate-400 hover:text-accent dark:text-amber-400 cursor-help" />
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 text-white text-xs p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 pointer-events-none">
                             {t('list.form.license_info')}
                             <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800"></div>
@@ -32,7 +32,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                     placeholder={t('prop_form.license_placeholder')}
                     value={formData.rentalLicense}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                 />
             </div>
 
@@ -70,7 +70,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                     required
                     value={formData.address || ''}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                 />
             </div>
         </div >

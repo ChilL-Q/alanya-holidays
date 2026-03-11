@@ -66,15 +66,15 @@ export const ListPropertyAction: React.FC = () => {
                 onClick={() => setIsListMenuOpen(!isListMenuOpen)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
             >
-                <Plus size={16} className="text-teal-400" />
+                <Plus size={16} className="text-teal-400 dark:text-cyan-400 " />
                 <span>{t('nav.list_property')}</span>
             </button>
             {/* List Dropdown */}
             {isListMenuOpen && (
-                <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                <div className="absolute top-full right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
                     <div className="p-2 space-y-1">
-                        <Link to="/list-property" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group">
-                            <div className="w-10 h-10 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-lg flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-teal-900/50 transition-colors">
+                        <Link to="/list-property" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
+                            <div className="w-10 h-10 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-lg flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-slate-700/50 transition-colors">
                                 <Home size={20} />
                             </div>
                             <div>
@@ -82,8 +82,8 @@ export const ListPropertyAction: React.FC = () => {
                                 <span className="block text-xs text-slate-500 font-medium">{t('nav.list_desc')}</span>
                             </div>
                         </Link>
-                        <Link to="/add-service" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all group">
-                            <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors">
+                        <Link to="/add-service" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
+                            <div className="w-10 h-10 bg-purple-50 dark:bg-slate-800/50 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors">
                                 <Car size={20} />
                             </div>
                             <div>

@@ -29,7 +29,7 @@ export const Counter: React.FC<CounterProps> = ({
     };
 
     return (
-        <div className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800 last:border-0">
+        <div className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800/50 last:border-0">
             <div>
                 {label && <div className="font-medium text-slate-900 dark:text-white">{label}</div>}
                 {subtitle && <div className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</div>}
@@ -39,8 +39,8 @@ export const Counter: React.FC<CounterProps> = ({
                     onClick={handleDecrement}
                     disabled={value <= min}
                     className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${value <= min
-                            ? 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed'
-                            : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-800 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'border-slate-200 dark:border-slate-800/50 text-slate-300 dark:text-slate-400 cursor-not-allowed'
+                            : 'border-slate-300 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:border-slate-800 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                 >
                     <Minus size={14} />
@@ -52,8 +52,8 @@ export const Counter: React.FC<CounterProps> = ({
                     onClick={handleIncrement}
                     disabled={value >= max}
                     className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${value >= max
-                            ? 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed'
-                            : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-800 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'border-slate-200 dark:border-slate-800/50 text-slate-300 dark:text-slate-400 cursor-not-allowed'
+                            : 'border-slate-300 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:border-slate-800 dark:hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                 >
                     <Plus size={14} />

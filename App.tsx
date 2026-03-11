@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CartProvider } from './context/CartContext';
@@ -48,48 +49,50 @@ const ScrollToTop = () => {
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Toaster position="bottom-left" />
-      <ScrollToTop />
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <CurrencyProvider>
-              <NotificationProvider>
-                <CartProvider>
-                  <FavoritesProvider>
-                    <ModalProvider>
-                      <LightboxProvider>
-                        <ChatProvider>
-                          <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
-                            <Navbar />
-                            <main className="flex-grow">
-                              <PageTransition>
-                                <React.Suspense fallback={<PageLoader />}>
-                                  <AppRoutes />
-                                </React.Suspense>
-                              </PageTransition>
-                            </main>
-                            <Footer />
-                          </div>
-                          <LoginModal />
-                          <RegisterModal />
-                          <Lightbox />
-                          <CartDrawer />
-                          <TripAssistant />
-                          <CookieConsent />
-                          <CommandPalette />
-                        </ChatProvider>
-                      </LightboxProvider>
-                    </ModalProvider>
-                  </FavoritesProvider>
-                </CartProvider>
-              </NotificationProvider>
-            </CurrencyProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider >
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <Toaster position="bottom-left" />
+        <ScrollToTop />
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <NotificationProvider>
+                  <CartProvider>
+                    <FavoritesProvider>
+                      <ModalProvider>
+                        <LightboxProvider>
+                          <ChatProvider>
+                            <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
+                              <Navbar />
+                              <main className="flex-grow">
+                                <PageTransition>
+                                  <React.Suspense fallback={<PageLoader />}>
+                                    <AppRoutes />
+                                  </React.Suspense>
+                                </PageTransition>
+                              </main>
+                              <Footer />
+                            </div>
+                            <LoginModal />
+                            <RegisterModal />
+                            <Lightbox />
+                            <CartDrawer />
+                            <TripAssistant />
+                            <CookieConsent />
+                            <CommandPalette />
+                          </ChatProvider>
+                        </LightboxProvider>
+                      </ModalProvider>
+                    </FavoritesProvider>
+                  </CartProvider>
+                </NotificationProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider >
+      </BrowserRouter>
+    </HelmetProvider>
   );
 };
 

@@ -70,9 +70,9 @@ export const ReportsPage: React.FC = () => {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-            case 'investigating': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'investigating': return 'bg-blue-100 text-blue-800 dark:bg-slate-800/50 dark:text-slate-200';
             case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-            case 'dismissed': return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-400';
+            case 'dismissed': return 'bg-slate-100 text-slate-800 dark:bg-slate-800/80 dark:text-slate-400';
             default: return 'bg-slate-100 text-slate-800';
         }
     };
@@ -83,15 +83,15 @@ export const ReportsPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Flag className="text-teal-600" />
+                    <Flag className="text-teal-600 dark:text-cyan-400 " />
                     Reports & Issues
                 </h1>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 font-medium">
                             <tr>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Reason</th>
@@ -101,9 +101,9 @@ export const ReportsPage: React.FC = () => {
                                 <th className="px-6 py-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {reports.map((report) => (
-                                <tr key={report.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                <tr key={report.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/90/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
                                             {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
@@ -139,7 +139,7 @@ export const ReportsPage: React.FC = () => {
                                                         conversation_id: report.conversation_id
                                                     });
                                                 }}
-                                                className={`p-2 rounded-full transition-colors ${activeMenu?.id === report.id ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                className={`p-2 rounded-full transition-colors ${activeMenu?.id === report.id ? 'bg-slate-100 text-slate-900 dark:bg-slate-800/80 dark:text-white' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/90'}`}
                                             >
                                                 <MoreVertical size={20} />
                                             </button>
@@ -170,7 +170,7 @@ export const ReportsPage: React.FC = () => {
                         onClick={() => setActiveMenu(null)}
                     />
                     <div
-                        className="fixed w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-[51] animate-in fade-in zoom-in-95 duration-200 origin-top-right"
+                        className="fixed w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800/50 py-1.5 z-[51] animate-in fade-in zoom-in-95 duration-200 origin-top-right"
                         style={{
                             top: `${activeMenu.rect.bottom + 5}px`,
                             left: `${activeMenu.rect.right - 192}px` // Align right edge
@@ -187,7 +187,7 @@ export const ReportsPage: React.FC = () => {
                                     updateStatus(activeMenu.id, 'resolved');
                                     setActiveMenu(null);
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center gap-2.5"
                             >
                                 <CheckCircle size={16} className="text-green-600" />
                                 <span>Mark Resolved</span>
@@ -201,7 +201,7 @@ export const ReportsPage: React.FC = () => {
                                     updateStatus(activeMenu.id, 'investigating');
                                     setActiveMenu(null);
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center gap-2.5"
                             >
                                 <Clock size={16} className="text-blue-600" />
                                 <span>Investigate</span>
@@ -215,7 +215,7 @@ export const ReportsPage: React.FC = () => {
                                     updateStatus(activeMenu.id, 'dismissed');
                                     setActiveMenu(null);
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                                className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center gap-2.5"
                             >
                                 <XCircle size={16} className="text-slate-400" />
                                 <span>Dismiss</span>
@@ -233,9 +233,9 @@ export const ReportsPage: React.FC = () => {
                                 }
                                 setActiveMenu(null);
                             }}
-                            className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2.5"
+                            className="w-full text-left px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center gap-2.5"
                         >
-                            <MessageSquare size={16} className="text-teal-600" />
+                            <MessageSquare size={16} className="text-teal-600 dark:text-cyan-400 " />
                             <span>View Chat Context</span>
                         </button>
                     </div>

@@ -39,7 +39,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
     return (
         <div
             onClick={onClick}
-            className={`group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
         >
             {imageUrl && (
                 <div className="relative h-48 overflow-hidden shrink-0">
@@ -51,7 +51,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm p-2 rounded-xl shadow-sm">
-                        <Icon className="w-5 h-5 text-primary dark:text-teal-400" />
+                        <Icon className="w-5 h-5 text-primary dark:text-slate-200" />
                     </div>
                     {isPromoted && (
                         <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
@@ -63,7 +63,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
             <div className="p-6 flex flex-col flex-1">
                 {!imageUrl && (
-                    <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center mb-4 text-primary dark:text-teal-400">
+                    <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center mb-4 text-primary dark:text-slate-200">
                         <Icon size={24} />
                     </div>
                 )}
@@ -76,7 +76,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
                 {displayPrice && (
                     <div className="mb-4">
-                        <span className="text-lg font-bold text-teal-600 dark:text-accent">
+                        <span className="text-lg font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
                             {displayPrice}
                         </span>
                     </div>
@@ -85,7 +85,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 <div className="flex-1" />
 
                 <button
-                    className="w-full bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
+                    className="w-full bg-slate-900 dark:bg-slate-800/50 text-white hover:bg-slate-800 dark:hover:bg-slate-600 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
                 >
                     {actionLabel || 'View Details'}
                 </button>

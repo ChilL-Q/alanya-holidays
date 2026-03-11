@@ -91,8 +91,8 @@ export const BikeRental: React.FC = () => {
 
                         <div className="flex flex-wrap gap-4 mb-10">
                             {[t('bike.features.helmet'), t('bike.features.mileage'), t('bike.features.assistance')].map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    <Check size={16} className="text-teal-500" />
+                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800/80 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    <Check size={16} className="text-teal-500 dark:text-cyan-400 " />
                                     {feature}
                                 </div>
                             ))}
@@ -100,7 +100,7 @@ export const BikeRental: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
                         <img
                             src="/images/transportation/bike/rent-a-bike-page.png"
                             alt="Scooter Rental"
@@ -124,7 +124,7 @@ export const BikeRental: React.FC = () => {
                         {bikeGroups.map((bike, index) => (
                             <div
                                 key={bike.id}
-                                className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 group cursor-pointer"
+                                className="bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group cursor-pointer"
                                 onClick={() => navigate(`/services/car-rental/${bike.id}`, { state: { brand: bike.brand, model: bike.model, type: 'bike' } })}
                             >
                                 <div className="aspect-[4/3] overflow-hidden relative">
@@ -139,7 +139,7 @@ export const BikeRental: React.FC = () => {
                                         {bike.year}
                                     </div>
                                     {bike.count > 1 && (
-                                        <div className="absolute top-3 left-3 bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                        <div className="absolute top-3 left-3 bg-teal-500 dark:bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                                             {bike.count} Offers
                                         </div>
                                     )}
@@ -149,7 +149,7 @@ export const BikeRental: React.FC = () => {
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white">{bike.title}</h3>
                                         <div className="text-right">
                                             <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
-                                            <div className="text-xl font-bold text-teal-600 dark:text-accent">
+                                            <div className="text-xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
                                                 {formatPrice(convertPrice(bike.minPrice, 'EUR'))}
                                             </div>
                                             <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
@@ -157,12 +157,12 @@ export const BikeRental: React.FC = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2 mb-6">
                                         {bike.features.map((feature, i) => (
-                                            <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
+                                            <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
                                                 {feature}
                                             </span>
                                         ))}
                                     </div>
-                                    <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:opacity-90 transition-opacity">
+                                    <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-white rounded-xl font-semibold hover:opacity-90 transition-opacity">
                                         {t('request_details')}
                                     </button>
                                 </div>

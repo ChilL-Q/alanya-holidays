@@ -116,7 +116,7 @@ export const ServicesPage: React.FC = () => {
                 {/* Transport Sub-filters */}
                 {activeCategory === 'transport' && (
                     <div className="flex justify-center mt-8 animate-in fade-in slide-in-from-top-4">
-                        <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/50 backdrop-blur-sm">
+                        <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-800/50 backdrop-blur-sm">
                             {[
                                 { id: 'all', label: 'All Transport' },
                                 { id: 'rental', label: 'Rentals' },
@@ -126,8 +126,8 @@ export const ServicesPage: React.FC = () => {
                                     key={filter.id}
                                     onClick={() => setTransportFilter(filter.id as any)}
                                     className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${transportFilter === filter.id
-                                        ? 'bg-white dark:bg-slate-700 text-teal-600 dark:text-teal-400 shadow-sm shadow-slate-200/50 dark:shadow-none translate-y-[-1px]'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/30'
+                                        ? 'bg-white dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 shadow-sm shadow-slate-200/50 dark:shadow-none translate-y-[-1px]'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/80'
                                         }`}
                                 >
                                     {filter.label}
@@ -143,7 +143,7 @@ export const ServicesPage: React.FC = () => {
                 <div className="flex justify-end mb-4">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors"
                     >
                         <Filter size={18} />
                         {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -151,7 +151,7 @@ export const ServicesPage: React.FC = () => {
                 </div>
 
                 {showFilters && (
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-down grid md:grid-cols-4 gap-6">
+                    <div className="bg-white dark:bg-slate-800/80 p-6 rounded-xl border border-slate-200 dark:border-slate-800/50 shadow-sm animate-fade-down grid md:grid-cols-4 gap-6">
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Search</label>
                             <input
@@ -159,7 +159,7 @@ export const ServicesPage: React.FC = () => {
                                 placeholder="Search services..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700/50 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
                         {activeCategory === 'transport' && (
@@ -168,7 +168,7 @@ export const ServicesPage: React.FC = () => {
                                 <select
                                     value={brandFilter}
                                     onChange={(e) => setBrandFilter(e.target.value)}
-                                    className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                    className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700/50 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                                 >
                                     <option value="all">All Brands</option>
                                     {availableBrands.map(brand => (
@@ -183,7 +183,7 @@ export const ServicesPage: React.FC = () => {
                                 type="number"
                                 value={priceRange.min}
                                 onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700/50 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
                         <div>
@@ -192,7 +192,7 @@ export const ServicesPage: React.FC = () => {
                                 type="number"
                                 value={priceRange.max}
                                 onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700/50 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
                     </div>

@@ -17,8 +17,8 @@ export const Contact: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6 mx-auto">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
+                        <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 dark:text-slate-200 mb-6 mx-auto">
                             <Phone size={24} />
                         </div>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Phone</h3>
@@ -26,8 +26,8 @@ export const Contact: React.FC = () => {
                         <p className="text-sm text-slate-500 mt-1">Mon-Sun 9:00-22:00</p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6 mx-auto">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
+                        <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 dark:text-slate-200 mb-6 mx-auto">
                             <Mail size={24} />
                         </div>
                         <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Email Us</h3>
@@ -35,8 +35,8 @@ export const Contact: React.FC = () => {
                         <p className="text-sm text-slate-500 mt-1">Response within 24h</p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
-                        <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6 mx-auto">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-sm text-center transform hover:scale-105 transition-all">
+                        <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 dark:text-slate-200 mb-6 mx-auto">
                             <MapPin size={24} />
                         </div>
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Office</h3>
@@ -45,7 +45,7 @@ export const Contact: React.FC = () => {
                 </div>
 
                 {/* Contact Form */}
-                <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-lg border border-slate-100 dark:border-slate-700">
+                <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800/80 rounded-3xl p-8 md:p-12 shadow-lg border border-slate-100 dark:border-slate-800/50">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 text-center">Send us a Message</h2>
                     <ContactForm />
                 </div>
@@ -120,7 +120,7 @@ const ContactForm: React.FC = () => {
                 <p className="text-slate-600">We'll get back to you shortly.</p>
                 <button
                     onClick={() => setStatus('idle')}
-                    className="mt-6 text-teal-600 font-medium hover:text-teal-700"
+                    className="mt-6 text-teal-600 dark:text-cyan-400 font-medium hover:text-teal-700 dark:text-cyan-400 "
                 >
                     Send another message
                 </button>
@@ -136,8 +136,8 @@ const ContactForm: React.FC = () => {
                     <input
                         required
                         readOnly={!!user}
-                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 outline-none transition-all ${user
-                            ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-slate-500'
+                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/50 outline-none transition-all ${user
+                            ? 'bg-slate-100 dark:bg-slate-800/80 cursor-not-allowed text-slate-500'
                             : 'bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500'
                             }`}
                         value={formData.name}
@@ -151,8 +151,8 @@ const ContactForm: React.FC = () => {
                         required
                         type="email"
                         readOnly={!!user}
-                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 outline-none transition-all ${user
-                            ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed text-slate-500'
+                        className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/50 outline-none transition-all ${user
+                            ? 'bg-slate-100 dark:bg-slate-800/80 cursor-not-allowed text-slate-500'
                             : 'bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500'
                             }`}
                         value={formData.email}
@@ -165,7 +165,7 @@ const ContactForm: React.FC = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject</label>
                 <input
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                     value={formData.subject}
                     onChange={e => setFormData({ ...formData, subject: e.target.value })}
                     placeholder="What is this about?"
@@ -176,7 +176,7 @@ const ContactForm: React.FC = () => {
                 <textarea
                     required
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"
                     value={formData.message}
                     onChange={e => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Your message here..."
@@ -184,7 +184,7 @@ const ContactForm: React.FC = () => {
             </div>
             <button
                 disabled={status === 'loading'}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
                 {status === 'loading' ? 'Sending...' : 'Send Message'}
             </button>

@@ -48,8 +48,8 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ files, onChange, m
             <div
                 className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer relative
           ${dragActive
-                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/10'
-                        : 'border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        ? 'border-teal-500 bg-teal-50 dark:bg-slate-800/50'
+                        : 'border-slate-300 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/90/50'
                     }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -66,7 +66,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ files, onChange, m
                     onChange={(e) => handleFiles(e.target.files)}
                 />
 
-                <div className="w-16 h-16 bg-teal-50 dark:bg-teal-900/30 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4">
                     <UploadCloud size={32} />
                 </div>
                 <p className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
@@ -81,7 +81,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ files, onChange, m
             {files.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {files.map((file, index) => (
-                        <div key={index} className="relative aspect-square group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                        <div key={index} className="relative aspect-square group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800/50">
                             <img
                                 src={URL.createObjectURL(file)}
                                 alt={`Preview ${index}`}

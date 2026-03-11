@@ -13,6 +13,7 @@ export * from './api/misc';
 export * from './api/storage';
 export * from './api/notifications';
 export * from './api/chat';
+export * from './api/directory';
 export * from './supabase';
 export * from './aiService';
 
@@ -26,6 +27,7 @@ import { storageService } from './api/storage';
 import { notificationsService } from './api/notifications';
 import { chatService } from './api/chat';
 import { yesimService } from './api/yesim';
+import { directoryService } from './api/directory';
 
 export const db = {
     ...propertiesService,
@@ -38,5 +40,6 @@ export const db = {
     ...storageService,
     ...notificationsService,
     ...chatService,
+    ...directoryService,
     yesimService
 };

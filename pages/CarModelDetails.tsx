@@ -105,13 +105,13 @@ export const CarModelDetails: React.FC = () => {
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-7xl mx-auto px-4">
-                <button onClick={() => navigate('/services/car-rental')} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 mb-8 transition-colors">
+                <button onClick={() => navigate('/services/car-rental')} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 dark:text-cyan-400 mb-8 transition-colors">
                     <ArrowLeft size={20} />
                     Back to Fleet
                 </button>
 
                 {/* Model Header */}
-                <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 mb-12 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row gap-8 items-center">
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-8 mb-12 shadow-sm border border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row gap-8 items-center">
                     <div className="w-full md:w-1/2">
                         <img
                             src={groupInfo.image}
@@ -123,7 +123,7 @@ export const CarModelDetails: React.FC = () => {
                         <h1 className="text-4xl font-serif font-bold text-slate-900 dark:text-white mb-4">{groupInfo.title}</h1>
                         <div className="flex flex-wrap gap-3 mb-6">
                             {groupInfo.features.map((f: string, i: number) => (
-                                <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-sm font-medium capitalize">
+                                <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-full text-sm font-medium capitalize">
                                     {f}
                                 </span>
                             ))}
@@ -141,14 +141,14 @@ export const CarModelDetails: React.FC = () => {
                         <div
                             key={offer.id}
                             onClick={() => setSelectedOffer(offer)}
-                            className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01] cursor-pointer group hover:ring-2 hover:ring-teal-500/20"
+                            className="bg-white dark:bg-slate-800/80 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01] cursor-pointer group hover:ring-2 hover:ring-teal-500/20"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
+                                <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold text-xl">
                                     {offer.provider?.company_name?.charAt(0) || offer.provider?.full_name?.charAt(0) || 'P'}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 transition-colors">
+                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
                                         {offer.provider?.company_name || offer.provider?.full_name || 'Verified Provider'}
                                     </h3>
                                     <div className="flex items-center gap-1 text-yellow-500 text-sm">
@@ -156,7 +156,7 @@ export const CarModelDetails: React.FC = () => {
                                         <span>5.0</span>
                                         <span className="text-slate-400 ml-1">(New)</span>
                                     </div>
-                                    <div className="text-xs text-teal-600 font-medium mt-1 md:hidden">
+                                    <div className="text-xs text-teal-600 dark:text-cyan-400 font-medium mt-1 md:hidden">
                                         Click to view details
                                     </div>
                                 </div>
@@ -166,19 +166,19 @@ export const CarModelDetails: React.FC = () => {
                                 <div className="flex flex-wrap gap-3">
                                     {offer.features?.year && (
                                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Calendar size={14} className="text-slate-400 dark:text-teal-400" />
+                                            <Calendar size={14} className="text-slate-400 dark:text-slate-200" />
                                             <span>{offer.features.year}</span>
                                         </div>
                                     )}
                                     {offer.features?.transmission && (
                                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Settings2 size={14} className="text-slate-400 dark:text-teal-400" />
+                                            <Settings2 size={14} className="text-slate-400 dark:text-slate-200" />
                                             <span className="capitalize">{offer.features.transmission}</span>
                                         </div>
                                     )}
                                     {offer.features?.fuel && (
                                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Fuel size={14} className="text-slate-400 dark:text-teal-400" />
+                                            <Fuel size={14} className="text-slate-400 dark:text-slate-200" />
                                             <span className="capitalize">{offer.features.fuel}</span>
                                         </div>
                                     )}
@@ -187,10 +187,10 @@ export const CarModelDetails: React.FC = () => {
 
                             <div className="flex items-center gap-4">
                                 <div className="text-right mr-2">
-                                    <div className="text-2xl font-bold text-teal-600 dark:text-accent">{formatPrice(convertPrice(offer.price, 'EUR'))}</div>
+                                    <div className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{formatPrice(convertPrice(offer.price, 'EUR'))}</div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400">per day</div>
                                 </div>
-                                <button className="hidden md:block px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-slate-700 transition-colors">
+                                <button className="hidden md:block px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-teal-600 dark:text-cyan-400 hover:bg-teal-50 dark:hover:bg-slate-700/80 transition-colors">
                                     View Details
                                 </button>
                                 <button
@@ -198,7 +198,7 @@ export const CarModelDetails: React.FC = () => {
                                         e.stopPropagation();
                                         navigate(`/book-vehicle/${offer.service_ref || offer.id}`);
                                     }}
-                                    className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
+                                    className="bg-slate-900 dark:bg-white text-white dark:text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
                                 >
                                     Book Now
                                 </button>
@@ -214,7 +214,7 @@ export const CarModelDetails: React.FC = () => {
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedOffer(null)}>
                         {/* Modal Content - Auto height with max constraints */}
                         <div
-                            className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden relative"
+                            className="bg-white dark:bg-slate-800/80 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden relative"
                             onClick={e => e.stopPropagation()}
                         >
                             <button
@@ -234,7 +234,7 @@ export const CarModelDetails: React.FC = () => {
                                                 key={idx}
                                                 src={img}
                                                 alt={`Gallery ${idx}`}
-                                                className="w-full h-full object-cover flex-shrink-0 snap-center"
+                                                className="w-full h-full object-contain flex-shrink-0 snap-center scale-[1.75]"
                                             />
                                         ))
                                     ) : (
@@ -245,7 +245,7 @@ export const CarModelDetails: React.FC = () => {
                                 </div>
 
                                 <div className="p-8">
-                                    <div className="flex flex-col md:flex-row gap-8 justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-700 pb-8">
+                                    <div className="flex flex-col md:flex-row gap-8 justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-800/50 pb-8">
                                         <div>
                                             <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">
                                                 {selectedOffer.title}
@@ -260,7 +260,7 @@ export const CarModelDetails: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-3xl font-bold text-teal-600 dark:text-accent">
+                                            <div className="text-3xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
                                                 {formatPrice(convertPrice(selectedOffer.price, 'EUR'))}
                                             </div>
                                             <div className="text-sm text-slate-500 dark:text-slate-400">per day</div>
@@ -278,7 +278,7 @@ export const CarModelDetails: React.FC = () => {
                                                         if (!value || key === 'brand' || key === 'model') return null;
                                                         return (
                                                             <div key={key} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50">
-                                                                <Check size={18} className="text-teal-600 dark:text-teal-400" />
+                                                                <Check size={18} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
                                                                 <div>
                                                                     <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, ' ')}</p>
                                                                     <p className="font-medium text-slate-900 dark:text-white capitalize">{value.toString()}</p>
@@ -292,10 +292,10 @@ export const CarModelDetails: React.FC = () => {
 
                                         {/* Sidebar / Provider */}
                                         <div className="space-y-6">
-                                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+                                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/50">
                                                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('offer.provider') || 'Provider'}</h3>
                                                 <div className="flex items-center gap-4 mb-4">
-                                                    <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center text-teal-600 font-bold text-xl">
+                                                    <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold text-xl">
                                                         {selectedOffer.provider?.company_name?.charAt(0) || selectedOffer.provider?.full_name?.charAt(0) || 'P'}
                                                     </div>
                                                     <div>
@@ -303,14 +303,14 @@ export const CarModelDetails: React.FC = () => {
                                                         <p className="text-xs text-slate-500">Joined 2024</p>
                                                     </div>
                                                 </div>
-                                                <button className="w-full py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2">
+                                                <button className="w-full py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors flex items-center justify-center gap-2">
                                                     <MessageCircle size={16} />
                                                     Active since 2024
                                                 </button>
                                             </div>
 
                                             <button
-                                                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
+                                                className="w-full bg-slate-900 dark:bg-white text-white dark:text-white py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
                                                 onClick={() => {
                                                     if (selectedOffer) {
                                                         navigate(`/book-vehicle/${selectedOffer.service_ref || selectedOffer.id}`);

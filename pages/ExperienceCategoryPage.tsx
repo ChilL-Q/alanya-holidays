@@ -95,7 +95,7 @@ export const ExperienceCategoryPage: React.FC = () => {
         return (
             <div className="pt-32 pb-16 min-h-screen text-center">
                 <h1 className="text-2xl font-bold">Category not found</h1>
-                <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 hover:underline">
+                <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 dark:text-cyan-400 hover:underline">
                     Back to Services
                 </button>
             </div>
@@ -109,10 +109,10 @@ export const ExperienceCategoryPage: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg text-teal-600 dark:text-teal-400">
+                            <div className="p-2 bg-teal-100 dark:bg-slate-800/50 rounded-lg text-teal-600 dark:text-cyan-400 dark:text-slate-200">
                                 <config.icon size={24} />
                             </div>
-                            <span className="text-sm font-bold text-teal-600 tracking-wider uppercase">{t('footer.experiences')}</span>
+                            <span className="text-sm font-bold text-teal-600 dark:text-cyan-400 tracking-wider uppercase">{t('footer.experiences')}</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6 leading-tight">
                             {config.title}
@@ -124,8 +124,8 @@ export const ExperienceCategoryPage: React.FC = () => {
 
                         <div className="flex flex-wrap gap-4 mb-10">
                             {config.features.map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    <Check size={16} className="text-teal-500" />
+                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800/80 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    <Check size={16} className="text-teal-500 dark:text-cyan-400 " />
                                     {feature}
                                 </div>
                             ))}
@@ -133,7 +133,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-teal-100 dark:bg-teal-900/30 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
                         <img
                             src={config.heroImage}
                             alt={config.title}
@@ -157,7 +157,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                         {services.map((service) => (
                             <div
                                 key={service.id}
-                                className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+                                className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
                                 onClick={() => {
                                     if (category === 'wellness') {
                                         navigate(`/book-wellness/${service.service_ref || service.id}`);
@@ -166,7 +166,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                                     }
                                 }}
                             >
-                                <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800/80">
                                     <img
                                         src={service.images?.[0] || config.heroImage}
                                         alt={service.title}
@@ -182,25 +182,25 @@ export const ExperienceCategoryPage: React.FC = () => {
 
                                 <div className="p-5 flex flex-col flex-grow">
                                     {(service.provider?.company_name || service.provider?.full_name) && (
-                                        <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider mb-1">
+                                        <p className="text-xs text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-bold uppercase tracking-wider mb-1">
                                             {service.provider.company_name || service.provider.full_name}
                                         </p>
                                     )}
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-teal-600 transition-colors">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
                                         {service.title}
                                     </h3>
                                     <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4 flex-grow leading-relaxed">
                                         {service.description}
                                     </p>
 
-                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/50">
                                         <div className="flex flex-col">
                                             <span className="text-xs text-slate-400 font-medium">From</span>
                                             <span className="text-lg font-bold text-slate-900 dark:text-white">
                                                 {formatPrice(convertPrice(service.price, 'EUR'))}
                                             </span>
                                         </div>
-                                        <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
+                                        <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-white rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
                                             {t('request_details')}
                                         </button>
                                     </div>
@@ -209,8 +209,8 @@ export const ExperienceCategoryPage: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
+                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/80 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/50">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800/80 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
                             <Compass size={32} />
                         </div>
                         <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No adventures found</h3>

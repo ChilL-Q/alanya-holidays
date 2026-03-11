@@ -112,9 +112,9 @@ export const HostDashboard: React.FC = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-teal-50 dark:bg-teal-900/30 rounded-xl text-teal-600 dark:text-teal-400">
+                        <div className="p-3 bg-teal-50 dark:bg-slate-800/50 rounded-xl text-teal-600 dark:text-cyan-400 dark:text-slate-200">
                             <DollarSign size={24} />
                         </div>
                     </div>
@@ -123,7 +123,7 @@ export const HostDashboard: React.FC = () => {
                     <p className="text-xs text-slate-400 mt-1">Total Net Earnings</p>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl text-yellow-600 dark:text-yellow-400">
                             <DollarSign size={24} />
@@ -134,9 +134,9 @@ export const HostDashboard: React.FC = () => {
                     <p className="text-xs text-slate-400 mt-1">Funds held by platform</p>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+                        <div className="p-3 bg-blue-50 dark:bg-slate-800/50 rounded-xl text-blue-600 dark:text-slate-200">
                             <Calendar size={24} />
                         </div>
                     </div>
@@ -144,9 +144,9 @@ export const HostDashboard: React.FC = () => {
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{bookings.length}</h3>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
+                        <div className="p-3 bg-purple-50 dark:bg-slate-800/50 rounded-xl text-purple-600 dark:text-slate-200">
                             <Home size={24} />
                         </div>
                     </div>
@@ -157,7 +157,7 @@ export const HostDashboard: React.FC = () => {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 h-[350px]">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 h-[350px]">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Earnings Trend</h3>
                     <div className="h-[280px] w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -181,7 +181,7 @@ export const HostDashboard: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 h-[350px] flex flex-col">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 h-[350px] flex flex-col">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Booking Status</h3>
                     <div className="flex-1 w-full min-h-[200px] min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
@@ -214,18 +214,18 @@ export const HostDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Bookings */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
                         <h3 className="font-bold text-slate-900 dark:text-white">{t('host.bookings.title')}</h3>
                         <Button variant="ghost" size="sm" onClick={() => navigate('/host/bookings')} className="text-indigo-600 hover:text-indigo-700">
                             {t('host.bookings.view_all')}
                         </Button>
                     </div>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
                         {bookings.length > 0 ? bookings.slice(0, 5).map((booking) => (
-                            <div key={booking.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition flex items-center justify-between">
+                            <div key={booking.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/90/50 transition flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-slate-500">
+                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800/50 rounded-lg flex items-center justify-center text-slate-500">
                                         <Calendar size={20} />
                                     </div>
                                     <div>
@@ -255,7 +255,7 @@ export const HostDashboard: React.FC = () => {
                 <div className="space-y-6">
 
 
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6">
                         <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('host.listings.title')}</h3>
                         <div className="space-y-4">
                             {properties.slice(0, 3).map((prop: any) => (
@@ -268,7 +268,7 @@ export const HostDashboard: React.FC = () => {
                                             {prop.rating || 5.0} • {prop.reviewsCount || 0} reviews
                                         </p>
                                     </div>
-                                    <Link to={`/property/${prop.id}`} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-600 transition">
+                                    <Link to={`/property/${prop.id}`} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-400 hover:text-indigo-600 transition">
                                         <ExternalLink size={16} />
                                     </Link>
                                 </div>

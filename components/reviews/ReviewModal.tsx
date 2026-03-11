@@ -96,7 +96,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                                     size={32}
                                     className={`${star <= rating
                                         ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-slate-300 dark:text-slate-600'}`}
+                                        : 'text-slate-300 dark:text-slate-400'}`}
                                 />
                             </button>
                         ))}
@@ -112,7 +112,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                         onChange={(e) => setComment(e.target.value)}
                         onKeyDown={handleKeyDown}
                         rows={4}
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition text-slate-900 dark:text-white resize-none"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition text-slate-900 dark:text-white resize-none"
                         placeholder={t('reviews.placeholder')}
                         required
                     />
@@ -142,7 +142,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-400 hover:border-teal-500 hover:text-teal-500 transition"
+                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-800/50 rounded-lg text-slate-400 hover:border-teal-500 hover:text-teal-500 dark:text-cyan-400 transition"
                             aria-label={t('reviews.add_photo')}
                         >
                             <Upload size={20} />
@@ -163,7 +163,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isSubmitting ? t('reviews.submitting') : t('reviews.submit')}
                     </button>

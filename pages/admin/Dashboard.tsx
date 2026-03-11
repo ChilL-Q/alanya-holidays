@@ -136,12 +136,12 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 w-24 h-24 bg-teal-50 dark:bg-teal-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-teal-50 dark:bg-slate-800/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Total Revenue</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">€{stats.revenue.toLocaleString()}</h3>
-                        <div className="flex items-center gap-1 text-teal-600 dark:text-teal-400 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-teal-600 dark:text-cyan-400 dark:text-slate-200 text-sm font-medium mt-2">
                             <TrendingUp size={16} />
                             <span>+12.5%</span>
                             <span className="text-slate-400 font-normal">vs last month</span>
@@ -149,34 +149,34 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 w-24 h-24 bg-blue-50 dark:bg-blue-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-blue-50 dark:bg-slate-800/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Users</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_users}</h3>
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-slate-200 text-sm font-medium mt-2">
                             <span>Active Customers</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 w-24 h-24 bg-purple-50 dark:bg-purple-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-purple-50 dark:bg-slate-800/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Properties</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_properties}</h3>
-                        <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-purple-600 dark:text-slate-200 text-sm font-medium mt-2">
                             <span>Listed</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                    <div className="absolute right-0 top-0 w-24 h-24 bg-orange-50 dark:bg-orange-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 w-24 h-24 bg-orange-50 dark:bg-slate-800/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                     <div className="relative">
                         <p className="text-slate-500 font-medium mb-1">Services</p>
                         <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.total_services}</h3>
-                        <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400 text-sm font-medium mt-2">
+                        <div className="flex items-center gap-1 text-orange-600 dark:text-slate-200 text-sm font-medium mt-2">
                             <span>Fleet Size</span>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-[350px]">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 h-[350px]">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Revenue Trend</h3>
                     <div ref={revenueChartRef} className="h-[280px] w-full min-w-0 overflow-hidden">
                         {revenueChartDims.width > 0 && revenueChartDims.height > 0 && (
@@ -213,7 +213,7 @@ export const Dashboard: React.FC = () => {
                         )}
                     </div>
                 </div>
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-[350px] flex flex-col">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 h-[350px] flex flex-col">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Booking Status</h3>
                     <div ref={breakdownChartRef} className="flex-1 w-full min-h-[200px] min-w-0 overflow-hidden">
                         {breakdownChartDims.width > 0 && breakdownChartDims.height > 0 && (
@@ -247,14 +247,14 @@ export const Dashboard: React.FC = () => {
 
             {/* Recent Bookings & Quick Actions */}
             < div className="grid grid-cols-1 lg:grid-cols-3 gap-6" >
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Real Bookings</h3>
-                        <NavLink to="/admin/bookings" className="text-sm text-teal-600 dark:text-teal-400 font-medium hover:underline">View All</NavLink>
+                        <NavLink to="/admin/bookings" className="text-sm text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium hover:underline">View All</NavLink>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase font-semibold">
+                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs uppercase font-semibold">
                                 <tr>
                                     <th className="p-4 pl-6">Item</th>
                                     <th className="p-4">Customer</th>
@@ -262,9 +262,9 @@ export const Dashboard: React.FC = () => {
                                     <th className="p-4 text-right">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                                 {stats.recent_bookings.map((b: any) => (
-                                    <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
                                         <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white">{b.itemTitle || 'Booking'}</td>
                                         <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
                                             {b.user?.full_name || 'Guest'}
@@ -280,22 +280,22 @@ export const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-fit">
+                <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/50 h-fit">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
                     <div className="space-y-3">
-                        <NavLink to="/add-service" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                            <div className="w-10 h-10 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                        <NavLink to="/add-service" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors group">
+                            <div className="w-10 h-10 rounded-lg bg-teal-100 text-teal-600 dark:text-cyan-400 flex items-center justify-center group-hover:bg-teal-200 transition-colors">
                                 <Car size={20} />
                             </div>
                             <span className="font-medium text-slate-700 dark:text-slate-200">Add Vehicle</span>
                         </NavLink>
-                        <NavLink to="/list-property" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                        <NavLink to="/list-property" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors group">
                             <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                                 <Home size={20} />
                             </div>
                             <span className="font-medium text-slate-700 dark:text-slate-200">Add Property</span>
                         </NavLink>
-                        <NavLink to="/admin/users" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                        <NavLink to="/admin/users" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors group">
                             <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                                 <Users size={20} />
                             </div>

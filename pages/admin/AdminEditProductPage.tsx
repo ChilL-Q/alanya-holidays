@@ -125,7 +125,7 @@ export const AdminEditProductPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+            <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/50">
                 <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
@@ -142,7 +142,7 @@ export const AdminEditProductPage: React.FC = () => {
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm disabled:opacity-50"
+                            className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm disabled:opacity-50"
                         >
                             <Save size={18} />
                             <span>{submitting ? 'Saving...' : 'Save'}</span>
@@ -156,9 +156,9 @@ export const AdminEditProductPage: React.FC = () => {
                     {/* Left Column - Main Info */}
                     <div className="md:col-span-2 space-y-6">
                         {/* Basic Details */}
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                <ShoppingBag size={20} className="text-teal-500" />
+                                <ShoppingBag size={20} className="text-teal-500 dark:text-cyan-400 " />
                                 Product Details
                             </h2>
 
@@ -170,7 +170,7 @@ export const AdminEditProductPage: React.FC = () => {
                                         name="title"
                                         value={formData.title}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                         placeholder="Product Name"
                                     />
                                 </div>
@@ -182,7 +182,7 @@ export const AdminEditProductPage: React.FC = () => {
                                         value={formData.description}
                                         onChange={handleChange}
                                         rows={6}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                         placeholder="Describe the product..."
                                     />
                                 </div>
@@ -190,13 +190,13 @@ export const AdminEditProductPage: React.FC = () => {
                         </div>
 
                         {/* Images */}
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Photos</h2>
 
                             {existingImages.length > 0 && (
                                 <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 gap-4 mb-6">
                                     {existingImages.map((url, idx) => (
-                                        <div key={idx} className="relative aspect-square group rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                                        <div key={idx} className="relative aspect-square group rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800/50">
                                             <img src={url} alt="Existing" className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -216,7 +216,7 @@ export const AdminEditProductPage: React.FC = () => {
 
                     {/* Right Column - Settings */}
                     <div className="space-y-6">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 sticky top-24">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 sticky top-24">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Settings</h2>
 
                             <div className="space-y-4">
@@ -228,7 +228,7 @@ export const AdminEditProductPage: React.FC = () => {
                                             name="category"
                                             value={formData.category}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white appearance-none"
+                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white appearance-none"
                                         >
                                             {categories.map(cat => (
                                                 <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
@@ -246,7 +246,7 @@ export const AdminEditProductPage: React.FC = () => {
                                             name="price"
                                             value={formData.price}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             placeholder="0.00"
                                         />
                                     </div>
@@ -262,7 +262,7 @@ export const AdminEditProductPage: React.FC = () => {
                                             value={formData.stock}
                                             onChange={handleChange}
                                             min="0"
-                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                         />
                                     </div>
                                 </div>

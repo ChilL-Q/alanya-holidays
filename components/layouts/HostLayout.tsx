@@ -52,8 +52,8 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed md:sticky top-0 h-screen w-72 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 z-50 transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <aside className={`fixed md:sticky top-0 h-screen w-72 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800/50 z-50 transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20">
                             H
@@ -92,15 +92,15 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className={({ isActive: linkActive }) => `
                                     flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
-                                    ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'}
+                                    ${isActive ? 'bg-indigo-50 dark:bg-slate-800/50 text-indigo-600 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
                                 `}
                             >
-                                <Icon size={20} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
+                                <Icon size={20} className={isActive ? 'text-indigo-600 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
                                 <span className="flex-1">{item.label}</span>
                                 {item.label === 'Inbox' && (() => {
                                     const unreadCount = conversations.reduce((acc, curr) => acc + (curr.unread_count || 0), 0);
                                     return unreadCount > 0 ? (
-                                        <span className="bg-teal-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                                        <span className="bg-teal-600 dark:bg-cyan-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
                                             {unreadCount}
                                         </span>
                                     ) : null;
@@ -110,9 +110,9 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 mt-2">
                     <div className="flex items-center gap-3 px-4 py-3 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
                             {user?.avatar ? (
                                 <img src={user.avatar} alt={user.name || 'User'} className="w-full h-full object-cover" />
                             ) : (
@@ -140,7 +140,7 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
+                <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg">
                             <Menu size={24} />

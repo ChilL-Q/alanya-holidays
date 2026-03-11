@@ -287,7 +287,7 @@ export interface Property {
   beds: number;
   bathrooms: number;
   description: string;
-  amenities: string[];
+  amenities: (string | any)[];
   hostName: string;
   type?: string; 
   cleaning_fee?: number;
@@ -331,4 +331,25 @@ export interface SearchFilters {
   checkIn: string;
   checkOut: string;
   guests: number;
+}
+
+export interface DirectoryListingDB {
+  id: string;
+  category_id: string;
+  name: string;
+  short_description: string;
+  is_featured?: boolean;
+  is_verified?: boolean;
+  website?: string;
+  whatsapp?: string;
+  gallery: string[];
+  reviews_average?: number;
+  reviews_count?: number;
+  languages_spoken?: string[];
+  certifications?: string[];
+  location: string;
+  google_map_url?: string;
+  price_level?: 1 | 2 | 3 | 4;
+  created_at?: string;
+  updated_at?: string;
 }

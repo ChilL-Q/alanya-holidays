@@ -41,7 +41,7 @@ export const storageService = {
         return data.publicUrl;
     },
 
-    async uploadImage(file: File, bucket: 'properties' | 'services' | 'products' = 'properties') {
+    async uploadImage(file: File, bucket: 'properties' | 'services' | 'products' | 'directory' = 'properties') {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;

@@ -52,7 +52,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
-    @apply bg-[#F7F7F7] dark:bg-slate-900 text-slate-900 dark:text-white transition-colors duration-300;
+    @apply bg-[#F7F7F7] dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300;
 }
 
 /* Custom Typography */
@@ -192,7 +192,7 @@ a {
 
 /* React Datepicker Customization - Airbnb Style */
 .react-datepicker {
-    @apply font-sans border-none bg-white dark:bg-slate-800 rounded-3xl p-4 shadow-premium;
+    @apply font-sans border-none bg-white dark:bg-slate-800/80 rounded-3xl p-4 shadow-premium;
 }
 
 .react-datepicker__month-container {
@@ -217,17 +217,17 @@ a {
 }
 
 .react-datepicker__day:hover {
-    @apply bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white;
+    @apply bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white;
     @apply ring-1 ring-slate-900/5 dark:ring-white/10;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-    @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold;
+    @apply bg-slate-900 dark:bg-white text-white dark:text-white font-bold;
 }
 
 .react-datepicker__day--disabled {
-    @apply text-slate-200 dark:text-slate-700 cursor-not-allowed line-through;
+    @apply text-slate-200 dark:text-slate-300 cursor-not-allowed line-through;
 }
 
 .react-datepicker__navigation {
@@ -241,11 +241,11 @@ a {
 
 /* Custom Day Classes managed by component */
 .rdp-day-selected {
-    @apply bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg transform scale-105;
+    @apply bg-slate-900 dark:bg-white text-white dark:text-white font-bold shadow-lg transform scale-105;
 }
 
 .rdp-day-blocked {
-    @apply bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 line-through;
+    @apply bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-400 line-through;
 }
 
 .rdp-day-booked {
@@ -253,9 +253,9 @@ a {
 }
 
 .rdp-day-custom {
-    @apply bg-teal-50 dark:bg-teal-900/10 text-teal-600 dark:text-teal-400 font-bold;
+    @apply bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-slate-200 font-bold;
 }
 
 .rdp-day-external {
-    @apply bg-purple-50 dark:bg-purple-900/10 text-purple-600 dark:text-purple-400;
+    @apply bg-purple-50 dark:bg-slate-800/50 text-purple-600 dark:text-slate-200;
 }

@@ -21,11 +21,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     return (
         <Link
             to={`/property/${property.ref_id || property.id}`}
-            className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800 relative"
+            className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800/50 relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-800">
+            <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-800/80">
                 <img
                     src={property.image}
                     alt={property.title}
@@ -67,16 +67,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-slate-900 dark:text-white text-lg line-clamp-1 group-hover:text-primary transition">{property.title}</h3>
                 </div>
-                <div className="flex items-center gap-1 text-teal-500 dark:text-teal-400 text-sm mb-4">
+                <div className="flex items-center gap-1 text-teal-500 dark:text-cyan-400 dark:text-slate-200 text-sm mb-4">
                     <MapPin size={14} />
                     {property.location}
                 </div>
-                <div className="flex items-end justify-between border-t border-slate-50 dark:border-slate-800 pt-4">
+                <div className="flex items-end justify-between border-t border-slate-50 dark:border-slate-800/50 pt-4">
                     <div className="text-sm text-slate-500 dark:text-slate-400">
                         <span className="font-medium text-slate-900 dark:text-white">{property.beds || property.bedrooms}</span> {property.beds === 1 ? 'bed' : 'beds'} • <span className="font-medium text-slate-900 dark:text-white">{property.guests}</span> {property.guests === 1 ? 'guest' : 'guests'}
                     </div>
                     <div className="text-right">
-                        <p className="font-bold text-teal-600 dark:text-accent text-lg">
+                        <p className="font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 text-lg">
                             {formatPrice(convertPrice(property.pricePerNight, 'EUR'))}
                         </p>
                         <p className="text-xs text-slate-400">{t('featured.night')}</p>

@@ -45,7 +45,7 @@ export const DestinationModal: React.FC<ModalProps> = ({ isOpen, onClose, data }
                     {/* Manual Close Button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white transition-colors z-20"
+                        className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/90 text-slate-400 hover:text-slate-900 dark:text-slate-500 dark:hover:text-white transition-colors z-20"
                     >
                         {/* Use X icon from lucide-react (make sure it's imported if not already) */}
                         <svg
@@ -67,15 +67,15 @@ export const DestinationModal: React.FC<ModalProps> = ({ isOpen, onClose, data }
 
                     <div className="hidden md:block mb-6 pr-8">
                         <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{data.title}</h2>
-                        <div className="h-1 w-20 bg-accent rounded-full"></div>
+                        <div className="h-1 w-20 bg-accent dark:bg-amber-600 rounded-full"></div>
                     </div>
 
                     <div className="prose dark:prose-invert prose-lg text-slate-600 dark:text-slate-300 leading-relaxed">
                         <p className="whitespace-pre-line">{data.description}</p>
                     </div>
 
-                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-accent font-medium">
+                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800/50">
+                        <div className="flex items-center gap-2 text-accent dark:text-amber-400 font-medium">
                             <MapPin size={20} />
                             <span>Alanya, Turkey</span>
                         </div>

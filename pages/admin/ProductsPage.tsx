@@ -82,8 +82,8 @@ export const ProductsPage: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-xl overflow-x-auto max-w-full">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl overflow-x-auto max-w-full">
                     {categories.map(cat => (
                         <button
                             key={cat}
@@ -106,13 +106,13 @@ export const ProductsPage: React.FC = () => {
                             placeholder="Search products..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                         />
                     </div>
 
                     <button
                         onClick={() => navigate('/admin/products/new')}
-                        className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl transition-colors font-medium whitespace-nowrap"
+                        className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white px-4 py-2 rounded-xl transition-colors font-medium whitespace-nowrap"
                     >
                         <Plus size={18} />
                         <span className="hidden sm:inline">Add Product</span>
@@ -121,10 +121,10 @@ export const ProductsPage: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-500 text-xs uppercase font-semibold">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs uppercase font-semibold">
                             <tr>
                                 <th className="p-4 pl-6 w-20">Image</th>
                                 <th className="p-4">Product</th>
@@ -135,7 +135,7 @@ export const ProductsPage: React.FC = () => {
                                 <th className="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {loading ? (
                                 <tr>
                                     <td colSpan={7} className="p-8 text-center text-slate-400">Loading products...</td>
@@ -146,7 +146,7 @@ export const ProductsPage: React.FC = () => {
                                 </tr>
                             ) : (
                                 filteredProducts.map((p) => (
-                                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors group">
                                         <td className="p-4 pl-6">
                                             <div className="w-16 h-12 rounded-lg bg-slate-200 overflow-hidden">
                                                 {p.images && p.images[0] ? (
@@ -163,7 +163,7 @@ export const ProductsPage: React.FC = () => {
                                             <div className="text-xs text-slate-500 max-w-[200px] truncate">{p.description}</div>
                                         </td>
                                         <td className="p-4">
-                                            <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs capitalize">
+                                            <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs capitalize">
                                                 {p.category}
                                             </span>
                                         </td>

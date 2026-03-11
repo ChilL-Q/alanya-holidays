@@ -33,10 +33,6 @@ export default defineConfig(({ mode }) => {
               if (id.includes('@google/generative-ai')) return 'vendor-ai';
               if (id.includes('lucide-react')) return 'vendor-icons';
               if (id.includes('date-fns') || id.includes('react-datepicker') || id.includes('react-imask')) return 'vendor-forms-dates';
-              if (id.includes('react-dom') || id.includes('react-router') || id.includes('@remix-run')) return 'vendor-react';
-              if (id.includes('framer-motion')) return 'vendor-motion';
-              if (id.includes('@headlessui')) return 'vendor-ui';
-              return 'vendor-core';
             }
           }
         }

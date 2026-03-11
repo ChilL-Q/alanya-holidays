@@ -90,7 +90,7 @@ export const AdminEditUserPage: React.FC = () => {
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <Loader2 className="animate-spin text-accent" size={40} />
+                <Loader2 className="animate-spin text-accent dark:text-amber-400 " size={40} />
             </div>
         );
     }
@@ -98,7 +98,7 @@ export const AdminEditUserPage: React.FC = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <Loader2 className="animate-spin text-accent" size={40} />
+                <Loader2 className="animate-spin text-accent dark:text-amber-400 " size={40} />
             </div>
         );
     }
@@ -114,8 +114,8 @@ export const AdminEditUserPage: React.FC = () => {
                     Back to Admin
                 </button>
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
-                    <div className="p-8 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 overflow-hidden">
+                    <div className="p-8 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/80">
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit User Profile</h1>
                         <p className="text-slate-500 mt-1">ID: {id}</p>
                     </div>
@@ -134,7 +134,7 @@ export const AdminEditUserPage: React.FC = () => {
                                         required
                                         value={formData.full_name}
                                         onChange={handleChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 </div>
@@ -152,7 +152,7 @@ export const AdminEditUserPage: React.FC = () => {
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 </div>
@@ -170,7 +170,7 @@ export const AdminEditUserPage: React.FC = () => {
                                         value={formData.phone}
                                         onChange={handleChange}
                                         placeholder="+90..."
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                                     />
                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 </div>
@@ -186,7 +186,7 @@ export const AdminEditUserPage: React.FC = () => {
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
                                     >
                                         <option value="guest">Guest</option>
                                         <option value="host">Host</option>
@@ -200,7 +200,7 @@ export const AdminEditUserPage: React.FC = () => {
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className="w-full bg-accent hover:bg-accent-hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="w-full bg-accent dark:bg-amber-600 hover:bg-accent dark:bg-amber-600 -hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {isSaving ? (
                                         <>

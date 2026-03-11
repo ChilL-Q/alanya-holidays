@@ -37,7 +37,7 @@ export const BecomeHostModal: React.FC<BecomeHostModalProps> = ({ isOpen, onClos
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all border border-slate-100 dark:border-slate-800">
+                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 text-left align-middle shadow-xl transition-all border border-slate-100 dark:border-slate-800/50">
                                 <div className="text-center">
                                     <div className="mx-auto w-16 h-16 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-teal-500/20">
                                         <Home className="text-white h-8 w-8" />
@@ -54,21 +54,21 @@ export const BecomeHostModal: React.FC<BecomeHostModalProps> = ({ isOpen, onClos
                                         </p>
                                     </div>
 
-                                    <div className="mt-6 space-y-3 text-left bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl">
+                                    <div className="mt-6 space-y-3 text-left bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl">
                                         <div className="flex items-start gap-3">
-                                            <div className="p-1 bg-teal-100 dark:bg-teal-900/30 rounded-full text-teal-600 dark:text-teal-400 mt-0.5">
+                                            <div className="p-1 bg-teal-100 dark:bg-slate-800/50 rounded-full text-teal-600 dark:text-cyan-400 dark:text-slate-200 mt-0.5">
                                                 <Check size={12} strokeWidth={3} />
                                             </div>
                                             <p className="text-sm text-slate-700 dark:text-slate-300">Property & Service Dashboard</p>
                                         </div>
                                         <div className="flex items-start gap-3">
-                                            <div className="p-1 bg-teal-100 dark:bg-teal-900/30 rounded-full text-teal-600 dark:text-teal-400 mt-0.5">
+                                            <div className="p-1 bg-teal-100 dark:bg-slate-800/50 rounded-full text-teal-600 dark:text-cyan-400 dark:text-slate-200 mt-0.5">
                                                 <Check size={12} strokeWidth={3} />
                                             </div>
                                             <p className="text-sm text-slate-700 dark:text-slate-300">Calendar & Booking Management</p>
                                         </div>
                                         <div className="flex items-start gap-3">
-                                            <div className="p-1 bg-teal-100 dark:bg-teal-900/30 rounded-full text-teal-600 dark:text-teal-400 mt-0.5">
+                                            <div className="p-1 bg-teal-100 dark:bg-slate-800/50 rounded-full text-teal-600 dark:text-cyan-400 dark:text-slate-200 mt-0.5">
                                                 <Check size={12} strokeWidth={3} />
                                             </div>
                                             <p className="text-sm text-slate-700 dark:text-slate-300">Direct Messaging with Guests</p>

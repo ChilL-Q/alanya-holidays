@@ -15,7 +15,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
 
     return (
         <div
-            className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 group cursor-pointer"
+            className="bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group cursor-pointer"
             onClick={() => navigate(`/services/car-rental/${car.id}`, { state: { brand: car.brand, model: car.model } })}
         >
             <div className="aspect-[4/3] overflow-hidden relative">
@@ -30,7 +30,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
                     {car.year}
                 </div>
                 {car.count > 1 && (
-                    <div className="absolute top-3 left-3 bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                    <div className="absolute top-3 left-3 bg-teal-500 dark:bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                         {car.count} Offers
                     </div>
                 )}
@@ -40,7 +40,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white">{car.title}</h3>
                     <div className="text-right">
                         <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
-                        <div className="text-xl font-bold text-teal-600 dark:text-accent">
+                        <div className="text-xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
                             {formatPrice(convertPrice(car.minPrice, 'EUR'))}
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
@@ -48,12 +48,12 @@ export const CarCard: React.FC<CarCardProps> = ({ car }) => {
                 </div>
                 <div className="flex flex-wrap gap-2 mb-6">
                     {car.features.map((feature, i) => (
-                        <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
+                        <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
                             {feature}
                         </span>
                     ))}
                 </div>
-                <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:opacity-90 transition-opacity">
+                <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-white rounded-xl font-semibold hover:opacity-90 transition-opacity">
                     {t('car.book')}
                 </button>
             </div>

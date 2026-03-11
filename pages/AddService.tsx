@@ -206,7 +206,7 @@ export const AddService: React.FC = () => {
     if (step === 2) {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-20 px-4 flex items-center justify-center">
-                <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 text-center">
+                <div className="max-w-md w-full bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800/50 text-center">
                     <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 size={32} />
                     </div>
@@ -231,7 +231,7 @@ export const AddService: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     {step > 0 && (
-                        <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-all duration-300 active:scale-90">
+                        <button onClick={() => setStep(step - 1)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800/90 rounded-full transition-all duration-300 active:scale-90">
                             <ArrowLeft size={24} className="text-slate-600 dark:text-slate-400" />
                         </button>
                     )}
@@ -246,9 +246,9 @@ export const AddService: React.FC = () => {
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <button
                             onClick={() => handleCategorySelect('transportation')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 hover:border-teal-500 hover:ring-2 hover:ring-teal-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 bg-blue-50 dark:bg-slate-800/50 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Car size={28} />
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.transportation')}</h3>
@@ -257,9 +257,9 @@ export const AddService: React.FC = () => {
 
                         <button
                             onClick={() => handleCategorySelect('adventure')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 hover:border-orange-500 hover:ring-2 hover:ring-orange-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 bg-orange-50 dark:bg-slate-800/50 text-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Map size={28} />
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.adventure')}</h3>
@@ -268,7 +268,7 @@ export const AddService: React.FC = () => {
 
                         <button
                             onClick={() => handleCategorySelect('health')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-rose-500 hover:ring-2 hover:ring-rose-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 hover:border-rose-500 hover:ring-2 hover:ring-rose-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
                             <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Heart size={28} />
@@ -279,9 +279,9 @@ export const AddService: React.FC = () => {
 
                         <button
                             onClick={() => handleCategorySelect('creative')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:ring-2 hover:ring-purple-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
+                            className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 hover:border-purple-500 hover:ring-2 hover:ring-purple-500/20 hover:shadow-md transition-all duration-300 ease-out active:scale-[0.98] text-left group"
                         >
-                            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 bg-purple-50 dark:bg-slate-800/50 text-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <Camera size={28} />
                             </div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('add_service.cat.creative')}</h3>
@@ -292,8 +292,8 @@ export const AddService: React.FC = () => {
 
                 {/* Step 1: Details Form */}
                 {step === 1 && (
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
-                        <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden">
+                        <div className="p-8 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                                 {category === 'transportation' ? 'Vehicle Details' : (category === 'adventure' ? 'Activity Details' : 'Service Details')}
                             </h2>
@@ -320,8 +320,8 @@ export const AddService: React.FC = () => {
                                                         model: ''
                                                     })}
                                                     className={`px-4 py-2 rounded-lg border text-sm font-medium capitalize transition-colors ${formData.type === t
-                                                        ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900'
-                                                        : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-600 dark:text-slate-400'}`}
+                                                        ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-white'
+                                                        : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700/50 dark:text-slate-400'}`}
                                                 >
                                                     {t}
                                                 </button>
@@ -348,7 +348,7 @@ export const AddService: React.FC = () => {
                                         onChange={handleChange}
                                         required
                                         placeholder={category === 'transportation' ? "e.g. Fiat Egea 2023" : "e.g. Alanya Jeep Safari"}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     />
                                     {category === 'transportation' && formData.modelSelection === 'popular' && (
                                         <div className="text-xs text-slate-500 mt-1">Title is auto-generated but can be customized.</div>
@@ -365,12 +365,12 @@ export const AddService: React.FC = () => {
                                             onChange={handleChange}
                                             // required
                                             rows={3}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white resize-none"
                                         />
                                     </div>
                                 ) : (
-                                    <div className="md:col-span-2 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-100 dark:border-teal-800">
-                                        <p className="text-sm text-teal-700 dark:text-teal-300">
+                                    <div className="md:col-span-2 p-4 bg-teal-50 dark:bg-slate-800/50 rounded-xl border border-teal-100 dark:border-slate-700/50">
+                                        <p className="text-sm text-teal-700 dark:text-cyan-400 dark:text-slate-200">
                                             <span className="font-bold">Description Auto-Generated:</span> We've automatically added a professional description for the {formData.brand} {formData.model} to help your listing stand out.
                                         </p>
                                     </div>
@@ -386,7 +386,7 @@ export const AddService: React.FC = () => {
                                         onWheel={(e) => e.currentTarget.blur()}
                                         required
                                         placeholder="0.00"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                     />
                                 </div>
                                 <div className="mt-6">
@@ -405,7 +405,7 @@ export const AddService: React.FC = () => {
                                                 name="availableFrom"
                                                 value={formData.availableFrom}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -415,20 +415,20 @@ export const AddService: React.FC = () => {
                                                 name="availableTo"
                                                 value={formData.availableTo}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-slate-700">
+                                <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-slate-800/50">
                                     <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
                                         <Tag size={18} className="text-orange-500" />
                                         Promotions (Optional)
                                     </h3>
                                     <div className="grid md:grid-cols-2 gap-6">
-                                        <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800">
-                                            <label className="block text-xs font-bold text-orange-800 dark:text-orange-300 mb-1">Promotion Price (€)</label>
+                                        <div className="bg-orange-50 dark:bg-slate-800/50 p-4 rounded-xl border border-orange-100 dark:border-slate-700/50">
+                                            <label className="block text-xs font-bold text-orange-800 dark:text-slate-200 mb-1">Promotion Price (€)</label>
                                             <input
                                                 type="number"
                                                 name="promotionPrice"
@@ -436,7 +436,7 @@ export const AddService: React.FC = () => {
                                                 onChange={handleChange}
                                                 onWheel={(e) => e.currentTarget.blur()}
                                                 placeholder="0.00"
-                                                className="w-full px-4 py-2 rounded-lg border border-orange-200 dark:border-orange-700 bg-white dark:bg-slate-800 focus:ring-0 focus:border-orange-500 outline-none font-bold text-lg dark:text-white"
+                                                className="w-full px-4 py-2 rounded-lg border border-orange-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-0 focus:border-orange-500 outline-none font-bold text-lg dark:text-white"
                                             />
                                         </div>
                                         <div>
@@ -446,25 +446,25 @@ export const AddService: React.FC = () => {
                                                 value={formData.promotionDescription}
                                                 onChange={handleChange}
                                                 placeholder="e.g. Flash sale!"
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <hr className="border-slate-100 dark:border-slate-700" />
+                            <hr className="border-slate-100 dark:border-slate-800/50" />
 
                             {/* Specific Fields: Transportation */}
                             {category === 'transportation' && (formData.type === 'car' || formData.type === 'bike') && (
-                                <div className="md:col-span-2 mb-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div className="md:col-span-2 mb-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
                                     <div className="flex gap-4 mb-6">
-                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
-                                            <input type="radio" name="modelSelection" value="popular" checked={formData.modelSelection === 'popular'} onChange={() => setFormData({ ...formData, modelSelection: 'popular', brand: '', model: '', title: '' })} className="text-teal-600" />
+                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 shadow-sm">
+                                            <input type="radio" name="modelSelection" value="popular" checked={formData.modelSelection === 'popular'} onChange={() => setFormData({ ...formData, modelSelection: 'popular', brand: '', model: '', title: '' })} className="text-teal-600 dark:text-cyan-400 " />
                                             <span className="text-sm font-medium text-slate-900 dark:text-white">Catalog (Popular)</span>
                                         </label>
-                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm">
-                                            <input type="radio" name="modelSelection" value="custom" checked={formData.modelSelection === 'custom'} onChange={() => setFormData({ ...formData, modelSelection: 'custom', brand: '', model: '', title: '' })} className="text-teal-600" />
+                                        <label className="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 shadow-sm">
+                                            <input type="radio" name="modelSelection" value="custom" checked={formData.modelSelection === 'custom'} onChange={() => setFormData({ ...formData, modelSelection: 'custom', brand: '', model: '', title: '' })} className="text-teal-600 dark:text-cyan-400 " />
                                             <span className="text-sm font-medium text-slate-900 dark:text-white">Other / Custom</span>
                                         </label>
                                     </div>
@@ -476,7 +476,7 @@ export const AddService: React.FC = () => {
                                                 <select
                                                     value={formData.brand}
                                                     onChange={handleBrandSelect}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                                 >
                                                     <option value="">Select Brand</option>
                                                     {currentCatalog && Object.keys(currentCatalog).sort().map(brand => (
@@ -484,7 +484,7 @@ export const AddService: React.FC = () => {
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <input name="brand" value={formData.brand} onChange={handleChange} placeholder="e.g. Fiat" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                                <input name="brand" value={formData.brand} onChange={handleChange} placeholder="e.g. Fiat" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                             )}
                                         </div>
                                         <div>
@@ -494,7 +494,7 @@ export const AddService: React.FC = () => {
                                                     value={formData.model}
                                                     onChange={handleModelSelect}
                                                     disabled={!formData.brand}
-                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white disabled:opacity-50"
+                                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white disabled:opacity-50"
                                                 >
                                                     <option value="">Select Model</option>
                                                     {availableModels.map(model => (
@@ -502,7 +502,7 @@ export const AddService: React.FC = () => {
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <input name="model" value={formData.model} onChange={handleChange} placeholder="e.g. Egea" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
+                                                <input name="model" value={formData.model} onChange={handleChange} placeholder="e.g. Egea" className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 outline-none focus:ring-2 focus:ring-teal-500 dark:text-white" />
                                             )}
                                         </div>
                                     </div>
@@ -525,7 +525,7 @@ export const AddService: React.FC = () => {
                                                             : prev.title
                                                     }));
                                                 }}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             >
                                                 {Array.from({ length: 17 }, (_, i) => (new Date().getFullYear() - i + 1).toString()).map(year => (
                                                     <option key={year} value={year}>{year}</option>
@@ -538,7 +538,7 @@ export const AddService: React.FC = () => {
                                                 name="transmission"
                                                 value={formData.transmission}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             >
                                                 <option value="automatic">Automatic</option>
                                                 <option value="manual">Manual</option>
@@ -550,7 +550,7 @@ export const AddService: React.FC = () => {
                                                 name="fuel"
                                                 value={formData.fuel}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             >
                                                 <option value="petrol">Petrol</option>
                                                 <option value="diesel">Diesel</option>
@@ -566,7 +566,7 @@ export const AddService: React.FC = () => {
                                                 value={formData.seats}
                                                 onChange={handleChange}
                                                 onWheel={(e) => e.currentTarget.blur()}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                                             />
                                         </div>
                                     </div>
@@ -583,7 +583,7 @@ export const AddService: React.FC = () => {
                                                 name="subcategory"
                                                 value={formData.subcategory}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500"
                                             >
                                                 <option value="">None</option>
                                                 <option value="water">Water (Boat, Jet Ski, Diving)</option>
@@ -601,7 +601,7 @@ export const AddService: React.FC = () => {
                                                 name="difficulty"
                                                 value={formData.difficulty}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-teal-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500"
                                             >
                                                 <option value="easy">Easy</option>
                                                 <option value="medium">Medium</option>
@@ -611,19 +611,19 @@ export const AddService: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Duration (Hours)</label>
-                                            <input name="duration" type="number" value={formData.duration} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                            <input name="duration" type="number" value={formData.duration} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Group Size</label>
-                                            <input name="groupSize" type="number" value={formData.groupSize} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" />
+                                            <input name="groupSize" type="number" value={formData.groupSize} onChange={handleChange} onWheel={(e) => e.currentTarget.blur()} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" />
                                         </div>
                                     </div>
 
                                     {/* Itinerary Builder */}
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800/50">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Trip Schedule / Itinerary</h3>
-                                            <button type="button" onClick={addItineraryItem} className="text-sm text-teal-600 font-bold hover:underline flex items-center gap-1">
+                                            <button type="button" onClick={addItineraryItem} className="text-sm text-teal-600 dark:text-cyan-400 font-bold hover:underline flex items-center gap-1">
                                                 <Plus size={16} /> Add Stop
                                             </button>
                                         </div>
@@ -635,7 +635,7 @@ export const AddService: React.FC = () => {
                                                             placeholder="09:00"
                                                             value={item.time}
                                                             onChange={(e) => updateItineraryItem(index, 'time', e.target.value)}
-                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-sm"
                                                         />
                                                     </div>
                                                     <div className="flex-grow">
@@ -643,7 +643,7 @@ export const AddService: React.FC = () => {
                                                             placeholder="Activity description (e.g. Hotel Pickup)"
                                                             value={item.description}
                                                             onChange={(e) => updateItineraryItem(index, 'description', e.target.value)}
-                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-sm"
                                                         />
                                                     </div>
                                                     <button type="button" onClick={() => removeItineraryItem(index)} className="p-2 text-slate-400 hover:text-rose-500">
@@ -656,11 +656,11 @@ export const AddService: React.FC = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">What is Included?</label>
-                                        <textarea name="included" value={formData.included} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="e.g. Lunch, Transfer, Guide" />
+                                        <textarea name="included" value={formData.included} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" placeholder="e.g. Lunch, Transfer, Guide" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Requirements</label>
-                                        <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" placeholder="e.g. Driving License, Comfortable shoes" />
+                                        <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80" placeholder="e.g. Driving License, Comfortable shoes" />
                                     </div>
                                 </div>
                             )}
@@ -675,7 +675,7 @@ export const AddService: React.FC = () => {
                                                 name="subcategory"
                                                 value={formData.subcategory}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-rose-500"
                                             >
                                                 <option value="">None</option>
                                                 <option value="hair">Hair Transplant</option>
@@ -691,7 +691,7 @@ export const AddService: React.FC = () => {
                                                 value={formData.whatsapp}
                                                 onChange={handleChange}
                                                 placeholder="+90 555 123 45 67"
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-rose-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-rose-500"
                                             />
                                             <p className="text-xs text-slate-500 mt-1">Clients will contact you directly via WhatsApp.</p>
                                         </div>
@@ -709,7 +709,7 @@ export const AddService: React.FC = () => {
                                                 name="subcategory"
                                                 value={formData.subcategory}
                                                 onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-purple-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-purple-500"
                                             >
                                                 <option value="">None</option>
                                                 <option value="photographer">{t('add_service.creative.photographer')}</option>
@@ -725,7 +725,7 @@ export const AddService: React.FC = () => {
                                                 value={formData.whatsapp}
                                                 onChange={handleChange}
                                                 placeholder="+90 555 123 45 67"
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-purple-500"
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-purple-500"
                                             />
                                             <p className="text-xs text-slate-500 mt-1">Clients will contact you directly via WhatsApp.</p>
                                         </div>
@@ -736,7 +736,7 @@ export const AddService: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
+                                className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? 'Listing Service...' : 'List Service'}
                                 <ChevronRight />

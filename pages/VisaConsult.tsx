@@ -18,8 +18,8 @@ export const VisaConsult: React.FC = () => {
                     {t('list_prop.back')}
                 </button>
 
-                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl overflow-hidden border border-slate-100 dark:border-slate-700">
-                    <div className="bg-teal-600 p-8 text-center">
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl overflow-hidden border border-slate-100 dark:border-slate-800/50">
+                    <div className="bg-teal-600 dark:bg-cyan-600 p-8 text-center">
                         <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 text-white">
                             <ShieldCheck size={40} />
                         </div>
@@ -32,13 +32,13 @@ export const VisaConsult: React.FC = () => {
                             {t('visa.consult.desc')}
                         </p>
 
-                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 mb-8">
+                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 border border-slate-200 dark:border-slate-800/50 mb-8">
                             <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">{t('visa.consult.agent')}</h3>
                             <a
                                 href="https://wa.me/905300846177"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-3 text-3xl font-bold text-slate-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                                className="inline-flex items-center gap-3 text-3xl font-bold text-slate-900 dark:text-white hover:text-teal-600 dark:text-cyan-400 dark:hover:text-teal-400 dark:text-cyan-400 transition-colors"
                             >
                                 <Phone className="mt-1" />
                                 +90 530 084 61 77

@@ -200,7 +200,7 @@ export const PropertyDetails: React.FC = () => {
       <div className="p-20 text-center text-slate-500">
         <h2 className="text-xl font-bold mb-2">Property not found</h2>
         <p>The property with ID {id} could not be loaded.</p>
-        <button onClick={() => window.history.back()} className="mt-4 text-teal-600 underline">Go Back</button>
+        <button onClick={() => window.history.back()} className="mt-4 text-teal-600 dark:text-cyan-400 underline">Go Back</button>
       </div>
     );
   }
@@ -277,8 +277,8 @@ export const PropertyDetails: React.FC = () => {
                 {property?.title || 'Unknown Property'}
               </h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-600 dark:text-slate-300 text-sm font-medium">
-                <span className="flex items-center gap-1.5"><MapPin size={16} className="text-teal-500 dark:text-teal-400" /> {property?.address || property?.location || 'No location'}</span>
-                <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {(property?.reviewsCount || 0) > 0 ? `${(property?.rating || 5.0).toFixed(1)} (${property?.reviewsCount} reviews)` : <span className="text-sm font-bold bg-teal-600 text-white px-2 py-0.5 rounded-md">New</span>}</span>
+                <span className="flex items-center gap-1.5"><MapPin size={16} className="text-teal-500 dark:text-cyan-400 dark:text-slate-200" /> {property?.address || property?.location || 'No location'}</span>
+                <span className="flex items-center gap-1.5"><Star size={16} className="fill-orange-400 text-orange-400" /> {(property?.reviewsCount || 0) > 0 ? `${(property?.rating || 5.0).toFixed(1)} (${property?.reviewsCount} reviews)` : <span className="text-sm font-bold bg-teal-600 dark:bg-cyan-600 text-white px-2 py-0.5 rounded-md">New</span>}</span>
               </div>
             </div>
           </div>
@@ -298,7 +298,7 @@ export const PropertyDetails: React.FC = () => {
               return (
                 <div
                   key={i}
-                  className="relative overflow-hidden group h-full w-full cursor-zoom-in bg-slate-200 dark:bg-slate-800"
+                  className="relative overflow-hidden group h-full w-full cursor-zoom-in bg-slate-200 dark:bg-slate-800/80"
                   onClick={() => openLightbox(property?.images || [], imgIndex)}
                 >
                   <img
@@ -341,13 +341,13 @@ export const PropertyDetails: React.FC = () => {
       </div>
 
       {/* Mobile Title Section (Below Image) */}
-      <div className="md:hidden px-4 py-5 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 rounded-b-3xl shadow-sm mb-2">
+      <div className="md:hidden px-4 py-5 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/50 rounded-b-3xl shadow-sm mb-2">
         <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2 leading-tight">
           {property?.title || 'Unknown Property'}
         </h1>
         <div className="flex flex-col gap-2 text-slate-600 dark:text-slate-400 text-sm">
           <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent shrink-0" /> <span className="truncate">{property?.address || property?.location || 'No location'}</span></span>
+            <span className="flex items-center gap-1.5"><MapPin size={16} className="text-accent dark:text-amber-400 shrink-0" /> <span className="truncate">{property?.address || property?.location || 'No location'}</span></span>
           </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium"><Star size={16} className="fill-orange-400 text-orange-400" /> {(property?.reviewsCount || 0) > 0 ? `${(property?.rating || 5.0).toFixed(1)}` : 'New'}</span>
@@ -362,27 +362,27 @@ export const PropertyDetails: React.FC = () => {
         {/* Left Column: Info */}
         <div className="lg:col-span-2 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
-              <Users size={24} className="text-teal-600 dark:text-teal-400" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 flex flex-col items-center justify-center text-center gap-2">
+              <Users size={24} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.guests || 1} Guests</span>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
-              <DoorOpen size={24} className="text-teal-600 dark:text-teal-400" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 flex flex-col items-center justify-center text-center gap-2">
+              <DoorOpen size={24} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.bedrooms || 1} Bedrooms</span>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
-              <BedDouble size={24} className="text-teal-600 dark:text-teal-400" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 flex flex-col items-center justify-center text-center gap-2">
+              <BedDouble size={24} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.beds || 1} Beds</span>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2">
-              <Bath size={24} className="text-teal-600 dark:text-teal-400" />
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 flex flex-col items-center justify-center text-center gap-2">
+              <Bath size={24} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">{property?.bathrooms || 1} Baths</span>
             </div>
           </div>
 
-          <div className="py-6 border-y border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center sm:justify-between gap-6 px-2 sm:px-0">
+          <div className="py-6 border-y border-slate-200 dark:border-slate-800/50 flex flex-col sm:flex-row items-center sm:justify-between gap-6 px-2 sm:px-0">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 overflow-hidden shrink-0">
+              <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 overflow-hidden shrink-0">
                 {property?.hostAvatar ? (
                   <img src={property.hostAvatar} alt={property.hostName} className="w-full h-full object-cover" />
                 ) : (
@@ -411,7 +411,7 @@ export const PropertyDetails: React.FC = () => {
                   setShowChat(true);
                 }
               }}
-              className="flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 z-10 ring-2 ring-transparent hover:ring-slate-900 dark:hover:ring-white ring-offset-2"
+              className="flex items-center justify-center gap-2 px-8 py-3 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 z-10 ring-2 ring-transparent hover:ring-slate-900 dark:hover:ring-white ring-offset-2"
             >
               <MessageCircle size={20} />
               Contact Host
@@ -428,7 +428,7 @@ export const PropertyDetails: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               {(property?.amenities || []).map((am: string, i: number) => (
                 <div key={i} className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 text-xs">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-600 dark:text-slate-400 text-xs">
                     <CheckCircle size={16} />
                   </div>
                   {t(am)}
@@ -439,9 +439,9 @@ export const PropertyDetails: React.FC = () => {
 
           {/* Hospitality Guide */}
           {hasBooking && (
-            <div className="bg-teal-50 dark:bg-teal-900/10 rounded-2xl p-8 border border-teal-100 dark:border-teal-800 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="bg-teal-50 dark:bg-slate-800/50 rounded-2xl p-8 border border-teal-100 dark:border-slate-700/50 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-slate-800/50 flex items-center justify-center text-teal-600 dark:text-cyan-400 dark:text-slate-200 shrink-0">
                   <ShieldCheck size={24} />
                 </div>
                 <div>
@@ -461,12 +461,12 @@ export const PropertyDetails: React.FC = () => {
         {/* Right Column: Booking Card */}
         <div className="relative z-30">
           <div
-            className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6"
+            className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-end mb-6">
               <div>
-                <span className="text-2xl font-bold text-teal-600 dark:text-accent">{displayPrice(property?.pricePerNight || 0)}</span>
+                <span className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{displayPrice(property?.pricePerNight || 0)}</span>
                 <span className="text-slate-500 dark:text-slate-400 text-sm"> {t('featured.night')}</span>
               </div>
               <div
@@ -478,15 +478,15 @@ export const PropertyDetails: React.FC = () => {
                 {(property?.reviewsCount || 0) > 0 ? (
                   <span className="flex items-center gap-1"><Star size={12} className="fill-slate-900 dark:fill-white" /> {property.reviewsCount} {t('prop.reviews')}</span>
                 ) : (
-                  <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-500">New Listing</span>
+                  <span className="bg-slate-100 dark:bg-slate-800/80 px-2 py-1 rounded text-slate-500">New Listing</span>
                 )}
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-700 rounded-xl mb-4 overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-800/50 rounded-xl mb-4 overflow-hidden">
               {/* Dates and guests inputs */}
-              <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-700">
-                <div className="p-3 border-r border-slate-200 dark:border-slate-700">
+              <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800/50">
+                <div className="p-3 border-r border-slate-200 dark:border-slate-800/50">
                   <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
                   <DatePicker selected={checkIn} onChange={setCheckIn} selectsStart startDate={checkIn} endDate={checkOut} minDate={new Date()} excludeDates={blockedDates} placeholderText={t('date_format')} dateFormat="dd.MM.yyyy" customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />} />
                 </div>
@@ -505,7 +505,7 @@ export const PropertyDetails: React.FC = () => {
               </div>
             </div>
 
-            <button onClick={handleBook} className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-teal-700/20">{t('prop.reserve')}</button>
+            <button onClick={handleBook} className="w-full bg-teal-700 dark:bg-cyan-600 hover:bg-teal-800 dark:bg-cyan-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-teal-700/20">{t('prop.reserve')}</button>
             <p className="text-center text-xs text-slate-400 mt-3">{t('prop.no_charge')}</p>
 
             {/* Price breakdown */}
@@ -514,7 +514,7 @@ export const PropertyDetails: React.FC = () => {
               {(property?.cleaning_fee || 0) > 0 && (
                 <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400"><span>{t('prop.cleaning_fee')}</span><span>{displayPrice(property?.cleaning_fee || 0)}</span></div>
               )}
-              <div className="flex justify-between font-bold text-slate-900 dark:text-white mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex justify-between font-bold text-slate-900 dark:text-white mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/50">
                 <span>{t('prop.total')}</span>
                 <span>{displayPrice(totalPrice + (property?.cleaning_fee || 0))}</span>
               </div>
@@ -524,14 +524,14 @@ export const PropertyDetails: React.FC = () => {
       </div>
 
       {/* Cross-Sell Section */}
-      <section id="cross-sell" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-16 animate-fade-up">
+      <section id="cross-sell" className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800/50 py-16 animate-fade-up">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('cross.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {crossSellServices.map(service => (
               <div
                 key={service.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full cursor-pointer group"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full cursor-pointer group"
                 onClick={() => navigate(`/book-tour/${service.id}`)}
               >
                 {/* Image Section */}
@@ -552,20 +552,20 @@ export const PropertyDetails: React.FC = () => {
                 {/* Content Section */}
                 <div className="p-5 flex flex-col gap-3 flex-1">
                   <div className="min-h-[3rem]">
-                    <h4 className="font-bold text-lg text-slate-900 dark:text-white leading-tight line-clamp-2 group-hover:text-teal-600 transition-colors">{service.title}</h4>
+                    <h4 className="font-bold text-lg text-slate-900 dark:text-white leading-tight line-clamp-2 group-hover:text-teal-600 dark:text-cyan-400 transition-colors">{service.title}</h4>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                     <span className="flex-1 truncate">{service.duration || 'Flexible duration'}</span>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between mt-auto">
                     <div className="flex flex-col">
                       <span className="text-xs text-slate-400 font-medium">From</span>
-                      <span className="font-bold text-lg text-teal-600 dark:text-accent">{displayPrice(service.price)}</span>
+                      <span className="font-bold text-lg text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{displayPrice(service.price)}</span>
                     </div>
                     <button
-                      className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors shadow-sm"
+                      className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-white rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors shadow-sm"
                     >
                       {t('request_details')}
                     </button>
@@ -581,7 +581,7 @@ export const PropertyDetails: React.FC = () => {
       <Modal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} title="Login Required">
         <div className="flex flex-col gap-6 py-2">
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 mb-4">
+            <div className="mx-auto w-16 h-16 bg-slate-100 dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 mb-4">
               <User size={32} />
             </div>
             <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
@@ -592,7 +592,7 @@ export const PropertyDetails: React.FC = () => {
           <div className="flex gap-3 justify-end">
             <button
               onClick={() => setShowLoginModal(false)}
-              className="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-xl transition-colors"
             >
               Cancel
             </button>
@@ -601,7 +601,7 @@ export const PropertyDetails: React.FC = () => {
                 setShowLoginModal(false);
                 document.dispatchEvent(new CustomEvent('open-login'));
               }}
-              className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg shadow-teal-600/20 transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold rounded-xl shadow-lg shadow-teal-600/20 transition-all"
             >
               <LogIn size={18} />
               Log In

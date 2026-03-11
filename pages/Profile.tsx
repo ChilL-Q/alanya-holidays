@@ -265,12 +265,12 @@ export const Profile: React.FC = () => {
                     {/* Sidebar Navigation */}
                     <div className="lg:col-span-3 space-y-6">
                         {/* User Card */}
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm p-6 text-center border border-slate-100 dark:border-slate-700">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm p-6 text-center border border-slate-100 dark:border-slate-800/50">
                             <div className="relative inline-block mb-4 group/avatar">
                                 <img
                                     src={user.avatar}
                                     alt={user.name}
-                                    className="w-24 h-24 rounded-full border-4 border-slate-100 dark:border-slate-700 object-cover"
+                                    className="w-24 h-24 rounded-full border-4 border-slate-100 dark:border-slate-800/50 object-cover"
                                 />
                                 <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                     <Camera size={24} className="text-white" />
@@ -292,17 +292,17 @@ export const Profile: React.FC = () => {
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{user.name}</h2>
                             <p className="text-slate-500 text-sm mb-4">{user.email}</p>
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800/50 text-xs font-semibold text-slate-600 dark:text-slate-300">
                                 <span className={`w-2 h-2 rounded-full ${user.role === 'admin' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
                                 {user.role === 'host' ? t('profile.role.host') : user.role === 'admin' ? t('profile.role.admin') : t('profile.role.guest')}
                             </div>
                         </div>
 
                         {/* Navigation Tabs */}
-                        <nav className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700">
+                        <nav className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800/50">
                             <button
                                 onClick={() => setActiveTab('overview')}
-                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'overview' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'overview' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                             >
                                 <Grid size={20} />
                                 <span className="font-medium">{t('profile.bookings') || 'Overview'}</span>
@@ -313,21 +313,21 @@ export const Profile: React.FC = () => {
                                 <>
                                     <button
                                         onClick={() => setActiveTab('my_properties')}
-                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_properties' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_properties' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                                     >
                                         <Home size={20} />
                                         <span className="font-medium">{t('profile.my_properties')}</span>
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('my_services')}
-                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_services' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'my_services' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                                     >
                                         <Car size={20} />
                                         <span className="font-medium">{t('profile.my_services')}</span>
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('payouts')}
-                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'payouts' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                        className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'payouts' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                                     >
                                         <Banknote size={20} />
                                         <span className="font-medium">{t('profile.payout_details')}</span>
@@ -337,19 +337,19 @@ export const Profile: React.FC = () => {
 
                             <button
                                 onClick={() => setActiveTab('settings')}
-                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'settings' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'settings' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                             >
                                 <Settings size={20} />
                                 <span className="font-medium">{t('profile.settings')}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('security')}
-                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                                className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
                             >
                                 <Shield size={20} />
                                 <span className="font-medium">{t('profile.security')}</span>
                             </button>
-                            <div className="border-t border-slate-100 dark:border-slate-700 mt-2 pt-2">
+                            <div className="border-t border-slate-100 dark:border-slate-800/50 mt-2 pt-2">
                                 <button
                                     onClick={handleLogout}
                                     className="w-full flex items-center gap-3 px-6 py-4 text-left text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
@@ -397,12 +397,12 @@ export const Profile: React.FC = () => {
                                 {loading ? (
                                     <div className="grid gap-4">
                                         {[1, 2].map(i => (
-                                            <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-700"></div>
+                                            <div key={i} className="bg-white dark:bg-slate-800/80 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-800/50"></div>
                                         ))}
                                     </div>
                                 ) : bookings.length === 0 ? (
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-700">
-                                        <Package size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-6" />
+                                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-800/50">
+                                        <Package size={48} className="mx-auto text-slate-200 dark:text-slate-300 mb-6" />
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('profile.no_bookings')}</h3>
                                         <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">{t('profile.empty_message')}</p>
                                         <button
@@ -415,7 +415,7 @@ export const Profile: React.FC = () => {
                                 ) : (
                                     <div className="grid gap-6">
                                         {bookings.map((booking) => (
-                                            <div key={booking.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700 group hover:shadow-xl transition-all duration-300">
+                                            <div key={booking.id} className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800/50 group hover:shadow-xl transition-all duration-300">
                                                 <div className="flex flex-col md:flex-row">
                                                     <div className="w-full md:w-64 h-48 md:h-auto overflow-hidden relative">
                                                         {booking.property?.images?.[0] ? (
@@ -441,7 +441,7 @@ export const Profile: React.FC = () => {
                                                         <div>
                                                             <div className="flex justify-between items-start mb-4">
                                                                 <div>
-                                                                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">
+                                                                    <p className="text-[10px] font-bold text-accent dark:text-amber-400 uppercase tracking-widest mb-1">
                                                                         {booking.item_type}
                                                                     </p>
                                                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
@@ -467,7 +467,7 @@ export const Profile: React.FC = () => {
                                                             </div>
                                                         </div>
 
-                                                        <div className="mt-6 flex items-center justify-between border-t border-slate-50 dark:border-slate-700 pt-4">
+                                                        <div className="mt-6 flex items-center justify-between border-t border-slate-50 dark:border-slate-800/50 pt-4">
                                                             <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                                                 {t('profile.id_label')}: {booking.id.slice(0, 8)}
                                                             </p>
@@ -515,19 +515,19 @@ export const Profile: React.FC = () => {
                                 {loading ? (
                                     <div className="grid gap-4">
                                         {[1, 2].map(i => (
-                                            <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-700"></div>
+                                            <div key={i} className="bg-white dark:bg-slate-800/80 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-800/50"></div>
                                         ))}
                                     </div>
                                 ) : myProperties.length === 0 ? (
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-700">
-                                        <Home size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-6" />
+                                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-800/50">
+                                        <Home size={48} className="mx-auto text-slate-200 dark:text-slate-300 mb-6" />
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('profile.no_properties')}</h3>
                                         <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">{t('profile.add_property')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid gap-6">
                                         {myProperties.map((property) => (
-                                            <div key={property.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700 group hover:shadow-xl transition-all duration-300">
+                                            <div key={property.id} className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800/50 group hover:shadow-xl transition-all duration-300">
                                                 <div className="flex flex-col md:flex-row">
                                                     <div className="w-full md:w-64 h-48 md:h-auto overflow-hidden relative">
                                                         {property.images?.[0] ? (
@@ -551,7 +551,7 @@ export const Profile: React.FC = () => {
                                                         <div>
                                                             <div className="flex justify-between items-start mb-4">
                                                                 <div>
-                                                                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">
+                                                                    <p className="text-[10px] font-bold text-accent dark:text-amber-400 uppercase tracking-widest mb-1">
                                                                         {property.type}
                                                                     </p>
                                                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
@@ -571,10 +571,10 @@ export const Profile: React.FC = () => {
                                                             </div>
                                                         </div>
 
-                                                        <div className="mt-6 flex items-center justify-end border-t border-slate-50 dark:border-slate-700 pt-4">
+                                                        <div className="mt-6 flex items-center justify-end border-t border-slate-50 dark:border-slate-800/50 pt-4">
                                                             <button
                                                                 onClick={() => navigate(`/properties/${property.id}`)}
-                                                                className="text-white bg-slate-900 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
+                                                                className="text-white bg-slate-900 dark:bg-slate-800/50 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
                                                             >
                                                                 {t('profile.view_page') || 'View Page'}
                                                             </button>
@@ -605,19 +605,19 @@ export const Profile: React.FC = () => {
                                 {loading ? (
                                     <div className="grid gap-4">
                                         {[1, 2].map(i => (
-                                            <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-700"></div>
+                                            <div key={i} className="bg-white dark:bg-slate-800/80 rounded-2xl h-40 animate-pulse border border-slate-100 dark:border-slate-800/50"></div>
                                         ))}
                                     </div>
                                 ) : myServices.length === 0 ? (
-                                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-700">
-                                        <Car size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-6" />
+                                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-sm p-12 text-center border-2 border-dashed border-slate-100 dark:border-slate-800/50">
+                                        <Car size={48} className="mx-auto text-slate-200 dark:text-slate-300 mb-6" />
                                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('profile.no_services')}</h3>
                                         <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm mx-auto">{t('profile.add_service')}</p>
                                     </div>
                                 ) : (
                                     <div className="grid gap-6">
                                         {myServices.map((service) => (
-                                            <div key={service.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700 group hover:shadow-xl transition-all duration-300">
+                                            <div key={service.id} className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800/50 group hover:shadow-xl transition-all duration-300">
                                                 <div className="flex flex-col md:flex-row">
                                                     <div className="w-full md:w-64 h-48 md:h-auto overflow-hidden relative">
                                                         {service.images?.[0] ? (
@@ -638,7 +638,7 @@ export const Profile: React.FC = () => {
                                                         <div>
                                                             <div className="flex justify-between items-start mb-4">
                                                                 <div>
-                                                                    <p className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">
+                                                                    <p className="text-[10px] font-bold text-accent dark:text-amber-400 uppercase tracking-widest mb-1">
                                                                         {service.type}
                                                                     </p>
                                                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
@@ -653,7 +653,7 @@ export const Profile: React.FC = () => {
                                                             </div>
                                                         </div>
 
-                                                        <div className="mt-6 flex items-center justify-end border-t border-slate-50 dark:border-slate-700 pt-4">
+                                                        <div className="mt-6 flex items-center justify-end border-t border-slate-50 dark:border-slate-800/50 pt-4">
                                                             <button
                                                                 onClick={() => {
                                                                     // Navigate based on type since service detail pages might differ or use a standardized one
@@ -661,7 +661,7 @@ export const Profile: React.FC = () => {
                                                                     else if (service.type === 'bike') navigate('/bike-rental');
                                                                     // For now, services don't have a single detail page in the same way, redirecting to category listing
                                                                 }}
-                                                                className="text-white bg-slate-900 dark:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
+                                                                className="text-white bg-slate-900 dark:bg-slate-800/50 px-4 py-2 rounded-lg text-sm font-medium hover:bg-black dark:hover:bg-slate-600 transition-colors"
                                                             >
                                                                 {t('profile.view_listing') || 'View Listing'}
                                                             </button>
@@ -677,7 +677,7 @@ export const Profile: React.FC = () => {
 
                         {/* TAB: SETTINGS (PERSONAL INFO) */}
                         {activeTab === 'settings' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
+                            <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 p-8">
                                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('profile.personal_info')}</h2>
                                 <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-2xl">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -690,7 +690,7 @@ export const Profile: React.FC = () => {
                                                     type="text"
                                                     value={profileForm.name}
                                                     onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
+                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
                                                     required
                                                 />
                                                 <UserCircle size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -706,7 +706,7 @@ export const Profile: React.FC = () => {
                                                     value={profileForm.phone}
                                                     onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                                                     placeholder="+90..."
-                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
+                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
                                                 />
                                                 <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                             </div>
@@ -725,14 +725,14 @@ export const Profile: React.FC = () => {
                                                     value={profileForm.companyName}
                                                     onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
                                                     placeholder="Alanya Holidays Ltd."
-                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
+                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
                                                 />
                                                 <Home size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                             </div>
                                         </div>
                                     )}
 
-                                    <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800/50">
                                         <button
                                             type="submit"
                                             disabled={savingProfile}
@@ -754,7 +754,7 @@ export const Profile: React.FC = () => {
                         {activeTab === 'security' && (
                             <div className="space-y-8">
                                 {/* Change Password */}
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
+                                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 p-8">
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="p-3 bg-primary/10 rounded-xl text-primary">
                                             <Key size={24} />
@@ -772,7 +772,7 @@ export const Profile: React.FC = () => {
                                                 type="password"
                                                 value={passwordForm.newPassword}
                                                 onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                                 required
                                                 minLength={6}
                                             />
@@ -783,7 +783,7 @@ export const Profile: React.FC = () => {
                                                 type="password"
                                                 value={passwordForm.confirmPassword}
                                                 onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                                 required
                                                 minLength={6}
                                             />
@@ -792,7 +792,7 @@ export const Profile: React.FC = () => {
                                             <button
                                                 type="submit"
                                                 disabled={changingPassword}
-                                                className="bg-slate-900 dark:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-800 disabled:opacity-50"
+                                                className="bg-slate-900 dark:bg-slate-800/50 text-white px-6 py-2.5 rounded-xl font-medium transition-colors hover:bg-slate-800 disabled:opacity-50"
                                             >
                                                 {changingPassword ? t('auth.submitting') : t('profile.update_password')}
                                             </button>
@@ -801,9 +801,9 @@ export const Profile: React.FC = () => {
                                 </div>
 
                                 {/* Change Email */}
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
+                                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 p-8">
                                     <div className="flex items-center gap-3 mb-6">
-                                        <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+                                        <div className="p-3 bg-indigo-50 dark:bg-slate-800/50 rounded-xl text-indigo-600 dark:text-slate-200">
                                             <Mail size={24} />
                                         </div>
                                         <div>
@@ -826,7 +826,7 @@ export const Profile: React.FC = () => {
                                                 type="email"
                                                 value={user.email}
                                                 disabled
-                                                className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 cursor-not-allowed"
+                                                className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-500 cursor-not-allowed"
                                             />
                                         </div>
                                         <div>
@@ -835,7 +835,7 @@ export const Profile: React.FC = () => {
                                                 type="email"
                                                 value={emailForm.email}
                                                 onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
-                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                                 required
                                             />
                                         </div>
@@ -856,14 +856,14 @@ export const Profile: React.FC = () => {
                         {/* TAB: PAYOUT DETAILS */}
                         {activeTab === 'payouts' && (
                             <div className="space-y-8 animate-fade-in">
-                                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
+                                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 p-8">
                                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Payout Details</h2>
                                     <p className="text-slate-500 mb-8">Set up how you want to receive your earnings from listings.</p>
 
                                     <form onSubmit={handleUpdatePayout} className="space-y-8 max-w-2xl">
                                         <div className="space-y-6">
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                                <Banknote className="text-teal-600" size={20} />
+                                                <Banknote className="text-teal-600 dark:text-cyan-400 " size={20} />
                                                 Bank Transfer (IBAN)
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -874,7 +874,7 @@ export const Profile: React.FC = () => {
                                                         value={payoutForm.iban}
                                                         onChange={(e) => setPayoutForm({ ...payoutForm, iban: e.target.value })}
                                                         placeholder="TR00 0000 0000 0000 0000 0000 00"
-                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
                                                     />
                                                 </div>
                                                 <div>
@@ -883,7 +883,7 @@ export const Profile: React.FC = () => {
                                                         type="text"
                                                         value={payoutForm.bankName}
                                                         onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                                     />
                                                 </div>
                                                 <div>
@@ -892,13 +892,13 @@ export const Profile: React.FC = () => {
                                                         type="text"
                                                         value={payoutForm.bankAccountHolderName}
                                                         onChange={(e) => setPayoutForm({ ...payoutForm, bankAccountHolderName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
+                                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-700 space-y-6">
+                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800/50 space-y-6">
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                                 <Wallet className="text-orange-500" size={20} />
                                                 Crypto Wallet (USDT/USDC)
@@ -910,13 +910,13 @@ export const Profile: React.FC = () => {
                                                     value={payoutForm.cryptoWallet}
                                                     onChange={(e) => setPayoutForm({ ...payoutForm, cryptoWallet: e.target.value })}
                                                     placeholder="0x... or T..."
-                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
+                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white font-mono"
                                                 />
                                                 <p className="text-xs text-slate-500 mt-2">Please ensure the network type is clearly specified if needed in notes.</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
+                                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800/50">
                                             <button
                                                 type="submit"
                                                 disabled={savingPayout}

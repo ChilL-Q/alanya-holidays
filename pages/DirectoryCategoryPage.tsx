@@ -1,0 +1,314 @@
+import React, { useMemo, useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import { Filter, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { directoryCategoryIntros } from '../data/directoryData';
+import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { db } from '../api-services';
+import { DirectoryListingDB } from '../types/models';
+
+export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
+    const params = useParams<{ categoryId: string }>();
+    const categoryId = propCategoryId || params.categoryId;
+
+    // Basic validation if category exists
+    if (!categoryId || !directoryCategoryIntros[categoryId]) {
+        // If invalid, bounce back home
+        return <Navigate to="/" replace />;
+    }
+
+    const { title, description, longDescription, faqs } = directoryCategoryIntros[categoryId];
+
+    // Filters State
+    const [showFilters, setShowFilters] = useState(false);
+    const [locationFilter, setLocationFilter] = useState('all');
+    const [verifiedOnly, setVerifiedOnly] = useState(false);
+    const [minRating, setMinRating] = useState<number>(0);
+    const [maxPriceLevel, setMaxPriceLevel] = useState<number>(4);
+    const [languageFilter, setLanguageFilter] = useState('all');
+
+    // UI State
+    const [showFullIntro, setShowFullIntro] = useState(false);
+    const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+    // Data State
+    const [listings, setListings] = useState<DirectoryListingDB[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch from Supabase
+    React.useEffect(() => {
+        const fetchListings = async () => {
+            setLoading(true);
+            try {
+                const data = await db.getDirectoryListingsByCategory(categoryId);
+                setListings(data || []);
+            } catch (e) {
+                console.error('Failed to load category listings', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchListings();
+    }, [categoryId]);
+
+    // Extract unique locations and languages for this category to populate filter
+    const availableLocations = useMemo(() => {
+        const locs = new Set<string>();
+        listings.forEach(d => {
+            if (d.location) locs.add(d.location);
+        });
+        return Array.from(locs);
+    }, [listings]);
+
+    const availableLanguages = useMemo(() => {
+        const langs = new Set<string>();
+        listings.forEach(d => {
+            if (d.languages_spoken) {
+                d.languages_spoken.forEach((l: string) => langs.add(l));
+            }
+        });
+        return Array.from(langs).sort();
+    }, [listings]);
+
+    const filteredData = useMemo(() => {
+        let data = listings;
+
+        if (locationFilter !== 'all') {
+            data = data.filter(item => item.location === locationFilter);
+        }
+        if (verifiedOnly) {
+            data = data.filter(item => item.is_verified);
+        }
+        if (minRating > 0) {
+            data = data.filter(item => (item.reviews_average || 0) >= minRating);
+        }
+        if (maxPriceLevel < 4) {
+            data = data.filter(item => (item.price_level || 4) <= maxPriceLevel);
+        }
+        if (languageFilter !== 'all') {
+            data = data.filter(item => item.languages_spoken?.includes(languageFilter));
+        }
+
+        return data;
+    }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter]);
+
+    // Generate JSON-LD Schemas for SEO
+    const faqSchema = faqs && faqs.length > 0 ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+            }
+        }))
+    } : null;
+
+    const itemListSchema = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "itemListElement": filteredData.map((item, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+                "@type": categoryId === 'accommodations' ? "LodgingBusiness" : categoryId === 'restaurants' ? "Restaurant" : "LocalBusiness",
+                "name": item.name,
+                "url": item.website || window.location.href,
+                "image": item.gallery?.[0] || ''
+            }
+        }))
+    };
+
+    const featuredListings = filteredData.filter(item => item.is_featured);
+    const standardListings = filteredData.filter(item => !item.is_featured);
+
+    return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16">
+            <Helmet>
+                <title>{title} - Alanya Holidays</title>
+                <meta name="description" content={description} />
+                <script type="application/ld+json">
+                    {JSON.stringify(itemListSchema)}
+                </script>
+                {faqSchema && (
+                    <script type="application/ld+json">
+                        {JSON.stringify(faqSchema)}
+                    </script>
+                )}
+            </Helmet>
+
+            {/* 1. Intro Paragraph (SEO Optimized) */}
+            <div className="bg-white dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800/50 shadow-sm mb-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center md:text-left md:py-16">
+                    <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">{title}</h1>
+                    <div className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-4xl leading-relaxed">
+                        <p className="mb-4">{description}</p>
+
+                        {longDescription && (
+                            <div className={`transition-all duration-500 overflow-hidden text-left ${showFullIntro ? 'max-h-[2000px] opacity-100 mt-6' : 'max-h-0 opacity-0'}`}>
+                                {longDescription.map((para, idx) => (
+                                    <p key={idx} className="mb-4 text-base md:text-lg">{para}</p>
+                                ))}
+                            </div>
+                        )}
+
+                        {longDescription && (
+                            <button
+                                onClick={() => setShowFullIntro(!showFullIntro)}
+                                className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
+                            >
+                                {showFullIntro ? 'Read Less' : 'Read Full Guide'}
+                                {showFullIntro ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                {/* 2. Filter System */}
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4 bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap">
+                        <Filter size={18} />
+                        <h2>Filters ({filteredData.length} Results)</h2>
+                    </div>
+
+                    <div className="flex overflow-x-auto pb-2 md:pb-0 md:flex-wrap items-center gap-4 w-full xl:w-auto scrollbar-hide">
+                        <select
+                            value={locationFilter}
+                            onChange={(e) => setLocationFilter(e.target.value)}
+                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value="all">All Locations</option>
+                            {availableLocations.map(loc => (
+                                <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                        </select>
+
+                        {availableLanguages.length > 0 && (
+                            <select
+                                value={languageFilter}
+                                onChange={(e) => setLanguageFilter(e.target.value)}
+                                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            >
+                                <option value="all">All Languages</option>
+                                {availableLanguages.map(lang => (
+                                    <option key={lang} value={lang}>{lang}</option>
+                                ))}
+                            </select>
+                        )}
+
+                        <select
+                            value={minRating}
+                            onChange={(e) => setMinRating(Number(e.target.value))}
+                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value={0}>Any Rating</option>
+                            <option value={4.0}>4.0+ Stars</option>
+                            <option value={4.5}>4.5+ Stars</option>
+                        </select>
+
+                        <select
+                            value={maxPriceLevel}
+                            onChange={(e) => setMaxPriceLevel(Number(e.target.value))}
+                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value={4}>Any Price</option>
+                            <option value={1}>$ (Budget)</option>
+                            <option value={2}>$$ (Moderate)</option>
+                            <option value={3}>$$$ (Premium)</option>
+                        </select>
+
+                        <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            <input
+                                type="checkbox"
+                                checked={verifiedOnly}
+                                onChange={(e) => setVerifiedOnly(e.target.checked)}
+                                className="w-4 h-4 text-teal-600 dark:text-cyan-400 rounded border-slate-300 focus:ring-teal-500"
+                            />
+                            Verified Only
+                        </label>
+
+                        {(locationFilter !== 'all' || verifiedOnly || minRating > 0 || maxPriceLevel < 4 || languageFilter !== 'all') && (
+                            <button
+                                onClick={() => {
+                                    setLocationFilter('all');
+                                    setVerifiedOnly(false);
+                                    setMinRating(0);
+                                    setMaxPriceLevel(4);
+                                    setLanguageFilter('all');
+                                }}
+                                className="text-sm text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-medium whitespace-nowrap flex-shrink-0"
+                            >
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 3. Featured Listings (Monetization Zone) */}
+                {featuredListings.length > 0 && (
+                    <div className="mb-12">
+                        <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
+                            <Star className="text-amber-500 fill-amber-500" size={24} />
+                            Featured Providers
+                        </h2>
+                        <div className="space-y-6">
+                            {featuredListings.map(listing => (
+                                <DirectoryListingCard key={listing.id} listing={listing} />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 4. Standard Listings */}
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
+                        All Listings
+                    </h2>
+                    {standardListings.length > 0 ? (
+                        <div className="space-y-6">
+                            {standardListings.map(listing => (
+                                <DirectoryListingCard key={listing.id} listing={listing} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white dark:bg-slate-800/80 border md:col-span-2 border-slate-200 dark:border-slate-800/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                            <Info className="w-16 h-16 text-slate-300 dark:text-slate-400 mb-4" />
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No standard listings found</h3>
+                            <p className="text-slate-500 dark:text-slate-400 max-w-sm">We couldn't find any standard listings matching your current filters. Try removing some filters or check our Featured items above.</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* 5. FAQ Section (SEO Optimized) */}
+                {faqs && faqs.length > 0 && (
+                    <div className="mt-16 mb-12 border-t border-slate-200 dark:border-slate-800/50 pt-16">
+                        <div className="max-w-3xl mx-auto">
+                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
+                            <div className="space-y-4">
+                                {faqs.map((faq, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl overflow-hidden hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+                                        <button
+                                            onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                                            className="w-full text-left px-6 py-4 flex items-center justify-between font-semibold text-slate-900 dark:text-white"
+                                        >
+                                            {faq.question}
+                                            {expandedFaq === idx ? <ChevronUp size={20} className="text-slate-400 dark:text-slate-500" /> : <ChevronDown size={20} className="text-slate-400 dark:text-slate-500" />}
+                                        </button>
+                                        <div className={`px-6 pb-4 text-slate-600 dark:text-slate-400 leading-relaxed ${expandedFaq === idx ? 'block' : 'hidden'}`}>
+                                            {faq.answer}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};

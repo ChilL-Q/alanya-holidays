@@ -25,9 +25,9 @@ export const MessageList: React.FC<MessageListProps> = ({
         >
             {/* Empty State */}
             {(!messages || messages.length === 0) && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 p-8 text-center animate-in fade-in duration-700">
-                    <div className="w-20 h-20 bg-teal-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                        <MessageSquare size={32} className="text-teal-500" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 dark:text-slate-400 p-8 text-center animate-in fade-in duration-700">
+                    <div className="w-20 h-20 bg-teal-50 dark:bg-slate-800/80 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                        <MessageSquare size={32} className="text-teal-500 dark:text-cyan-400 " />
                     </div>
                     <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-2">Start a conversation</h3>
                     <p className="text-sm max-w-[240px]">Ask questions about the property or discuss booking details.</p>
@@ -37,7 +37,7 @@ export const MessageList: React.FC<MessageListProps> = ({
             {/* Date Divider (Mock) */}
             {messages.length > 0 && (
                 <div className="flex justify-center mb-4">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
                         Today
                     </span>
                 </div>
@@ -60,7 +60,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                                 {otherPerson?.avatar_url ? (
                                     <img src={otherPerson.avatar_url} className="w-8 h-8 rounded-full shadow-sm object-cover" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800/80 flex items-center justify-center">
                                         <User size={12} className="text-slate-500" />
                                     </div>
                                 )}
@@ -71,8 +71,8 @@ export const MessageList: React.FC<MessageListProps> = ({
                             <div className={`
                                 px-5 py-3.5 shadow-sm text-[15px] leading-relaxed relative transition-all duration-200
                                 ${isMe
-                                    ? `bg-teal-600 text-white ${isFirstInGroup ? 'rounded-tr-2xl' : 'rounded-tr-md'} ${isLastInGroup ? 'rounded-br-2xl' : 'rounded-br-md'} rounded-l-2xl`
-                                    : `bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 ${isFirstInGroup ? 'rounded-tl-2xl' : 'rounded-tl-md'} ${isLastInGroup ? 'rounded-bl-2xl' : 'rounded-bl-md'} rounded-r-2xl border border-slate-100 dark:border-slate-700`
+                                    ? `bg-teal-600 dark:bg-cyan-600 text-white ${isFirstInGroup ? 'rounded-tr-2xl' : 'rounded-tr-md'} ${isLastInGroup ? 'rounded-br-2xl' : 'rounded-br-md'} rounded-l-2xl`
+                                    : `bg-white dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 ${isFirstInGroup ? 'rounded-tl-2xl' : 'rounded-tl-md'} ${isLastInGroup ? 'rounded-bl-2xl' : 'rounded-bl-md'} rounded-r-2xl border border-slate-100 dark:border-slate-800/50`
                                 }
                             `}>
                                 {msg.content}
@@ -86,7 +86,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                             `}>
                                 <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 {isMe && (
-                                    msg.is_read ? <CheckCheck size={12} className="text-teal-500" /> : <Check size={12} />
+                                    msg.is_read ? <CheckCheck size={12} className="text-teal-500 dark:text-cyan-400 " /> : <Check size={12} />
                                 )}
                             </div>
                         </div>

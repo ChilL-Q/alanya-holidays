@@ -134,14 +134,14 @@ export const RegisterModal: React.FC = () => {
                                 type="button"
                                 onClick={() => setRole('guest')}
                                 className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'guest'
-                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 ring-1 ring-teal-600'
+                                    : 'border-slate-200 dark:border-slate-800/50 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800/90'
                                     }`}
                             >
-                                <span className={`block font-bold mb-1 ${role === 'guest' ? 'text-teal-800 dark:text-teal-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                <span className={`block font-bold mb-1 ${role === 'guest' ? 'text-teal-800 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {t('auth.role.buyer') || 'Buyer'}
                                 </span>
-                                <span className={`text-xs block ${role === 'guest' ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                                <span className={`text-xs block ${role === 'guest' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`}>
                                     {t('auth.role.buyer_desc') || 'I want to book stays'}
                                 </span>
                             </button>
@@ -150,14 +150,14 @@ export const RegisterModal: React.FC = () => {
                                 type="button"
                                 onClick={() => setRole('host')}
                                 className={`p-4 rounded-xl border-2 text-left transition-all ${role === 'host'
-                                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-600'
-                                    : 'border-slate-200 dark:border-slate-700 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 ring-1 ring-teal-600'
+                                    : 'border-slate-200 dark:border-slate-800/50 hover:border-teal-200 hover:bg-slate-50 dark:hover:bg-slate-800/90'
                                     }`}
                             >
-                                <span className={`block font-bold mb-1 ${role === 'host' ? 'text-teal-800 dark:text-teal-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                <span className={`block font-bold mb-1 ${role === 'host' ? 'text-teal-800 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-700 dark:text-slate-300'}`}>
                                     {t('auth.role.seller') || 'Seller'}
                                 </span>
-                                <span className={`text-xs block ${role === 'host' ? 'text-teal-600 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                                <span className={`text-xs block ${role === 'host' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`}>
                                     {t('auth.role.seller_desc') || 'I want to list properties'}
                                 </span>
                             </button>
@@ -172,7 +172,7 @@ export const RegisterModal: React.FC = () => {
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="John Doe"
                                 />
                             </div>
@@ -187,7 +187,7 @@ export const RegisterModal: React.FC = () => {
                                         type="text"
                                         value={companyName}
                                         onChange={(e) => setCompanyName(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                         placeholder="Alanya Holidays Ltd."
                                     />
                                 </div>
@@ -203,7 +203,7 @@ export const RegisterModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
@@ -218,7 +218,7 @@ export const RegisterModal: React.FC = () => {
                                     minLength={6}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -238,7 +238,7 @@ export const RegisterModal: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={openLogin}
-                                className="text-primary dark:text-teal-400 font-semibold hover:underline"
+                                className="text-primary dark:text-slate-200 font-semibold hover:underline"
                             >
                                 {t('auth.submit.login')}
                             </button>

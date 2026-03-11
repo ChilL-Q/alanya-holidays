@@ -119,9 +119,9 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-                <RefreshCw className="text-teal-600" />
+                <RefreshCw className="text-teal-600 dark:text-cyan-400 " />
                 Sync Calendars (iCal)
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
@@ -142,19 +142,19 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
                         placeholder="Name (e.g. Airbnb)"
                         value={newFeedName}
                         onChange={(e) => setNewFeedName(e.target.value)}
-                        className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                        className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                     />
                     <input
                         type="text"
                         placeholder="iCal URL (https://...)"
                         value={newFeedUrl}
                         onChange={(e) => setNewFeedUrl(e.target.value)}
-                        className="flex-[2] px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                        className="flex-[2] px-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                     />
                     <button
                         onClick={handleAddFeed}
                         disabled={isAdding}
-                        className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
                     >
                         {isAdding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                         <span className="ml-2 hidden sm:inline">Add</span>
@@ -171,7 +171,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
                         </div>
                     ) : (
                         feeds.map((feed) => (
-                            <div key={feed.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div key={feed.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-100 dark:border-slate-800/50">
                                 <div className="overflow-hidden">
                                     <div className="font-medium text-slate-900 dark:text-white text-sm">{feed.name}</div>
                                     <div className="text-xs text-slate-500 truncate mt-0.5">{feed.url}</div>
@@ -198,7 +198,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
                     <button
                         onClick={handleSync}
                         disabled={isSyncing}
-                        className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium rounded-lg flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+                        className="w-full py-2 bg-slate-900 dark:bg-white text-white dark:text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
                         {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
                         Sync All Calendars
@@ -207,7 +207,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
             </div>
 
             {/* Export Section */}
-            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
                     <Copy size={16} />
                     Export Calendar
@@ -215,15 +215,15 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
                 <p className="text-xs text-slate-500 mb-3">
                     Copy this link to Airbnb or Booking.com to block dates when booked here.
                 </p>
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 p-2 rounded-lg">
                     <code className="flex-1 text-xs text-slate-600 dark:text-slate-300 truncate font-mono select-all">
                         {exportUrl}
                     </code>
                     <button
                         onClick={handleCopy}
-                        className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-slate-500 transition-colors"
+                        className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-md text-slate-500 transition-colors"
                     >
-                        {copied ? <Check size={14} className="text-teal-500" /> : <Copy size={14} />}
+                        {copied ? <Check size={14} className="text-teal-500 dark:text-cyan-400 " /> : <Copy size={14} />}
                     </button>
                 </div>
             </div>

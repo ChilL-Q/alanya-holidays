@@ -333,7 +333,7 @@ export const ar = {
     'nav.service_desc': 'سيارات، جولات، وأكثر',
 
     // Car Rental Page
-    'car.hero.title': 'استكشف ألانيا <span class="text-teal-600">بشروطك الخاصة</span>',
+    'car.hero.title': 'استكشف ألانيا <span class="text-teal-600 dark:text-cyan-400 ">بشروطك الخاصة</span>',
     'car.hero.subtitle': 'من السيارات المدمجة إلى سيارات الدفع الرباعي للمغامرات الجبلية. أسعار شفافة، تأمين شامل، وبدون رسوم مخفية.',
     'car.features.delivery': 'توصيل مجاني',
     'car.features.deposit': 'خيارات بدون وديعة',
@@ -362,7 +362,7 @@ export const ar = {
     'offer.close': 'إغلاق',
 
     // Bike Rental Page
-    'bike.hero.title': 'تجول في ألانيا <span class="text-teal-600">على عجلتين</span>',
+    'bike.hero.title': 'تجول في ألانيا <span class="text-teal-600 dark:text-cyan-400 ">على عجلتين</span>',
     'bike.hero.subtitle': 'تغلب على الزحام واستكشف الجواهر الخفية. دراجات بخارية بأسعار معقولة ودراجات نارية قوية لكل سائق.',
     'bike.features.helmet': 'خوذة مجانية',
     'bike.features.mileage': 'كيلومترات غير محدودة',
@@ -406,7 +406,7 @@ export const ar = {
     'visa.consult.disclaimer': 'بالاتصال بشريكنا، فإنك تقر بأن الخدمات مقدمة من قبل طرف ثالث مستقل.',
 
     // eSIM Page
-    'esim.hero.title': 'ابق متصلاً <span class="text-teal-600">فوراً</span>',
+    'esim.hero.title': 'ابق متصلاً <span class="text-teal-600 dark:text-cyan-400 ">فوراً</span>',
     'esim.hero.title_plain': 'ابق متصلاً فوراً',
     'esim.hero.subtitle': 'لا رسوم تجوال. لا تبديل بطاقات بلاستيكية. نزل شريحة eSIM التركية في دقائق وكن متصلاً لحظة هبوطك.',
     'esim.btn.install': 'تثبيت التطبيق',
@@ -425,7 +425,7 @@ export const ar = {
     'esim.days': 'أيام',
 
     // List Your Property
-    'list.hero.title': 'حول عقارك إلى <span class="text-accent">دخل سلبي</span>',
+    'list.hero.title': 'حول عقارك إلى <span class="text-accent dark:text-amber-400 ">دخل سلبي</span>',
     'list.hero.subtitle': 'انضم إلى مجموعة ألانيا الأكثر تميزًا من تأجير العطلات. نحن نتولى كل شيء من الحجز إلى التنظيف.',
     'list.hero.cta': 'ابدأ الكسب',
     'list.benefit.verified.title': 'عملاء موثوقون',
@@ -595,7 +595,7 @@ export const ar = {
     'prop_form.full_address': 'العنوان الكامل',
     'prop_form.address_placeholder': 'الشارع، رقم المبنى، رقم الشقة ...',
     'prop_form.license_placeholder': 'مثال 07-1234...',
-    
+
     // Form Labels
     'prop_form.label_title': 'العنوان',
     'prop_form.label_price': 'السعر (€/ليلة)',
@@ -705,4 +705,51 @@ export const ar = {
     'add_service.success.desc': 'تم إرسال خدمتك للمراجعة. سنقوم بإعلامك بمجرد تفعيلها.',
     'add_service.view_all': 'عرض جميع الخدمات',
     'add_service.add_another': 'أضف خدمة أخرى',
+
+    // Directory Home
+    'dir.hero.page_title': 'عطلات ألانيا – إيجارات العطلات، الجولات ودليل السفر في ألانيا، تركيا',
+    'dir.hero.meta_desc': 'اعثر على أفضل الخدمات الطبية وأماكن الإقامة والجولات والمطاعم والنقل وخدمات النقل في مكان واحد موثوق.',
+    'dir.hero.badge': 'خطط لعطلة ألانيا المثالية',
+    'dir.hero.title1': 'الدليل السياحي الشامل',
+    'dir.hero.title2': 'لألانيا وأنطاليا',
+    'dir.hero.subtitle': 'اعثر على أفضل الخدمات الطبية للإقامة والجولات والمطاعم والنقل في مكان واحد موثوق.',
+    'dir.search.placeholder': 'ما الذي تبحث عنه؟',
+    'dir.search.cat_all': 'جميع الفئات',
+    'dir.search.loc_all': 'جميع المواقع',
+    'dir.search.loc_center': 'مركز ألانيا',
+    'dir.search.loc_mahmutlar': 'محمودلار',
+    'dir.search.loc_oba': 'أوبا',
+    'dir.search.loc_kestel': 'كيستيل',
+    'dir.search.btn': 'بحث',
+    'dir.cta.explore': 'استكشف ألانيا',
+    'dir.cta.categories': 'الفئات',
+    'dir.cta.list': 'إضافة عملك',
+    'dir.cta.ai': 'جرب مخطط الرحلات بالذكاء الاصطناعي',
+    'dir.cat.medical': 'السياحة الطبية',
+    'dir.cat.accommodations': 'أماكن الإقامة',
+    'dir.cat.tours': 'الجولات والتجارب',
+    'dir.cat.transport': 'مواصلات',
+    'dir.cat.restaurants': 'المطاعم والمقاهي',
+    'dir.cat.realestate': 'العقارات',
+    'dir.cat.visa': 'التأشيرة والإقامة',
+    'dir.cat.shopping': 'التسوق والهدايا التذكارية',
+    'dir.cat.nature': 'المعالم الطبيعية',
+    'dir.cat.title': 'تصفح حسب الفئة',
+    'dir.cat.subtitle': 'اعثر على كل ما تحتاجه لإقامة مثالية.',
+    'dir.trust.title': 'لماذا تثق بمركز عطلات ألانيا؟',
+    'dir.trust.subtitle': 'نحن نبني المورد السياحي الأكمل والأكثر ثقة في الريفييرا التركية.',
+    'dir.trust.b1.title': 'شركات موثوقة',
+    'dir.trust.b1.desc': 'كل إعلان مميز يمر بعملية تحقق صارمة لضمان الجودة والموثوقية لمستخدمينا.',
+    'dir.trust.b2.title': 'اتصال مباشر',
+    'dir.trust.b2.desc': 'بدون رسوم خفية. نقوم بتوصيلك مباشرة بمقدمي الخدمات عبر الواتساب.',
+    'dir.trust.b3.title': 'نظام بيئي محلي',
+    'dir.trust.b3.desc': 'من التنقلات من المطار إلى الاستثمارات العقارية، اعثر على كل ما تتطلبه عطلتك.',
+    'dir.testi.title': 'المورد السياحي الأكمل في ألانيا',
+    'dir.testi.subtitle': 'ما يقوله المستخدمون والشركاء عنا.',
+    'dir.testi.t1.text': '"وجدت عيادة أسنان رائعة وموثوقة خلال 5 دقائق. تكامل الواتساب يجعل كل شيء سهلاً للغاية."',
+    'dir.testi.t1.name': 'سارة م.',
+    'dir.testi.t1.role': 'زائر من المملكة المتحدة',
+    'dir.testi.t2.text': '"كمنظم رحلات محلي، جلب لنا التواجد هنا عملاء مؤهلين بشكل كبير مباشرة إلى هاتفنا."',
+    'dir.testi.t2.name': 'أحمد ك.',
+    'dir.testi.t2.role': 'ألانيا تورز'
 };

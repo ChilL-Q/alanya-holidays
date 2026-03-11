@@ -63,7 +63,7 @@ export const HostBookingsPage = () => {
             pending: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
             confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
             cancelled: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
-            completed: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
+            completed: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-slate-800/50 dark:text-slate-200 dark:border-slate-700/50'
         };
         const icons = {
             pending: Clock,
@@ -89,14 +89,14 @@ export const HostBookingsPage = () => {
                     <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your guest bookings</p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800/50 shadow-sm">
                     {['all', 'pending', 'confirmed', 'upcoming', 'completed', 'cancelled'].map(status => (
                         status === 'upcoming' ? null : // Skip upcoming for now or implement logic
                             <button
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${filterStatus === status
-                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-md'
+                                    ? 'bg-slate-900 dark:bg-white text-white dark:text-white shadow-md'
                                     : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                     }`}
                             >
@@ -115,16 +115,16 @@ export const HostBookingsPage = () => {
                         placeholder="Search guests, properties, or ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm outline-none"
+                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm outline-none"
                     />
                 </div>
             </div>
 
             {/* Bookings List */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs uppercase font-bold tracking-wider border-b border-slate-100 dark:border-slate-700">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 text-xs uppercase font-bold tracking-wider border-b border-slate-100 dark:border-slate-800/50">
                             <tr>
                                 <th className="p-5 pl-6">Guest</th>
                                 <th className="p-5">Property</th>
@@ -134,18 +134,18 @@ export const HostBookingsPage = () => {
                                 <th className="p-5 text-right pr-6">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {isLoading ? (
                                 <tr><td colSpan={6} className="p-12 text-center text-slate-400">Loading reservations...</td></tr>
                             ) : filteredBookings.length > 0 ? (
                                 filteredBookings.map((booking) => (
-                                    <tr key={booking.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
+                                    <tr key={booking.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors group">
                                         <td className="p-5 pl-6">
                                             <div className="flex items-center gap-3">
                                                 {booking.user?.avatar_url ? (
                                                     <img src={booking.user.avatar_url} className="w-10 h-10 rounded-full object-cover shadow-sm bg-slate-100" alt="" />
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 font-bold">
+                                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-500 font-bold">
                                                         {booking.user?.full_name?.charAt(0) || 'G'}
                                                     </div>
                                                 )}
@@ -180,7 +180,7 @@ export const HostBookingsPage = () => {
                                             <div className="flex justify-end gap-2">
                                                 <button
                                                     onClick={() => setSelectedBooking(booking)}
-                                                    className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                                    className="p-2 text-slate-400 hover:text-teal-600 dark:text-cyan-400 hover:bg-teal-50 rounded-lg transition-colors"
                                                     title="View Details"
                                                 >
                                                     <Eye size={18} />
@@ -248,11 +248,11 @@ export const HostBookingsPage = () => {
                         </div>
 
                         {/* Guest Section */}
-                        <div className="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                             {selectedBooking.user?.avatar_url ? (
                                 <img src={selectedBooking.user.avatar_url} className="w-14 h-14 rounded-full object-cover" alt="" />
                             ) : (
-                                <div className="w-14 h-14 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-200 text-xl font-bold">
+                                <div className="w-14 h-14 rounded-full bg-white dark:bg-slate-800/80 flex items-center justify-center text-slate-400 border border-slate-200 text-xl font-bold">
                                     {selectedBooking.user?.full_name?.charAt(0) || 'G'}
                                 </div>
                             )}
@@ -273,7 +273,7 @@ export const HostBookingsPage = () => {
                                         onClick={() => {
                                             navigate('/host/messages');
                                         }}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 transition"
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 dark:bg-cyan-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 dark:bg-cyan-600 transition"
                                     >
                                         <MessageSquare size={14} />
                                         Message Guest
@@ -284,12 +284,12 @@ export const HostBookingsPage = () => {
 
                         {/* Property & Dates */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                                 <div className="text-xs text-slate-400 uppercase font-bold mb-1">Check In</div>
                                 <div className="font-bold text-slate-900 dark:text-white text-lg">{new Date(selectedBooking.check_in).toLocaleDateString()}</div>
                                 <div className="text-xs text-slate-500">After 3:00 PM</div>
                             </div>
-                            <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                                 <div className="text-xs text-slate-400 uppercase font-bold mb-1">Check Out</div>
                                 <div className="font-bold text-slate-900 dark:text-white text-lg">{new Date(selectedBooking.check_out).toLocaleDateString()}</div>
                                 <div className="text-xs text-slate-500">Before 11:00 AM</div>
@@ -298,7 +298,7 @@ export const HostBookingsPage = () => {
 
                         {/* Property Mini Card */}
                         {/* Property Mini Card */}
-                        <div className="flex gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 items-center">
+                        <div className="flex gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 items-center">
                             {(selectedBooking.item_type === 'property' && selectedBooking.property?.images?.[0]) ? (
                                 <img src={selectedBooking.property.images[0]} className="w-16 h-16 rounded-lg object-cover" alt="" />
                             ) : (selectedBooking.item_type === 'service' && selectedBooking.service?.images?.[0]) ? ( // Assuming service images are joined if available, though getBookingsForHost might optimize this differently.
@@ -319,7 +319,7 @@ export const HostBookingsPage = () => {
                                 <span className="text-slate-500">Total Price</span>
                                 <span className="font-bold text-lg text-slate-900 dark:text-white">{formatPrice(convertPrice(selectedBooking.total_price, 'EUR'))}</span>
                             </div>
-                            <div className="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <div className="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800/50">
                                 <span>Payment Status</span>
                                 <span className={`font-bold ${selectedBooking.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
                                     {(selectedBooking.payment_status || 'Pending').toUpperCase()}
@@ -338,7 +338,7 @@ export const HostBookingsPage = () => {
                                 </button>
                                 <button
                                     onClick={() => handleStatusUpdate(selectedBooking.id, 'confirmed')}
-                                    className="p-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20"
+                                    className="p-3 rounded-xl bg-teal-600 dark:bg-cyan-600 text-white font-bold hover:bg-teal-700 dark:bg-cyan-600 transition shadow-lg shadow-teal-500/20"
                                 >
                                     Accept Booking
                                 </button>

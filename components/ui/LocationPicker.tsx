@@ -156,7 +156,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect
         }
     }, [onLocationSelect, onAddressSelect]);
 
-    if (!isLoaded) return <div className="w-full h-full bg-slate-100 dark:bg-slate-800 animate-pulse rounded-xl"></div>;
+    if (!isLoaded) return <div className="w-full h-full bg-slate-100 dark:bg-slate-800/80 animate-pulse rounded-xl"></div>;
 
     const mapOptions = {
         styles: theme === 'dark' ? darkMapStyles : undefined,
@@ -169,7 +169,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ onLocationSelect
     };
 
     return (
-        <div className="h-full w-full rounded-xl overflow-hidden shadow-inner border border-slate-300 dark:border-slate-600 z-0">
+        <div className="h-full w-full rounded-xl overflow-hidden shadow-inner border border-slate-300 dark:border-slate-700/50 z-0">
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={center}

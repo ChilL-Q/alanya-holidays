@@ -40,13 +40,13 @@ export const AlanyaIntro: React.FC = () => {
 
     return (
         <>
-            <section className="py-24 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <section className="py-24 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800/50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16 max-w-2xl mx-auto animate-fade-up">
                         <h2 className="text-3xl md:text-4xl font-serif text-slate-900 dark:text-white mb-4">
                             {t('intro.title')}
                         </h2>
-                        <p className="text-sm font-bold uppercase tracking-widest text-accent mb-6">
+                        <p className="text-sm font-bold uppercase tracking-widest text-accent dark:text-amber-400 mb-6">
                             {t('intro.subtitle')}
                         </p>
                         <p className="text-lg text-slate-600 dark:text-slate-400 font-light leading-relaxed">

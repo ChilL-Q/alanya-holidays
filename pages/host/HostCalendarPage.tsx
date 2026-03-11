@@ -71,18 +71,18 @@ export const HostCalendarPage = () => {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Calendar</h1>
                     <p className="text-slate-500 dark:text-slate-400">View your booking schedule</p>
                 </div>
-                <div className="flex items-center gap-4 bg-white dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                    <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <div className="flex items-center gap-4 bg-white dark:bg-slate-800/80 p-2 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                    <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg">
                         <ChevronLeft size={20} className="text-slate-600 dark:text-slate-300" />
                     </button>
                     <span className="font-bold text-lg min-w-[140px] text-center text-slate-900 dark:text-white">{monthName} {year}</span>
-                    <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                    <button onClick={() => changeMonth(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg">
                         <ChevronRight size={20} className="text-slate-600 dark:text-slate-300" />
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6">
                 <div className="grid grid-cols-7 gap-4 mb-4">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                         <div key={day} className="text-center text-sm font-semibold text-slate-400 uppercase">
@@ -102,8 +102,8 @@ export const HostCalendarPage = () => {
                                 key={day}
                                 className={`aspect-square rounded-xl flex items-center justify-center text-sm font-medium transition-all cursor-pointer relative
                                     ${booked
-                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                                        : 'bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-slate-800/50 dark:text-slate-200'
+                                        : 'bg-white hover:bg-slate-50 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 border border-slate-100 dark:border-slate-800/50 text-slate-700 dark:text-slate-300'
                                     }
                                 `}
                             >
@@ -117,7 +117,7 @@ export const HostCalendarPage = () => {
 
             <div className="flex gap-6 justify-center">
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700" />
+                    <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-800/50" />
                     <span className="text-sm text-slate-500">Available</span>
                 </div>
                 <div className="flex items-center gap-2">

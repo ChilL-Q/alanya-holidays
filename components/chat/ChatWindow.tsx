@@ -147,7 +147,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
         : activeConversation?.host_id;
 
     return (
-        <div className={`flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden ${embedded ? 'rounded-none border-0 shadow-none h-full' : 'fixed top-[72px] bottom-0 left-0 right-0 sm:top-28 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[400px] rounded-t-3xl sm:rounded-3xl z-50'} ${className} font-sans`}>
+        <div className={`flex flex-col bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 shadow-2xl overflow-hidden ${embedded ? 'rounded-none border-0 shadow-none h-full' : 'fixed top-[72px] bottom-0 left-0 right-0 sm:top-28 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[400px] rounded-t-3xl sm:rounded-3xl z-50'} ${className} font-sans`}>
 
             <ChatHeader
                 otherPerson={otherPerson}

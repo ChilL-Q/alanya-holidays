@@ -12,7 +12,7 @@ export const About: React.FC = () => {
             <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1542051841857-5f90071e7989?q=80&w=2940&auto=format&fit=crop"
+                        src="/images/hero-bg.jpg"
                         alt="Alanya Coastline"
                         className="w-full h-full object-cover"
                     />
@@ -32,8 +32,8 @@ export const About: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20 pb-20">
                 {/* Stats / Pillars */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-24">
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
-                        <div className="w-14 h-14 bg-teal-50 dark:bg-teal-900/20 rounded-2xl flex items-center justify-center text-teal-600 dark:text-teal-400 mb-6 group-hover:scale-110 transition-transform">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-800/50">
+                        <div className="w-14 h-14 bg-teal-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-teal-600 dark:text-cyan-400 dark:text-slate-200 mb-6 group-hover:scale-110 transition-transform">
                             <Shield size={28} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('about.pillar.fees_guest.title')}</h3>
@@ -42,8 +42,8 @@ export const About: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
-                        <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6 group-hover:scale-110 transition-transform">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-800/50">
+                        <div className="w-14 h-14 bg-blue-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-blue-600 dark:text-slate-200 mb-6 group-hover:scale-110 transition-transform">
                             <Users size={28} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('about.pillar.fees_host.title')}</h3>
@@ -52,7 +52,7 @@ export const About: React.FC = () => {
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-700/50">
+                    <div className="bg-white dark:bg-slate-800/80 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-slate-100 dark:border-slate-800/50">
                         <div className="w-14 h-14 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center text-rose-600 dark:text-rose-400 mb-6 group-hover:scale-110 transition-transform">
                             <Heart size={28} strokeWidth={1.5} />
                         </div>
@@ -80,9 +80,8 @@ export const About: React.FC = () => {
                         </div>
                     </div>
                     <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl order-1 lg:order-2 group">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/20 to-purple-500/20 mix-blend-overlay z-10" />
                         <img
-                            src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=2949&auto=format&fit=crop"
+                            src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=2949"
                             alt="Alanya Harbor"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
@@ -93,11 +92,11 @@ export const About: React.FC = () => {
                 <div className="relative rounded-3xl overflow-hidden">
                     <div className="absolute inset-0">
                         <img
-                            src="https://images.unsplash.com/photo-1605218427368-35b81a3ddabc?q=80&w=2832&auto=format&fit=crop"
+                            src="https://images.unsplash.com/photo-1582733352932-514d7a8deda6?auto=format&fit=crop&q=80&w=2832"
                             alt="Turkish Hospitality"
-                            className="w-full h-full object-cover grayscale"
+                            className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-teal-900/90 mix-blend-multiply" />
+                        <div className="absolute inset-0 bg-teal-900/40" />
                     </div>
 
                     <div className="relative z-10 p-12 md:p-24 text-center text-white">

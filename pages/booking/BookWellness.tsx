@@ -72,7 +72,7 @@ export const BookWellness: React.FC = () => {
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-4xl mx-auto px-4">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 mb-8 transition-colors">
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 dark:text-cyan-400 mb-8 transition-colors">
                     <ArrowLeft size={20} />
                     {t('auth.close') || 'Back'}
                 </button>
@@ -85,7 +85,7 @@ export const BookWellness: React.FC = () => {
                             alt={service.title}
                             className="w-full rounded-2xl shadow-md object-cover aspect-[4/3] mb-6"
                         />
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-6">
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 space-y-6">
 
                             {/* Description */}
                             <div>
@@ -99,10 +99,10 @@ export const BookWellness: React.FC = () => {
                                 </p>
                             </div>
 
-                            <div className="h-px bg-slate-100 dark:bg-slate-700" />
+                            <div className="h-px bg-slate-100 dark:bg-slate-800/50" />
 
                             {/* Provider Info */}
-                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
                                 <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-2">Direct Contact</h4>
                                 <p className="text-sm text-slate-500 mb-2">You will be communicating directly with the clinic/specialist via WhatsApp.</p>
                                 <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
@@ -115,10 +115,10 @@ export const BookWellness: React.FC = () => {
                     </div>
 
                     {/* Booking/Contact Form */}
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 h-fit">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-8 shadow-lg border border-slate-100 dark:border-slate-800/50 h-fit">
                         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">{service.title}</h1>
                         <div className="flex items-baseline gap-2 mb-8">
-                            <span className="text-2xl font-bold text-teal-600 dark:text-accent">
+                            <span className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
                                 {service.price > 0 ? formatPrice(convertPrice(service.price, 'EUR')) : 'Contact for Price'}
                             </span>
                             {service.price > 0 && <span className="text-slate-500 dark:text-slate-400">approx. cost</span>}
@@ -138,7 +138,7 @@ export const BookWellness: React.FC = () => {
                                         placeholderText={t('date_format')}
                                         dateFormat="dd.MM.yyyy"
                                         locale={language === 'ru' ? ru : language === 'tr' ? tr : enGB}
-                                        customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
+                                        customInput={<DateInputMask className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none" />}
                                     />
                                 </div>
                             </div>

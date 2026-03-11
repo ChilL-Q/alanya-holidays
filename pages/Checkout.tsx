@@ -146,13 +146,13 @@ export const Checkout: React.FC = () => {
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl text-center max-w-md animate-in fade-in zoom-in duration-500">
+        <div className="bg-white dark:bg-slate-800/80 p-8 rounded-3xl shadow-xl text-center max-w-md animate-in fade-in zoom-in duration-500">
           <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('checkout.success_title') || 'Booking Confirmed!'}</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6">{t('checkout.success_desc') || 'Your adventure in Alanya awaits. Redirecting to your dashboard...'}</p>
-          <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-full h-2 overflow-hidden">
             <div className="bg-green-500 h-full w-full animate-[progress_3s_linear]" />
           </div>
         </div>
@@ -172,23 +172,23 @@ export const Checkout: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Order Details */}
           <div className="md:col-span-2 space-y-6 animate-fade-up">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div className="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('checkout.basket')}</h2>
 
               {items.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-slate-500 dark:text-slate-400 mb-4">{t('checkout.empty')}</p>
-                  <Link to="/" className="text-teal-700 dark:text-teal-400 font-medium underline">{t('checkout.start')}</Link>
+                  <Link to="/" className="text-teal-700 dark:text-cyan-400 dark:text-slate-200 font-medium underline">{t('checkout.start')}</Link>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-start border-b border-slate-100 dark:border-slate-700 pb-6 last:border-0 last:pb-0">
+                    <div key={idx} className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800/50 pb-6 last:border-0 last:pb-0">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${item.type === 'RENTAL' || item.type === 'property'
-                            ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-400'
-                            : 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400'
+                            ? 'bg-teal-100 dark:bg-slate-800/50 text-teal-800 dark:text-cyan-400 dark:text-slate-200'
+                            : 'bg-orange-100 dark:bg-slate-800/50 text-orange-800 dark:text-slate-200'
                             }`}>
                             {item.type === 'property' ? 'STAY' : item.type}
                           </span>
@@ -206,7 +206,7 @@ export const Checkout: React.FC = () => {
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className="font-medium text-teal-600 dark:text-accent">{convertAndFormat(item.price, 'EUR')}</span>
+                        <span className="font-medium text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{convertAndFormat(item.price, 'EUR')}</span>
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition"
@@ -222,14 +222,14 @@ export const Checkout: React.FC = () => {
 
             {/* Welcome Pack Special Offer */}
             {/* Welcome Pack Special Offer */}
-            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm border border-teal-100 dark:border-teal-800/50 p-4 flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-12 h-12 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm border border-teal-100 dark:border-slate-700/50 p-4 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-12 h-12 bg-white dark:bg-slate-800/80 rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">
                 🧺
               </div>
               <div className="flex-grow text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('checkout.welcome_pack_title') || 'Arrive in Comfort'}</h3>
-                  <span className="font-bold text-teal-700 dark:text-accent text-sm">€30</span>
+                  <span className="font-bold text-teal-700 dark:text-cyan-400 dark:text-accent dark:text-amber-400 text-sm">€30</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
                   {t('checkout.welcome_pack_desc') || 'Don\'t worry about shopping immediately. We\'ll stock your fridge with essentials: bread, water, milk, eggs, cheese, and seasonal fruit.'}
@@ -253,89 +253,89 @@ export const Checkout: React.FC = () => {
                 disabled={items.some(i => i.id === 'rec-2')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm whitespace-nowrap ${items.some(i => i.id === 'rec-2')
                   ? 'bg-green-100 text-green-700 cursor-default'
-                  : 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-md active:scale-95'}`}
+                  : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white hover:shadow-md active:scale-95'}`}
               >
                 {items.some(i => i.id === 'rec-2') ? (t('checkout.added') || 'Added') : (t('checkout.add_welcome') || 'Add')}
               </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div className="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('checkout.payment')}</h2>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <button
                   onClick={() => setPaymentMethod('card')}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'card'
-                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200'
+                    : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                     }`}
                 >
-                  <CreditCard className={paymentMethod === 'card' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'card' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.card')}</span>
+                  <CreditCard className={paymentMethod === 'card' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className={`text-sm font-bold ${paymentMethod === 'card' ? 'text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.card')}</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod('cash')}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'cash'
-                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200'
+                    : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                     }`}
                 >
-                  <Banknote className={paymentMethod === 'cash' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.cash')}</span>
+                  <Banknote className={paymentMethod === 'cash' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className={`text-sm font-bold ${paymentMethod === 'cash' ? 'text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.cash')}</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod('bank')}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'bank'
-                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200'
+                    : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                     }`}
                 >
-                  <Shield className={paymentMethod === 'bank' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'bank' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.bank')}</span>
+                  <Shield className={paymentMethod === 'bank' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className={`text-sm font-bold ${paymentMethod === 'bank' ? 'text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.bank')}</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod('crypto')}
                   className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'crypto'
-                    ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200'
+                    : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                     }`}
                 >
-                  <Bitcoin className={paymentMethod === 'crypto' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                  <span className={`text-sm font-bold ${paymentMethod === 'crypto' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.crypto')}</span>
+                  <Bitcoin className={paymentMethod === 'crypto' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 dark:text-slate-400'} />
+                  <span className={`text-sm font-bold ${paymentMethod === 'crypto' ? 'text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.crypto')}</span>
                 </button>
                 <div className="col-span-2 sm:col-span-1">
                   <button
                     onClick={() => setPaymentMethod('swift')}
                     className={`w-full p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition ${paymentMethod === 'swift'
-                      ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400'
-                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200'
+                      : 'border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                       }`}
                   >
-                    <Banknote className={paymentMethod === 'swift' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-400'} />
-                    <span className={`text-sm font-bold ${paymentMethod === 'swift' ? 'text-teal-700 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.swift')}</span>
+                    <Banknote className={paymentMethod === 'swift' ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 dark:text-slate-400'} />
+                    <span className={`text-sm font-bold ${paymentMethod === 'swift' ? 'text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}>{t('checkout.method.swift')}</span>
                   </button>
                 </div>
               </div>
 
               {paymentMethod === 'card' && (
-                <div className="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-700/50 mb-4 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800/50 rounded-lg bg-slate-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
                   <CreditCard className="text-slate-400" />
                   <span className="text-slate-500 dark:text-slate-400 text-sm">You will be redirected to Stripe for secure payment</span>
                 </div>
               )}
 
               {paymentMethod === 'cash' && (
-                <div className="p-4 border border-orange-200 dark:border-orange-900/50 rounded-lg bg-orange-50 dark:bg-orange-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-orange-800 dark:text-orange-300 font-medium mb-1">20% Non-refundable Deposit Required</p>
-                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                <div className="p-4 border border-orange-200 dark:border-slate-700/50 rounded-lg bg-orange-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-orange-800 dark:text-slate-200 font-medium mb-1">20% Non-refundable Deposit Required</p>
+                  <p className="text-xs text-orange-600 dark:text-slate-200">
                     To secure your reservation with Cash on Arrival, we require a 20% deposit now via secure online payment. The remaining balance will be paid in cash upon arrival.
                   </p>
                 </div>
               )}
 
               {paymentMethod === 'bank' && (
-                <div className="p-4 border border-teal-100 dark:border-teal-900/50 rounded-lg bg-teal-50 dark:bg-teal-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-teal-800 dark:text-teal-300 font-medium mb-2">{t('checkout.method.bank_desc')}</p>
-                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-teal-900">
+                <div className="p-4 border border-teal-100 dark:border-slate-700/50 rounded-lg bg-teal-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-teal-800 dark:text-cyan-400 dark:text-slate-200 font-medium mb-2">{t('checkout.method.bank_desc')}</p>
+                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-slate-700/50">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">Bank Name</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Ziraat Bankası</span>
@@ -348,7 +348,7 @@ export const Checkout: React.FC = () => {
                       <span className="text-slate-500">IBAN</span>
                       <div className="flex items-center gap-2">
                         <code className="font-mono text-slate-700 dark:text-slate-300">TR12 3456 7890 1234 5678 9012 34</code>
-                        <button onClick={() => copyToClipboard('TR12 3456 7890 1234 5678 9012 34')} className="text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300"><Copy size={12} /></button>
+                        <button onClick={() => copyToClipboard('TR12 3456 7890 1234 5678 9012 34')} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200 hover:text-teal-800 dark:text-cyan-400 dark:hover:text-teal-300"><Copy size={12} /></button>
                       </div>
                     </div>
                   </div>
@@ -356,8 +356,8 @@ export const Checkout: React.FC = () => {
               )}
 
               {paymentMethod === 'crypto' && (
-                <div className="p-4 border border-indigo-100 dark:border-indigo-900/50 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-indigo-800 dark:text-indigo-300 font-medium mb-2">{t('checkout.method.crypto_desc')}</p>
+                <div className="p-4 border border-indigo-100 dark:border-indigo-900/50 rounded-lg bg-indigo-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-indigo-800 dark:text-slate-200 font-medium mb-2">{t('checkout.method.crypto_desc')}</p>
                   <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-indigo-100 dark:border-indigo-900">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">Network</span>
@@ -367,7 +367,7 @@ export const Checkout: React.FC = () => {
                       <span className="text-slate-500">USDT Address</span>
                       <div className="flex items-center gap-2">
                         <code className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[200px]">TVj...xYz</code>
-                        <button onClick={() => copyToClipboard('TVj7...ExampleAddress...xYz')} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"><Copy size={12} /></button>
+                        <button onClick={() => copyToClipboard('TVj7...ExampleAddress...xYz')} className="text-indigo-600 dark:text-slate-200 hover:text-indigo-800 dark:hover:text-indigo-300"><Copy size={12} /></button>
                       </div>
                     </div>
                     <p className="text-[10px] text-amber-600 mt-1">⚠️ Please ensure you send only USDT on the TRC20 network.</p>
@@ -375,9 +375,9 @@ export const Checkout: React.FC = () => {
                 </div>
               )}
               {paymentMethod === 'swift' && (
-                <div className="p-4 border border-blue-100 dark:border-blue-900/50 rounded-lg bg-blue-50 dark:bg-blue-900/20 mb-4 animate-in fade-in slide-in-from-top-2">
-                  <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-2">{t('checkout.method.swift_desc')}</p>
-                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-blue-900">
+                <div className="p-4 border border-blue-100 dark:border-slate-700/50 rounded-lg bg-blue-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
+                  <p className="text-sm text-blue-800 dark:text-slate-200 font-medium mb-2">{t('checkout.method.swift_desc')}</p>
+                  <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-slate-700/50">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500">{t('checkout.bank_name')}</span>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Garanti BBVA</span>
@@ -404,7 +404,7 @@ export const Checkout: React.FC = () => {
                 onClick={handlePayment}
                 disabled={items.length === 0 || isProcessing}
                 data-testid="pay-button"
-                className="w-full bg-teal-700 dark:bg-teal-600 text-white font-bold py-4 rounded-xl border-2 border-transparent hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-800 dark:hover:bg-teal-700 shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-teal-700 dark:bg-cyan-600 dark:bg-slate-800/50 text-white font-bold py-4 rounded-xl border-2 border-transparent hover:border-teal-500 dark:hover:border-teal-400 hover:bg-teal-800 dark:bg-cyan-600 dark:hover:bg-teal-700 dark:bg-cyan-600 shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <>Processing...</>
@@ -419,7 +419,7 @@ export const Checkout: React.FC = () => {
 
           {/* Sidebar Summary */}
           <div className="md:col-span-1 animate-fade-up delay-200 opacity-0 fill-mode-forwards">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 p-6 sticky top-24">
+            <div className="bg-white dark:bg-slate-800/80 rounded-xl shadow-md border border-slate-200 dark:border-slate-800/50 p-6 sticky top-24">
               <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-6">{t('checkout.price_details')}</h3>
 
               <div className="space-y-3 mb-6">
@@ -430,7 +430,7 @@ export const Checkout: React.FC = () => {
                   const rentalPrice = item.type === 'property' || item.type === 'RENTAL' ? (itemTotal - itemCleaningFee) : itemTotal;
 
                   return (
-                    <div key={idx} className="flex flex-col gap-2 border-b border-slate-100 dark:border-slate-700 pb-3 last:border-0 last:pb-0">
+                    <div key={idx} className="flex flex-col gap-2 border-b border-slate-100 dark:border-slate-800/50 pb-3 last:border-0 last:pb-0">
                       {/* Base Item Price / Rental Price */}
                       <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
                         <span>
@@ -457,15 +457,15 @@ export const Checkout: React.FC = () => {
                 })}
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-800/50">
                 <span className="font-bold text-lg text-slate-900 dark:text-white">{t('prop.total')} ({currency})</span>
                 <span className="font-bold text-xl text-slate-900 dark:text-white">
                   {convertAndFormat(total)}
                 </span>
               </div>
 
-              <div className="mt-6 bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg flex gap-3 items-start">
-                <Shield className="text-teal-700 dark:text-teal-400 shrink-0" size={18} />
+              <div className="mt-6 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg flex gap-3 items-start">
+                <Shield className="text-teal-700 dark:text-cyan-400 dark:text-slate-200 shrink-0" size={18} />
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
                   <span className="font-bold text-slate-700 dark:text-slate-300">{t('checkout.free_cancel')}</span> {t('checkout.free_cancel_desc')}
                 </p>

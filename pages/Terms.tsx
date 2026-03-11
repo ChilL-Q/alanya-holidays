@@ -24,7 +24,7 @@ export const Terms: React.FC = () => {
 
             <section id="acceptance" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <FileCheck size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">1. Acceptance of Terms</h2>
@@ -36,7 +36,7 @@ export const Terms: React.FC = () => {
 
             <section id="fees" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <CreditCard size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">2. Zero Fees Policy</h2>
@@ -59,7 +59,7 @@ export const Terms: React.FC = () => {
 
             <section id="bookings" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Gavel size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">3. Booking & Cancellations</h2>
@@ -79,7 +79,7 @@ export const Terms: React.FC = () => {
 
             <section id="responsibilities" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <AlertCircle size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">4. Guest Responsibilities</h2>
@@ -95,7 +95,7 @@ export const Terms: React.FC = () => {
 
             <section id="liability" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Ban size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">5. Liability</h2>
@@ -113,7 +113,7 @@ export const Terms: React.FC = () => {
 
             <section id="governing" className="scroll-mt-28 mb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-accent">
+                    <div className="w-10 h-10 rounded-lg bg-teal-50 dark:bg-slate-800/50 flex items-center justify-center text-accent dark:text-amber-400 ">
                         <Scale size={20} />
                     </div>
                     <h2 className="text-2xl font-bold m-0">6. Governing Law</h2>

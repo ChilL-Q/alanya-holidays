@@ -20,7 +20,7 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
                 <div className="text-center">
-                    <Loader2 className="h-10 w-10 animate-spin text-teal-600 mx-auto mb-4" />
+                    <Loader2 className="h-10 w-10 animate-spin text-teal-600 dark:text-cyan-400 mx-auto mb-4" />
                     <p className="text-slate-500 animate-pulse">Verifying permissions...</p>
                 </div>
             </div>

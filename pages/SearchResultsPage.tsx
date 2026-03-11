@@ -51,7 +51,7 @@ export const SearchResultsPage: React.FC = () => {
                 <div className={`${showMap ? 'w-full lg:w-[58%] h-full flex flex-col' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}`}>
 
                     {/* Header & Filters (Fixed in Split View) */}
-                    <div className={`flex-none flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${showMap ? 'px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 z-10' : 'mb-8 pt-8'}`}>
+                    <div className={`flex-none flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${showMap ? 'px-6 py-4 border-b border-slate-100 dark:border-slate-800/50 bg-white dark:bg-slate-950 z-10' : 'mb-8 pt-8'}`}>
                         <div>
                             <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-white">
                                 {location ? `Stays in "${location}"` : 'All Stays in Alanya'}
@@ -65,7 +65,7 @@ export const SearchResultsPage: React.FC = () => {
                             <div className="relative w-full md:w-auto">
                                 <button
                                     onClick={() => setShowSortMenu(!showSortMenu)}
-                                    className="flex w-full items-center justify-between md:justify-start gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
+                                    className="flex w-full items-center justify-between md:justify-start gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
                                 >
                                     <span className="flex items-center gap-2">
                                         <ArrowUpDown size={16} />
@@ -85,7 +85,7 @@ export const SearchResultsPage: React.FC = () => {
                                             className="fixed inset-0 z-10"
                                             onClick={() => setShowSortMenu(false)}
                                         />
-                                        <div className="absolute left-0 md:right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
+                                        <div className="absolute left-0 md:right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
                                             {[
                                                 { label: 'Recommended', value: 'recommended' },
                                                 { label: 'Newest', value: 'newest' },
@@ -95,7 +95,7 @@ export const SearchResultsPage: React.FC = () => {
                                             ].map((option) => (
                                                 <button
                                                     key={option.value}
-                                                    className={`w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${sort === option.value ? 'text-teal-600 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
+                                                    className={`w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors ${sort === option.value ? 'text-teal-600 dark:text-cyan-400 font-bold' : 'text-slate-700 dark:text-slate-200'}`}
                                                     onClick={() => {
                                                         setSort(option.value);
                                                         setShowSortMenu(false);
@@ -112,7 +112,7 @@ export const SearchResultsPage: React.FC = () => {
                             <div className="flex items-center gap-2 w-full md:w-auto">
                                 <button
                                     onClick={() => setShowMap(!showMap)}
-                                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium text-sm ${showMap ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'}`}
+                                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border rounded-lg hover:shadow-sm transition-all font-medium text-sm ${showMap ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-white' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800/50 text-slate-700 dark:text-slate-200'}`}
                                 >
                                     <MapPin size={16} />
                                     <span className="hidden sm:inline">{showMap ? t('search.show_list') : t('search.show_map')}</span>
@@ -120,13 +120,13 @@ export const SearchResultsPage: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowFilters(true)}
-                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
+                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-lg hover:shadow-sm transition-all font-medium text-slate-700 dark:text-slate-200 text-sm"
                                 >
                                     <Filter size={16} />
                                     <span className="hidden sm:inline">Filters</span>
                                     <span className="sm:hidden">Filters</span>
                                     {activeFilterCount > 0 && (
-                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600 dark:bg-cyan-600 text-[10px] text-white">
                                             {activeFilterCount}
                                         </span>
                                     )}
@@ -181,7 +181,7 @@ export const SearchResultsPage: React.FC = () => {
 
                             {!filteredProperties.length && !isLoading && (
                                 <div className="text-center py-20">
-                                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                                         <Filter size={24} />
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No properties match your filters</h3>
@@ -196,7 +196,7 @@ export const SearchResultsPage: React.FC = () => {
                                             minBathrooms: 1,
                                             hasPhotos: false
                                         })}
-                                        className="text-teal-600 hover:text-teal-700 font-bold hover:underline"
+                                        className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-bold hover:underline"
                                     >
                                         Clear all filters
                                     </button>
@@ -210,17 +210,17 @@ export const SearchResultsPage: React.FC = () => {
                 {showMap && (
                     <>
                         {/* Desktop Side Map */}
-                        <div className="hidden lg:block w-[42%] h-full border-l border-slate-200 dark:border-slate-800 relative z-0">
+                        <div className="hidden lg:block w-[42%] h-full border-l border-slate-200 dark:border-slate-800/50 relative z-0">
                             <Map properties={filteredProperties} />
                         </div>
 
                         {/* Mobile Overlay Map */}
                         <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col animate-in slide-in-from-bottom">
-                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shadow-sm z-10">
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center bg-white dark:bg-slate-900 shadow-sm z-10">
                                 <h3 className="font-bold text-lg">Map View</h3>
                                 <button
                                     onClick={() => setShowMap(false)}
-                                    className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition-colors"
+                                    className="p-2 bg-slate-100 dark:bg-slate-800/80 rounded-full hover:bg-slate-200 transition-colors"
                                 >
                                     <X size={20} />
                                 </button>

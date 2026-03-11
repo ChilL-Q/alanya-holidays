@@ -208,22 +208,22 @@ export const ListProperty: React.FC = () => {
 
                 <div className="max-w-7xl mx-auto px-4 py-20">
                     <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
+                        <div className="bg-white dark:bg-slate-800/80 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800/50">
+                            <div className="w-14 h-14 bg-blue-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-blue-600 dark:text-slate-200 mb-6">
                                 <ShieldCheck size={32} />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.verified.title')}</h3>
                             <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.verified.desc')}</p>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div className="bg-white dark:bg-slate-800/80 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800/50">
                             <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center text-green-600 dark:text-green-400 mb-6">
                                 <TrendingUp size={32} />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.earnings.title')}</h3>
                             <p className="text-slate-600 dark:text-slate-400">{t('list.benefit.earnings.desc')}</p>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                            <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6">
+                        <div className="bg-white dark:bg-slate-800/80 p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800/50">
+                            <div className="w-14 h-14 bg-purple-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-purple-600 dark:text-slate-200 mb-6">
                                 <Settings size={32} />
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{t('list.benefit.control.title')}</h3>
@@ -238,8 +238,8 @@ export const ListProperty: React.FC = () => {
     if (isSuccess) {
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4 transition-colors">
-                <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-slate-100 dark:border-slate-700">
-                    <div className="w-24 h-24 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600 dark:text-teal-400">
+                <div className="bg-white dark:bg-slate-800/80 p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-slate-100 dark:border-slate-800/50">
+                    <div className="w-24 h-24 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6 text-teal-600 dark:text-cyan-400 dark:text-slate-200">
                         <CheckCircle size={48} />
                     </div>
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('list_prop.success.title')}</h2>
@@ -257,7 +257,7 @@ export const ListProperty: React.FC = () => {
                     <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS.map(s => t(s))} />
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden min-h-[500px] flex flex-col">
+                <div className="bg-white dark:bg-slate-800/80 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden min-h-[500px] flex flex-col">
                     <div className="p-8 flex-grow">
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -269,11 +269,11 @@ export const ListProperty: React.FC = () => {
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'apartment' })}
                                             className={`p-6 rounded-2xl border-2 text-left transition-all hover:border-teal-600 ${formData.propertyType === 'apartment'
-                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
-                                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50'
+                                                : 'border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                                                 }`}
                                         >
-                                            <Building2 size={32} className={`mb-4 ${formData.propertyType === 'apartment' ? 'text-teal-600' : 'text-slate-400'}`} />
+                                            <Building2 size={32} className={`mb-4 ${formData.propertyType === 'apartment' ? 'text-teal-600 dark:text-cyan-400 ' : 'text-slate-400'}`} />
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('list_prop.type_apt')}</h3>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('list_prop.type_apt_desc')}</p>
                                         </button>
@@ -281,11 +281,11 @@ export const ListProperty: React.FC = () => {
                                         <button
                                             onClick={() => setFormData({ ...formData, propertyType: 'villa' })}
                                             className={`p-6 rounded-2xl border-2 text-left transition-all hover:border-teal-600 ${formData.propertyType === 'villa'
-                                                ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
-                                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                                ? 'border-teal-600 bg-teal-50 dark:bg-slate-800/50'
+                                                : 'border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-700/80'
                                                 }`}
                                         >
-                                            <Home size={32} className={`mb-4 ${formData.propertyType === 'villa' ? 'text-teal-600' : 'text-slate-400'}`} />
+                                            <Home size={32} className={`mb-4 ${formData.propertyType === 'villa' ? 'text-teal-600 dark:text-cyan-400 ' : 'text-slate-400'}`} />
                                             <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('list_prop.type_villa')}</h3>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('list_prop.type_villa_desc')}</p>
                                         </button>
@@ -359,7 +359,7 @@ export const ListProperty: React.FC = () => {
                                             onChange={handleChange}
                                             placeholder={t('prop_form.title')}
                                             maxLength={50}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none font-bold text-lg"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none font-bold text-lg"
                                         />
                                         <p className="text-right text-xs text-slate-400 mt-1">{formData.title.length}/50</p>
                                     </div>
@@ -371,7 +371,7 @@ export const ListProperty: React.FC = () => {
                                             onChange={handleChange}
                                             rows={6}
                                             placeholder={t('prop_form.description')}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
                                         />
                                     </div>
                                 </div>
@@ -382,7 +382,7 @@ export const ListProperty: React.FC = () => {
                                 <div className="space-y-8">
                                     <div>
                                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">{t('list_prop.step7_title')}</h2>
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800/50">
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('list_prop.set_price')}</label>
                                             <div className="relative max-w-xs">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">€</span>
@@ -392,13 +392,13 @@ export const ListProperty: React.FC = () => {
                                                     value={formData.price}
                                                     onChange={handleChange}
                                                     onWheel={(e) => e.currentTarget.blur()}
-                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-3xl"
+                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-3xl"
                                                 />
                                             </div>
                                             <p className="text-sm text-slate-500 mt-2">{t('list_prop.per_night')}</p>
                                         </div>
 
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 mt-4">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800/50 mt-4">
                                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Cleaning Fee (One-time)</label>
                                             <div className="relative max-w-xs">
                                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">€</span>
@@ -409,17 +409,17 @@ export const ListProperty: React.FC = () => {
                                                     onChange={handleChange}
                                                     onWheel={(e) => e.currentTarget.blur()}
                                                     placeholder="0"
-                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-xl"
+                                                    className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-0 focus:border-teal-600 outline-none font-bold text-xl"
                                                 />
                                             </div>
                                             <p className="text-sm text-slate-500 mt-2">Added once per reservation</p>
                                         </div>
 
-                                        <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                                        <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800/50">
                                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Promotions (Optional)</h3>
                                             <div className="space-y-6">
-                                                <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-2xl border border-orange-100 dark:border-orange-800">
-                                                    <label className="block text-sm font-bold text-orange-800 dark:text-orange-300 mb-2">Promotion Price</label>
+                                                <div className="bg-orange-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-orange-100 dark:border-slate-700/50">
+                                                    <label className="block text-sm font-bold text-orange-800 dark:text-slate-200 mb-2">Promotion Price</label>
                                                     <div className="relative max-w-xs">
                                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500 font-bold text-lg">€</span>
                                                         <input
@@ -429,10 +429,10 @@ export const ListProperty: React.FC = () => {
                                                             onChange={handleChange}
                                                             onWheel={(e) => e.currentTarget.blur()}
                                                             placeholder="0"
-                                                            className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-orange-200 dark:border-orange-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-0 focus:border-orange-500 outline-none font-bold text-xl"
+                                                            className="w-full pl-10 pr-4 py-4 rounded-xl border-2 border-orange-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-0 focus:border-orange-500 outline-none font-bold text-xl"
                                                         />
                                                     </div>
-                                                    <p className="text-sm text-orange-600 dark:text-orange-400 mt-2">Set a lower price to attract more guests</p>
+                                                    <p className="text-sm text-orange-600 dark:text-slate-200 mt-2">Set a lower price to attract more guests</p>
                                                 </div>
 
                                                 <div>
@@ -443,7 +443,7 @@ export const ListProperty: React.FC = () => {
                                                         onChange={handleChange}
                                                         rows={2}
                                                         placeholder="e.g. Early bird discount for summer bookings"
-                                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
+                                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-600 outline-none resize-none"
                                                     />
                                                 </div>
                                             </div>
@@ -458,7 +458,7 @@ export const ListProperty: React.FC = () => {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-between items-center">
+                    <div className="p-6 border-t border-slate-100 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 flex justify-between items-center">
                         <button
                             onClick={prevStep}
                             disabled={step === 0}
@@ -484,7 +484,7 @@ export const ListProperty: React.FC = () => {
                                     onClick={nextStep}
                                     variant="secondary"
                                     size="lg"
-                                    className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 gap-2"
+                                    className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-white dark:hover:bg-slate-200 gap-2"
                                 >
                                     {t('list_prop.next')}
                                     <ArrowRight size={18} />

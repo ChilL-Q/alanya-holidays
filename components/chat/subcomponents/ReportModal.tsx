@@ -47,7 +47,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, conve
 
     return (
         <div className="absolute inset-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6 relative">
+            <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 p-6 relative">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -65,7 +65,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, conve
                             <select
                                 name="reason"
                                 data-testid="report-reason-select"
-                                className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                                className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                                 required
                             >
                                 <option value="">Select a reason</option>
@@ -83,7 +83,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, conve
                                 data-testid="report-description"
                                 rows={4}
                                 placeholder="Please provide more details..."
-                                className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"
+                                className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"
                                 required
                             ></textarea>
                         </div>
@@ -92,7 +92,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, conve
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-teal-600 text-white font-medium py-3 rounded-xl hover:bg-teal-700 active:scale-[0.98] transition-all shadow-lg shadow-teal-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full bg-teal-600 dark:bg-cyan-600 text-white font-medium py-3 rounded-xl hover:bg-teal-700 dark:bg-cyan-600 active:scale-[0.98] transition-all shadow-lg shadow-teal-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Submitting...' : 'Submit Report'}
                             </button>

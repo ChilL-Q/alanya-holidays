@@ -70,7 +70,7 @@ export const CreativeServices: React.FC = () => {
         return (
             <div className="pt-32 pb-16 min-h-screen text-center">
                 <h1 className="text-2xl font-bold">Category not found</h1>
-                <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 hover:underline">
+                <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 dark:text-cyan-400 hover:underline">
                     Back to Services
                 </button>
             </div>
@@ -84,7 +84,7 @@ export const CreativeServices: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                            <div className="p-2 bg-purple-100 dark:bg-slate-800/50 rounded-lg text-purple-600 dark:text-slate-200">
                                 <currentConfig.icon size={24} />
                             </div>
                             <span className="text-sm font-bold text-purple-600 tracking-wider uppercase">{t('add_service.cat.creative')}</span>
@@ -99,8 +99,8 @@ export const CreativeServices: React.FC = () => {
 
                         <div className="flex flex-wrap gap-4 mb-10">
                             {currentConfig.features.map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    <Check size={16} className="text-teal-500" />
+                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800/80 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    <Check size={16} className="text-teal-500 dark:text-cyan-400 " />
                                     {feature}
                                 </div>
                             ))}
@@ -108,7 +108,7 @@ export const CreativeServices: React.FC = () => {
                     </div>
 
                     <div className="relative">
-                        <div className="absolute -inset-4 bg-purple-100 dark:bg-purple-900/30 rounded-full blur-3xl opacity-50"></div>
+                        <div className="absolute -inset-4 bg-purple-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
                         <img
                             src={currentConfig.heroImage}
                             alt={currentConfig.title}
@@ -135,10 +135,10 @@ export const CreativeServices: React.FC = () => {
                         {services.map((service) => (
                             <div
                                 key={service.id}
-                                className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+                                className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/50 transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group flex flex-col h-full hover:-translate-y-1 cursor-pointer"
                                 onClick={() => navigate(`/contact?service=${service.id}`)}
                             >
-                                <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                <div className="aspect-[3/2] relative overflow-hidden bg-slate-100 dark:bg-slate-800/80">
                                     <img
                                         src={service.images?.[0] || currentConfig.heroImage}
                                         alt={service.title}
@@ -149,7 +149,7 @@ export const CreativeServices: React.FC = () => {
 
                                 <div className="p-5 flex flex-col flex-grow">
                                     {(service.provider?.full_name || service.provider?.company_name) && (
-                                        <p className="text-xs text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider mb-1">
+                                        <p className="text-xs text-purple-600 dark:text-slate-200 font-bold uppercase tracking-wider mb-1">
                                             {service.provider.company_name || service.provider.full_name}
                                         </p>
                                     )}
@@ -160,14 +160,14 @@ export const CreativeServices: React.FC = () => {
                                         {service.description}
                                     </p>
 
-                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/50">
                                         <div className="flex flex-col">
                                             <span className="text-xs text-slate-400 font-medium">Starting from</span>
                                             <span className="text-lg font-bold text-slate-900 dark:text-white">
                                                 {formatPrice(convertPrice(service.price, 'EUR'))}
                                             </span>
                                         </div>
-                                        <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
+                                        <button className="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-white rounded-lg font-bold text-sm hover:opacity-90 transition-all active:scale-95">
                                             Book Now
                                         </button>
                                     </div>
@@ -176,8 +176,8 @@ export const CreativeServices: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
-                        <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
+                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/80 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/50">
+                        <div className="w-16 h-16 bg-white dark:bg-slate-800/80 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 shadow-sm">
                             <Compass size={32} />
                         </div>
                         <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No professionals found</h3>

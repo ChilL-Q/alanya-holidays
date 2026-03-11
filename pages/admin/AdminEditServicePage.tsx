@@ -209,7 +209,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="text"
                                 value={features.brand || ''}
                                 onChange={e => updateFeature('brand', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div>
@@ -218,7 +218,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="text"
                                 value={features.model || ''}
                                 onChange={e => updateFeature('model', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div>
@@ -227,7 +227,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="text"
                                 value={features.year || ''}
                                 onChange={e => updateFeature('year', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div>
@@ -235,7 +235,7 @@ export const AdminEditServicePage: React.FC = () => {
                             <select
                                 value={features.transmission || ''}
                                 onChange={e => updateFeature('transmission', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             >
                                 <option value="">Select...</option>
                                 <option value="Automatic">Automatic</option>
@@ -247,7 +247,7 @@ export const AdminEditServicePage: React.FC = () => {
                             <select
                                 value={features.fuel || ''}
                                 onChange={e => updateFeature('fuel', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             >
                                 <option value="">Select...</option>
                                 <option value="Petrol">Petrol</option>
@@ -263,7 +263,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 value={features.seats || ''}
                                 onChange={e => updateFeature('seats', Number(e.target.value))}
                                 onWheel={(e) => e.currentTarget.blur()}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                     </div>
@@ -300,7 +300,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 placeholder="e.g. 6 hours"
                                 value={features.duration || ''}
                                 onChange={e => updateFeature('duration', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div>
@@ -310,7 +310,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 placeholder="e.g. Up to 10 people"
                                 value={features.groupSize || ''}
                                 onChange={e => updateFeature('groupSize', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div>
@@ -318,7 +318,7 @@ export const AdminEditServicePage: React.FC = () => {
                             <select
                                 value={features.difficulty || ''}
                                 onChange={e => updateFeature('difficulty', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             >
                                 <option value="">Select...</option>
                                 <option value="Easy">Easy</option>
@@ -334,7 +334,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 placeholder="e.g. English, Russian, Turkish"
                                 value={features.languages || ''}
                                 onChange={e => updateFeature('languages', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -343,7 +343,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 rows={2}
                                 value={features.included || ''}
                                 onChange={e => updateFeature('included', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -352,16 +352,16 @@ export const AdminEditServicePage: React.FC = () => {
                                 rows={2}
                                 value={features.requirements || ''}
                                 onChange={e => updateFeature('requirements', e.target.value)}
-                                className="w-full p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700"
+                                className="w-full p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50"
                             />
                         </div>
                     </div>
 
                     {/* Itinerary Builder */}
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="font-bold text-sm text-slate-700 dark:text-slate-300">Itinerary Schedule</h4>
-                            <button onClick={addItineraryItem} className="text-sm bg-teal-100 text-teal-700 px-3 py-1 rounded-full font-bold hover:bg-teal-200 transaction-colors">
+                            <button onClick={addItineraryItem} className="text-sm bg-teal-100 text-teal-700 dark:text-cyan-400 px-3 py-1 rounded-full font-bold hover:bg-teal-200 transaction-colors">
                                 + Add Step
                             </button>
                         </div>
@@ -373,14 +373,14 @@ export const AdminEditServicePage: React.FC = () => {
                                         placeholder="Time"
                                         value={item.time || ''}
                                         onChange={e => updateItineraryItem(idx, 'time', e.target.value)}
-                                        className="w-24 p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 text-sm"
+                                        className="w-24 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50 text-sm"
                                     />
                                     <input
                                         type="text"
                                         placeholder="Description (e.g. Pick up from hotel)"
                                         value={item.description || ''}
                                         onChange={e => updateItineraryItem(idx, 'description', e.target.value)}
-                                        className="flex-1 p-2 rounded-lg border dark:bg-slate-800 dark:border-slate-700 text-sm"
+                                        className="flex-1 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-800/50 text-sm"
                                     />
                                     <button onClick={() => removeItineraryItem(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={16} />
@@ -409,7 +409,7 @@ export const AdminEditServicePage: React.FC = () => {
                             } catch { }
                         }}
                         rows={6}
-                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs"
+                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 font-mono text-xs"
                     />
                 </div>
             </div>
@@ -437,7 +437,7 @@ export const AdminEditServicePage: React.FC = () => {
                         {editId && (
                             <button
                                 onClick={handleRejectEdit}
-                                className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-lg font-bold hover:bg-slate-300 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300 rounded-lg font-bold hover:bg-slate-300 transition-colors"
                             >
                                 <X size={18} /> Reject Update
                             </button>
@@ -446,7 +446,7 @@ export const AdminEditServicePage: React.FC = () => {
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-white transition-colors disabled:opacity-50 ${editId ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-teal-600 hover:bg-teal-700'
+                            className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold text-white transition-colors disabled:opacity-50 ${editId ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 '
                                 }`}
                         >
                             <Save size={18} /> {saving ? 'Processing...' : (editId ? 'Approve & Apply' : 'Save Changes')}
@@ -455,8 +455,8 @@ export const AdminEditServicePage: React.FC = () => {
                 </div>
 
                 {editId && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-4 rounded-xl mb-6 flex items-center gap-3 text-indigo-800 dark:text-indigo-200">
-                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+                    <div className="bg-indigo-50 dark:bg-slate-800/50 border border-indigo-200 dark:border-indigo-800 p-4 rounded-xl mb-6 flex items-center gap-3 text-indigo-800 dark:text-slate-200">
+                        <div className="p-2 bg-indigo-100 dark:bg-slate-800/50 rounded-lg">
                             <Edit2 size={20} />
                         </div>
                         <div>
@@ -466,11 +466,11 @@ export const AdminEditServicePage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-8 space-y-6">
+                <div className="bg-white dark:bg-slate-800/80 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 p-8 space-y-6">
                     <div className="flex items-center gap-3 mb-6">
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Edit Service: {service.title}</h1>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${service.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                            service.status === 'pending' || !service.status ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                            service.status === 'pending' || !service.status ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 ' :
                                 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                             }`}>
                             {service.status || 'pending'}
@@ -485,7 +485,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="text"
                                 value={service.title || ''}
                                 onChange={e => setService({ ...service, title: e.target.value })}
-                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
                         <div>
@@ -493,7 +493,7 @@ export const AdminEditServicePage: React.FC = () => {
                             <select
                                 value={service.type || 'car'}
                                 onChange={e => setService({ ...service, type: e.target.value as any })}
-                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             >
                                 <option value="car">Car Rental</option>
                                 <option value="bike">Bike/Scooter</option>
@@ -510,7 +510,7 @@ export const AdminEditServicePage: React.FC = () => {
                                 value={service.price || 0}
                                 onChange={(e) => setService({ ...service, price: Number(e.target.value) })}
                                 onWheel={(e) => (e.target as HTMLInputElement).blur()}
-                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
                         <div>
@@ -519,10 +519,10 @@ export const AdminEditServicePage: React.FC = () => {
                                 type="text"
                                 value={service.provider_id || ''}
                                 onChange={e => setService({ ...service, provider_id: e.target.value })}
-                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                             />
                         </div>
-                        <div className="flex items-center gap-3 bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                        <div className="flex items-center gap-3 bg-indigo-50 dark:bg-slate-800/50 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
                             <input
                                 type="checkbox"
                                 id="is_promoted"
@@ -544,12 +544,12 @@ export const AdminEditServicePage: React.FC = () => {
                             value={service.description || ''}
                             onChange={e => setService({ ...service, description: e.target.value })}
                             rows={4}
-                            className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                            className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                         />
                     </div>
 
                     {/* Dynamic Features Form */}
-                    <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-xl border border-slate-200 dark:border-slate-800/50">
                         {renderFeaturesForm()}
                     </div>
 
@@ -557,13 +557,13 @@ export const AdminEditServicePage: React.FC = () => {
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Images</label>
-                            <button onClick={handleImageAdd} type="button" className="text-sm text-teal-600 font-bold hover:underline flex items-center gap-1">
+                            <button onClick={handleImageAdd} type="button" className="text-sm text-teal-600 dark:text-cyan-400 font-bold hover:underline flex items-center gap-1">
                                 <Plus size={16} /> Add URL
                             </button>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {service.images?.map((url, idx) => (
-                                <div key={idx} className="relative group aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <div key={idx} className="relative group aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800/50">
                                     <img src={url} alt="" className="w-full h-full object-cover" />
                                     <button
                                         onClick={() => handleImageRemove(idx)}

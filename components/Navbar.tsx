@@ -36,18 +36,18 @@ export const Navbar: React.FC = () => {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 transition-colors supports-[backdrop-filter]:bg-white/60">
+    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/50 transition-colors supports-[backdrop-filter]:bg-white/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20">
 
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 flex items-center gap-3 group relative z-10">
             <div className="relative">
-              <div className="absolute inset-0 bg-teal-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
+              <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
               <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
             </div>
             <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate max-w-[120px] md:max-w-none">
-              Alanya<span className="text-teal-600 dark:text-teal-400">Holidays</span>
+              Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
             </span>
           </Link>
 
@@ -75,10 +75,10 @@ export const Navbar: React.FC = () => {
 
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="p-2.5 rounded-full text-slate-500 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:text-slate-400 transition-all relative group"
+                className="p-2.5 rounded-full text-slate-500 hover:text-teal-600 dark:text-cyan-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 dark:text-slate-400 transition-all relative group"
               >
                 <ShoppingBag size={20} />
-                {items.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
+                {items.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 dark:bg-cyan-600 rounded-full border-2 border-white dark:border-slate-900"></span>}
               </button>
 
               {/* Profile / Mobile Menu Trigger */}
@@ -95,9 +95,9 @@ export const Navbar: React.FC = () => {
                     }
                   }}
                   data-testid="profile-button"
-                  className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800"
+                  className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-800/50 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800/80"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden ring-2 ring-white dark:ring-slate-900">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 overflow-hidden ring-2 ring-white dark:ring-slate-900">
                     {isAuthenticated && user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (

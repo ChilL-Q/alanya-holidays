@@ -52,17 +52,17 @@ export const CartDrawer: React.FC = () => {
                 <div className={`relative h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
                     {/* Header */}
-                    <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800/50">
                         <div className="flex items-center gap-2">
-                            <ShoppingBag className="text-teal-600" />
+                            <ShoppingBag className="text-teal-600 dark:text-cyan-400 " />
                             <h2 className="text-xl font-bold font-serif text-slate-900 dark:text-white">Your Cart</h2>
-                            <span className="ml-2 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                            <span className="ml-2 bg-teal-100 dark:bg-slate-800/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200 text-xs font-bold px-2 py-0.5 rounded-full">
                                 {items.length} items
                             </span>
                         </div>
                         <button
                             onClick={() => setIsCartOpen(false)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                         >
                             <X size={20} />
                         </button>
@@ -72,7 +72,7 @@ export const CartDrawer: React.FC = () => {
                     <div className="flex-1 overflow-y-auto p-5 space-y-4">
                         {items.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
-                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300">
+                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/80 rounded-full flex items-center justify-center text-slate-300">
                                     <ShoppingBag size={32} />
                                 </div>
                                 <div>
@@ -81,14 +81,14 @@ export const CartDrawer: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => setIsCartOpen(false)}
-                                    className="text-teal-600 font-medium hover:underline"
+                                    className="text-teal-600 dark:text-cyan-400 font-medium hover:underline"
                                 >
                                     Continue Shopping
                                 </button>
                             </div>
                         ) : (
                             items.map((item) => (
-                                <div key={item.id} className="flex gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-teal-100 dark:hover:border-teal-900/30 transition-colors group">
+                                <div key={item.id} className="flex gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50 hover:border-teal-100 dark:hover:border-teal-900/30 transition-colors group">
                                     {/* Image */}
                                     <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
                                         <img
@@ -110,7 +110,7 @@ export const CartDrawer: React.FC = () => {
                                             </p>
                                         </div>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="font-bold text-teal-600 dark:text-accent">{formatPrice(item.price)}</span>
+                                            <span className="font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{formatPrice(item.price)}</span>
                                             <button
                                                 onClick={() => removeFromCart(item.id)}
                                                 className="text-slate-400 hover:text-rose-500 p-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors opacity-0 group-hover:opacity-100"
@@ -126,17 +126,17 @@ export const CartDrawer: React.FC = () => {
 
                     {/* Footer */}
                     {items.length > 0 && (
-                        <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                        <div className="p-5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
                             <div className="flex items-center justify-between mb-4">
                                 <span className="text-slate-600 dark:text-slate-400 font-medium">Subtotal</span>
-                                <span className="text-2xl font-bold font-serif text-slate-900 dark:text-accent">{formatPrice(total)}</span>
+                                <span className="text-2xl font-bold font-serif text-slate-900 dark:text-accent dark:text-amber-400 ">{formatPrice(total)}</span>
                             </div>
                             <button
                                 onClick={() => {
                                     setIsCartOpen(false);
                                     navigate('/checkout');
                                 }}
-                                className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full py-4 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 <span>Proceed to Checkout</span>
                                 <ArrowRight size={20} />

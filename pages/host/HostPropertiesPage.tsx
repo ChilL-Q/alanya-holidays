@@ -68,7 +68,7 @@ export const HostPropertiesPage = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
                 <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
@@ -76,7 +76,7 @@ export const HostPropertiesPage = () => {
                         placeholder="Search properties..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700/50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                        className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export const HostPropertiesPage = () => {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-700/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                        className="bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white"
                     >
                         <option value="all">All Status</option>
                         <option value="approved">Published</option>
@@ -95,10 +95,10 @@ export const HostPropertiesPage = () => {
             </div>
 
             {/* List */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 text-slate-500 font-semibold text-sm">
+                        <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800/50 text-slate-500 font-semibold text-sm">
                             <tr>
                                 <th className="p-4 pl-6">Property</th>
                                 <th className="p-4">Location</th>
@@ -107,20 +107,20 @@ export const HostPropertiesPage = () => {
                                 <th className="p-4 text-right pr-6">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {isLoading ? (
                                 [...Array(3)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="p-4 pl-6"><div className="h-12 w-48 bg-slate-100 dark:bg-slate-700 rounded-lg"></div></td>
-                                        <td className="p-4"><div className="h-4 w-24 bg-slate-100 dark:bg-slate-700 rounded"></div></td>
-                                        <td className="p-4"><div className="h-6 w-16 bg-slate-100 dark:bg-slate-700 rounded-full"></div></td>
-                                        <td className="p-4"><div className="h-4 w-16 bg-slate-100 dark:bg-slate-700 rounded"></div></td>
+                                        <td className="p-4 pl-6"><div className="h-12 w-48 bg-slate-100 dark:bg-slate-800/50 rounded-lg"></div></td>
+                                        <td className="p-4"><div className="h-4 w-24 bg-slate-100 dark:bg-slate-800/50 rounded"></div></td>
+                                        <td className="p-4"><div className="h-6 w-16 bg-slate-100 dark:bg-slate-800/50 rounded-full"></div></td>
+                                        <td className="p-4"><div className="h-4 w-16 bg-slate-100 dark:bg-slate-800/50 rounded"></div></td>
                                         <td className="p-4"></td>
                                     </tr>
                                 ))
                             ) : filteredProperties.length > 0 ? (
                                 filteredProperties.map((property) => (
-                                    <tr key={property.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                    <tr key={property.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
                                         <td className="p-4 pl-6">
                                             <div className="flex items-center gap-3">
                                                 <img
@@ -149,7 +149,7 @@ export const HostPropertiesPage = () => {
                                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50'
                                                 : property.status === 'pending'
                                                     ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50'
-                                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-800/50'
                                                 }`}>
                                                 {property.status === 'approved' ? 'Published' : property.status.charAt(0).toUpperCase() + property.status.slice(1)}
                                             </span>
@@ -163,14 +163,14 @@ export const HostPropertiesPage = () => {
                                             <div className="flex justify-end items-center gap-2">
                                                 <Link
                                                     to={`/property/${property.id}`}
-                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition"
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg transition"
                                                     title="View"
                                                 >
                                                     <Eye size={18} />
                                                 </Link>
                                                 <Link
                                                     to={`/host/edit-property/${property.id}`}
-                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition"
+                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg transition"
                                                     title="Edit"
                                                 >
                                                     <Edit size={18} />

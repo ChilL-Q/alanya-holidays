@@ -120,7 +120,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
             return entry.source === 'ical' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-500 line-through';
         }
         if (entry.status === 'booked') return 'bg-rose-100 text-rose-600 font-bold';
-        if (entry.price) return 'bg-teal-50 text-teal-700 font-medium'; // Has custom price
+        if (entry.price) return 'bg-teal-50 text-teal-700 dark:text-cyan-400 font-medium'; // Has custom price
 
         return undefined;
     };
@@ -167,11 +167,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <CalendarIcon className="text-teal-600" />
+                        <CalendarIcon className="text-teal-600 dark:text-cyan-400 " />
                         Availability & Pricing
                     </h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -180,7 +180,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                 </div>
                 <button
                     onClick={loadData}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-full transition-colors"
                     title="Refresh Calendar"
                 >
                     <RefreshCw size={20} className={isLoading ? 'animate-spin text-slate-400' : 'text-slate-600 dark:text-slate-300'} />
@@ -226,7 +226,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                 </div>
 
                 {/* Edit Panel */}
-                <div className={`lg:w-80 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 h-fit transition-all ${isPanelOpen ? 'opacity-100 translate-x-0' : 'opacity-50 pointer-events-none'}`}>
+                <div className={`lg:w-80 bg-slate-50 dark:bg-slate-800/80 rounded-xl p-6 h-fit transition-all ${isPanelOpen ? 'opacity-100 translate-x-0' : 'opacity-50 pointer-events-none'}`}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold text-slate-900 dark:text-white">
                             {selectedDates.length === 0 ? 'Select dates' :
@@ -235,7 +235,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                         </h3>
                         <button
                             onClick={handleClosePanel}
-                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-500 transition-colors"
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-full text-slate-500 transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -278,10 +278,10 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                         // 1. Mixed Availability (Open & Blocked)
                         if (isMixed) {
                             return (
-                                <div className="mb-6 p-4 bg-slate-200 dark:bg-slate-700 rounded-xl">
+                                <div className="mb-6 p-4 bg-slate-200 dark:bg-slate-800/50 rounded-xl">
                                     <h4 className="font-bold text-slate-900 dark:text-white mb-2">Mixed availability</h4>
                                     <ul className="space-y-1 text-sm">
-                                        {availableCount > 0 && <li className="text-teal-600 flex items-center gap-2"><div className="w-1.5 h-1.5 bg-teal-500 rounded-full" /> {availableCount} nights open</li>}
+                                        {availableCount > 0 && <li className="text-teal-600 dark:text-cyan-400 flex items-center gap-2"><div className="w-1.5 h-1.5 bg-teal-500 dark:bg-cyan-600 rounded-full" /> {availableCount} nights open</li>}
                                         {blockedCount > 0 && <li className="text-rose-600 flex items-center gap-2"><div className="w-1.5 h-1.5 bg-rose-500 rounded-full" /> {blockedCount} nights blocked</li>}
                                     </ul>
                                 </div>
@@ -295,8 +295,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                 const sourceName = uniqueSources[0];
                                 const isExternal = sourceName !== 'You';
                                 return (
-                                    <div className={`mb-6 p-4 rounded-xl border ${isExternal ? 'bg-purple-50 border-purple-100 dark:bg-purple-900/20 dark:border-purple-800' : 'bg-slate-100 border-slate-200'}`}>
-                                        <h4 className={`font-bold mb-1 ${isExternal ? 'text-purple-800 dark:text-purple-300' : 'text-slate-800'}`}>
+                                    <div className={`mb-6 p-4 rounded-xl border ${isExternal ? 'bg-purple-50 border-purple-100 dark:bg-slate-800/50 dark:border-purple-800' : 'bg-slate-100 border-slate-200'}`}>
+                                        <h4 className={`font-bold mb-1 ${isExternal ? 'text-purple-800 dark:text-slate-200' : 'text-slate-800'}`}>
                                             Blocked by {sourceName}
                                         </h4>
                                         <p className="text-sm opacity-80 mb-2">{blockedCount} nights blocked</p>
@@ -343,7 +343,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
 
                     {/* Edit Controls (Only show if we have available dates or manual blocks to edit) */}
                     {selectedDates.length > 0 && (
-                        <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800/50">
 
                             {/* Inputs (Status/Price) - Only if NO external blocks */}
                             {(() => {
@@ -411,7 +411,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                 return (
                                     <button
                                         onClick={handleSave}
-                                        className="w-full py-2 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 rounded-lg transition-colors"
+                                        className="w-full py-2 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-white rounded-lg transition-colors"
                                     >
                                         Save Changes
                                     </button>

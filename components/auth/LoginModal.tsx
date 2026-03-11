@@ -156,7 +156,7 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
@@ -167,7 +167,7 @@ export const LoginModal: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setMode('recovery')}
-                                    className="text-sm text-primary dark:text-teal-400 font-semibold hover:underline"
+                                    className="text-sm text-primary dark:text-slate-200 font-semibold hover:underline"
                                 >
                                     Forgot password?
                                 </button>
@@ -180,7 +180,7 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -200,7 +200,7 @@ export const LoginModal: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={openRegister}
-                                className="text-teal-600 dark:text-teal-400 font-semibold hover:underline"
+                                className="text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-semibold hover:underline"
                             >
                                 {t('auth.submit.register')}
                             </button>
@@ -224,7 +224,7 @@ export const LoginModal: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-800/50 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition"
                                     placeholder="hello@example.com"
                                 />
                             </div>
@@ -256,7 +256,7 @@ export const LoginModal: React.FC = () => {
                                 required
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-64 text-center text-3xl tracking-[0.3em] font-bold py-3 border-b-2 border-slate-300 dark:border-slate-700 focus:border-primary outline-none text-slate-900 dark:text-white bg-transparent placeholder:tracking-normal placeholder:text-slate-300"
+                                className="w-64 text-center text-3xl tracking-[0.3em] font-bold py-3 border-b-2 border-slate-300 dark:border-slate-800/50 focus:border-primary outline-none text-slate-900 dark:text-white bg-transparent placeholder:tracking-normal placeholder:text-slate-300"
                                 placeholder="12345678"
                                 autoFocus
                             />

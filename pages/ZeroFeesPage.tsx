@@ -66,7 +66,7 @@ export const ZeroFeesPage: React.FC = () => {
 
             {/* Why */}
             <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-6 text-accent">
+                <div className="w-16 h-16 bg-accent dark:bg-amber-600 /10 rounded-full flex items-center justify-center mx-auto mb-6 text-accent dark:text-amber-400 ">
                     <TrendingUp size={32} />
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 mb-6">{t('zerofees.why.title')}</h2>

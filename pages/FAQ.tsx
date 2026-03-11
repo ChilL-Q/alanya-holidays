@@ -14,9 +14,9 @@ export const FAQ: React.FC = () => {
 
                 <div className="space-y-6">
                     {/* Q1 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                            <HelpCircle size={20} className="text-teal-500" />
+                            <HelpCircle size={20} className="text-teal-500 dark:text-cyan-400 " />
                             How do I book a rental?
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -25,9 +25,9 @@ export const FAQ: React.FC = () => {
                     </div>
 
                     {/* Q2 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                            <HelpCircle size={20} className="text-teal-500" />
+                            <HelpCircle size={20} className="text-teal-500 dark:text-cyan-400 " />
                             What is the cancellation policy?
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -36,9 +36,9 @@ export const FAQ: React.FC = () => {
                     </div>
 
                     {/* Q3 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                            <HelpCircle size={20} className="text-teal-500" />
+                            <HelpCircle size={20} className="text-teal-500 dark:text-cyan-400 " />
                             Do you offer airport transfers?
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -47,9 +47,9 @@ export const FAQ: React.FC = () => {
                     </div>
 
                     {/* Q4 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                            <HelpCircle size={20} className="text-teal-500" />
+                            <HelpCircle size={20} className="text-teal-500 dark:text-cyan-400 " />
                             Are there any hidden fees?
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 leading-relaxed">

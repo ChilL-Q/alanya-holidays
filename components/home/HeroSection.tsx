@@ -38,7 +38,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
                         {t('hero.title')}
                     </h1>
                     <p className="text-base sm:text-lg md:text-xl text-slate-100 font-light animate-fade-up opacity-0 fill-mode-forwards px-4" style={{ animationDelay: '400ms' }}>
-                        {t('hero.subtitle')} <span className="font-semibold text-accent block sm:inline mt-1 sm:mt-0">{t('hero.zero_fees')}</span>
+                        {t('hero.subtitle')} <span className="font-semibold text-accent dark:text-amber-400 block sm:inline mt-1 sm:mt-0">{t('hero.zero_fees')}</span>
                     </p>
                 </div>
 

@@ -5,7 +5,7 @@ import { FeaturedProperties } from '../components/home/FeaturedProperties';
 
 import { AlanyaIntro } from '../components/home/AlanyaIntro';
 
-export const Home: React.FC = () => {
+export const AiPlanner: React.FC = () => {
   const [location, setLocation] = useState('');
 
   return (

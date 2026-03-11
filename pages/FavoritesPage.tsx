@@ -65,9 +65,9 @@ export const FavoritesPage: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Heart size={32} className="text-slate-300 dark:text-slate-600" />
+                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/80 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Heart size={32} className="text-slate-300 dark:text-slate-400" />
                         </div>
                         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No favorites yet</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
@@ -75,7 +75,7 @@ export const FavoritesPage: React.FC = () => {
                         </p>
                         <Link
                             to="/search"
-                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 transition-colors"
+                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 transition-colors"
                         >
                             Explore Stays
                         </Link>

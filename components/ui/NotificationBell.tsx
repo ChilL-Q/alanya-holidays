@@ -30,9 +30,9 @@ export const NotificationBell: React.FC = () => {
     const getIconColor = (type: string) => {
         switch (type) {
             case 'booking_confirmed': return 'text-green-500 bg-green-50 dark:bg-green-900/20';
-            case 'booking_request': return 'text-blue-500 bg-blue-50 dark:bg-blue-900/20';
-            case 'review': return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
-            default: return 'text-slate-500 bg-slate-50 dark:bg-slate-800';
+            case 'booking_request': return 'text-blue-500 bg-blue-50 dark:bg-slate-800/50';
+            case 'review': return 'text-orange-500 bg-orange-50 dark:bg-slate-800/50';
+            default: return 'text-slate-500 bg-slate-50 dark:bg-slate-800/80';
         }
     };
 
@@ -52,7 +52,7 @@ export const NotificationBell: React.FC = () => {
         <div className="relative" ref={containerRef}>
             <button
                 onClick={() => { setIsOpen(!isOpen); setShowBubble(false); }}
-                className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-lg transition-colors"
                 aria-label="Notifications"
             >
                 <Bell size={20} />
@@ -63,8 +63,8 @@ export const NotificationBell: React.FC = () => {
 
             {/* Live Bubble */}
             {showBubble && lastNotification && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 p-4 z-[60] animate-in fade-in slide-in-from-top-2 duration-300 flex flex-col gap-2">
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-t border-l border-slate-100 dark:border-slate-800 transform rotate-45"></div>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800/50 p-4 z-[60] animate-in fade-in slide-in-from-top-2 duration-300 flex flex-col gap-2">
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-t border-l border-slate-100 dark:border-slate-800/50 transform rotate-45"></div>
                     <div className="relative flex gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${getIconColor(lastNotification.type)}`}>
                             <Bell size={14} />
@@ -76,7 +76,7 @@ export const NotificationBell: React.FC = () => {
                                 <Link
                                     to={lastNotification.link.includes('/host/messages') && user?.role !== 'host' && user?.role !== 'admin' ? '/inbox' : lastNotification.link}
                                     onClick={() => setShowBubble(false)}
-                                    className="text-xs text-teal-600 font-bold hover:underline mt-1.5 inline-block"
+                                    className="text-xs text-teal-600 dark:text-cyan-400 font-bold hover:underline mt-1.5 inline-block"
                                 >
                                     View
                                 </Link>
@@ -91,10 +91,10 @@ export const NotificationBell: React.FC = () => {
             )}
 
             {isOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-80 md:w-96 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-700 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-t border-l border-slate-100 dark:border-slate-800 transform rotate-45 z-0"></div>
+                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-80 md:w-96 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 dark:border-slate-800/50 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-t border-l border-slate-100 dark:border-slate-800/50 transform rotate-45 z-0"></div>
                     <div className="relative z-10 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
-                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex justify-between items-center bg-white dark:bg-slate-900">
                             <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
                             <div className="flex items-center gap-2">
                                 <button
@@ -123,11 +123,11 @@ export const NotificationBell: React.FC = () => {
 
                         <div className="max-h-[60vh] overflow-y-auto">
                             {notifications.length > 0 ? (
-                                <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                                <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
                                     {notifications.map((notification) => (
                                         <div
                                             key={notification.id}
-                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!notification.read ? 'bg-teal-50/30 dark:bg-teal-900/10' : ''}`}
+                                            className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-800/90/50 transition-colors ${!notification.read ? 'bg-teal-50/30 dark:bg-slate-800/50' : ''}`}
                                             onClick={() => handleMarkAsRead(notification.id)}
                                         >
                                             <div className="flex gap-3">
@@ -142,13 +142,13 @@ export const NotificationBell: React.FC = () => {
                                                         {new Date(notification.created_at || new Date()).toLocaleString()}
                                                     </p>
                                                     {notification.link && (
-                                                        <Link to={notification.link} className="text-xs text-teal-600 font-bold hover:underline mt-1 inline-block">
+                                                        <Link to={notification.link} className="text-xs text-teal-600 dark:text-cyan-400 font-bold hover:underline mt-1 inline-block">
                                                             View details
                                                         </Link>
                                                     )}
                                                 </div>
                                                 {!notification.read && (
-                                                    <div className="w-2 h-2 bg-teal-500 rounded-full mt-2"></div>
+                                                    <div className="w-2 h-2 bg-teal-500 dark:bg-cyan-600 rounded-full mt-2"></div>
                                                 )}
                                             </div>
                                         </div>

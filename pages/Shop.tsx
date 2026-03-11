@@ -157,7 +157,7 @@ export const Shop: React.FC = () => {
             <div className="relative h-[40vh] min-h-[400px] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0">
                     <img
-                        src="https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&q=80&w=2670"
+                        src="/images/alanya-bazaar-hero.png"
                         alt="Colorful Turkish Lamps"
                         className="w-full h-full object-cover animate-stagger-enter"
                         style={{ animationDelay: '0.1s' }}
@@ -179,7 +179,7 @@ export const Shop: React.FC = () => {
             </div>
 
             {/* Filter */}
-            <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 animate-stagger-enter" style={{ animationDelay: '0.5s' }}>
+            <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 animate-stagger-enter" style={{ animationDelay: '0.5s' }}>
                 <div className="max-w-7xl mx-auto px-4 overflow-x-auto">
                     <div className="flex gap-4 py-4 min-w-max">
                         {['all', 'souvenir', 'textile', 'food', 'jewelry', 'art'].map(cat => (
@@ -188,7 +188,7 @@ export const Shop: React.FC = () => {
                                 onClick={() => handleFilterChange(cat)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${filter === cat
                                     ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/80'
                                     }`}
                             >
                                 <span className="capitalize">{cat}</span>
@@ -203,7 +203,7 @@ export const Shop: React.FC = () => {
                 {loading ? (
                     <div className="text-center py-20 text-slate-500">Loading treasures...</div>
                 ) : products.length === 0 ? (
-                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/80 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800/50">
                         <ShoppingBag size={48} className="mx-auto text-slate-300 mb-4" />
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No products found</h3>
                         <p className="text-slate-500 mb-6">Be the first to list something in this category!</p>
@@ -216,11 +216,11 @@ export const Shop: React.FC = () => {
                         {products.map((product, index) => (
                             <div
                                 key={product.id}
-                                className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-700 animate-stagger-enter flex flex-col"
+                                className="group bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-800/50 animate-stagger-enter flex flex-col"
                                 style={{ animationDelay: `${0.1 * index}s` }}
                             >
                                 {/* Image Placeholder */}
-                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-700 relative overflow-hidden group">
+                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800/50 relative overflow-hidden group">
                                     {product?.images?.[0] ? (
                                         <img
                                             src={product.images[0]}
@@ -257,9 +257,9 @@ export const Shop: React.FC = () => {
                                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 min-h-[40px] flex-grow">
                                         {product.description}
                                     </p>
-                                    <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-700 pt-4 mt-auto">
+                                    <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/50 pt-4 mt-auto">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-400">
                                                 <User size={14} />
                                             </div>
                                             <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px]">
@@ -274,7 +274,7 @@ export const Shop: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={() => handleAddToCart(product)}
-                                        className="w-full mt-4 bg-slate-100 dark:bg-slate-700 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
+                                        className="w-full mt-4 bg-slate-100 dark:bg-slate-800/50 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
                                     >
                                         Add to Basket
                                     </button>

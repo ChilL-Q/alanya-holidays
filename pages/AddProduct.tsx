@@ -50,9 +50,9 @@ export const AddProduct: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-20 px-4">
-            <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700">
+            <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800/50">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-xl text-amber-600 dark:text-amber-400">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-xl text-amber-600 dark:text-amber-400 ">
                         <ShoppingBag size={24} />
                     </div>
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Add Artisan Product</h1>
@@ -75,7 +75,7 @@ export const AddProduct: React.FC = () => {
                             onChange={handleChange}
                             required
                             placeholder="e.g. Handmade Turkish Carpet"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
                         />
                     </div>
 
@@ -92,7 +92,7 @@ export const AddProduct: React.FC = () => {
                                     onWheel={(e) => e.currentTarget.blur()}
                                     required
                                     placeholder="0.00"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                         </div>
@@ -108,7 +108,7 @@ export const AddProduct: React.FC = () => {
                                     onWheel={(e) => e.currentTarget.blur()}
                                     required
                                     min="1"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
                                 />
                             </div>
                         </div>
@@ -122,7 +122,7 @@ export const AddProduct: React.FC = () => {
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none appearance-none"
                             >
                                 <option value="souvenir">Souvenir</option>
                                 <option value="textile">Textile / Carpet</option>
@@ -142,7 +142,7 @@ export const AddProduct: React.FC = () => {
                             rows={4}
                             required
                             placeholder="Describe the materials, origin, and story of the product..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none"
                         />
                     </div>
 
