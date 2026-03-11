@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { Helmet } from 'react-helmet-async';
 
 export const DirectoryHome: React.FC = () => {
-    const { t } = useTranslation();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
