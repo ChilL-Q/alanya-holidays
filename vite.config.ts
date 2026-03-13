@@ -21,6 +21,10 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    preview: {
+      port: 3000,
+      host: '0.0.0.0'
+    },
     plugins: [react(), tailwindcss()],
     build: {
       rollupOptions: {
@@ -30,7 +34,6 @@ export default defineConfig(({ mode }) => {
               if (id.includes('@react-google-maps')) return 'vendor-maps';
               if (id.includes('recharts')) return 'vendor-charts';
               if (id.includes('@supabase')) return 'vendor-supabase';
-              if (id.includes('@google/generative-ai')) return 'vendor-ai';
               if (id.includes('lucide-react')) return 'vendor-icons';
               if (id.includes('date-fns') || id.includes('react-datepicker') || id.includes('react-imask')) return 'vendor-forms-dates';
             }
@@ -39,7 +42,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     define: {
-      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY),
+      // GEMINI_API_KEY is now server-side only (ai-proxy Edge Function)
     },
     resolve: {
       alias: {

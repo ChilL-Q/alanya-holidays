@@ -59,14 +59,8 @@ const filesToRemove = [
     "scripts/verify_booking_expiration.ts",
     "scripts/verify_pagination.ts",
     "scripts/verify-locales.cjs",
-    "supabase/functions/cancel-expired-bookings/index.ts",
-    "supabase/functions/cleanup-bookings/index.ts",
-    "supabase/functions/create-checkout-session/index.ts",
-    "supabase/functions/cron-daily/index.ts",
-    "supabase/functions/export-ical/index.ts",
-    "supabase/functions/send-email/index.ts",
-    "supabase/functions/stripe-webhook/index.ts",
-    "supabase/functions/sync-ical/index.ts"
+    // NOTE: supabase/functions/* entries removed — these are active deployed functions
+    // and must NOT be deleted from the local codebase.
 ];
 
 let removedCount = 0;
