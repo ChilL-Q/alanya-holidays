@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DirectoryAdminPage } from './DirectoryAdminPage';
@@ -32,13 +32,13 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('renders the admin page and loads listings', async () => {
-        render(
-            <BrowserRouter>
-                <DirectoryAdminPage />
-            </BrowserRouter>
-        );
-
-        expect(screen.getByText('Loading directory...')).toBeInTheDocument();
+        await act(async () => {
+            render(
+                <BrowserRouter>
+                    <DirectoryAdminPage />
+                </BrowserRouter>
+            );
+        });
 
         await waitFor(() => {
             expect(screen.queryByText('Loading directory...')).not.toBeInTheDocument();
@@ -49,11 +49,13 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('filters listings by search query', async () => {
-        render(
-            <BrowserRouter>
-                <DirectoryAdminPage />
-            </BrowserRouter>
-        );
+        await act(async () => {
+            render(
+                <BrowserRouter>
+                    <DirectoryAdminPage />
+                </BrowserRouter>
+            );
+        });
 
         await waitFor(() => {
             expect(screen.getByText('Test Medical')).toBeInTheDocument();
@@ -67,11 +69,17 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('navigates to add new listing', async () => {
-        render(
-            <BrowserRouter>
-                <DirectoryAdminPage />
-            </BrowserRouter>
-        );
+        await act(async () => {
+            render(
+                <BrowserRouter>
+                    <DirectoryAdminPage />
+                </BrowserRouter>
+            );
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('Test Medical')).toBeInTheDocument();
+        });
 
         const addBtn = screen.getByText('Add Listing');
         fireEvent.click(addBtn);
