@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../../context/LanguageContext';
-import { AMENITIES_LIST } from '../../data/constants';
+import { useLanguage } from '../../../../context/LanguageContext';
+import { AMENITIES_LIST } from '../../../../data/constants';
 
 interface PropertyAmenitiesProps {
     formData: any;
@@ -11,7 +11,9 @@ export const PropertyAmenities: React.FC<PropertyAmenitiesProps> = ({ formData, 
     const { t } = useLanguage();
 
     return (
-        <div>
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step4_title')}</h2>
+            <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
                 Amenities
             </label>
@@ -34,6 +36,7 @@ export const PropertyAmenities: React.FC<PropertyAmenitiesProps> = ({ formData, 
                         <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
                     </label>
                 ))}
+            </div>
             </div>
         </div>
     );

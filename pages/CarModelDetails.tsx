@@ -1,32 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
-import { useAuth } from '../context/AuthContext';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
-import { Check, Star, Shield, Fuel, Zap, ArrowLeft, MessageCircle, X, Calendar, Settings2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getCarImage } from '../utils/carImages';
 
-// Local interfaces removed in favor of global types
+// Modular Components
+import { CarModelHeader } from '../components/services/car/CarModelHeader';
+import { CarOfferCard } from '../components/services/car/CarOfferCard';
+import { CarOfferModal } from '../components/services/car/CarOfferModal';
 
 export const CarModelDetails: React.FC = () => {
     const { modelId } = useParams<{ modelId: string }>();
     const location = useLocation();
-    const { brand, model, type: serviceType } = (location.state as { brand?: string; model?: string; type?: string }) || {}; // Expect type from state if provided
+    const { brand, model, type: serviceType } = (location.state as { brand?: string; model?: string; type?: string }) || {};
     const { t } = useLanguage();
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [selectedOffer, setSelectedOffer] = useState<ServiceData | null>(null);
 
     const [loading, setLoading] = useState(true);
     const [offers, setOffers] = useState<ServiceData[]>([]);
     const [groupInfo, setGroupInfo] = useState<any>(null);
 
-    // Lock scroll and handle escape key when modal is open
-    // Handle escape key when modal is open
     useEffect(() => {
         if (selectedOffer) {
             const handleEsc = (e: KeyboardEvent) => {
@@ -42,12 +40,8 @@ export const CarModelDetails: React.FC = () => {
     useEffect(() => {
         const fetchOffers = async () => {
             try {
-                // If type is explicitly passed (e.g. 'bike'), use it. Otherwise default to 'car'.
                 const targetType = serviceType || 'car';
                 const { data: services } = await db.getServices(targetType, 1, 1000);
-
-                // Filter by modelId (slug) or direct brand/model match
-                // Slug generation logic: `${brand}-${model}`.toLowerCase()
 
                 const filtered = services?.filter((s: any) => {
                     const sBrand = s.features?.brand || '';
@@ -62,25 +56,18 @@ export const CarModelDetails: React.FC = () => {
 
                 setOffers(filtered);
 
-                // Sort by created_at ASC to get the "First" (Oldest) service as the constant representer
-                // db.getServices returns DESC, so we can just reverse it or pick the last one.
-                // However, to be safe, let's sort if we have dates, or just take the last one since we know the query order.
                 const constantService = filtered.length > 0 ? filtered[filtered.length - 1] : null;
-
-                setOffers(filtered);
 
                 if (constantService) {
                     const brand = constantService.features.brand;
                     const model = constantService.features.model;
 
-                    // Fetch dynamic metadata from DB
                     const serviceModel = await db.getServiceModel(targetType, brand, model);
-
                     const staticDescription = serviceModel?.description || CAR_DESCRIPTIONS[`${brand} ${model}`];
                     const staticImage = serviceModel?.image_url;
 
                     setGroupInfo({
-                        ...constantService, // Keep full object for modal
+                        ...constantService,
                         title: `${brand} ${model}`,
                         description: staticDescription || constantService.description || DEFAULT_DESCRIPTION,
                         image: getCarImage(brand, model, targetType, staticImage || constantService.images?.[0]),
@@ -97,10 +84,12 @@ export const CarModelDetails: React.FC = () => {
         fetchOffers();
     }, [modelId, brand, model, serviceType]);
 
+    const handleBook = (offer: ServiceData) => {
+        navigate(`/book-vehicle/${offer.service_ref || offer.id}`);
+    };
+
     if (loading) return <div className="pt-32 text-center">Loading offers...</div>;
     if (!groupInfo) return <div className="pt-32 text-center">Model not found</div>;
-
-
 
     return (
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -110,224 +99,37 @@ export const CarModelDetails: React.FC = () => {
                     Back to Fleet
                 </button>
 
-                {/* Model Header */}
-                <div className="bg-white dark:bg-slate-800/80 rounded-3xl p-8 mb-12 shadow-sm border border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row gap-8 items-center">
-                    <div className="w-full md:w-1/2">
-                        <img
-                            src={groupInfo.image}
-                            alt={groupInfo.title}
-                            className="w-full rounded-2xl shadow-md object-contain sm:object-cover aspect-[4/3] bg-white dark:bg-slate-900"
-                        />
-                    </div>
-                    <div className="w-full md:w-1/2">
-                        <h1 className="text-4xl font-serif font-bold text-slate-900 dark:text-white mb-4">{groupInfo.title}</h1>
-                        <div className="flex flex-wrap gap-3 mb-6">
-                            {groupInfo.features.map((f: string, i: number) => (
-                                <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-full text-sm font-medium capitalize">
-                                    {f}
-                                </span>
-                            ))}
-                        </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg mb-6">
-                            {groupInfo.description || "Verified listings from top rated providers in Alanya. Compare prices and book directly."}
-                        </p>
-                    </div>
-                </div>
+                <CarModelHeader
+                    image={groupInfo.image}
+                    title={groupInfo.title}
+                    description={groupInfo.description}
+                    features={groupInfo.features}
+                />
 
-                {/* Offers List */}
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Available Offers ({offers.length})</h2>
                 <div className="space-y-4">
                     {offers.map((offer) => (
-                        <div
+                        <CarOfferCard
                             key={offer.id}
-                            onClick={() => setSelectedOffer(offer)}
-                            className="bg-white dark:bg-slate-800/80 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-6 transition-transform hover:scale-[1.01] cursor-pointer group hover:ring-2 hover:ring-teal-500/20"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold text-xl">
-                                    {offer.provider?.company_name?.charAt(0) || offer.provider?.full_name?.charAt(0) || 'P'}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white group-hover:text-teal-600 dark:text-cyan-400 transition-colors">
-                                        {offer.provider?.company_name || offer.provider?.full_name || 'Verified Provider'}
-                                    </h3>
-                                    <div className="flex items-center gap-1 text-yellow-500 text-sm">
-                                        <Star size={14} fill="currentColor" />
-                                        <span>5.0</span>
-                                        <span className="text-slate-400 ml-1">(New)</span>
-                                    </div>
-                                    <div className="text-xs text-teal-600 dark:text-cyan-400 font-medium mt-1 md:hidden">
-                                        Click to view details
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 md:px-8">
-                                <div className="flex flex-wrap gap-3">
-                                    {offer.features?.year && (
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Calendar size={14} className="text-slate-400 dark:text-slate-200" />
-                                            <span>{offer.features.year}</span>
-                                        </div>
-                                    )}
-                                    {offer.features?.transmission && (
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Settings2 size={14} className="text-slate-400 dark:text-slate-200" />
-                                            <span className="capitalize">{offer.features.transmission}</span>
-                                        </div>
-                                    )}
-                                    {offer.features?.fuel && (
-                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-white/5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-white/5">
-                                            <Fuel size={14} className="text-slate-400 dark:text-slate-200" />
-                                            <span className="capitalize">{offer.features.fuel}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                <div className="text-right mr-2">
-                                    <div className="text-2xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">{formatPrice(convertPrice(offer.price, 'EUR'))}</div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400">per day</div>
-                                </div>
-                                <button className="hidden md:block px-4 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-teal-600 dark:text-cyan-400 hover:bg-teal-50 dark:hover:bg-slate-700/80 transition-colors">
-                                    View Details
-                                </button>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/book-vehicle/${offer.service_ref || offer.id}`);
-                                    }}
-                                    className="bg-slate-900 dark:bg-white text-white dark:text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
-                                >
-                                    Book Now
-                                </button>
-                            </div>
-                        </div>
+                            offer={offer}
+                            onSelect={setSelectedOffer}
+                            onBook={handleBook}
+                            formatPrice={formatPrice}
+                            convertPrice={convertPrice}
+                        />
                     ))}
                 </div>
             </div>
 
-            {/* Offer Details Modal */}
-            {
-                selectedOffer && createPortal(
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedOffer(null)}>
-                        {/* Modal Content - Auto height with max constraints */}
-                        <div
-                            className="bg-white dark:bg-slate-800/80 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden relative"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <button
-                                onClick={() => setSelectedOffer(null)}
-                                className="absolute top-4 right-4 p-2 bg-white/90 dark:bg-slate-900/90 rounded-full shadow-lg z-50 hover:scale-110 transition-transform cursor-pointer group"
-                            >
-                                <X size={24} className="text-slate-900 dark:text-white group-hover:text-rose-500 transition-colors" />
-                            </button>
-
-                            {/* Reset scroll on modal open */}
-                            <div className="overflow-y-auto flex-1 overscroll-contain">
-                                {/* Gallery */}
-                                <div className="h-64 md:h-80 w-full bg-slate-100 dark:bg-slate-900 flex overflow-x-auto snap-x snap-mandatory">
-                                    {selectedOffer.images && selectedOffer.images.length > 0 ? (
-                                        selectedOffer.images.map((img, idx) => (
-                                            <img
-                                                key={idx}
-                                                src={img}
-                                                alt={`Gallery ${idx}`}
-                                                className="w-full h-full object-contain flex-shrink-0 snap-center scale-[1.75]"
-                                            />
-                                        ))
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400">
-                                            No Images Available
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="p-8">
-                                    <div className="flex flex-col md:flex-row gap-8 justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-800/50 pb-8">
-                                        <div>
-                                            <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-2">
-                                                {selectedOffer.title}
-                                            </h2>
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-1 text-yellow-500 text-sm font-bold">
-                                                    <Star size={16} fill="currentColor" />
-                                                    <span>5.0</span>
-                                                </div>
-                                                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                                <span className="text-slate-500 text-sm">Top Rated</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-3xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
-                                                {formatPrice(convertPrice(selectedOffer.price, 'EUR'))}
-                                            </div>
-                                            <div className="text-sm text-slate-500 dark:text-slate-400">per day</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                        <div className="md:col-span-2 space-y-8">
-
-                                            {/* Features */}
-                                            <div>
-                                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('offer.features') || 'Features'}</h3>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    {selectedOffer.features && Object.entries(selectedOffer.features).map(([key, value]) => {
-                                                        if (!value || key === 'brand' || key === 'model') return null;
-                                                        return (
-                                                            <div key={key} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50">
-                                                                <Check size={18} className="text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
-                                                                <div>
-                                                                    <p className="text-xs text-slate-500 capitalize">{key.replace(/_/g, ' ')}</p>
-                                                                    <p className="font-medium text-slate-900 dark:text-white capitalize">{value.toString()}</p>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Sidebar / Provider */}
-                                        <div className="space-y-6">
-                                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/50">
-                                                <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('offer.provider') || 'Provider'}</h3>
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="w-12 h-12 bg-teal-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 font-bold text-xl">
-                                                        {selectedOffer.provider?.company_name?.charAt(0) || selectedOffer.provider?.full_name?.charAt(0) || 'P'}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-slate-900 dark:text-white">{selectedOffer.provider?.company_name || selectedOffer.provider?.full_name || 'Verified Provider'}</p>
-                                                        <p className="text-xs text-slate-500">Joined 2024</p>
-                                                    </div>
-                                                </div>
-                                                <button className="w-full py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors flex items-center justify-center gap-2">
-                                                    <MessageCircle size={16} />
-                                                    Active since 2024
-                                                </button>
-                                            </div>
-
-                                            <button
-                                                className="w-full bg-slate-900 dark:bg-white text-white dark:text-white py-4 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10"
-                                                onClick={() => {
-                                                    if (selectedOffer) {
-                                                        navigate(`/book-vehicle/${selectedOffer.service_ref || selectedOffer.id}`);
-                                                    }
-                                                }}
-                                            >
-                                                Book Now
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>,
-                    document.body
-                )
-            }
-        </div >
+            {selectedOffer && (
+                <CarOfferModal
+                    offer={selectedOffer}
+                    onClose={() => setSelectedOffer(null)}
+                    onBook={handleBook}
+                    formatPrice={formatPrice}
+                    convertPrice={convertPrice}
+                />
+            )}
+        </div>
     );
 };

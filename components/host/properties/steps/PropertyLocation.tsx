@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Info } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
-import { LocationPicker } from '../ui/LocationPicker';
+import { useLanguage } from '../../../../context/LanguageContext';
+import { LocationPicker } from '../../../ui/LocationPicker';
 import toast from 'react-hot-toast';
 
 interface PropertyLocationProps {
@@ -15,6 +15,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
 
     return (
         <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('list_prop.step2_title')}</h2>
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                     {t('list.form.license')}
@@ -36,8 +37,6 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                 />
             </div>
 
-
-
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     {t('prop_form.pin_location')}
@@ -48,8 +47,8 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                         onAddressSelect={(address, city) => {
                             setFormData((prev: any) => ({
                                 ...prev,
-                                address: address, // Auto-fill full address
-                                location: city || prev.location // Auto-fill Area/City if found, otherwise keep existing
+                                address: address,
+                                location: city || prev.location
                             }));
                             toast.success('Address found: ' + (city ? `${city}` : address));
                         }}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Calendar } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../../../context/LanguageContext';
 
 interface PropertyHospitalityProps {
     formData: any;
@@ -68,17 +68,6 @@ export const PropertyHospitality: React.FC<PropertyHospitalityProps> = ({ formDa
                         placeholder={t('prop_form.arrival')}
                         rows={3}
                         value={formData.arrivalGuide}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                    />
-                </div>
-                <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_directions')}</label>
-                    <textarea
-                        name="directions"
-                        placeholder={t('prop_form.directions')}
-                        rows={2}
-                        value={formData.directions}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
                     />

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { db } from '../api-services';
-import { ShoppingBag, Star, User } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useCurrency } from '../context/CurrencyContext'; // Added
+import { useCurrency } from '../context/CurrencyContext';
 import { ServiceType } from '../types/index';
+
+// Modular Components
+import { ProductCard } from '../components/shop/ProductCard';
+import { ShopHero } from '../components/shop/ShopHero';
 
 interface Product {
     id: string;
@@ -22,48 +26,20 @@ interface Product {
 
 export const Shop: React.FC = () => {
     const { t } = useLanguage();
-    const { convertPrice, formatPrice } = useCurrency(); // Added
+    const { convertPrice, formatPrice } = useCurrency();
     const [searchParams, setSearchParams] = useSearchParams();
-    const initialCategory = searchParams.get('category') || 'all';
+    const { addToCart: contextAddToCart } = useCart();
 
-    // Validate that the category is valid, else default to all
     const validCategories = ['all', 'souvenir', 'textile', 'food', 'jewelry', 'art'];
     const currentCategory = searchParams.get('category') || 'all';
     const filter = validCategories.includes(currentCategory) ? currentCategory : 'all';
 
-    // Sync activeCategory with URL params (Scroll behavior)
-    useEffect(() => {
-        if (searchParams.get('category')) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }, [searchParams]);
-
-    const handleFilterChange = (newFilter: string) => {
-        setSearchParams(newFilter === 'all' ? {} : { category: newFilter });
-    };
-
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const { addToCart: contextAddToCart } = useCart();
-
-    // Cart Toast State
     const [cartToast, setCartToast] = useState<string | null>(null);
-
-    const handleAddToCart = (product: Product) => {
-        contextAddToCart({
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            image: product.images[0],
-            type: ServiceType.PRODUCT
-        });
-        setCartToast(`Added ${product.title} to basket`);
-        setTimeout(() => setCartToast(null), 3000);
-    };
 
     // Mock Data for "Examples"
     const mockProducts: Product[] = [
-        // Souvenirs
         {
             id: 'm1', title: 'Handblown Glass Evil Eye', price: 15, category: 'souvenir', stock: 10,
             description: 'Traditional Nazar amulet to protect against the evil eye. Handblown by local artisans.',
@@ -76,7 +52,6 @@ export const Shop: React.FC = () => {
             images: ['https://images.unsplash.com/photo-1624558481358-19e0cf94ffdf?auto=format&fit=crop&q=80&w=600'],
             seller: { full_name: 'Fatma Demir' }
         },
-        // Textile
         {
             id: 'm3', title: 'Organic Cotton Peshtemal', price: 35, category: 'textile', stock: 20,
             description: 'Lightweight, absorbent Turkish towel. Perfect for the beach or hammam.',
@@ -89,7 +64,6 @@ export const Shop: React.FC = () => {
             images: ['https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=600'],
             seller: { full_name: 'Ayşe Gül' }
         },
-        // Food
         {
             id: 'm5', title: 'Premium Turkish Delight Box', price: 18, category: 'food', stock: 50,
             description: 'Assorted Lokum with double-roasted pistachios, rose, and pomegranate.',
@@ -102,14 +76,12 @@ export const Shop: React.FC = () => {
             images: ['https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=600'],
             seller: { full_name: 'Spice Market' }
         },
-        // Jewelry
         {
             id: 'm7', title: 'Silver Turquoise Ring', price: 45, category: 'jewelry', stock: 3,
             description: '925 Sterling Silver ring with a natural Turkish Turquoise stone.',
             images: ['https://images.unsplash.com/photo-1611085583191-a3b181a88401?auto=format&fit=crop&q=80&w=600'],
             seller: { full_name: 'Mehmet Silver' }
         },
-        // Art
         {
             id: 'm8', title: 'Red Tower Watercolor', price: 80, category: 'art', stock: 1,
             description: 'Original watercolor painting of the Alanya harbor at sunset.',
@@ -123,29 +95,42 @@ export const Shop: React.FC = () => {
             setLoading(true);
             try {
                 const data = await db.getProducts(filter === 'all' ? undefined : filter);
-                // IF DB is empty, show mocks for demo purposes
                 if ((!data || data.length === 0) && filter === 'all') {
                     setProducts(mockProducts);
                 } else if ((!data || data.length === 0) && filter !== 'all') {
-                    // Filter visuals for mocks if DB is empty
                     setProducts(mockProducts.filter(p => p.category === filter));
                 } else {
                     setProducts(data as any);
                 }
             } catch (err) {
                 console.error(err);
-                // Fallback to mocks on error
                 setProducts(filter === 'all' ? mockProducts : mockProducts.filter(p => p.category === filter));
             } finally {
                 setLoading(false);
             }
         };
         fetchProducts();
-    }, [filter]); // Re-run when filter (derived from URL) changes
+    }, [filter]);
+
+    const handleFilterChange = (newFilter: string) => {
+        setSearchParams(newFilter === 'all' ? {} : { category: newFilter });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleAddToCart = (product: Product) => {
+        contextAddToCart({
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.images[0],
+            type: ServiceType.PRODUCT
+        });
+        setCartToast(`Added ${product.title} to basket`);
+        setTimeout(() => setCartToast(null), 3000);
+    };
 
     return (
         <div className="min-h-screen bg-white dark:bg-slate-900 pb-20 animate-page-enter relative">
-            {/* Toast Notification */}
             {cartToast && (
                 <div className="fixed top-24 right-4 z-50 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl animate-in slide-in-from-right flex items-center gap-3">
                     <div className="bg-green-500 rounded-full p-1"><ShoppingBag size={14} /></div>
@@ -153,36 +138,12 @@ export const Shop: React.FC = () => {
                 </div>
             )}
 
-            {/* Hero */}
-            <div className="relative h-[40vh] min-h-[400px] flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0">
-                    <img
-                        src="/images/alanya-bazaar-hero.png"
-                        alt="Colorful Turkish Lamps"
-                        className="w-full h-full object-cover animate-stagger-enter"
-                        style={{ animationDelay: '0.1s' }}
-                    />
-                    <div className="absolute inset-0 bg-slate-900/40"></div>
-                </div>
-                <div className="relative z-10 text-center px-4 max-w-4xl mx-auto animate-stagger-enter" style={{ animationDelay: '0.3s' }}>
-                    <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 px-4 py-2 rounded-full mb-6 border border-amber-500/30 backdrop-blur-md">
-                        <ShoppingBag size={18} />
-                        <span className="font-medium tracking-wide text-sm uppercase">Alanya Artisan Shop</span>
-                    </div>
-                    <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight">
-                        Authentic Local Treasures
-                    </h1>
-                    <p className="text-xl text-slate-200 font-light max-w-2xl mx-auto">
-                        Discover handmade goods, spices, and souvenirs directly from local artisans.
-                    </p>
-                </div>
-            </div>
+            <ShopHero />
 
-            {/* Filter */}
-            <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 animate-stagger-enter" style={{ animationDelay: '0.5s' }}>
+            <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50">
                 <div className="max-w-7xl mx-auto px-4 overflow-x-auto">
                     <div className="flex gap-4 py-4 min-w-max">
-                        {['all', 'souvenir', 'textile', 'food', 'jewelry', 'art'].map(cat => (
+                        {validCategories.map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => handleFilterChange(cat)}
@@ -198,7 +159,6 @@ export const Shop: React.FC = () => {
                 </div>
             </div>
 
-            {/* Grid */}
             <div className="max-w-7xl mx-auto px-4 py-12">
                 {loading ? (
                     <div className="text-center py-20 text-slate-500">Loading treasures...</div>
@@ -214,72 +174,14 @@ export const Shop: React.FC = () => {
                 ) : (
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {products.map((product, index) => (
-                            <div
+                            <ProductCard
                                 key={product.id}
-                                className="group bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-800/50 animate-stagger-enter flex flex-col"
-                                style={{ animationDelay: `${0.1 * index}s` }}
-                            >
-                                {/* Image Placeholder */}
-                                <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800/50 relative overflow-hidden group">
-                                    {product?.images?.[0] ? (
-                                        <img
-                                            src={product.images[0]}
-                                            alt={product.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                                            <ShoppingBag size={32} />
-                                        </div>
-                                    )}
-                                    {/* Quick Add Button Overlay */}
-                                    <button
-                                        onClick={() => handleAddToCart(product)}
-                                        className="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-amber-500 hover:text-white"
-                                        title="Add to Basket"
-                                    >
-                                        <ShoppingBag size={20} />
-                                    </button>
-                                </div>
-                                <div className="p-6 flex flex-col flex-grow">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="text-xs uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
-                                            {product.category}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-yellow-400">
-                                            <Star size={14} fill="currentColor" />
-                                            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">New</span>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-1">
-                                        {product.title}
-                                    </h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 min-h-[40px] flex-grow">
-                                        {product.description}
-                                    </p>
-                                    <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/50 pt-4 mt-auto">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-400">
-                                                <User size={14} />
-                                            </div>
-                                            <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px]">
-                                                {product.seller?.full_name || 'Artisan'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xl font-bold text-slate-900 dark:text-white">
-                                                {formatPrice(convertPrice(product.price, 'EUR'))}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => handleAddToCart(product)}
-                                        className="w-full mt-4 bg-slate-100 dark:bg-slate-800/50 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
-                                    >
-                                        Add to Basket
-                                    </button>
-                                </div>
-                            </div>
+                                product={product}
+                                index={index}
+                                onAddToCart={handleAddToCart}
+                                formatPrice={formatPrice}
+                                convertPrice={convertPrice}
+                            />
                         ))}
                     </div>
                 )}
