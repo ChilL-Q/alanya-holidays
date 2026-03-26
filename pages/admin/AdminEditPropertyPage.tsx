@@ -4,19 +4,16 @@ import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import {
-    Camera,
-    XCircle,
-    Home,
-    MapPin,
-    ArrowLeft,
-    Calendar,
-    Settings
-} from 'lucide-react';
-import { AMENITIES_LIST } from '../../data/constants';
+import { ArrowLeft, Calendar, Settings } from 'lucide-react';
+
 import { AvailabilityCalendar } from '../../components/host/AvailabilityCalendar';
 import { ICalManager } from '../../components/host/ICalManager';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
+
+import { PropertyBasicDetailsForm } from '../../components/admin/property/PropertyBasicDetailsForm';
+import { PropertyHospitalityForm } from '../../components/admin/property/PropertyHospitalityForm';
+import { PropertyAmenitiesForm } from '../../components/admin/property/PropertyAmenitiesForm';
+import { PropertyMediaForm } from '../../components/admin/property/PropertyMediaForm';
 
 export const AdminEditPropertyPage: React.FC = () => {
     const { t } = useLanguage();
@@ -62,7 +59,6 @@ export const AdminEditPropertyPage: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch property data
     const fetchProp = async () => {
         if (!id) return;
         try {
@@ -80,7 +76,6 @@ export const AdminEditPropertyPage: React.FC = () => {
                     amenities: (data.amenities || []).map((a: any) => typeof a === 'string' ? a : a.label),
                     name: data.host?.full_name || '',
                     email: '',
-                    // Hospitality Details
                     arrivalGuide: data.arrival_guide || '',
                     checkInTime: data.check_in_time || '',
                     checkOutTime: data.check_out_time || '',
@@ -118,6 +113,14 @@ export const AdminEditPropertyPage: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleAmenitiesChange = (updatedAmenities: string[]) => {
+        setFormData({ ...formData, amenities: updatedAmenities });
+    };
+
+    const handleRemoveExistingImage = (index: number) => {
+        setExistingImages(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
 
@@ -134,7 +137,6 @@ export const AdminEditPropertyPage: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Upload new images
             const newUploadedUrls = [];
             for (const file of files) {
                 const url = await db.uploadPropertyImage(file);
@@ -153,7 +155,6 @@ export const AdminEditPropertyPage: React.FC = () => {
                 type: formData.propertyType as 'villa' | 'apartment',
                 amenities: formData.amenities,
                 images: finalImages,
-                // Hospitality Details
                 arrival_guide: formData.arrivalGuide,
                 check_in_time: formData.checkInTime,
                 check_out_time: formData.checkOutTime,
@@ -187,8 +188,6 @@ export const AdminEditPropertyPage: React.FC = () => {
 
     useSaveShortcut(handleSubmit);
 
-    // Protected by AdminRoute wrapper in App.tsx for admin routes
-    // For host routes, we handle check here or in HostRoute (if it exists)
     if (authLoading) return null;
     if (!isAuthenticated) return null;
     if (user?.role !== 'admin' && user?.role !== 'host') return null;
@@ -215,7 +214,6 @@ export const AdminEditPropertyPage: React.FC = () => {
                                 <p className="text-slate-500 mt-1">{t('admin_prop.edit_subtitle')}</p>
                             </div>
 
-                            {/* Tabs */}
                             <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
                                 <button
                                     onClick={() => setActiveTab('details')}
@@ -252,394 +250,32 @@ export const AdminEditPropertyPage: React.FC = () => {
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_title')}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="title"
-                                            required
-                                            value={formData.title}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
+                                
+                                <PropertyBasicDetailsForm formData={formData} onChange={handleChange} />
+                                
+                                <PropertyAmenitiesForm amenities={formData.amenities} onChange={handleAmenitiesChange} />
 
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_price')}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="price"
-                                            required
-                                            min="1"
-                                            value={formData.price}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            Cleaning Fee (One-time)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="cleaningFee"
-                                            min="0"
-                                            value={formData.cleaningFee}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_type')}
-                                        </label>
-                                        <div className="relative">
-                                            <select
-                                                name="propertyType"
-                                                value={formData.propertyType}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all appearance-none"
-                                            >
-                                                <option value="apartment">Apartment</option>
-                                                <option value="villa">Villa</option>
-                                            </select>
-                                            <Home className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_max_guests')}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="maxGuests"
-                                            required
-                                            min="1"
-                                            value={formData.maxGuests}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_beds')}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="beds"
-                                            required
-                                            min="1"
-                                            value={formData.beds}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_bedrooms')}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="bedrooms"
-                                            required
-                                            min="0"
-                                            value={formData.bedrooms}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                            {t('prop_form.label_bathrooms')}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="bathrooms"
-                                            required
-                                            min="0"
-                                            value={formData.bathrooms}
-                                            onChange={handleChange}
-                                            onWheel={(e) => e.currentTarget.blur()}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
+                                <PropertyHospitalityForm formData={formData} onChange={handleChange} />
 
-
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        {t('prop_form.label_address')}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        required
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
-                                        {t('prop_form.label_amenities')}
-                                    </label>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                        {AMENITIES_LIST.map(am => (
-                                            <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={(formData.amenities as string[] || []).includes(am.label)}
-                                                    onChange={(e) => {
-                                                        const current = (formData.amenities as string[]) || [];
-                                                        if (e.target.checked) {
-                                                            setFormData(prev => ({ ...prev, amenities: [...current, am.label] }));
-                                                        } else {
-                                                            setFormData(prev => ({ ...prev, amenities: current.filter(a => a !== am.label) }));
-                                                        }
-                                                    }}
-                                                    className="w-4 h-4 text-accent dark:text-amber-400 rounded focus:ring-accent border-gray-300"
-                                                />
-                                                <span className="text-sm text-slate-700 dark:text-slate-300">{t(am.label)}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="bg-indigo-50 dark:bg-slate-800/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
-                                    <input
-                                        type="checkbox"
-                                        id="isPromoted"
-                                        checked={formData.isPromoted}
-                                        onChange={(e) => setFormData({ ...formData, isPromoted: e.target.checked })}
-                                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
-                                    />
-                                    <label htmlFor="isPromoted" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
-                                        Promote this Property
-                                        <span className="block text-xs font-normal text-slate-500">Property will appear with a 'Featured' badge</span>
-                                    </label>
-                                </div>
-
-                                {/* Hospitality & Guest Guide Section */}
-                                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                        {t('prop_form.section_hospitality')}
-                                        <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-full ml-auto">{t('prop_form.visible_after_booking')}</span>
-                                    </h3>
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkin')}</label>
-                                            <input
-                                                type="text"
-                                                name="checkInTime"
-                                                placeholder={t('prop_form.checkin_time')}
-                                                value={formData.checkInTime}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout')}</label>
-                                            <input
-                                                type="text"
-                                                name="checkOutTime"
-                                                placeholder={t('prop_form.checkout_time')}
-                                                value={formData.checkOutTime}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_method')}</label>
-                                            <input
-                                                type="text"
-                                                name="checkInMethod"
-                                                placeholder={t('prop_form.checkin_method')}
-                                                value={formData.checkInMethod}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_wifi')}</label>
-                                            <textarea
-                                                name="wifiDetails"
-                                                placeholder={t('prop_form.wifi')}
-                                                rows={2}
-                                                value={formData.wifiDetails}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_arrival')}</label>
-                                            <textarea
-                                                name="arrivalGuide"
-                                                placeholder={t('prop_form.arrival')}
-                                                rows={3}
-                                                value={formData.arrivalGuide}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_directions')}</label>
-                                            <textarea
-                                                name="directions"
-                                                placeholder={t('prop_form.directions')}
-                                                rows={2}
-                                                value={formData.directions}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_manual')}</label>
-                                            <textarea
-                                                name="houseManual"
-                                                placeholder={t('prop_form.house_manual')}
-                                                rows={3}
-                                                value={formData.houseManual}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_rules')}</label>
-                                            <textarea
-                                                name="houseRules"
-                                                placeholder={t('prop_form.house_rules')}
-                                                rows={3}
-                                                value={formData.houseRules}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_checkout_instr')}</label>
-                                            <textarea
-                                                name="checkoutInstructions"
-                                                placeholder={t('prop_form.checkout_instr')}
-                                                rows={2}
-                                                value={formData.checkoutInstructions}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_guidebooks')}</label>
-                                            <textarea
-                                                name="guidebooks"
-                                                placeholder={t('prop_form.recommendations')}
-                                                rows={2}
-                                                value={formData.guidebooks}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('prop_form.label_interaction')}</label>
-                                            <textarea
-                                                name="interactionPreferences"
-                                                placeholder={t('prop_form.interaction')}
-                                                rows={2}
-                                                value={formData.interactionPreferences}
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        {t('admin_prop.upload_title')}
-                                    </label>
-                                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-700/50 rounded-2xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/90/50 transition-colors cursor-pointer relative">
-                                        <input
-                                            type="file"
-                                            multiple
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                if (e.target.files) {
-                                                    setFiles(Array.from(e.target.files));
-                                                }
-                                            }}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        />
-                                        <div className="w-12 h-12 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Camera size={24} />
-                                        </div>
-                                        <p className="text-sm font-medium text-slate-900 dark:text-white">{t('admin_prop.upload_text')}</p>
-                                        <p className="text-xs text-slate-500 mt-1">{t('admin_prop.upload_hint')}</p>
-
-                                        {(existingImages.length > 0 || files.length > 0) && (
-                                            <div className="mt-4 flex flex-wrap gap-2 justify-center">
-                                                {existingImages.map((img, i) => (
-                                                    <div key={`existing-${i}`} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200">
-                                                        <img src={img} className="w-full h-full object-cover" />
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                e.preventDefault();
-                                                                setExistingImages(prev => prev.filter((_, idx) => idx !== i));
-                                                            }}
-                                                            className="absolute top-0 right-0 bg-red-500 text-white p-0.5 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            <XCircle size={12} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                {files.map((f, i) => (
-                                                    <span key={i} className="flex items-center justify-center w-20 h-20 text-xs bg-slate-200 dark:bg-slate-800/50 px-2 py-1 rounded text-slate-600 dark:text-slate-300 overflow-hidden break-words text-center">
-                                                        {f.name}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                        {t('prop_form.label_desc')}
-                                    </label>
-                                    <textarea
-                                        name="description"
-                                        rows={4}
-                                        // required
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all resize-none"
-                                    ></textarea>
-                                </div>
+                                <PropertyMediaForm
+                                    existingImages={existingImages}
+                                    onRemoveExisting={handleRemoveExistingImage}
+                                    files={files}
+                                    onFilesChange={setFiles}
+                                />
 
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="w-full bg-accent dark:bg-amber-600 hover:bg-accent dark:bg-amber-600 -hover text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
+                                    className="w-full bg-accent dark:bg-amber-600 hover:bg-accent hover:opacity-90 dark:bg-amber-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-accent/30 text-lg disabled:opacity-50 disabled:cursor-wait"
                                 >
                                     {isLoading ? t('admin_prop.save_loading') : t('admin_prop.save')}
                                 </button>
                             </form>
                         )}
                     </div>
-                </div >
-            </div >
-        </div >
+                </div>
+            </div>
+        </div>
     );
 };

@@ -4,6 +4,7 @@ import { Filter, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 
@@ -30,6 +31,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     // UI State
     const [showFullIntro, setShowFullIntro] = useState(false);
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+    const [selectedListing, setSelectedListing] = useState<DirectoryListingDB | null>(null);
 
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
@@ -177,50 +179,62 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     </div>
 
                     <div className="flex overflow-x-auto pb-2 md:pb-0 md:flex-wrap items-center gap-4 w-full xl:w-auto scrollbar-hide">
-                        <select
-                            value={locationFilter}
-                            onChange={(e) => setLocationFilter(e.target.value)}
-                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        >
-                            <option value="all">All Locations</option>
-                            {availableLocations.map(loc => (
-                                <option key={loc} value={loc}>{loc}</option>
-                            ))}
-                        </select>
-
-                        {availableLanguages.length > 0 && (
+                        <div className="relative shrink-0">
                             <select
-                                value={languageFilter}
-                                onChange={(e) => setLanguageFilter(e.target.value)}
-                                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                value={locationFilter}
+                                onChange={(e) => setLocationFilter(e.target.value)}
+                                className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
-                                <option value="all">All Languages</option>
-                                {availableLanguages.map(lang => (
-                                    <option key={lang} value={lang}>{lang}</option>
+                                <option value="all">All Locations</option>
+                                {availableLocations.map(loc => (
+                                    <option key={loc} value={loc}>{loc}</option>
                                 ))}
                             </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+
+                        {availableLanguages.length > 0 && (
+                            <div className="relative shrink-0">
+                                <select
+                                    value={languageFilter}
+                                    onChange={(e) => setLanguageFilter(e.target.value)}
+                                    className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="all">All Languages</option>
+                                    {availableLanguages.map(lang => (
+                                        <option key={lang} value={lang}>{lang}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
                         )}
 
-                        <select
-                            value={minRating}
-                            onChange={(e) => setMinRating(Number(e.target.value))}
-                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        >
-                            <option value={0}>Any Rating</option>
-                            <option value={4.0}>4.0+ Stars</option>
-                            <option value={4.5}>4.5+ Stars</option>
-                        </select>
+                        <div className="relative shrink-0">
+                            <select
+                                value={minRating}
+                                onChange={(e) => setMinRating(Number(e.target.value))}
+                                className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            >
+                                <option value={0}>Any Rating</option>
+                                <option value={4.0}>4.0+ Stars</option>
+                                <option value={4.5}>4.5+ Stars</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
 
-                        <select
-                            value={maxPriceLevel}
-                            onChange={(e) => setMaxPriceLevel(Number(e.target.value))}
-                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        >
-                            <option value={4}>Any Price</option>
-                            <option value={1}>$ (Budget)</option>
-                            <option value={2}>$$ (Moderate)</option>
-                            <option value={3}>$$$ (Premium)</option>
-                        </select>
+                        <div className="relative shrink-0">
+                            <select
+                                value={maxPriceLevel}
+                                onChange={(e) => setMaxPriceLevel(Number(e.target.value))}
+                                className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            >
+                                <option value={4}>Any Price</option>
+                                <option value={1}>$ (Budget)</option>
+                                <option value={2}>$$ (Moderate)</option>
+                                <option value={3}>$$$ (Premium)</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
 
                         <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             <input
@@ -256,9 +270,9 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                             <Star className="text-amber-500 fill-amber-500" size={24} />
                             Featured Providers
                         </h2>
-                        <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {featuredListings.map(listing => (
-                                <DirectoryListingCard key={listing.id} listing={listing} />
+                                <DirectoryListingCard key={listing.id} listing={listing} onClick={setSelectedListing} />
                             ))}
                         </div>
                     </div>
@@ -270,9 +284,9 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                         All Listings
                     </h2>
                     {standardListings.length > 0 ? (
-                        <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {standardListings.map(listing => (
-                                <DirectoryListingCard key={listing.id} listing={listing} />
+                                <DirectoryListingCard key={listing.id} listing={listing} onClick={setSelectedListing} />
                             ))}
                         </div>
                     ) : (
@@ -309,6 +323,12 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     </div>
                 )}
             </div>
+
+            <DirectoryListingModal 
+                listing={selectedListing} 
+                isOpen={!!selectedListing} 
+                onClose={() => setSelectedListing(null)} 
+            />
         </div>
     );
 };
