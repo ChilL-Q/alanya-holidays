@@ -19,6 +19,14 @@ vi.mock('../../context/LanguageContext', () => ({
     useLanguage: () => ({ t: (k: string) => k })
 }));
 
+vi.mock('../../components/host/AvailabilityCalendar', () => ({
+    AvailabilityCalendar: () => <div data-testid="mock-calendar" />
+}));
+
+vi.mock('../../components/host/ICalManager', () => ({
+    ICalManager: () => <div data-testid="mock-ical" />
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');

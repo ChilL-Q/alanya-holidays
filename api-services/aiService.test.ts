@@ -1,87 +1,67 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { supabase } from './supabase';
 
-// Mock the GoogleGenerativeAI class
-const { mockGenerateContent, mockGetGenerativeModel } = vi.hoisted(() => {
-    const mockGen = vi.fn();
-    const mockModel = vi.fn();
-    return { mockGenerateContent: mockGen, mockGetGenerativeModel: mockModel };
-});
-
-vi.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: vi.fn(function() {
-        return {
-            getGenerativeModel: mockGetGenerativeModel
-        };
-    })
+vi.mock('./supabase', () => ({
+    supabase: {
+        functions: {
+            invoke: vi.fn()
+        }
+    }
 }));
 
 describe('askLocalGuide', () => {
     beforeEach(() => {
-        vi.resetModules();
-        vi.stubEnv('VITE_GEMINI_API_KEY', 'test-key');
         vi.clearAllMocks();
-        
-        mockGenerateContent.mockResolvedValue({
-            response: {
-                text: () => 'AI Response'
-            }
-        });
-        mockGetGenerativeModel.mockReturnValue({
-            generateContent: mockGenerateContent
-        });
-    });
-
-    afterEach(() => {
-        vi.unstubAllEnvs();
     });
 
     it('returns AI response on success', async () => {
+        (supabase.functions.invoke as any).mockResolvedValue({
+            data: { answer: 'AI Response' },
+            error: null
+        });
+
         const { askLocalGuide } = await import('./aiService');
         const response = await askLocalGuide(null, null, 'Hello');
+        
         expect(response).toBe('AI Response');
-        expect(mockGetGenerativeModel).toHaveBeenCalled();
-        expect(mockGenerateContent).toHaveBeenCalled();
+        expect(supabase.functions.invoke).toHaveBeenCalledWith('ai-proxy', expect.any(Object));
     });
 
     it('handles property context', async () => {
+        (supabase.functions.invoke as any).mockResolvedValue({
+            data: { answer: 'Details here' },
+            error: null
+        });
+
         const { askLocalGuide } = await import('./aiService');
         await askLocalGuide('Villa', 'Center', 'Details?');
-        const prompt = mockGenerateContent.mock.calls[0][0];
-        expect(prompt).toContain('Villa');
-        expect(prompt).toContain('Center');
-    });
-
-    it('tries multiple models on failure', async () => {
-        const { askLocalGuide } = await import('./aiService');
-        mockGenerateContent
-            .mockRejectedValueOnce(new Error('First fail'))
-            .mockResolvedValueOnce({
-                response: {
-                    text: () => 'Success after retry'
-                }
-            });
-
-        const response = await askLocalGuide(null, null, 'Hello');
-        expect(response).toBe('Success after retry');
-        expect(mockGetGenerativeModel).toHaveBeenCalledTimes(2);
+        
+        const callArgs = (supabase.functions.invoke as any).mock.calls[0][1];
+        expect(callArgs.body.propertyName).toBe('Villa');
+        expect(callArgs.body.location).toBe('Center');
     });
 
     it('returns rate limit message', async () => {
+        (supabase.functions.invoke as any).mockResolvedValue({
+            data: { error: '429 Too Many Requests' },
+            error: null
+        });
+
         const { askLocalGuide } = await import('./aiService');
-        mockGenerateContent.mockRejectedValue(new Error('429 Too Many Requests'));
-        
         const response = await askLocalGuide(null, null, 'Hello');
+        
         expect(response).toContain('receiving too many requests');
     });
 
-    it('returns error message if all models fail', async () => {
+    it('returns error message if edge function fails', async () => {
+        (supabase.functions.invoke as any).mockResolvedValue({
+            data: null,
+            error: new Error('NetworkError')
+        });
+
         const { askLocalGuide } = await import('./aiService');
-        mockGenerateContent.mockRejectedValue(new Error('Fatal error'));
+        const response = await askLocalGuide(null, null, 'Hello');
         
-        try {
-            await askLocalGuide(null, null, 'Hello');
-        } catch (e: any) {
-            expect(e.message).toContain('Fatal error');
-        }
+        expect(response).toContain('Error connecting to AI');
     });
 });

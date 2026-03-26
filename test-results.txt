@@ -1,0 +1,73 @@
+
+> alanya-holidays@0.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.17 [39m[90m/Users/kachevn1k/Projects/alanya-holidays[39m
+
+ [32m✓[39m hooks/usePropertyFilters.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 290[2mms[22m[39m
+ [32m✓[39m components/ui/PropertyFilters.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 213[2mms[22m[39m
+ [32m✓[39m context/AuthContext.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 392[2mms[22m[39m
+ [32m✓[39m components/host/AvailabilityCalendar.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[32m 285[2mms[22m[39m
+ [31m❯[39m api-services/aiService.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 883[2mms[22m[39m
+[31m     [31m×[31m returns AI response on success[39m[32m 294[2mms[22m[39m
+[31m     [31m×[31m handles property context[39m[32m 178[2mms[22m[39m
+[31m     [31m×[31m tries multiple models on failure[39m[32m 122[2mms[22m[39m
+[31m     [31m×[31m returns rate limit message[39m[32m 155[2mms[22m[39m
+     [32m✓[39m returns error message if all models fail[32m 133[2mms[22m[39m
+ [31m❯[39m pages/admin/AdminEditServicePage.test.tsx [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1018[2mms[22m[39m
+[31m     [31m×[31m renders service editor form fields[39m[33m 1017[2mms[22m[39m
+ [31m❯[39m pages/admin/AdminEditPropertyPage.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 130[2mms[22m[39m
+     [32m✓[39m renders new property form and tabs[32m 68[2mms[22m[39m
+[31m     [31m×[31m switches to calendar tab[39m[32m 60[2mms[22m[39m
+ [32m✓[39m components/ui/CartDrawer.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 279[2mms[22m[39m
+ [32m✓[39m components/chat/ChatWindow.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 335[2mms[22m[39m
+ [32m✓[39m pages/SearchResultsPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 370[2mms[22m[39m
+ [32m✓[39m pages/host/HostServicesPage.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 243[2mms[22m[39m
+ [32m✓[39m components/ui/Counter.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 167[2mms[22m[39m
+ [32m✓[39m components/services/ServiceCard.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 139[2mms[22m[39m
+ [32m✓[39m hooks/useCars.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 124[2mms[22m[39m
+ [32m✓[39m components/ui/Button.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 147[2mms[22m[39m
+ [32m✓[39m hooks/useServicePrices.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 119[2mms[22m[39m
+ [32m✓[39m components/Footer.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 180[2mms[22m[39m
+ [32m✓[39m pages/Contact.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 126[2mms[22m[39m
+ [32m✓[39m components/Navbar.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 158[2mms[22m[39m
+ [32m✓[39m pages/Checkout.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 103[2mms[22m[39m
+ [32m✓[39m pages/admin/Dashboard.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m pages/admin/DirectoryAdminPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m pages/admin/PropertiesPage.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m pages/admin/AdminEditDirectoryPage.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m components/ui/Pagination.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m context/CurrencyContext.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m pages/ServicesPage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+ [32m✓[39m components/ui/ConfirmationModal.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m context/LanguageContext.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m pages/admin/ReportsPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m context/ThemeContext.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m api-services/api/properties.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m hooks/useShortcuts.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m pages/admin/AdminEditProductPage.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m pages/InboxPage.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m hooks/useSubmitShortcut.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m utils/currency.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m api-services/api/bookings.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m hooks/useSaveShortcut.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m api-services/api/notifications.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m api-services/api/services.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m hooks/useClickOutside.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m hooks/useCarAggregation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m api-services/api/chat.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m api-services/api/yesim.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m api-services/api/products.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m api-services/api/storage.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m utils/cn.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m api-services/api/schemas.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m api-services/api/users.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m api-services/api/misc.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m utils/carImages.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m49 passed[39m[22m[90m (52)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m289 passed[39m[22m[90m (295)[39m
+[2m   Start at [22m 19:54:20
+[2m   Duration [22m 7.77s[2m (transform 2.38s, setup 6.95s, import 9.26s, tests 6.76s, environment 23.61s)[22m
+
