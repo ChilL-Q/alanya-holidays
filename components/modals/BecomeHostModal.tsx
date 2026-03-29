@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Home, Check, X } from 'lucide-react';
+import { Home, Check } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 interface BecomeHostModalProps {

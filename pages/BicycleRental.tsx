@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
-import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
-import { getCarImage } from '../utils/carImages';
 
 interface BikeGroup {
     id: string; // generated slug
@@ -21,7 +19,6 @@ interface BikeGroup {
 
 export const BicycleRental: React.FC = () => {
     const { t } = useLanguage();
-    const { openLightbox } = useLightbox();
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
 

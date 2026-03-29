@@ -23,9 +23,8 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     useEffect(() => {
         if (isAuthenticated && user?.id) {
             db.getFavorites(user.id).then(dbFavorites => {
-                // Merge local and remote? For now, just trust remote + local unique
-                const merged = Array.from(new Set([...favorites, ...dbFavorites]));
-                setFavorites(merged);
+                // Use functional update to avoid stale closure on favorites state
+                setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
             });
         }
     }, [isAuthenticated, user]);

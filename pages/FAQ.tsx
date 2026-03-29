@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, ChevronDown } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 
 export const FAQ: React.FC = () => {
     return (

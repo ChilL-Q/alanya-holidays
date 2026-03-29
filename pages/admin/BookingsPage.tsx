@@ -38,7 +38,7 @@ export const BookingsPage: React.FC = () => {
             if (selectedBooking?.id === id) {
                 setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
             }
-        } catch (e) {
+        } catch {
             alert('Failed to update status');
         }
     };
@@ -53,7 +53,7 @@ export const BookingsPage: React.FC = () => {
             if (selectedBooking?.id === id) {
                 setSelectedBooking((prev: any) => ({ ...prev, payout_status: newStatus }));
             }
-        } catch (e) {
+        } catch {
             alert('Failed to update payout status');
         }
     };

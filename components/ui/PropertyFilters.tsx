@@ -30,7 +30,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
     onClose,
     filters,
     onFilterChange,
-    maxPrice = 1000
+    maxPrice: _maxPrice = 1000
 }) => {
     const { t } = useLanguage();
 

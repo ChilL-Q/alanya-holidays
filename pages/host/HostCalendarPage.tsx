@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { db } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 
@@ -7,13 +7,9 @@ export const HostCalendarPage = () => {
     const { user } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [bookings, setBookings] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [_isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        loadBookings();
-    }, [user, currentDate]);
-
-    const loadBookings = async () => {
+    const loadBookings = useCallback(async () => {
         if (!user) return;
         try {
             setIsLoading(true);
@@ -32,7 +28,11 @@ export const HostCalendarPage = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        loadBookings();
+    }, [loadBookings, currentDate]);
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();

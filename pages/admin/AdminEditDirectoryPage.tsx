@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -40,13 +40,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
         is_verified: false
     });
 
-    useEffect(() => {
-        if (isEditing) {
-            loadListing();
-        }
-    }, [id]);
-
-    const loadListing = async () => {
+    const loadListing = useCallback(async () => {
         try {
             const listing = await db.getDirectoryListing(id!);
             if (listing) {
@@ -73,7 +67,13 @@ export const AdminEditDirectoryPage: React.FC = () => {
             toast.error('Failed to load listing');
             navigate('/admin/directory');
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (isEditing) {
+            loadListing();
+        }
+    }, [isEditing, loadListing]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;

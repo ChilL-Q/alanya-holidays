@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { db } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { HostBookingToolbar } from '../../components/host/bookings/HostBookingToolbar';
@@ -13,11 +13,7 @@ export const HostBookingsPage: React.FC = () => {
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        loadBookings();
-    }, [user]);
-
-    const loadBookings = async () => {
+    const loadBookings = useCallback(async () => {
         if (!user) return;
         try {
             setIsLoading(true);
@@ -28,7 +24,11 @@ export const HostBookingsPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        loadBookings();
+    }, [loadBookings]);
 
     const handleStatusUpdate = async (id: string, newStatus: 'confirmed' | 'cancelled') => {
         if (confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) {

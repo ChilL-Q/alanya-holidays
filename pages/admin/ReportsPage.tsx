@@ -62,7 +62,7 @@ export const ReportsPage: React.FC = () => {
             if (error) throw error;
             toast.success('Status updated');
             fetchReports();
-        } catch (error) {
+        } catch {
             toast.error('Failed to update status');
         }
     };

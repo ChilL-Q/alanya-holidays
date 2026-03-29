@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Cloud, CloudRain, CloudLightning, Snowflake, Moon, CloudSun, Wind, CloudDrizzle, CloudFog } from 'lucide-react';
+import { Sun, Cloud, CloudRain, CloudLightning, Snowflake, Moon, CloudSun, CloudDrizzle, CloudFog } from 'lucide-react';
 
 interface WeatherData {
     current: {

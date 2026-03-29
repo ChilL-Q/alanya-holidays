@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { db } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, Car, Map, Smartphone, CreditCard } from 'lucide-react';
@@ -51,11 +51,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
         }
     };
 
-    useEffect(() => {
-        loadServices();
-    }, [user]);
-
-    const loadServices = async () => {
+    const loadServices = useCallback(async () => {
         if (!user) return;
         try {
             setIsLoading(true);
@@ -73,7 +69,11 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        loadServices();
+    }, [loadServices]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this service? This cannot be undone.')) {

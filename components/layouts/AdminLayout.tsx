@@ -1,8 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag, ShoppingBag, Map as MapIcon, BookOpen } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen } from 'lucide-react';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AdminLayoutProps {
@@ -10,15 +8,10 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-    const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
-    const handleSignOut = async () => {
-        await logout();
-        navigate('/login');
-    };
 
     // Handle Esc key to close mobile menu
     React.useEffect(() => {
@@ -80,7 +73,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={({ isActive: linkActive }) => `
+                                className={({ isActive: _linkActive }) => `
                                     flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
                                     ${isActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
                                 `}

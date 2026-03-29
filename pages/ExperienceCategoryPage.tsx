@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
+import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';

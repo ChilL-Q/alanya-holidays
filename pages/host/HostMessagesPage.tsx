@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useChat } from '../../context/ChatContext';
 import { ChatWindow } from '../../components/chat/ChatWindow';
-import { useLanguage } from '../../context/LanguageContext';
 import { Search, User, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const HostMessagesPage: React.FC = () => {
     const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
-    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         refreshConversations();
-    }, []);
+    }, [refreshConversations]);
 
     const filteredConversations = conversations
         .filter(c =>

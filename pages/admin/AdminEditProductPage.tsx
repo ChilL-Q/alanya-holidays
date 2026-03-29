@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -14,7 +13,6 @@ import { ProductMediaForm } from '../../components/admin/products/ProductMediaFo
 export const AdminEditProductPage: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { t } = useLanguage();
     const { user } = useAuth();
     const isEditing = id && id !== 'new';
 
@@ -30,13 +28,7 @@ export const AdminEditProductPage: React.FC = () => {
         category: 'souvenir'
     });
 
-    useEffect(() => {
-        if (isEditing) {
-            loadProduct();
-        }
-    }, [id]);
-
-    const loadProduct = async () => {
+    const loadProduct = useCallback(async () => {
         try {
             const product = await db.getProduct(id!);
             if (product) {
@@ -54,7 +46,13 @@ export const AdminEditProductPage: React.FC = () => {
             toast.error('Failed to load product');
             navigate('/admin/products');
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (isEditing) {
+            loadProduct();
+        }
+    }, [isEditing, loadProduct]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

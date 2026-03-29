@@ -3,7 +3,6 @@ import { useChat } from '../../context/ChatContext';
 import { useAuth } from '../../context/AuthContext';
 import { ChatMessage } from '../../types/models';
 import { chatService } from '../../api-services/api/chat';
-import { toast } from 'react-hot-toast';
 
 // Subcomponents
 import { ChatHeader } from './subcomponents/ChatHeader';
@@ -22,7 +21,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
     const { user } = useAuth();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputText, setInputText] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [_loading, setLoading] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
 

@@ -2,7 +2,6 @@ import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
@@ -13,16 +12,12 @@ interface HostLayoutProps {
 }
 
 export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
-    const { logout, user } = useAuth();
+    const { user } = useAuth();
     const { conversations } = useChat();
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
-    const handleSignOut = async () => {
-        await logout();
-        navigate('/login');
-    };
 
     // Handle Esc key to close mobile menu
     React.useEffect(() => {
@@ -91,7 +86,7 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={({ isActive: linkActive }) => `
+                                className={({ isActive: _linkActive }) => `
                                     flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
                                     ${isActive ? 'bg-indigo-50 dark:bg-slate-800/50 text-indigo-600 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
                                 `}

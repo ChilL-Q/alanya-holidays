@@ -24,7 +24,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
     isDisabled
 }) => {
     const { t } = useLanguage();
-    const [copied, setCopied] = useState(false);
+    const [_copied, setCopied] = useState(false);
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);

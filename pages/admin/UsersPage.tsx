@@ -25,14 +25,14 @@ export const UsersPage: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (_id: string) => {
         if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
 
         try {
             // await db.deleteUser(id); // Ensure this method exists in db service
             alert('Delete functionality would go here. (Ensure backend supports it)');
             // loadUsers();
-        } catch (e) {
+        } catch {
             alert('Failed to delete user');
         }
     };

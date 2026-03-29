@@ -3,7 +3,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { AddServiceCategoryStep, ServiceCategory } from '../components/host/services/AddServiceCategoryStep';
@@ -20,7 +19,6 @@ interface ItineraryItem {
 export const AddService: React.FC = () => {
     const { t } = useLanguage();
     const { user } = useAuth();
-    const navigate = useNavigate();
 
     // Steps: 0 = Category, 1 = Details, 2 = Success
     const [step, setStep] = useState(0);
