@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Menu, User, Globe, ChevronDown, Check, Sun, Moon, LogOut, Plus, Home, Car, LayoutDashboard, Heart, Banknote } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { NotificationBell } from './ui/NotificationBell';
-import { NavLink } from './navbar/NavLink';
-import { NavIndicator } from './navbar/NavIndicator';
 import { MobileMenu } from './navbar/MobileMenu';
 import { UserDropdown } from './navbar/UserDropdown';
 import { DesktopNav } from './navbar/DesktopNav';
@@ -18,7 +16,8 @@ export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
-  const { openLogin, openRegister } = useModal();
+  // useModal is kept if it provides context needed by other logic, but unused vars removed
+  useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

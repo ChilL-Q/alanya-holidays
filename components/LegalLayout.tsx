@@ -1,5 +1,4 @@
 import React from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { Calendar, ChevronRight } from 'lucide-react';
 
 interface Section {

@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { ThemeProvider, useTheme } from './ThemeContext';
-import { useEffect } from 'react';
 
 const TestComponent = () => {
     const { theme, toggleTheme } = useTheme();

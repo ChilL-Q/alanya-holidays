@@ -3,7 +3,7 @@ import { Modal } from '../ui/Modal';
 import { useModal } from '../../context/ModalContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, AlertCircle, Loader2, ArrowLeft, KeyRound } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import toast from 'react-hot-toast';
 
@@ -45,7 +45,7 @@ export const LoginModal: React.FC = () => {
             } else {
                 setError(result.error || 'Invalid email or password');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -65,7 +65,7 @@ export const LoginModal: React.FC = () => {
             } else {
                 setError(result.error || 'Failed to send code');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -86,7 +86,7 @@ export const LoginModal: React.FC = () => {
             } else {
                 setError(result.error || 'Invalid code');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -103,7 +103,7 @@ export const LoginModal: React.FC = () => {
             } else {
                 setError(result.error || 'Failed to resend code');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);

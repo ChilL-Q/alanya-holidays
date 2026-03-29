@@ -31,8 +31,7 @@ export const SearchResultsPage: React.FC = () => {
         isLoading,
         filters,
         setFilters,
-        activeFilterCount,
-        hasMore
+        activeFilterCount
     } = usePropertyFilters({ checkIn, checkOut, location, guests });
 
     return (

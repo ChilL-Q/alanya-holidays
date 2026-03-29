@@ -6,7 +6,7 @@ import { ServiceCard } from '../components/services/ServiceCard';
 import { CategoryTabs } from '../components/services/CategoryTabs';
 import { useServicePrices } from '../hooks/useServicePrices';
 import { SERVICES_DATA } from '../data/services';
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
 
 export const ServicesPage: React.FC = () => {
     const { t } = useLanguage();

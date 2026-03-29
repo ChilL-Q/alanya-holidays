@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
     RATES,
-    SYMBOLS,
     convertPrice as convertPriceUtil,
     formatPrice as formatPriceUtil,
     type Currency
