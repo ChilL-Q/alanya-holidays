@@ -24,8 +24,8 @@ export const CookieConsent: React.FC = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 p-4 z-[9999] animate-fade-up">
-            <div className="max-w-7xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 rounded-2xl shadow-2xl p-6 md:flex items-center justify-between gap-6">
+        <div className="fixed bottom-0 left-0 right-0 p-4 z-[9990] animate-fade-up pointer-events-none flex justify-center pb-24 md:pb-8">
+            <div className="max-w-7xl mx-auto w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800/50 rounded-2xl shadow-2xl p-6 md:flex items-center justify-between gap-6 pointer-events-auto">
                 <div className="flex items-start gap-4 mb-4 md:mb-0">
                     <div className="p-3 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-xl shrink-0">
                         <Cookie size={24} />

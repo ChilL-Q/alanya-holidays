@@ -1,8 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { Profile } from './Profile';
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
+
+// Mock api-services to prevent real async calls and unhandled rejections
+vi.mock('../api-services', () => ({
+    db: {
+        getBookings: vi.fn().mockResolvedValue([]),
+        getPropertiesByHost: vi.fn().mockResolvedValue([]),
+        getServicesByProvider: vi.fn().mockResolvedValue([]),
+        getUserProfile: vi.fn().mockResolvedValue(null),
+        updateUserProfile: vi.fn().mockResolvedValue({}),
+        uploadAvatar: vi.fn().mockResolvedValue('https://example.com/avatar.jpg'),
+        cancelBooking: vi.fn().mockResolvedValue({}),
+    }
+}));
 
 // Mock Lucide icons
 vi.mock('lucide-react', async () => {

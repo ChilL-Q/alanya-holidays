@@ -23,6 +23,7 @@ import { CookieConsent } from './components/ui/CookieConsent';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 // Loading Component
 const PageLoader = () => (
@@ -67,9 +68,11 @@ const App: React.FC = () => {
                               <Navbar />
                               <main className="flex-grow">
                                 <PageTransition>
-                                  <React.Suspense fallback={<PageLoader />}>
-                                    <AppRoutes />
-                                  </React.Suspense>
+                                  <ErrorBoundary>
+                                    <React.Suspense fallback={<PageLoader />}>
+                                      <AppRoutes />
+                                    </React.Suspense>
+                                  </ErrorBoundary>
                                 </PageTransition>
                               </main>
                               <Footer />

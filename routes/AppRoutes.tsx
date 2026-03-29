@@ -9,6 +9,7 @@ import { HostRoute } from '../components/auth/HostRoute';
 // Public Pages - Direct Imports (critical for immediate FCP)
 import { DirectoryHome } from '../pages/DirectoryHome';
 import { DirectoryCategoryPage } from '../pages/DirectoryCategoryPage';
+import { LoginRedirect } from '../pages/auth/LoginRedirect';
 
 // Public Pages - Lazy Loaded
 const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => ({ default: module.AiPlanner })));
@@ -105,6 +106,11 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/stays" element={<SearchResultsPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
+
+                {/* Auth Redirects */}
+                <Route path="/login" element={<LoginRedirect mode="login" />} />
+                <Route path="/register" element={<LoginRedirect mode="register" />} />
+
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:category" element={<ServicesPage />} />
