@@ -4,6 +4,7 @@ import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 import { useChat } from '../../context/ChatContext';
 
@@ -152,7 +153,9 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                 </header>
 
                 <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-                    {children}
+                    <ErrorBoundary>
+                        {children}
+                    </ErrorBoundary>
                 </div>
             </main>
         </div>

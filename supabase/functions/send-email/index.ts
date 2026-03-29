@@ -1,4 +1,7 @@
+// @ts-ignore
 import { createClient } from "npm:@supabase/supabase-js@2"
+
+declare const Deno: any;
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
@@ -17,7 +20,7 @@ interface EmailPayload {
   data: any; // Dynamic data for templates
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
