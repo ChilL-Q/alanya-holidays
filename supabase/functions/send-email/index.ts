@@ -26,6 +26,27 @@ Deno.serve(async (req) => {
     const { to, userId, type, data }: EmailPayload = await req.json()
 
     if (!RESEND_API_KEY) throw new Error('Missing RESEND_API_KEY')
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error('Missing Supabase credentials')
+
+    // --- Authentication Check ---
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { 
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      })
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    
+    // We can use the service role client, but pass the token explicitly to getUser()
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), { 
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      })
+    }
+    // ----------------------------
     
     // --- Input Validation ---
     if (!type || typeof type !== 'string') {
@@ -96,7 +117,8 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('Email Function Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
