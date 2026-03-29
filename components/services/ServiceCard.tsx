@@ -1,6 +1,5 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
 import { useCurrency, Currency } from '../../context/CurrencyContext';
 
 interface ServiceCardProps {

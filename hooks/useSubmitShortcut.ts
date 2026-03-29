@@ -1,4 +1,4 @@
-import { useEffect, KeyboardEvent } from 'react';
+import { useEffect } from 'react';
 
 export const useSubmitShortcut = (callback: () => void, disabled = false) => {
     useEffect(() => {

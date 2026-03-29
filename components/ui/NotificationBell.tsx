@@ -3,14 +3,12 @@ import { Bell } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../../context/LanguageContext';
 
 export const NotificationBell: React.FC = () => {
     const { notifications, unreadCount, markAsRead, addNotification } = useNotifications();
     const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const { t } = useLanguage();
 
     // Close on click outside
     useEffect(() => {

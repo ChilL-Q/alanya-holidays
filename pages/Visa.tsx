@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCheck, Clock, ShieldCheck, Globe, CheckCircle } from 'lucide-react';
+import { FileCheck, Clock, Globe, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useLanguage } from '../context/LanguageContext';

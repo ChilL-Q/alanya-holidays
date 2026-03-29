@@ -53,7 +53,7 @@ export const RegisterModal: React.FC = () => {
             } else {
                 setError(result.error || 'Failed to register');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -91,7 +91,7 @@ export const RegisterModal: React.FC = () => {
             } else {
                 setError(result.error || 'Invalid code');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred');
         } finally {
             setLoading(false);

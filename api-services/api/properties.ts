@@ -1,6 +1,5 @@
 import { supabase } from '../supabase';
 import { PropertyDB, ApprovalStatus, Review } from '../../types/index';
-import { NotificationType } from '../../types/enums';
 import { notificationsService } from './notifications';
 import { propertySchema } from './schemas';
 
@@ -378,7 +377,7 @@ export const propertiesService = {
     },
 
     async addReview(review: Omit<Review, 'id' | 'created_at'>) {
-        const { error, data: newReview } = await supabase
+        const { error } = await supabase
             .from('reviews')
             .insert([review])
             .select()
@@ -477,8 +476,8 @@ export const propertiesService = {
                 .eq('id', id); 
             
             if (error) throw error;
-        } catch (err: any) {
-            console.warn('Hard delete failed, fallback to soft delete.', err);
+        } catch {
+            console.warn('Hard delete failed, fallback to soft delete.');
             
             // Unconditional Soft Delete as fallback for ANY error (FK, RLS, etc.)
             // This ensures user gets the "Deleted" experience even if DB restrictions apply.
