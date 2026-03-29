@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Star, User, Camera, Trash2 } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Star, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { db, Review } from '../../api-services';
 import { ReviewModal } from './ReviewModal';
@@ -12,7 +11,6 @@ interface ReviewsSectionProps {
 }
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) => {
-    const { t } = useLanguage();
     const { user, isAuthenticated } = useAuth();
     const { openLightbox } = useLightbox();
 
@@ -21,7 +19,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
 
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         try {
             const data = await db.getReviews(propertyId);
             setReviews(data);
@@ -30,11 +28,11 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
         } finally {
             setLoading(false);
         }
-    };
+    }, [propertyId]);
 
     useEffect(() => {
         fetchReviews();
-    }, [propertyId]);
+    }, [fetchReviews]);
 
     const handleWriteReview = () => {
         if (!isAuthenticated) {
@@ -47,21 +45,15 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
     const handleDeleteReview = async (reviewId: string) => {
         if (!user) return;
 
-        console.log('🗑️ Attempting to delete review:', reviewId, 'by user:', user.id);
-
         if (!confirm('Are you sure you want to delete this review?')) {
             return;
         }
 
         setDeletingReviewId(reviewId);
         try {
-            console.log('🗑️ Calling deleteReview API...');
             await db.deleteReview(reviewId, user.id);
-            console.log('✅ Review deleted successfully');
             toast.success('Review deleted successfully');
-            console.log('🔄 Fetching updated reviews...');
             await fetchReviews();
-            console.log('✅ Reviews refreshed');
         } catch (error) {
             console.error('❌ Failed to delete review:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to delete review');

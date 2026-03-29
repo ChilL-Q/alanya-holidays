@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Copy, RefreshCw, Check, Link as LinkIcon, DownloadCloud, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Copy, RefreshCw, Check, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { db } from '../../api-services';
 
@@ -28,15 +28,10 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
     const [isAdding, setIsAdding] = useState(false);
 
     // Export URL Logic
-    const [icalToken, setIcalToken] = useState<string | null>(null);
+    const [_icalToken, setIcalToken] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
 
-    useEffect(() => {
-        loadFeeds();
-        loadPropertyDetails();
-    }, [propertyId]);
-
-    const loadFeeds = async () => {
+    const loadFeeds = useCallback(async () => {
         try {
             const data = await db.getICalFeeds(propertyId);
             setFeeds(data);
@@ -45,16 +40,21 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [propertyId]);
 
-    const loadPropertyDetails = async () => {
+    const loadPropertyDetails = useCallback(async () => {
         try {
             const property = await db.getProperty(propertyId);
             setIcalToken(property.ical_token || property.id); // Fallback to ID if token missing
         } catch (error) {
             console.error('Error loading property:', error);
         }
-    };
+    }, [propertyId]);
+
+    useEffect(() => {
+        loadFeeds();
+        loadPropertyDetails();
+    }, [loadFeeds, loadPropertyDetails]);
 
     const handleAddFeed = async () => {
         if (!newFeedName || !newFeedUrl) {

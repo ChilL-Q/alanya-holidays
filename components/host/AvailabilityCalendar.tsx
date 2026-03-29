@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { db } from '../../api-services';
@@ -23,7 +23,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
     const [price, setPrice] = useState<string>('');
     const { formatPrice, currency } = useCurrency(); // Added currency destructuring
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             const start = new Date();
             start.setMonth(start.getMonth() - 1); // Get slightly past
@@ -47,11 +47,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [propertyId]);
 
     useEffect(() => {
         loadData();
-    }, [propertyId]);
+    }, [loadData]);
 
     // Helper: Get local YYYY-MM-DD consistently avoiding UTC shifts
     const toLocalISOString = (date: Date) => {

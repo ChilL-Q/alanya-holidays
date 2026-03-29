@@ -61,7 +61,7 @@ export const HostEditServicePage: React.FC = () => {
                 });
 
                 setItinerary(features.itinerary || [{ time: '09:00', description: 'Start' }]);
-            } catch (err) {
+            } catch {
                 toast.error("Failed to load service");
                 navigate('/host/services');
             } finally {
@@ -125,7 +125,7 @@ export const HostEditServicePage: React.FC = () => {
                 toast.success('Service updated successfully');
                 navigate('/host/services');
             }
-        } catch (error) {
+        } catch {
             toast.error('Failed to submit changes');
         } finally {
             setSubmitting(false);

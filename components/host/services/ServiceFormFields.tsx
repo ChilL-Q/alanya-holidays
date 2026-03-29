@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface ComponentProps {
     formData: any;

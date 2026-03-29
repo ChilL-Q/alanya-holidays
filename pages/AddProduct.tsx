@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { ShoppingBag, Tag, Box, DollarSign } from 'lucide-react';
 
 export const AddProduct: React.FC = () => {
-    const { t } = useLanguage();
     const { user } = useAuth();
 
     // Form State

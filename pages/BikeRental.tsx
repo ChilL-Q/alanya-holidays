@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
-import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +20,6 @@ interface BikeGroup {
 
 export const BikeRental: React.FC = () => {
     const { t } = useLanguage();
-    const { openLightbox } = useLightbox();
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
 
@@ -91,7 +89,7 @@ export const BikeRental: React.FC = () => {
             loadingMessage="Loading bikes..."
             isEmpty={!loading && bikeGroups.length === 0}
         >
-            {bikeGroups.map((bike, index) => (
+            {bikeGroups.map((bike, _index) => (
                 <div
                     key={bike.id}
                     className="bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group cursor-pointer"

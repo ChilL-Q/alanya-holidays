@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, Camera, Video, Instagram, Smartphone, Sparkles, Compass } from 'lucide-react';
+import { Check, Camera, Video, Sparkles, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';

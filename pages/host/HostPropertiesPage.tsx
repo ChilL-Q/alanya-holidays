@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { db } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, MapPin, Star, Eye } from 'lucide-react';
@@ -14,11 +14,7 @@ export const HostPropertiesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
-    useEffect(() => {
-        loadProperties();
-    }, [user]);
-
-    const loadProperties = async () => {
+    const loadProperties = useCallback(async () => {
         if (!user) return;
         try {
             setIsLoading(true);
@@ -29,7 +25,11 @@ export const HostPropertiesPage = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        loadProperties();
+    }, [loadProperties]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this listing? This cannot be undone.')) {

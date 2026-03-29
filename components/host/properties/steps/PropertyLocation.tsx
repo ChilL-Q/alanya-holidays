@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { LocationPicker } from '../../../ui/LocationPicker';
 import toast from 'react-hot-toast';

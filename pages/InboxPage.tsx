@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useChat } from '../context/ChatContext';
 import { ChatWindow } from '../components/chat/ChatWindow';
-import { useLanguage } from '../context/LanguageContext';
 import { Search, Home, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
@@ -10,7 +9,6 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 export const InboxPage: React.FC = () => {
     const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
     const { isAuthenticated } = useAuth();
-    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
 
     const [searchParams] = useSearchParams();
@@ -23,7 +21,7 @@ export const InboxPage: React.FC = () => {
         if (conversationIdParam) {
             setActiveConversationId(conversationIdParam);
         }
-    }, [searchParams]);
+    }, [searchParams, refreshConversations, setActiveConversationId]);
 
     // Redirect if not logged in
     if (!isAuthenticated) {

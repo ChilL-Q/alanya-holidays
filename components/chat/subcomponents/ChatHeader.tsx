@@ -15,7 +15,7 @@ interface ChatHeaderProps {
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
     otherPerson,
     activeConversation,
-    activeConversationId,
+    activeConversationId: _activeConversationId,
     setActiveConversationId,
     embedded,
     onClearHistory,

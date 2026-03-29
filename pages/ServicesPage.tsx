@@ -99,7 +99,7 @@ export const ServicesPage: React.FC = () => {
 
             return true;
         });
-    }, [activeCategory, priceRange, searchQuery, minPrices, t, transportFilter]);
+    }, [activeCategory, priceRange, searchQuery, minPrices, t, transportFilter, brandFilter]);
 
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-20 pt-24">

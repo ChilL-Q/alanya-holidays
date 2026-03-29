@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
@@ -37,6 +37,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
+    const refreshConversations = useCallback(async () => {
+        if (!user) return;
+        try {
+            const data = await chatService.getConversations();
+            setConversations(data);
+        } catch (error) {
+            console.error('Failed to load conversations', error);
+        }
+    }, [user]);
+
     // ... (Initial load matches existing code)
     // Initial load
     useEffect(() => {
@@ -45,7 +55,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
             setConversations([]);
         }
-    }, [user]);
+    }, [user, refreshConversations]);
 
     // Realtime subscription
     useEffect(() => {
@@ -56,7 +66,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .channel('public:chat_messages')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
                 const newMessage = payload.new as ChatMessage;
-                console.log('Chat debug: received message', newMessage);
 
                 // Refresh conversations to update unread counts/latest message
                 refreshConversations();
@@ -65,10 +74,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Then trigger notification
                 const isSender = newMessage.sender_id === user.id;
                 const isActive = newMessage.conversation_id === activeConversationId;
-                console.log(`Chat debug: IsSender=${isSender}, IsActive=${isActive}`);
 
                 if (!isSender && !isActive) {
-                    console.log('Chat debug: Triggering notification');
                     addNotification({
                         type: 'booking_request' as any,
                         title: 'New Message',
@@ -83,17 +90,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             subscription.unsubscribe();
         };
-    }, [user, activeConversationId]); // Added activeConversationId dependency to correct check
-
-    const refreshConversations = async () => {
-        if (!user) return;
-        try {
-            const data = await chatService.getConversations();
-            setConversations(data);
-        } catch (error) {
-            console.error('Failed to load conversations', error);
-        }
-    };
+    }, [user, activeConversationId, refreshConversations, addNotification]);
 
     const startConversation = async (propertyId: string, hostId: string) => {
         setLoading(true);
