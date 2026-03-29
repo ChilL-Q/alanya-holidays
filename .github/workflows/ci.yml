@@ -52,6 +52,12 @@ jobs:
     - name: Run Tests
       run: npm run test -- --run
 
+    - name: Supabase Functions Lint
+      run: npm run supabase:lint
+
+    - name: Supabase Functions Type Check
+      run: npm run supabase:type-check
+
     - name: Verify Build
       run: npm run build
       env:
