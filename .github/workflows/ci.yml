@@ -9,6 +9,10 @@ on:
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: "https://mock-supabase-url.supabase.co"
+      VITE_SUPABASE_ANON_KEY: "mock-supabase-anon-key"
+      VITE_GOOGLE_MAPS_API_KEY: "mock-google-maps-api-key"
     
     steps:
     - name: Checkout Code
