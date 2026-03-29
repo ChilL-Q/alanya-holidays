@@ -115,7 +115,7 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                 }
 
                 // 2. Fetch Page with Filters & Sort
-                let result = await propertiesService.getProperties(
+                const result = await propertiesService.getProperties(
                     page, 
                     LIMIT, 
                     filters, 
@@ -123,7 +123,7 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     availableIds || undefined,
                     sort
                 );
-                let fetchedProps = result.data || [];
+                const fetchedProps = result.data || [];
                 
                 // Update Total Count
                 if (result.count !== null) {
