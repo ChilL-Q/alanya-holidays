@@ -1,8 +1,7 @@
 import React from 'react';
-import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import { Search, Calendar, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { LOCATIONS } from '../../data/constants';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
@@ -27,26 +26,12 @@ interface SearchWidgetProps {
     setLocation: (loc: string) => void;
 }
 
-export const SearchWidget: React.FC<SearchWidgetProps> = ({ location, setLocation }) => {
+export const SearchWidget: React.FC<SearchWidgetProps> = ({ location }) => {
     const { t, language } = useLanguage();
     const navigate = useNavigate();
     const [checkIn, setCheckIn] = React.useState<Date | null>(null);
     const [checkOut, setCheckOut] = React.useState<Date | null>(null);
     const [guests, setGuests] = React.useState('');
-    const [showSuggestions, setShowSuggestions] = React.useState(false);
-    const locationWrapperRef = React.useRef<HTMLDivElement>(null);
-
-    React.useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (locationWrapperRef.current && !locationWrapperRef.current.contains(event.target as Node)) {
-                setShowSuggestions(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
 
     const handleSearch = () => {
         const searchParams = new URLSearchParams();

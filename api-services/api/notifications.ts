@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { Notification, NotificationType } from '../../types/index';
+import { Notification } from '../../types/index';
 
 export const notificationsService = {
     async createNotification(

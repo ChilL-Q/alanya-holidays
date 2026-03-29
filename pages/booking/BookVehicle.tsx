@@ -3,10 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, ServiceData } from '../../api-services';
 import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Calendar, ArrowLeft, Fuel, Gauge, Armchair, ChevronRight } from 'lucide-react';
-import { ServiceType } from '../../types/index';
+import { Calendar, ArrowLeft, Fuel, Gauge, Armchair } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';
@@ -28,10 +26,8 @@ const DateInputMask = React.forwardRef<HTMLInputElement, any>((props, ref) => (
 export const BookVehicle: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { addToCart } = useCart();
     const { convertPrice, formatPrice } = useCurrency();
     const { t, language } = useLanguage();
-    const { user } = useAuth();
 
     const [service, setService] = useState<ServiceData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -64,32 +60,6 @@ export const BookVehicle: React.FC = () => {
         }
     }, [startDate, endDate]);
 
-    const handleBook = () => {
-        if (!service || !startDate || !endDate || days <= 0) return;
-
-        const totalPrice = service.price * days;
-
-        // Format dates as YYYY-MM-DD for consistency with previous logic and CartItem expectations
-        // Although Date objects are better, our CartItem interface currently uses string | undefined for startDate/endDate in some places, 
-        // but let's stick to the string format 'YYYY-MM-DD' as expected by the existing cart display logic.
-        const formatDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        const startDateStr = formatDate(startDate);
-        const endDateStr = formatDate(endDate);
-
-        addToCart({
-            id: service.id || Math.random().toString(),
-            type: ServiceType.RENTAL,
-            title: service.title,
-            price: totalPrice,
-            image: service.images?.[0],
-            details: `${days} Days (${startDateStr} to ${endDateStr})`,
-            startDate: startDateStr,
-            endDate: endDateStr,
-            date: startDateStr // Legacy support
-        });
-
-        navigate('/checkout');
-    };
 
     if (loading) return <div className="pt-32 text-center">Loading...</div>;
     if (!service) return <div className="pt-32 text-center">Service not found</div>;

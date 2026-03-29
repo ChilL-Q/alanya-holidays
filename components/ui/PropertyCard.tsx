@@ -14,16 +14,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     const { t } = useLanguage();
     const { isFavorite, toggleFavorite } = useFavorites();
     const { convertPrice, formatPrice } = useCurrency();
-    const [isHovered, setIsHovered] = React.useState(false);
-
     const isLiked = isFavorite(property.id);
 
     return (
         <Link
             to={`/property/${property.ref_id || property.id}`}
             className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800/50 relative"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
         >
             <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-800/80">
                 <img

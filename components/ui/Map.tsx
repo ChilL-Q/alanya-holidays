@@ -138,11 +138,11 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
         return { lat: avgLat, lng: avgLng };
     }, [properties, getCoords]);
 
-    const onLoad = useCallback(function callback(map: google.maps.Map) {
+    const onLoad = useCallback(function callback(_map: google.maps.Map) {
         // center logic handled by prop
     }, []);
 
-    const onUnmount = useCallback(function callback(map: google.maps.Map) {
+    const onUnmount = useCallback(function callback(_map: google.maps.Map) {
         // cleanup
     }, []);
 
