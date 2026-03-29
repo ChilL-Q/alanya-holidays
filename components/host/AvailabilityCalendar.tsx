@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { db } from '../../api-services';
 import { PropertyAvailability } from '../../types/models';
-import { Loader2, Lock, DollarSign, Calendar as CalendarIcon, RefreshCw, X } from 'lucide-react';
+import { Calendar as CalendarIcon, RefreshCw, X } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 import toast from 'react-hot-toast';
 
@@ -249,7 +249,6 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                         let blockedCount = 0;
                         let availableCount = 0;
                         const blockSources = new Set<string>();
-                        let manualBlockCount = 0;
 
                         selectedDates.forEach(dateStr => {
                             const entry = availability.find(a => a.date === dateStr);
@@ -264,7 +263,6 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                     blockSources.add(feedName || 'External Calendar');
                                 } else {
                                     blockSources.add('You'); // Manual block
-                                    manualBlockCount++;
                                 }
                             } else {
                                 availableCount++;

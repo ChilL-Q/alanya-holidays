@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { LanguageProvider, useLanguage } from './LanguageContext';
-import { useEffect } from 'react';
 
 // Mock locale data
 vi.mock('../locales/en', () => ({ en: { 'test.key': 'Test Value', 'test.param': 'Hello {name}' } }));

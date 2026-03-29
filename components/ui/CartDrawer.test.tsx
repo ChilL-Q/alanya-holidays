@@ -116,14 +116,6 @@ describe('CartDrawer', () => {
         render(<CartDrawer />);
         // Trash icon is inside a button. 
         // Usually has no text, so getByRole('button') logic might be tricky with multiple buttons.
-        // We can assert based on some accessible name if added, or find by icon functionality.
-        // Looking at code: <button ...><Trash2 /></button>
-        // Let's grab all buttons and find the one that isn't Close or Checkout.
-
-        // Better: Add aria-label in source? Or just simpler:
-        // The button has a specific class or we can use container query.
-        // Let's assume there is one remove button per item.
-        const buttons = screen.getAllByRole('button');
         // Identify the remove button. It's likely one of the middle ones. 
         // Button 1: Close (X)
         // Button 2: Remove (Trash)

@@ -1,28 +1,19 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Home, Calendar } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { supabase } from '../../api-services/supabase';
 
 export const BookingSuccess: React.FC = () => {
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get('session_id');
     const navigate = useNavigate();
     const { t } = useLanguage();
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!sessionId) {
             navigate('/');
-            return;
         }
-        // In a real app, we might verify the session status via API here
-        // For now, if we have a session_id, we assume Stripe redirected us correctly.
-        // We can wait a moment for the webhook to process.
-
-        const timer = setTimeout(() => setLoading(false), 1500);
-        return () => clearTimeout(timer);
     }, [sessionId, navigate]);
 
     return (
