@@ -67,7 +67,7 @@ export const AdminEditServicePage: React.FC = () => {
                 try {
                     const url = await db.uploadImage(file, 'services');
                     newImageUrls.push(url);
-                } catch (err) {
+                } catch {
                     const url = await db.uploadImage(file, 'properties'); // Fallback
                     newImageUrls.push(url);
                 }

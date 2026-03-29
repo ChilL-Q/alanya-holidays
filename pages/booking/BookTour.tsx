@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, ServiceData } from '../../api-services';
 import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Calendar, ArrowLeft, Users, Clock, ChevronRight } from 'lucide-react';
 import { ServiceType } from '../../types/index';
@@ -31,7 +30,6 @@ export const BookTour: React.FC = () => {
     const { addToCart } = useCart();
     const { convertPrice, formatPrice } = useCurrency();
     const { t, language } = useLanguage();
-    const { user } = useAuth();
 
     const [service, setService] = useState<ServiceData | null>(null);
     const [loading, setLoading] = useState(true);

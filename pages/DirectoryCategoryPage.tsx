@@ -15,7 +15,6 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const intro = categoryId ? directoryCategoryIntros[categoryId] : null;
 
     // Filters State
-    const [showFilters, setShowFilters] = useState(false);
     const [locationFilter, setLocationFilter] = useState('all');
     const [verifiedOnly, setVerifiedOnly] = useState(false);
     const [minRating, setMinRating] = useState<number>(0);
@@ -29,7 +28,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [_loading, setLoading] = useState(true);
 
     // Fetch from Supabase
     React.useEffect(() => {

@@ -1,5 +1,4 @@
-import { ServiceType } from '../types/enums';
-import { Car, Anchor, Heart, Stethoscope, ShoppingBag, Cloud, Mountain, Bike, Camera, Video } from 'lucide-react';
+import { Car, Anchor, Heart, Stethoscope, Cloud, Mountain, Bike, Camera, Video } from 'lucide-react';
 
 export const SERVICES_DATA = [
     // Transport

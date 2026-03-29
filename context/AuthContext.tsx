@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../api-services/supabase';
-import { Session } from '@supabase/supabase-js';
 
 // Types
 export interface User {
@@ -59,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             try {
                 // Fetch profile from DB to get the LATEST role
-                const { data: profile, error } = await supabase
+                const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', sessionUser.id)
@@ -102,7 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const login = async (email: string, password: string) => {
         setIsLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
@@ -172,7 +171,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const verifyOtp = async (email: string, token: string, type: 'email' | 'signup' | 'recovery' = 'email') => {
         setIsLoading(true);
-        const { data, error } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.verifyOtp({
             email,
             token,
             type,

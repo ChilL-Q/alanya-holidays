@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -15,7 +14,6 @@ import {
 } from 'lucide-react';
 
 export const AdminEditUserPage: React.FC = () => {
-    const { t } = useLanguage();
     const { isAuthenticated, user: adminUser, isLoading: authLoading } = useAuth();
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();

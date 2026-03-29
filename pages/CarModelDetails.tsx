@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
@@ -16,7 +15,6 @@ export const CarModelDetails: React.FC = () => {
     const { modelId } = useParams<{ modelId: string }>();
     const location = useLocation();
     const { brand, model, type: serviceType } = (location.state as { brand?: string; model?: string; type?: string }) || {};
-    const { t } = useLanguage();
     const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
     const [selectedOffer, setSelectedOffer] = useState<ServiceData | null>(null);

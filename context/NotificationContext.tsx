@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { db, Notification } from '../api-services';
 
@@ -18,7 +18,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [lastNotification, setLastNotification] = useState<Notification | null>(null);
 
-    const refreshNotifications = async () => {
+    const refreshNotifications = useCallback(async () => {
         if (!user) {
             setNotifications([]);
             return;
@@ -29,7 +29,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
-    };
+    }, [user]);
 
     useEffect(() => {
         refreshNotifications();
@@ -53,7 +53,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                 subscription.unsubscribe();
             };
         }
-    }, [user]);
+    }, [user, refreshNotifications]);
 
     const markAsRead = async (id: string) => {
         try {
@@ -64,7 +64,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         }
     };
 
-    const addNotification = async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
+    const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
         if (!user) return;
         try {
             const newNotification: Notification = {
@@ -75,8 +75,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                 created_at: new Date().toISOString()
             };
 
-            // Optimistic update
-            console.log('Adding new notification:', newNotification);
             setNotifications(prev => [newNotification, ...prev]);
             setLastNotification(newNotification);
 
@@ -88,7 +86,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         } catch (error) {
             console.error('Failed to add notification:', error);
         }
-    };
+    }, [user]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 

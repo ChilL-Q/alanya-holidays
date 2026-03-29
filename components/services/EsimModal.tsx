@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal } from '../ui/Modal';
-import { Check, Copy, ExternalLink, Smartphone, Info, Zap } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Check, ExternalLink, Smartphone, Info, Zap } from 'lucide-react';
 
 interface EsimModalProps {
     isOpen: boolean;

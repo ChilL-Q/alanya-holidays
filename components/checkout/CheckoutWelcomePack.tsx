@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { ServiceType } from '../../types/index';
 
 interface CheckoutWelcomePackProps {
     isAdded: boolean;

@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Property, PropertyDB } from '../types/models';
+import { Property } from '../types/models';
 import { propertiesService } from '../api-services/api/properties';
 
 export interface FilterState {
@@ -23,7 +23,7 @@ interface UsePropertyFiltersProps {
 
 export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UsePropertyFiltersProps) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const isMounted = useRef(false);
+    const _isMounted = useRef(false);
     
     // Initialize state from URL params
     const initialPage = parseInt(searchParams.get('page') || '1');
@@ -88,8 +88,9 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
         const hasFiltersChanged = JSON.stringify(prev.filters) !== JSON.stringify(filters);
 
         if (hasLocationChanged || hasDatesChanged || hasSortChanged || hasFiltersChanged) {
-            setPage(1);
-            
+            setPageState(1);
+            setSearchParams(prev => { prev.set('page', '1'); return prev; });
+
             // Update refs after change detected
             prevDeps.current = {
                 location,
@@ -99,7 +100,7 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                 sort
             };
         }
-    }, [location, checkIn, checkOut, filters, sort]); 
+    }, [location, checkIn, checkOut, filters, sort, setSearchParams]);
 
     // Fetch Properties
     useEffect(() => {

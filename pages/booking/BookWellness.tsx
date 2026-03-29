@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, ServiceData } from '../../api-services';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Calendar, ArrowLeft, Clock, Heart, Phone, MessageCircle } from 'lucide-react';
+import { Calendar, ArrowLeft, Heart, MessageCircle } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { enGB, ru, tr } from 'date-fns/locale';

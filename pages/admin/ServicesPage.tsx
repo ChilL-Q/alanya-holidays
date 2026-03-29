@@ -37,7 +37,8 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
 
     useEffect(() => {
         loadServices();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // intentional mount-only load; admin page requires auth, user won't change
 
     const toggleSelectAll = () => {
         if (selectedIds.size === filteredServices.length) {

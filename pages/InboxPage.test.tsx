@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { InboxPage } from './InboxPage';
-import { useSearchParams } from 'react-router-dom';
 import * as ChatContext from '../context/ChatContext';
 
 // Mock Auth

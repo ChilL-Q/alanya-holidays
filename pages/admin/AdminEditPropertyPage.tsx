@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
@@ -59,7 +59,7 @@ export const AdminEditPropertyPage: React.FC = () => {
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const fetchProp = async () => {
+    const fetchProp = useCallback(async () => {
         if (!id) return;
         try {
             const data = await db.getProperty(id);
@@ -103,11 +103,11 @@ export const AdminEditPropertyPage: React.FC = () => {
             console.error('Error fetching property:', error);
             toast.error('Failed to load property');
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchProp();
-    }, [id]);
+    }, [fetchProp]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });

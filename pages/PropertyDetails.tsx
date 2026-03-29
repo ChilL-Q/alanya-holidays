@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ServiceType } from '../types/index';
 import { useLanguage } from '../context/LanguageContext';
 import { useChat } from '../context/ChatContext';
 import { ChatWindow } from '../components/chat/ChatWindow';
