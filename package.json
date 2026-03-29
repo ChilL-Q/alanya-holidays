@@ -15,7 +15,9 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "sync-reviews": "tsx scripts/sync-google-reviews.ts"
+    "sync-reviews": "tsx scripts/sync-google-reviews.ts",
+    "supabase:lint": "supabase functions lint",
+    "supabase:type-check": "supabase functions type-check"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -60,6 +62,7 @@
     "globals": "^15.15.0",
     "jsdom": "^27.4.0",
     "postcss": "^8.5.6",
+    "supabase": "^2.84.4",
     "tailwindcss": "^4.1.18",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
