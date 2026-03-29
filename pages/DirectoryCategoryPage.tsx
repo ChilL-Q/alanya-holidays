@@ -12,13 +12,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const params = useParams<{ categoryId: string }>();
     const categoryId = propCategoryId || params.categoryId;
 
-    // Basic validation if category exists
-    if (!categoryId || !directoryCategoryIntros[categoryId]) {
-        // If invalid, bounce back home
-        return <Navigate to="/" replace />;
-    }
-
-    const { title, description, longDescription, faqs } = directoryCategoryIntros[categoryId];
+    const intro = categoryId ? directoryCategoryIntros[categoryId] : null;
 
     // Filters State
     const [showFilters, setShowFilters] = useState(false);
@@ -39,6 +33,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
     // Fetch from Supabase
     React.useEffect(() => {
+        if (!categoryId) return;
         const fetchListings = async () => {
             setLoading(true);
             try {
@@ -93,6 +88,14 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
         return data;
     }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter]);
+
+    // Basic validation if category exists
+    if (!categoryId || !intro) {
+        // If invalid, bounce back home
+        return <Navigate to="/" replace />;
+    }
+
+    const { title, description, longDescription, faqs } = intro;
 
     // Generate JSON-LD Schemas for SEO
     const faqSchema = faqs && faqs.length > 0 ? {
