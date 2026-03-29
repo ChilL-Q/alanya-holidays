@@ -1,5 +1,9 @@
+// @ts-ignore
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+// @ts-ignore
 import { createClient } from "npm:@supabase/supabase-js@2"
+
+declare const Deno: any;
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
@@ -17,7 +21,7 @@ interface AiProxyRequest {
   history: { role: 'user' | 'model'; content: string }[];
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }

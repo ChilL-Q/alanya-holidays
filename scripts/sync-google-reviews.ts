@@ -63,7 +63,7 @@ async function syncReviews() {
 
   if (error || !listings) {
     console.error('Error fetching listings from Supabase:', error);
-    return;
+    process.exit(1);
   }
 
   console.log(`Found ${listings.length} listings to sync.`);
@@ -72,31 +72,35 @@ async function syncReviews() {
 
   // 2. Iterate and sync
   for (const listing of listings) {
-    console.log(`Fetching Google data for: ${listing.name}...`);
-    const googleData = await fetchGoogleRating(listing.name, listing.location);
-    
-    if (googleData) {
-        // If the rating or review count has changed, update the DB
-        if (googleData.rating !== listing.reviews_average || googleData.count !== listing.reviews_count) {
-            console.log(`  -> Updating: Rating ${listing.reviews_average} => ${googleData.rating}, Count ${listing.reviews_count} => ${googleData.count}`);
-            
-            const { error: updateError } = await supabase
-                .from('directory_listings')
-                .update({ 
-                    reviews_average: googleData.rating, 
-                    reviews_count: googleData.count,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', listing.id);
-                
-            if (updateError) {
-                console.error(`  -> Failed to update ${listing.name} in DB:`, updateError.message);
-            } else {
-                updatedCount++;
-            }
-        } else {
-            console.log(`  -> ${listing.name} is already up to date.`);
-        }
+    try {
+      console.log(`Fetching Google data for: ${listing.name}...`);
+      const googleData = await fetchGoogleRating(listing.name, listing.location);
+      
+      if (googleData) {
+          // If the rating or review count has changed, update the DB
+          if (googleData.rating !== listing.reviews_average || googleData.count !== listing.reviews_count) {
+              console.log(`  -> Updating: Rating ${listing.reviews_average} => ${googleData.rating}, Count ${listing.reviews_count} => ${googleData.count}`);
+              
+              const { error: updateError } = await supabase
+                  .from('directory_listings')
+                  .update({ 
+                      reviews_average: googleData.rating, 
+                      reviews_count: googleData.count,
+                      updated_at: new Date().toISOString()
+                  })
+                  .eq('id', listing.id);
+                  
+              if (updateError) {
+                  console.error(`  -> Failed to update ${listing.name} in DB:`, updateError.message);
+              } else {
+                  updatedCount++;
+              }
+          } else {
+              console.log(`  -> ${listing.name} is already up to date.`);
+          }
+      }
+    } catch (err: any) {
+      console.error(`  -> Unhandled error processing ${listing.name}:`, err.message);
     }
     
     // Small delay to respect Google API rate limits (don't blast all requests instantly)
@@ -106,4 +110,9 @@ async function syncReviews() {
   console.log(`\nSync complete! Successfully updated ${updatedCount} listings.`);
 }
 
-syncReviews().catch(console.error);
+syncReviews()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Fatal error during sync:', err);
+    process.exit(1);
+  });

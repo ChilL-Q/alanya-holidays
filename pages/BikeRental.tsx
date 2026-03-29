@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, ChevronRight } from 'lucide-react';
+import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
 import { useLightbox } from '../context/LightboxContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -79,98 +79,65 @@ export const BikeRental: React.FC = () => {
     }, []);
 
     return (
-        <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
-            {/* Hero Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6 leading-tight" dangerouslySetInnerHTML={{ __html: t('bike.hero.title') }} />
-                        <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-                            {t('bike.hero.subtitle')}
-                        </p>
-
-                        <div className="flex flex-wrap gap-4 mb-10">
-                            {[t('bike.features.helmet'), t('bike.features.mileage'), t('bike.features.assistance')].map((feature, idx) => (
-                                <div key={idx} className="flex items-center gap-2 bg-white dark:bg-slate-800/80 px-4 py-2 rounded-full shadow-sm text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    <Check size={16} className="text-teal-500 dark:text-cyan-400 " />
-                                    {feature}
+        <VehicleRentalTemplate
+            titleHtml={t('bike.hero.title')}
+            subtitle={t('bike.hero.subtitle')}
+            features={[t('bike.features.helmet'), t('bike.features.mileage'), t('bike.features.assistance')]}
+            heroImage="/images/transportation/bike/rent-a-bike-page.png"
+            heroAlt="Scooter Rental"
+            heroImageRotate="-rotate-2"
+            popularTitle={t('bike.popular')}
+            loading={loading}
+            loadingMessage="Loading bikes..."
+            isEmpty={!loading && bikeGroups.length === 0}
+        >
+            {bikeGroups.map((bike, index) => (
+                <div
+                    key={bike.id}
+                    className="bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group cursor-pointer"
+                    onClick={() => navigate(`/services/car-rental/${bike.id}`, { state: { brand: bike.brand, model: bike.model, type: 'bike' } })}
+                >
+                    <div className="aspect-[4/3] overflow-hidden relative">
+                        <img
+                            src={bike.image}
+                            alt={bike.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
+                            {bike.year}
+                        </div>
+                        {bike.count > 1 && (
+                            <div className="absolute top-3 left-3 bg-teal-500 dark:bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                {bike.count} Offers
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-5">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{bike.title}</h3>
+                            <div className="text-right">
+                                <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
+                                <div className="text-xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
+                                    {formatPrice(convertPrice(bike.minPrice, 'EUR'))}
                                 </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {bike.features.map((feature, i) => (
+                                <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
+                                    {feature}
+                                </span>
                             ))}
                         </div>
-                    </div>
-
-                    <div className="relative">
-                        <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
-                        <img
-                            src="/images/transportation/bike/rent-a-bike-page.png"
-                            alt="Scooter Rental"
-                            loading="eager"
-                            fetchPriority="high"
-                            decoding="async"
-                            className="relative rounded-3xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
-                        />
+                        <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-white rounded-xl font-semibold hover:opacity-90 transition-opacity">
+                            {t('request_details')}
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            {/* Fleet Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-serif text-slate-900 dark:text-white mb-8">{t('bike.popular')}</h2>
-
-                {loading ? (
-                    <div className="text-center py-20 text-slate-500">Loading bikes...</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {bikeGroups.map((bike, index) => (
-                            <div
-                                key={bike.id}
-                                className="bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800/50 group cursor-pointer"
-                                onClick={() => navigate(`/services/car-rental/${bike.id}`, { state: { brand: bike.brand, model: bike.model, type: 'bike' } })}
-                            >
-                                <div className="aspect-[4/3] overflow-hidden relative">
-                                    <img
-                                        src={bike.image}
-                                        alt={bike.title}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                    <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-white shadow-sm">
-                                        {bike.year}
-                                    </div>
-                                    {bike.count > 1 && (
-                                        <div className="absolute top-3 left-3 bg-teal-500 dark:bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                            {bike.count} Offers
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-5">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{bike.title}</h3>
-                                        <div className="text-right">
-                                            <div className="text-sm text-slate-500 dark:text-slate-400">from</div>
-                                            <div className="text-xl font-bold text-teal-600 dark:text-cyan-400 dark:text-accent dark:text-amber-400 ">
-                                                {formatPrice(convertPrice(bike.minPrice, 'EUR'))}
-                                            </div>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">{t('car.per_day')}</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 mb-6">
-                                        {bike.features.map((feature, i) => (
-                                            <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium capitalize">
-                                                {feature}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <button className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-white rounded-xl font-semibold hover:opacity-90 transition-opacity">
-                                        {t('request_details')}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div >
+            ))}
+        </VehicleRentalTemplate>
     );
 };

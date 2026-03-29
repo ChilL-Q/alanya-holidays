@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Settings, Flag, ShoppingBag, Map as MapIcon, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -116,9 +117,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     </div>
                 </header>
 
-                <div className="flex-1 p-6 md:p-8 overflow-y-auto">
-                    {children}
-                </div>
+                    <div className="flex-1 p-6 md:p-8 overflow-y-auto">
+                        <ErrorBoundary>
+                            {children}
+                        </ErrorBoundary>
+                    </div>
             </main>
         </div>
     );
