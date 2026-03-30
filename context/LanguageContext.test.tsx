@@ -59,7 +59,7 @@ describe('LanguageContext', () => {
     });
 
     it('handles RTL for Arabic', () => {
-        const { getByText } = render(
+        const { getByText: _getByText } = render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
@@ -104,7 +104,7 @@ describe('LanguageContext', () => {
     it('throws error if used outside provider', () => {
         // Suppress console.error for this test (React logs error when boundary catches)
         const spy = vi.spyOn(console, 'error');
-        spy.mockImplementation(() => { });
+        spy.mockImplementation(() => {});
 
         expect(() => render(<TestComponent />)).toThrow('useLanguage must be used within a LanguageProvider');
 

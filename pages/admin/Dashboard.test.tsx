@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Dashboard } from './Dashboard';
 import { db } from '../../api-services';
 import { BrowserRouter } from 'react-router-dom';
@@ -41,8 +41,8 @@ global.ResizeObserver = class ResizeObserver {
             contentRect: { width: 500, height: 300 }
         }]);
     }
-    unobserve() { }
-    disconnect() { }
+    unobserve() {}
+    disconnect() {}
 };
 
 describe('Admin Dashboard', () => {

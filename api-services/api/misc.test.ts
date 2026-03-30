@@ -25,7 +25,7 @@ describe('misc services', () => {
     it('removes favorite if it exists', async () => {
       // Mock existing finding
       const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'fav1' }, error: null });
-      const mockSelectChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: mockSingle };
+      const _mockSelectChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: mockSingle };
       
       // Mock delete
       const mockDelete = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({}) });

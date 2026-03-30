@@ -186,7 +186,7 @@ describe('SearchResultsPage', () => {
         expect(screen.getAllByTestId('map').length).toBeGreaterThan(0);
 
         // Close via mobile overlay 'X' button
-        const mobileCloseBtn = screen.getByRole('button', { name: '' });
+        const _mobileCloseBtn = screen.getByRole('button', { name: '' });
         // We look for button in the mobile overlay container
         const mapHeaderElements = screen.getByText('Map View').parentElement;
         const closeBtn = mapHeaderElements!.querySelector('button');

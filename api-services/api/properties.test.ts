@@ -161,10 +161,10 @@ describe('propertiesService', () => {
 
     it('deletes review if authorized', async () => {
         // Mock checking owner
-        const mockCheckChain = createMockChain({ user_id: 'u1' });
+        const _mockCheckChain = createMockChain({ user_id: 'u1' });
         
         // Mock delete
-        const mockDeleteChain = createMockChain();
+        const _mockDeleteChain = createMockChain();
 
         mockSupabase.from.mockImplementation(() => {
             // Because we call it twice, we can return a unified chain for simplicity that handles both select.single and delete

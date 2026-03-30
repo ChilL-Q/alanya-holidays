@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PropertyDetails } from './PropertyDetails';
-import { BrowserRouter } from 'react-router-dom';
 
 // Mock contexts
 vi.mock('../context/AuthContext', () => ({
