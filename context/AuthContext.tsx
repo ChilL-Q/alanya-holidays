@@ -196,7 +196,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const updates: any = {};
         if (data.name) updates.full_name = data.name;
         if (data.avatar) updates.avatar_url = data.avatar;
-        if (data.role) updates.role = data.role;
+        // NOTE: role is intentionally excluded — role changes must go through
+        // the DB (profiles table) via admin actions, not user_metadata.
         if (data.company_name) updates.company_name = data.company_name;
 
         const { error } = await supabase.auth.updateUser({

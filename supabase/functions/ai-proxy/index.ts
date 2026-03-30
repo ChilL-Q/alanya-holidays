@@ -65,19 +65,38 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Format conversation history
-    const recentHistory = (history || []).slice(-15).map(msg =>
-      `${msg.role === 'user' ? 'User' : 'Guide'}: ${msg.content}`
-    ).join('\n')
+    const MAX_QUESTION_LENGTH = 500
+    const MAX_HISTORY_ENTRIES = 15
+    const MAX_HISTORY_CONTENT_LENGTH = 300
+
+    // Sanitize user question: trim, limit length, strip prompt-injection markers
+    const sanitizedQuestion = userQuestion
+      .trim()
+      .slice(0, MAX_QUESTION_LENGTH)
+      .replace(/\[INST\]|\[\/INST\]|<s>|<\/s>|###\s*(System|Human|Assistant)/gi, '')
+
+    // Sanitize property context fields
+    const safePropertyName = propertyName ? String(propertyName).trim().slice(0, 200) : null
+    const safeLocation = location ? String(location).trim().slice(0, 200) : null
+
+    // Format conversation history with length limits
+    const recentHistory = (history || [])
+      .slice(-MAX_HISTORY_ENTRIES)
+      .map(msg => {
+        const role = msg.role === 'user' ? 'User' : 'Guide'
+        const content = String(msg.content).trim().slice(0, MAX_HISTORY_CONTENT_LENGTH)
+        return `${role}: ${content}`
+      })
+      .join('\n')
 
     const contextPrompt = `
       You are a friendly, knowledgeable local travel guide in Alanya, Turkey.
-      ${propertyName ? `The user is considering booking a property named "${propertyName}" located in "${location}".` : 'The user is planning a trip to Alanya.'}
+      ${safePropertyName ? `The user is considering booking a property named "${safePropertyName}" located in "${safeLocation}".` : 'The user is planning a trip to Alanya.'}
 
       Conversation History:
       ${recentHistory}
 
-      User Question: "${userQuestion}"
+      User Question: "${sanitizedQuestion}"
       
       Provide a helpful, concise answer (max 100 words). 
       If asked about services (health, transport, shopping), mention that Alanya Holidays offers verified direct bookings.

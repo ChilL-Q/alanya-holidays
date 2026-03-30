@@ -42,8 +42,11 @@ export const propertiesService = {
 
         // Server-Side Filtering
         if (location && location !== 'all') {
-            // Case-insensitive check for location or title
-            query = query.or(`location.ilike.%${location}%,title.ilike.%${location}%`);
+            // Strip characters that have special meaning in PostgREST filter syntax
+            const safeLocation = location.replace(/[%_,.()"']/g, '').trim().slice(0, 100);
+            if (safeLocation) {
+                query = query.or(`location.ilike.%${safeLocation}%,title.ilike.%${safeLocation}%`);
+            }
         }
 
         if (filters) {
