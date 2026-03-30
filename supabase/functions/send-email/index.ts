@@ -128,6 +128,18 @@ Deno.serve(async (req: Request) => {
   }
 })
 
+// --- Security Helpers ---
+
+function escapeHtml(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // --- Email Template Helpers (Updated Design) ---
 
 const BRAND_COLOR = '#05445E'; // Deep Petrol Blue
@@ -200,17 +212,17 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
         // --- Host Notifications ---
         case 'booking_request_host':
             return {
-                subject: `🔔 New Booking Request: ${data.itemTitle}`,
+                subject: `🔔 New Booking Request: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'New Booking Request',
                     `
-                    <p style="font-size: 16px;">Good news! You have received a new booking request from <strong>${data.guestName}</strong>.</p>
+                    <p style="font-size: 16px;">Good news! You have received a new booking request from <strong>${escapeHtml(data.guestName)}</strong>.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">${itemLabel}</span><span class="value">${data.itemTitle}</span></div>
-                        <div class="info-row"><span class="label">Dates</span><span class="value">${data.checkIn} — ${data.checkOut}</span></div>
-                        <div class="info-row"><span class="label">Guests</span><span class="value">${data.guests}</span></div>
-                        <div class="info-row"><span class="label">Total Payout</span><span class="value price-value">€${data.totalPrice}</span></div>
-                        ${data.message ? `<div class="info-row" style="flex-direction:column; gap:8px"><span class="label">Note:</span><div class="quote" style="margin:0">"${data.message}"</div></div>` : ''}
+                        <div class="info-row"><span class="label">${escapeHtml(itemLabel)}</span><span class="value">${escapeHtml(data.itemTitle)}</span></div>
+                        <div class="info-row"><span class="label">Dates</span><span class="value">${escapeHtml(data.checkIn)} — ${escapeHtml(data.checkOut)}</span></div>
+                        <div class="info-row"><span class="label">Guests</span><span class="value">${escapeHtml(data.guests)}</span></div>
+                        <div class="info-row"><span class="label">Total Payout</span><span class="value price-value">€${escapeHtml(data.totalPrice)}</span></div>
+                        ${data.message ? `<div class="info-row" style="flex-direction:column; gap:8px"><span class="label">Note:</span><div class="quote" style="margin:0">"${escapeHtml(data.message)}"</div></div>` : ''}
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Please review and accept or decline this request within 24 hours.</p>
                     `,
@@ -221,14 +233,14 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'booking_cancelled_host':
             return {
-                subject: `❌ Booking Cancelled: ${data.itemTitle}`,
+                subject: `❌ Booking Cancelled: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Booking Cancelled',
                     `
-                    <p style="font-size: 16px;">The booking for <strong>${data.itemTitle}</strong> has been cancelled.</p>
+                    <p style="font-size: 16px;">The booking for <strong>${escapeHtml(data.itemTitle)}</strong> has been cancelled.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">Guest</span><span class="value">${data.guestName}</span></div>
-                        <div class="info-row"><span class="label">Dates</span><span class="value">${data.checkIn} — ${data.checkOut}</span></div>
+                        <div class="info-row"><span class="label">Guest</span><span class="value">${escapeHtml(data.guestName)}</span></div>
+                        <div class="info-row"><span class="label">Dates</span><span class="value">${escapeHtml(data.checkIn)} — ${escapeHtml(data.checkOut)}</span></div>
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px;">Your calendar has been automatically updated.</p>
                     `,
@@ -240,14 +252,14 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'booking_expired_host':
             return {
-                subject: `⏳ Request Expired: ${data.itemTitle}`,
+                subject: `⏳ Request Expired: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Request Expired',
                     `
-                    <p style="font-size: 16px;">The booking request from <strong>${data.guestName}</strong> has expired because no action was taken within 24 hours.</p>
+                    <p style="font-size: 16px;">The booking request from <strong>${escapeHtml(data.guestName)}</strong> has expired because no action was taken within 24 hours.</p>
                      <div class="card">
-                        <div class="info-row"><span class="label">${itemLabel}</span><span class="value">${data.itemTitle}</span></div>
-                        <div class="info-row"><span class="label">Dates</span><span class="value">${data.checkIn} — ${data.checkOut}</span></div>
+                        <div class="info-row"><span class="label">${escapeHtml(itemLabel)}</span><span class="value">${escapeHtml(data.itemTitle)}</span></div>
+                        <div class="info-row"><span class="label">Dates</span><span class="value">${escapeHtml(data.checkIn)} — ${escapeHtml(data.checkOut)}</span></div>
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px;">The dates have been unblocked on your calendar.</p>
                     `,
@@ -260,16 +272,16 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
         // --- Guest Notifications ---
         case 'booking_created':
             return {
-                subject: `🕒 Booking Request Sent: ${data.itemTitle}`,
+                subject: `🕒 Booking Request Sent: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Request Sent',
                     `
-                    <p style="font-size: 16px;">Hi ${data.userName || 'there'},</p>
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.userName) || 'there'},</p>
                     <p>We've received your request! The host has 24 hours to accept your booking.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">${itemLabel}</span><span class="value">${data.itemTitle}</span></div>
-                        <div class="info-row"><span class="label">Dates</span><span class="value">${data.checkIn} — ${data.checkOut}</span></div>
-                        <div class="info-row"><span class="label">Total Price</span><span class="value price-value">€${data.totalPrice}</span></div>
+                        <div class="info-row"><span class="label">${escapeHtml(itemLabel)}</span><span class="value">${escapeHtml(data.itemTitle)}</span></div>
+                        <div class="info-row"><span class="label">Dates</span><span class="value">${escapeHtml(data.checkIn)} — ${escapeHtml(data.checkOut)}</span></div>
+                        <div class="info-row"><span class="label">Total Price</span><span class="value price-value">€${escapeHtml(data.totalPrice)}</span></div>
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px;">You won't be charged until the host accepts your request.</p>
                     `,
@@ -280,15 +292,15 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'booking_confirmed':
             return {
-                subject: `✅ Booking Confirmed: ${data.itemTitle}!`,
+                subject: `✅ Booking Confirmed: ${escapeHtml(data.itemTitle)}!`,
                 html: getHtmlTemplate(
                     'Booking Confirmed!',
                     `
-                    <p style="font-size: 16px;">Your booking for <strong>${data.itemTitle}</strong> is confirmed.</p>
+                    <p style="font-size: 16px;">Your booking for <strong>${escapeHtml(data.itemTitle)}</strong> is confirmed.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">Dates</span><span class="value">${data.checkIn} — ${data.checkOut}</span></div>
-                        <div class="info-row"><span class="label">Address</span><span class="value">${data.address || 'Check details in app'}</span></div>
-                        <div class="info-row"><span class="label">Guests</span><span class="value">${data.guests}</span></div>
+                        <div class="info-row"><span class="label">Dates</span><span class="value">${escapeHtml(data.checkIn)} — ${escapeHtml(data.checkOut)}</span></div>
+                        <div class="info-row"><span class="label">Address</span><span class="value">${escapeHtml(data.address) || 'Check details in app'}</span></div>
+                        <div class="info-row"><span class="label">Guests</span><span class="value">${escapeHtml(data.guests)}</span></div>
                     </div>
                     <p style="text-align: center; margin-top: 16px;">Get ready for an amazing experience!</p>
                     `,
@@ -299,13 +311,13 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'booking_rejected':
             return {
-                subject: `⛔ Update on your booking for ${data.itemTitle}`,
+                subject: `⛔ Update on your booking for ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Booking Declined',
                     `
-                    <p style="font-size: 16px;">We're sorry, but your booking request for <strong>${data.itemTitle}</strong> could not be accepted at this time.</p>
+                    <p style="font-size: 16px;">We're sorry, but your booking request for <strong>${escapeHtml(data.itemTitle)}</strong> could not be accepted at this time.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${data.reason || 'Dates unavailable'}</span></div>
+                        <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(data.reason) || 'Dates unavailable'}</span></div>
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px;">No charges have been made.</p>
                     `,
@@ -317,11 +329,11 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'booking_expired_guest':
             return {
-                subject: `⏳ Request Expired: ${data.itemTitle}`,
+                subject: `⏳ Request Expired: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Request Expired',
                     `
-                    <p style="font-size: 16px;">Your booking request for <strong>${data.itemTitle}</strong> has expired because the host didn't respond within 24 hours.</p>
+                    <p style="font-size: 16px;">Your booking request for <strong>${escapeHtml(data.itemTitle)}</strong> has expired because the host didn't respond within 24 hours.</p>
                     <p>No charge has been made.</p>
                     `,
                     data.link,
@@ -344,7 +356,7 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                                 <span style="font-size: 32px;">✓</span>
                             </div>
                          </div>
-                         <p style="text-align: center; font-weight: 600; color: ${HEADING_COLOR}; margin: 0;">${data.title} is now Live</p>
+                         <p style="text-align: center; font-weight: 600; color: ${HEADING_COLOR}; margin: 0;">${escapeHtml(data.title)} is now Live</p>
                     </div>
                     `,
                     data.link,
@@ -354,13 +366,13 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'listing_rejected':
             return {
-                subject: `⚠️ Action Required: ${data.title}`,
+                subject: `⚠️ Action Required: ${escapeHtml(data.title)}`,
                 html: getHtmlTemplate(
                     'Listing Returned',
                     `
-                    <p style="font-size: 16px;">Your property <strong>${data.title}</strong> needs some changes before it can be published.</p>
+                    <p style="font-size: 16px;">Your property <strong>${escapeHtml(data.title)}</strong> needs some changes before it can be published.</p>
                      <div class="card">
-                         <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${data.reason}</span></div>
+                         <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(data.reason)}</span></div>
                     </div>
                     `,
                     data.link,
@@ -376,14 +388,14 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                 html: getHtmlTemplate(
                     'Service Published',
                     `
-                    <p style="font-size: 16px; margin-bottom: 24px; text-align: center;">Congratulations! Your service <strong>${data.title}</strong> has been approved.</p>
+                    <p style="font-size: 16px; margin-bottom: 24px; text-align: center;">Congratulations! Your service <strong>${escapeHtml(data.title)}</strong> has been approved.</p>
                     <div class="card">
                          <div style="text-align: center; margin-bottom: 16px;">
                             <div style="background: #d1fae5; color: #059669; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                                 <span style="font-size: 32px;">✓</span>
                             </div>
                          </div>
-                         <p style="text-align: center; font-weight: 600; color: ${HEADING_COLOR}; margin: 0;">${data.title}</p>
+                         <p style="text-align: center; font-weight: 600; color: ${HEADING_COLOR}; margin: 0;">${escapeHtml(data.title)}</p>
                          <p style="text-align: center; font-size: 14px; color: #64748b; margin-top: 8px;">Now visible to customers</p>
                     </div>
                     `,
@@ -394,13 +406,13 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'service_rejected':
             return {
-                subject: `⚠️ Action Required: ${data.title}`,
+                subject: `⚠️ Action Required: ${escapeHtml(data.title)}`,
                 html: getHtmlTemplate(
                     'Service Rejected',
                     `
-                    <p style="font-size: 16px;">Your service <strong>${data.title}</strong> was not approved.</p>
+                    <p style="font-size: 16px;">Your service <strong>${escapeHtml(data.title)}</strong> was not approved.</p>
                      <div class="card">
-                         <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${data.reason}</span></div>
+                         <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(data.reason)}</span></div>
                     </div>
                     <p style="text-align: center;">Please review the feedback and submit again.</p>
                     `,
@@ -412,11 +424,11 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
         
         case 'service_updated':
             return {
-                subject: `Service Updated: ${data.title}`,
+                subject: `Service Updated: ${escapeHtml(data.title)}`,
                 html: getHtmlTemplate(
                     'Service Updated',
                     `
-                    <p style="font-size: 16px;">The details of your service <strong>${data.title}</strong> have been updated by the administrator.</p>
+                    <p style="font-size: 16px;">The details of your service <strong>${escapeHtml(data.title)}</strong> have been updated by the administrator.</p>
                     <div class="card">
                         <p style="margin: 0; color: #64748b;">Review the changes in your dashboard.</p>
                     </div>
@@ -434,7 +446,7 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                 html: getHtmlTemplate(
                     'Welcome Aboard!',
                     `
-                    <p style="font-size: 16px;">Hi ${data.name},</p>
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.name)},</p>
                     <p>We are thrilled to have you join our community. Whether you are looking for the perfect vacation rental or offering one, we are here to help.</p>
                     <div class="card">
                         <p style="font-weight: 600;">Get started by exploring our top listings or setting up your profile.</p>
@@ -447,16 +459,16 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'trip_reminder':
             return {
-                subject: `🏖️ Your Trip Starts Tomorrow: ${data.itemTitle}`,
+                subject: `🏖️ Your Trip Starts Tomorrow: ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'Ready for Takeoff?',
                     `
-                    <p style="font-size: 16px;">Hi ${data.guestName},</p>
-                    <p>Your stay at <strong>${data.itemTitle}</strong> begins tomorrow! Here is everything you need to know.</p>
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.guestName)},</p>
+                    <p>Your stay at <strong>${escapeHtml(data.itemTitle)}</strong> begins tomorrow! Here is everything you need to know.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">Check-in</span><span class="value">${data.checkIn}</span></div>
-                        <div class="info-row"><span class="label">Address</span><span class="value">${data.address}</span></div>
-                        <div class="info-row"><span class="label">Host</span><span class="value">${data.hostName}</span></div>
+                        <div class="info-row"><span class="label">Check-in</span><span class="value">${escapeHtml(data.checkIn)}</span></div>
+                        <div class="info-row"><span class="label">Address</span><span class="value">${escapeHtml(data.address)}</span></div>
+                        <div class="info-row"><span class="label">Host</span><span class="value">${escapeHtml(data.hostName)}</span></div>
                     </div>
                     `,
                     data.link,
@@ -466,12 +478,12 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'review_reminder':
             return {
-                subject: `How was your stay at ${data.itemTitle}?`,
+                subject: `How was your stay at ${escapeHtml(data.itemTitle)}?`,
                 html: getHtmlTemplate(
                     'Welcome Back!',
                     `
-                    <p style="font-size: 16px;">Hi ${data.guestName},</p>
-                    <p>We hope you had a wonderful time at <strong>${data.itemTitle}</strong>. Would you mind sharing your experience?</p>
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.guestName)},</p>
+                    <p>We hope you had a wonderful time at <strong>${escapeHtml(data.itemTitle)}</strong>. Would you mind sharing your experience?</p>
                     <p>Your review helps other travelers and supports your host.</p>
                     `,
                     data.link,
@@ -481,13 +493,13 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'new_chat_message':
             return {
-                subject: `💬 New message from ${data.senderName}`,
+                subject: `💬 New message from ${escapeHtml(data.senderName)}`,
                 html: getHtmlTemplate(
                     'New Message',
                     `
-                    <p style="font-size: 16px;">You have a new unread message from <strong>${data.senderName}</strong>.</p>
+                    <p style="font-size: 16px;">You have a new unread message from <strong>${escapeHtml(data.senderName)}</strong>.</p>
                      <div class="card">
-                        <div class="quote" style="margin:0">"${data.messagePreview}..."</div>
+                        <div class="quote" style="margin:0">"${escapeHtml(data.messagePreview)}..."</div>
                     </div>
                     `,
                     data.link,
@@ -497,14 +509,14 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'payout_processed':
             return {
-                subject: `💰 Payout Processed: €${data.amount}`,
+                subject: `💰 Payout Processed: €${escapeHtml(data.amount)}`,
                 html: getHtmlTemplate(
                     'Payout Sent',
                     `
-                    <p style="font-size: 16px;">Good news! We've sent a payout of <strong>€${data.amount}</strong> to your account.</p>
+                    <p style="font-size: 16px;">Good news! We've sent a payout of <strong>€${escapeHtml(data.amount)}</strong> to your account.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">Amount</span><span class="value price-value">€${data.amount}</span></div>
-                        <div class="info-row"><span class="label">Reference</span><span class="value">${data.reference || 'N/A'}</span></div>
+                        <div class="info-row"><span class="label">Amount</span><span class="value price-value">€${escapeHtml(data.amount)}</span></div>
+                        <div class="info-row"><span class="label">Reference</span><span class="value">${escapeHtml(data.reference) || 'N/A'}</span></div>
                         <div class="info-row"><span class="label">Date</span><span class="value">${new Date().toLocaleDateString()}</span></div>
                     </div>
                     <p style="text-align: center; font-size: 13px; color: #64748b;">Funds typically arrive within 1-3 business days.</p>
@@ -516,13 +528,13 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'refund_processed':
             return {
-                subject: `Refund Processed: €${data.amount}`,
+                subject: `Refund Processed: €${escapeHtml(data.amount)}`,
                 html: getHtmlTemplate(
                     'Refund Issued',
                     `
-                    <p style="font-size: 16px;">We have processed a refund of <strong>€${data.amount}</strong> for your booking at ${data.itemTitle}.</p>
+                    <p style="font-size: 16px;">We have processed a refund of <strong>€${escapeHtml(data.amount)}</strong> for your booking at ${escapeHtml(data.itemTitle)}.</p>
                     <div class="card">
-                         <div class="info-row"><span class="label">Amount</span><span class="value">€${data.amount}</span></div>
+                         <div class="info-row"><span class="label">Amount</span><span class="value">€${escapeHtml(data.amount)}</span></div>
                     </div>
                     <p style="font-size: 14px; text-align: center; color: #64748b;">It may take 5-10 days for the credit to appear on your statement.</p>
                     `,
@@ -533,17 +545,17 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
 
         case 'new_review':
             return {
-                subject: `⭐ New Review for ${data.itemTitle}`,
+                subject: `⭐ New Review for ${escapeHtml(data.itemTitle)}`,
                 html: getHtmlTemplate(
                     'New Review Received',
                     `
-                    <p style="font-size: 16px;">You received a new review from <strong>${data.guestName}</strong>.</p>
+                    <p style="font-size: 16px;">You received a new review from <strong>${escapeHtml(data.guestName)}</strong>.</p>
                     <div class="card" style="text-align: center;">
                          <div style="color: #fbbf24; font-size: 24px; margin-bottom: 12px; text-align: center;">
-                            ${"★".repeat(Math.round(Number(data.rating) || 5))} <span style="color:#334155; font-size: 16px; font-weight:600">(${data.rating}/5)</span>
+                            ${"★".repeat(Math.round(Number(data.rating) || 5))} <span style="color:#334155; font-size: 16px; font-weight:600">(${escapeHtml(data.rating)}/5)</span>
                          </div>
-                         <div class="quote" style="text-align: left; background: transparent; border: none; padding: 0;">"${data.comment}"</div>
-                         <p style="margin-top: 16px; font-size: 14px; color: #64748b;">— ${data.guestName}</p>
+                         <div class="quote" style="text-align: left; background: transparent; border: none; padding: 0;">"${escapeHtml(data.comment)}"</div>
+                         <p style="margin-top: 16px; font-size: 14px; color: #64748b;">— ${escapeHtml(data.guestName)}</p>
                     </div>
                     `,
                     data.link,
@@ -554,20 +566,20 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
         // --- Admin/System ---
         case 'admin_contact_message':
             return {
-                subject: `📩 New Contact Message: ${data.subject}`,
+                subject: `📩 New Contact Message: ${escapeHtml(data.subject)}`,
                 html: getHtmlTemplate(
                     'New Message',
                     `
                     <p style="font-size: 16px;">You received a new message via the contact form.</p>
                     <div class="card">
-                        <div class="info-row"><span class="label">From</span><span class="value">${data.name} (${data.email})</span></div>
-                        <div class="info-row"><span class="label">Subject</span><span class="value">${data.subject}</span></div>
+                        <div class="info-row"><span class="label">From</span><span class="value">${escapeHtml(data.name)} (${escapeHtml(data.email)})</span></div>
+                        <div class="info-row"><span class="label">Subject</span><span class="value">${escapeHtml(data.subject)}</span></div>
                     </div>
                     <div class="quote" style="margin-top: 16px;">
-                        ${data.message}
+                        ${escapeHtml(data.message)}
                     </div>
                     `,
-                    `mailto:${data.email}`,
+                    `mailto:${encodeURIComponent(data.email || '')}`,
                     'Reply via Email'
                 )
             };
