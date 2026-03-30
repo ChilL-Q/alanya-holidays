@@ -5,6 +5,7 @@ import { AdminLayout } from '../components/layouts/AdminLayout';
 import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
+import { AuthRoute } from '../components/auth/AuthRoute';
 
 // Public Pages - Direct Imports (critical for immediate FCP)
 import { DirectoryHome } from '../pages/DirectoryHome';
@@ -111,7 +112,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/login" element={<LoginRedirect mode="login" />} />
                 <Route path="/register" element={<LoginRedirect mode="register" />} />
 
-                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout" element={<AuthRoute><Checkout /></AuthRoute>} />
                 <Route path="/services" element={<ServicesPage />} />
                 <Route path="/services/:category" element={<ServicesPage />} />
                 <Route path="/zero-fees" element={<ZeroFeesPage />} />
@@ -131,13 +132,13 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/services/visa-legal" element={<Visa />} />
                 <Route path="/creative-professionals/:subcategory" element={<CreativeServices />} />
                 <Route path="/shop" element={<Shop />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/add-service" element={<AddService />} />
+                <Route path="/profile" element={<AuthRoute><Profile /></AuthRoute>} />
+                <Route path="/add-service" element={<AuthRoute><AddService /></AuthRoute>} />
                 <Route path="/bookmarks" element={<FavoritesPage />} />
                 <Route path="/book-vehicle/:id" element={<BookVehicle />} />
                 <Route path="/book-tour/:id" element={<BookTour />} />
                 <Route path="/book-wellness/:id" element={<BookWellness />} />
-                <Route path="/inbox" element={<InboxPage />} />
+                <Route path="/inbox" element={<AuthRoute><InboxPage /></AuthRoute>} />
 
                 {/* Host Routes - Protected */}
                 <Route path="/booking/success" element={<BookingSuccess />} />
@@ -314,7 +315,7 @@ export const AppRoutes: React.FC = () => {
                     </AdminRoute>
                 } />
 
-                <Route path="/add-product" element={<AddProduct />} />
+                <Route path="/add-product" element={<AuthRoute><AddProduct /></AuthRoute>} />
 
                 <Route path="*" element={<DirectoryHome />} />
             </Routes>
