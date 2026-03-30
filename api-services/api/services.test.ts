@@ -288,10 +288,10 @@ describe('servicesService', () => {
           const mockEdit = { id: 'e1', service_id: 's1' };
           const mockService = { provider_id: 'p1', title: 'T', type: 'car' };
 
-          let editCalls = 0;
+          let _editCalls = 0;
           mockSupabase.from.mockImplementation((table) => {
                if (table === 'service_edits') {
-                   editCalls++;
+                   _editCalls++;
                    const chain = createMockChain(mockEdit) as any;
                    chain.update = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
                    chain.single = vi.fn().mockResolvedValue({ data: mockEdit, error: null });
@@ -324,7 +324,7 @@ describe('servicesService', () => {
       });
 
       it('throws error in getService', async () => {
-          const chain = createMockChain();
+          const _chain = createMockChain();
           // Simulate failure
           let callCount = 0;
           mockSupabase.from.mockImplementation(() => {
