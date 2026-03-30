@@ -1,5 +1,7 @@
 // @ts-ignore
 import { createClient } from "npm:@supabase/supabase-js@2"
+// @ts-ignore
+import { z } from "npm:zod@3"
 
 declare const Deno: any;
 
@@ -12,12 +14,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// --- Zod schemas per email type ---
+
+const s = z.string().min(1)
+const sOpt = z.string().optional()
+const bookingBase = { itemTitle: s, checkIn: s, checkOut: s, link: sOpt, itemTypeLabel: sOpt }
+
+const emailDataSchemas = {
+  booking_request_host:  z.object({ ...bookingBase, guestName: s, guests: z.coerce.string(), totalPrice: z.coerce.string(), message: sOpt }),
+  booking_cancelled_host: z.object({ ...bookingBase, guestName: s }),
+  booking_expired_host:  z.object({ ...bookingBase, guestName: s }),
+  booking_created:       z.object({ ...bookingBase, totalPrice: z.coerce.string(), userName: sOpt }),
+  booking_confirmed:     z.object({ ...bookingBase, guests: z.coerce.string(), address: sOpt }),
+  booking_rejected:      z.object({ itemTitle: s, reason: sOpt, searchLink: sOpt }),
+  booking_expired_guest: z.object({ itemTitle: s, link: sOpt }),
+  booking_cancelled:     z.object({ itemTitle: s, link: sOpt }),
+  listing_approved:      z.object({ title: s, link: sOpt }),
+  listing_rejected:      z.object({ title: s, reason: s, link: sOpt }),
+  listing_deleted:       z.object({ title: s, link: sOpt }),
+  service_approved:      z.object({ title: s, link: sOpt }),
+  service_rejected:      z.object({ title: s, reason: s, link: sOpt }),
+  service_updated:       z.object({ title: s, link: sOpt }),
+  welcome_email:         z.object({ name: s, link: sOpt }),
+  trip_reminder:         z.object({ itemTitle: s, guestName: s, checkIn: s, address: s, hostName: s, link: sOpt }),
+  review_reminder:       z.object({ itemTitle: s, guestName: s, link: sOpt }),
+  new_chat_message:      z.object({ senderName: s, messagePreview: s, link: sOpt }),
+  payout_processed:      z.object({ amount: z.coerce.string(), reference: sOpt, link: sOpt }),
+  refund_processed:      z.object({ amount: z.coerce.string(), itemTitle: s, link: sOpt }),
+  new_review:            z.object({ itemTitle: s, guestName: s, rating: z.coerce.number().min(1).max(5), comment: s, link: sOpt }),
+  admin_contact_message: z.object({ subject: s, name: s, email: s, message: s }),
+} as const
+
+type EmailType = keyof typeof emailDataSchemas
+
+const EMAIL_TYPES = Object.keys(emailDataSchemas) as EmailType[]
+
 interface EmailPayload {
   to?: string;
-
   userId?: string;
-  type: 'booking_created' | 'booking_confirmed' | 'booking_rejected' | 'booking_cancelled' | 'listing_approved' | 'listing_rejected' | 'new_review' | 'listing_deleted' | 'booking_request_host' | 'booking_cancelled_host' | 'booking_expired_guest' | 'booking_expired_host' | 'admin_contact_message' | 'welcome_email' | 'service_approved' | 'service_rejected' | 'service_updated' | 'trip_reminder' | 'review_reminder' | 'new_chat_message' | 'payout_processed' | 'refund_processed';
-  data: any; // Dynamic data for templates
+  type: EmailType;
+  data: unknown;
 }
 
 Deno.serve(async (req: Request) => {
@@ -52,12 +88,25 @@ Deno.serve(async (req: Request) => {
     // ----------------------------
     
     // --- Input Validation ---
-    if (!type || typeof type !== 'string') {
-      return new Response(JSON.stringify({ error: 'Missing or invalid "type" field. Must be a valid email type string.' }), {
+    if (!type || !EMAIL_TYPES.includes(type as EmailType)) {
+      return new Response(JSON.stringify({ error: `Invalid "type" field. Must be one of: ${EMAIL_TYPES.join(', ')}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       })
     }
+
+    const schemaResult = emailDataSchemas[type as EmailType].safeParse(data)
+    if (!schemaResult.success) {
+      return new Response(JSON.stringify({
+        error: 'Invalid "data" payload for email type: ' + type,
+        issues: schemaResult.error.issues.map(i => ({ path: i.path.join('.'), message: i.message })),
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    const validatedData = schemaResult.data
 
     if (to && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
       return new Response(JSON.stringify({ error: `Invalid email format: "${to}"` }), {
@@ -89,7 +138,7 @@ Deno.serve(async (req: Request) => {
     if (!targetEmail) throw new Error('No target email resolved')
 
     // Generate Content based on Type
-    const { subject, html } = generateEmailContent(type, data);
+    const { subject, html } = generateEmailContent(type, validatedData);
 
     // eslint-disable-next-line no-console
     console.log(`Sending '${type}' email to: ${targetEmail}`)
