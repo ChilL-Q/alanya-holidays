@@ -37,6 +37,27 @@ dist-ssr
 # Test artifacts
 test_playback.webm
 *.webm
+test-results/
+test-results.txt
+test_out.txt
+test_results.json
+
+# Coverage reports (auto-generated)
+coverage/
+
+# CI/dev lint output artifacts
+*_lint_output*.txt
+*_lint_check*.txt
+lint_output*.txt
+coverage_report.txt
+full_coverage_report.txt
+remaining_warnings.txt
+basic_out.txt
+vitest-output*.txt
+autofixed_lint_output.txt
+current_lint_output.txt
+final_lint_check.txt
+supabase_lint_check.txt
 
 # Testsprite
 testsprite_tests/

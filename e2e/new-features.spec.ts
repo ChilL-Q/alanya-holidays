@@ -65,7 +65,7 @@ test.describe('New Features Flow', () => {
     // 3. Ensure NO price element exists
     // We previously had elements with class 'text-primary' containing price.
     // We should assert that specific pricing text is NOT visible.
-    const priceElements = page.locator('text=€');
+    const _priceElements = page.locator('text=€');
     // It's possible € symbol exists elsewhere, so be specific if possible.
     // Or check that the specific container is gone.
   });

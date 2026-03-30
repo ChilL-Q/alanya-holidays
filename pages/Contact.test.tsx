@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Contact } from './Contact';
 import { messagesService } from '../api-services/api/misc';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
 
 // Mock dependencies
 vi.mock('../api-services/api/misc', () => ({
@@ -77,7 +76,7 @@ describe('Contact Page', () => {
 
     it('handles submission error', async () => {
         (messagesService.sendMessage as any).mockRejectedValue(new Error('Failed'));
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         render(<Contact />);
 

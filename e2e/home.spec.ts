@@ -9,7 +9,7 @@ test.describe('Homepage', () => {
     await expect(page).toHaveTitle(/Alanya Holidays/i);
     
     // Check for search button or hero section
-    const searchButton = page.getByRole('button', { name: /search/i }); 
+    const _searchButton = page.getByRole('button', { name: /search/i });
     // We confirm it's visible, though text might vary ("Search", "Find", etc. - using regex)
     // If specific text is known, specific string is better. 
     // Based on previous files, SearchWidget uses "Search".

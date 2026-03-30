@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { Profile } from './Profile';
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
