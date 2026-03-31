@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthRoute } from './AuthRoute';
 
 // Mock useAuth
@@ -44,7 +44,7 @@ describe('AuthRoute', () => {
     it('redirects to "/" with state { from: location } when not authenticated', () => {
         mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 
-        let capturedLocation: any = null;
+        const capturedLocation: any = null;
 
         render(
             <MemoryRouter initialEntries={['/protected']}>
@@ -85,7 +85,6 @@ describe('AuthRoute', () => {
 
         // Capture the Navigate state by rendering a component that reads location state
         const HomeCapture = () => {
-            const { useLocation } = require('react-router-dom');
             const loc = useLocation();
             return (
                 <div>
