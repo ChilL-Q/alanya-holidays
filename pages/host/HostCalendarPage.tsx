@@ -13,26 +13,22 @@ export const HostCalendarPage = () => {
         if (!user) return;
         try {
             setIsLoading(true);
-            const props = await db.getPropertiesByHost(user.id);
-            const myPropertyIds = new Set(props?.map((p: any) => p.id));
-            const allBookings = await db.getBookings(); // Ideally fetch by date range from DB
-
-            const myBookings = allBookings?.filter((b: any) =>
-                myPropertyIds.has(b.item_id) &&
-                b.status === 'confirmed' // Only show confirmed on calendar usually
-            ) || [];
-
-            setBookings(myBookings);
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            const monthStart = new Date(year, month, 1).toISOString();
+            const monthEnd = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+            const myBookings = await db.getBookingsForHost(user.id, monthStart, monthEnd);
+            setBookings(myBookings || []);
         } catch (error) {
             console.error(error);
         } finally {
             setIsLoading(false);
         }
-    }, [user]);
+    }, [user, currentDate]);
 
     useEffect(() => {
         loadBookings();
-    }, [loadBookings, currentDate]);
+    }, [loadBookings]);
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();
