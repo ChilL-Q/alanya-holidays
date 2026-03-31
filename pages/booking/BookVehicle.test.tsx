@@ -14,7 +14,7 @@ vi.mock('../../api-services', () => ({
 // Mock Currency Context
 vi.mock('../../context/CurrencyContext', () => ({
     useCurrency: () => ({
-        convertPrice: (price: number, currency: string) => price,
+        convertPrice: (price: number, _currency: string) => price,
         formatPrice: (price: number) => `€${price}`
     })
 }));
@@ -41,7 +41,7 @@ vi.mock('react-router-dom', async () => {
 // Mock DatePicker
 vi.mock('react-datepicker', () => ({
     __esModule: true,
-    default: ({ selected, onChange, minDate, placeholderText, dateFormat, locale, customInput, selectsStart, selectsEnd, startDate, endDate }: any) => (
+    default: ({ selected, onChange, _minDate, placeholderText, _dateFormat, _locale, _customInput, selectsStart, selectsEnd, _startDate, _endDate }: any) => (
         <input
             type="text"
             data-testid={selectsStart ? 'start-date-picker' : selectsEnd ? 'end-date-picker' : 'date-picker'}

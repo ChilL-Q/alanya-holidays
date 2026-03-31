@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import { RegisterModal } from './RegisterModal';
 
@@ -66,8 +66,6 @@ vi.mock('../ui/Modal', () => ({
     }
 }));
 
-import { useModal } from '../../context/ModalContext';
-import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import { supabase } from '../../api-services/supabase';
 
 const mockCloseModal = vi.fn();
