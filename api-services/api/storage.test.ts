@@ -99,7 +99,7 @@ describe('storageService', () => {
             mockSupabase.storage.listBuckets = vi.fn().mockResolvedValue({ data: [{ id: 'properties' }] });
             mockSupabase.storage.from.mockReturnValue(bucket as any);
 
-            const result = await storageService.uploadImage(mockFile, 'products');
+            await storageService.uploadImage(mockFile, 'products');
             // Should fallback to properties bucket
             expect(mockSupabase.storage.from).toHaveBeenCalledWith('properties');
         });

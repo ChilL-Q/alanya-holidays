@@ -44,8 +44,6 @@ describe('AuthRoute', () => {
     it('redirects to "/" with state { from: location } when not authenticated', () => {
         mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 
-        const capturedLocation: any = null;
-
         render(
             <MemoryRouter initialEntries={['/protected']}>
                 <Routes>
@@ -54,7 +52,7 @@ describe('AuthRoute', () => {
                         element={
                             <div
                                 data-testid="home"
-                                ref={(el) => {
+                                ref={(_el) => {
                                     // Location state is checked via the Navigate component behaviour;
                                     // we verify the redirect happened by confirming the home page renders.
                                 }}
