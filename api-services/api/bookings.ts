@@ -25,18 +25,27 @@ export const bookingsService = {
 
         if (error) throw error;
         if (result.error) throw new Error(result.error);
-        
+
         // Trigger Email Notification (Non-blocking)
         const bookingId = result.data;
         const itemTypeLabel = data.type === 'service' ? 'Service' : 'Property';
 
+        // Получаем имя гостя один раз для обоих писем
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', data.user_id)
+            .single();
+
+        const guestName = profile?.full_name || 'Guest';
+
         supabase.functions.invoke('send-email', {
             body: {
                 type: 'booking_created',
-                userId: data.user_id, 
+                userId: data.user_id,
                 data: {
-                    userName: 'Guest', 
-                    itemTitle: data.title || 'Item', 
+                    userName: guestName,
+                    itemTitle: data.title || 'Item',
                     itemTypeLabel: itemTypeLabel,
                     checkIn: data.check_in,
                     checkOut: data.check_out,
@@ -56,14 +65,14 @@ export const bookingsService = {
             .then(({ data: item }) => {
                 const itemData = item as any;
                 const hostId = itemData ? (itemData.host_id || itemData.provider_id) : null;
-                
+
                 if (hostId) {
                     supabase.functions.invoke('send-email', {
                         body: {
                             type: 'booking_request_host',
                             userId: hostId,
                             data: {
-                                guestName: 'A Guest', // Ideally fetch user name
+                                guestName: guestName,
                                 itemTitle: itemData.title,
                                 itemTypeLabel: itemTypeLabel,
                                 checkIn: data.check_in,
