@@ -102,7 +102,7 @@ Deno.serve(async (req: Request) => {
 
     await Promise.allSettled(emailPromises)
 
-    console.log(`Cancelled ${expiredBookings.length} expired bookings`)
+    console.warn(`Cancelled ${expiredBookings.length} expired bookings`)
 
     return new Response(
       JSON.stringify({ cancelled: expiredBookings.length, ids }),
