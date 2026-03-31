@@ -25,7 +25,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
             db.getFavorites(user.id).then(dbFavorites => {
                 // Use functional update to avoid stale closure on favorites state
                 setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
-            });
+            }).catch(console.error);
         }
     }, [isAuthenticated, user]);
 
@@ -40,23 +40,14 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
             return prev;
         });
         if (isAuthenticated && user?.id) {
-            await db.toggleFavorite({ user_id: user.id, item_id: id }).catch(console.error); // Basic sync
+            await db.addFavorite({ user_id: user.id, item_id: id }).catch(console.error);
         }
     };
 
     const removeFavorite = async (id: string) => {
         setFavorites((prev) => prev.filter((favId) => favId !== id));
         if (isAuthenticated && user?.id) {
-            await db.toggleFavorite({ user_id: user.id, item_id: id }).catch(console.error); // Toggle handles remove too if logic is flip-flop
-            // Wait, db.toggleFavorite implementation checks existence. 
-            // If I call remove locally, I should ensure db removes it. 
-            // My db.toggleFavorite implements "check if exists". 
-            // If I call it and it exists -> it deletes. If it doesn't -> it inserts.
-            // This is risky if state is out of sync.
-            // Better to explicit add/remove in DB or trust toggle.
-            // For this polish, toggle is fine if we assume synced. 
-            // But to be safe, I'd need separate add/remove methods in DB or check state.
-            // Let's assume toggle is sufficient for this "Master Polish".
+            await db.removeFavorite({ user_id: user.id, item_id: id }).catch(console.error);
         }
     };
 
