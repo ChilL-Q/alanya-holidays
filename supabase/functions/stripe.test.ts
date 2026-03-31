@@ -25,10 +25,10 @@ describe('Stripe Edge Functions - Logic Tests', () => {
     const mockStripeCreate = vi.fn();
     
     // Mock Supabase
-    const mockSupabaseUpdate = vi.fn();
+    const _mockSupabaseUpdate = vi.fn();
     const mockSupabaseIn = vi.fn();
-    
-    const mockSupabaseFrom = vi.fn(() => ({
+
+    const _mockSupabaseFrom = vi.fn(() => ({
       update: vi.fn(() => ({
         in: mockSupabaseIn,
       })),
@@ -269,7 +269,7 @@ describe('Stripe Edge Functions - Logic Tests', () => {
   describe('stripe-webhook', () => {
     // Mock Supabase
     const mockSupabaseUpdate = vi.fn();
-    const mockSupabaseIn = vi.fn();
+    const _mockSupabaseIn = vi.fn();
     const mockSupabaseSingle = vi.fn();
     const mockSupabaseFunctionsInvoke = vi.fn();
 

@@ -65,8 +65,6 @@ vi.mock('../ui/Modal', () => ({
     }
 }));
 
-import { useModal } from '../../context/ModalContext';
-import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import toast from 'react-hot-toast';
 
 const mockCloseModal = vi.fn();

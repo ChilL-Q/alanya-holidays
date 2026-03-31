@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import { CheckoutPaymentSection } from './CheckoutPaymentSection';
+import { PAYMENT_DETAILS } from '../../data/payment';
 
 // Mock useLanguage
 vi.mock('../../context/LanguageContext', () => ({
@@ -16,7 +17,8 @@ vi.mock('lucide-react', () => ({
     Banknote: ({ className }: any) => <svg data-testid="banknote-icon" className={className} />,
     Shield: ({ className }: any) => <svg data-testid="shield-icon" className={className} />,
     Bitcoin: ({ className }: any) => <svg data-testid="bitcoin-icon" className={className} />,
-    Copy: ({ className, size }: any) => <svg data-testid="copy-icon" className={className} width={size} height={size} />
+    Copy: ({ className, size }: any) => <svg data-testid="copy-icon" className={className} width={size} height={size} />,
+    Check: ({ className, size }: any) => <svg data-testid="check-icon" className={className} width={size} height={size} />
 }));
 
 // Mock navigator.clipboard
@@ -45,6 +47,11 @@ describe('CheckoutPaymentSection', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockWriteText.mockClear();
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     describe('Rendering', () => {
@@ -184,96 +191,100 @@ describe('CheckoutPaymentSection', () => {
             renderComponent({ paymentMethod: 'bank' });
 
             expect(screen.getByText('checkout.method.bank_desc')).toBeInTheDocument();
-            expect(screen.getByText('Ziraat Bankası')).toBeInTheDocument();
-            expect(screen.getByText('Alanya Holidays Ltd.')).toBeInTheDocument();
-            expect(screen.getByText('TR12 3456 7890 1234 5678 9012 34')).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.bank.name)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.bank.accountHolder)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.bank.iban)).toBeInTheDocument();
         });
 
         it('shows crypto payment instruction with details', () => {
             renderComponent({ paymentMethod: 'crypto' });
 
             expect(screen.getByText('checkout.method.crypto_desc')).toBeInTheDocument();
-            expect(screen.getByText('TRC20 (Tron)')).toBeInTheDocument();
-            expect(screen.getByText(/USDT Address/)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.crypto.network)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.crypto.address)).toBeInTheDocument();
         });
 
         it('shows swift payment instruction with details', () => {
             renderComponent({ paymentMethod: 'swift' });
 
             expect(screen.getByText('checkout.method.swift_desc')).toBeInTheDocument();
-            expect(screen.getByText('Garanti BBVA')).toBeInTheDocument();
-            expect(screen.getByText('GATRTRI2')).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.swift.bankName)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.swift.bic)).toBeInTheDocument();
+            expect(screen.getByText(PAYMENT_DETAILS.swift.iban)).toBeInTheDocument();
         });
 
         it('shows copy button for bank IBAN', () => {
             renderComponent({ paymentMethod: 'bank' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             expect(copyButtons.length).toBeGreaterThan(0);
         });
 
         it('shows copy button for crypto address', () => {
             renderComponent({ paymentMethod: 'crypto' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             expect(copyButtons.length).toBeGreaterThan(0);
         });
 
         it('shows copy button for swift BIC', () => {
             renderComponent({ paymentMethod: 'swift' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             expect(copyButtons.length).toBeGreaterThan(0);
         });
     });
 
     describe('Copy to Clipboard', () => {
-        it('copies bank IBAN to clipboard', async () => {
+        it('copies bank IBAN to clipboard and shows feedback', async () => {
             mockWriteText.mockResolvedValue(undefined);
             renderComponent({ paymentMethod: 'bank' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             fireEvent.click(copyButtons[0]);
 
-            await waitFor(() => {
-                expect(mockWriteText).toHaveBeenCalledWith('TR12 3456 7890 1234 5678 9012 34');
+            expect(mockWriteText).toHaveBeenCalledWith(PAYMENT_DETAILS.bank.iban);
+            expect(screen.getByText('Copied!')).toBeInTheDocument();
+            expect(screen.getByTestId('check-icon')).toBeInTheDocument();
+
+            // Feedback should disappear after 2 seconds
+            act(() => {
+                vi.advanceTimersByTime(2000);
             });
+            expect(screen.queryByText('Copied!')).not.toBeInTheDocument();
         });
 
         it('copies crypto address to clipboard', async () => {
             mockWriteText.mockResolvedValue(undefined);
             renderComponent({ paymentMethod: 'crypto' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             fireEvent.click(copyButtons[0]);
 
-            await waitFor(() => {
-                expect(mockWriteText).toHaveBeenCalledWith('TVj7...ExampleAddress...xYz');
-            });
+            expect(mockWriteText).toHaveBeenCalledWith(PAYMENT_DETAILS.crypto.address);
+            expect(screen.getByText('Copied!')).toBeInTheDocument();
         });
 
         it('copies swift BIC to clipboard', async () => {
             mockWriteText.mockResolvedValue(undefined);
             renderComponent({ paymentMethod: 'swift' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             fireEvent.click(copyButtons[0]);
 
-            await waitFor(() => {
-                expect(mockWriteText).toHaveBeenCalledWith('GATRTRI2');
-            });
+            expect(mockWriteText).toHaveBeenCalledWith(PAYMENT_DETAILS.swift.bic);
+            expect(screen.getByText('Copied!')).toBeInTheDocument();
         });
 
         it('copies swift IBAN to clipboard', async () => {
             mockWriteText.mockResolvedValue(undefined);
             renderComponent({ paymentMethod: 'swift' });
 
-            const copyButtons = screen.getAllByTestId('copy-icon');
+            const copyButtons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
             fireEvent.click(copyButtons[1]);
 
-            await waitFor(() => {
-                expect(mockWriteText).toHaveBeenCalledWith('TR00 1234 5678 9000 0000 0000 00');
-            });
+            expect(mockWriteText).toHaveBeenCalledWith(PAYMENT_DETAILS.swift.iban);
+            expect(screen.getByText('Copied!')).toBeInTheDocument();
         });
     });
 
@@ -344,9 +355,8 @@ describe('CheckoutPaymentSection', () => {
 
             const payButton = screen.getByTestId('pay-button');
             expect(payButton).toHaveClass('bg-teal-700');
+            expect(payButton).toHaveClass('dark:bg-cyan-600');
             expect(payButton).toHaveClass('font-bold');
-            expect(payButton).toHaveClass('py-4');
-            expect(payButton).toHaveClass('rounded-xl');
         });
     });
 
@@ -413,9 +423,11 @@ describe('CheckoutPaymentSection', () => {
         it('renders copy icons with proper size', () => {
             renderComponent({ paymentMethod: 'bank' });
 
-            const copyIcons = screen.getAllByTestId('copy-icon');
-            expect(copyIcons[0]).toHaveAttribute('width', '12');
-            expect(copyIcons[0]).toHaveAttribute('height', '12');
+            const copyIcons = screen.getAllByRole('button').filter(b => b.title === 'checkout.copy');
+            // Check size of the first svg child of the button
+            const firstSvg = copyIcons[0].querySelector('svg');
+            expect(firstSvg).toHaveAttribute('width', '12');
+            expect(firstSvg).toHaveAttribute('height', '12');
         });
     });
 
