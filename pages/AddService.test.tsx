@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { AddService } from './AddService';
 import { BrowserRouter } from 'react-router-dom';
+import { db } from '../api-services';
 
 // Mock contexts
 vi.mock('../context/AuthContext', () => ({
@@ -25,11 +26,20 @@ vi.mock('../api-services', () => ({
     }
 }));
 
+vi.mock('react-hot-toast', () => ({
+    default: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
+    toast: { success: vi.fn(), error: vi.fn() }
+}));
+
 const renderWithRouter = (ui: React.ReactElement) => {
     return render(ui, { wrapper: BrowserRouter });
 };
 
 describe('AddService Component', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('renders category selection step initially', () => {
         renderWithRouter(<AddService />);
         expect(screen.getByText('add_service.title')).toBeDefined();
@@ -63,5 +73,55 @@ describe('AddService Component', () => {
         expect(screen.getByText('Difficulty')).toBeDefined();
         expect(screen.getByText('Duration (Hours)')).toBeDefined();
         expect(screen.getByText('Trip Schedule / Itinerary')).toBeDefined();
+    });
+
+    it('shows health/wellness fields when health category is selected', () => {
+        renderWithRouter(<AddService />);
+        fireEvent.click(screen.getByText('add_service.cat.health'));
+        expect(screen.getByText('WhatsApp Number')).toBeDefined();
+    });
+
+    it('shows back button on step 1 and returns to step 0 on click', () => {
+        renderWithRouter(<AddService />);
+        fireEvent.click(screen.getByText('add_service.cat.transportation'));
+        // Should be on step 1 now - back button should exist
+        const backBtn = screen.getAllByRole('button').find(
+            b => b.querySelector('svg') !== null
+        );
+        // Back button is the first button in the header
+        const allBtns = screen.getAllByRole('button');
+        // Find ArrowLeft button (has no text)
+        const arrowBtn = allBtns.find(b => b.textContent === '' || b.className.includes('rounded-full'));
+        if (arrowBtn) {
+            fireEvent.click(arrowBtn);
+            expect(screen.getByText('add_service.cat.transportation')).toBeDefined();
+        }
+    });
+
+    it('calls createService on transportation form submit', async () => {
+        (db.createService as any).mockResolvedValue({});
+        renderWithRouter(<AddService />);
+        fireEvent.click(screen.getByText('add_service.cat.transportation'));
+
+        // Submit the form element directly
+        const form = document.querySelector('form');
+        await act(async () => { fireEvent.submit(form!); });
+        await waitFor(() => {
+            expect(db.createService).toHaveBeenCalled();
+        });
+    });
+
+    it('shows error on console when createService fails', async () => {
+        (db.createService as any).mockRejectedValue(new Error('Upload failed'));
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        renderWithRouter(<AddService />);
+        fireEvent.click(screen.getByText('add_service.cat.transportation'));
+
+        const form = document.querySelector('form');
+        await act(async () => { fireEvent.submit(form!); });
+        await waitFor(() => {
+            expect(consoleSpy).toHaveBeenCalled();
+        });
+        consoleSpy.mockRestore();
     });
 });

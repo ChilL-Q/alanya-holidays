@@ -86,4 +86,65 @@ describe('DirectoryAdminPage', () => {
 
         expect(mockNavigate).toHaveBeenCalledWith('/admin/directory/new');
     });
+
+    it('filters listings by category', async () => {
+        await act(async () => {
+            render(<BrowserRouter><DirectoryAdminPage /></BrowserRouter>);
+        });
+        await waitFor(() => {
+            expect(screen.getByText('Test Medical')).toBeInTheDocument();
+        });
+        // Click the 'medical' category filter button
+        const medicalBtn = screen.getByRole('button', { name: /medical/i });
+        fireEvent.click(medicalBtn);
+        expect(screen.getByText('Test Medical')).toBeInTheDocument();
+        expect(screen.queryByText('Alanya Resort')).not.toBeInTheDocument();
+    });
+
+    it('navigates to edit listing on edit click', async () => {
+        await act(async () => {
+            render(<BrowserRouter><DirectoryAdminPage /></BrowserRouter>);
+        });
+        await waitFor(() => {
+            expect(screen.getByText('Test Medical')).toBeInTheDocument();
+        });
+        const editBtns = screen.getAllByRole('button', { name: /edit/i });
+        fireEvent.click(editBtns[0]);
+        expect(mockNavigate).toHaveBeenCalledWith('/admin/directory/1');
+    });
+
+    it('opens delete modal on delete click', async () => {
+        await act(async () => {
+            render(<BrowserRouter><DirectoryAdminPage /></BrowserRouter>);
+        });
+        await waitFor(() => {
+            expect(screen.getByText('Test Medical')).toBeInTheDocument();
+        });
+        const deleteBtns = screen.getAllByRole('button', { name: /delete/i });
+        fireEvent.click(deleteBtns[0]);
+        expect(screen.getByText('Delete Directory Listing')).toBeInTheDocument();
+    });
+
+    it('handles error when getDirectoryListings fails', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        (db.getDirectoryListings as any).mockRejectedValue(new Error('Network error'));
+        await act(async () => {
+            render(<BrowserRouter><DirectoryAdminPage /></BrowserRouter>);
+        });
+        await waitFor(() => {
+            expect(consoleSpy).toHaveBeenCalled();
+        });
+        consoleSpy.mockRestore();
+    });
+
+    it('shows loading state initially', async () => {
+        let resolveListings: (v: any) => void;
+        (db.getDirectoryListings as any).mockReturnValue(
+            new Promise(r => { resolveListings = r; })
+        );
+        render(<BrowserRouter><DirectoryAdminPage /></BrowserRouter>);
+        // Before data resolves, loading state should be present (no listings)
+        expect(screen.queryByText('Test Medical')).not.toBeInTheDocument();
+        await act(async () => { resolveListings!(mockListings); });
+    });
 });
