@@ -25,7 +25,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
             db.getFavorites(user.id).then(dbFavorites => {
                 // Use functional update to avoid stale closure on favorites state
                 setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
-            });
+            }).catch(console.error);
         }
     }, [isAuthenticated, user]);
 
