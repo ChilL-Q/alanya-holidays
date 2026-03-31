@@ -4,6 +4,13 @@ import React from 'react';
 import { NotificationProvider, useNotifications } from './NotificationContext';
 import { useAuth } from './AuthContext';
 import { db } from '../api-services';
+
+const mockedDb = db as unknown as {
+    getNotifications: ReturnType<typeof vi.fn>;
+    markNotificationAsRead: ReturnType<typeof vi.fn>;
+    addNotification: ReturnType<typeof vi.fn>;
+    subscribeToNotifications: ReturnType<typeof vi.fn>;
+};
 import { Notification } from '../types/models';
 
 // Mock AuthContext
@@ -107,7 +114,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-1', title: 'Notification 1' }),
                 createMockNotification({ id: 'notif-2', title: 'Notification 2', read: true })
             ];
-            db.getNotifications.mockResolvedValue(mockNotifications);
+            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -121,7 +128,7 @@ describe('NotificationContext', () => {
 
         it('should handle fetch notifications error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockRejectedValue(new Error('Fetch failed'));
+            mockedDb.getNotifications.mockRejectedValue(new Error('Fetch failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -138,7 +145,7 @@ describe('NotificationContext', () => {
             const mockNotifications: Notification[] = [
                 createMockNotification({ id: 'notif-1' })
             ];
-            db.getNotifications.mockResolvedValue(mockNotifications);
+            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result, rerender } = renderHook(() => useNotifications(), { wrapper });
 
@@ -225,7 +232,7 @@ describe('NotificationContext', () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
 
             const existingNotification = createMockNotification({ id: 'existing' });
-            db.getNotifications.mockResolvedValue([existingNotification]);
+            mockedDb.getNotifications.mockResolvedValue([existingNotification]);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -272,7 +279,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockResolvedValue(mockNotifications);
+            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -291,10 +298,10 @@ describe('NotificationContext', () => {
 
         it('should handle mark as read error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockResolvedValue([
+            mockedDb.getNotifications.mockResolvedValue([
                 createMockNotification({ id: 'notif-1', read: false })
             ]);
-            db.markNotificationAsRead.mockRejectedValue(new Error('Mark failed'));
+            mockedDb.markNotificationAsRead.mockRejectedValue(new Error('Mark failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -418,7 +425,7 @@ describe('NotificationContext', () => {
 
         it('should handle add notification error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.addNotification.mockRejectedValue(new Error('Add failed'));
+            mockedDb.addNotification.mockRejectedValue(new Error('Add failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -509,7 +516,7 @@ describe('NotificationContext', () => {
             const initialNotifications: Notification[] = [
                 createMockNotification({ id: 'notif-1' })
             ];
-            db.getNotifications.mockResolvedValue(initialNotifications);
+            mockedDb.getNotifications.mockResolvedValue(initialNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -522,7 +529,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2' }),
                 createMockNotification({ id: 'notif-3' })
             ];
-            db.getNotifications.mockResolvedValue(updatedNotifications);
+            mockedDb.getNotifications.mockResolvedValue(updatedNotifications);
 
             // Call refresh
             await act(async () => {
@@ -535,7 +542,7 @@ describe('NotificationContext', () => {
 
         it('should clear notifications when refreshing without user', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockResolvedValue([
+            mockedDb.getNotifications.mockResolvedValue([
                 createMockNotification({ id: 'notif-1' })
             ]);
 
@@ -556,7 +563,7 @@ describe('NotificationContext', () => {
 
         it('should handle refresh error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockRejectedValue(new Error('Refresh failed'));
+            mockedDb.getNotifications.mockRejectedValue(new Error('Refresh failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -586,7 +593,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-4', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockResolvedValue(mockNotifications);
+            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -601,7 +608,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            db.getNotifications.mockResolvedValue(mockNotifications);
+            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 

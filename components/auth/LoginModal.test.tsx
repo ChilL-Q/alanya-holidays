@@ -84,7 +84,7 @@ describe('LoginModal', () => {
         mockSendOtp.mockReset();
         mockVerifyOtp.mockReset();
         mockUseSubmitShortcut.mockReset();
-        toast.success.mockClear();
+        (toast.success as unknown as ReturnType<typeof vi.fn>).mockClear();
     });
 
     const renderLoginModal = () => {

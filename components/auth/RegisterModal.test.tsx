@@ -84,7 +84,7 @@ describe('RegisterModal', () => {
         mockRegister.mockReset();
         mockVerifyOtp.mockReset();
         mockUseSubmitShortcut.mockReset();
-        supabase.functions.invoke.mockClear();
+        (supabase.functions.invoke as unknown as ReturnType<typeof vi.fn>).mockClear();
     });
 
     const renderRegisterModal = () => {

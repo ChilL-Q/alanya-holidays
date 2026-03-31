@@ -60,7 +60,6 @@ vi.mock('react-datepicker', () => ({
             value={selected ? selected.toLocaleDateString() : ''}
             onChange={(e) => onChange(new Date(e.target.value))}
             placeholder={placeholderText}
-            minDate={minDate}
         />
     )
 }));
