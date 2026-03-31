@@ -105,7 +105,7 @@ describe('directoryService', () => {
                 .mockResolvedValueOnce({ data: [mockListing], error: null });
             mockSupabase.from.mockReturnValue(chain);
 
-            const result = await directoryService.getDirectoryListingsByCategory('medical');
+            await directoryService.getDirectoryListingsByCategory('medical');
             expect(chain.eq).toHaveBeenCalledWith('category_id', 'medical');
         });
 
@@ -126,7 +126,7 @@ describe('directoryService', () => {
             chain.single.mockResolvedValue({ data: mockListing, error: null });
             mockSupabase.from.mockReturnValue(chain);
 
-            const { id, created_at, updated_at, ...listingData } = mockListing;
+            const { id: _id, created_at: _created_at, updated_at: _updated_at, ...listingData } = mockListing;
             const result = await directoryService.createDirectoryListing(listingData as any);
             expect(result).toEqual(mockListing);
             expect(chain.insert).toHaveBeenCalledWith(listingData);

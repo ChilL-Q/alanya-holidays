@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ListProperty } from './ListProperty';
 import { BrowserRouter } from 'react-router-dom';
-import { db } from '../api-services';
 
 // Mock window.scrollTo
 window.scrollTo = vi.fn();
