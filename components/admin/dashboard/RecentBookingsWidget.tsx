@@ -23,8 +23,8 @@ export const RecentBookingsWidget: React.FC<RecentBookingsWidgetProps> = ({ book
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                        {bookings.map((b: any) => (
-                            <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
+                        {bookings.map((b: any, index: number) => (
+                            <tr key={b.id ?? `booking-${index}`} className="hover:bg-slate-50 dark:hover:bg-slate-700/80 transition-colors">
                                 <td className="p-4 pl-6 font-medium text-slate-900 dark:text-white">{b.itemTitle || 'Booking'}</td>
                                 <td className="p-4 text-sm text-slate-600 dark:text-slate-400">
                                     {b.user?.full_name || 'Guest'}
