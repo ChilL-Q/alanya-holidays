@@ -80,6 +80,7 @@ vi.mock('../api-services', () => ({
         }),
         getUnavailableDates: vi.fn().mockResolvedValue([]),
         getReviewCount: vi.fn().mockResolvedValue(10),
+        getReviews: vi.fn().mockResolvedValue([]),
         getBookings: vi.fn().mockResolvedValue([]),
         getServices: vi.fn().mockResolvedValue({ data: [] })
     }
