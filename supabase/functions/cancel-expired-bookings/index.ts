@@ -8,8 +8,6 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 // Set this secret in Supabase Dashboard → Edge Functions → Secrets
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
-const EXPIRY_HOURS = 24
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -24,6 +22,8 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     // 1. Найти все просроченные pending бронирования с данными гостя и хоста
+    // Отменяем только те брони у которых явно выставлен payment_expires_at и он уже прошёл
+    // Брони без Stripe (наличные, банк) не будут затронуты
     const { data: expiredBookings, error: fetchError } = await supabase
       .from('bookings')
       .select(`
@@ -36,7 +36,8 @@ Deno.serve(async (req: Request) => {
         service:services (title, host:profiles!services_provider_id_fkey (email))
       `)
       .eq('status', 'pending')
-      .lt('created_at', new Date(Date.now() - EXPIRY_HOURS * 60 * 60 * 1000).toISOString())
+      .lt('payment_expires_at', new Date().toISOString())
+      .not('payment_expires_at', 'is', null)
 
     if (fetchError) throw fetchError
     if (!expiredBookings || expiredBookings.length === 0) {
