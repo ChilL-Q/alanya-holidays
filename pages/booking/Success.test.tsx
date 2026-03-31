@@ -13,9 +13,9 @@ vi.mock('../../context/LanguageContext', () => ({
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-    CheckCircle: ({ size, className }: any) => <svg data-testid="check-circle-icon" className={className} />,
-    Home: ({ size, className }: any) => <svg data-testid="home-icon" className={className} />,
-    Calendar: ({ size, className }: any) => <svg data-testid="calendar-icon" className={className} />
+    CheckCircle: ({ _size, className }: any) => <svg data-testid="check-circle-icon" className={className} />,
+    Home: ({ _size, className }: any) => <svg data-testid="home-icon" className={className} />,
+    Calendar: ({ _size, className }: any) => <svg data-testid="calendar-icon" className={className} />
 }));
 
 // Mock react-router-dom
