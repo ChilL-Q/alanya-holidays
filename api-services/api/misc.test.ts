@@ -21,51 +21,48 @@ describe('misc services', () => {
     vi.clearAllMocks();
   });
 
-  describe('favoritesService.toggleFavorite', () => {
-    it('removes favorite if it exists', async () => {
-      // Mock existing finding
-      const mockSingle = vi.fn().mockResolvedValue({ data: { id: 'fav1' }, error: null });
-      const _mockSelectChain = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: mockSingle };
-      
-      // Mock delete
-      const mockDelete = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({}) });
+  describe('favoritesService.addFavorite', () => {
+    it('upserts favorite', async () => {
+      const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+      mockSupabase.from.mockReturnValue({ upsert: mockUpsert });
 
-      mockSupabase.from.mockImplementation((table) => {
-          if (mockDelete.mock.calls.length > 0 && table === 'favorites') return { delete: mockDelete }; 
-          // A bit tricky to distinguish calls to same table in same flow without complex mock.
-          // Let's simplified mock returning object with ALL methods
-          return {
-              select: vi.fn().mockReturnThis(),
-              eq: vi.fn().mockReturnThis(),
-              single: mockSingle,
-              delete: mockDelete,
-              insert: vi.fn()
-          };
-      });
-
-      const result = await favoritesService.toggleFavorite({ user_id: 'u1', item_id: 'i1' });
-      expect(result).toBe(false); // Removed
-      expect(mockDelete).toHaveBeenCalled();
+      await favoritesService.addFavorite({ user_id: 'u1', item_id: 'i1' });
+      expect(mockUpsert).toHaveBeenCalledWith(
+        [{ user_id: 'u1', item_id: 'i1' }],
+        { onConflict: 'user_id,item_id', ignoreDuplicates: true }
+      );
     });
 
-    it('adds favorite if it does not exist', async () => {
-      // Mock NOT found
-      const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
-      
-       // Mock insert
-      const mockInsert = vi.fn().mockResolvedValue({});
-
+    it('throws on DB error', async () => {
       mockSupabase.from.mockReturnValue({
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          single: mockSingle,
-          delete: vi.fn(),
-          insert: mockInsert
+        upsert: vi.fn().mockResolvedValue({ error: { message: 'DB error' } })
       });
+      await expect(favoritesService.addFavorite({ user_id: 'u1', item_id: 'i1' })).rejects.toBeTruthy();
+    });
+  });
 
-      const result = await favoritesService.toggleFavorite({ user_id: 'u1', item_id: 'i1' });
-      expect(result).toBe(true); // Added
-      expect(mockInsert).toHaveBeenCalled();
+  describe('favoritesService.removeFavorite', () => {
+    it('deletes favorite by user_id and item_id', async () => {
+      const mockEq2 = vi.fn().mockResolvedValue({ error: null });
+      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockEq1 });
+      mockSupabase.from.mockReturnValue({ delete: mockDelete });
+
+      await favoritesService.removeFavorite({ user_id: 'u1', item_id: 'i1' });
+      expect(mockDelete).toHaveBeenCalled();
+      expect(mockEq1).toHaveBeenCalledWith('user_id', 'u1');
+      expect(mockEq2).toHaveBeenCalledWith('item_id', 'i1');
+    });
+
+    it('throws on DB error', async () => {
+      mockSupabase.from.mockReturnValue({
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: { message: 'DB error' } })
+          })
+        })
+      });
+      await expect(favoritesService.removeFavorite({ user_id: 'u1', item_id: 'i1' })).rejects.toBeTruthy();
     });
   });
 

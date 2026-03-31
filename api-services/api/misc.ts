@@ -28,31 +28,31 @@ export const messagesService = {
 };
 
 export const favoritesService = {
-    async toggleFavorite(data: { user_id: string; item_id: string }) {
-        // Check if exists
-        const { data: existing } = await supabase
+    async addFavorite(data: { user_id: string; item_id: string }) {
+        const { error } = await supabase
             .from('favorites')
-            .select('*')
-            .eq('user_id', data.user_id)
-            .eq('item_id', data.item_id)
-            .single();
+            .upsert([data], { onConflict: 'user_id,item_id', ignoreDuplicates: true });
 
-        if (existing) {
-            await supabase.from('favorites').delete().eq('id', existing.id);
-            return false; // Removed
-        } else {
-            await supabase.from('favorites').insert([data]);
-            return true; // Added
-        }
+        if (error) throw error;
+    },
+
+    async removeFavorite(data: { user_id: string; item_id: string }) {
+        const { error } = await supabase
+            .from('favorites')
+            .delete()
+            .eq('user_id', data.user_id)
+            .eq('item_id', data.item_id);
+
+        if (error) throw error;
     },
 
     async getFavorites(userId: string) {
         const { data, error } = await supabase
             .from('favorites')
-            .select('item_id') // We only need IDs to filter/check
+            .select('item_id')
             .eq('user_id', userId);
 
         if (error) throw error;
-        return data.map((f: any) => f.item_id); // Returns array of IDs
+        return data.map((f: any) => f.item_id);
     }
 };

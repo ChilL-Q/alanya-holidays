@@ -14,7 +14,8 @@ vi.mock('./AuthContext', () => ({
 vi.mock('../api-services', () => ({
     db: {
         getFavorites: vi.fn().mockResolvedValue([]),
-        toggleFavorite: vi.fn().mockResolvedValue(undefined)
+        addFavorite: vi.fn().mockResolvedValue(undefined),
+        removeFavorite: vi.fn().mockResolvedValue(undefined)
     }
 }));
 
@@ -49,7 +50,7 @@ describe('FavoritesContext', () => {
         localStorageMock.getItem.mockImplementation((key: string) => localStorageStore[key] || null);
         (useAuth as any).mockReturnValue({ user: null, isAuthenticated: false });
         (db.getFavorites as any).mockResolvedValue([]);
-        (db.toggleFavorite as any).mockResolvedValue(undefined);
+        (db.addFavorite as any).mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -124,7 +125,7 @@ describe('FavoritesContext', () => {
                 await result.current.addFavorite('item-1');
             });
 
-            expect(db.toggleFavorite).toHaveBeenCalledWith({
+            expect(db.addFavorite).toHaveBeenCalledWith({
                 user_id: 'user-123',
                 item_id: 'item-1'
             });
@@ -149,7 +150,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.toggleFavorite as any).mockRejectedValue(new Error('DB error'));
+            (db.addFavorite as any).mockRejectedValue(new Error('DB error'));
 
             const { result } = renderHook(() => useFavorites(), { wrapper });
 
@@ -200,7 +201,7 @@ describe('FavoritesContext', () => {
                 await result.current.removeFavorite('item-1');
             });
 
-            expect(db.toggleFavorite).toHaveBeenCalledWith({
+            expect(db.removeFavorite).toHaveBeenCalledWith({
                 user_id: 'user-123',
                 item_id: 'item-1'
             });
@@ -227,7 +228,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.toggleFavorite as any).mockRejectedValue(new Error('DB error'));
+            (db.removeFavorite as any).mockRejectedValue(new Error('DB error'));
 
             localStorageStore['favorites'] = JSON.stringify(['item-1', 'item-2']);
 
@@ -303,7 +304,7 @@ describe('FavoritesContext', () => {
                 await result.current.toggleFavorite('item-1');
             });
 
-            expect(db.toggleFavorite).toHaveBeenCalledWith({
+            expect(db.addFavorite).toHaveBeenCalledWith({
                 user_id: 'user-123',
                 item_id: 'item-1'
             });
