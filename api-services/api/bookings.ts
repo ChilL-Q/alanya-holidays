@@ -205,7 +205,7 @@ export const bookingsService = {
     },
 
     // Host Bookings (New Efficient Method)
-    async getBookingsForHost(hostId: string) {
+    async getBookingsForHost(hostId: string, dateFrom?: string, dateTo?: string) {
         // 1. Get all properties owned by host
         const { data: properties } = await supabase
             .from('properties')
@@ -218,12 +218,19 @@ export const bookingsService = {
         const propertyMap = new Map(properties.map(p => [p.id, p]));
 
         // 2. Get bookings for these properties
-        const { data: bookings, error } = await supabase
+        let query = supabase
             .from('bookings')
             .select('*')
             .in('item_id', propertyIds)
             .eq('item_type', 'property') // Only property bookings for now
+            .eq('status', 'confirmed')
             .order('check_in', { ascending: true }); // Upcoming first
+
+        // Filter by date range if provided
+        if (dateFrom) query = query.gte('check_out', dateFrom);
+        if (dateTo) query = query.lte('check_in', dateTo);
+
+        const { data: bookings, error } = await query;
 
         if (error) throw error;
 
