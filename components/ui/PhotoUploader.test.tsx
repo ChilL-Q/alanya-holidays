@@ -67,7 +67,7 @@ describe('PhotoUploader', () => {
     });
 
     it('respects maxFiles limit', () => {
-        const { rerender } = render(<PhotoUploader {...defaultProps} maxFiles={2} />);
+        render(<PhotoUploader {...defaultProps} maxFiles={2} />);
 
         const file1 = new File(['image'], 'test1.jpg', { type: 'image/jpeg' });
         const file2 = new File(['image'], 'test2.jpg', { type: 'image/jpeg' });

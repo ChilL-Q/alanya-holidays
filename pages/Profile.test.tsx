@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Profile } from './Profile';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -27,7 +27,7 @@ vi.mock('react-hot-toast', () => ({
 
 // Mock components
 vi.mock('../components/user/profile/ProfileSidebar', () => ({
-    ProfileSidebar: ({ user, activeTab, setActiveTab, handleLogout }: any) => (
+    ProfileSidebar: ({ user, activeTab: _activeTab, setActiveTab, handleLogout }: any) => (
         <div data-testid="profile-sidebar">
             <div data-testid="user-name">{user.name}</div>
             <div data-testid="user-email">{user.email}</div>
@@ -365,7 +365,6 @@ describe('Profile Page', () => {
         });
 
         it('upgrades user to host successfully', async () => {
-            const { db } = await import('../api-services');
             const updateUserMock = vi.fn();
 
             renderProfile({ updateUser: updateUserMock });

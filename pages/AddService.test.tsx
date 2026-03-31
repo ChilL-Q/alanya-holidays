@@ -85,9 +85,6 @@ describe('AddService Component', () => {
         renderWithRouter(<AddService />);
         fireEvent.click(screen.getByText('add_service.cat.transportation'));
         // Should be on step 1 now - back button should exist
-        const backBtn = screen.getAllByRole('button').find(
-            b => b.querySelector('svg') !== null
-        );
         // Back button is the first button in the header
         const allBtns = screen.getAllByRole('button');
         // Find ArrowLeft button (has no text)
