@@ -96,13 +96,13 @@ vi.mock('../components/user/profile/ProfileSecurityTab', () => ({
         <div data-testid="security-tab">
             <input
                 value={emailForm.email}
-                onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
+                onChange={() => {}}
                 data-testid="email-input"
             />
             <input
                 type="password"
                 value={passwordForm.newPassword}
-                onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                onChange={() => {}}
                 data-testid="password-input"
             />
             <button onClick={handleChangeEmail} data-testid="change-email-button">Change Email</button>
@@ -340,7 +340,7 @@ describe('Profile Page', () => {
 
         it('shows loading state while saving profile', async () => {
             const { db } = await import('../api-services');
-            db.updateUserProfile.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+            (db.updateUserProfile as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
             renderProfile();
 
@@ -392,7 +392,7 @@ describe('Profile Page', () => {
         it('loads bookings data on mount', async () => {
             const { db } = await import('../api-services');
             const mockBookings = [{ id: '1', status: 'confirmed' }];
-            db.getBookings.mockResolvedValue(mockBookings);
+            (db.getBookings as ReturnType<typeof vi.fn>).mockResolvedValue(mockBookings);
 
             renderProfile();
 
@@ -405,7 +405,7 @@ describe('Profile Page', () => {
             const { db } = await import('../api-services');
             const hostUser = { ...mockUser, role: 'host' };
             const mockProperties = [{ id: 'prop-1' }];
-            db.getPropertiesByHost.mockResolvedValue(mockProperties);
+            (db.getPropertiesByHost as ReturnType<typeof vi.fn>).mockResolvedValue(mockProperties);
 
             renderProfile({ user: hostUser });
 
@@ -418,7 +418,7 @@ describe('Profile Page', () => {
             const { db } = await import('../api-services');
             const hostUser = { ...mockUser, role: 'host' };
             const mockServices = [{ id: 'service-1' }];
-            db.getServicesByProvider.mockResolvedValue(mockServices);
+            (db.getServicesByProvider as ReturnType<typeof vi.fn>).mockResolvedValue(mockServices);
 
             renderProfile({ user: hostUser });
 
@@ -429,7 +429,7 @@ describe('Profile Page', () => {
 
         it('loads user profile data on mount', async () => {
             const { db } = await import('../api-services');
-            db.getUserProfile.mockResolvedValue({
+            (db.getUserProfile as ReturnType<typeof vi.fn>).mockResolvedValue({
                 full_name: 'Loaded Name',
                 phone: '+90555000',
             });
@@ -486,7 +486,7 @@ describe('Profile Page', () => {
     describe('Error Handling', () => {
         it('handles profile update error', async () => {
             const { db } = await import('../api-services');
-            db.updateUserProfile.mockRejectedValue(new Error('Update failed'));
+            (db.updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Update failed'));
 
             renderProfile();
 
@@ -500,7 +500,7 @@ describe('Profile Page', () => {
 
         it('handles avatar upload error', async () => {
             const { db } = await import('../api-services');
-            db.uploadAvatar.mockRejectedValue(new Error('Upload failed'));
+            (db.uploadAvatar as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Upload failed'));
 
             renderProfile();
 

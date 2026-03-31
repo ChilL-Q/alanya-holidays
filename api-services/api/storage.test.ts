@@ -7,6 +7,7 @@ const { mockSupabase } = vi.hoisted(() => {
         mockSupabase: {
             storage: {
                 from: vi.fn(),
+                listBuckets: vi.fn(),
             }
         }
     }

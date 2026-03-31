@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { PropertyCard } from './PropertyCard';
-import { Property } from '../types/index';
+import { Property } from '../../types/index';
 
 // Mock contexts
 const mockIsFavorite = vi.fn();
@@ -33,16 +33,21 @@ vi.mock('../../context/LanguageContext', () => ({
 
 const mockProperty: Property = {
   id: 'prop-123',
-  ref_id: 'REF-123',
+  ref_id: 123,
   title: 'Luxury Sea View Villa',
   location: 'Alanya, Turkey',
   pricePerNight: 150,
   beds: 3,
   bedrooms: 2,
+  bathrooms: 1,
   guests: 6,
   rating: 4.8,
   reviewsCount: 24,
   image: 'https://example.com/image.jpg',
+  images: [],
+  description: '',
+  amenities: [],
+  hostName: 'Host',
   isPromoted: false,
 };
 
@@ -101,7 +106,7 @@ describe('PropertyCard', () => {
       renderPropertyCard();
 
       const link = screen.getByRole('link');
-      expect(link).toHaveAttribute('href', '/property/REF-123');
+      expect(link).toHaveAttribute('href', '/property/123');
     });
 
     it('should use id in link if ref_id is not available', () => {

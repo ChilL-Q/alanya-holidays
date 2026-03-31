@@ -53,8 +53,8 @@ describe('CartContext', () => {
 
     it('should load cart from localStorage on initialization', () => {
       const mockCart: CartItem[] = [
-        { id: '1', name: 'Item 1', price: 10, quantity: 1 },
-        { id: '2', name: 'Item 2', price: 20, quantity: 1 },
+        { id: '1', type: 'service', title: 'Item 1', price: 10 },
+        { id: '2', type: 'service', title: 'Item 2', price: 20 },
       ];
       localStorageMock.getItem.mockReturnValue(JSON.stringify(mockCart));
 
@@ -78,7 +78,7 @@ describe('CartContext', () => {
   describe('addToCart', () => {
     it('should add item to empty cart', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -91,8 +91,8 @@ describe('CartContext', () => {
 
     it('should add multiple items to cart', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item1: CartItem = { id: '1', name: 'Item 1', price: 10, quantity: 1 };
-      const item2: CartItem = { id: '2', name: 'Item 2', price: 20, quantity: 1 };
+      const item1: CartItem = { id: '1', type: 'service', title: 'Item 1', price: 10 };
+      const item2: CartItem = { id: '2', type: 'service', title: 'Item 2', price: 20 };
 
       act(() => {
         result.current.addToCart(item1);
@@ -105,7 +105,7 @@ describe('CartContext', () => {
 
     it('should prevent duplicate items', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -117,7 +117,7 @@ describe('CartContext', () => {
 
     it('should auto-open cart when adding first item', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -128,7 +128,7 @@ describe('CartContext', () => {
 
     it('should save cart to localStorage when adding item', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -141,8 +141,8 @@ describe('CartContext', () => {
   describe('removeFromCart', () => {
     it('should remove item from cart', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item1: CartItem = { id: '1', name: 'Item 1', price: 10, quantity: 1 };
-      const item2: CartItem = { id: '2', name: 'Item 2', price: 20, quantity: 1 };
+      const item1: CartItem = { id: '1', type: 'service', title: 'Item 1', price: 10 };
+      const item2: CartItem = { id: '2', type: 'service', title: 'Item 2', price: 20 };
 
       act(() => {
         result.current.addToCart(item1);
@@ -167,7 +167,7 @@ describe('CartContext', () => {
 
     it('should save cart to localStorage when removing item', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -181,8 +181,8 @@ describe('CartContext', () => {
   describe('clearCart', () => {
     it('should remove all items from cart', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item1: CartItem = { id: '1', name: 'Item 1', price: 10, quantity: 1 };
-      const item2: CartItem = { id: '2', name: 'Item 2', price: 20, quantity: 1 };
+      const item1: CartItem = { id: '1', type: 'service', title: 'Item 1', price: 10 };
+      const item2: CartItem = { id: '2', type: 'service', title: 'Item 2', price: 20 };
 
       act(() => {
         result.current.addToCart(item1);
@@ -196,7 +196,7 @@ describe('CartContext', () => {
 
     it('should save cart to localStorage when clearing', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item: CartItem = { id: '1', name: 'Test Item', price: 25, quantity: 1 };
+      const item: CartItem = { id: '1', type: 'service', title: 'Test Item', price: 25 };
 
       act(() => {
         result.current.addToCart(item);
@@ -210,9 +210,9 @@ describe('CartContext', () => {
   describe('cart total', () => {
     it('should calculate total correctly', () => {
       const { result } = renderHook(() => useCart(), { wrapper });
-      const item1: CartItem = { id: '1', name: 'Item 1', price: 15, quantity: 1 };
-      const item2: CartItem = { id: '2', name: 'Item 2', price: 25, quantity: 1 };
-      const item3: CartItem = { id: '3', name: 'Item 3', price: 30, quantity: 1 };
+      const item1: CartItem = { id: '1', type: 'service', title: 'Item 1', price: 15 };
+      const item2: CartItem = { id: '2', type: 'service', title: 'Item 2', price: 25 };
+      const item3: CartItem = { id: '3', type: 'service', title: 'Item 3', price: 30 };
 
       act(() => {
         result.current.addToCart(item1);
