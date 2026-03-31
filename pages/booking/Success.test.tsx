@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BookingSuccess } from './Success';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { supabase } from '../../api-services/supabase';
 
 // Mock Language Context
 vi.mock('../../context/LanguageContext', () => ({
@@ -11,34 +12,60 @@ vi.mock('../../context/LanguageContext', () => ({
     })
 }));
 
+// Mock Currency Context
+vi.mock('../../context/CurrencyContext', () => ({
+    useCurrency: () => ({
+        formatPrice: (amount: number) => `€${amount.toFixed(2)}`
+    })
+}));
+
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-    CheckCircle: ({ _size, className }: any) => <svg data-testid="check-circle-icon" className={className} />,
-    Home: ({ _size, className }: any) => <svg data-testid="home-icon" className={className} />,
-    Calendar: ({ _size, className }: any) => <svg data-testid="calendar-icon" className={className} />
+    CheckCircle: ({ className }: any) => <svg data-testid="check-circle-icon" className={className} />,
+    Home: ({ className }: any) => <svg data-testid="home-icon" className={className} />,
+    Calendar: ({ className }: any) => <svg data-testid="calendar-icon" className={className} />,
+    AlertCircle: ({ className }: any) => <svg data-testid="alert-circle-icon" className={className} />,
+    Loader2: ({ className }: any) => <svg data-testid="loader-icon" className={className} />,
+    Hash: ({ className }: any) => <svg data-testid="hash-icon" className={className} />,
+    Clock: ({ className }: any) => <svg data-testid="clock-icon" className={className} />
+}));
+
+// Mock Supabase
+vi.mock('../../api-services/supabase', () => ({
+    supabase: {
+        from: vi.fn(() => ({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn()
+                }))
+            }))
+        }))
+    }
 }));
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
+let mockSearchParams = new URLSearchParams('session_id=sess_123');
+
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as any;
     return {
-        ...(actual as object),
+        ...actual,
         useNavigate: () => mockNavigate,
-        useSearchParams: () => [new URLSearchParams(), vi.fn()]
+        useSearchParams: () => [mockSearchParams, vi.fn()]
     };
 });
 
 describe('BookingSuccess', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockNavigate.mockClear();
+        mockSearchParams = new URLSearchParams('session_id=sess_123');
     });
 
-    const renderBookingSuccess = (sessionId: string | null = 'sess_123', initialEntry = '/booking/success') => {
+    const renderBookingSuccess = (sessionId: string | null = 'sess_123') => {
         const params = sessionId ? `?session_id=${sessionId}` : '';
         return render(
-            <MemoryRouter initialEntries={[`${initialEntry}${params}`]}>
+            <MemoryRouter initialEntries={[`/booking/success${params}`]}>
                 <Routes>
                     <Route path="/booking/success" element={<BookingSuccess />} />
                 </Routes>
@@ -46,376 +73,100 @@ describe('BookingSuccess', () => {
         );
     };
 
-    describe('Redirect without Session ID', () => {
-        it('redirects to home when no session_id is provided', async () => {
-            // Mock useSearchParams to return null session_id
-            vi.mock('react-router-dom', async () => {
-                const actual = await vi.importActual('react-router-dom');
-                return {
-                    ...(actual as object),
-                    useNavigate: () => mockNavigate,
-                    useSearchParams: () => [new URLSearchParams(''), vi.fn()]
-                };
-            });
+    it('redirects to home if no session_id is provided', async () => {
+        mockSearchParams = new URLSearchParams('');
+        
+        renderBookingSuccess(null);
 
-            // Re-import after mock update
-            const { BookingSuccess: BookingSuccessNoSession } = await import('./Success');
-
-            render(
-                <MemoryRouter initialEntries={['/booking/success']}>
-                    <Routes>
-                        <Route path="/booking/success" element={<BookingSuccessNoSession />} />
-                    </Routes>
-                </MemoryRouter>
-            );
-
-            await waitFor(() => {
-                expect(mockNavigate).toHaveBeenCalledWith('/');
-            });
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/');
         });
     });
 
-    describe('Success Page Display', () => {
-        it('renders success page with check circle icon', async () => {
-            renderBookingSuccess('sess_123');
+    it('shows loading state initially', async () => {
+        // Mock a slow response
+        vi.mocked(supabase.from).mockReturnValue({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn(() => new Promise(() => {})) // Never resolves
+                }))
+            }))
+        } as any);
 
-            await waitFor(() => {
-                expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
-            });
-        });
+        renderBookingSuccess('sess_123');
 
-        it('renders success title', async () => {
-            renderBookingSuccess('sess_123');
+        expect(screen.getByTestId('loader-icon')).toBeInTheDocument();
+        expect(screen.getByText(/Verifying your payment/)).toBeInTheDocument();
+    });
 
-            await waitFor(() => {
-                expect(screen.getByText('booking.success.title')).toBeInTheDocument();
-            });
-        });
+    it('shows success state when booking is confirmed', async () => {
+        const mockBooking = {
+            id: 'BOOKING123',
+            status: 'confirmed',
+            payment_status: 'paid',
+            check_in: '2026-04-01',
+            check_out: '2026-04-05',
+            total_price: 500
+        };
 
-        it('renders success message', async () => {
-            renderBookingSuccess('sess_123');
+        vi.mocked(supabase.from).mockReturnValue({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                }))
+            }))
+        } as any);
 
-            await waitFor(() => {
-                expect(screen.getByText('booking.success.message')).toBeInTheDocument();
-            });
-        });
+        renderBookingSuccess('sess_123');
 
-        it('renders check circle icon with correct styling', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const icon = screen.getByTestId('check-circle-icon');
-                expect(icon).toHaveClass('text-green-600');
-                expect(icon).toHaveClass('dark:text-green-400');
-            });
-        });
-
-        it('renders icon container with correct styling', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const iconContainer = screen.getByTestId('check-circle-icon').parentElement;
-                expect(iconContainer).toHaveClass('bg-green-100');
-                expect(iconContainer).toHaveClass('dark:bg-green-900/30');
-                expect(iconContainer).toHaveClass('rounded-full');
-            });
-        });
-
-        it('renders main container with correct styling', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const card = document.querySelector('.rounded-3xl.shadow-xl');
-                expect(card).toHaveClass('bg-white');
-                expect(card).toHaveClass('dark:bg-slate-800/80');
-            });
-        });
-
-        it('renders page with correct background', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const pageContainer = document.querySelector('.min-h-screen');
-                expect(pageContainer).toHaveClass('bg-slate-50');
-                expect(pageContainer).toHaveClass('dark:bg-slate-900');
-            });
-        });
-
-        it('renders with animation classes', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const card = document.querySelector('.animate-in');
-                expect(card).toBeInTheDocument();
-                expect(card).toHaveClass('fade-in');
-                expect(card).toHaveClass('zoom-in');
-            });
+        await waitFor(() => {
+            expect(screen.getByText('booking.success.title')).toBeInTheDocument();
+            expect(screen.getByText('BOOKING1')).toBeInTheDocument(); // first 8 chars
+            expect(screen.getByText(/€500\.00/)).toBeInTheDocument();
+            expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
         });
     });
 
-    describe('Navigation Buttons', () => {
-        it('renders "View My Bookings" button with Calendar icon', async () => {
-            renderBookingSuccess('sess_123');
+    it('shows error state when booking status is not confirmed', async () => {
+        const mockBooking = {
+            id: 'BOOKING123',
+            status: 'pending',
+            payment_status: 'pending',
+            check_in: '2026-04-01',
+            check_out: '2026-04-05',
+            total_price: 500
+        };
 
-            await waitFor(() => {
-                expect(screen.getByText('booking.success.my_bookings')).toBeInTheDocument();
-                expect(screen.getByTestId('calendar-icon')).toBeInTheDocument();
-            });
-        });
+        vi.mocked(supabase.from).mockReturnValue({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                }))
+            }))
+        } as any);
 
-        it('renders "Return to Home" button with Home icon', async () => {
-            renderBookingSuccess('sess_123');
+        renderBookingSuccess('sess_123');
 
-            await waitFor(() => {
-                expect(screen.getByText('booking.success.home')).toBeInTheDocument();
-                expect(screen.getByTestId('home-icon')).toBeInTheDocument();
-            });
-        });
-
-        it('renders "View My Bookings" button with correct link', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const bookingsLink = screen.getByText('booking.success.my_bookings').closest('a');
-                expect(bookingsLink).toHaveAttribute('href', '/inbox');
-            });
-        });
-
-        it('renders "Return to Home" button with correct link', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const homeLink = screen.getByText('booking.success.home').closest('a');
-                expect(homeLink).toHaveAttribute('href', '/');
-            });
-        });
-
-        it('renders "View My Bookings" button with correct styling', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const bookingsButton = screen.getByText('booking.success.my_bookings').closest('a');
-                expect(bookingsButton).toHaveClass('bg-teal-600');
-                expect(bookingsButton).toHaveClass('dark:bg-cyan-600');
-                expect(bookingsButton).toHaveClass('text-white');
-            });
-        });
-
-        it('renders "Return to Home" button with correct styling', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const homeButton = screen.getByText('booking.success.home').closest('a');
-                expect(homeButton).toHaveClass('bg-slate-100');
-                expect(homeButton).toHaveClass('dark:bg-slate-800/50');
-                expect(homeButton).toHaveClass('text-slate-900');
-            });
-        });
-
-        it('renders buttons with correct layout', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const buttonsContainer = screen.getByText('booking.success.my_bookings').closest('div');
-                expect(buttonsContainer).toHaveClass('space-y-3');
-            });
-        });
-
-        it('renders buttons as block elements with full width', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const bookingsButton = screen.getByText('booking.success.my_bookings').closest('a');
-                expect(bookingsButton).toHaveClass('block');
-                expect(bookingsButton).toHaveClass('w-full');
-            });
-        });
-
-        it('renders buttons with flex layout for icons', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const bookingsButton = screen.getByText('booking.success.my_bookings').closest('a');
-                expect(bookingsButton).toHaveClass('flex');
-                expect(bookingsButton).toHaveClass('items-center');
-                expect(bookingsButton).toHaveClass('justify-center');
-                expect(bookingsButton).toHaveClass('gap-2');
-            });
+        await waitFor(() => {
+            expect(screen.getByText('Payment Pending')).toBeInTheDocument();
+            expect(screen.getByText(/Your payment is being processed/)).toBeInTheDocument();
+            expect(screen.getByTestId('alert-circle-icon')).toBeInTheDocument();
         });
     });
 
-    describe('Responsive Layout', () => {
-        it('renders with correct max-width container', async () => {
-            renderBookingSuccess('sess_123');
+    it('redirects to home if booking is not found', async () => {
+        vi.mocked(supabase.from).mockReturnValue({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } })
+                }))
+            }))
+        } as any);
 
-            await waitFor(() => {
-                const card = document.querySelector('.max-w-md');
-                expect(card).toBeInTheDocument();
-            });
-        });
+        renderBookingSuccess('sess_123');
 
-        it('renders with correct padding', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const card = document.querySelector('.p-8');
-                expect(card).toBeInTheDocument();
-            });
-        });
-
-        it('renders page with flex layout for centering', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const pageContainer = document.querySelector('.min-h-screen');
-                expect(pageContainer).toHaveClass('flex');
-                expect(pageContainer).toHaveClass('items-center');
-                expect(pageContainer).toHaveClass('justify-center');
-            });
-        });
-
-        it('renders with responsive padding', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const pageContainer = document.querySelector('.min-h-screen');
-                expect(pageContainer).toHaveClass('px-4');
-            });
-        });
-    });
-
-    describe('Typography', () => {
-        it('renders title with correct typography', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const title = screen.getByText('booking.success.title');
-                expect(title).toHaveClass('text-2xl');
-                expect(title).toHaveClass('font-bold');
-                expect(title).toHaveClass('text-slate-900');
-            });
-        });
-
-        it('renders message with correct typography', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const message = screen.getByText('booking.success.message');
-                expect(message).toHaveClass('text-slate-600');
-                expect(message).toHaveClass('dark:text-slate-400');
-            });
-        });
-
-        it('renders button text with correct typography', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const buttonText = screen.getByText('booking.success.my_bookings');
-                expect(buttonText).toHaveClass('font-semibold');
-            });
-        });
-    });
-
-    describe('Dark Mode Support', () => {
-        it('renders card with dark mode background', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const card = document.querySelector('.dark\\:bg-slate-800\\/80');
-                expect(card).toBeInTheDocument();
-            });
-        });
-
-        it('renders title with dark mode text color', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const title = screen.getByText('booking.success.title');
-                expect(title).toHaveClass('dark:text-white');
-            });
-        });
-
-        it('renders icon with dark mode color', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const icon = screen.getByTestId('check-circle-icon');
-                expect(icon).toHaveClass('dark:text-green-400');
-            });
-        });
-
-        it('renders home button with dark mode hover', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const homeButton = screen.getByText('booking.success.home').closest('a');
-                expect(homeButton).toHaveClass('dark:hover:bg-slate-600');
-                expect(homeButton).toHaveClass('dark:text-white');
-            });
-        });
-    });
-
-    describe('Accessibility', () => {
-        it('renders icons with proper SVG structure', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const checkIcon = screen.getByTestId('check-circle-icon');
-                expect(checkIcon.tagName).toBe('svg');
-            });
-        });
-
-        it('renders links with proper anchor structure', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const bookingsLink = screen.getByText('booking.success.my_bookings').closest('a');
-                expect(bookingsLink?.tagName).toBe('A');
-                expect(bookingsLink).toHaveAttribute('href');
-            });
-        });
-
-        it('renders page with semantic structure', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const heading = screen.getByRole('heading', { level: 1 });
-                expect(heading).toBeInTheDocument();
-            });
-        });
-    });
-
-    describe('Component Structure', () => {
-        it('renders complete component structure', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
-                expect(screen.getByText('booking.success.title')).toBeInTheDocument();
-                expect(screen.getByText('booking.success.message')).toBeInTheDocument();
-                expect(screen.getByText('booking.success.my_bookings')).toBeInTheDocument();
-                expect(screen.getByText('booking.success.home')).toBeInTheDocument();
-            });
-        });
-
-        it('renders icon container with correct dimensions', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const iconContainer = screen.getByTestId('check-circle-icon').parentElement;
-                expect(iconContainer).toHaveClass('w-20');
-                expect(iconContainer).toHaveClass('h-20');
-            });
-        });
-
-        it('renders icon with correct classes', async () => {
-            renderBookingSuccess('sess_123');
-
-            await waitFor(() => {
-                const icon = screen.getByTestId('check-circle-icon');
-                expect(icon).toHaveClass('w-10');
-                expect(icon).toHaveClass('h-10');
-            });
+        await waitFor(() => {
+            expect(mockNavigate).toHaveBeenCalledWith('/');
         });
     });
 });
