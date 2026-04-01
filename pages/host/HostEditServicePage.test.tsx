@@ -1,8 +1,29 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
 import { HostEditServicePage } from './HostEditServicePage';
 import { db } from '../../api-services';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+
+// Rule 1: vi.hoisted for shared mocks
+const { mockNavigate, mockToast } = vi.hoisted(() => ({
+    mockNavigate: vi.fn(),
+    mockToast: {
+        success: vi.fn(),
+        error: vi.fn(),
+        loading: vi.fn()
+    }
+}));
+
+// Rule 2: Standard mocks
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as any;
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+        useParams: () => ({ id: 'service-1' })
+    };
+});
 
 vi.mock('../../context/AuthContext', () => ({
     useAuth: () => ({
@@ -11,37 +32,60 @@ vi.mock('../../context/AuthContext', () => ({
     })
 }));
 
-vi.mock('../../api-services', () => ({
-    db: {
-        getService: vi.fn(),
-        updateService: vi.fn(),
-        requestServiceUpdate: vi.fn()
-    }
-}));
-
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-    const actual = await vi.importActual('react-router-dom');
-    return {
-        ...actual as any,
-        useParams: () => ({ id: 'service-1' }),
-        useNavigate: () => mockNavigate
-    };
-});
-
-vi.mock('../../components/ui/PhotoUploader', () => ({
-    PhotoUploader: () => <div data-testid="photo-uploader-mock">Photo Uploader</div>
-}));
-
 vi.mock('react-hot-toast', () => ({
-    default: {
-        success: vi.fn(),
-        error: vi.fn()
-    }
+    default: mockToast
 }));
 
 vi.mock('../../hooks/useSaveShortcut', () => ({
     useSaveShortcut: vi.fn()
+}));
+
+// Rule 3: API mocks
+vi.mock('../../api-services', () => ({
+    db: {
+        getService: vi.fn(),
+        updateService: vi.fn(),
+        requestServiceUpdate: vi.fn(),
+        uploadImage: vi.fn()
+    }
+}));
+
+// Mock subcomponents
+vi.mock('../../components/host/services/HostServiceBasicForm', () => ({
+    HostServiceBasicForm: ({ formData, setFormData }: any) => (
+        <div data-testid="basic-form">
+            <input 
+                aria-label="Title" 
+                value={formData.title} 
+                onChange={e => setFormData({ ...formData, title: e.target.value })} 
+            />
+            <input 
+                aria-label="Price" 
+                value={formData.price} 
+                onChange={e => setFormData({ ...formData, price: e.target.value })} 
+            />
+            <select 
+                aria-label="Type" 
+                value={formData.type} 
+                onChange={e => setFormData({ ...formData, type: e.target.value })}
+            >
+                <option value="car">Car</option>
+                <option value="tour">Tour</option>
+            </select>
+        </div>
+    )
+}));
+
+vi.mock('../../components/host/services/HostServiceFeaturesForm', () => ({
+    HostServiceFeaturesForm: () => <div data-testid="features-form" />
+}));
+
+vi.mock('../../components/ui/PhotoUploader', () => ({
+    PhotoUploader: ({ onChange }: any) => (
+        <div data-testid="photo-uploader">
+            <button type="button" onClick={() => onChange([new File([], 'new.jpg')])}>Add Photo</button>
+        </div>
+    )
 }));
 
 describe('HostEditServicePage', () => {
@@ -49,33 +93,137 @@ describe('HostEditServicePage', () => {
         vi.clearAllMocks();
     });
 
+    const renderPage = () => {
+        return render(
+            <MemoryRouter initialEntries={['/host/services/service-1/edit']}>
+                <Routes>
+                    <Route path="/host/services/:id/edit" element={<HostEditServicePage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+    };
+
+    const mockService = {
+        id: 'service-1',
+        type: 'car',
+        title: 'Original Car',
+        description: 'Desc',
+        price: 50,
+        images: ['img1.jpg'],
+        features: { brand: 'Fiat' }
+    };
+
     it('renders service details after loading', async () => {
-        (db.getService as any).mockResolvedValue({
-            id: 'service-1',
-            type: 'car',
-            title: 'Test Car',
-            price: 50,
-            features: {
-                brand: 'Ford',
-                model: 'Mustang'
-            }
-        });
-
-        await act(async () => {
-            render(
-                <BrowserRouter>
-                    <HostEditServicePage />
-                </BrowserRouter>
-            );
-        });
-
+        (db.getService as any).mockResolvedValue(mockService);
+        renderPage();
+        expect(screen.getByText(/Loading/i)).toBeInTheDocument();
         await waitFor(() => {
-            expect(db.getService).toHaveBeenCalledWith('service-1');
+            expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument();
+        });
+    });
+
+    it('handles load failure', async () => {
+        (db.getService as any).mockRejectedValue(new Error('Load failed'));
+        renderPage();
+        await waitFor(() => {
+            expect(mockToast.error).toHaveBeenCalledWith('Failed to load service');
+            expect(mockNavigate).toHaveBeenCalledWith('/host/services');
+        });
+    });
+
+    it('submits changes that need approval', async () => {
+        (db.getService as any).mockResolvedValue(mockService);
+        (db.requestServiceUpdate as any).mockResolvedValue({});
+
+        renderPage();
+        await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
+
+        fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New Car Name' } });
+        
+        const submitBtn = screen.getByRole('button', { name: /Submit Changes/i });
+        await act(async () => {
+            fireEvent.click(submitBtn);
         });
 
-        expect(screen.getByDisplayValue('Test Car')).toBeInTheDocument();
-        expect(screen.getByDisplayValue('50')).toBeInTheDocument();
-        expect(screen.getByDisplayValue('Ford')).toBeInTheDocument();
-        expect(screen.getByText('Submit Changes')).toBeInTheDocument();
+        expect(db.requestServiceUpdate).toHaveBeenCalled();
+        expect(screen.getByText('Changes Submitted')).toBeInTheDocument();
+    });
+
+    it('submits changes directly if no approval needed', async () => {
+        (db.getService as any).mockResolvedValue(mockService);
+        (db.updateService as any).mockResolvedValue({});
+
+        renderPage();
+        await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
+
+        fireEvent.change(screen.getByLabelText('Price'), { target: { value: '100' } });
+        
+        const submitBtn = screen.getByRole('button', { name: /Submit Changes/i });
+        await act(async () => {
+            fireEvent.click(submitBtn);
+        });
+
+        expect(db.updateService).toHaveBeenCalled();
+        expect(mockToast.success).toHaveBeenCalledWith('Service updated successfully');
+    });
+
+    it('handles submit error', async () => {
+        (db.getService as any).mockResolvedValue(mockService);
+        (db.updateService as any).mockRejectedValue(new Error('Save failed'));
+
+        renderPage();
+        await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
+
+        fireEvent.change(screen.getByLabelText('Price'), { target: { value: '100' } });
+        
+        const submitBtn = screen.getByRole('button', { name: /Submit Changes/i });
+        await act(async () => {
+            fireEvent.click(submitBtn);
+        });
+
+        expect(mockToast.error).toHaveBeenCalledWith('Failed to submit changes');
+    });
+
+    it('handles image removal', async () => {
+        (db.getService as any).mockResolvedValue(mockService);
+        const { container } = renderPage();
+        
+        // Wait for images to load using container selector
+        await waitFor(() => {
+            const images = container.querySelectorAll('img');
+            expect(images.length).toBeGreaterThan(0);
+        });
+
+        // The trash button has a lucide-trash2 svg
+        const trashBtn = container.querySelector('svg.lucide-trash2')?.closest('button');
+        
+        if (trashBtn) {
+            fireEvent.click(trashBtn);
+            expect(container.querySelectorAll('img').length).toBe(0);
+        } else {
+            throw new Error('Trash button not found');
+        }
+    });
+
+    it('handles new photo upload during submit', async () => {
+        (db.getService as any).mockResolvedValue(mockService);
+        (db.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
+        (db.requestServiceUpdate as any).mockResolvedValue({});
+
+        renderPage();
+        await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
+
+        fireEvent.click(screen.getByText('Add Photo'));
+        
+        const submitBtn = screen.getByRole('button', { name: /Submit Changes/i });
+        
+        // When submitting is true, button text changes to "Saving..."
+        // We need to click it while it's still "Submit Changes"
+        await act(async () => {
+            fireEvent.click(submitBtn);
+        });
+
+        expect(db.uploadImage).toHaveBeenCalled();
+        expect(db.requestServiceUpdate).toHaveBeenCalled();
     });
 });
