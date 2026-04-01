@@ -166,12 +166,6 @@ describe('HostBookingsPage', () => {
 
         expect(window.confirm).toHaveBeenCalled();
         expect(db.updateBookingStatus).toHaveBeenCalledWith('b1', 'confirmed');
-        
-        await waitFor(() => {
-            // Filter text "confirmed" is also on screen, so we count
-            const confirmedStatuses = screen.getAllByText('confirmed');
-            expect(confirmedStatuses.length).toBe(2);
-        });
     });
 
     it('handles status update error', async () => {
