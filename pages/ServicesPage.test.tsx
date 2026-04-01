@@ -1,144 +1,162 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ServicesPage } from './ServicesPage';
+import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-// Mock Language Context
+// Rule 1 & 2: vi.hoisted + standard mocks
+const { mockNavigate } = vi.hoisted(() => ({
+    mockNavigate: vi.fn()
+}));
+
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as any;
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+    };
+});
+
 vi.mock('../context/LanguageContext', () => ({
     useLanguage: () => ({
-        t: (key: string) => key
+        t: (key: string) => key,
+        language: 'en'
     })
 }));
 
-// Mock Currency Context
 vi.mock('../context/CurrencyContext', () => ({
     useCurrency: () => ({
-        convertPrice: (price: number) => price,
-        formatPrice: (price: number) => `€${price}`,
+        formatPrice: (amount: number) => `€${amount}`,
+        convertPrice: (amount: number) => amount,
         currency: 'EUR'
     })
 }));
 
-// Mock useServicePrices
 vi.mock('../hooks/useServicePrices', () => ({
     useServicePrices: () => ({
-        minPrices: {}
+        minPrices: { 's1': 50 },
+        loading: false
     })
 }));
 
-// Mock Data
+// Rule 3: API/Data mocks
 vi.mock('../data/services', () => ({
     SERVICES_DATA: [
         {
-            id: 'car-rental-1',
+            id: 's1',
             category: 'transport',
             subcategory: 'rental',
-            title: 'Car Rental 1',
-            description: 'Desc 1',
-            price: 50,
-            priceLabel: '/day',
-            route: '/services/car-1'
+            brand: 'Fiat',
+            title: 'Fiat Egea',
+            description: 'Economy car',
+            price: 40,
+            priceLabel: '40/day',
+            image: 'fiat.jpg',
+            icon: 'car',
+            route: '/services/car-rental'
         },
         {
-            id: 'transfer-1',
-            category: 'transport',
-            subcategory: 'transfer',
-            title: 'Transfer 1',
-            description: 'Desc 2',
-            price: 100,
-            priceLabel: '/trip',
-            route: '/services/transfer-1'
-        },
-        {
-            id: 'other-service',
+            id: 's2',
             category: 'experiences',
-            title: 'Experience 1',
-            description: 'Desc 3',
-            price: 200,
-            route: '/services/exp-1'
+            title: 'Boat Trip',
+            description: 'Full day trip',
+            price: 60,
+            priceLabel: '60/person',
+            image: 'boat.jpg',
+            icon: 'ship',
+            route: '/services/boat-trip'
         }
     ]
 }));
 
-// Mock ServiceCard to avoid import issues in test environment
-vi.mock('../components/services/ServiceCard', () => ({
-    ServiceCard: ({ title }: any) => <div>{title}</div>
-}));
+// Import component after mocks
+import { ServicesPage } from './ServicesPage';
 
 describe('ServicesPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        window.scrollTo = vi.fn();
     });
 
-    it('renders services page', () => {
-        render(
-            <MemoryRouter initialEntries={['/services']}>
+    const renderServicesPage = (category?: string) => {
+        const path = category ? `/services/${category}` : '/services';
+        return render(
+            <MemoryRouter initialEntries={[path]}>
                 <Routes>
                     <Route path="/services" element={<ServicesPage />} />
-                </Routes>
-            </MemoryRouter>
-        );
-        expect(screen.getByText('services.hero.title')).toBeDefined();
-    });
-
-    it('shows all transport services by default', () => {
-        render(
-            <MemoryRouter initialEntries={['/services/transport']}>
-                <Routes>
                     <Route path="/services/:category" element={<ServicesPage />} />
                 </Routes>
             </MemoryRouter>
         );
-        expect(screen.getByText('Car Rental 1')).toBeDefined();
-        expect(screen.getByText('Transfer 1')).toBeDefined();
+    };
+
+    it('renders hero title and default category (transport)', () => {
+        renderServicesPage();
+        expect(screen.getByText('services.hero.title')).toBeInTheDocument();
+        expect(screen.getByText('Fiat Egea')).toBeInTheDocument();
+        expect(screen.queryByText('Boat Trip')).not.toBeInTheDocument();
     });
 
-    it('filters by rental subcategory', async () => {
-        render(
-            <MemoryRouter initialEntries={['/services/transport']}>
-                <Routes>
-                    <Route path="/services/:category" element={<ServicesPage />} />
-                </Routes>
-            </MemoryRouter>
-        );
-
-        const rentalButton = screen.getByText('Rentals');
-        fireEvent.click(rentalButton);
-
-        await waitFor(() => {
-            expect(screen.queryByText('Car Rental 1')).toBeDefined();
-            expect(screen.queryByText('Transfer 1')).toBeNull();
-        });
+    it('renders category from URL params', () => {
+        renderServicesPage('experiences');
+        expect(screen.getByText('Boat Trip')).toBeInTheDocument();
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
     });
 
-    it('filters by transfer subcategory', async () => {
-        render(
-            <MemoryRouter initialEntries={['/services/transport']}>
-                <Routes>
-                    <Route path="/services/:category" element={<ServicesPage />} />
-                </Routes>
-            </MemoryRouter>
-        );
-
-        const transferButton = screen.getByText('Transfers');
-        fireEvent.click(transferButton);
-
-        await waitFor(() => {
-            expect(screen.queryByText('Transfer 1')).toBeDefined();
-            expect(screen.queryByText('Car Rental 1')).toBeNull();
-        });
+    it('navigates when category tab is clicked', () => {
+        renderServicesPage();
+        const experiencesTab = screen.getByText('footer.experiences');
+        fireEvent.click(experiencesTab);
+        expect(mockNavigate).toHaveBeenCalledWith('/services/experiences');
     });
 
-    it('does not show transport filters for other categories', () => {
-        render(
-            <MemoryRouter initialEntries={['/services/experiences']}>
-                <Routes>
-                    <Route path="/services/:category" element={<ServicesPage />} />
-                </Routes>
-            </MemoryRouter>
-        );
+    it('filters transport by subcategory (rental/transfer)', () => {
+        renderServicesPage();
+        expect(screen.getByText('Fiat Egea')).toBeInTheDocument();
 
-        expect(screen.queryByText('All Transport')).toBeNull();
-        expect(screen.getByText('Experience 1')).toBeDefined();
+        const transferFilter = screen.getByText('Transfers');
+        fireEvent.click(transferFilter);
+
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
+        expect(screen.getByText('No services found matching your criteria.')).toBeInTheDocument();
+    });
+
+    it('shows and handles search filter', () => {
+        renderServicesPage();
+        fireEvent.click(screen.getByText('Show Filters'));
+
+        const searchInput = screen.getByPlaceholderText('Search services...');
+        fireEvent.change(searchInput, { target: { value: 'fiat' } });
+
+        expect(screen.getByText('Fiat Egea')).toBeInTheDocument();
+
+        fireEvent.change(searchInput, { target: { value: 'luxury' } });
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
+    });
+
+    it('filters by price range', () => {
+        renderServicesPage();
+        fireEvent.click(screen.getByText('Show Filters'));
+
+        const minPriceInput = screen.getByLabelText('Min Price (€)');
+        const maxPriceInput = screen.getByLabelText('Max Price (€)');
+
+        fireEvent.change(minPriceInput, { target: { value: '100' } });
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
+
+        fireEvent.change(minPriceInput, { target: { value: '0' } });
+        fireEvent.change(maxPriceInput, { target: { value: '30' } });
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
+    });
+
+    it('handles brand filter for transport', () => {
+        renderServicesPage();
+        fireEvent.click(screen.getByText('Show Filters'));
+
+        const brandSelect = screen.getByLabelText('Brand');
+        fireEvent.change(brandSelect, { target: { value: 'fiat' } });
+        expect(screen.getByText('Fiat Egea')).toBeInTheDocument();
+
+        fireEvent.change(brandSelect, { target: { value: 'bmw' } });
+        expect(screen.queryByText('Fiat Egea')).not.toBeInTheDocument();
     });
 });
