@@ -1,564 +1,319 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Profile } from './Profile';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { db } from '../api-services';
+import { toast } from 'react-hot-toast';
 
-// Mock api-services
+// Rule 1: vi.hoisted for shared mocks
+const { mockNavigate, mockLogout, mockUpdateUser, mockUpdateEmail, mockUpdatePassword } = vi.hoisted(() => ({
+    mockNavigate: vi.fn(),
+    mockLogout: vi.fn(),
+    mockUpdateUser: vi.fn().mockResolvedValue(undefined),
+    mockUpdateEmail: vi.fn().mockResolvedValue(undefined),
+    mockUpdatePassword: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Rule 2: Standard mocks
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as any;
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+    };
+});
+
+vi.mock('../context/AuthContext', () => ({
+    useAuth: () => ({
+        user: { id: 'user-123', name: 'Test User', email: 'test@example.com', role: 'guest' },
+        isAuthenticated: true,
+        logout: mockLogout,
+        updateUser: mockUpdateUser,
+        updateEmail: mockUpdateEmail,
+        updatePassword: mockUpdatePassword,
+    })
+}));
+
+vi.mock('../context/LanguageContext', () => ({
+    useLanguage: () => ({
+        t: (key: string) => key,
+        language: 'en'
+    })
+}));
+
+vi.mock('react-hot-toast', () => ({
+    toast: {
+        loading: vi.fn().mockReturnValue('toast-id'),
+        success: vi.fn(),
+        error: vi.fn(),
+    }
+}));
+
+// Rule 3: API mocks
 vi.mock('../api-services', () => ({
     db: {
         getBookings: vi.fn().mockResolvedValue([]),
         getPropertiesByHost: vi.fn().mockResolvedValue([]),
         getServicesByProvider: vi.fn().mockResolvedValue([]),
-        getUserProfile: vi.fn().mockResolvedValue(null),
+        getUserProfile: vi.fn().mockResolvedValue({
+            full_name: 'Test User',
+            email: 'test@example.com',
+            role: 'guest'
+        }),
         updateUserProfile: vi.fn().mockResolvedValue({}),
-        uploadAvatar: vi.fn().mockResolvedValue('https://example.com/avatar.jpg'),
+        uploadAvatar: vi.fn().mockResolvedValue('https://example.com/new-avatar.jpg'),
         cancelBooking: vi.fn().mockResolvedValue({}),
-    },
+    }
 }));
 
-// Mock toast
-vi.mock('react-hot-toast', () => ({
-    toast: {
-        loading: vi.fn(),
-        success: vi.fn(),
-        error: vi.fn(),
-    },
-}));
-
-// Mock components
+// Mock sub-components to expose their action props for testing
 vi.mock('../components/user/profile/ProfileSidebar', () => ({
-    ProfileSidebar: ({ user, activeTab: _activeTab, setActiveTab, handleLogout }: any) => (
-        <div data-testid="profile-sidebar">
-            <div data-testid="user-name">{user.name}</div>
-            <div data-testid="user-email">{user.email}</div>
-            <div data-testid="user-role">{user.role}</div>
-            <button onClick={() => setActiveTab('overview')} data-testid="tab-overview">Overview</button>
-            <button onClick={() => setActiveTab('settings')} data-testid="tab-settings">Settings</button>
-            <button onClick={() => setActiveTab('security')} data-testid="tab-security">Security</button>
-            {user.role === 'host' && (
-                <>
-                    <button onClick={() => setActiveTab('my_properties')} data-testid="tab-properties">My Properties</button>
-                    <button onClick={() => setActiveTab('my_services')} data-testid="tab-services">My Services</button>
-                    <button onClick={() => setActiveTab('payouts')} data-testid="tab-payouts">Payouts</button>
-                </>
-            )}
-            <button onClick={handleLogout} data-testid="logout-button">Logout</button>
-        </div>
-    ),
+    ProfileSidebar: ({ setActiveTab, handleAvatarUpload, handleLogout, setIsHostModalOpen, loading }: any) => (
+        loading ? <div data-testid="sidebar-loading" /> : (
+            <div data-testid="profile-sidebar">
+                <button onClick={() => setActiveTab('settings')}>Go Settings</button>
+                <button onClick={() => setActiveTab('security')}>Go Security</button>
+                <button onClick={() => setActiveTab('payouts')}>Go Payouts</button>
+                <button onClick={handleLogout}>Logout</button>
+                <button onClick={() => setIsHostModalOpen(true)}>Open Host Modal</button>
+                <input type="file" data-testid="avatar-input" onChange={handleAvatarUpload} />
+            </div>
+        )
+    )
 }));
 
 vi.mock('../components/user/profile/ProfileBookingsTab', () => ({
-    ProfileBookingsTab: ({ bookings, loading }: any) => (
-        <div data-testid="bookings-tab">
-            {loading ? <span>Loading...</span> : <span>Bookings: {bookings.length}</span>}
-        </div>
-    ),
-}));
-
-vi.mock('../components/user/profile/ProfilePropertiesTab', () => ({
-    ProfilePropertiesTab: ({ properties, loading }: any) => (
-        <div data-testid="properties-tab">
-            {loading ? <span>Loading...</span> : <span>Properties: {properties.length}</span>}
-        </div>
-    ),
-}));
-
-vi.mock('../components/user/profile/ProfileServicesTab', () => ({
-    ProfileServicesTab: ({ services, loading }: any) => (
-        <div data-testid="services-tab">
-            {loading ? <span>Loading...</span> : <span>Services: {services.length}</span>}
-        </div>
-    ),
+    ProfileBookingsTab: ({ onCancelBooking, bookings, loading }: any) => (
+        loading ? <div data-testid="bookings-loading" /> : (
+            <div data-testid="bookings-tab">
+                {bookings.map((b: any) => (
+                    <button key={b.id} onClick={() => onCancelBooking(b.id, b.created_at)}>
+                        Cancel {b.id}
+                    </button>
+                ))}
+            </div>
+        )
+    )
 }));
 
 vi.mock('../components/user/profile/ProfileSettingsTab', () => ({
-    ProfileSettingsTab: ({ profileForm, setProfileForm, handleUpdateProfile, savingProfile }: any) => (
-        <div data-testid="settings-tab">
-            <input
-                value={profileForm.name}
-                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                data-testid="name-input"
+    ProfileSettingsTab: ({ handleUpdateProfile, profileForm, setProfileForm }: any) => (
+        <form data-testid="settings-tab" onSubmit={handleUpdateProfile}>
+            <input 
+                data-testid="name-input" 
+                value={profileForm.name} 
+                onChange={(e) => setProfileForm({...profileForm, name: e.target.value})} 
             />
-            <input
-                value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                data-testid="phone-input"
-            />
-            <button onClick={handleUpdateProfile} data-testid="save-profile-button" disabled={savingProfile}>
-                Save Profile
-            </button>
-        </div>
-    ),
+            <button type="submit">Update Profile</button>
+        </form>
+    )
 }));
 
 vi.mock('../components/user/profile/ProfileSecurityTab', () => ({
-    ProfileSecurityTab: ({ emailForm, passwordForm, handleChangeEmail, handleChangePassword }: any) => (
+    ProfileSecurityTab: ({ handleChangeEmail, handleChangePassword, setEmailForm, emailForm, setPasswordForm, passwordForm }: any) => (
         <div data-testid="security-tab">
-            <input
-                value={emailForm.email}
-                onChange={() => {}}
-                data-testid="email-input"
-            />
-            <input
-                type="password"
-                value={passwordForm.newPassword}
-                onChange={() => {}}
-                data-testid="password-input"
-            />
-            <button onClick={handleChangeEmail} data-testid="change-email-button">Change Email</button>
-            <button onClick={handleChangePassword} data-testid="change-password-button">Change Password</button>
+            <form data-testid="email-form" onSubmit={handleChangeEmail}>
+                <input 
+                    data-testid="email-input" 
+                    value={emailForm.email} 
+                    onChange={(e) => setEmailForm({...emailForm, email: e.target.value})} 
+                />
+                <button type="submit">Change Email</button>
+            </form>
+            <form data-testid="password-form" onSubmit={handleChangePassword}>
+                <input 
+                    data-testid="password-input" 
+                    value={passwordForm.newPassword} 
+                    onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value, confirmPassword: e.target.value})} 
+                />
+                <button type="submit">Change Password</button>
+            </form>
         </div>
-    ),
+    )
 }));
 
 vi.mock('../components/user/profile/ProfilePayoutTab', () => ({
-    ProfilePayoutTab: ({ payoutForm, setPayoutForm, handleUpdatePayout, savingPayout }: any) => (
-        <div data-testid="payouts-tab">
-            <input
-                value={payoutForm.iban}
-                onChange={(e) => setPayoutForm({ ...payoutForm, iban: e.target.value })}
-                data-testid="iban-input"
+    ProfilePayoutTab: ({ handleUpdatePayout, setPayoutForm, payoutForm }: any) => (
+        <form data-testid="payouts-tab" onSubmit={handleUpdatePayout}>
+            <input 
+                data-testid="iban-input" 
+                value={payoutForm.iban} 
+                onChange={(e) => setPayoutForm({...payoutForm, iban: e.target.value})} 
             />
-            <button onClick={handleUpdatePayout} data-testid="save-payout-button" disabled={savingPayout}>
-                Save Payout
-            </button>
-        </div>
-    ),
+            <button type="submit">Update Payout</button>
+        </form>
+    )
 }));
 
 vi.mock('../components/modals/BecomeHostModal', () => ({
-    BecomeHostModal: ({ isOpen, onConfirm }: any) => (
-        isOpen ? (
-            <div data-testid="become-host-modal">
-                <button onClick={onConfirm} data-testid="confirm-host-button">Become Host</button>
-            </div>
-        ) : null
-    ),
+    BecomeHostModal: ({ isOpen, onConfirm }: any) => isOpen ? (
+        <div data-testid="host-modal">
+            <button onClick={onConfirm}>Confirm Host</button>
+        </div>
+    ) : null
 }));
 
-const mockUser = {
-    id: 'user-123',
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'guest',
-    avatar: 'https://example.com/avatar.jpg',
-};
-
-const mockAuthContext = {
-    user: mockUser,
-    isAuthenticated: true,
-    isLoading: false,
-    login: vi.fn(),
-    logout: vi.fn(),
-    register: vi.fn(),
-    updateUser: vi.fn(),
-    updateEmail: vi.fn(),
-    updatePassword: vi.fn(),
-    resetPassword: vi.fn(),
-};
-
-const mockLanguageContext = {
-    language: 'en',
-    setLanguage: vi.fn(),
-    t: (key: string) => key,
-    dir: 'ltr',
-};
-
-const mockUseAuth = vi.fn(() => mockAuthContext);
-const mockUseLanguage = vi.fn(() => mockLanguageContext);
-
-vi.mock('../context/AuthContext', () => ({
-    useAuth: () => mockUseAuth(),
-}));
-
-vi.mock('../context/LanguageContext', () => ({
-    useLanguage: () => mockUseLanguage(),
-}));
-
-const renderProfile = (authOverrides = {}) => {
-    mockUseAuth.mockReturnValue({
-        ...mockAuthContext,
-        ...authOverrides,
-    });
-
-    return render(
-        <BrowserRouter>
-            <Profile />
-        </BrowserRouter>
-    );
-};
+// Dummy implementations for missing tabs
+vi.mock('../components/user/profile/ProfilePropertiesTab', () => ({ ProfilePropertiesTab: () => <div /> }));
+vi.mock('../components/user/profile/ProfileServicesTab', () => ({ ProfileServicesTab: () => <div /> }));
 
 describe('Profile Page', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockUseAuth.mockReturnValue(mockAuthContext);
-        mockUseLanguage.mockReturnValue(mockLanguageContext);
+        vi.stubGlobal('confirm', vi.fn(() => true));
     });
 
-    describe('Basic Rendering', () => {
-        it('renders profile sidebar with user info', () => {
-            renderProfile();
-
-            expect(screen.getByTestId('user-name')).toHaveTextContent('Test User');
-            expect(screen.getByTestId('user-email')).toHaveTextContent('test@example.com');
-            expect(screen.getByTestId('user-role')).toHaveTextContent('guest');
-        });
-
-        it('renders bookings tab by default', () => {
-            renderProfile();
-
-            expect(screen.getByTestId('bookings-tab')).toBeInTheDocument();
-        });
-
-        it('renders sidebar navigation', () => {
-            renderProfile();
-
-            expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
-            expect(screen.getByTestId('tab-overview')).toBeInTheDocument();
-            expect(screen.getByTestId('tab-settings')).toBeInTheDocument();
-            expect(screen.getByTestId('tab-security')).toBeInTheDocument();
-        });
+    afterEach(() => {
+        vi.unstubAllGlobals();
     });
 
-    describe('User Roles', () => {
-        it('shows guest role badge', () => {
-            renderProfile();
+    const renderProfile = () => {
+        return render(
+            <MemoryRouter initialEntries={['/profile']}>
+                <Routes>
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/" element={<div>Home</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+    };
 
-            expect(screen.getByTestId('user-role')).toHaveTextContent('guest');
-        });
-
-        it('shows host tabs for host user', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            expect(screen.getByTestId('tab-properties')).toBeInTheDocument();
-            expect(screen.getByTestId('tab-services')).toBeInTheDocument();
-            expect(screen.getByTestId('tab-payouts')).toBeInTheDocument();
-        });
-
-        it('does not show host tabs for guest user', () => {
-            renderProfile();
-
-            expect(screen.queryByTestId('tab-properties')).not.toBeInTheDocument();
-            expect(screen.queryByTestId('tab-services')).not.toBeInTheDocument();
-            expect(screen.queryByTestId('tab-payouts')).not.toBeInTheDocument();
+    it('loads all data on mount', async () => {
+        renderProfile();
+        
+        await waitFor(() => {
+            expect(db.getBookings).toHaveBeenCalledWith('user-123');
+            expect(db.getUserProfile).toHaveBeenCalledWith('user-123');
         });
     });
 
-    describe('Tab Navigation', () => {
-        it('navigates to settings tab', () => {
-            renderProfile();
+    it('handles avatar upload', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        const input = screen.getByTestId('avatar-input');
+        const file = new File(['hello'], 'hello.png', { type: 'image/png' });
+        
+        fireEvent.change(input, { target: { files: [file] } });
 
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            expect(screen.getByTestId('settings-tab')).toBeInTheDocument();
-        });
-
-        it('navigates to security tab', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-security'));
-            expect(screen.getByTestId('security-tab')).toBeInTheDocument();
-        });
-
-        it('navigates to properties tab for host', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-properties'));
-            expect(screen.getByTestId('properties-tab')).toBeInTheDocument();
-        });
-
-        it('navigates to services tab for host', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-services'));
-            expect(screen.getByTestId('services-tab')).toBeInTheDocument();
-        });
-
-        it('navigates to payouts tab for host', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-payouts'));
-            expect(screen.getByTestId('payouts-tab')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(db.uploadAvatar).toHaveBeenCalledWith(file);
+            expect(db.updateUserProfile).toHaveBeenCalled();
+            expect(mockUpdateUser).toHaveBeenCalled();
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Logout', () => {
-        it('calls logout when logout button clicked', () => {
-            const logoutMock = vi.fn();
-            renderProfile({ logout: logoutMock });
+    it('handles profile update', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Go Settings'));
+        
+        const nameInput = screen.getByTestId('name-input');
+        fireEvent.change(nameInput, { target: { value: 'New Name' } });
+        
+        fireEvent.submit(screen.getByTestId('settings-tab'));
 
-            fireEvent.click(screen.getByTestId('logout-button'));
-            expect(logoutMock).toHaveBeenCalled();
+        await waitFor(() => {
+            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
+                full_name: 'New Name'
+            }));
+            expect(mockUpdateUser).toHaveBeenCalled();
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Profile Settings', () => {
-        it('shows profile form in settings tab', () => {
-            renderProfile();
+    it('handles payout update', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Go Payouts'));
+        
+        const ibanInput = screen.getByTestId('iban-input');
+        fireEvent.change(ibanInput, { target: { value: 'TR123' } });
+        
+        fireEvent.submit(screen.getByTestId('payouts-tab'));
 
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            expect(screen.getByTestId('name-input')).toBeInTheDocument();
-            expect(screen.getByTestId('phone-input')).toBeInTheDocument();
-        });
-
-        it('updates name in profile form', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            const nameInput = screen.getByTestId('name-input');
-            fireEvent.change(nameInput, { target: { value: 'New Name' } });
-
-            expect(nameInput).toHaveValue('New Name');
-        });
-
-        it('updates phone in profile form', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            const phoneInput = screen.getByTestId('phone-input');
-            fireEvent.change(phoneInput, { target: { value: '+1234567890' } });
-
-            expect(phoneInput).toHaveValue('+1234567890');
-        });
-
-        it('saves profile successfully', async () => {
-            const { db } = await import('../api-services');
-            const updateUserMock = vi.fn();
-
-            renderProfile({ updateUser: updateUserMock });
-
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            fireEvent.click(screen.getByTestId('save-profile-button'));
-
-            await waitFor(() => {
-                expect(db.updateUserProfile).toHaveBeenCalled();
-            });
-        });
-
-        it('shows loading state while saving profile', async () => {
-            const { db } = await import('../api-services');
-            (db.updateUserProfile as ReturnType<typeof vi.fn>).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            const saveButton = screen.getByTestId('save-profile-button');
-
-            fireEvent.click(saveButton);
-            expect(saveButton).toBeDisabled();
-
-            await waitFor(() => {
-                expect(saveButton).not.toBeDisabled();
-            });
+        await waitFor(() => {
+            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
+                iban: 'TR123'
+            }));
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Become Host', () => {
-        it('shows become host button for guest', () => {
-            renderProfile();
+    it('handles booking cancellation', async () => {
+        const mockBookings = [{ id: 'b1', created_at: new Date().toISOString() }];
+        (db.getBookings as any).mockResolvedValue(mockBookings);
+        
+        renderProfile();
+        
+        const cancelBtn = await screen.findByText('Cancel b1');
+        fireEvent.click(cancelBtn);
 
-            // BecomeHostModal is shown when upgrade button is clicked in real component
-            expect(screen.getByTestId('user-role')).toHaveTextContent('guest');
-        });
-
-        it('upgrades user to host successfully', async () => {
-            const updateUserMock = vi.fn();
-
-            renderProfile({ updateUser: updateUserMock });
-
-            // Simulate opening become host modal and confirming
-            const confirmButton = screen.queryByTestId('confirm-host-button');
-            if (confirmButton) {
-                fireEvent.click(confirmButton);
-            }
-
-            // User initiates become host flow
-            expect(screen.getByTestId('user-role')).toHaveTextContent('guest');
-        });
-
-        it('does not show become host option for host user', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            expect(screen.getByTestId('user-role')).toHaveTextContent('host');
+        expect(window.confirm).toHaveBeenCalled();
+        
+        await waitFor(() => {
+            expect(db.cancelBooking).toHaveBeenCalledWith('b1');
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Data Loading', () => {
-        it('loads bookings data on mount', async () => {
-            const { db } = await import('../api-services');
-            const mockBookings = [{ id: '1', status: 'confirmed' }];
-            (db.getBookings as ReturnType<typeof vi.fn>).mockResolvedValue(mockBookings);
+    it('handles email change', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Go Security'));
+        
+        const emailInput = screen.getByTestId('email-input');
+        fireEvent.change(emailInput, { target: { value: 'new@email.com' } });
+        
+        fireEvent.submit(screen.getByTestId('email-form'));
 
-            renderProfile();
-
-            await waitFor(() => {
-                expect(db.getBookings).toHaveBeenCalledWith('user-123');
-            });
-        });
-
-        it('loads properties data for host on mount', async () => {
-            const { db } = await import('../api-services');
-            const hostUser = { ...mockUser, role: 'host' };
-            const mockProperties = [{ id: 'prop-1' }];
-            (db.getPropertiesByHost as ReturnType<typeof vi.fn>).mockResolvedValue(mockProperties);
-
-            renderProfile({ user: hostUser });
-
-            await waitFor(() => {
-                expect(db.getPropertiesByHost).toHaveBeenCalledWith('user-123');
-            });
-        });
-
-        it('loads services data for host on mount', async () => {
-            const { db } = await import('../api-services');
-            const hostUser = { ...mockUser, role: 'host' };
-            const mockServices = [{ id: 'service-1' }];
-            (db.getServicesByProvider as ReturnType<typeof vi.fn>).mockResolvedValue(mockServices);
-
-            renderProfile({ user: hostUser });
-
-            await waitFor(() => {
-                expect(db.getServicesByProvider).toHaveBeenCalledWith('user-123');
-            });
-        });
-
-        it('loads user profile data on mount', async () => {
-            const { db } = await import('../api-services');
-            (db.getUserProfile as ReturnType<typeof vi.fn>).mockResolvedValue({
-                full_name: 'Loaded Name',
-                phone: '+90555000',
-            });
-
-            renderProfile();
-
-            await waitFor(() => {
-                expect(db.getUserProfile).toHaveBeenCalledWith('user-123');
-            });
+        await waitFor(() => {
+            expect(mockUpdateEmail).toHaveBeenCalledWith('new@email.com');
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Avatar Upload', () => {
-        it('has avatar upload functionality', () => {
-            renderProfile();
+    it('handles password change', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Go Security'));
+        
+        const pwdInput = screen.getByTestId('password-input');
+        fireEvent.change(pwdInput, { target: { value: 'new-password' } });
+        
+        fireEvent.submit(screen.getByTestId('password-form'));
 
-            // Avatar is displayed
-            expect(screen.getByTestId('user-name')).toBeInTheDocument();
-        });
-
-        it('uploads avatar successfully', async () => {
-            const { db } = await import('../api-services');
-            const updateUserMock = vi.fn();
-
-            renderProfile({ updateUser: updateUserMock });
-
-            // Avatar upload would be triggered by file input
-            expect(db.uploadAvatar).toBeDefined();
+        await waitFor(() => {
+            expect(mockUpdatePassword).toHaveBeenCalledWith('new-password');
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Authentication', () => {
-        it('renders when authenticated', () => {
-            renderProfile();
+    it('handles become host flow', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Open Host Modal'));
+        fireEvent.click(screen.getByText('Confirm Host'));
 
-            expect(screen.getByTestId('profile-sidebar')).toBeInTheDocument();
-        });
-
-        it('handles authenticated user with different roles', () => {
-            // Guest
-            const { unmount } = renderProfile({ user: { ...mockUser, role: 'guest' } });
-            expect(screen.queryByTestId('user-role')).toHaveTextContent('guest');
-            
-            unmount();
-            
-            // Host
-            renderProfile({ user: { ...mockUser, role: 'host' } });
-            expect(screen.queryByTestId('user-role')).toHaveTextContent('host');
-            
-            // Note: Admin test would require re-render which is complex in this setup
+        await waitFor(() => {
+            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', { role: 'host' });
+            expect(mockUpdateUser).toHaveBeenCalledWith({ role: 'host' });
+            expect(toast.success).toHaveBeenCalled();
         });
     });
 
-    describe('Error Handling', () => {
-        it('handles profile update error', async () => {
-            const { db } = await import('../api-services');
-            (db.updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Update failed'));
-
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-settings'));
-            fireEvent.click(screen.getByTestId('save-profile-button'));
-
-            await waitFor(() => {
-                expect(db.updateUserProfile).toHaveBeenCalled();
-            });
-        });
-
-        it('handles avatar upload error', async () => {
-            const { db } = await import('../api-services');
-            (db.uploadAvatar as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Upload failed'));
-
-            renderProfile();
-
-            // Would trigger upload error
-            expect(db.uploadAvatar).toBeDefined();
-        });
-    });
-
-    describe('Security Tab', () => {
-        it('shows security tab content', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-security'));
-            expect(screen.getByTestId('security-tab')).toBeInTheDocument();
-        });
-
-        it('has email input in security tab', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-security'));
-            expect(screen.getByTestId('email-input')).toBeInTheDocument();
-        });
-
-        it('has password input in security tab', () => {
-            renderProfile();
-
-            fireEvent.click(screen.getByTestId('tab-security'));
-            expect(screen.getByTestId('password-input')).toBeInTheDocument();
-        });
-    });
-
-    describe('Payout Tab for Host', () => {
-        it('shows payout tab for host', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-payouts'));
-            expect(screen.getByTestId('payouts-tab')).toBeInTheDocument();
-        });
-
-        it('has IBAN input in payout tab', () => {
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-payouts'));
-            expect(screen.getByTestId('iban-input')).toBeInTheDocument();
-        });
-
-        it('saves payout details', async () => {
-            const { db } = await import('../api-services');
-            const hostUser = { ...mockUser, role: 'host' };
-            renderProfile({ user: hostUser });
-
-            fireEvent.click(screen.getByTestId('tab-payouts'));
-            fireEvent.click(screen.getByTestId('save-payout-button'));
-
-            await waitFor(() => {
-                expect(db.updateUserProfile).toHaveBeenCalled();
-            });
-        });
+    it('handles logout', async () => {
+        renderProfile();
+        await waitFor(() => expect(screen.queryByTestId('sidebar-loading')).not.toBeInTheDocument());
+        
+        fireEvent.click(screen.getByText('Logout'));
+        expect(mockLogout).toHaveBeenCalled();
+        expect(mockNavigate).toHaveBeenCalledWith('/');
     });
 });
