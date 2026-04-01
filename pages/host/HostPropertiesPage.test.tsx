@@ -477,7 +477,7 @@ describe('HostPropertiesPage', () => {
 
         await waitFor(() => {
             const images = screen.getAllByRole('img');
-            expect(images[0].src).toContain('unsplash.com');
+            expect((images[0] as HTMLImageElement).src).toContain('unsplash.com');
         });
     });
 
