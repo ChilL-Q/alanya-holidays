@@ -24,6 +24,7 @@ export const ProductMediaForm: React.FC<ProductMediaFormProps> = ({
                             <button
                                 type="button"
                                 onClick={() => removeExistingImage(idx)}
+                                title="Remove image"
                                 className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
                             >
                                 <Trash2 size={20} />

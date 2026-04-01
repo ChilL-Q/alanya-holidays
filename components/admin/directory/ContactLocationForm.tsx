@@ -17,10 +17,11 @@ export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Contact & Location</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location / Area *</label>
+                    <label htmlFor="directory-location" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location / Area *</label>
                     <div className="relative">
                         <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="directory-location"
                             type="text"
                             name="location"
                             required
@@ -32,8 +33,9 @@ export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Map URL (Optional)</label>
+                    <label htmlFor="directory-map" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Map URL (Optional)</label>
                     <input
+                        id="directory-map"
                         type="url"
                         name="google_map_url"
                         value={googleMapUrl}
@@ -43,10 +45,11 @@ export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Website URL (Optional)</label>
+                    <label htmlFor="directory-website" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Website URL (Optional)</label>
                     <div className="relative">
                         <Link2 size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="directory-website"
                             type="url"
                             name="website"
                             value={website}
@@ -57,10 +60,11 @@ export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">WhatsApp / Phone (Optional)</label>
+                    <label htmlFor="directory-whatsapp" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">WhatsApp / Phone (Optional)</label>
                     <div className="relative">
                         <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="directory-whatsapp"
                             type="text"
                             name="whatsapp"
                             value={whatsapp}

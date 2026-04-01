@@ -18,8 +18,9 @@ export const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ name, descri
             <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Business Name *</label>
+                        <label htmlFor="directory-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Business Name *</label>
                         <input
+                            id="directory-name"
                             type="text"
                             name="name"
                             required
@@ -30,8 +31,9 @@ export const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ name, descri
                         />
                     </div>
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Short Description *</label>
+                        <label htmlFor="directory-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Short Description *</label>
                         <textarea
+                            id="directory-description"
                             name="short_description"
                             required
                             value={description}

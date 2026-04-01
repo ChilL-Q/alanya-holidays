@@ -16,8 +16,9 @@ export const ProductBasicDetailsForm: React.FC<ProductBasicDetailsFormProps> = (
 
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
+                    <label htmlFor="product-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
                     <input
+                        id="product-title"
                         type="text"
                         name="title"
                         value={formData.title}
@@ -28,8 +29,9 @@ export const ProductBasicDetailsForm: React.FC<ProductBasicDetailsFormProps> = (
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                    <label htmlFor="product-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
                     <textarea
+                        id="product-description"
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
