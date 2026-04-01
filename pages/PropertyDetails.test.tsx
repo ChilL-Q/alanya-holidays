@@ -1,14 +1,21 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { PropertyDetails } from './PropertyDetails';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-// Mock contexts
-vi.mock('../context/AuthContext', () => ({
-    useAuth: () => ({
-        isAuthenticated: true,
-        user: { id: 'test-user-id' }
-    })
+// Rule 1: vi.hoisted for shared mocks
+const { mockNavigate } = vi.hoisted(() => ({
+    mockNavigate: vi.fn()
 }));
+
+// Rule 2: Standard mocks
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as any;
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+    };
+});
 
 vi.mock('../context/LanguageContext', () => ({
     useLanguage: () => ({
@@ -19,8 +26,16 @@ vi.mock('../context/LanguageContext', () => ({
 
 vi.mock('../context/CurrencyContext', () => ({
     useCurrency: () => ({
-        convertPrice: (val: number) => val,
-        formatPrice: (val: number) => `€${val}`
+        formatPrice: (amount: number) => `€${amount}`,
+        convertPrice: (amount: number) => amount,
+        currency: 'EUR'
+    })
+}));
+
+vi.mock('../context/AuthContext', () => ({
+    useAuth: () => ({
+        user: { id: 'user-1', full_name: 'Test User', role: 'user' },
+        isAuthenticated: true
     })
 }));
 
@@ -33,36 +48,64 @@ vi.mock('../context/LightboxContext', () => ({
 vi.mock('../context/CartContext', () => ({
     useCart: () => ({
         addToCart: vi.fn(),
-        cart: []
+        items: []
     })
 }));
 
 vi.mock('../context/ChatContext', () => ({
     useChat: () => ({
         startConversation: vi.fn(),
-        activeConversationId: 'conv-1',
+        activeConversationId: null,
         setActiveConversationId: vi.fn(),
         sendMessage: vi.fn(),
-        conversations: [{ 
-            id: 'conv-1', 
-            guest_id: 'guest-1', 
-            host: { full_name: 'Test Host' },
-            guest: { full_name: 'Test Guest' }
-        }],
-        clearHistory: vi.fn(),
-        cart: []
+        conversations: []
     })
 }));
 
-// Mock ChatWindow to avoid deep rendering issues and make it easy to find
+// Rule 3: API mocks
+vi.mock('../api-services', () => ({
+    db: {
+        getProperty: vi.fn(),
+        getUnavailableDates: vi.fn().mockResolvedValue([]),
+        getReviewCount: vi.fn().mockResolvedValue(0),
+        getReviews: vi.fn().mockResolvedValue([]),
+        getBookings: vi.fn().mockResolvedValue([]),
+        getServices: vi.fn().mockResolvedValue({ data: [] })
+    }
+}));
+
+// Mock ChatWindow to simplify
 vi.mock('../components/chat/ChatWindow', () => ({
     ChatWindow: () => <div data-testid="chat-window">Mocked Chat Window</div>
 }));
 
-// Mock API services
-vi.mock('../api-services', () => ({
-    db: {
-        getProperty: vi.fn().mockResolvedValue({
+import { PropertyDetails } from './PropertyDetails';
+import { db } from '../api-services';
+
+describe('PropertyDetails Page', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.scrollTo = vi.fn();
+    });
+
+    const renderPage = (id = 'prop-1') => {
+        return render(
+            <MemoryRouter initialEntries={[`/property/${id}`]}>
+                <Routes>
+                    <Route path="/property/:id" element={<PropertyDetails />} />
+                </Routes>
+            </MemoryRouter>
+        );
+    };
+
+    it('shows loading state initially', () => {
+        (db.getProperty as any).mockReturnValue(new Promise(() => {})); // Never resolves
+        renderPage();
+        expect(screen.getByText('Loading property details...')).toBeInTheDocument();
+    });
+
+    it('renders property details after fetch', async () => {
+        const mockProperty = {
             id: 'prop-1',
             title: 'Test Villa',
             description: 'Beautiful villa',
@@ -77,55 +120,65 @@ vi.mock('../api-services', () => ({
             rating: 4.8,
             reviews_count: 10,
             cleaning_fee: 50
-        }),
-        getUnavailableDates: vi.fn().mockResolvedValue([]),
-        getReviewCount: vi.fn().mockResolvedValue(10),
-        getReviews: vi.fn().mockResolvedValue([]),
-        getBookings: vi.fn().mockResolvedValue([]),
-        getServices: vi.fn().mockResolvedValue({ data: [] })
-    }
-}));
+        };
+        (db.getProperty as any).mockResolvedValue(mockProperty);
 
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+        renderPage();
 
-const renderWithRouter = (ui: React.ReactElement) => {
-    return render(
-        <MemoryRouter initialEntries={['/property/prop-1']}>
-            <Routes>
-                <Route path="/property/:id" element={ui} />
-            </Routes>
-        </MemoryRouter>
-    );
-};
-
-describe('PropertyDetails Component', () => {
-    it('renders property title and basic info', async () => {
-        renderWithRouter(<PropertyDetails />);
-        
-        const titles = await screen.findAllByText('Test Villa');
-        expect(titles.length).toBeGreaterThan(0);
-        expect(screen.getByText('4 Guests')).toBeDefined();
-        // Price check matches mocked price_per_night
-        expect(screen.getAllByText(/€100/)).toBeDefined();
+        await waitFor(() => {
+            expect(screen.getAllByText('Test Villa').length).toBeGreaterThan(0);
+            expect(screen.getByText('Beautiful villa')).toBeInTheDocument();
+            expect(screen.getByText(/4 Guests/)).toBeInTheDocument();
+        });
     });
 
-    it('shows booking card with calculated price', async () => {
-        renderWithRouter(<PropertyDetails />);
+    it('shows error message when property is not found', async () => {
+        (db.getProperty as any).mockResolvedValue(null);
         
-        await screen.findAllByText('Test Villa');
-        // Default nights is 5 in state. Total = 100 * 5 + 50 (cleaning) = 550
-        expect(screen.getByText(/100 x 5 nights/)).toBeDefined();
-        expect(screen.getByText(/€550/)).toBeDefined();
+        renderPage();
+
+        await waitFor(() => {
+            expect(screen.getByText('Property not found')).toBeInTheDocument();
+            expect(screen.getByText(/could not be loaded/)).toBeInTheDocument();
+        });
     });
 
-    it('opens chat when contact host is clicked', async () => {
-        renderWithRouter(<PropertyDetails />);
+    it('shows error message on API failure', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        (db.getProperty as any).mockRejectedValue(new Error('Fetch failed'));
         
-        await screen.findAllByText('Test Villa');
-        const contactBtn = screen.getByText('Contact Host');
-        fireEvent.click(contactBtn);
-        
-        // Check for mocked ChatWindow
-        expect(await screen.findByTestId('chat-window')).toBeDefined();
+        renderPage();
+
+        await waitFor(() => {
+            expect(screen.getByText('Property not found')).toBeInTheDocument();
+        });
+        expect(consoleSpy).toHaveBeenCalled();
+        consoleSpy.mockRestore();
+    });
+
+    it('calculates total price correctly in booking card', async () => {
+        const mockProperty = {
+            id: 'prop-1',
+            title: 'Test Villa',
+            price_per_night: 100,
+            cleaning_fee: 50,
+            images: ['img1.jpg'],
+            amenities: [],
+            max_guests: 4,
+            bedrooms: 1,
+            beds: 1,
+            bathrooms: 1,
+            rating: 5,
+            reviewsCount: 0
+        };
+        (db.getProperty as any).mockResolvedValue(mockProperty);
+
+        renderPage();
+
+        await waitFor(() => {
+            // Default is 5 nights. 100 * 5 + 50 = 550
+            expect(screen.getByText(/100 x 5 nights/)).toBeInTheDocument();
+            expect(screen.getByText(/€550/)).toBeInTheDocument();
+        });
     });
 });

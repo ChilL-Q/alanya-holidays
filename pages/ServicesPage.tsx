@@ -153,8 +153,9 @@ export const ServicesPage: React.FC = () => {
                 {showFilters && (
                     <div className="bg-white dark:bg-slate-800/80 p-6 rounded-xl border border-slate-200 dark:border-slate-800/50 shadow-sm animate-fade-down grid md:grid-cols-4 gap-6">
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Search</label>
+                            <label htmlFor="search-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Search</label>
                             <input
+                                id="search-filter"
                                 type="text"
                                 placeholder="Search services..."
                                 value={searchQuery}
@@ -164,8 +165,9 @@ export const ServicesPage: React.FC = () => {
                         </div>
                         {activeCategory === 'transport' && (
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Brand</label>
+                                <label htmlFor="brand-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Brand</label>
                                 <select
+                                    id="brand-filter"
                                     value={brandFilter}
                                     onChange={(e) => setBrandFilter(e.target.value)}
                                     className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700/50 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
@@ -178,8 +180,9 @@ export const ServicesPage: React.FC = () => {
                             </div>
                         )}
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Min Price (€)</label>
+                            <label htmlFor="min-price-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Min Price (€)</label>
                             <input
+                                id="min-price-filter"
                                 type="number"
                                 value={priceRange.min}
                                 onChange={(e) => setPriceRange({ ...priceRange, min: Number(e.target.value) })}
@@ -187,8 +190,9 @@ export const ServicesPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Max Price (€)</label>
+                            <label htmlFor="max-price-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Max Price (€)</label>
                             <input
+                                id="max-price-filter"
                                 type="number"
                                 value={priceRange.max}
                                 onChange={(e) => setPriceRange({ ...priceRange, max: Number(e.target.value) })}

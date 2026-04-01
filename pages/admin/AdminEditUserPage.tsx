@@ -122,11 +122,12 @@ export const AdminEditUserPage: React.FC = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Full Name */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <label htmlFor="full_name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Full Name
                                 </label>
                                 <div className="relative">
                                     <input
+                                        id="full_name"
                                         type="text"
                                         name="full_name"
                                         required
@@ -140,11 +141,12 @@ export const AdminEditUserPage: React.FC = () => {
 
                             {/* Email */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Email Address
                                 </label>
                                 <div className="relative">
                                     <input
+                                        id="email"
                                         type="email"
                                         name="email"
                                         required
@@ -158,11 +160,12 @@ export const AdminEditUserPage: React.FC = () => {
 
                             {/* Phone */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     Phone Number
                                 </label>
                                 <div className="relative">
                                     <input
+                                        id="phone"
                                         type="text"
                                         name="phone"
                                         value={formData.phone}
@@ -176,11 +179,12 @@ export const AdminEditUserPage: React.FC = () => {
 
                             {/* Role */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                <label htmlFor="role" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                     User Role
                                 </label>
                                 <div className="relative">
                                     <select
+                                        id="role"
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
