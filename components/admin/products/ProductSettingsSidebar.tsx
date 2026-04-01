@@ -15,10 +15,11 @@ export const ProductSettingsSidebar: React.FC<ProductSettingsSidebarProps> = ({ 
 
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                    <label htmlFor="product-category" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
                     <div className="relative">
                         <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
+                            id="product-category"
                             name="category"
                             value={formData.category}
                             onChange={handleChange}
@@ -32,10 +33,11 @@ export const ProductSettingsSidebar: React.FC<ProductSettingsSidebarProps> = ({ 
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Price</label>
+                    <label htmlFor="product-price" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Price</label>
                     <div className="relative">
                         <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="product-price"
                             type="number"
                             name="price"
                             value={formData.price}
@@ -47,10 +49,11 @@ export const ProductSettingsSidebar: React.FC<ProductSettingsSidebarProps> = ({ 
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stock</label>
+                    <label htmlFor="product-stock" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Stock</label>
                     <div className="relative">
                         <Box size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
+                            id="product-stock"
                             type="number"
                             name="stock"
                             value={formData.stock}
