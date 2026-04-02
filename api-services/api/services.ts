@@ -2,6 +2,9 @@ import { supabase } from '../supabase';
 import { ServiceDB, ServiceModel, ApprovalStatus } from '../../types/index';
 import { notificationsService } from './notifications';
 import { serviceSchema } from './schemas';
+import { getAppUrl } from '../../utils/appUrl';
+import { retry } from '../../utils/retry';
+import { createAuditLog } from './audit';
 
 export const servicesService = {
     async createService(data: Omit<ServiceDB, 'id' | 'created_at'>) {
@@ -138,23 +141,30 @@ export const servicesService = {
             .eq('id', id);
         if (error) throw error;
 
+        // Audit log for status change
+        if (status === 'approved') {
+            createAuditLog('SERVICE_APPROVED', { serviceId: id });
+        } else if (status === 'rejected') {
+            createAuditLog('SERVICE_REJECTED', { serviceId: id, reason });
+        }
+
         // Notify Provider logic
         if (status !== 'pending') {
             const { data: service } = await supabase.from('services').select('provider_id, title, type').eq('id', id).single();
             if (service) {
                 // 1. Send Email
                 if (status === 'approved' || status === 'rejected') {
-                     supabase.functions.invoke('send-email', {
+                    retry(() => supabase.functions.invoke('send-email', {
                         body: {
                             type: status === 'approved' ? 'service_approved' : 'service_rejected',
                             userId: service.provider_id,
                             data: {
                                 title: service.title,
                                 reason: reason,
-                                link: `${window.location.origin}/service/${id}` 
+                                link: getAppUrl(`/service/${id}`)
                             }
                         }
-                    }).catch(err => console.error('Failed to send status email:', err));
+                    })).catch(err => console.error('Failed to send status email:', err));
                 }
 
                 // 2. In-App Notification

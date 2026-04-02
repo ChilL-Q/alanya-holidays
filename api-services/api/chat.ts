@@ -1,5 +1,7 @@
 import { supabase } from '../supabase';
 import { ChatConversation, ChatMessage } from '../../types/index';
+import { getAppUrl } from '../../utils/appUrl';
+import { retry } from '../../utils/retry';
 
 export const chatService = {
     // Get all conversations for the current user
@@ -99,17 +101,17 @@ export const chatService = {
                     const recipientId = user.id === conv.guest_id ? conv.host_id : conv.guest_id;
                     const senderName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
-                    await supabase.functions.invoke('send-email', {
+                    await retry(() => supabase.functions.invoke('send-email', {
                         body: {
                             type: 'new_chat_message',
                             userId: recipientId,
                             data: {
                                 senderName,
                                 messagePreview: content.length > 50 ? content.substring(0, 50) + '...' : content,
-                                link: `${window.location.origin}/host/inbox`, // Simplify to inbox for now
+                                link: getAppUrl('/host/inbox'), // Simplify to inbox for now
                             }
                         }
-                    });
+                    }));
                  }
             } catch (e) {
                 console.error('Failed to send chat notification', e);

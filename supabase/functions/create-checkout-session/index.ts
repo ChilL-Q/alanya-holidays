@@ -27,14 +27,35 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { items, userId, email, origin } = await req.json()
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    if (!items?.length || !userId || !origin) {
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+
+    if (userError || !user) {
+      console.error('User verification failed:', userError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { items, email, origin } = await req.json()
+
+    if (!items?.length || !origin) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    const verifiedUserId = user.id
 
     // Stripe Checkout Session (min expires_at = 30 min)
     const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60
@@ -57,7 +78,7 @@ Deno.serve(async (req: Request) => {
       success_url: `${origin}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout`,
       metadata: {
-        userId,
+        userId: verifiedUserId,
         bookingIds: items.map((i: any) => i.bookingId).join(','),
       },
     })
@@ -67,13 +88,37 @@ Deno.serve(async (req: Request) => {
     const bookingIds = items.map((i: any) => i.bookingId).filter(Boolean)
 
     if (bookingIds.length > 0) {
+      // Security: Verify that these bookings belong to the verified user
+      const { data: verifiedBookings, error: verifyError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('user_id', verifiedUserId)
+        .in('id', bookingIds)
+
+      if (verifyError) {
+        console.error('Bookings verification error:', verifyError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to verify bookings' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const verifiedIds = verifiedBookings?.map(b => b.id) || []
+      
+      if (verifiedIds.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No valid bookings found for this user' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       await supabase
         .from('bookings')
         .update({
           stripe_session_id: session.id,
           payment_expires_at: paymentExpiresAt,
         })
-        .in('id', bookingIds)
+        .in('id', verifiedIds)
     }
 
     return new Response(

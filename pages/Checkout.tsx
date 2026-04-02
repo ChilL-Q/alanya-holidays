@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { supabase } from '../api-services/supabase';
+import { getBaseUrl } from '../utils/appUrl';
 
 // Modular Components
 import { CheckoutSuccessView } from '../components/checkout/CheckoutSuccessView';
@@ -101,7 +102,7 @@ export const Checkout: React.FC = () => {
                         items: bookingItemsForStripe,
                         userId: user!.id,
                         email: user!.email,
-                        origin: window.location.origin
+                        origin: getBaseUrl()
                     }
                 });
 

@@ -155,7 +155,6 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     description: p.description,
                     amenities: p.amenities || [],
                     hostName: p.host?.full_name || 'Host',
-                    property_ref: p.property_ref,
                     ref_id: p.ref_id,
                     type: p.type
                 }));

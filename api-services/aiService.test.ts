@@ -41,7 +41,7 @@ describe('askLocalGuide', () => {
         expect(callArgs.body.location).toBe('Center');
     });
 
-    it('returns rate limit message', async () => {
+    it('returns rate limit message after retries', async () => {
         (supabase.functions.invoke as any).mockResolvedValue({
             data: { error: '429 Too Many Requests' },
             error: null
@@ -51,9 +51,11 @@ describe('askLocalGuide', () => {
         const response = await askLocalGuide(null, null, 'Hello');
         
         expect(response).toContain('receiving too many requests');
+        // Should have retried 3 times
+        expect(supabase.functions.invoke).toHaveBeenCalledTimes(3);
     });
 
-    it('returns error message if edge function fails', async () => {
+    it('returns fallback recommendations if edge function fails after retries', async () => {
         (supabase.functions.invoke as any).mockResolvedValue({
             data: null,
             error: new Error('NetworkError')
@@ -62,6 +64,9 @@ describe('askLocalGuide', () => {
         const { askLocalGuide } = await import('./aiService');
         const response = await askLocalGuide(null, null, 'Hello');
         
-        expect(response).toContain('Error connecting to AI');
+        expect(response).toContain('top recommendations for your Alanya holiday');
+        expect(response).toContain('Alanya Castle');
+        // Should have retried 3 times
+        expect(supabase.functions.invoke).toHaveBeenCalledTimes(3);
     });
 });
