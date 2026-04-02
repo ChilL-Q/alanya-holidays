@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Copy, RefreshCw, Check, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { db } from '../../api-services';
+import { getAppUrl } from '../../utils/appUrl';
 
 interface ICalManagerProps {
     propertyId: string;
@@ -108,8 +109,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
         }
     };
 
-    // Use window.location.origin to support both dev (via proxy) and prod (via vercel rewrite)
-    const exportUrl = `${window.location.origin}/calendar/${propertyId}.ics`;
+    const exportUrl = getAppUrl(`/calendar/${propertyId}.ics`);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(exportUrl);
