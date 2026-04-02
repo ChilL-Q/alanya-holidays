@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { Message } from '../../types/index';
+import { retry } from '../../utils/retry';
 
 export const messagesService = {
     async sendMessage(data: Message) {
@@ -10,7 +11,7 @@ export const messagesService = {
         if (error) throw error;
         
         // Notify Admin
-        supabase.functions.invoke('send-email', {
+        retry(() => supabase.functions.invoke('send-email', {
             body: {
                 type: 'admin_contact_message',
                 to: 'contact@alanyaholidays.com', // Notification to Admin
@@ -21,7 +22,7 @@ export const messagesService = {
                     message: data.message
                 }
             }
-        }).catch(err => console.error('Failed to send admin email:', err));
+        })).catch(err => console.error('Failed to send admin email:', err));
 
         return true;
     }

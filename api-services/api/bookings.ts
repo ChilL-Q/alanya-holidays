@@ -1,6 +1,9 @@
 import { supabase } from '../supabase';
 import { Booking } from '../../types/index';
 import { bookingSchema } from './schemas';
+import { getAppUrl } from '../../utils/appUrl';
+import { retry } from '../../utils/retry';
+import { createAuditLog } from './audit';
 
 export const bookingsService = {
 
@@ -39,7 +42,15 @@ export const bookingsService = {
 
         const guestName = profile?.full_name || 'Guest';
 
-        supabase.functions.invoke('send-email', {
+        // Log booking creation
+        createAuditLog('BOOKING_CREATED', { 
+            bookingId, 
+            userId: data.user_id, 
+            itemId: data.item_id, 
+            itemType: data.type 
+        });
+
+        retry(() => supabase.functions.invoke('send-email', {
             body: {
                 type: 'booking_created',
                 userId: data.user_id,
@@ -51,10 +62,10 @@ export const bookingsService = {
                     checkOut: data.check_out,
                     totalPrice: data.total_price,
                     guests: data.guests,
-                    link: `${window.location.origin}/profile`
+                    link: getAppUrl('/profile')
                 }
             }
-        }).catch(err => console.error('Failed to send email:', err));
+        })).catch(err => console.error('Failed to send email:', err));
 
         // Notify Host (New Feature)
         // Correctly identify table based on type
@@ -67,7 +78,7 @@ export const bookingsService = {
                 const hostId = itemData ? (itemData.host_id || itemData.provider_id) : null;
 
                 if (hostId) {
-                    supabase.functions.invoke('send-email', {
+                    retry(() => supabase.functions.invoke('send-email', {
                         body: {
                             type: 'booking_request_host',
                             userId: hostId,
@@ -80,10 +91,10 @@ export const bookingsService = {
                                 totalPrice: data.total_price,
                                 guests: data.guests,
                                 message: data.message, // Include user message
-                                link: `${window.location.origin}/host/bookings`
+                                link: getAppUrl('/host/bookings')
                             }
                         }
-                    }).catch(err => console.error('Failed to send host email:', err));
+                    })).catch(err => console.error('Failed to send host email:', err));
                 }
             });
 
@@ -269,6 +280,18 @@ export const bookingsService = {
 
         if (error) throw error;
 
+        // Audit log for status change
+        if (currentBooking) {
+            if (status === 'confirmed') {
+                createAuditLog('BOOKING_CONFIRMED', { bookingId: id }, currentBooking.user_id);
+            } else if (status === 'cancelled') {
+                const eventType = currentBooking.status === 'pending'
+                    ? 'BOOKING_REJECTED'
+                    : 'BOOKING_CANCELLED';
+                createAuditLog(eventType, { bookingId: id, reason }, currentBooking.user_id);
+            }
+        }
+
         // Trigger Email Notification
         if (status === 'confirmed' || status === 'cancelled') {
              
@@ -296,7 +319,7 @@ export const bookingsService = {
                 
                 if (type) {
                      // Notify Guest
-                     supabase.functions.invoke('send-email', {
+                     retry(() => supabase.functions.invoke('send-email', {
                         body: {
                             type,
                             userId: currentBooking.user_id,
@@ -306,14 +329,14 @@ export const bookingsService = {
                                 checkIn: currentBooking.check_in,
                                 checkOut: currentBooking.check_out,
                                 reason: reason, // For rejection
-                                link: `${window.location.origin}/profile`
+                                link: getAppUrl('/profile')
                             }
                         }
-                    }).catch(err => console.error('Failed to send status email:', err));
+                    })).catch(err => console.error('Failed to send status email:', err));
 
                     // Notify Host if Cancelled
                     if (status === 'cancelled' && type === 'booking_cancelled' && hostId) {
-                        supabase.functions.invoke('send-email', {
+                        retry(() => supabase.functions.invoke('send-email', {
                             body: {
                                 type: 'booking_cancelled_host',
                                 userId: hostId,
@@ -323,10 +346,10 @@ export const bookingsService = {
                                     itemTypeLabel: itemTypeLabel,
                                     checkIn: currentBooking.check_in,
                                     checkOut: currentBooking.check_out,
-                                    link: `${window.location.origin}/host/bookings`
+                                    link: getAppUrl('/host/bookings')
                                 }
                             }
-                        }).catch(err => console.error('Failed to send host cancellation email:', err));
+                        })).catch(err => console.error('Failed to send host cancellation email:', err));
                     }
                 }
             }
@@ -337,7 +360,7 @@ export const bookingsService = {
         // 1. Fetch booking to check created_at time
         const { data: booking, error: fetchError } = await supabase
             .from('bookings')
-            .select('created_at, status')
+            .select('created_at, status, user_id')
             .eq('id', id)
             .single();
 
@@ -362,6 +385,13 @@ export const bookingsService = {
              reason = 'Standard Cancellation (after 48h)';
              // potentially trigger partial refund logic here in future
         }
+
+        // Log cancellation for audit tracking
+        createAuditLog('CANCELLATION', { 
+            bookingId: id, 
+            reason,
+            hoursSinceCreation: diffHours.toFixed(2)
+        }, booking.user_id);
 
         return this.updateBookingStatus(id, 'cancelled', reason);
     }

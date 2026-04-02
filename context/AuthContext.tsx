@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../api-services/supabase';
+import { getAppUrl } from '../utils/appUrl';
 
 // Types
 export interface User {
@@ -147,7 +148,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     userId: data.user.id,
                     data: {
                         name: name,
-                        link: window.location.origin
+                        link: getAppUrl('/')
                     }
                 }
             }).catch(e => console.error('Failed to send welcome email', e));
