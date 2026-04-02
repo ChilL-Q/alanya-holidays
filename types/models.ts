@@ -24,8 +24,7 @@ export interface UserProfile {
 
 export interface PropertyDB {
     id: string;
-    property_ref?: number; // Friendly ID (e.g., 1001) - DEPRECATED, use ref_id
-    ref_id?: number; // Auto-incrementing friendly ID from database
+    ref_id?: number;
     title: string;
     description: string;
     price_per_night: number;
@@ -271,7 +270,6 @@ export interface ChatConversation {
 
 export interface Property {
   id: string;
-  property_ref?: number;
   ref_id?: number;
   title: string;
   location: string;

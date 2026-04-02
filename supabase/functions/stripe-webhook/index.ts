@@ -50,39 +50,61 @@ Deno.serve(async (req: Request) => {
 
         console.warn(`Confirmed bookings: ${bookingIds.join(', ')}`)
 
-        // Отправляем email гостю по каждой брони
-        for (const bookingId of bookingIds) {
-          const { data: booking } = await supabase
-            .from('bookings')
-            .select(`
-              check_in, check_out, guests,
-              property:properties(title),
-              service:services(title),
-              profile:profiles!bookings_user_id_fkey(email)
-            `)
-            .eq('id', bookingId)
-            .single()
+        // Fetch all bookings at once to avoid N+1
+        const { data: bookings, error: fetchError } = await supabase
+          .from('bookings')
+          .select(`
+            id, check_in, check_out, guests,
+            property:properties(title),
+            service:services(title),
+            profile:profiles!bookings_user_id_fkey(email)
+          `)
+          .in('id', bookingIds)
 
-          if (booking) {
-            const itemTitle = (booking.property as any)?.title ?? (booking.service as any)?.title ?? 'Booking'
-            const guestEmail = (booking.profile as any)?.email
+        if (fetchError) {
+          console.error('Failed to fetch bookings for emails:', fetchError)
+        }
+
+        // Отправляем email гостю по каждой брони
+        if (bookings && bookings.length > 0) {
+          await Promise.all(bookings.map(async (booking: any) => {
+            const itemTitle = booking.property?.title ?? booking.service?.title ?? 'Booking'
+            const guestEmail = booking.profile?.email
 
             if (guestEmail) {
-              await supabase.functions.invoke('send-email', {
-                body: {
-                  to: guestEmail,
-                  type: 'booking_confirmed',
-                  data: {
-                    itemTitle,
-                    checkIn: booking.check_in,
-                    checkOut: booking.check_out,
-                    guests: String(booking.guests ?? 1),
-                    link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
-                  },
-                },
-              }).catch((e: any) => console.error('Email send failed:', e))
+              const maxRetries = 3
+              let lastError: any
+
+              for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                  await supabase.functions.invoke('send-email', {
+                    body: {
+                      to: guestEmail,
+                      type: 'booking_confirmed',
+                      data: {
+                        itemTitle,
+                        checkIn: booking.check_in,
+                        checkOut: booking.check_out,
+                        guests: String(booking.guests ?? 1),
+                        link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+                      },
+                    },
+                  })
+                  console.log(`Email sent successfully for booking ${booking.id}`)
+                  break
+                } catch (e: any) {
+                  lastError = e
+                  if (attempt < maxRetries) {
+                    const delayMs = Math.pow(2, attempt) * 1000
+                    console.warn(`Email send failed for booking ${booking.id}, attempt ${attempt}/${maxRetries}. Retrying in ${delayMs}ms...`)
+                    await new Promise(resolve => setTimeout(resolve, delayMs))
+                  } else {
+                    console.error(`Email send failed for booking ${booking.id} after ${maxRetries} attempts:`, e)
+                  }
+                }
+              }
             }
-          }
+          }))
         }
       }
     }

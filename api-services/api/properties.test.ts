@@ -45,6 +45,7 @@ describe('propertiesService', () => {
       not: vi.fn().mockReturnThis(),
       neq: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({ data, error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       then: (resolve: any) => resolve({ data, error: null })
     };
     return chain;
@@ -85,12 +86,13 @@ describe('propertiesService', () => {
   });
 
   describe('getProperty', () => {
-    it('fetches by UUID and applies Nar Villa override', async () => {
+    it('fetches property by UUID', async () => {
         const uuid = 'eee2d685-eac5-4ec8-bd24-63fea94f25ee';
-        mockSupabase.from.mockReturnValue(createMockChain({ id: uuid, title: 'Nar Villa' }));
+        mockSupabase.from.mockReturnValue(createMockChain({ id: uuid, title: 'Nar Villa', ref_id: 1 }));
 
         const result = await propertiesService.getProperty(uuid);
-        expect(result.property_ref).toBe(1001);
+        expect(result.id).toBe(uuid);
+        expect(result.title).toBe('Nar Villa');
     });
 
     it('fetches by ref_id using RPC', async () => {

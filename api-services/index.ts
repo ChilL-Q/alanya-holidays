@@ -7,6 +7,7 @@ export type { Review, Notification, ServiceModel };
 export * from './api/properties';
 export * from './api/services';
 export * from './api/bookings';
+export * from './api/audit';
 export * from './api/users';
 export * from './api/products';
 export * from './api/misc';

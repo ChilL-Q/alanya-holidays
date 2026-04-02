@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Save, Trash2, X, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
+import { getAppUrl } from '../../utils/appUrl';
 
 import { ServiceBasicDetailsForm } from '../../components/admin/services/ServiceBasicDetailsForm';
 import { ServiceFeaturesForm } from '../../components/admin/services/ServiceFeaturesForm';
@@ -95,7 +96,7 @@ export const AdminEditServicePage: React.FC = () => {
                         userId: service.provider_id,
                         data: {
                             title: service.title,
-                            link: `${window.location.origin}/service/${id}`
+                            link: getAppUrl(`/service/${id}`)
                         }
                     }
                 }).catch(e => console.error('Failed to notify provider', e));
@@ -111,7 +112,7 @@ export const AdminEditServicePage: React.FC = () => {
                             userId: service.provider_id,
                             data: {
                                 title: service.title,
-                                link: `${window.location.origin}/service/${id}`
+                                link: getAppUrl(`/service/${id}`)
                             }
                         }
                     }).catch(e => console.error('Failed to notify provider', e));

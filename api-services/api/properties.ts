@@ -2,6 +2,10 @@ import { supabase } from '../supabase';
 import { PropertyDB, ApprovalStatus, Review } from '../../types/index';
 import { notificationsService } from './notifications';
 import { propertySchema } from './schemas';
+import { getAppUrl } from '../../utils/appUrl';
+import { getPropertyOverride } from './config';
+import { retry } from '../../utils/retry';
+import { createAuditLog } from './audit';
 
 export const propertiesService = {
     async getPropertiesByIds(ids: string[]) {
@@ -103,29 +107,7 @@ export const propertiesService = {
 
         if (error) throw error;
         
-        // Mock property_ref for now (use hashing or slicing if not present)
-        const mappedData = (data as PropertyDB[]).map(p => {
-            // CENTRALIZED FIX: Nar Villa Data Override
-            if (p.id === 'eee2d685-eac5-4ec8-bd24-63fea94f25ee') {
-                return {
-                    ...p,
-                    property_ref: 1001 // Fixed Friendly ID for Nar Villa (Data now in DB)
-                };
-            }
-            // CENTRALIZED FIX: Castle View Penthouse Data Override
-            if (p.title === 'Castle View Penthouse') {
-                return {
-                    ...p,
-                    property_ref: 1002 // Fixed Friendly ID for Castle View (Data now in DB)
-                };
-            }
-            return {
-                ...p,
-                property_ref: p.property_ref || parseInt(p.id.slice(0, 8), 16) % 10000 // Temporary mock ID
-            };
-        });
-
-        return { data: mappedData, count };
+        return { data: data as PropertyDB[], count };
     },
 
     async getAvailableProperties(checkIn: string, checkOut: string) {
@@ -149,99 +131,70 @@ export const propertiesService = {
     },
 
     async getProperty(id: string) {
-        // Check if id is UUID or Reference
+        // Check if id is UUID or Reference/Slug
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
         
+        let targetId = id;
+        
+        // If not UUID, check for slug override
+        if (!isUUID) {
+            const overrideId = await getPropertyOverride(id);
+            if (overrideId) {
+                targetId = overrideId;
+            }
+        }
+
+        // Re-check if we now have a UUID (either original or from override)
+        const finalIsUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
         
         let data, error;
         
-        if (isUUID) {
+        if (finalIsUUID) {
             const result = await supabase
                 .from('properties')
                 .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
-                .eq('id', id)
+                .eq('id', targetId)
                 .single();
             data = result.data;
             error = result.error;
         } else {
-            // Use RPC to bypass schema cache issues - returns array
-            try {
-                const result = await supabase
-                    .rpc('get_property_by_ref_id', { ref_id_param: parseInt(id) });
-                
-                // Get first item from array (RPC returns array, not single object)
-                if (result.data && result.data.length > 0) {
-                    data = result.data[0];
-                    error = null;
+            // Try numeric ref_id lookup via RPC
+            const refId = parseInt(targetId);
+            if (!isNaN(refId)) {
+                try {
+                    const result = await supabase
+                        .rpc('get_property_by_ref_id', { ref_id_param: refId });
                     
-                    // Fetch host data separately if property found
-                    if (data.host_id) {
-                        const { data: hostData } = await supabase
-                            .from('profiles')
-                            .select('full_name, avatar_url, email, phone, company_name')
-                            .eq('id', data.host_id)
-                            .single();
-                        if (hostData) {
-                            data.host = hostData;
+                    if (result.data && result.data.length > 0) {
+                        data = result.data[0];
+                        error = null;
+                        
+                        // Fetch host data separately if property found
+                        if (data.host_id) {
+                            const { data: hostData } = await supabase
+                                .from('profiles')
+                                .select('full_name, avatar_url, email, phone, company_name')
+                                .eq('id', data.host_id)
+                                .single();
+                            if (hostData) {
+                                data.host = hostData;
+                            }
                         }
+                    } else {
+                        data = null;
+                        error = result.error || { message: 'Property not found' };
                     }
-                } else {
+                } catch (e) {
+                    console.error('Error fetching property by ref_id:', e);
+                    error = e;
                     data = null;
-                    error = result.error || { message: 'Property not found' };
                 }
-            } catch (e) {
-                console.error('Error fetching property by ref_id:', e);
-                error = e;
-                data = null;
+            } else {
+                error = { message: 'Invalid property ID format' };
             }
         }
 
-        // Fallback for mock environment if property_ref not in DB
-        if ((error || !data) && !isUUID) {
-             // CENTRALIZED FIX: Handle specific mock IDs
-             if (id === '1001') {
-                 const { data: nar } = await supabase
-                    .from('properties')
-                    .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
-                    .eq('id', 'eee2d685-eac5-4ec8-bd24-63fea94f25ee') // Nar Villa UUID
-                    .single();
-                 if (nar) {
-                     nar.property_ref = 1001; // Data now in DB
-                     return nar as PropertyDB;
-                 }
-             }
-
-             if (id === '1002') {
-                 const { data: castle } = await supabase
-                    .from('properties')
-                    .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
-                    .eq('title', 'Castle View Penthouse')
-                    .single();
-                 if (castle) {
-                     castle.property_ref = 1002; // Data now in DB
-                     return castle as PropertyDB;
-                 }
-             }
-
-             // Generic fallback logic
-             const { data: all } = await supabase.from('properties').select('*, host:profiles(full_name, avatar_url, email, phone, company_name)');
-             if (all) {
-                 const found = all.find((p: any) => (parseInt(p.id.slice(0, 8), 16) % 10000).toString() === id);
-                 if (found) return found as PropertyDB;
-             }
-             if (error) throw error;
-        }
-
         if (error) throw error;
-        
-        // CENTRALIZED FIX: ID Mapping only
-        if (data && data.id === 'eee2d685-eac5-4ec8-bd24-63fea94f25ee') {
-            data.property_ref = 1001;
-        }
-        if (data && data.title === 'Castle View Penthouse') {
-            data.property_ref = 1002;
-        }
-
         return data as PropertyDB;
     },
 
@@ -311,6 +264,13 @@ export const propertiesService = {
             .eq('id', id);
         if (error) throw error;
 
+        // Audit log for status change
+        if (status === 'approved') {
+            createAuditLog('PROPERTY_APPROVED', { propertyId: id });
+        } else if (status === 'rejected') {
+            createAuditLog('PROPERTY_REJECTED', { propertyId: id, reason });
+        }
+
         // Notify Host via Email
         if (status === 'approved' || status === 'rejected') {
             const { data: property } = await supabase
@@ -320,17 +280,17 @@ export const propertiesService = {
                 .single();
             
             if (property) {
-                supabase.functions.invoke('send-email', {
+                retry(() => supabase.functions.invoke('send-email', {
                     body: {
                         type: status === 'approved' ? 'listing_approved' : 'listing_rejected',
                         userId: property.host_id,
                         data: {
                             title: property.title,
                             reason: reason,
-                            link: `${window.location.origin}/property/${id}`
+                            link: getAppUrl(`property/${id}`)
                         }
                     }
-                }).catch(err => console.error('Failed to send status email:', err));
+                })).catch(err => console.error('Failed to send status email:', err));
             }
         }
 
@@ -399,7 +359,7 @@ export const propertiesService = {
              // Fetch guest name (optional, but good for email)
              // We can assume we have user context if we needed, but let's just use generic or fetch if critical
              // For now, let's send basic notification
-             supabase.functions.invoke('send-email', {
+            retry(() => supabase.functions.invoke('send-email', {
                 body: {
                     type: 'new_review',
                     userId: property.host_id,
@@ -408,10 +368,10 @@ export const propertiesService = {
                         rating: review.rating,
                         comment: review.comment,
                         guestName: 'A Guest', // We'd need to fetch user profile to get specific name
-                        link: `${window.location.origin}/property/${review.property_id}`
+                        link: getAppUrl(`property/${review.property_id}`)
                     }
                 }
-            }).catch(err => console.error('Failed to send review email:', err));
+            })).catch(err => console.error('Failed to send review email:', err));
         }
     },
 
@@ -444,8 +404,11 @@ export const propertiesService = {
             .eq('id', id)
             .single();
 
+        // Audit log for deletion
+        createAuditLog('PROPERTY_DELETED', { propertyId: id, reason });
+
         if (property) {
-             supabase.functions.invoke('send-email', {
+            retry(() => supabase.functions.invoke('send-email', {
                 body: {
                     type: 'listing_deleted',
                     userId: property.host_id,
@@ -454,7 +417,7 @@ export const propertiesService = {
                         reason: reason
                     }
                 }
-            }).catch(err => console.error('Failed to send deletion email:', err));
+            })).catch(err => console.error('Failed to send deletion email:', err));
         }
 
         // 1. Delete Dependencies (Manual Cascade)

@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { AlertCircle, Loader2, ArrowLeft, Mail, User, Lock } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import { supabase } from '../../api-services/supabase';
+import { getAppUrl } from '../../utils/appUrl';
 
 export const RegisterModal: React.FC = () => {
     const { activeModal, closeModal, openLogin } = useModal();
@@ -75,7 +76,7 @@ export const RegisterModal: React.FC = () => {
                         to: email,
                         data: {
                             name: name, // From state
-                            url: window.location.origin
+                            url: getAppUrl('/')
                         }
                     }
                 }).catch(err => console.error('Failed to send welcome email:', err));
