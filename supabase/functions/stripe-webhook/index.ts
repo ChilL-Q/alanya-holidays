@@ -73,8 +73,6 @@ Deno.serve(async (req: Request) => {
 
             if (guestEmail) {
               const maxRetries = 3
-              let lastError: any
-
               for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                   await supabase.functions.invoke('send-email', {
@@ -90,10 +88,8 @@ Deno.serve(async (req: Request) => {
                       },
                     },
                   })
-                  console.log(`Email sent successfully for booking ${booking.id}`)
                   break
                 } catch (e: any) {
-                  lastError = e
                   if (attempt < maxRetries) {
                     const delayMs = Math.pow(2, attempt) * 1000
                     console.warn(`Email send failed for booking ${booking.id}, attempt ${attempt}/${maxRetries}. Retrying in ${delayMs}ms...`)
