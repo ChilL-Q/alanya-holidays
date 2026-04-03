@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { PropertyDB, ApprovalStatus, Review } from '../../types/index';
+import { PropertyDB, ApprovalStatus, Review, PropertyAvailability, PropertyICalFeed } from '../../types/index';
 import { notificationsService } from './notifications';
 import { propertySchema } from './schemas';
 import { getAppUrl } from '../../utils/appUrl';
@@ -516,7 +516,7 @@ export const propertiesService = {
             .lte('date', endDate);
 
         if (error) throw error;
-        return data as any[]; // Type assertion needed or update types import
+        return data as PropertyAvailability[];
     },
 
     async updatePropertyAvailability(
@@ -575,7 +575,7 @@ export const propertiesService = {
             .neq('status', 'available');
 
         if (error) throw error;
-        return (data || []).map((row: any) => row.date);
+        return (data || []).map(row => row.date);
     },
 
     // Multi-Calendar Management
@@ -587,7 +587,7 @@ export const propertiesService = {
             .order('created_at', { ascending: true });
         
         if (error) throw error;
-        return data as any[]; // Need to import PropertyICalFeed type properly if possible, or cast later
+        return data as PropertyICalFeed[];
     },
 
     async addICalFeed(propertyId: string, name: string, url: string) {

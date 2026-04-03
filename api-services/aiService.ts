@@ -47,6 +47,17 @@ const getFallbackResponse = (): string => {
 };
 
 /**
+ * Custom error class for AI service rate limits.
+ */
+class RateLimitError extends Error {
+    isRateLimit = true;
+    constructor(message: string) {
+        super(message);
+        this.name = 'RateLimitError';
+    }
+}
+
+/**
  * Asks the AI Local Guide a question about a property or Alanya in general.
  * Includes retry logic and fallback recommendations if the service is unavailable.
  * 
@@ -79,10 +90,7 @@ export const askLocalGuide = async (
         if (data?.error) {
             const errorMsg = String(data.error);
             if (errorMsg.includes('429') || errorMsg.includes('rate')) {
-                const rateLimitError = new Error("RATE_LIMIT");
-                // @ts-ignore - adding custom property to error
-                (rateLimitError as any).isRateLimit = true;
-                throw rateLimitError;
+                throw new RateLimitError("RATE_LIMIT");
             }
             throw new Error(errorMsg);
         }
@@ -104,7 +112,7 @@ export const askLocalGuide = async (
         console.error("AI Service Error after retries:", error);
 
         // Handle rate limits gracefully with a specific message
-        if (error.isRateLimit || String(error).includes("429") || String(error).includes("rate")) {
+        if (error instanceof RateLimitError || error.isRateLimit || String(error).includes("429") || String(error).includes("rate")) {
             return "I'm currently receiving too many requests. Please wait 10-20 seconds and try again! ⏳";
         }
 

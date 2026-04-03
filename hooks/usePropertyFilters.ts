@@ -182,15 +182,12 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
     // Client-side filtering removed - properties are now already filtered from backend
     const filteredProperties = properties;
 
-    const activeFilterCount = Object.keys(filters).reduce((acc, key) => {
-        // @ts-ignore
+    const activeFilterCount = (Object.keys(filters) as Array<keyof FilterState>).reduce((acc, key) => {
+        const value = filters[key];
         if (key === 'priceRange') return acc;
-        // @ts-ignore
-        if (Array.isArray(filters[key])) return acc + filters[key].length;
-         // @ts-ignore
-        if (typeof filters[key] === 'boolean') return acc + (filters[key] ? 1 : 0);
-         // @ts-ignore
-        if (key.startsWith('min') && filters[key] > (key === 'minGuests' ? 1 : 0)) return acc + 1;
+        if (Array.isArray(value)) return acc + value.length;
+        if (typeof value === 'boolean') return acc + (value ? 1 : 0);
+        if (typeof value === 'number' && key.startsWith('min') && value > (key === 'minGuests' ? 1 : 0)) return acc + 1;
         return acc;
     }, 0);
 

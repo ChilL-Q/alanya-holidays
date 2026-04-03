@@ -133,7 +133,7 @@ export interface ServiceDB {
     price: number;
     type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative';
     provider_id: string;
-    features: { [key: string]: any };
+    features: ServiceFeatures;
     images: string[];
     status?: ApprovalStatus | 'approved' | 'pending' | 'rejected';
     rejection_reason?: string;
@@ -203,6 +203,8 @@ export interface Booking {
     check_out?: string;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     total_price: number;
+    guests: number;
+    message?: string;
     created_at?: string;
     
     // Virtual fields for joined data
@@ -210,7 +212,7 @@ export interface Booking {
     service?: Partial<ServiceDB>;
     product?: Partial<Product>;
     
-    payment_method?: 'card' | 'bank' | 'crypto' | 'cash';
+    payment_method?: 'card' | 'bank' | 'crypto' | 'cash' | 'swift';
     payment_status?: 'pending' | 'paid' | 'failed' | 'refunded';
     payment_intent_id?: string;
     
@@ -285,7 +287,7 @@ export interface Property {
   beds: number;
   bathrooms: number;
   description: string;
-  amenities: (string | any)[];
+  amenities: string[];
   hostName: string;
   type?: string; 
   cleaning_fee?: number;
@@ -296,7 +298,7 @@ export interface Property {
 
 export interface Service {
   id: string;
-  type: any; // Using any for transition or Specific enum if imported
+  type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative';
   title: string;
   price: number;
   description: string;

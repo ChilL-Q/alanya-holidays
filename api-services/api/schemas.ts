@@ -26,7 +26,7 @@ export const bookingSchema = z.object({
     guests: z.number().int().min(1),
     message: z.string().max(500).optional(),
     payment_method: z.enum(['card', 'cash', 'bank', 'crypto', 'swift']).default('card'),
-    type: z.enum(['property', 'service'])
+    item_type: z.enum(['property', 'service', 'product'])
 });
 
 export const serviceSchema = z.object({
