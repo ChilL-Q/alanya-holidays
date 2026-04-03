@@ -61,3 +61,6 @@ supabase_lint_check.txt
 
 # Testsprite
 testsprite_tests/
+
+# Conductor
+conductor/

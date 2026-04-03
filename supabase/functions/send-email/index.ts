@@ -150,7 +150,7 @@ Deno.serve(async (req: Request) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Alanya Holidays <onboarding@resend.dev>', // TODO: Change to verified domain in prod
+        from: 'Alanya Holidays <noreply@alanya-holidays.com>',
         to: targetEmail,
         subject,
         html,
