@@ -21,10 +21,10 @@ export const MOCK_PROPERTIES: Property[] = [
     hostName: 'Mehmet Y.',
     description: 'Experience the best of Alanya in this stunning penthouse overlooking the famous Kleopatra Beach. Features a private jacuzzi and expansive terrace.',
     amenities: [
-      { icon: 'wifi', label: 'Fast Wifi' },
-      { icon: 'wind', label: 'Air Conditioning' },
-      { icon: 'waves', label: 'Sea View' },
-      { icon: 'coffee', label: 'Coffee Maker' }
+      'amenities.wifi',
+      'amenities.ac',
+      'amenities.waterfront',
+      'amenities.hot_water'
     ]
   },
   {
@@ -47,10 +47,10 @@ export const MOCK_PROPERTIES: Property[] = [
     hostName: 'Elena K.',
     description: 'Escape the city noise in this secluded villa in the Tepe hills. Infinity pool with panoramic castle views.',
     amenities: [
-      { icon: 'droplet', label: 'Private Pool' },
-      { icon: 'car', label: 'Free Parking' },
-      { icon: 'utensils', label: 'Full Kitchen' },
-      { icon: 'sun', label: 'Terrace' }
+      'amenities.pool',
+      'amenities.parking',
+      'amenities.kitchen',
+      'amenities.balcony'
     ]
   },
   {
@@ -73,9 +73,9 @@ export const MOCK_PROPERTIES: Property[] = [
     hostName: 'Alanya Rentals',
     description: 'Perfect for digital nomads and families. Close to shopping malls, restaurants, and just 500m from the beach.',
     amenities: [
-      { icon: 'tv', label: 'Smart TV' },
-      { icon: 'map-pin', label: 'Central Location' },
-      { icon: 'briefcase', label: 'Work Area' }
+      'amenities.tv',
+      'amenities.private_entrance',
+      'amenities.essentials'
     ]
   }
 ];

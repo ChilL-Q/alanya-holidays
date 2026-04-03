@@ -1,16 +1,37 @@
 import { supabase } from '../supabase';
-import { Booking } from '../../types/index';
+import { Booking, PropertyDB, ServiceDB, UserProfile } from '../../types/index';
 import { bookingSchema } from './schemas';
 import { getAppUrl } from '../../utils/appUrl';
 import { retry } from '../../utils/retry';
 import { createAuditLog } from './audit';
+import { z } from 'zod';
+
+export type BookingCreateInput = Omit<z.infer<typeof bookingSchema>, 'item_type' | 'payment_method'> & { 
+    item_type?: 'property' | 'service' | 'product' | string;
+    payment_method?: string;
+    type?: string; // Legacy field support
+    title?: string; 
+    status?: string; // Legacy field support
+    payment_status?: string; // Legacy field support
+};
+
+export type EnrichedBooking = Booking & {
+    user?: Partial<UserProfile>;
+    itemTitle?: string;
+};
 
 export const bookingsService = {
 
 
-    async createBooking(data: any) {
+    async createBooking(data: BookingCreateInput) {
+         // Map legacy 'type' to 'item_type' if needed for backward compatibility
+         const input = {
+             ...data,
+             item_type: data.item_type || data.type || 'property'
+         };
+
          // Validate Input
-         const validatedData = bookingSchema.parse(data);
+         const validatedData = bookingSchema.parse(input);
 
          const rpcParams = {
             p_item_id: validatedData.item_id, 
@@ -21,7 +42,7 @@ export const bookingsService = {
             p_guests: validatedData.guests,
             p_message: validatedData.message,
             p_payment_method: validatedData.payment_method,
-            p_item_type: validatedData.type
+            p_item_type: validatedData.item_type
         };
 
         const { data: result, error } = await supabase.rpc('create_booking', rpcParams);
@@ -31,13 +52,13 @@ export const bookingsService = {
 
         // Trigger Email Notification (Non-blocking)
         const bookingId = result.data;
-        const itemTypeLabel = data.type === 'service' ? 'Service' : 'Property';
+        const itemTypeLabel = input.item_type === 'service' ? 'Service' : 'Property';
 
         // Получаем имя гостя один раз для обоих писем
         const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
-            .eq('id', data.user_id)
+            .eq('id', validatedData.user_id)
             .single();
 
         const guestName = profile?.full_name || 'Guest';
@@ -45,23 +66,23 @@ export const bookingsService = {
         // Log booking creation
         createAuditLog('BOOKING_CREATED', { 
             bookingId, 
-            userId: data.user_id, 
-            itemId: data.item_id, 
-            itemType: data.type 
+            userId: validatedData.user_id, 
+            itemId: validatedData.item_id, 
+            itemType: input.item_type 
         });
 
         retry(() => supabase.functions.invoke('send-email', {
             body: {
                 type: 'booking_created',
-                userId: data.user_id,
+                userId: validatedData.user_id,
                 data: {
                     userName: guestName,
                     itemTitle: data.title || 'Item',
                     itemTypeLabel: itemTypeLabel,
-                    checkIn: data.check_in,
-                    checkOut: data.check_out,
-                    totalPrice: data.total_price,
-                    guests: data.guests,
+                    checkIn: validatedData.check_in,
+                    checkOut: validatedData.check_out,
+                    totalPrice: validatedData.total_price,
+                    guests: validatedData.guests,
                     link: getAppUrl('/profile')
                 }
             }
@@ -69,10 +90,10 @@ export const bookingsService = {
 
         // Notify Host (New Feature)
         // Correctly identify table based on type
-        const table = data.type === 'service' ? 'services' : 'properties';
-        const ownerParams = data.type === 'service' ? 'provider_id, title' : 'host_id, title';
+        const table = input.item_type === 'service' ? 'services' : 'properties';
+        const ownerParams = input.item_type === 'service' ? 'provider_id, title' : 'host_id, title';
 
-        supabase.from(table).select(ownerParams).eq('id', data.item_id || data.id).single()
+        supabase.from(table).select(ownerParams).eq('id', validatedData.item_id).single()
             .then(({ data: item }) => {
                 const itemData = item as any;
                 const hostId = itemData ? (itemData.host_id || itemData.provider_id) : null;
@@ -86,11 +107,11 @@ export const bookingsService = {
                                 guestName: guestName,
                                 itemTitle: itemData.title,
                                 itemTypeLabel: itemTypeLabel,
-                                checkIn: data.check_in,
-                                checkOut: data.check_out,
-                                totalPrice: data.total_price,
-                                guests: data.guests,
-                                message: data.message, // Include user message
+                                checkIn: validatedData.check_in,
+                                checkOut: validatedData.check_out,
+                                totalPrice: validatedData.total_price,
+                                guests: validatedData.guests,
+                                message: validatedData.message, // Include user message
                                 link: getAppUrl('/host/bookings')
                             }
                         }
@@ -98,13 +119,13 @@ export const bookingsService = {
                 }
             });
 
-        return { id: bookingId };
+        return { id: bookingId as string };
     },
     
     // Original unsafe method kept as reference if needed (renamed internal or just removed)
     // async createBookingLegacy(data: any) { ... }
 
-    async getBookings(userId?: string) {
+    async getBookings(userId?: string): Promise<EnrichedBooking[]> {
         // 1. Fetch raw bookings
         let query = supabase.from('bookings').select('*');
 
@@ -119,35 +140,35 @@ export const bookingsService = {
 
         // 2. Batch Fetching Details
         const propertyIds = bookings
-            .filter((b: any) => b.item_type === 'property')
-            .map((b: any) => b.item_id);
+            .filter(b => b.item_type === 'property')
+            .map(b => b.item_id);
             
         const serviceIds = bookings
-            .filter((b: any) => b.item_type === 'service')
-            .map((b: any) => b.item_id);
+            .filter(b => b.item_type === 'service')
+            .map(b => b.item_id);
 
         const [propertiesResult, servicesResult] = await Promise.all([
             propertyIds.length > 0 
                 ? supabase.from('properties').select('id, title, images, price_per_night, location').in('id', propertyIds)
-                : Promise.resolve({ data: [], error: null }),
+                : Promise.resolve({ data: [] as any[], error: null }),
             serviceIds.length > 0
                 ? supabase.from('services').select('id, title, images, price, type').in('id', serviceIds)
-                : Promise.resolve({ data: [], error: null })
+                : Promise.resolve({ data: [] as any[], error: null })
         ]);
 
         if (propertiesResult.error) throw propertiesResult.error;
         if (servicesResult.error) throw servicesResult.error;
 
         // Clean up any usage
-        const propertyItems = propertiesResult.data || [];
-        const serviceItems = servicesResult.data || [];
+        const propertyItems = (propertiesResult.data || []) as PropertyDB[];
+        const serviceItems = (servicesResult.data || []) as ServiceDB[];
 
-        const propertyMap = new Map(propertyItems.map((p: any) => [p.id, p] as [string, any]));
-        const serviceMap = new Map(serviceItems.map((s: any) => [s.id, s] as [string, any]));
+        const propertyMap = new Map(propertyItems.map(p => [p.id, p]));
+        const serviceMap = new Map(serviceItems.map(s => [s.id, s]));
 
         // 3. Map details back to bookings
-        const enrichedBookings = bookings.map((booking: any) => {
-            let details = null;
+        const enrichedBookings = bookings.map(booking => {
+            let details = {};
             if (booking.item_type === 'property') {
                 details = { property: propertyMap.get(booking.item_id) || null };
             } else if (booking.item_type === 'service') {
@@ -156,11 +177,11 @@ export const bookingsService = {
             return { ...booking, ...details };
         });
 
-        return enrichedBookings as Booking[];
+        return enrichedBookings as EnrichedBooking[];
     },
     
     // Admin Bookings
-    async getAdminBookings(statusFilter?: string) {
+    async getAdminBookings(statusFilter?: string): Promise<EnrichedBooking[]> {
         let query = supabase.from('bookings').select('*');
 
         if (statusFilter && statusFilter !== 'all') {
@@ -170,33 +191,33 @@ export const bookingsService = {
         const { data: bookings, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
-        if (bookings.length === 0) return [];
+        if (!bookings || bookings.length === 0) return [];
 
         // Batch Fetching for Efficient Data Loading (Avoid N+1 Problem)
-        const userIds = Array.from(new Set(bookings.map((b: any) => b.user_id).filter(Boolean)));
-        const propertyIds = Array.from(new Set(bookings.filter((b: any) => b.item_type === 'property').map((b: any) => b.item_id).filter(Boolean)));
-        const serviceIds = Array.from(new Set(bookings.filter((b: any) => b.item_type === 'service').map((b: any) => b.item_id).filter(Boolean)));
+        const userIds = Array.from(new Set(bookings.map(b => b.user_id).filter(Boolean)));
+        const propertyIds = Array.from(new Set(bookings.filter(b => b.item_type === 'property').map(b => b.item_id).filter(Boolean)));
+        const serviceIds = Array.from(new Set(bookings.filter(b => b.item_type === 'service').map(b => b.item_id).filter(Boolean)));
 
         const [usersResult, propertiesResult, servicesResult] = await Promise.all([
             userIds.length > 0 
                 ? supabase.from('profiles').select('id, full_name, email, avatar_url').in('id', userIds)
-                : Promise.resolve({ data: [] }),
+                : Promise.resolve({ data: [] as any[] }),
             propertyIds.length > 0 
                 ? supabase.from('properties').select('id, title, images, price_per_night, location').in('id', propertyIds)
-                : Promise.resolve({ data: [] }),
+                : Promise.resolve({ data: [] as any[] }),
             serviceIds.length > 0
                 ? supabase.from('services').select('id, title, images, price, type').in('id', serviceIds)
-                : Promise.resolve({ data: [] })
+                : Promise.resolve({ data: [] as any[] })
         ]);
 
-        const userMap = new Map((usersResult.data || []).map((u: any) => [u.id, u]));
-        const propertyMap = new Map((propertiesResult.data || []).map((p: any) => [p.id, p]));
-        const serviceMap = new Map((servicesResult.data || []).map((s: any) => [s.id, s]));
+        const userMap = new Map(((usersResult.data || []) as UserProfile[]).map(u => [u.id, u]));
+        const propertyMap = new Map(((propertiesResult.data || []) as PropertyDB[]).map(p => [p.id, p]));
+        const serviceMap = new Map(((servicesResult.data || []) as ServiceDB[]).map(s => [s.id, s]));
 
-        const enrichedBookings = bookings.map((booking: any) => {
+        const enrichedBookings = bookings.map(booking => {
             const user = userMap.get(booking.user_id);
             
-            let itemDetails = null;
+            let itemDetails = {};
             if (booking.item_type === 'property') {
                 const property = propertyMap.get(booking.item_id);
                 itemDetails = { property, itemTitle: property?.title };
@@ -208,7 +229,7 @@ export const bookingsService = {
             return { ...booking, user, ...itemDetails };
         });
 
-        return enrichedBookings;
+        return enrichedBookings as EnrichedBooking[];
     },
 
     async getBookingsByStatus(status: string) {
@@ -216,7 +237,7 @@ export const bookingsService = {
     },
 
     // Host Bookings (New Efficient Method)
-    async getBookingsForHost(hostId: string, dateFrom?: string, dateTo?: string) {
+    async getBookingsForHost(hostId: string, dateFrom?: string, dateTo?: string): Promise<EnrichedBooking[]> {
         // 1. Get all properties owned by host
         const { data: properties } = await supabase
             .from('properties')
@@ -244,24 +265,25 @@ export const bookingsService = {
         const { data: bookings, error } = await query;
 
         if (error) throw error;
+        if (!bookings) return [];
 
         // 3. Batch Fetch Guest Info (Fix N+1 query)
-        const guestIds = Array.from(new Set(bookings.map((b: any) => b.user_id).filter(Boolean)));
+        const guestIds = Array.from(new Set(bookings.map(b => b.user_id).filter(Boolean)));
         const { data: profiles } = await supabase
             .from('profiles')
             .select('id, full_name, email, avatar_url, phone')
             .in('id', guestIds);
         
-        const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+        const profileMap = new Map(((profiles || []) as UserProfile[]).map(p => [p.id, p]));
 
-        const enrichedBookings = bookings.map((booking: any) => ({
+        const enrichedBookings = bookings.map(booking => ({
             ...booking,
             user: profileMap.get(booking.user_id), // Guest details
             property: propertyMap.get(booking.item_id),
             itemTitle: propertyMap.get(booking.item_id)?.title
         }));
 
-        return enrichedBookings;
+        return enrichedBookings as EnrichedBooking[];
     },
 
     async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'pending' | 'completed', reason?: string) {
@@ -302,8 +324,8 @@ export const bookingsService = {
                 const property = Array.isArray(currentBooking.property) ? currentBooking.property[0] : currentBooking.property;
                 const service = Array.isArray(currentBooking.service) ? currentBooking.service[0] : currentBooking.service;
                 
-                const itemTitle = property?.title || service?.title || 'Item';
-                const hostId = property?.host_id || service?.provider_id;
+                const itemTitle = (property as any)?.title || (service as any)?.title || 'Item';
+                const hostId = (property as any)?.host_id || (service as any)?.provider_id;
                 const itemTypeLabel = property ? 'Property' : (service ? 'Service' : 'Item');
 
                 if (status === 'confirmed') {
