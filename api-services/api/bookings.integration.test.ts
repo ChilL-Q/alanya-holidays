@@ -232,7 +232,7 @@ describe('cancelBooking', () => {
         });
 
         // Второй пользователь пытается обновить чужую бронь
-        const { data, error } = await otherClient
+        const { data, error: _error } = await otherClient
             .from('bookings')
             .update({ status: 'cancelled' })
             .eq('id', bookingId)

@@ -21,7 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 // Use test Supabase instance
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
 const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || 'test-key';
-const STRIPE_SECRET_KEY = import.meta.env.STRIPE_SECRET_KEY || 'sk_test_mock';
+const _STRIPE_SECRET_KEY = import.meta.env.STRIPE_SECRET_KEY || 'sk_test_mock';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
