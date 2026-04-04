@@ -81,7 +81,8 @@ export const Checkout: React.FC = () => {
                         listingId: item.id,
                         title: isDeposit ? `Deposit (20%): ${item.title}` : item.title,
                         price: isDeposit ? item.price * 0.2 : item.price,
-                        image: item.image
+                        image: item.image,
+                        type: item.type === 'RENTAL' ? 'property' : item.type
                     });
 
                     if (wpHandled && wpItem && (item.type === 'RENTAL' || item.type === 'property')) {
@@ -90,7 +91,8 @@ export const Checkout: React.FC = () => {
                             listingId: wpItem.id,
                             title: isDeposit ? `Deposit (20%): ${wpItem.title}` : wpItem.title,
                             price: isDeposit ? wpItem.price * 0.2 : wpItem.price,
-                            image: wpItem.image
+                            image: wpItem.image,
+                            type: 'welcome_pack'
                         });
                     }
                 }
