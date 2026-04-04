@@ -1,11 +1,13 @@
 import { supabase } from '../supabase';
 import { Product } from '../../types/index';
+import { productSchema } from './schemas';
 
 export const productsService = {
     async createProduct(data: Product) {
+        const validatedData = productSchema.parse(data);
         const { data: product, error } = await supabase
             .from('products')
-            .insert([data])
+            .insert([validatedData])
             .select()
             .single();
 

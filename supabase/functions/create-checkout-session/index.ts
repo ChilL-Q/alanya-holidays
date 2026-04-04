@@ -14,8 +14,10 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 )
 
+const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -35,7 +37,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
+    const token = authHeader.replace(/^Bearer\s+/i, '')
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
 
     if (userError || !user) {
@@ -52,6 +54,14 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate origin against allowed domain
+    if (!origin.startsWith(ALLOWED_ORIGIN)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid origin' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -104,7 +114,7 @@ Deno.serve(async (req: Request) => {
       }
 
       const verifiedIds = verifiedBookings?.map(b => b.id) || []
-      
+
       if (verifiedIds.length === 0) {
         return new Response(
           JSON.stringify({ error: 'No valid bookings found for this user' }),

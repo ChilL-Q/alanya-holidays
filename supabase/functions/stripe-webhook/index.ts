@@ -31,9 +31,25 @@ Deno.serve(async (req: Request) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
-    if (session.payment_status === 'paid') {
-      const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
+    // Idempotency: skip if already processed (payment_status already 'paid')
+    const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
+    if (bookingIds.length > 0) {
+      const { data: existing } = await supabase
+        .from('bookings')
+        .select('id, payment_status')
+        .eq('stripe_session_id', session.id)
+        .limit(1)
+        .single()
 
+      if (existing?.payment_status === 'paid') {
+        console.warn(`Skipping duplicate webhook for session ${session.id}`)
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    if (session.payment_status === 'paid') {
       if (bookingIds.length > 0) {
         const { error } = await supabase
           .from('bookings')

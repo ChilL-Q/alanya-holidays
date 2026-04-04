@@ -8,9 +8,10 @@ declare const Deno: any;
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -170,8 +171,9 @@ Deno.serve(async (req: Request) => {
     })
   } catch (error) {
     console.error('Email Function Error:', error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Sanitize error — don't leak internals
+    const safeMessage = error instanceof Error && error.message ? 'An error occurred sending the email' : 'An unexpected error occurred';
+    return new Response(JSON.stringify({ error: safeMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
