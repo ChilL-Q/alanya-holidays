@@ -55,6 +55,19 @@ export const chatService = {
 
     // Get messages for a specific conversation
     async getMessages(conversationId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Verify user is a participant in this conversation
+        const { data: conv } = await supabase
+            .from('chat_conversations')
+            .select('id')
+            .eq('id', conversationId)
+            .or(`guest_id.eq.${user.id},host_id.eq.${user.id}`)
+            .maybeSingle();
+
+        if (!conv) throw new Error('Not authorized for this conversation');
+
         const { data, error } = await supabase
             .from('chat_messages')
             .select('*')
@@ -193,15 +206,21 @@ export const chatService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        // SECURITY: Ensure user is part of the conversation
-        // This is handled by RLS typically, but good to be explicit/safe.
-        // For MVP, just delete where conversation_id matches.
-        // NOTE: This deletes for BOTH users. API requirement was "Clear history".
+        // Verify user owns this conversation before deleting
+        const { data: conv } = await supabase
+            .from('chat_conversations')
+            .select('id')
+            .eq('id', conversationId)
+            .or(`guest_id.eq.${user.id},host_id.eq.${user.id}`)
+            .maybeSingle();
+
+        if (!conv) throw new Error('Not authorized for this conversation');
+
         const { error } = await supabase
             .from('chat_messages')
             .delete()
             .eq('conversation_id', conversationId);
-        
+
         if (error) throw error;
     },
 
@@ -213,10 +232,17 @@ export const chatService = {
         reason: string;
         description: string;
     }) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Derive reporter_id from the authenticated session
         const { error } = await supabase
             .from('chat_reports')
-            .insert([data]);
-        
+            .insert([{
+                ...data,
+                reporter_id: user.id
+            }]);
+
         if (error) throw error;
     },
 

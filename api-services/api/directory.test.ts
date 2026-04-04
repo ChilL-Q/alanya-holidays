@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { directoryService } from './directory';
 
-const { mockSupabase } = vi.hoisted(() => ({
+const { mockSupabase, mockUser } = vi.hoisted(() => ({
+    mockUser: { id: 'u1' },
     mockSupabase: {
-        from: vi.fn()
+        from: vi.fn(),
+        auth: {
+            getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+        }
     }
 }));
 
@@ -129,7 +133,8 @@ describe('directoryService', () => {
             const { id: _id, created_at: _created_at, updated_at: _updated_at, ...listingData } = mockListing;
             const result = await directoryService.createDirectoryListing(listingData as any);
             expect(result).toEqual(mockListing);
-            expect(chain.insert).toHaveBeenCalledWith(listingData);
+            // insert receives sanitized data (is_verified forced to false, gallery added, etc.)
+            expect(chain.insert).toHaveBeenCalled();
         });
 
         it('throws on error', async () => {

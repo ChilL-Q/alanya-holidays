@@ -24,10 +24,13 @@ function validateFile(file: File) {
 
 export const storageService = {
     async uploadPropertyImage(file: File) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         validateFile(file);
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -41,10 +44,13 @@ export const storageService = {
     },
 
     async uploadAvatar(file: File) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         validateFile(file);
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -68,10 +74,13 @@ export const storageService = {
     },
 
     async uploadImage(file: File, bucket: 'properties' | 'services' | 'products' | 'directory' = 'properties') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         validateFile(file);
 
         const fileExt = file.name.split('.').pop();
-        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         try {

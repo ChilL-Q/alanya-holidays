@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usersService } from './users';
 
-const { mockSupabase } = vi.hoisted(() => {
+const { mockSupabase, adminSession, unAuth } = vi.hoisted(() => {
   return {
+    adminSession: { data: { session: { user: { user_metadata: { role: 'admin' } } } }, error: null },
+    unAuth: { data: { session: null }, error: null },
     mockSupabase: {
       from: vi.fn(),
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ data: { session: { user: { user_metadata: { role: 'admin' } } } }, error: null }),
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'admin-1', user_metadata: { role: 'admin' } } }, error: null })
+      },
     }
   }
 });
@@ -16,6 +22,8 @@ vi.mock('../supabase', () => ({
 describe('usersService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.auth.getSession.mockResolvedValue(adminSession);
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'admin-1', user_metadata: { role: 'admin' } } }, error: null });
   });
 
   describe('getAllUsers', () => {
@@ -35,6 +43,11 @@ describe('usersService', () => {
          mockSupabase.from.mockReturnValue({ select: mockSelect });
 
          await expect(usersService.getAllUsers()).rejects.toBe('Fetch error');
+     });
+
+     it('throws when not admin', async () => {
+         mockSupabase.auth.getSession.mockResolvedValueOnce(unAuth);
+         await expect(usersService.getAllUsers()).rejects.toThrow('Not authorized');
      });
   });
 
@@ -68,7 +81,7 @@ describe('usersService', () => {
       const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
       mockSupabase.from.mockReturnValue({ update: mockUpdate });
 
-      await usersService.updateUserProfile('1', { full_name: 'Jane' });
+      await usersService.updateUserProfile('admin-1', { full_name: 'Jane' });
       expect(mockUpdate).toHaveBeenCalledWith({ full_name: 'Jane' });
     });
 
@@ -152,6 +165,11 @@ describe('usersService', () => {
       mockSupabase.from.mockReturnValue({ select: mockSelect });
 
       await expect(usersService.getUsersByRole('host')).rejects.toBe('Query error');
+    });
+
+    it('throws when not admin', async () => {
+        mockSupabase.auth.getSession.mockResolvedValueOnce(unAuth);
+        await expect(usersService.getUsersByRole('host')).rejects.toThrow('Not authorized');
     });
   });
 });
