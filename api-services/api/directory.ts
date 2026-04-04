@@ -1,11 +1,14 @@
 import { supabase } from '../supabase';
 import { DirectoryListingDB } from '../../types/models';
 
+// eslint-disable-next-line no-control-regex
+const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+
 const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
     const result: Record<string, unknown> = { ...obj };
     for (const [key, value] of Object.entries(result)) {
         if (typeof value === 'string') {
-            result[key] = value.replace(/[\r\n\x00-\x1f\x7f]/g, '').trim();
+            result[key] = value.replace(STRIP_CONTROL, '').trim();
         }
     }
     return result as T;
@@ -94,7 +97,12 @@ export const directoryService = {
         if (!user) throw new Error('Not authenticated');
 
         // Strip fields that should not be updated directly
-        const { id: _id, created_at: _, updated_at: __, is_verified, is_featured, ...safeUpdates } = updates;
+        const safeUpdates: Record<string, unknown> = { ...updates };
+        delete safeUpdates.id;
+        delete safeUpdates.created_at;
+        delete safeUpdates.updated_at;
+        delete safeUpdates.is_verified;
+        delete safeUpdates.is_featured;
 
         const sanitized = sanitize(safeUpdates as Record<string, unknown>);
 

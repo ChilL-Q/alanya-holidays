@@ -2,9 +2,11 @@ import { supabase } from '../supabase';
 import { Message } from '../../types/index';
 import { retry } from '../../utils/retry';
 
-// Strip CRLF and control characters to prevent header injection
+// eslint-disable-next-line no-control-regex
+const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+
 const sanitizeHeaderField = (value: string): string =>
-    value.replace(/[\r\n\x00-\x1f\x7f]/g, '').trim();
+    value.replace(STRIP_CONTROL, '').trim();
 
 const sanitizeMessage = (data: Message): Message => ({
     ...data,
