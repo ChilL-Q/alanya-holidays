@@ -57,7 +57,6 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Validate origin against allowed domain
     if (!origin.startsWith(ALLOWED_ORIGIN)) {
       return new Response(
         JSON.stringify({ error: 'Invalid origin' }),
@@ -67,6 +66,61 @@ Deno.serve(async (req: Request) => {
 
     const verifiedUserId = user.id
 
+    // --- Server-side price verification ---
+    const propertyIds: string[] = []
+    const serviceIds: string[] = []
+
+    for (const item of items as any[]) {
+      if (item.type === 'service' || item.listingType === 'service') {
+        serviceIds.push(item.listingId)
+      } else {
+        propertyIds.push(item.listingId)
+      }
+    }
+
+    const [propertiesResult, servicesResult] = await Promise.all([
+      propertyIds.length > 0
+        ? supabase.from('properties').select('id, title, price_per_night, images').in('id', propertyIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      serviceIds.length > 0
+        ? supabase.from('services').select('id, title, price, images').in('id', serviceIds)
+        : Promise.resolve({ data: [] as any[], error: null })
+    ])
+
+    if (propertiesResult.error) throw propertiesResult.error
+    if (servicesResult.error) throw servicesResult.error
+
+    const propertyMap = new Map((propertiesResult.data || []).map((p: any) => [p.id, p.price_per_night]))
+    const serviceMap = new Map((servicesResult.data || []).map((s: any) => [s.id, s.price]))
+
+    const lineItems: any[] = []
+
+    for (const item of items as any[]) {
+      let serverPrice: number | null = null
+
+      if (item.type === 'service' || item.listingType === 'service') {
+        serverPrice = serviceMap.get(item.listingId) ?? null
+      } else {
+        serverPrice = propertyMap.get(item.listingId) ?? null
+      }
+
+      if (serverPrice === null) {
+        throw new Error(`Unable to verify price for item: ${item.title} (ID: ${item.listingId})`)
+      }
+
+      lineItems.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: item.title,
+            ...(item.image ? { images: [item.image] } : {}),
+          },
+          unit_amount: Math.round(serverPrice * 100),
+        },
+        quantity: 1,
+      })
+    }
+
     // Stripe Checkout Session (min expires_at = 30 min)
     const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60
 
@@ -74,22 +128,12 @@ Deno.serve(async (req: Request) => {
       mode: 'payment',
       customer_email: email,
       expires_at: expiresAt,
-      line_items: items.map((item: any) => ({
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: item.title,
-            ...(item.image ? { images: [item.image] } : {}),
-          },
-          unit_amount: Math.round(item.price * 100), // cents
-        },
-        quantity: 1,
-      })),
+      line_items: lineItems,
       success_url: `${origin}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout`,
       metadata: {
         userId: verifiedUserId,
-        bookingIds: items.map((i: any) => i.bookingId).join(','),
+        bookingIds: items.map((i: any) => i.bookingId).filter(Boolean).join(','),
       },
     })
 
@@ -98,7 +142,6 @@ Deno.serve(async (req: Request) => {
     const bookingIds = items.map((i: any) => i.bookingId).filter(Boolean)
 
     if (bookingIds.length > 0) {
-      // Security: Verify that these bookings belong to the verified user
       const { data: verifiedBookings, error: verifyError } = await supabase
         .from('bookings')
         .select('id')
