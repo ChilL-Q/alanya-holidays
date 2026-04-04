@@ -20,6 +20,9 @@ export const propertiesService = {
     },
 
     async createProperty(data: Omit<PropertyDB, 'id' | 'created_at' | 'updated_at'>) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         const validatedData = propertySchema.parse(data);
         const { data: property, error } = await supabase
             .from('properties')
@@ -150,6 +153,10 @@ export const propertiesService = {
         let data, error;
         
         if (finalIsUUID) {
+            // Don't expose host PII (email, phone) to unauthenticated users
+            const { data: authData } = await supabase.auth.getUser();
+            const isAuthenticated = !!authData.user;
+
             const result = await supabase
                 .from('properties')
                 .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
@@ -157,6 +164,12 @@ export const propertiesService = {
                 .single();
             data = result.data;
             error = result.error;
+
+            // Strip PII from host data for unauthenticated visitors
+            if (data?.host && !isAuthenticated) {
+                const { email, phone, ...safeHost } = data.host;
+                data.host = safeHost;
+            }
         } else {
             // Try numeric ref_id lookup via RPC
             const refId = parseInt(targetId);
@@ -230,24 +243,36 @@ export const propertiesService = {
 
 
     async updateProperty(id: string, updates: Partial<PropertyDB>) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Full fetch for auth check and notification
+        const { data: existingProp } = await supabase
+            .from('properties')
+            .select('host_id, title, type')
+            .eq('id', id)
+            .single();
+
+        if (!existingProp || (existingProp.host_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
+        // Prevent status bypass via general update — only updatePropertyStatus should change status
+        const { status, ical_token, ical_url, last_synced_at: _lt, ...safeUpdates } = updates as any;
+
         const { error } = await supabase
             .from('properties')
-            .update(updates)
+            .update(safeUpdates)
             .eq('id', id);
 
         if (error) throw error;
 
-        // Notify Host (if it's an admin update, typically)
-        // We need to fetch property to know host_id and title
-         const { data: property } = await supabase.from('properties').select('host_id, title, type').eq('id', id).single();
-         if (property && updates.status === undefined) { 
-             // Only notify on general updates if needed, or we can restricting this to specific fields
-             // The original db.ts notified on ANY update.
-             const typeLabel = property.type === 'villa' ? 'Villa' : 'Apartment';
+        if (existingProp && safeUpdates.status === undefined) {
+             const typeLabel = existingProp.type === 'villa' ? 'Villa' : 'Apartment';
              await notificationsService.createNotification(
-                 property.host_id,
+                 existingProp.host_id,
                  'Property Updated',
-                 `Your ${typeLabel} "${property.title}" has been updated by an administrator.`,
+                 `Your ${typeLabel} "${existingProp.title}" has been updated by an administrator.`,
                  'info'
              );
          }
@@ -390,7 +415,10 @@ export const propertiesService = {
         }
     },
 
-    async deleteReview(reviewId: string, userId: string) {
+    async deleteReview(reviewId: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         // First check if user owns this review
         const { data: review, error: fetchError } = await supabase
             .from('reviews')
@@ -400,7 +428,7 @@ export const propertiesService = {
 
         if (fetchError) throw fetchError;
         if (!review) throw new Error('Review not found');
-        if (review.user_id !== userId) throw new Error('Unauthorized: You can only delete your own reviews');
+        if (review.user_id !== user.id) throw new Error('Unauthorized: You can only delete your own reviews');
 
         // Delete the review
         const { error } = await supabase

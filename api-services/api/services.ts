@@ -42,7 +42,6 @@ export const servicesService = {
             .range(from, to);
 
         if (error) throw error;
-        if (error) throw error;
         
         const mappedData = (data as ServiceDB[]).map(s => ({
             ...s,
@@ -93,9 +92,12 @@ export const servicesService = {
     },
 
     async updateService(id: string, updates: Partial<ServiceDB>) {
+        // Prevent status bypass and provider_id hijacking
+        const { status, provider_id, id: _id, created_at, updated_at: _ua, ...safeUpdates } = updates as any;
+
         const { error } = await supabase
             .from('services')
-            .update(updates)
+            .update(safeUpdates)
             .eq('id', id);
 
         if (error) throw error;

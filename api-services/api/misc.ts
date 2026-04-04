@@ -2,24 +2,40 @@ import { supabase } from '../supabase';
 import { Message } from '../../types/index';
 import { retry } from '../../utils/retry';
 
+// eslint-disable-next-line no-control-regex
+const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+
+const sanitizeHeaderField = (value: string): string =>
+    value.replace(STRIP_CONTROL, '').trim();
+
+const sanitizeMessage = (data: Message): Message => ({
+    ...data,
+    name: sanitizeHeaderField(data.name).slice(0, 200),
+    email: sanitizeHeaderField(data.email).slice(0, 320),
+    subject: data.subject ? sanitizeHeaderField(data.subject).slice(0, 500) : data.subject,
+    message: sanitizeHeaderField(data.message).slice(0, 10000),
+});
+
 export const messagesService = {
     async sendMessage(data: Message) {
+        const sanitized = sanitizeMessage(data);
+
         const { error } = await supabase
             .from('messages')
-            .insert([data]);
+            .insert([sanitized]);
 
         if (error) throw error;
-        
+
         // Notify Admin
         retry(() => supabase.functions.invoke('send-email', {
             body: {
                 type: 'admin_contact_message',
-                to: 'contact@alanyaholidays.com', // Notification to Admin
+                to: 'contact@alanyaholidays.com',
                 data: {
-                    name: data.name,
-                    email: data.email,
-                    subject: data.subject,
-                    message: data.message
+                    name: sanitized.name,
+                    email: sanitized.email,
+                    subject: sanitized.subject,
+                    message: sanitized.message
                 }
             }
         })).catch(err => console.error('Failed to send admin email:', err));

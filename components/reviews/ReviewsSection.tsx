@@ -51,7 +51,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
 
         setDeletingReviewId(reviewId);
         try {
-            await db.deleteReview(reviewId, user.id);
+            await db.deleteReview(reviewId);
             toast.success('Review deleted successfully');
             await fetchReviews();
         } catch (error) {

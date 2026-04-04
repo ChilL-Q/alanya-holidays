@@ -1,6 +1,19 @@
 import { supabase } from '../supabase';
 import { DirectoryListingDB } from '../../types/models';
 
+// eslint-disable-next-line no-control-regex
+const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+
+const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
+    const result: Record<string, unknown> = { ...obj };
+    for (const [key, value] of Object.entries(result)) {
+        if (typeof value === 'string') {
+            result[key] = value.replace(STRIP_CONTROL, '').trim();
+        }
+    }
+    return result as T;
+};
+
 export const directoryService = {
     async getDirectoryListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
@@ -48,9 +61,26 @@ export const directoryService = {
     },
 
     async createDirectoryListing(listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>): Promise<DirectoryListingDB> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const safeData = sanitize({
+            name: (listing.name ?? '').slice(0, 200),
+            short_description: (listing.short_description ?? '').slice(0, 500),
+            category_id: listing.category_id,
+            website: listing.website?.slice(0, 500),
+            whatsapp: listing.whatsapp?.slice(0, 50),
+            gallery: Array.isArray(listing.gallery) ? listing.gallery : [],
+            location: (listing.location ?? '').slice(0, 200),
+            google_map_url: listing.google_map_url?.slice(0, 500),
+            is_featured: false,
+            is_verified: false,
+            ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
+        });
+
         const { data, error } = await supabase
             .from('directory_listings')
-            .insert(listing)
+            .insert(safeData as unknown as Record<string, unknown>)
             .select()
             .single();
 
@@ -63,9 +93,22 @@ export const directoryService = {
     },
 
     async updateDirectoryListing(id: string, updates: Partial<DirectoryListingDB>): Promise<DirectoryListingDB> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Strip fields that should not be updated directly
+        const safeUpdates: Record<string, unknown> = { ...updates };
+        delete safeUpdates.id;
+        delete safeUpdates.created_at;
+        delete safeUpdates.updated_at;
+        delete safeUpdates.is_verified;
+        delete safeUpdates.is_featured;
+
+        const sanitized = sanitize(safeUpdates as Record<string, unknown>);
+
         const { data, error } = await supabase
             .from('directory_listings')
-            .update({ ...updates, updated_at: new Date().toISOString() })
+            .update({ ...sanitized, updated_at: new Date().toISOString() })
             .eq('id', id)
             .select()
             .single();
@@ -79,6 +122,9 @@ export const directoryService = {
     },
 
     async deleteDirectoryListing(id: string): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         const { error } = await supabase
             .from('directory_listings')
             .delete()

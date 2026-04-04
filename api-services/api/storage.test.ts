@@ -8,6 +8,9 @@ const { mockSupabase } = vi.hoisted(() => {
             storage: {
                 from: vi.fn(),
                 listBuckets: vi.fn(),
+            },
+            auth: {
+                getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user-id' } }, error: null })
             }
         }
     }

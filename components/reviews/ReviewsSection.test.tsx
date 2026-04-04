@@ -213,7 +213,7 @@ describe('ReviewsSection', () => {
         });
 
         await waitFor(() => {
-            expect(db.deleteReview).toHaveBeenCalledWith('review-1', 'user-1');
+            expect(db.deleteReview).toHaveBeenCalledWith('review-1');
             expect(mockToast.success).toHaveBeenCalledWith('Review deleted successfully');
         });
 
