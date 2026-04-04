@@ -38,3 +38,21 @@ export const serviceSchema = z.object({
     features: z.any().default({}),
     images: z.array(z.string()).default([])
 });
+
+export const productSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    price: z.number().positive("Price must be positive"),
+    stock: z.number().int().nonnegative("Stock cannot be negative"),
+    category: z.string().min(1, "Category is required"),
+    images: z.array(z.string()).min(1, "At least one image is required"),
+    seller_id: z.string().uuid("Invalid seller ID"),
+});
+
+export const reviewSchema = z.object({
+    property_id: z.string().uuid("Invalid property ID"),
+    user_id: z.string().uuid("Invalid user ID"),
+    rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
+    comment: z.string().min(5, "Comment must be at least 5 characters").max(1000, "Comment cannot exceed 1000 characters"),
+    images: z.array(z.string()).default([]),
+});
