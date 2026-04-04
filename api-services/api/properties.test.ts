@@ -6,6 +6,9 @@ const { mockSupabase } = vi.hoisted(() => {
     mockSupabase: {
       from: vi.fn(),
       rpc: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+      },
       functions: {
         invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
       },
@@ -165,27 +168,27 @@ describe('propertiesService', () => {
     });
 
     it('deletes review if authorized', async () => {
-        // Mock checking owner
-        const _mockCheckChain = createMockChain({ user_id: 'u1' });
-        
-        // Mock delete
-        const _mockDeleteChain = createMockChain();
-
+        mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'u1' } }, error: null });
         mockSupabase.from.mockImplementation(() => {
-            // Because we call it twice, we can return a unified chain for simplicity that handles both select.single and delete
             const chain = createMockChain({ user_id: 'u1' }) as any;
              chain.delete = vi.fn().mockReturnValue(chain);
              return chain;
         });
 
-        await propertiesService.deleteReview('r1', 'u1');
+        await propertiesService.deleteReview('r1');
         expect(mockSupabase.from).toHaveBeenCalledWith('reviews');
     });
 
     it('throws if not authorized to delete review', async () => {
-         const chain = createMockChain({ user_id: 'other-user' }) as any;
-         mockSupabase.from.mockReturnValue(chain);
-         await expect(propertiesService.deleteReview('r1', 'u1')).rejects.toThrow('Unauthorized');
+        mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'u2' } }, error: null });
+        const chain = createMockChain({ user_id: 'u1' }) as any;
+        mockSupabase.from.mockReturnValue(chain);
+        await expect(propertiesService.deleteReview('r1')).rejects.toThrow('Unauthorized');
+    });
+
+    it('throws delete review if unauthenticated', async () => {
+        mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
+        await expect(propertiesService.deleteReview('r1')).rejects.toThrow('Not authenticated');
     });
   });
 
@@ -275,31 +278,26 @@ describe('propertiesService', () => {
   });
 
   describe('updateProperty', () => {
-      it('updates property and creates notification', async () => {
-          // Mock update success
-          const updateChain = createMockChain();
-          
-          // Mock fetch property
-          const fetchChain = createMockChain({ host_id: 'h1', title: 'V', type: 'villa' });
+      beforeEach(() => {
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'h1' } }, error: null });
+      });
 
-          mockSupabase.from.mockImplementation((table) => {
-               if (table === 'properties') {
-                    // It will call update(), then select().single() inside notification
-                    // We can return a unified chain for simplicity
-                    return {
-                        ...updateChain,
-                        ...fetchChain,
-                        update: vi.fn().mockReturnValue(createMockChain()),
-                        single: vi.fn().mockResolvedValue({ data: { host_id: 'h1', title: 'V', type: 'villa' }, error: null })
-                    } as any;
-               }
-               return createMockChain();
+      it('updates property and creates notification', async () => {
+          mockSupabase.from.mockImplementation(() => {
+              const chain = createMockChain({ host_id: 'h1', title: 'V', type: 'villa' }) as any;
+              chain.update = vi.fn().mockReturnValue(createMockChain());
+              return chain;
           });
 
           await propertiesService.updateProperty('p1', { price_per_night: 150 });
-          // verify notificationsService was called
           const { notificationsService } = await import('./notifications');
           expect(notificationsService.createNotification).toHaveBeenCalled();
+      });
+
+      it('throws when not owner', async () => {
+          mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'other-user' } }, error: null });
+          mockSupabase.from.mockReturnValue(createMockChain({ host_id: 'h1' }) as any);
+          await expect(propertiesService.updateProperty('p1', { price_per_night: 150 })).rejects.toThrow('Not authorized');
       });
   });
 
@@ -415,9 +413,16 @@ describe('propertiesService', () => {
       });
 
       it('throws error in updateProperty', async () => {
-          const mockChain = createMockChain();
-          mockChain.eq = vi.fn().mockResolvedValue({ error: new Error('DB Error') });
-          mockSupabase.from.mockReturnValue(mockChain);
+          mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'h1' } }, error: null });
+          // First call: owner check (returns chain with .single())
+          // Second call: update (returns chain with .eq() that errors)
+          const updateChain: any = createMockChain();
+          updateChain.update = vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: new Error('DB Error') })
+          });
+          mockSupabase.from
+              .mockReturnValueOnce(createMockChain({ host_id: 'h1', title: 'T', type: 'villa' }))
+              .mockReturnValueOnce(updateChain);
           await expect(propertiesService.updateProperty('1', { price_per_night: 200 })).rejects.toThrow('DB Error');
       });
 

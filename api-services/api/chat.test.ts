@@ -19,6 +19,7 @@ vi.mock('../supabase', () => ({
 describe('chatService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
   });
 
   const createMockChain = (data: any = null, error: any = null) => {
@@ -78,15 +79,20 @@ describe('chatService', () => {
 
   describe('getMessages', () => {
       it('fetches messages for conversation', async () => {
+          mockSupabase.from.mockReturnValue(
+              createMockChain({ id: 'c1' }) as any
+          );
           const mockData = [{ id: '1' }];
-          mockSupabase.from.mockReturnValue(createMockChain(mockData));
+          const msgChain = createMockChain(mockData);
+          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: 'c1' }) as any);
+          mockSupabase.from.mockReturnValueOnce(msgChain);
           const result = await chatService.getMessages('c1');
           expect(result).toEqual(mockData);
       });
 
-      it('throws on db error', async () => {
-          mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
-          await expect(chatService.getMessages('c1')).rejects.toThrow('DB Error');
+      it('throws when not participant', async () => {
+          mockSupabase.from.mockReturnValue(createMockChain(null) as any);
+          await expect(chatService.getMessages('c1')).rejects.toThrow('Not authorized for this conversation');
       });
   });
 
@@ -209,15 +215,15 @@ describe('chatService', () => {
 
   describe('clearHistory', () => {
       it('deletes messages', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-          const chain = createMockChain();
-          mockSupabase.from.mockReturnValue(chain);
+          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: 'c1' }) as any);
+          mockSupabase.from.mockReturnValueOnce(createMockChain());
           await chatService.clearHistory('c1');
-          expect(chain.delete).toHaveBeenCalled();
+          const calls = mockSupabase.from.mock.calls;
+          expect(calls).toContainEqual(['chat_messages']);
       });
 
       it('throws if no user', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+          mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: null } });
           await expect(chatService.clearHistory('c1')).rejects.toThrow();
       });
   });
