@@ -6,6 +6,9 @@ const { mockSupabase } = vi.hoisted(() => {
   return {
     mockSupabase: {
       from: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+      },
       functions: {
         invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
       },
@@ -192,6 +195,7 @@ describe('servicesService', () => {
       });
 
       it('updateServiceModel', async () => {
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { user_metadata: { role: 'admin' } } }, error: null });
           const chain = createMockChain();
           mockSupabase.from.mockReturnValue(chain);
           await servicesService.updateServiceModel('1', { brand: 'BMW' });

@@ -250,6 +250,11 @@ export const servicesService = {
     },
 
     async updateServiceModel(id: string, updates: Partial<ServiceModel>) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || user.user_metadata?.role !== 'admin') {
+            throw new Error('Not authorized');
+        }
+
         const { error } = await supabase
             .from('service_models')
             .update(updates)
