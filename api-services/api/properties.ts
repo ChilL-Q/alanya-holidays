@@ -563,13 +563,27 @@ export const propertiesService = {
     },
 
     async updatePropertyAvailability(
-        propertyId: string, 
-        dates: string[], 
-        status: 'available' | 'booked' | 'blocked', 
+        propertyId: string,
+        dates: string[],
+        status: 'available' | 'booked' | 'blocked',
         price?: number
     ) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Verify ownership or admin
+        const { data: prop } = await supabase
+            .from('properties')
+            .select('host_id')
+            .eq('id', propertyId)
+            .single();
+
+        if (!prop || (prop.host_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
         // If status is 'available', we remove the entry (unless we want to keep price override?)
-        // Strategy: 
+        // Strategy:
         // 1. Delete existing entries for these dates
         // 2. If status != available or price is set, insert new entries
 
@@ -634,12 +648,26 @@ export const propertiesService = {
     },
 
     async addICalFeed(propertyId: string, name: string, url: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Verify ownership
+        const { data: prop } = await supabase
+            .from('properties')
+            .select('host_id')
+            .eq('id', propertyId)
+            .single();
+
+        if (!prop || (prop.host_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
         const { data, error } = await supabase
             .from('property_ical_feeds')
             .insert([{ property_id: propertyId, name, url }])
             .select()
             .single();
-        
+
         if (error) throw error;
         return data;
     },

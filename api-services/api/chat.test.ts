@@ -104,34 +104,40 @@ describe('chatService', () => {
 
     it('inserts message correctly and updates conversation', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-      
+
       const msgChain = createMockChain({ id: 'msg1', content: 'hello' });
       const convUpdateChain = createMockChain();
       const convSelectChain = createMockChain({ guest_id: 'me', host_id: 'host1', property: { title: 'Villa' } });
+      const convAccessChain = createMockChain({ id: 'c1' });
 
       let convCall = 0;
       mockSupabase.from.mockImplementation((table) => {
-          if (table === 'chat_messages') return msgChain;
           if (table === 'chat_conversations') {
               convCall++;
-              return convCall === 1 ? convUpdateChain : convSelectChain;
+              if (convCall === 1) return convAccessChain; // verify access
+              if (convCall === 2) return convUpdateChain;
+              return convSelectChain;
           }
+          if (table === 'chat_messages') return msgChain;
+          return createMockChain();
       });
 
       const result = await chatService.sendMessage('c1', 'hello');
-      
+
       expect(msgChain.insert).toHaveBeenCalled();
       expect(convUpdateChain.update).toHaveBeenCalled();
       // Verify email invocation happens in the background
       await new Promise(r => setTimeout(r, 0)); // flush promises
       expect(mockSupabase.functions.invoke).toHaveBeenCalled();
-      
+
       expect(result).toEqual({ id: 'msg1', content: 'hello' });
     });
 
     it('throws on db error', async () => {
         mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-        mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
+        mockSupabase.from
+            .mockReturnValueOnce(createMockChain({ id: 'c1' })) // verify access
+            .mockReturnValueOnce(createMockChain(null, new Error('DB Error'))); // insert fails
         await expect(chatService.sendMessage('c1', 'hi')).rejects.toThrow('DB Error');
     });
   });

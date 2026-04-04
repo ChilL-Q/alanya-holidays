@@ -3,6 +3,17 @@ import { ChatConversation, ChatMessage } from '../../types/index';
 import { getAppUrl } from '../../utils/appUrl';
 import { retry } from '../../utils/retry';
 
+async function verifyConversationAccess(userId: string, conversationId: string) {
+    const { data: conv } = await supabase
+        .from('chat_conversations')
+        .select('id')
+        .eq('id', conversationId)
+        .or(`guest_id.eq.${userId},host_id.eq.${userId}`)
+        .maybeSingle();
+
+    if (!conv) throw new Error('Not authorized for this conversation');
+}
+
 export const chatService = {
     // Get all conversations for the current user
     async getConversations() {
@@ -58,15 +69,7 @@ export const chatService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        // Verify user is a participant in this conversation
-        const { data: conv } = await supabase
-            .from('chat_conversations')
-            .select('id')
-            .eq('id', conversationId)
-            .or(`guest_id.eq.${user.id},host_id.eq.${user.id}`)
-            .maybeSingle();
-
-        if (!conv) throw new Error('Not authorized for this conversation');
+        await verifyConversationAccess(user.id, conversationId);
 
         const { data, error } = await supabase
             .from('chat_messages')
@@ -83,12 +86,18 @@ export const chatService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
+        await verifyConversationAccess(user.id, conversationId);
+
+        // Content validation
+        const trimmed = content.trim().slice(0, 5000);
+        if (!trimmed) throw new Error('Message cannot be empty');
+
         const { data, error } = await supabase
             .from('chat_messages')
             .insert([{
                 conversation_id: conversationId,
                 sender_id: user.id,
-                content
+                content: trimmed
             }])
             .select()
             .single();
@@ -206,15 +215,7 @@ export const chatService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        // Verify user owns this conversation before deleting
-        const { data: conv } = await supabase
-            .from('chat_conversations')
-            .select('id')
-            .eq('id', conversationId)
-            .or(`guest_id.eq.${user.id},host_id.eq.${user.id}`)
-            .maybeSingle();
-
-        if (!conv) throw new Error('Not authorized for this conversation');
+        await verifyConversationAccess(user.id, conversationId);
 
         const { error } = await supabase
             .from('chat_messages')
