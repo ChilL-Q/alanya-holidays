@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const YESIM_API_URL = 'https://partners-api.yesim.biz';
 const getApiToken = () => import.meta.env.VITE_YESIM_API_TOKEN;
+const getHeaders = () => {
+    const token = getApiToken();
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+};
 
 export interface YesimPlan {
     id: string;
@@ -44,7 +49,7 @@ export const yesimService = {
 
         try {
             const response = await axios.get(`${YESIM_API_URL}/plans`, {
-                params: { token: token }
+                headers: getHeaders()
             });
             return response.data;
         } catch (error) {
@@ -70,7 +75,7 @@ export const yesimService = {
             // 1. Create a new eSIM (or assign to user if we had user flow, but for guest checkout we create new)
             // Using /new_esim to get a fresh ICCID
             const simResponse = await axios.get(`${YESIM_API_URL}/new_esim`, {
-                params: { token: token }
+                headers: getHeaders()
             });
             
             if (simResponse.data.status === 'error') {
@@ -84,8 +89,8 @@ export const yesimService = {
             const paymentId = `ORD-${Date.now()}`;
             
             const activationResponse = await axios.post(`${YESIM_API_URL}/add_plan_iccid`, null, {
+                headers: getHeaders(),
                 params: {
-                    token: token,
                     iccid: iccid,
                     plan_id: planId,
                     payment_id: paymentId
@@ -98,8 +103,8 @@ export const yesimService = {
 
             // 3. Get eSIM details to return QR code
             const detailsResponse = await axios.get(`${YESIM_API_URL}/sim_info`, {
-                 params: {
-                    token: token,
+                headers: getHeaders(),
+                params: {
                     iccid: iccid
                 }
             });
