@@ -144,9 +144,12 @@ describe('propertiesService', () => {
         const result = await propertiesService.getReviews('p1');
         expect(result).toEqual(mockReviews);
 
-        // Add review
+        // Add review (duplicate check returns null)
+        const dupCheckChain = createMockChain(null);
+        (dupCheckChain.maybeSingle as any).mockResolvedValueOnce({ data: null, error: null });
+        mockSupabase.from.mockReturnValueOnce(dupCheckChain);
         mockSupabase.from.mockReturnValue(createMockChain({ id: 'r2' }));
-        await propertiesService.addReview({ property_id: 'p1', rating: 5, comment: 'C', user_id: 'u1' } as any);
+        await propertiesService.addReview({ property_id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d', rating: 5, comment: 'Great stay!', user_id: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e' } as any);
         expect(mockSupabase.from).toHaveBeenCalledWith('reviews');
     });
 

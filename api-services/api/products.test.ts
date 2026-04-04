@@ -88,20 +88,44 @@ describe('productsService', () => {
 
     describe('createProduct', () => {
         it('inserts product', async () => {
-             const mockProduct = { title: 'New Product', price: 100 };
+             const mockProduct = {
+                 title: 'New Product',
+                 description: 'A great product for testing',
+                 price: 100,
+                 stock: 10,
+                 category: 'electronics',
+                 images: ['https://example.com/img.jpg'],
+                 seller_id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+             };
              const chain = createMockChain({ id: '1', ...mockProduct });
              mockSupabase.from.mockReturnValue(chain);
-             
+
              const result = await productsService.createProduct(mockProduct as any);
-             
+
              expect(mockSupabase.from).toHaveBeenCalledWith('products');
-             expect(chain.insert).toHaveBeenCalledWith([mockProduct]);
+             expect(chain.insert).toHaveBeenCalledWith([expect.objectContaining({
+                 title: 'New Product',
+                 price: 100,
+                 seller_id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+             })]);
              expect(result).toEqual({ id: '1', ...mockProduct });
+        });
+
+        it('throws on validation error', async () => {
+             await expect(productsService.createProduct({} as any)).rejects.toThrow();
         });
 
         it('throws on db error', async () => {
              mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
-             await expect(productsService.createProduct({} as any)).rejects.toThrow('DB Error');
+             await expect(productsService.createProduct({
+                 title: 'New Product',
+                 description: 'A great product for testing',
+                 price: 100,
+                 stock: 10,
+                 category: 'electronics',
+                 images: ['https://example.com/img.jpg'],
+                 seller_id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+             } as any)).rejects.toThrow('DB Error');
         });
     });
 
