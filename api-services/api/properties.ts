@@ -1,7 +1,7 @@
 import { supabase } from '../supabase';
 import { PropertyDB, ApprovalStatus, Review, PropertyAvailability, PropertyICalFeed } from '../../types/index';
 import { notificationsService } from './notifications';
-import { propertySchema } from './schemas';
+import { propertySchema, reviewSchema } from './schemas';
 import { getAppUrl } from '../../utils/appUrl';
 import { getPropertyOverride } from './config';
 import { retry } from '../../utils/retry';
@@ -340,9 +340,24 @@ export const propertiesService = {
     },
 
     async addReview(review: Omit<Review, 'id' | 'created_at'>) {
+        // Validate input
+        const validatedData = reviewSchema.parse(review);
+
+        // Check for duplicate review (same user on same property)
+        const { data: existing } = await supabase
+            .from('reviews')
+            .select('id')
+            .eq('property_id', validatedData.property_id)
+            .eq('user_id', validatedData.user_id)
+            .maybeSingle();
+
+        if (existing) {
+            throw new Error('You have already submitted a review for this property');
+        }
+
         const { error } = await supabase
             .from('reviews')
-            .insert([review])
+            .insert([validatedData])
             .select()
             .single();
             

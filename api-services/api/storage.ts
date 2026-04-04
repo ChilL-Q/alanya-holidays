@@ -1,9 +1,33 @@
 import { supabase } from '../supabase';
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']);
+
+function validateFile(file: File) {
+    // Check size
+    if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+    }
+
+    // Check extension
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+        throw new Error(`File type ".${ext}" is not allowed. Allowed types: ${Array.from(ALLOWED_EXTENSIONS).join(', ')}`);
+    }
+
+    // Check MIME type (if available on client side)
+    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
+        throw new Error(`MIME type "${file.type}" is not allowed. Only image files are accepted`);
+    }
+}
+
 export const storageService = {
     async uploadPropertyImage(file: File) {
+        validateFile(file);
+
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -17,8 +41,10 @@ export const storageService = {
     },
 
     async uploadAvatar(file: File) {
+        validateFile(file);
+
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -42,8 +68,10 @@ export const storageService = {
     },
 
     async uploadImage(file: File, bucket: 'properties' | 'services' | 'products' | 'directory' = 'properties') {
+        validateFile(file);
+
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         try {
@@ -58,7 +86,7 @@ export const storageService = {
                     .upload(filePath, file);
 
                 if (fallbackError) throw fallbackError;
-                
+
                 const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
                 return data.publicUrl;
             }
@@ -77,7 +105,7 @@ export const storageService = {
                         .upload(filePath, file);
 
                     if (fallbackError) throw fallbackError;
-                    
+
                     const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
                     return data.publicUrl;
                 }
