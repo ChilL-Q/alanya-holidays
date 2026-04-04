@@ -6,6 +6,11 @@ import { getAppUrl } from '../../utils/appUrl';
 import { retry } from '../../utils/retry';
 import { createAuditLog } from './audit';
 
+// Fields that must never be overwritten via service_edits
+const IMMUTABLE_SERVICE_FIELDS = new Set([
+    'id', 'provider_id', 'status', 'created_at', 'updated_at'
+]);
+
 export const servicesService = {
     async createService(data: Omit<ServiceDB, 'id' | 'created_at'>) {
         const validatedData = serviceSchema.parse(data);
@@ -351,10 +356,18 @@ export const servicesService = {
         if (fetchError) throw fetchError;
         if (!edit) throw new Error('Edit not found');
 
-        // 2. Apply changes to service
+        // 2. Sanitize changed_data — strip immutable fields
+        const safeChanges: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(edit.changed_data)) {
+            if (!IMMUTABLE_SERVICE_FIELDS.has(key)) {
+                safeChanges[key] = value;
+            }
+        }
+
+        // 3. Apply changes to service
         const { error: updateError } = await supabase
             .from('services')
-            .update(edit.changed_data)
+            .update(safeChanges)
             .eq('id', edit.service_id);
 
         if (updateError) throw updateError;

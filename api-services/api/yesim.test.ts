@@ -28,7 +28,7 @@ describe('yesimService', () => {
             const plans = await yesimService.getPlans();
             
             expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/plans'), {
-                params: { token: mockToken }
+                headers: { Authorization: `Bearer ${mockToken}` }
             });
             expect(plans).toEqual(mockPlans);
         });
