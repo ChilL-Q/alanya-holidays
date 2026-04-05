@@ -100,31 +100,31 @@ export interface PropertyAvailability {
 }
 
 export interface PropertyFormData {
-    title: string;
-    description: string;
-    type: string;
-    maxGuests: number;
-    bedrooms: number;
-    beds: number;
-    bathrooms: number;
-    address: string;
-    location: string;
-    latitude: number | null;
-    longitude: number | null;
-    rentalLicense: string;
-    pricePerNight: number;
-    cleaningFee: number;
-    securityDeposit: number;
-    weekendPremium: number;
-    minStay: number;
-    amenities: string[];
-    hospitality: {
+    title?: string;
+    description?: string;
+    type?: string;
+    maxGuests?: number;
+    bedrooms?: number;
+    beds?: number;
+    bathrooms?: number;
+    address?: string;
+    location?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    rentalLicense?: string;
+    pricePerNight?: number | string;
+    cleaningFee?: number | string;
+    securityDeposit?: number | string;
+    weekendPremium?: number | string;
+    minStay?: number | string;
+    amenities?: string[];
+    hospitality?: {
         airportPickup: boolean;
         groceryDelivery: boolean;
         dailyCleaning: boolean;
         welcomeBasket: boolean;
     };
-    images: string[];
+    images?: string[];
     [key: string]: any;
 }
 
