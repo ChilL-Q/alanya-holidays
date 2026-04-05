@@ -119,8 +119,10 @@ describe('propertiesService', () => {
 
   describe('deleteProperty', () => {
     it('performs soft delete if hard delete fails', async () => {
+        // Owner scenario - host_id matches authenticated user
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'h1' } }, error: null });
         const mockChain = createMockChain({ title: 'V', host_id: 'h1' });
-        
+
         // Mock specific behavior for deleteProperty logic
         mockSupabase.from.mockImplementation((table) => {
             if (table === 'properties') {
@@ -136,6 +138,38 @@ describe('propertiesService', () => {
 
         await propertiesService.deleteProperty('p1');
         expect(mockSupabase.from).toHaveBeenCalledWith('properties');
+    });
+
+    it('rejects non-owner non-admin', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'other-user' } }, error: null });
+        const mockChain = createMockChain({ title: 'V', host_id: 'h1' });
+        const profileChain = createMockChain({ role: 'guest' });
+
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'properties') return mockChain as any;
+            if (table === 'profiles') return profileChain as any;
+            return createMockChain();
+        });
+
+        await expect(propertiesService.deleteProperty('p1')).rejects.toThrow('Not authorized');
+    });
+
+    it('allows admin to delete property', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'other-user' } }, error: null });
+        const mockChain = createMockChain({ title: 'V', host_id: 'h1' });
+        const profileChain = createMockChain({ role: 'admin' });
+
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'properties') return mockChain as any;
+            if (table === 'profiles') return profileChain as any;
+            return createMockChain();
+        });
+
+        mockChain.delete = vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null })
+        });
+
+        await propertiesService.deleteProperty('p1');
     });
   });
 
@@ -432,6 +466,12 @@ describe('propertiesService', () => {
       });
 
       it('soft delete fallback throws if soft delete fails', async () => {
+          // Ensure user is authenticated as owner
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'h1' } }, error: null });
+
+          // Fetch property info chain
+          const fetchChain = createMockChain({ title: 'Test', host_id: 'h1' });
+
           // Hard delete fails
           const hardDeleteChain = createMockChain();
           hardDeleteChain.delete = vi.fn().mockReturnValue({
@@ -448,7 +488,7 @@ describe('propertiesService', () => {
           mockSupabase.from.mockImplementation((table) => {
                if (table === 'properties') {
                     callCount++;
-                    if (callCount === 1) return hardDeleteChain as any; // Fetch property info
+                    if (callCount === 1) return fetchChain as any; // Fetch property info
                     if (callCount === 2) return hardDeleteChain as any; // Hard delete attempt
                     return softDeleteChain as any; // Soft delete attempt
                }
