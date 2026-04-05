@@ -279,6 +279,20 @@ export const propertiesService = {
     },
 
     async updatePropertyStatus(id: string, status: ApprovalStatus | 'approved' | 'rejected' | 'pending', reason?: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Verify admin role — only admins can change approval status
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role !== 'admin') {
+            throw new Error('Not authorized: only admins can change property status');
+        }
+
         const updates: any = { status };
         if (status === 'rejected' && reason) updates.rejection_reason = reason;
         if (status === 'approved') updates.rejection_reason = null;
