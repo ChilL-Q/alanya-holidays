@@ -27,6 +27,9 @@ export const bookingSchema = z.object({
     message: z.string().max(500).optional(),
     payment_method: z.enum(['card', 'cash', 'bank', 'crypto', 'swift']).default('card'),
     item_type: z.enum(['property', 'service', 'product'])
+}).refine(data => new Date(data.check_out) > new Date(data.check_in), {
+    message: "Check-out date must be after check-in date",
+    path: ["check_out"]
 });
 
 export const serviceSchema = z.object({
