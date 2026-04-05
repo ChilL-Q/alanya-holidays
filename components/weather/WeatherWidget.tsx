@@ -54,11 +54,12 @@ export const WeatherWidget: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const c = new AbortController();
         const fetchWeather = async () => {
             try {
-                // Alanya Coordinates: 36.5436° N, 31.9998° E
                 const res = await fetch(
-                    'https://api.open-meteo.com/v1/forecast?latitude=36.5436&longitude=31.9998&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto'
+                    'https://api.open-meteo.com/v1/forecast?latitude=36.5436&longitude=31.9998&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto',
+                    { signal: c.signal }
                 );
                 const data = await res.json();
 
@@ -76,13 +77,16 @@ export const WeatherWidget: React.FC = () => {
                     }
                 });
             } catch (error) {
-                console.error('Failed to fetch weather', error);
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error('Failed to fetch weather', error);
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchWeather();
+        return () => c.abort();
     }, []);
 
     if (loading || !weather) return null;

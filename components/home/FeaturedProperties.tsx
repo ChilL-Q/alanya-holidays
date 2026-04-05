@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { db } from '../../api-services';
@@ -11,18 +11,18 @@ export const FeaturedProperties: React.FC = () => {
 
     // Curated Featured Properties (Hardcoded for high-quality display)
     useEffect(() => {
+        const isMountedRef = { current: true };
         const fetchProperties = async () => {
             setIsLoading(true);
             try {
-                // Fetch top 6 properties to ensure user's restored properties are visible
                 const { data } = await db.getProperties(1, 6);
+
+                if (!isMountedRef.current) return;
 
                 const formattedData = (data || []).map((p: any) => ({
                     ...p,
                     pricePerNight: p.price_per_night,
-                    // Ensure consistent types
                     amenities: p.amenities || [],
-                    // Ensure image is string for PropertyCard main image
                     image: p.images?.[0] || '',
                     images: p.images || [],
                     rating: p.rating || 5,
@@ -33,13 +33,14 @@ export const FeaturedProperties: React.FC = () => {
 
                 setProperties(formattedData);
             } catch (error) {
-                console.error('Failed to fetch featured properties:', error);
+                // ignore unmount
             } finally {
-                setIsLoading(false);
+                if (isMountedRef.current) setIsLoading(false);
             }
         };
 
         fetchProperties();
+        return () => { isMountedRef.current = false; };
     }, []);
 
     if (isLoading) {

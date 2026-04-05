@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -69,26 +69,25 @@ export const ExperienceCategoryPage: React.FC = () => {
     const config = category ? categoryConfig[category] : null;
 
     useEffect(() => {
+        const isMountedRef = { current: true };
         const fetchServices = async () => {
             if (!category) return;
             try {
-                // Fetch all tours and filter by subcategory
-                // Ideally backend would support filtering by subcategory directly
                 const { data } = await db.getServices('tour', 1, 100);
-                if (data) {
-                    // Filter locally for now effectively
+                if (isMountedRef.current && data) {
                     const filtered = data.filter(s => s.features?.subcategory === category);
                     setServices(filtered);
                 }
             } catch (err) {
-                console.error('Failed to fetch services', err);
+                // ignore unmount
             } finally {
-                setLoading(false);
+                if (isMountedRef.current) setLoading(false);
             }
         };
 
         fetchServices();
         window.scrollTo(0, 0);
+        return () => { isMountedRef.current = false; };
     }, [category]);
 
     if (!config) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Star, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { db, Review } from '../../api-services';
@@ -11,6 +11,7 @@ interface ReviewsSectionProps {
 }
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) => {
+    const isMountedRef = useRef(true);
     const { user, isAuthenticated } = useAuth();
     const { openLightbox } = useLightbox();
 
