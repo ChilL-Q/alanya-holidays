@@ -1,5 +1,5 @@
 import { supabase } from '../../supabase';
-import { Booking, PropertyDB, ServiceDB, UserProfile } from '../../../types/index';
+import { PropertyDB, ServiceDB, UserProfile } from '../../../types/index';
 import type { EnrichedBooking } from './index';
 
 export async function getBookings(userId: string): Promise<EnrichedBooking[]> {
