@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from '../api-services';
 
 export const useServicePrices = () => {
     const [minPrices, setMinPrices] = useState<Record<string, number>>({});
     const [isLoading, setIsLoading] = useState(true);
+    const isMountedRef = useRef(true);
 
     useEffect(() => {
+        isMountedRef.current = true;
         const fetchPrices = async () => {
             try {
-                // Fetch tours to calculate min prices for experiences
-                // We fetch a reasonable amount to get a good sample. 
-                // Ideally backend provides aggregate data.
                 const { data } = await db.getServices('tour', 1, 100);
-                if (data) {
+                if (data && isMountedRef.current) {
                     const prices: Record<string, number> = {};
                     const subcategories = ['water', 'safari', 'air', 'land', 'atv'];
 
@@ -28,10 +27,11 @@ export const useServicePrices = () => {
             } catch (err) {
                 console.error('Failed to fetch prices', err);
             } finally {
-                setIsLoading(false);
+                if (isMountedRef.current) setIsLoading(false);
             }
         };
         fetchPrices();
+        return () => { isMountedRef.current = false; };
     }, []);
 
     return { minPrices, isLoading };

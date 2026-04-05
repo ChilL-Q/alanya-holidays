@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Copy, RefreshCw, Check, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { db } from '../../api-services';
@@ -53,8 +53,17 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
     }, [propertyId]);
 
     useEffect(() => {
-        loadFeeds();
-        loadPropertyDetails();
+        const isMountedRef = { current: true };
+        const doLoad = async () => {
+            if (isMountedRef.current) {
+                await loadFeeds();
+            }
+            if (isMountedRef.current) {
+                await loadPropertyDetails();
+            }
+        };
+        doLoad();
+        return () => { isMountedRef.current = false; };
     }, [loadFeeds, loadPropertyDetails]);
 
     const handleAddFeed = async () => {

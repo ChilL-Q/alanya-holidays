@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { db, Notification } from '../api-services';
 
@@ -17,21 +17,23 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [lastNotification, setLastNotification] = useState<Notification | null>(null);
+    const isMountedRef = useRef(true);
 
     const refreshNotifications = useCallback(async () => {
         if (!user) {
-            setNotifications([]);
+            if (isMountedRef.current) setNotifications([]);
             return;
         }
         try {
             const data = await db.getNotifications(user.id);
-            setNotifications(data);
+            if (isMountedRef.current) setNotifications(data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
     }, [user]);
 
     useEffect(() => {
+        isMountedRef.current = true;
         refreshNotifications();
 
         // Real-time subscription
@@ -50,9 +52,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             });
 
             return () => {
+                isMountedRef.current = false;
                 subscription.unsubscribe();
             };
         }
+        return () => { isMountedRef.current = false; };
     }, [user, refreshNotifications]);
 
     const markAsRead = async (id: string) => {

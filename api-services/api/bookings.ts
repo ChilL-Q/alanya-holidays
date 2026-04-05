@@ -125,13 +125,16 @@ export const bookingsService = {
     // Original unsafe method kept as reference if needed (renamed internal or just removed)
     // async createBookingLegacy(data: any) { ... }
 
-    async getBookings(userId?: string): Promise<EnrichedBooking[]> {
-        // 1. Fetch raw bookings
-        let query = supabase.from('bookings').select('*');
-
-        if (userId) {
-            query = query.eq('user_id', userId);
+    async getBookings(userId: string): Promise<EnrichedBooking[]> {
+        // Verify the requesting user is fetching their own bookings
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+        if (user.id !== userId && user.user_metadata?.role !== 'admin') {
+            throw new Error('Not authorized');
         }
+
+        // 1. Fetch raw bookings
+        const query = supabase.from('bookings').select('*').eq('user_id', userId);
 
         const { data: bookings, error } = await query.order('check_in', { ascending: true });
 
@@ -182,6 +185,11 @@ export const bookingsService = {
     
     // Admin Bookings
     async getAdminBookings(statusFilter?: string): Promise<EnrichedBooking[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || user.user_metadata?.role !== 'admin') {
+            throw new Error('Not authorized');
+        }
+
         let query = supabase.from('bookings').select('*');
 
         if (statusFilter && statusFilter !== 'all') {
@@ -238,7 +246,10 @@ export const bookingsService = {
 
     // Host Bookings (New Efficient Method)
     async getBookingsForHost(hostId: string, dateFrom?: string, dateTo?: string): Promise<EnrichedBooking[]> {
-        // 1. Get all properties owned by host
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || (user.id !== hostId && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
         const { data: properties } = await supabase
             .from('properties')
             .select('id, title, images, location')

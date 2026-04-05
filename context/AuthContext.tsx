@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { supabase } from '../api-services/supabase';
 import { getAppUrl } from '../utils/appUrl';
 
@@ -49,11 +49,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
     };
 
+    const isMountedRef = useRef(true);
+
     useEffect(() => {
+        isMountedRef.current = true;
         const checkUser = async (sessionUser: any) => {
             if (!sessionUser) {
-                setUser(null);
-                setIsLoading(false);
+                if (isMountedRef.current) setUser(null);
+                if (isMountedRef.current) setIsLoading(false);
                 return;
             }
 
@@ -65,39 +68,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     .eq('id', sessionUser.id)
                     .single();
 
-                if (profile) {
-                    setUser({
-                        id: sessionUser.id,
-                        name: profile.full_name || 'User',
-                        email: profile.email || sessionUser.email || '',
-                        avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'U')}&background=0D9488&color=fff`,
-                        role: profile.role || 'guest',
-                        company_name: profile.company_name,
-                        joinedDate: profile.created_at || sessionUser.created_at,
-                    });
-                } else {
-                    // Fallback to metadata if profile not found (unlikely)
-                    setUser(mapSessionToUser(sessionUser));
+                if (isMountedRef.current) {
+                    if (profile) {
+                        setUser({
+                            id: sessionUser.id,
+                            name: profile.full_name || 'User',
+                            email: profile.email || sessionUser.email || '',
+                            avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'U')}&background=0D9488&color=fff`,
+                            role: profile.role || 'guest',
+                            company_name: profile.company_name,
+                            joinedDate: profile.created_at || sessionUser.created_at,
+                        });
+                    } else {
+                        // Fallback to metadata if profile not found (unlikely)
+                        setUser(mapSessionToUser(sessionUser));
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching user profile:', err);
-                setUser(mapSessionToUser(sessionUser));
+                if (isMountedRef.current) setUser(mapSessionToUser(sessionUser));
             } finally {
-                setIsLoading(false);
+                if (isMountedRef.current) setIsLoading(false);
             }
         };
 
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            checkUser(session?.user);
+            if (isMountedRef.current) checkUser(session?.user);
         });
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            checkUser(session?.user);
+            if (isMountedRef.current) checkUser(session?.user);
         });
 
-        return () => subscription.unsubscribe();
+        return () => { isMountedRef.current = false; subscription.unsubscribe(); };
     }, []);
 
     const login = async (email: string, password: string) => {

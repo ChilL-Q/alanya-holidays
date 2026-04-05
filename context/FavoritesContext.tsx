@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../api-services';
 
@@ -20,13 +20,17 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
 
     // Sync with DB on login
+    const isMountedRef = useRef(true);
+
     useEffect(() => {
+        isMountedRef.current = true;
         if (isAuthenticated && user?.id) {
             db.getFavorites(user.id).then(dbFavorites => {
                 // Use functional update to avoid stale closure on favorites state
-                setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
+                if (isMountedRef.current) setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
             }).catch(console.error);
         }
+        return () => { isMountedRef.current = false; };
     }, [isAuthenticated, user]);
 
     // Persist to LocalStorage

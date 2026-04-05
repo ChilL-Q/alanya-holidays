@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
@@ -67,6 +67,8 @@ export const Profile: React.FC = () => {
             return;
         }
 
+        const isMountedRef = { current: true };
+
         const fetchData = async () => {
             if (user?.id) {
                 try {
@@ -76,6 +78,8 @@ export const Profile: React.FC = () => {
                         db.getServicesByProvider(user.id),
                         db.getUserProfile(user.id)
                     ]);
+
+                    if (!isMountedRef.current) return;
 
                     setBookings(bookingsData || []);
                     setMyProperties(propertiesData || []);
@@ -94,21 +98,21 @@ export const Profile: React.FC = () => {
                             bankAccountHolderName: profile.bank_account_holder_name || '',
                             cryptoWallet: (profile as any).crypto_wallet || ''
                         });
-                        // Update email form initial value
                         setEmailForm(prev => ({
                             ...prev,
                             email: profile.email || user.email
                         }));
                     }
                 } catch (error) {
-                    console.error('Error fetching data:', error);
+                    // ignore unmount
                 } finally {
-                    setLoading(false);
+                    if (isMountedRef.current) setLoading(false);
                 }
             }
         };
 
         fetchData();
+        return () => { isMountedRef.current = false; };
     }, [user, isAuthenticated, navigate]);
 
     const handleLogout = () => {

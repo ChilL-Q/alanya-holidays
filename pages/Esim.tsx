@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Wifi, Download, Zap, Smartphone, Globe, Check, Loader } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -17,7 +17,21 @@ export const Esim: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<YesimPlan | null>(null);
 
     useEffect(() => {
+        const isMountedRef = { current: true };
+        const loadPlans = async () => {
+            try {
+                const data = await yesimService.getPlans();
+                if (isMountedRef.current) {
+                    setPlans(data.slice(0, 6));
+                }
+            } catch (error) {
+                // ignore unmount
+            } finally {
+                if (isMountedRef.current) setLoading(false);
+            }
+        };
         loadPlans();
+        return () => { isMountedRef.current = false; };
     }, []);
 
     const loadPlans = async () => {
