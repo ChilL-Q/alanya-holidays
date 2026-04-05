@@ -1,6 +1,5 @@
 import { supabase } from '../../supabase';
 import { Review } from '../../../types/index';
-import { notificationsService } from '../notifications';
 import { reviewSchema } from '../schemas';
 import { getAppUrl } from '../../../utils/appUrl';
 import { retry } from '../../../utils/retry';
