@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { CartItem } from '../types/index';
 
 interface CartContextType {
@@ -37,30 +37,32 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   }, [items]);
 
-  const addToCart = (item: CartItem) => {
+  const addToCart = useCallback((item: CartItem) => {
     setItems(prev => {
-      // Avoid duplicates
       if (prev.some(i => i.id === item.id)) {
         return prev;
       }
-      // Auto-open cart only when adding the first item
       if (prev.length === 0) {
         setIsCartOpen(true);
       }
       return [...prev, item];
     });
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     setItems(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => setItems([]), []);
 
-  const total = items.reduce((sum, item) => sum + item.price, 0);
+  const total = useMemo(() => items.reduce((sum, item) => sum + item.price, 0), [items]);
+
+  const value = useMemo(() => ({
+    items, addToCart, removeFromCart, clearCart, total, isCartOpen, setIsCartOpen
+  }), [items, addToCart, removeFromCart, clearCart, total, isCartOpen]);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total, isCartOpen, setIsCartOpen }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
