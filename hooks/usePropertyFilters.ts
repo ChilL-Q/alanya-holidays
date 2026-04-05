@@ -23,7 +23,7 @@ interface UsePropertyFiltersProps {
 
 export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UsePropertyFiltersProps) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const _isMounted = useRef(false);
+    const isMountedRef = useRef(false);
     
     // Initialize state from URL params
     const initialPage = parseInt(searchParams.get('page') || '1');
@@ -104,9 +104,10 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
 
     // Fetch Properties
     useEffect(() => {
+        isMountedRef.current = true;
         const fetchProperties = async () => {
-            setIsLoading(true);
-            setError(null);
+            if (isMountedRef.current) setIsLoading(true);
+            if (isMountedRef.current) setError(null);
             try {
                 // 1. Availability Filter (Base)
                 let availableIds: string[] | null = null;
@@ -117,17 +118,17 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
 
                 // 2. Fetch Page with Filters & Sort
                 const result = await propertiesService.getProperties(
-                    page, 
-                    LIMIT, 
-                    filters, 
-                    location || undefined, 
+                    page,
+                    LIMIT,
+                    filters,
+                    location || undefined,
                     availableIds || undefined,
                     sort
                 );
                 const fetchedProps = result.data || [];
-                
+
                 // Update Total Count
-                if (result.count !== null) {
+                if (result.count !== null && isMountedRef.current) {
                     setTotalCount(result.count);
                 }
 
@@ -138,11 +139,11 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     location: p.location,
                     pricePerNight: p.price_per_night,
                     // Keep raw fields for Map component compatibility
-                    price_per_night: p.price_per_night, 
+                    price_per_night: p.price_per_night,
                     latitude: p.latitude,
                     longitude: p.longitude,
                     max_guests: p.max_guests,
-                    
+
                     rating: p.rating || 0,
                     // @ts-ignore - reviews joined dynamically
                     reviewsCount: p.reviews?.[0]?.count ?? (p.reviews_count || 0),
@@ -159,8 +160,8 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
                     type: p.type
                 }));
 
-                setProperties(mappedProps);
-                
+                if (isMountedRef.current) setProperties(mappedProps);
+
                 // Check if we reached the end
                 if (result.data.length < LIMIT) {
                     setHasMore(false);
@@ -170,13 +171,14 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
 
             } catch (err) {
                 console.error(err);
-                setError(err as Error);
+                if (isMountedRef.current) setError(err as Error);
             } finally {
-                setIsLoading(false);
+                if (isMountedRef.current) setIsLoading(false);
             }
         };
 
         fetchProperties();
+        return () => { isMountedRef.current = false; };
     }, [page, location, checkIn, checkOut, filters, sort]);
 
     // Client-side filtering removed - properties are now already filtered from backend

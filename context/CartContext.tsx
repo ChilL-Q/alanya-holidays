@@ -43,18 +43,12 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (prev.some(i => i.id === item.id)) {
         return prev;
       }
-      // logic for auto-open needs to know if it was empty, but here we are in setter.
-      // We can check prev.length inside.
+      // Auto-open cart only when adding the first item
+      if (prev.length === 0) {
+        setIsCartOpen(true);
+      }
       return [...prev, item];
     });
-
-    // Side effect for cart open: relies on current 'items' which is stale, but logic:
-    // "Only auto-open if it's the first item".
-    // If items.length is 0, we are adding one. 
-    // If we call twice, items.length is 0 both times. Open called twice. Harmless.
-    if (items.length === 0) {
-      setIsCartOpen(true);
-    }
   };
 
   const removeFromCart = (id: string) => {
