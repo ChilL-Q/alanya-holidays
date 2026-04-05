@@ -86,7 +86,7 @@ export const Dashboard: React.FC = () => {
                         recent_bookings: recent
                     });
                 }
-            } catch (e) {
+            } catch (_e) {
                 // ignore unmount
             } finally {
                 if (isMountedRef.current) setLoading(false);

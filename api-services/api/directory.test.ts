@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { directoryService } from './directory';
 
-const { mockSupabase, mockUser } = vi.hoisted(() => ({
-    mockUser: { id: 'u1' },
+const { mockSupabase } = vi.hoisted(() => ({
     mockSupabase: {
         from: vi.fn(),
         auth: {

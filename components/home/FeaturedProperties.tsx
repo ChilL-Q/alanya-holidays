@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { db } from '../../api-services';
@@ -32,7 +32,7 @@ export const FeaturedProperties: React.FC = () => {
                 }));
 
                 setProperties(formattedData);
-            } catch (error) {
+            } catch (_error) {
                 // ignore unmount
             } finally {
                 if (isMountedRef.current) setIsLoading(false);
