@@ -7,7 +7,7 @@ const { mockSupabase } = vi.hoisted(() => {
     mockSupabase: {
       from: vi.fn(),
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+        getUser: vi.fn().mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null })
       },
       functions: {
         invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -29,6 +29,9 @@ vi.mock('./notifications', () => ({
 describe('servicesService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null
+    });
   });
 
   const createMockChain = (data: any = null, error: any = null) => {
@@ -54,39 +57,32 @@ describe('servicesService', () => {
         const mockData = { id: 's1' };
         mockSupabase.from.mockReturnValue(createMockChain(mockData));
 
-        const result = await servicesService.createService({ 
-            title: 'Title', type: 'car', price: 10, provider_id: '550e8400-e29b-41d4-a716-446655440001', description: 'desc' 
+        const result = await servicesService.createService({
+            title: 'Title', type: 'car', price: 10, description: 'desc'
         } as any);
         expect(result).toEqual(mockData);
     });
 
     it('updateService', async () => {
+        const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
         const updateChain = createMockChain();
-        const fetchChain = createMockChain({ provider_id: 'p1', title: 'T', type: 'car' });
-        
-        mockSupabase.from.mockImplementation((table) => {
-            if (table === 'services') {
-                return {
-                    ...updateChain,
-                    ...fetchChain,
-                    update: vi.fn().mockReturnValue(createMockChain()),
-                    single: vi.fn().mockResolvedValue({ data: { provider_id: 'p1', title: 'T', type: 'car' }, error: null })
-                } as any;
-            }
-            return createMockChain();
-        });
+        mockSupabase.from.mockReturnValueOnce(fetchChain);
+        mockSupabase.from.mockReturnValueOnce(updateChain);
 
         await servicesService.updateService('s1', { title: 'New' });
+        expect(updateChain.update).toHaveBeenCalledWith({ title: 'New' });
         expect(notificationsService.createNotification).toHaveBeenCalled();
     });
 
     it('deleteService', async () => {
-        const mockChain = createMockChain({ provider_id: 'p1', title: 'T', type: 'car' });
-        mockSupabase.from.mockReturnValue(mockChain);
+        const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
+        const deleteChain = createMockChain();
+        mockSupabase.from.mockReturnValueOnce(fetchChain);
+        mockSupabase.from.mockReturnValueOnce(deleteChain);
 
         await servicesService.deleteService('s1');
+        expect(deleteChain.delete).toHaveBeenCalled();
         expect(notificationsService.createNotification).toHaveBeenCalled();
-        expect(mockChain.delete).toHaveBeenCalled();
     });
 
     it('getService (UUID)', async () => {
@@ -152,8 +148,15 @@ describe('servicesService', () => {
 
   describe('Status Management', () => {
       it('updateServiceStatus - approved', async () => {
-          const chain = createMockChain({ provider_id: 'p1', title: 'T', type: 'car' });
-          mockSupabase.from.mockReturnValue(chain);
+          mockSupabase.auth.getUser.mockResolvedValue({
+              data: { user: { id: 'admin-user', user_metadata: { role: 'admin' } } }, error: null
+          });
+          mockSupabase.from.mockImplementation((table) => {
+              if (table === 'profiles') {
+                  return createMockChain({ role: 'admin' });
+              }
+              return createMockChain({ provider_id: 'p1', title: 'T', type: 'car' });
+          });
 
           await servicesService.updateServiceStatus('s1', 'approved');
           expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('send-email', expect.anything());

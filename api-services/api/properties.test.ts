@@ -111,9 +111,30 @@ describe('propertiesService', () => {
 
   describe('updatePropertyStatus', () => {
     it('updates status and triggers email', async () => {
-        mockSupabase.from.mockReturnValue(createMockChain({ host_id: 'h1', title: 'V' }));
+        mockSupabase.auth.getUser.mockResolvedValueOnce({
+            data: { user: { id: 'admin-user', user_metadata: { role: 'admin' } } }, error: null
+        });
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'profiles') {
+                return createMockChain({ role: 'admin' });
+            }
+            return createMockChain({ host_id: 'h1', title: 'V' });
+        });
         await propertiesService.updatePropertyStatus('p1', 'approved');
         expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('send-email', expect.anything());
+    });
+
+    it('throws when not admin', async () => {
+        mockSupabase.auth.getUser.mockResolvedValueOnce({
+            data: { user: { id: 'h1' } }, error: null
+        });
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'profiles') {
+                return createMockChain({ role: 'host' });
+            }
+            return createMockChain({});
+        });
+        await expect(propertiesService.updatePropertyStatus('p1', 'approved')).rejects.toThrow('Not authorized');
     });
   });
 
