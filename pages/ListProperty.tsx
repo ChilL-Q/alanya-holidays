@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
+import { PropertyFormData } from '../types/models';
 import toast from 'react-hot-toast';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
@@ -45,11 +46,12 @@ export const ListProperty: React.FC = () => {
 
     // Form Data
     const [files, setFiles] = useState<File[]>([]);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<PropertyFormData>({
         title: '',
         description: '',
         price: '',
         cleaningFee: '',
+        type: '',
         propertyType: '',
         maxGuests: 4,
         bedrooms: 2,
@@ -57,7 +59,10 @@ export const ListProperty: React.FC = () => {
         bathrooms: 1,
         location: '',
         address: '',
-        rentalLicense: '', 
+        latitude: null,
+        longitude: null,
+        rentalLicense: '',
+        pricePerNight: 0,
         amenities: [] as string[],
         // Hospitality details
         checkInTime: '',
@@ -120,7 +125,7 @@ export const ListProperty: React.FC = () => {
                 location: formData.location,
                 address: formData.address,
                 type: formData.propertyType as any,
-                cleaning_fee: formData.cleaningFee ? parseFloat(formData.cleaningFee) : undefined,
+                cleaning_fee: formData.cleaningFee ? parseFloat(String(formData.cleaningFee)) : undefined,
                 max_guests: formData.maxGuests,
                 bedrooms: formData.bedrooms,
                 beds: formData.beds,
