@@ -1,86 +1,74 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 import { yesimService } from './yesim';
+import { supabase } from '../supabase';
 
-vi.mock('axios');
+vi.mock('../supabase', () => ({
+    supabase: {
+        functions: {
+            invoke: vi.fn(),
+        },
+    },
+}));
 
 describe('yesimService', () => {
-    const mockToken = 'test-token';
-
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     describe('getPlans', () => {
-        it('returns demo data if token is missing', async () => {
-            vi.stubEnv('VITE_YESIM_API_TOKEN', '');
+        it('returns plans from edge function', async () => {
+            const mockPlans = [
+                { id: 'turkey_3gb', name: 'Turkey Essential', days: '7', price: '3.50', data: '3', countries_included: 'Turkey', countryIso2: 'TR', operators: 'Turkcell', image: 'https://cdn.yesim.app/flags/ver/1/tr.svg', plan_type: 'country' },
+            ];
+            (supabase.functions.invoke as any).mockResolvedValueOnce({
+                data: { data: mockPlans },
+                error: null,
+            });
+
             const plans = await yesimService.getPlans();
-            expect(plans).toBeInstanceOf(Array);
-            expect(plans.length).toBeGreaterThan(0);
+
+            expect(supabase.functions.invoke).toHaveBeenCalledWith('yesim-proxy', {
+                body: { action: 'getPlans' },
+            });
+            expect(plans).toEqual(mockPlans);
             expect(plans[0]).toHaveProperty('name', 'Turkey Essential');
         });
 
-        it('calls API if token exists', async () => {
-            vi.stubEnv('VITE_YESIM_API_TOKEN', mockToken);
-            const mockPlans = [{ id: 'plan1', name: 'Plan 1' }];
-            (axios.get as any).mockResolvedValueOnce({ data: mockPlans });
-
-            const plans = await yesimService.getPlans();
-            
-            expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('/plans'), {
-                headers: { Authorization: `Bearer ${mockToken}` }
+        it('throws when edge function returns error', async () => {
+            (supabase.functions.invoke as any).mockResolvedValueOnce({
+                data: null,
+                error: { message: 'API Error' },
             });
-            expect(plans).toEqual(mockPlans);
-        });
 
-        it('handles API error', async () => {
-            (axios.get as any).mockRejectedValueOnce(new Error('API Error'));
             await expect(yesimService.getPlans()).rejects.toThrow('API Error');
         });
     });
 
     describe('createOrder', () => {
-        it('completes the full order flow', async () => {
-            // 1. Mock new_esim
-            (axios.get as any).mockResolvedValueOnce({ 
-                data: { status: 'success', iccid: 'ICCID123', id: 'SIM123' } 
-            });
-            // 2. Mock add_plan_iccid
-            (axios.post as any).mockResolvedValueOnce({ 
-                data: { status: 'success' } 
-            });
-            // 3. Mock sim_info
-            (axios.get as any).mockResolvedValueOnce({ 
-                data: { qrcode: 'QRDATA', ios_tap_link: 'APPLINK' } 
+        it('completes the full order flow via edge function', async () => {
+            const mockOrder = {
+                id: 'SIM123',
+                iccid: 'ICCID123',
+                qrcode: 'QRDATA',
+                ios_tap_link: 'APPLINK',
+            };
+            (supabase.functions.invoke as any).mockResolvedValueOnce({
+                data: { data: mockOrder },
+                error: null,
             });
 
             const order = await yesimService.createOrder('plan123');
 
-            expect(order).toEqual({
-                id: 'SIM123',
-                iccid: 'ICCID123',
-                qrcode: 'QRDATA',
-                ios_tap_link: 'APPLINK'
+            expect(supabase.functions.invoke).toHaveBeenCalledWith('yesim-proxy', {
+                body: { action: 'createOrder', planId: 'plan123' },
             });
-
-            expect(axios.get).toHaveBeenCalledTimes(2);
-            expect(axios.post).toHaveBeenCalledTimes(1);
+            expect(order).toEqual(mockOrder);
         });
 
-        it('throws error if SIM creation fails', async () => {
-            (axios.get as any).mockResolvedValueOnce({ 
-                data: { status: 'error', message: 'No SIMs available' } 
-            });
-
-            await expect(yesimService.createOrder('plan123')).rejects.toThrow('No SIMs available');
-        });
-
-        it('throws error if activation fails', async () => {
-            (axios.get as any).mockResolvedValueOnce({ 
-                data: { status: 'success', iccid: 'ICCID123', id: 'SIM123' } 
-            });
-            (axios.post as any).mockResolvedValueOnce({ 
-                data: { status: 'error', description: 'Activation failed' } 
+        it('throws error if edge function returns error', async () => {
+            (supabase.functions.invoke as any).mockResolvedValueOnce({
+                data: { error: 'Activation failed' },
+                error: null,
             });
 
             await expect(yesimService.createOrder('plan123')).rejects.toThrow('Activation failed');
