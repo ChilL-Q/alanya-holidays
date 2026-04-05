@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -78,7 +78,7 @@ export const ExperienceCategoryPage: React.FC = () => {
                     const filtered = data.filter(s => s.features?.subcategory === category);
                     setServices(filtered);
                 }
-            } catch (err) {
+            } catch (_err) {
                 // ignore unmount
             } finally {
                 if (isMountedRef.current) setLoading(false);
