@@ -78,20 +78,18 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
     });
 
     // Reset pagination ONLY when filters/sort/location/dates actually change
+    // Uses ref comparison to avoid JSON.stringify serialization overhead
     useEffect(() => {
         const prev = prevDeps.current;
         const hasLocationChanged = prev.location !== location;
         const hasDatesChanged = prev.checkIn !== checkIn || prev.checkOut !== checkOut;
         const hasSortChanged = prev.sort !== sort;
-        // Simple shallow comparison for filters object usually sufficient if treated immutably, 
-        // but let's stringify to be safe as it contains arrays
-        const hasFiltersChanged = JSON.stringify(prev.filters) !== JSON.stringify(filters);
+        const hasFiltersChanged = prev.filters !== filters;
 
         if (hasLocationChanged || hasDatesChanged || hasSortChanged || hasFiltersChanged) {
             setPageState(1);
             setSearchParams(prev => { prev.set('page', '1'); return prev; });
 
-            // Update refs after change detected
             prevDeps.current = {
                 location,
                 checkIn,

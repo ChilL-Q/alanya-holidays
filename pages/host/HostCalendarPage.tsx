@@ -46,18 +46,25 @@ export const HostCalendarPage = () => {
         setCurrentDate(new Date(year, currentDate.getMonth() + delta, 1));
     };
 
-    const isDateBooked = (day: number) => {
-        if (!bookings.length) return false;
-        const targetDate = new Date(year, currentDate.getMonth(), day);
-        targetDate.setHours(0, 0, 0, 0);
-
-        return bookings.some(b => {
+    // Build a Map of bookings for O(1) lookup
+    const dateRangeMap = new Map<string, { check_in: string; check_out: string }>();
+    if (bookings.length) {
+        bookings.forEach(b => {
             const start = new Date(b.check_in);
             const end = new Date(b.check_out);
             start.setHours(0, 0, 0, 0);
             end.setHours(0, 0, 0, 0);
-            return targetDate >= start && targetDate <= end;
+            const current = new Date(start);
+            while (current <= end) {
+                dateRangeMap.set(current.toISOString().slice(0, 10), b);
+                current.setDate(current.getDate() + 1);
+            }
         });
+    }
+
+    const isDateBooked = (day: number) => {
+        const dateKey = new Date(year, currentDate.getMonth(), day).toISOString().slice(0, 10);
+        return dateRangeMap.has(dateKey);
     };
 
     return (

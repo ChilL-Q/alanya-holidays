@@ -340,22 +340,23 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                     })()}
 
                     {/* Edit Controls (Only show if we have available dates or manual blocks to edit) */}
-                    {selectedDates.length > 0 && (
+                    {selectedDates.length > 0 && (() => {
+                        // Build a Set of externally-sourced dates (ical) for O(1) lookup
+                        const externalDates = new Set(
+                            availability.filter(a => a.source === 'ical').map(a => a.date)
+                        );
+                        function hasExternalBlock(dates: string[]) {
+                            return dates.some(d => externalDates.has(d));
+                        }
+                        return (
                         <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800/50">
 
                             {/* Inputs (Status/Price) - Only if NO external blocks */}
-                            {(() => {
-                                const hasExternalBlock = selectedDates.some(d => {
-                                    const entry = availability.find(a => a.date === d);
-                                    return entry?.source === 'ical';
-                                });
-                                if (hasExternalBlock) return null;
-
-                                return (
-                                    <>
-                                        <div>
-                                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Status</label>
-                                            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
+                            {!hasExternalBlock(selectedDates) && (
+                                <>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Status</label>
+                                        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
                                                 <button
                                                     onClick={() => setStatus('available')}
                                                     className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${status === 'available' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
@@ -393,31 +394,22 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                                 </div>
                                             </div>
                                         )}
-                                    </>
-                                )
-                            })()}
+                                </>
+                            )}
 
                             {/* Actions - MOVED TO BOTTOM */}
-                            {(() => {
-                                const hasExternalBlock = selectedDates.some(d => {
-                                    const entry = availability.find(a => a.date === d);
-                                    return entry?.source === 'ical';
-                                });
-
-                                if (hasExternalBlock) return null;
-
-                                return (
-                                    <button
-                                        onClick={handleSave}
-                                        className="w-full py-2 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-white rounded-lg transition-colors"
-                                    >
-                                        Save Changes
-                                    </button>
-                                );
-                            })()}
+                            {hasExternalBlock(selectedDates) ? null : (
+                                <button
+                                    onClick={handleSave}
+                                    className="w-full py-2 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-white rounded-lg transition-colors"
+                                >
+                                    Save Changes
+                                </button>
+                            )}
 
                         </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
         </div>
