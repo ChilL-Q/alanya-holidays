@@ -3,11 +3,12 @@ import { Info } from 'lucide-react';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { LocationPicker } from '../../../ui/LocationPicker';
 import toast from 'react-hot-toast';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyLocationProps {
-    formData: any;
+    formData: PropertyFormData;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-    setFormData: React.Dispatch<React.SetStateAction<any>>;
+    setFormData: React.Dispatch<React.SetStateAction<PropertyFormData>>;
 }
 
 export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, handleChange, setFormData }) => {

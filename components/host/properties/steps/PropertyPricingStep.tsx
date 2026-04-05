@@ -1,9 +1,10 @@
 import React from 'react';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { PropertyHospitality } from './PropertyHospitality';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyPricingStepProps {
-    formData: any;
+    formData: PropertyFormData;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 

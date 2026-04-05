@@ -1,9 +1,10 @@
 import React from 'react';
 import { ShieldCheck, Calendar } from 'lucide-react';
 import { useLanguage } from '../../../../context/LanguageContext';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyHospitalityProps {
-    formData: any;
+    formData: PropertyFormData;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
 }
 

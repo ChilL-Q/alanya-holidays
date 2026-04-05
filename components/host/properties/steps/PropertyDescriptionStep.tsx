@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLanguage } from '../../../../context/LanguageContext';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyDescriptionStepProps {
-    formData: any;
+    formData: PropertyFormData;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 

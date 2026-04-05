@@ -1,10 +1,11 @@
 import React from 'react';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { AMENITIES_LIST } from '../../../../data/constants';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyAmenitiesProps {
-    formData: any;
-    setFormData: React.Dispatch<React.SetStateAction<any>>;
+    formData: PropertyFormData;
+    setFormData: React.Dispatch<React.SetStateAction<PropertyFormData>>;
 }
 
 export const PropertyAmenities: React.FC<PropertyAmenitiesProps> = ({ formData, setFormData }) => {
@@ -22,13 +23,13 @@ export const PropertyAmenities: React.FC<PropertyAmenitiesProps> = ({ formData, 
                     <label key={am.label} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-slate-200 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors">
                         <input
                             type="checkbox"
-                            checked={(formData.amenities as string[] || []).includes(am.label)}
+                            checked={(formData.amenities || []).includes(am.label)}
                             onChange={(e) => {
-                                const current = (formData.amenities as string[]) || [];
+                                const current = formData.amenities || [];
                                 if (e.target.checked) {
-                                    setFormData((prev: any) => ({ ...prev, amenities: [...current, am.label] }));
+                                    setFormData((prev) => ({ ...prev, amenities: [...current, am.label] }));
                                 } else {
-                                    setFormData((prev: any) => ({ ...prev, amenities: current.filter((a: string) => a !== am.label) }));
+                                    setFormData((prev) => ({ ...prev, amenities: current.filter((a: string) => a !== am.label) }));
                                 }
                             }}
                             className="w-4 h-4 text-accent dark:text-amber-400 rounded focus:ring-accent border-gray-300"
