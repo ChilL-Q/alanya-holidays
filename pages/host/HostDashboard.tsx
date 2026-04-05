@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
@@ -42,13 +42,15 @@ export const HostDashboard: React.FC = () => {
         fetchData();
     }, [user, isAuthenticated]);
 
-    const months = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date();
+    const now = useMemo(() => new Date(), []);
+
+    const months = useMemo(() => Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now);
         d.setMonth(d.getMonth() - i);
         return d.toLocaleString('default', { month: 'short' });
-    }).reverse();
+    }).reverse(), [now]);
 
-    const revenueHistory = months.map(month => {
+    const revenueHistory = useMemo(() => months.map(month => {
         const monthlyBookings = bookings.filter(b => {
             const amount = Number(b.host_payout_amount) || 0;
             if (amount <= 0) return false;
@@ -57,17 +59,37 @@ export const HostDashboard: React.FC = () => {
         });
         const monthlyRevenue = monthlyBookings.reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
         return { name: month, value: monthlyRevenue };
-    });
+    }), [bookings, months]);
 
-    const bookingStatusDistribution = [
-        { name: 'Pending', value: bookings.filter(b => b.status === 'pending').length, color: '#F59E0B' },
-        { name: 'Confirmed', value: bookings.filter(b => b.status === 'confirmed').length, color: '#10B981' },
-        { name: 'Completed', value: bookings.filter(b => b.status === 'completed').length, color: '#3B82F6' },
-        { name: 'Cancelled', value: bookings.filter(b => b.status === 'cancelled').length, color: '#EF4444' }
-    ].filter(item => item.value > 0);
+    const bookingStatusDistribution = useMemo(() => {
+        const counts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
+        bookings.forEach(b => {
+            if (counts[b.status as keyof typeof counts] !== undefined) {
+                counts[b.status as keyof typeof counts]++;
+            }
+        });
+        return [
+            { name: 'Pending', value: counts.pending, color: '#F59E0B' },
+            { name: 'Confirmed', value: counts.confirmed, color: '#10B981' },
+            { name: 'Completed', value: counts.completed, color: '#3B82F6' },
+            { name: 'Cancelled', value: counts.cancelled, color: '#EF4444' }
+        ].filter(item => item.value > 0);
+    }, [bookings]);
 
-    const totalEarnings = bookings.filter(b => b.payment_status === 'paid' && b.host_payout_amount).reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
-    const pendingPayouts = bookings.filter(b => b.payment_status === 'paid' && b.payout_status === 'pending').reduce((sum, b) => sum + (Number(b.host_payout_amount) || 0), 0);
+    const { totalEarnings, pendingPayouts } = useMemo(() => {
+        let totalEarnings = 0;
+        let pendingPayouts = 0;
+        bookings.forEach(b => {
+            const amount = Number(b.host_payout_amount) || 0;
+            if (b.payment_status === 'paid') {
+                totalEarnings += amount;
+                if (b.payout_status === 'pending') {
+                    pendingPayouts += amount;
+                }
+            }
+        });
+        return { totalEarnings, pendingPayouts };
+    }, [bookings]);
     
     if (loading) return <div className="h-full flex items-center justify-center min-h-[400px]">Loading Dashboard...</div>;
 
