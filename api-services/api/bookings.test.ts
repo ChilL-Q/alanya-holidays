@@ -7,6 +7,12 @@ const { mockSupabase } = vi.hoisted(() => {
     mockSupabase: {
       from: vi.fn(),
       rpc: vi.fn(),
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'mock-user-id', user_metadata: { role: 'admin' } } },
+          error: null,
+        }),
+      },
       functions: {
         invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
       },

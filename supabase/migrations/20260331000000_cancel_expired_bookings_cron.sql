@@ -23,6 +23,11 @@ select
             select decrypted_secret
             from vault.decrypted_secrets
             where name = 'anon_key'
+          ),
+          'X-Cron-Secret', (
+            select decrypted_secret
+            from vault.decrypted_secrets
+            where name = 'cron_secret'
           )
         ),
         body := jsonb_build_object('triggered_at', now()),

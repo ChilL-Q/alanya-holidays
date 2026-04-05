@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
@@ -49,12 +49,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // ... (Initial load matches existing code)
     // Initial load
+    const isMountedRef = useRef(true);
+
     useEffect(() => {
+        isMountedRef.current = true;
         if (user) {
             refreshConversations();
         } else {
-            setConversations([]);
+            if (isMountedRef.current) setConversations([]);
         }
+        return () => { isMountedRef.current = false; };
     }, [user, refreshConversations]);
 
     // Realtime subscription
@@ -152,14 +156,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Mark as read when opening a conversation
     useEffect(() => {
+        let isMounted = true;
         if (activeConversationId) {
             chatService.markAsRead(activeConversationId).then(() => {
                 // Update local state to remove unread badge immediately
-                setConversations(prev => prev.map(c =>
+                if (isMounted) setConversations(prev => prev.map(c =>
                     c.id === activeConversationId ? { ...c, unread_count: 0 } : c
                 ));
             });
         }
+        return () => { isMounted = false; };
     }, [activeConversationId]);
 
     const totalUnreadCount = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
