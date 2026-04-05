@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
@@ -96,7 +96,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [user, activeConversationId, refreshConversations, addNotification]);
 
-    const startConversation = async (propertyId: string, hostId: string) => {
+    const startConversation = useCallback(async (propertyId: string, hostId: string) => {
         setLoading(true);
         try {
             const id = await chatService.createConversation(propertyId, hostId);
@@ -110,49 +110,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    };
+    }, [refreshConversations]);
 
-
-    const sendMessage = async (content: string) => {
+    const sendMessage = useCallback(async (content: string) => {
         if (!activeConversationId) return;
         try {
             const msg = await chatService.sendMessage(activeConversationId, content);
-            await refreshConversations(); // Update last message
+            await refreshConversations();
             return msg;
         } catch (error) {
             console.error('Failed to send message', error);
             throw error;
         }
-    };
+    }, [activeConversationId, refreshConversations]);
 
-    const clearHistory = async (conversationId: string) => {
+    const clearHistory = useCallback(async (conversationId: string) => {
         try {
             await chatService.clearHistory(conversationId);
             if (activeConversationId === conversationId) {
-                setMessages([]); // Clear local state for AI/Chat if shared? 
-                // Wait, messages for ChatWindow are LOCAL to ChatWindow. 
-                // We need to trigger a refresh there. 
-                // Currently ChatWindow polls or uses realtime. 
-                // Realtime DELETE event? Supabase sends DELETE events. 
-                // ChatWindow should handle it.
-                // But for good measure we can force a refresh if we exposed a refresh method to it.
-                // Actually ChatContext doesn't hold chat messages, ChatWindow does.
+                setMessages([]);
             }
             await refreshConversations();
         } catch (error) {
             console.error('Failed to clear history', error);
             throw error;
         }
-    };
+    }, [activeConversationId, refreshConversations]);
 
-    const submitReport = async (data: any) => {
+    const submitReport = useCallback(async (data: any) => {
         try {
             await chatService.submitReport(data);
         } catch (error) {
             console.error('Failed to submit report', error);
             throw error;
         }
-    };
+    }, []);
 
     // Mark as read when opening a conversation
     useEffect(() => {
@@ -168,7 +160,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => { isMounted = false; };
     }, [activeConversationId]);
 
-    const totalUnreadCount = conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+    const totalUnreadCount = useMemo(() => conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0), [conversations]);
 
     // AI Assistant State
     const [isOpen, setIsOpen] = useState(false);
@@ -184,36 +176,37 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     }, []);
 
-    const addMessage = (msg: { role: 'user' | 'model'; content: string }) => {
+    const addMessage = useCallback((msg: { role: 'user' | 'model'; content: string }) => {
         setMessages(prev => [...prev, msg]);
-    };
+    }, []);
 
-    const clearMessages = () => {
+    const clearMessages = useCallback(() => {
         setMessages([]);
-    };
+    }, []);
+
+    const value = useMemo(() => ({
+        conversations,
+        activeConversationId,
+        setActiveConversationId,
+        totalUnreadCount,
+        loading,
+        sendMessage,
+        startConversation,
+        refreshConversations,
+        clearHistory,
+        submitReport,
+        isOpen,
+        setIsOpen,
+        messages,
+        addMessage,
+        isLoading,
+        setIsLoading,
+        chatContext,
+        clearMessages
+    }), [conversations, activeConversationId, totalUnreadCount, loading, sendMessage, startConversation, refreshConversations, clearHistory, submitReport, isOpen, messages, isLoading, chatContext, addMessage, clearMessages]);
 
     return (
-        <ChatContext.Provider value={{
-            conversations,
-            activeConversationId,
-            setActiveConversationId,
-            totalUnreadCount,
-            loading,
-            sendMessage,
-            startConversation,
-            refreshConversations,
-            clearHistory,
-            submitReport,
-            // AI Props
-            isOpen,
-            setIsOpen,
-            messages,
-            addMessage,
-            isLoading,
-            setIsLoading,
-            chatContext,
-            clearMessages
-        }}>
+        <ChatContext.Provider value={value}>
             {children}
         </ChatContext.Provider>
     );

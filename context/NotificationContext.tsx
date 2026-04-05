@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { db, Notification } from '../api-services';
 
@@ -59,14 +59,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         return () => { isMountedRef.current = false; };
     }, [user, refreshNotifications]);
 
-    const markAsRead = async (id: string) => {
+    const markAsRead = useCallback(async (id: string) => {
         try {
             await db.markNotificationAsRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         } catch (error) {
             console.error('Failed to mark notification as read:', error);
         }
-    };
+    }, []);
 
     const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
         if (!user) return;
@@ -92,10 +92,14 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         }
     }, [user]);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+
+    const value = useMemo(() => ({
+        notifications, unreadCount, markAsRead, addNotification, refreshNotifications, lastNotification
+    }), [notifications, unreadCount, markAsRead, addNotification, refreshNotifications, lastNotification]);
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, addNotification, refreshNotifications, lastNotification }}>
+        <NotificationContext.Provider value={value}>
             {children}
         </NotificationContext.Provider>
     );

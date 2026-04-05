@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
     RATES,
     convertPrice as convertPriceUtil,
@@ -28,16 +28,20 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('currency', currency);
     }, [currency]);
 
-    const convertPrice = (amount: number, fromCurrency: Currency): number => {
+    const convertPrice = useCallback((amount: number, fromCurrency: Currency): number => {
         return convertPriceUtil(amount, fromCurrency, currency);
-    };
+    }, [currency]);
 
-    const formatPrice = (amount: number, targetCurrency?: Currency): string => {
+    const formatPrice = useCallback((amount: number, targetCurrency?: Currency): string => {
         return formatPriceUtil(amount, targetCurrency || currency);
-    };
+    }, [currency]);
+
+    const value = useMemo(() => ({
+        currency, setCurrency, convertPrice, formatPrice, rates: RATES
+    }), [currency, convertPrice, formatPrice]);
 
     return (
-        <CurrencyContext.Provider value={{ currency, setCurrency, convertPrice, formatPrice, rates: RATES }}>
+        <CurrencyContext.Provider value={value}>
             {children}
         </CurrencyContext.Provider>
     );
