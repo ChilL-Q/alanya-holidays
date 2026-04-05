@@ -258,7 +258,7 @@ export const propertiesService = {
         }
 
         // Prevent status bypass via general update — only updatePropertyStatus should change status
-        const { status, ical_token, ical_url, last_synced_at: _lt, ...safeUpdates } = updates as any;
+        const { status: _status, ical_token: _icalToken, ical_url: _icalUrl, last_synced_at: _lt, ...safeUpdates } = updates as any;
 
         const { error } = await supabase
             .from('properties')

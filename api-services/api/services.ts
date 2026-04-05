@@ -17,7 +17,7 @@ export const servicesService = {
         if (!user) throw new Error('Not authenticated');
 
         const insertData = { ...data, provider_id: user.id };
-        const validatedData = serviceSchema.parse(insertData);
+        serviceSchema.parse(insertData);
 
         const { data: service, error } = await supabase
             .from('services')
@@ -112,7 +112,7 @@ export const servicesService = {
         }
 
         // Prevent status bypass and provider_id hijacking
-        const { status, provider_id, id: _id, created_at, updated_at: _ua, ...safeUpdates } = updates as any;
+        const { status: _status, provider_id: _providerId, id: _id, created_at: _createdAt, updated_at: _updatedAt, ...safeUpdates } = updates as any;
 
         const { error } = await supabase
             .from('services')
