@@ -3,7 +3,15 @@ import { ChatConversation, ChatMessage } from '../../types/index';
 import { getAppUrl } from '../../utils/appUrl';
 import { retry } from '../../utils/retry';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function assertUUID(value: string, label: string): void {
+    if (!UUID_RE.test(value)) throw new Error(`Invalid ${label}`);
+}
+
 async function verifyConversationAccess(userId: string, conversationId: string) {
+    assertUUID(userId, 'userId');
+    assertUUID(conversationId, 'conversationId');
     const { data: conv } = await supabase
         .from('chat_conversations')
         .select('id')
@@ -145,6 +153,8 @@ export const chatService = {
 
     // Create or retrieve existing conversation
     async createConversation(propertyId: string, hostId: string) {
+        assertUUID(propertyId, 'propertyId');
+        assertUUID(hostId, 'hostId');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 

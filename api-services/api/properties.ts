@@ -23,7 +23,7 @@ export const propertiesService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const validatedData = propertySchema.parse(data);
+        const validatedData = propertySchema.parse({ ...data, host_id: user.id });
         const { data: property, error } = await supabase
             .from('properties')
             .insert([validatedData])
