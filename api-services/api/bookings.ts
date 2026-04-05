@@ -134,7 +134,7 @@ export const bookingsService = {
         }
 
         // 1. Fetch raw bookings
-        let query = supabase.from('bookings').select('*').eq('user_id', userId);
+        const query = supabase.from('bookings').select('*').eq('user_id', userId);
 
         const { data: bookings, error } = await query.order('check_in', { ascending: true });
 
