@@ -12,11 +12,20 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 
 // Global fix to prevent mouse wheel from changing numerical input values
-document.addEventListener('wheel', (_e) => {
-  if (document.activeElement?.tagName === 'INPUT' && (document.activeElement as HTMLInputElement).type === 'number') {
-    (document.activeElement as HTMLElement).blur();
-  }
-}, { passive: false });
+function setupWheelGuard() {
+  const handler = (_e: WheelEvent) => {
+    if (document.activeElement?.tagName === 'INPUT' && (document.activeElement as HTMLInputElement).type === 'number') {
+      (document.activeElement as HTMLElement).blur();
+    }
+  };
+  document.addEventListener('wheel', handler, { passive: false });
+  return () => document.removeEventListener('wheel', handler);
+}
+
+const cleanup = setupWheelGuard();
+if (import.meta.hot) {
+  import.meta.hot.dispose(cleanup);
+}
 
 root.render(
   <React.StrictMode>
