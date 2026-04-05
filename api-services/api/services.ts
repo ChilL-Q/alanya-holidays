@@ -13,10 +13,15 @@ const IMMUTABLE_SERVICE_FIELDS = new Set([
 
 export const servicesService = {
     async createService(data: Omit<ServiceDB, 'id' | 'created_at'>) {
-        const validatedData = serviceSchema.parse(data);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const insertData = { ...data, provider_id: user.id };
+        const validatedData = serviceSchema.parse(insertData);
+
         const { data: service, error } = await supabase
             .from('services')
-            .insert([validatedData])
+            .insert([insertData])
             .select()
             .single();
 
@@ -92,6 +97,20 @@ export const servicesService = {
     },
 
     async updateService(id: string, updates: Partial<ServiceDB>) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Full fetch for auth check and notification
+        const { data: existingService } = await supabase
+            .from('services')
+            .select('provider_id, title, type')
+            .eq('id', id)
+            .single();
+
+        if (!existingService || (existingService.provider_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
         // Prevent status bypass and provider_id hijacking
         const { status, provider_id, id: _id, created_at, updated_at: _ua, ...safeUpdates } = updates as any;
 
@@ -116,8 +135,17 @@ export const servicesService = {
     },
 
     async deleteService(id: string, reason?: string) {
-        // Fetch details before delete
-        const { data: service } = await supabase.from('services').select('provider_id, title, type').eq('id', id).single();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Fetch details before delete + auth check
+        const { data: service, error: fetchError } = await supabase.from('services').select('provider_id, title, type').eq('id', id).single();
+
+        if (fetchError || !service) throw new Error('Service not found');
+
+        if (service.provider_id !== user.id && user.user_metadata?.role !== 'admin') {
+            throw new Error('Not authorized');
+        }
 
         const { error } = await supabase
             .from('services')
@@ -139,6 +167,19 @@ export const servicesService = {
     },
 
     async updateServiceStatus(id: string, status: ApprovalStatus | 'approved' | 'rejected' | 'pending', reason?: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        // Verify admin role — only admins can change approval status
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role !== 'admin') {
+            throw new Error('Not authorized: only admins can change service status');
+        }
         const updates: any = { status };
         if (status === 'rejected' && reason) updates.rejection_reason = reason;
 

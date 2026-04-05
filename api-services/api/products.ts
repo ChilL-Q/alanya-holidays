@@ -4,7 +4,12 @@ import { productSchema } from './schemas';
 
 export const productsService = {
     async createProduct(data: Product) {
-        const validatedData = productSchema.parse(data);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const insertData = { ...data, seller_id: user.id };
+        const validatedData = productSchema.parse(insertData);
+
         const { data: product, error } = await supabase
             .from('products')
             .insert([validatedData])
@@ -61,15 +66,44 @@ export const productsService = {
     },
 
     async updateProduct(id: string, updates: Partial<Product>) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data: existingProduct } = await supabase
+            .from('products')
+            .select('seller_id')
+            .eq('id', id)
+            .single();
+
+        if (!existingProduct || (existingProduct.seller_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
+        // Prevent seller_id hijacking
+        const { seller_id: _sellerId, ...safeUpdates } = updates;
+
         const { error } = await supabase
             .from('products')
-            .update(updates)
+            .update(safeUpdates)
             .eq('id', id);
 
         if (error) throw error;
     },
 
     async deleteProduct(id: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data: existingProduct } = await supabase
+            .from('products')
+            .select('seller_id')
+            .eq('id', id)
+            .single();
+
+        if (!existingProduct || (existingProduct.seller_id !== user.id && user.user_metadata?.role !== 'admin')) {
+            throw new Error('Not authorized');
+        }
+
         const { error } = await supabase
             .from('products')
             .delete()
