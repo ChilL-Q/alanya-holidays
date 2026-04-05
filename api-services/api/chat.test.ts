@@ -16,10 +16,17 @@ vi.mock('../supabase', () => ({
   supabase: mockSupabase,
 }));
 
+// Stable UUIDs for test fixtures
+const USER_ID   = '550e8400-e29b-41d4-a716-446655440001';
+const CONV_ID   = '550e8400-e29b-41d4-a716-446655440002';
+const PROP_ID   = '550e8400-e29b-41d4-a716-446655440003';
+const HOST_ID   = '550e8400-e29b-41d4-a716-446655440004';
+const HOST_ID2  = '550e8400-e29b-41d4-a716-446655440005';
+
 describe('chatService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } }, error: null });
   });
 
   const createMockChain = (data: any = null, error: any = null) => {
@@ -47,18 +54,15 @@ describe('chatService', () => {
     });
 
     it('fetches and enriches conversations', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
 
-      const mockConvs = [{ id: 'c1' }];
-      
+      const mockConvs = [{ id: CONV_ID }];
+
       mockSupabase.from.mockImplementation((table) => {
           if (table === 'chat_conversations') return createMockChain(mockConvs);
           if (table === 'chat_messages') {
-              // Can act as either the lastMsg single fetch or the unread count fetch depending on what's called last.
               const chain = createMockChain();
-              // override to resolve the promise for the count query
               chain.then = (cb: any) => cb({ count: 5, data: [] });
-              // override single for last msg query
               chain.maybeSingle = vi.fn().mockResolvedValue({ data: { content: 'hi' }, error: null });
               return chain;
           }
@@ -71,7 +75,7 @@ describe('chatService', () => {
     });
 
     it('throws on db error', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
       mockSupabase.from.mockReturnValue(createMockChain(null, new Error('DB Error')));
       await expect(chatService.getConversations()).rejects.toThrow('DB Error');
     });
@@ -80,35 +84,35 @@ describe('chatService', () => {
   describe('getMessages', () => {
       it('fetches messages for conversation', async () => {
           mockSupabase.from.mockReturnValue(
-              createMockChain({ id: 'c1' }) as any
+              createMockChain({ id: CONV_ID }) as any
           );
           const mockData = [{ id: '1' }];
           const msgChain = createMockChain(mockData);
-          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: 'c1' }) as any);
+          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: CONV_ID }) as any);
           mockSupabase.from.mockReturnValueOnce(msgChain);
-          const result = await chatService.getMessages('c1');
+          const result = await chatService.getMessages(CONV_ID);
           expect(result).toEqual(mockData);
       });
 
       it('throws when not participant', async () => {
           mockSupabase.from.mockReturnValue(createMockChain(null) as any);
-          await expect(chatService.getMessages('c1')).rejects.toThrow('Not authorized for this conversation');
+          await expect(chatService.getMessages(CONV_ID)).rejects.toThrow('Not authorized for this conversation');
       });
   });
 
   describe('sendMessage', () => {
     it('throws if not authenticated', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-      await expect(chatService.sendMessage('c1', 'hi')).rejects.toThrow('Not authenticated');
+      await expect(chatService.sendMessage(CONV_ID, 'hi')).rejects.toThrow('Not authenticated');
     });
 
     it('inserts message correctly and updates conversation', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
 
       const msgChain = createMockChain({ id: 'msg1', content: 'hello' });
       const convUpdateChain = createMockChain();
-      const convSelectChain = createMockChain({ guest_id: 'me', host_id: 'host1', property: { title: 'Villa' } });
-      const convAccessChain = createMockChain({ id: 'c1' });
+      const convSelectChain = createMockChain({ guest_id: USER_ID, host_id: HOST_ID2, property: { title: 'Villa' } });
+      const convAccessChain = createMockChain({ id: CONV_ID });
 
       let convCall = 0;
       mockSupabase.from.mockImplementation((table) => {
@@ -122,11 +126,10 @@ describe('chatService', () => {
           return createMockChain();
       });
 
-      const result = await chatService.sendMessage('c1', 'hello');
+      const result = await chatService.sendMessage(CONV_ID, 'hello');
 
       expect(msgChain.insert).toHaveBeenCalled();
       expect(convUpdateChain.update).toHaveBeenCalled();
-      // Verify email invocation happens in the background
       await new Promise(r => setTimeout(r, 0)); // flush promises
       expect(mockSupabase.functions.invoke).toHaveBeenCalled();
 
@@ -134,31 +137,31 @@ describe('chatService', () => {
     });
 
     it('throws on db error', async () => {
-        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
         mockSupabase.from
-            .mockReturnValueOnce(createMockChain({ id: 'c1' })) // verify access
+            .mockReturnValueOnce(createMockChain({ id: CONV_ID })) // verify access
             .mockReturnValueOnce(createMockChain(null, new Error('DB Error'))); // insert fails
-        await expect(chatService.sendMessage('c1', 'hi')).rejects.toThrow('DB Error');
+        await expect(chatService.sendMessage(CONV_ID, 'hi')).rejects.toThrow('DB Error');
     });
   });
 
   describe('createConversation', () => {
       it('throws if not auth', async () => {
           mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
-          await expect(chatService.createConversation('p1', 'h1')).rejects.toThrow();
+          await expect(chatService.createConversation(PROP_ID, HOST_ID)).rejects.toThrow();
       });
 
       it('returns existing', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-          const chain = createMockChain({ id: 'c1' });
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+          const chain = createMockChain({ id: CONV_ID });
           mockSupabase.from.mockReturnValue(chain);
-          const result = await chatService.createConversation('p1', 'h1');
-          expect(result).toBe('c1');
+          const result = await chatService.createConversation(PROP_ID, HOST_ID);
+          expect(result).toBe(CONV_ID);
       });
 
       it('creates new if not exists', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-          
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+
           const existChain = createMockChain(null); // not found
           const insertChain = createMockChain({ id: 'new-c' });
 
@@ -168,14 +171,14 @@ describe('chatService', () => {
               return call === 1 ? existChain : insertChain;
           });
 
-          const result = await chatService.createConversation('p1', 'h1');
+          const result = await chatService.createConversation(PROP_ID, HOST_ID);
           expect(insertChain.insert).toHaveBeenCalled();
           expect(result).toBe('new-c');
       });
 
       it('handles duplicate error condition', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
-          
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
+
           const existChain = createMockChain(null); // not found
           const insertChain = createMockChain(null, { code: '23505' }); // duplicate error
           const retryChain = createMockChain({ id: 'c-dup' });
@@ -188,17 +191,17 @@ describe('chatService', () => {
               return retryChain;
           });
 
-          const result = await chatService.createConversation('p1', 'h1');
+          const result = await chatService.createConversation(PROP_ID, HOST_ID);
           expect(result).toBe('c-dup');
       });
   });
 
   describe('markAsRead', () => {
       it('updates messages', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
           const chain = createMockChain();
           mockSupabase.from.mockReturnValue(chain);
-          await chatService.markAsRead('c1');
+          await chatService.markAsRead(CONV_ID);
           expect(chain.update).toHaveBeenCalledWith({ is_read: true });
       });
 
@@ -206,31 +209,31 @@ describe('chatService', () => {
           mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
           const chain = createMockChain();
           mockSupabase.from.mockReturnValue(chain);
-          await chatService.markAsRead('c1');
+          await chatService.markAsRead(CONV_ID);
           expect(chain.update).not.toHaveBeenCalled();
       });
 
       it('throws on db error', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'me' } } });
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
           const chain = createMockChain();
           chain.eq = vi.fn().mockResolvedValue({ error: new Error('DB Error') });
           mockSupabase.from.mockReturnValue(chain);
-          await expect(chatService.markAsRead('c1')).rejects.toThrow();
+          await expect(chatService.markAsRead(CONV_ID)).rejects.toThrow();
       });
   });
 
   describe('clearHistory', () => {
       it('deletes messages', async () => {
-          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: 'c1' }) as any);
+          mockSupabase.from.mockReturnValueOnce(createMockChain({ id: CONV_ID }) as any);
           mockSupabase.from.mockReturnValueOnce(createMockChain());
-          await chatService.clearHistory('c1');
+          await chatService.clearHistory(CONV_ID);
           const calls = mockSupabase.from.mock.calls;
           expect(calls).toContainEqual(['chat_messages']);
       });
 
       it('throws if no user', async () => {
           mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: null } });
-          await expect(chatService.clearHistory('c1')).rejects.toThrow();
+          await expect(chatService.clearHistory(CONV_ID)).rejects.toThrow();
       });
   });
 
@@ -251,9 +254,9 @@ describe('chatService', () => {
               on: mockOn,
               subscribe: mockSubscribe
           });
-          
-          chatService.subscribeToMessages('c1', vi.fn());
-          expect(mockSupabase.channel).toHaveBeenCalledWith('conversation:c1');
+
+          chatService.subscribeToMessages(CONV_ID, vi.fn());
+          expect(mockSupabase.channel).toHaveBeenCalledWith(`conversation:${CONV_ID}`);
           expect(mockOn).toHaveBeenCalled();
           expect(mockSubscribe).toHaveBeenCalled();
       });
