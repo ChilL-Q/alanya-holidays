@@ -99,6 +99,35 @@ export interface PropertyAvailability {
     updated_at?: string;
 }
 
+export interface PropertyFormData {
+    title: string;
+    description: string;
+    type: string;
+    maxGuests: number;
+    bedrooms: number;
+    beds: number;
+    bathrooms: number;
+    address: string;
+    location: string;
+    latitude: number | null;
+    longitude: number | null;
+    rentalLicense: string;
+    pricePerNight: number;
+    cleaningFee: number;
+    securityDeposit: number;
+    weekendPremium: number;
+    minStay: number;
+    amenities: string[];
+    hospitality: {
+        airportPickup: boolean;
+        groceryDelivery: boolean;
+        dailyCleaning: boolean;
+        welcomeBasket: boolean;
+    };
+    images: string[];
+    [key: string]: any;
+}
+
 export interface ServiceFeatures {
     brand?: string;
     model?: string;

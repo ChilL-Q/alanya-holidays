@@ -1,10 +1,11 @@
 import React from 'react';
 import { Counter } from '../../../ui/Counter';
 import { useLanguage } from '../../../../context/LanguageContext';
+import { PropertyFormData } from '../../../../types/models';
 
 interface PropertyBasicsStepProps {
-    formData: any;
-    setFormData: (data: any) => void;
+    formData: PropertyFormData;
+    setFormData: React.Dispatch<React.SetStateAction<PropertyFormData>>;
 }
 
 export const PropertyBasicsStep: React.FC<PropertyBasicsStepProps> = ({ formData, setFormData }) => {
