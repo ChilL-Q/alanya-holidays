@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -55,85 +55,112 @@ export const PropertyDetails: React.FC = () => {
     const [crossSellServices, setCrossSellServices] = useState<any[]>([]);
 
     useEffect(() => {
+        let cancelled = false;
+
         const fetchProperty = async () => {
             if (!id) return;
             try {
                 const data = await db.getProperty(id);
-                if (data) {
-                    const normalizedData: PropertyDetailsData = {
-                        ...data,
-                        title: data.title || 'Property Details',
-                        description: data.description || '',
-                        images: Array.isArray(data.images) ? data.images : [],
-                        amenities: Array.isArray(data.amenities)
-                            ? data.amenities.map((a: any) => {
-                                if (typeof a === 'object' && a !== null) {
-                                    return a.label || a.name || a.title || JSON.stringify(a);
-                                }
-                                return String(a);
-                            })
-                            : [],
-                        pricePerNight: Number(data.price_per_night) || 0,
-                        guests: data.max_guests || 2,
-                        bedrooms: data.bedrooms || 1,
-                        beds: data.beds || 1,
-                        bathrooms: data.bathrooms || 1,
-                        host_id: data.host_id,
-                        hostName: data.host?.full_name || ((data as any).profiles ? ((data as any).profiles.full_name || (data as any).profiles.username) : 'Alanya Holidays'),
-                        hostAvatar: data.host?.avatar_url || ((data as any).profiles ? (data as any).profiles.avatar_url : null),
-                        rating: data.rating || 5.0,
-                        reviewsCount: data.reviews_count || 0,
-                        cleaning_fee: Number(data.cleaning_fee) || 0
-                    } as unknown as PropertyDetailsData;
+                if (!data || typeof data !== 'object') return;
 
-                    setProperty(normalizedData);
-                    const unavailable = await db.getUnavailableDates(normalizedData.id);
-                    if (unavailable) {
-                        setBlockedDates(unavailable.map((d: string) => new Date(d)));
+                const normalizedData: PropertyDetailsData = {
+                    ...data,
+                    title: data.title || 'Property Details',
+                    description: data.description || '',
+                    images: Array.isArray(data.images) ? data.images : [],
+                    amenities: Array.isArray(data.amenities)
+                        ? data.amenities.map((a: any) => {
+                            if (typeof a === 'object' && a !== null) {
+                                return a.label || a.name || a.title || JSON.stringify(a);
+                            }
+                            return String(a);
+                        })
+                        : [],
+                    pricePerNight: Number(data.price_per_night) || 0,
+                    guests: data.max_guests || 2,
+                    bedrooms: data.bedrooms || 1,
+                    beds: data.beds || 1,
+                    bathrooms: data.bathrooms || 1,
+                    host_id: data.host_id,
+                    hostName: data.host?.full_name || ((data as any).profiles ? ((data as any).profiles.full_name || (data as any).profiles.username) : 'Alanya Holidays'),
+                    hostAvatar: data.host?.avatar_url || ((data as any).profiles ? (data as any).profiles.avatar_url : null),
+                    rating: data.rating || 5.0,
+                    reviewsCount: data.reviews_count || 0,
+                    cleaning_fee: Number(data.cleaning_fee) || 0
+                } as unknown as PropertyDetailsData;
+
+                // Fire remaining requests in parallel
+                const blockedPromise = db.getUnavailableDates(normalizedData.id);
+                const reviewPromise = db.getReviewCount(normalizedData.id);
+                const bookingPromise = isAuthenticated && user
+                    ? db.getBookings(user.id)
+                    : Promise.resolve([]);
+
+                const [unavailable, reviewCount, bookings] = await Promise.all([
+                    blockedPromise,
+                    reviewPromise,
+                    bookingPromise,
+                ]);
+
+                if (cancelled) return;
+
+                setProperty(prev => {
+                    const current = prev || normalizedData;
+                    if (!prev) {
+                        return { ...normalizedData, reviewsCount: reviewCount };
                     }
-                    const reviewCount = await db.getReviewCount(normalizedData.id);
-                    setProperty(prev => prev ? { ...prev, reviewsCount: reviewCount } : null);
+                    return current.reviewsCount ? current : { ...current, reviewsCount: reviewCount };
+                });
 
-                    if (isAuthenticated && user) {
-                        const bookings = await db.getBookings(user.id);
-                        const activeBooking = bookings?.find((b: any) =>
-                            b.item_id === normalizedData.id &&
-                            (b.status === 'confirmed' || b.payment_status === 'paid')
-                        );
-                        if (activeBooking) {
-                            setHasBooking(true);
-                        }
+                if (unavailable) {
+                    setBlockedDates(unavailable.map((d: string) => new Date(d)));
+                }
+
+                if (bookings) {
+                    const activeBooking = bookings?.find((b: any) =>
+                        b.item_id === normalizedData.id &&
+                        (b.status === 'confirmed' || b.payment_status === 'paid')
+                    );
+                    if (activeBooking) {
+                        setHasBooking(true);
                     }
                 }
             } catch (error) {
                 console.error('Error fetching property:', error);
                 toast.error('Failed to load property details');
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
         fetchProperty();
+        return () => { cancelled = true; };
     }, [id, isAuthenticated, user]);
 
     useEffect(() => {
+        let cancelled = false;
+
         const fetchCrossSell = async () => {
             try {
-                const { data: cars } = await db.getServices('car', 1, 10);
-                const { data: bikes } = await db.getServices('bike', 1, 10);
-                const rentals = [...(cars || []), ...(bikes || [])];
+                // Fire all 5 service fetches in parallel
+                const [cars, bikes, tours, visas, esims] = await Promise.all([
+                    db.getServices('car', 1, 10),
+                    db.getServices('bike', 1, 10),
+                    db.getServices('tour', 1, 10),
+                    db.getServices('visa', 1, 10),
+                    db.getServices('esim', 1, 10),
+                ]);
+
+                if (cancelled) return;
+
+                const rentals = [...(cars?.data || []), ...(bikes?.data || [])];
                 const randomRental = rentals.length > 0 ? rentals[Math.floor(Math.random() * rentals.length)] : null;
-
-                const { data: tours } = await db.getServices('tour', 1, 10);
-                const randomTour = (tours && tours.length > 0) ? tours[Math.floor(Math.random() * tours.length)] : null;
-
-                const { data: visas } = await db.getServices('visa', 1, 10);
-                const { data: esims } = await db.getServices('esim', 1, 10);
-                const consulting = [...(visas || []), ...(esims || [])];
+                const randomTour = (tours?.data && tours.data.length > 0) ? tours.data[Math.floor(Math.random() * tours.data.length)] : null;
+                const consulting = [...(visas?.data || []), ...(esims?.data || [])];
                 const randomConsulting = consulting.length > 0 ? consulting[Math.floor(Math.random() * consulting.length)] : null;
 
                 const selected = [randomRental, randomTour, randomConsulting].filter(Boolean);
                 const selectedIds = new Set(selected.map(s => s.id));
-                const allPool = [...rentals, ...(tours || []), ...consulting].filter(s => !selectedIds.has(s.id));
+                const allPool = [...rentals, ...(tours?.data || []), ...consulting].filter(s => !selectedIds.has(s.id));
 
                 while (selected.length < 3 && allPool.length > 0) {
                     const randomIndex = Math.floor(Math.random() * allPool.length);
@@ -146,6 +173,7 @@ export const PropertyDetails: React.FC = () => {
             }
         };
         fetchCrossSell();
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
