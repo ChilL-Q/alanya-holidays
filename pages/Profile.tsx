@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
@@ -103,7 +103,7 @@ export const Profile: React.FC = () => {
                             email: profile.email || user.email
                         }));
                     }
-                } catch (error) {
+                } catch (_error) {
                     // ignore unmount
                 } finally {
                     if (isMountedRef.current) setLoading(false);
