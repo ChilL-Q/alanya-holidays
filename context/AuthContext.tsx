@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, ReactNode } from 'react';
 import { supabase } from '../api-services/supabase';
 import { getAppUrl } from '../utils/appUrl';
 
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return () => { isMountedRef.current = false; subscription.unsubscribe(); };
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string) => {
         setIsLoading(true);
         const { error } = await supabase.auth.signInWithPassword({
             email,
@@ -118,9 +118,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return { success: false, error: error.message };
         }
         return { success: true };
-    };
+    }, []);
 
-    const register = async (name: string, email: string, password: string, role: 'guest' | 'host' = 'guest', companyName?: string) => {
+    const register = useCallback(async (name: string, email: string, password: string, role: 'guest' | 'host', companyName?: string) => {
         setIsLoading(true);
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -159,9 +159,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         return { success: true };
-    };
+    }, []);
 
-    const sendOtp = async (email: string) => {
+    const sendOtp = useCallback(async (email: string) => {
         setIsLoading(true);
         const { error } = await supabase.auth.signInWithOtp({
             email,
@@ -172,9 +172,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return { success: false, error: error.message };
         }
         return { success: true };
-    };
+    }, []);
 
-    const verifyOtp = async (email: string, token: string, type: 'email' | 'signup' | 'recovery' = 'email') => {
+    const verifyOtp = useCallback(async (email: string, token: string, type: 'email' | 'signup' | 'recovery' = 'email') => {
         setIsLoading(true);
         const { error } = await supabase.auth.verifyOtp({
             email,
@@ -188,14 +188,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return { success: false, error: error.message };
         }
         return { success: true };
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         await supabase.auth.signOut();
         setUser(null);
-    };
+    }, []);
 
-    const updateUser = async (data: Partial<User>) => {
+    const updateUser = useCallback(async (data: Partial<User>) => {
         if (!user) return;
 
         const updates: any = {};
@@ -215,34 +215,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Local state will update via listener
             setUser({ ...user, ...data });
         }
-    };
+    }, [user]);
 
-    const updateEmail = async (email: string) => {
+    const updateEmail = useCallback(async (email: string) => {
         const { error } = await supabase.auth.updateUser({ email });
         if (error) throw error;
         // User needs to confirm via email, so local state might not update immediately depending on config
-    };
+    }, []);
 
-    const updatePassword = async (password: string) => {
+    const updatePassword = useCallback(async (password: string) => {
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-    };
+    }, []);
+
+    const value = useMemo(() => ({
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        register,
+        sendOtp,
+        verifyOtp,
+        logout,
+        updateUser,
+        updateProfile: updateUser,
+        updateEmail,
+        updatePassword
+    }), [user, isLoading, login, register, sendOtp, verifyOtp, logout, updateUser, updateEmail, updatePassword]);
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            isAuthenticated: !!user,
-            isLoading,
-            login,
-            register,
-            sendOtp,
-            verifyOtp,
-            logout,
-            updateUser,
-            updateProfile: updateUser,
-            updateEmail,
-            updatePassword
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
