@@ -440,12 +440,29 @@ export const propertiesService = {
     },
 
     async deleteProperty(id: string, reason?: string) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         // Fetch details before deletion to notify host
         const { data: property } = await supabase
             .from('properties')
             .select('host_id, title')
             .eq('id', id)
             .single();
+
+        if (!property) throw new Error('Property not found');
+
+        if (property.host_id !== user.id) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (profile?.role !== 'admin') {
+                throw new Error('Not authorized: only owner or admin can delete properties');
+            }
+        }
 
         // Audit log for deletion
         createAuditLog('PROPERTY_DELETED', { propertyId: id, reason });

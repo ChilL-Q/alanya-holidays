@@ -128,8 +128,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             options: {
                 data: {
                     full_name: name,
-                    role: role,
-                    company_name: companyName, // Added optional company name
+                    company_name: companyName,
                     avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D9488&color=fff`
                 }
             }
