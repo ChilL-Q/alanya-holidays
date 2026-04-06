@@ -273,6 +273,8 @@ describe('Stripe Edge Functions - Logic Tests', () => {
     const mockSupabaseSingle = vi.fn();
     const mockSupabaseFunctionsInvoke = vi.fn();
 
+    const mockSupabaseInsert = vi.fn();
+
     const webhookHandler = async (event: any) => {
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
@@ -319,6 +321,37 @@ describe('Stripe Edge Functions - Logic Tests', () => {
               }
             }
           }
+        }
+      }
+
+      if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntentId = event.data.object.id;
+        const booking = await mockSupabaseSingle(paymentIntentId);
+
+        if (!booking) {
+          return { status: 200, body: { received: true } };
+        }
+
+        const result = await mockSupabaseUpdate({ payment_status: 'failed' });
+        if (result?.error) {
+          return { status: 500, body: 'DB update failed' };
+        }
+
+        await mockSupabaseInsert({
+          user_id: booking.user_id,
+          title: 'Payment Failed',
+          type: 'error',
+        });
+      }
+
+      if (event.type === 'charge.dispute.created') {
+        const paymentIntentId = event.data.object.payment_intent;
+        if (paymentIntentId) {
+          const booking = await mockSupabaseSingle(paymentIntentId);
+          if (booking) {
+            await mockSupabaseUpdate({ payment_status: 'failed' });
+          }
+          await mockSupabaseInsert({ title: 'Charge Dispute Filed', type: 'warning' });
         }
       }
 
@@ -511,6 +544,64 @@ describe('Stripe Edge Functions - Logic Tests', () => {
         });
 
         expect(result.status).toBe(200);
+      });
+    });
+
+    describe('payment_intent.payment_failed Event', () => {
+      it('updates booking payment_status to failed', async () => {
+        mockSupabaseSingle.mockResolvedValue({ id: 'booking-1', user_id: 'user-1', property: { title: 'Test' } });
+        mockSupabaseUpdate.mockResolvedValue({ error: null });
+        mockSupabaseInsert.mockResolvedValue({ error: null });
+
+        const result = await webhookHandler({
+          type: 'payment_intent.payment_failed',
+          data: { object: { id: 'pi_test_123' } },
+        });
+
+        expect(result.status).toBe(200);
+        expect(mockSupabaseUpdate).toHaveBeenCalledWith({ payment_status: 'failed' });
+        expect(mockSupabaseInsert).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
+      });
+
+      it('returns 200 when no booking found for payment_intent', async () => {
+        mockSupabaseSingle.mockResolvedValue(null);
+
+        const result = await webhookHandler({
+          type: 'payment_intent.payment_failed',
+          data: { object: { id: 'pi_unknown' } },
+        });
+
+        expect(result.status).toBe(200);
+        expect(mockSupabaseUpdate).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('charge.dispute.created Event', () => {
+      it('updates booking and notifies admins on dispute', async () => {
+        mockSupabaseSingle.mockResolvedValue({ id: 'booking-1', user_id: 'user-1' });
+        mockSupabaseUpdate.mockResolvedValue({ error: null });
+        mockSupabaseInsert.mockResolvedValue({ error: null });
+
+        const result = await webhookHandler({
+          type: 'charge.dispute.created',
+          data: { object: { payment_intent: 'pi_test_456', reason: 'fraudulent' } },
+        });
+
+        expect(result.status).toBe(200);
+        expect(mockSupabaseUpdate).toHaveBeenCalledWith({ payment_status: 'failed' });
+        expect(mockSupabaseInsert).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Charge Dispute Filed', type: 'warning' })
+        );
+      });
+
+      it('skips update when no payment_intent in dispute', async () => {
+        const result = await webhookHandler({
+          type: 'charge.dispute.created',
+          data: { object: { reason: 'fraudulent' } },
+        });
+
+        expect(result.status).toBe(200);
+        expect(mockSupabaseUpdate).not.toHaveBeenCalled();
       });
     });
 
