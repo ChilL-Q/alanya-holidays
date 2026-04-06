@@ -5,17 +5,28 @@ declare const Deno: any
 
 const YESIM_API_URL = 'https://partners-api.yesim.biz'
 const YESIM_API_TOKEN = Deno.env.get('YESIM_API_TOKEN')
-const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
+const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
+
+const ALLOWED_ORIGINS = new Set([
+  SITE_URL,
+  'https://alanyaholidays.com',
+  'http://localhost:3000',
+  'http://localhost:5173',
+])
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL'),
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 )
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || ''
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : SITE_URL
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
 }
 
 const yesimHeaders = () => {
@@ -59,25 +70,41 @@ type RequestBody =
   | { action: 'createOrder'; planId: string }
 
 Deno.serve(async (req: Request) => {
+  const cors = getCorsHeaders(req)
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: cors })
   }
 
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 405, headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 
   try {
-    // --- Auth verification ---
+    const body: RequestBody = await req.json()
+
+    if (!body?.action) {
+      return new Response(
+        JSON.stringify({ error: 'Missing action field' }),
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // getPlans is public — no auth required
+    if (body.action === 'getPlans') {
+      return await handleGetPlans(cors)
+    }
+
+    // All other actions require authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -88,52 +115,41 @@ Deno.serve(async (req: Request) => {
       console.error('User verification failed:', userError)
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const body: RequestBody = await req.json()
-
-    if (!body?.action) {
-      return new Response(
-        JSON.stringify({ error: 'Missing action field' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
       )
     }
 
     // --- Route by action ---
     switch (body.action) {
-      case 'getPlans':
-        return await handleGetPlans()
       case 'createOrder':
         if (!body.planId) {
           return new Response(
             JSON.stringify({ error: 'Missing planId' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
           )
         }
-        return await handleCreateOrder(body.planId)
+        return await handleCreateOrder(body.planId, cors)
       default:
         return new Response(
           JSON.stringify({ error: `Unknown action: ${body.action}` }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } }
         )
     }
   } catch (error: any) {
     console.error('yesim-proxy error:', error)
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 })
 
-async function handleGetPlans(): Promise<Response> {
+async function handleGetPlans(cors: Record<string, string>): Promise<Response> {
   if (!YESIM_API_TOKEN) {
     console.warn('YESIM_API_TOKEN not configured, returning demo plans')
     return new Response(
       JSON.stringify({ data: DEMO_PLANS }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 
@@ -149,18 +165,18 @@ async function handleGetPlans(): Promise<Response> {
     const data = await response.json()
     return new Response(
       JSON.stringify({ data }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   } catch (error: any) {
     console.error('Failed to fetch Yesim plans:', error)
     return new Response(
       JSON.stringify({ error: `Failed to fetch plans: ${error.message}` }),
-      { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 }
 
-async function handleCreateOrder(planId: string): Promise<Response> {
+async function handleCreateOrder(planId: string, cors: Record<string, string>): Promise<Response> {
   if (!YESIM_API_TOKEN) {
     console.warn('YESIM_API_TOKEN not configured, returning demo order')
     await new Promise((r) => setTimeout(r, 1500))
@@ -172,7 +188,7 @@ async function handleCreateOrder(planId: string): Promise<Response> {
     }
     return new Response(
       JSON.stringify({ data: demoOrder }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 
@@ -239,13 +255,13 @@ async function handleCreateOrder(planId: string): Promise<Response> {
 
     return new Response(
       JSON.stringify({ data: order }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   } catch (error: any) {
     console.error('Yesim Order Failed:', error)
     return new Response(
       JSON.stringify({ error: error.message || 'Order creation failed' }),
-      { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 502, headers: { ...cors, 'Content-Type': 'application/json' } }
     )
   }
 }
