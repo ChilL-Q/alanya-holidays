@@ -158,21 +158,23 @@ describe('ChatContext', () => {
 
     it('submits a report', async () => {
         const { result } = renderHook(() => useChat(), { wrapper });
+        const reportData = { reporter_id: 'u1', conversation_id: 'c1', reason: 'spam', description: 'test' };
 
         await act(async () => {
-            await result.current.submitReport({ reason: 'spam' });
+            await result.current.submitReport(reportData);
         });
 
-        expect(chatService.submitReport).toHaveBeenCalledWith({ reason: 'spam' });
+        expect(chatService.submitReport).toHaveBeenCalledWith(reportData);
     });
 
     it('handles submit report error', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         (chatService.submitReport as any).mockRejectedValue(new Error('Report failed'));
         const { result } = renderHook(() => useChat(), { wrapper });
+        const reportData = { reporter_id: 'u1', conversation_id: 'c1', reason: 'spam', description: 'test' };
 
         await expect(act(async () => {
-            await result.current.submitReport({ reason: 'spam' });
+            await result.current.submitReport(reportData);
         })).rejects.toThrow('Report failed');
 
         expect(consoleSpy).toHaveBeenCalled();

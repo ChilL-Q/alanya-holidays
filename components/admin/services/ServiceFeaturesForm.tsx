@@ -64,7 +64,7 @@ export const ServiceFeaturesForm: React.FC<ServiceFeaturesFormProps> = ({ servic
     }
 
     if (service.type === 'tour') {
-        const itinerary = (features.itinerary || []) as any[];
+        const itinerary = features.itinerary || [];
 
         return (
             <div className="space-y-6">

@@ -255,6 +255,7 @@ export const RegisterModal: React.FC = () => {
 
                         <div className="flex justify-center">
                             <input
+                                id="otp-input"
                                 type="text"
                                 maxLength={8}
                                 required

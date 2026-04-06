@@ -117,7 +117,7 @@ export const Map: React.FC<MapProps> = ({ properties }) => {
         if (p.latitude && p.longitude) return { lat: p.latitude, lng: p.longitude };
 
         // Deterministic pseudo-random based on ID
-        const seed = ((p as any).id || 'default').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const seed = (p.id || 'default').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const latOffset = (Math.sin(seed) * 0.04);
         const lngOffset = (Math.cos(seed) * 0.04);
 

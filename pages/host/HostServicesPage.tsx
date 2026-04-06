@@ -60,10 +60,10 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                 db.getMyPendingEdits(user.id)
             ]);
 
-            const editSet = new Set((edits || []).map((e: any) => e.service_id));
+            const editSet = (edits || []).map((e: { service_id: string }) => e.service_id);
 
             setServices(data || []);
-            setPendingEdits(new Set(editSet as any));
+            setPendingEdits(new Set(editSet));
         } catch (error) {
             console.error('Failed to load services:', error);
         } finally {

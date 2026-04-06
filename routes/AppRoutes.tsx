@@ -6,11 +6,12 @@ import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 // Public Pages - Direct Imports (critical for immediate FCP)
-import { DirectoryHome } from '../pages/DirectoryHome';
-import { DirectoryCategoryPage } from '../pages/DirectoryCategoryPage';
-import { LoginRedirect } from '../pages/auth/LoginRedirect';
+const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(module => ({ default: module.DirectoryHome })));
+const DirectoryCategoryPage = React.lazy(() => import('../pages/DirectoryCategoryPage').then(module => ({ default: module.DirectoryCategoryPage })));
+const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
 const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => ({ default: module.AiPlanner })));
@@ -23,8 +24,6 @@ const Privacy = React.lazy(() => import('../pages/Privacy').then(module => ({ de
 const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ default: module.Terms })));
 const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
 const ListProperty = React.lazy(() => import('../pages/ListProperty').then(module => ({ default: module.ListProperty })));
-
-// Public Pages - Lazy Loaded
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
 const VisaConsult = React.lazy(() => import('../pages/VisaConsult').then(module => ({ default: module.VisaConsult })));
 const CarRental = React.lazy(() => import('../pages/CarRental').then(module => ({ default: module.CarRental })));
@@ -71,17 +70,11 @@ const HostBookingsPage = React.lazy(() => import('../pages/host/HostBookingsPage
 const HostCalendarPage = React.lazy(() => import('../pages/host/HostCalendarPage').then(module => ({ default: module.HostCalendarPage })));
 const HostMessagesPage = React.lazy(() => import('../pages/host/HostMessagesPage').then(module => ({ default: module.HostMessagesPage })));
 
-const PageLoader = () => (
-    <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-);
 
 export const AppRoutes: React.FC = () => {
     return (
-        <React.Suspense fallback={<PageLoader />}>
-            <Routes>
-                <Route path="/" element={<DirectoryHome />} />
+        <Routes>
+            <Route path="/" element={<DirectoryHome />} />
                 <Route path="/ai-planner" element={<AiPlanner />} />
 
                 {/* SEO-Optimized Directory Category Routes */}
@@ -319,6 +312,5 @@ export const AppRoutes: React.FC = () => {
 
                 <Route path="*" element={<DirectoryHome />} />
             </Routes>
-        </React.Suspense>
     );
 };

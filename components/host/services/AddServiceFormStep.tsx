@@ -5,15 +5,42 @@ import { TransportationFields, AdventureFields, HealthCreativeFields } from './S
 import { useLanguage } from '../../../context/LanguageContext';
 import { ServiceCategory } from './AddServiceCategoryStep';
 
+interface ServiceFormData {
+    title: string;
+    description: string;
+    price: string | number;
+    type: 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative';
+    brand?: string;
+    model?: string;
+    seats?: number | string;
+    transmission?: string;
+    fuel?: string;
+    year?: string;
+    vehicleType?: string;
+    subcategory?: string;
+    duration?: string;
+    difficulty?: string;
+    groupSize?: string;
+    included?: string;
+    languages?: string;
+    requirements?: string;
+    itinerary?: Array<{ label?: string; value?: string; description?: string }>;
+    availableFrom?: string;
+    availableTo?: string;
+    modelSelection?: string;
+    promotionPrice?: string | number;
+    promotionDescription?: string;
+}
+
 interface AddServiceFormStepProps {
     category: ServiceCategory;
-    formData: any;
+    formData: ServiceFormData;
     handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-    setFormData: React.Dispatch<React.SetStateAction<any>>;
+    setFormData: React.Dispatch<React.SetStateAction<ServiceFormData>>;
     files: File[];
     setFiles: (files: File[]) => void;
-    itinerary: any[];
-    setItinerary: React.Dispatch<React.SetStateAction<any[]>>;
+    itinerary: Array<{ label?: string; value?: string; description?: string }>;
+    setItinerary: React.Dispatch<React.SetStateAction<Array<{ label?: string; value?: string; description?: string }>>>;
     onSubmit: (e: React.FormEvent) => void;
     isSubmitting: boolean;
 }
@@ -71,7 +98,7 @@ export const AddServiceFormStep: React.FC<AddServiceFormStepProps> = ({
                                         type="button"
                                         onClick={() => setFormData({
                                             ...formData,
-                                            type: type as any,
+                                            type: type as ServiceFormData['type'],
                                             brand: '',
                                             model: ''
                                         })}

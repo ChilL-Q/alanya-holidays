@@ -102,7 +102,7 @@ export const NotificationBell: React.FC = () => {
                                         audio.play().catch(err => console.error('Manual sound test failed', err));
 
                                         addNotification({
-                                            type: 'info' as any,
+                                            type: 'info' as const,
                                             title: 'Sound Test',
                                             message: 'If you hear this, sound is working!',
                                             link: '#',
