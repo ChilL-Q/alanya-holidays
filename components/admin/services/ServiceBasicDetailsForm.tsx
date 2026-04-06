@@ -22,7 +22,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
                     <select
                         value={service.type || 'car'}
-                        onChange={e => setService({ ...service, type: e.target.value as any })}
+                        onChange={e => setService({ ...service, type: e.target.value as 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative' })}
                         className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
                     >
                         <option value="car">Car Rental</option>

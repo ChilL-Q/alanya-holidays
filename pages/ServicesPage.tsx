@@ -52,8 +52,8 @@ export const ServicesPage: React.FC = () => {
         if (activeCategory !== 'transport') return [];
         const brands = new Set<string>();
         SERVICES_DATA.forEach(s => {
-            if (s.category === 'transport' && (s as any).brand) {
-                brands.add((s as any).brand);
+            if (s.category === 'transport' && s.brand) {
+                brands.add(s.brand);
             }
         });
         return Array.from(brands).sort();
@@ -67,14 +67,14 @@ export const ServicesPage: React.FC = () => {
 
             // 1.1 Transport Sub-filter
             if (activeCategory === 'transport' && transportFilter !== 'all') {
-                const subcategory = (service as any).subcategory;
+                const subcategory = service.subcategory;
                 if (subcategory && subcategory !== transportFilter) return false;
                 if (!subcategory) return false;
             }
 
             // 1.2 Brand Filter
             if (activeCategory === 'transport' && brandFilter !== 'all') {
-                const brand = (service as any).brand;
+                const brand = service.brand;
                 if (!brand || brand.toLowerCase() !== brandFilter) return false;
             }
 
@@ -124,7 +124,7 @@ export const ServicesPage: React.FC = () => {
                             ].map((filter) => (
                                 <button
                                     key={filter.id}
-                                    onClick={() => setTransportFilter(filter.id as any)}
+                                    onClick={() => setTransportFilter(filter.id as 'all' | 'rental' | 'transfer')}
                                     className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${transportFilter === filter.id
                                         ? 'bg-white dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 shadow-sm shadow-slate-200/50 dark:shadow-none translate-y-[-1px]'
                                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-700/80'

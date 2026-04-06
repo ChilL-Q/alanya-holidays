@@ -73,13 +73,14 @@ export async function createBooking(data: BookingCreateInput) {
         }
     })).catch(err => console.error('Failed to send email:', err));
 
+interface ItemOwner { host_id?: string; provider_id?: string; title?: string }
     const table       = input.item_type === 'service' ? 'services' : 'properties';
     const ownerParams = input.item_type === 'service' ? 'provider_id, title' : 'host_id, title';
 
     supabase.from(table).select(ownerParams).eq('id', validatedData.item_id).single()
-        .then(({ data: item }) => {
-            const itemData = item as any;
-            const hostId   = itemData ? (itemData.host_id || itemData.provider_id) : null;
+        .then(({ data }) => {
+            const item = data as ItemOwner;
+            const hostId   = item ? (item.host_id || item.provider_id) : null;
             if (hostId) {
                 retry(() => supabase.functions.invoke('send-email', {
                     body: {
@@ -87,7 +88,7 @@ export async function createBooking(data: BookingCreateInput) {
                         userId: hostId,
                         data: {
                             guestName,
-                            itemTitle:     itemData.title,
+                            itemTitle:     item?.title,
                             itemTypeLabel,
                             checkIn:       validatedData.check_in,
                             checkOut:      validatedData.check_out,
@@ -132,10 +133,10 @@ export async function updateBookingStatus(
     }
 
     if ((status === 'confirmed' || status === 'cancelled') && currentBooking) {
-        const property     = Array.isArray(currentBooking.property) ? currentBooking.property[0] : currentBooking.property;
-        const service      = Array.isArray(currentBooking.service)  ? currentBooking.service[0]  : currentBooking.service;
-        const itemTitle    = (property as any)?.title || (service as any)?.title || 'Item';
-        const hostId       = (property as any)?.host_id || (service as any)?.provider_id;
+        const property: { title?: string; host_id?: string } | null = Array.isArray(currentBooking.property) ? currentBooking.property[0] : currentBooking.property;
+        const service: { title?: string; provider_id?: string } | null = Array.isArray(currentBooking.service) ? currentBooking.service[0] : currentBooking.service;
+        const itemTitle    = property?.title || service?.title || 'Item';
+        const hostId       = property?.host_id || service?.provider_id;
         const itemTypeLabel = property ? 'Property' : (service ? 'Service' : 'Item');
 
         let type: string | null = null;

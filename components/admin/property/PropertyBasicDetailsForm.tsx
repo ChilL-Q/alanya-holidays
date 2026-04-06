@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { useLanguage } from '../../../context/LanguageContext';
 import { Home } from 'lucide-react';
 
+interface PropertyBasicForm {
+    title: string;
+    description: string;
+    propertyType: string;
+    price: string | number;
+    cleaningFee: string | number;
+    maxGuests: string | number;
+    beds: string | number;
+    bedrooms: string | number;
+    bathrooms: string | number;
+    address: string;
+    isPromoted: boolean;
+    [key: string]: unknown;
+}
+
 interface PropertyBasicDetailsFormProps {
-    formData: any;
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+    formData: PropertyBasicForm;
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
 }
 
 export const PropertyBasicDetailsForm: React.FC<PropertyBasicDetailsFormProps> = ({ formData, onChange }) => {
@@ -13,7 +28,7 @@ export const PropertyBasicDetailsForm: React.FC<PropertyBasicDetailsFormProps> =
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Basic Information</h3>
-            
+
             <div className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -163,14 +178,14 @@ export const PropertyBasicDetailsForm: React.FC<PropertyBasicDetailsFormProps> =
                     ></textarea>
                 </div>
             </div>
-            
+
             <div className="mt-6 bg-indigo-50 dark:bg-slate-800/50 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800 flex items-center gap-3">
                 <input
                     type="checkbox"
                     id="isPromoted"
                     name="isPromoted"
                     checked={formData.isPromoted}
-                    onChange={(e) => onChange({ ...e, target: { ...e.target, name: 'isPromoted', value: e.target.checked as any, type: 'checkbox', checked: e.target.checked } } as any)}
+                    onChange={onChange}
                     className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
                 />
                 <label htmlFor="isPromoted" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">

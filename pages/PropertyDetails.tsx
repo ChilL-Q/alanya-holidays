@@ -24,11 +24,12 @@ import { PropertyAmenitiesList } from '../components/properties/details/Property
 import { PropertyHospitalityGuide } from '../components/properties/details/PropertyHospitalityGuide';
 import { PropertyBookingCard } from '../components/properties/details/PropertyBookingCard';
 import { PropertyCrossSell } from '../components/properties/details/PropertyCrossSell';
-import { Property } from '../types/models';
+import { Property, UserProfile } from '../types/models';
 
 interface PropertyDetailsData extends Property {
     address?: string;
-    host?: any;
+    host?: Partial<UserProfile>;
+    profiles?: { full_name?: string; username?: string; avatar_url?: string };
     host_id?: string;
     hostAvatar?: string | null;
 }
@@ -82,8 +83,8 @@ export const PropertyDetails: React.FC = () => {
                     beds: data.beds || 1,
                     bathrooms: data.bathrooms || 1,
                     host_id: data.host_id,
-                    hostName: data.host?.full_name || ((data as any).profiles ? ((data as any).profiles.full_name || (data as any).profiles.username) : 'Alanya Holidays'),
-                    hostAvatar: data.host?.avatar_url || ((data as any).profiles ? (data as any).profiles.avatar_url : null),
+                    hostName: data.host?.full_name || (data.profiles ? (data.profiles.full_name || data.profiles.username) : 'Alanya Holidays'),
+                    hostAvatar: data.host?.avatar_url || (data.profiles ? data.profiles.avatar_url : null),
                     rating: data.rating || 5.0,
                     reviewsCount: data.reviews_count || 0,
                     cleaning_fee: Number(data.cleaning_fee) || 0

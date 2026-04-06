@@ -24,10 +24,10 @@ export async function getBookings(userId: string): Promise<EnrichedBooking[]> {
     const [propertiesResult, servicesResult] = await Promise.all([
         propertyIds.length > 0
             ? supabase.from('properties').select('id, title, images, price_per_night, location').in('id', propertyIds)
-            : Promise.resolve({ data: [] as any[], error: null }),
+            : Promise.resolve({ data: [], error: null }),
         serviceIds.length > 0
             ? supabase.from('services').select('id, title, images, price, type').in('id', serviceIds)
-            : Promise.resolve({ data: [] as any[], error: null })
+            : Promise.resolve({ data: [], error: null })
     ]);
 
     if (propertiesResult.error) throw propertiesResult.error;
@@ -65,13 +65,13 @@ export async function getAdminBookings(statusFilter?: string): Promise<EnrichedB
     const [usersResult, propertiesResult, servicesResult] = await Promise.all([
         userIds.length > 0
             ? supabase.from('profiles').select('id, full_name, email, avatar_url').in('id', userIds)
-            : Promise.resolve({ data: [] as any[] }),
+            : Promise.resolve({ data: [], error: null }),
         propertyIds.length > 0
             ? supabase.from('properties').select('id, title, images, price_per_night, location').in('id', propertyIds)
-            : Promise.resolve({ data: [] as any[] }),
+            : Promise.resolve({ data: [], error: null }),
         serviceIds.length > 0
             ? supabase.from('services').select('id, title, images, price, type').in('id', serviceIds)
-            : Promise.resolve({ data: [] as any[] })
+            : Promise.resolve({ data: [], error: null })
     ]);
 
     const userMap     = new Map((usersResult.data as UserProfile[]).map(u => [u.id, u]));
@@ -83,10 +83,10 @@ export async function getAdminBookings(statusFilter?: string): Promise<EnrichedB
         let itemDetails = {};
         if (booking.item_type === 'property') {
             const property = propertyMap.get(booking.item_id);
-            itemDetails = { property, itemTitle: (property as any)?.title };
+            itemDetails = { property, itemTitle: property?.title };
         } else if (booking.item_type === 'service') {
             const service = serviceMap.get(booking.item_id);
-            itemDetails = { service, itemTitle: (service as any)?.title };
+            itemDetails = { service, itemTitle: service?.title };
         }
         return { ...booking, user: enrichedUser, ...itemDetails };
     }) as EnrichedBooking[];
@@ -135,6 +135,6 @@ export async function getBookingsForHost(hostId: string, dateFrom?: string, date
         ...booking,
         user:      profileMap.get(booking.user_id),
         property:  propertyMap.get(booking.item_id),
-        itemTitle: (propertyMap.get(booking.item_id) as any)?.title
+        itemTitle: propertyMap.get(booking.item_id)?.title
     })) as EnrichedBooking[];
 }

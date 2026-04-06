@@ -90,7 +90,7 @@ export async function updateService(id: string, updates: Partial<ServiceDB>) {
         throw new Error('Not authorized');
     }
 
-    const { status: _s, provider_id: _p, id: _id, created_at: _c, updated_at: _u, ...safeUpdates } = updates as any;
+    const { status: _s, provider_id: _p, id: _id, created_at: _c, ...safeUpdates } = updates as Partial<ServiceDB>;
     const { error } = await supabase.from('services').update(safeUpdates).eq('id', id);
     if (error) throw error;
 
@@ -155,7 +155,7 @@ export async function updateServiceStatus(
 
     if (profile?.role !== 'admin') throw new Error('Not authorized: only admins can change service status');
 
-    const updates: any = { status };
+    const updates: Partial<ServiceDB> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
 
     const { error } = await supabase.from('services').update(updates).eq('id', id);

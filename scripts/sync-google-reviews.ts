@@ -31,7 +31,7 @@ async function fetchGoogleRating(name: string, location: string): Promise<{ rati
         const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${googleApiKey}`;
         
         const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json() as any;
+        const searchData: { status: string; results?: Array<{ place_id: string; name: string; rating?: number; user_ratings_total?: number }> } = await searchRes.json();
         
         if (searchData.status === 'OK' && searchData.results && searchData.results.length > 0) {
             const place = searchData.results[0];
