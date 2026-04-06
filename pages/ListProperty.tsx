@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
-import { PropertyFormData } from '../types/models';
+import { PropertyFormData, PropertyDB } from '../types/models';
 import toast from 'react-hot-toast';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
@@ -75,7 +75,7 @@ export const ListProperty: React.FC = () => {
         checkoutInstructions: '',
         guidebooks: '',
         interactionPreferences: '',
-        promotionPrice: '',
+        promotionPrice: undefined,
         promotionDescription: '',
         icalUrl: ''
     });
@@ -121,10 +121,10 @@ export const ListProperty: React.FC = () => {
             await db.createProperty({
                 title: formData.title,
                 description: formData.description,
-                price_per_night: parseFloat(formData.price),
+                price_per_night: parseFloat(String(formData.price || 0)),
                 location: formData.location,
                 address: formData.address,
-                type: formData.propertyType as any,
+                type: formData.propertyType as PropertyDB['type'],
                 cleaning_fee: formData.cleaningFee ? parseFloat(String(formData.cleaningFee)) : undefined,
                 max_guests: formData.maxGuests,
                 bedrooms: formData.bedrooms,
@@ -144,7 +144,7 @@ export const ListProperty: React.FC = () => {
                 guidebooks: formData.guidebooks,
                 interaction_preferences: formData.interactionPreferences,
                 is_promoted: !!formData.promotionPrice,
-                promotion_price: formData.promotionPrice ? parseFloat(formData.promotionPrice) : undefined,
+                promotion_price: formData.promotionPrice ? parseFloat(String(formData.promotionPrice)) : undefined,
                 promotion_description: formData.promotionDescription,
                 status: 'pending'
             });

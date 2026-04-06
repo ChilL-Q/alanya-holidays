@@ -7,6 +7,8 @@ import { getPropertyOverride } from '../config';
 import { retry } from '../../../utils/retry';
 import { createAuditLog } from '../audit';
 
+type PropertyUpdateInput = Omit<PropertyDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'ical_token' | 'ical_url' | 'last_synced_at'>;
+
 export async function getPropertiesByIds(ids: string[]) {
     if (!ids.length) return [];
     const { data, error } = await supabase
@@ -191,12 +193,12 @@ export async function updateProperty(id: string, updates: Partial<PropertyDB>) {
         throw new Error('Not authorized');
     }
 
-    const { status: _status, ical_token: _t, ical_url: _u, last_synced_at: _lt, ...safeUpdates } = updates as any;
+    const { status: _status, ical_token: _t, ical_url: _u, last_synced_at: _lt, ...safeUpdates } = updates as Partial<PropertyDB>;
 
     const { error } = await supabase.from('properties').update(safeUpdates).eq('id', id);
     if (error) throw error;
 
-    if (existingProp && safeUpdates.status === undefined) {
+    if (existingProp && ('status' in safeUpdates) === false) {
         const typeLabel = existingProp.type === 'villa' ? 'Villa' : 'Apartment';
         await notificationsService.createNotification(
             existingProp.host_id,
@@ -225,7 +227,7 @@ export async function updatePropertyStatus(
         throw new Error('Not authorized: only admins can change property status');
     }
 
-    const updates: any = { status };
+    const updates: Partial<PropertyDB> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
     if (status === 'approved') updates.rejection_reason = null;
 

@@ -12,11 +12,12 @@ export interface UserProfile {
   email?: string;
   phone?: string;
   company_name?: string;
-  
+
   // Manual Payout Details
   iban?: string;
   bank_name?: string;
   bank_account_holder_name?: string;
+  crypto_wallet?: string;
 
   created_at?: string;
   role?: 'guest' | 'user' | 'host' | 'admin';
@@ -72,6 +73,9 @@ export interface PropertyDB {
     ical_url?: string;
     ical_token?: string;
     last_synced_at?: string;
+
+    // Legacy Supabase join field
+    profiles?: { full_name?: string; username?: string; avatar_url?: string };
 }
 
 export interface PropertyICalFeed {
@@ -103,6 +107,8 @@ export interface PropertyFormData {
     title?: string;
     description?: string;
     type?: string;
+    propertyType?: 'villa' | 'apartment' | string;
+    price?: string | number;
     maxGuests?: number;
     bedrooms?: number;
     beds?: number;
@@ -125,7 +131,19 @@ export interface PropertyFormData {
         welcomeBasket: boolean;
     };
     images?: string[];
-    [key: string]: any;
+    checkInTime?: string;
+    checkOutTime?: string;
+    checkInMethod?: string;
+    wifiDetails?: string;
+    arrivalGuide?: string;
+    houseManual?: string;
+    houseRules?: string;
+    checkoutInstructions?: string;
+    guidebooks?: string;
+    interactionPreferences?: string;
+    icalUrl?: string;
+    promotionPrice?: number;
+    promotionDescription?: string;
 }
 
 export interface ServiceFeatures {
@@ -134,9 +152,9 @@ export interface ServiceFeatures {
     year?: string;
     transmission?: string;
     fuel?: string;
-    seats?: number;
+    seats?: number | string;
     vehicleType?: string;
-    
+
     // Adventure fields
     subcategory?: string;
     duration?: string;
@@ -145,13 +163,14 @@ export interface ServiceFeatures {
     included?: string;
     languages?: string;
     requirements?: string;
-    itinerary?: any[];
+    itinerary?: Array<{ label?: string; value?: string; description?: string; duration?: string }>;
 
     // Availability
     availableFrom?: string;
     availableTo?: string;
-    
-    [key: string]: any;
+
+    // Booking/contact
+    whatsapp?: string;
 }
 
 export interface ServiceDB {
@@ -332,8 +351,10 @@ export interface Service {
   price: number;
   description: string;
   image: string;
-  duration?: string; // For tours
-  vehicleType?: string; // For transfers
+  duration?: string;
+  vehicleType?: string;
+  brand?: string;
+  subcategory?: 'rental' | 'transfer';
   isPromoted?: boolean;
   promotionPrice?: number;
   promotionDescription?: string;

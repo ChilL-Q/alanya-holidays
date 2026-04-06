@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
+import { NotificationType } from '../types/enums';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
 
@@ -15,7 +16,7 @@ interface ChatContextType {
     startConversation: (propertyId: string, hostId: string) => Promise<string>;
     refreshConversations: () => Promise<void>;
     clearHistory: (conversationId: string) => Promise<void>;
-    submitReport: (data: any) => Promise<void>;
+    submitReport: (data: { reporter_id: string; reported_id?: string; conversation_id: string; reason: string; description: string }) => Promise<void>;
 
     // AI Assistant
     isOpen: boolean;
@@ -81,7 +82,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (!isSender && !isActive) {
                     addNotification({
-                        type: 'booking_request' as any,
+                        type: NotificationType.INFO,
                         title: 'New Message',
                         message: `New message: ${newMessage.content.substring(0, 30)}${newMessage.content.length > 30 ? '...' : ''}`,
                         link: '/host/messages',

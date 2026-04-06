@@ -1,18 +1,6 @@
 import React from 'react';
 import { ShoppingBag, Star, User } from 'lucide-react';
-
-interface Product {
-    id: string;
-    title: string;
-    price: number;
-    description: string;
-    category: string;
-    stock?: number;
-    images: string[];
-    seller: {
-        full_name: string;
-    };
-}
+import { Product } from '../../types/models';
 
 interface ProductCardProps {
     product: Product;

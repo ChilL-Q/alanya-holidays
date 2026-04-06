@@ -23,6 +23,17 @@ const corsHeaders = {
 
 const PAYMENT_WINDOW_MINUTES = 15
 
+interface CartItem {
+  type: string
+  listingType?: string
+  listingId: string
+  title: string
+}
+interface SupabaseEmptyResponse {
+  data: unknown[]
+  error: null
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -70,7 +81,7 @@ Deno.serve(async (req: Request) => {
     const propertyIds: string[] = []
     const serviceIds: string[] = []
 
-    for (const item of items as any[]) {
+    for (const item of items as CartItem[]) {
       if (item.type === 'service' || item.listingType === 'service') {
         serviceIds.push(item.listingId)
       } else {
@@ -81,10 +92,10 @@ Deno.serve(async (req: Request) => {
     const [propertiesResult, servicesResult] = await Promise.all([
       propertyIds.length > 0
         ? supabase.from('properties').select('id, title, price_per_night, images').in('id', propertyIds)
-        : Promise.resolve({ data: [] as any[], error: null }),
+    : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null }),
       serviceIds.length > 0
         ? supabase.from('services').select('id, title, price, images').in('id', serviceIds)
-        : Promise.resolve({ data: [] as any[], error: null })
+    : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null })
     ])
 
     if (propertiesResult.error) throw propertiesResult.error
@@ -95,7 +106,7 @@ Deno.serve(async (req: Request) => {
 
     const lineItems: any[] = []
 
-    for (const item of items as any[]) {
+    for (const item of items as CartItem[]) {
       let serverPrice: number | null = null
 
       if (item.type === 'service' || item.listingType === 'service') {
