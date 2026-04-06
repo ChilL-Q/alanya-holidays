@@ -15,7 +15,7 @@ export const notificationsService = {
                 user_id: userId,
                 title,
                 message,
-                type,
+                type: type as Notification['type'],
                 link,
                 read: false
             }]);
@@ -28,7 +28,7 @@ export const notificationsService = {
             notification.user_id,
             notification.title,
             notification.message,
-            notification.type as any,
+            notification.type,
             notification.link
         );
     },

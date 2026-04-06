@@ -96,7 +96,7 @@ export const Profile: React.FC = () => {
                             iban: profile.iban || '',
                             bankName: profile.bank_name || '',
                             bankAccountHolderName: profile.bank_account_holder_name || '',
-                            cryptoWallet: (profile as any).crypto_wallet || ''
+                            cryptoWallet: profile.crypto_wallet || ''
                         });
                         setEmailForm(prev => ({
                             ...prev,
