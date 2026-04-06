@@ -23,7 +23,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         >
             <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-800/80">
                 <img
-                    src={property.image}
+                    src={property.image || undefined}
                     alt={property.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
