@@ -122,6 +122,93 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  if (event.type === 'payment_intent.payment_failed') {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent
+    const paymentIntentId = paymentIntent.id
+
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('id, user_id, property:properties(title), service:services(title)')
+      .eq('payment_intent_id', paymentIntentId)
+      .limit(1)
+      .maybeSingle()
+
+    if (fetchError) {
+      console.error('Failed to fetch booking for payment_intent:', fetchError)
+      return new Response('DB lookup failed', { status: 500 })
+    }
+
+    if (!booking) {
+      console.warn(`No booking found for payment_intent ${paymentIntentId}`)
+      return new Response(JSON.stringify({ received: true }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ payment_status: 'failed' })
+      .eq('id', booking.id)
+
+    if (updateError) {
+      console.error('Failed to update booking payment_status to failed:', updateError)
+      return new Response('DB update failed', { status: 500 })
+    }
+
+    const itemTitle = (booking.property as any)?.title ?? (booking.service as any)?.title ?? 'your booking'
+
+    await supabase.from('notifications').insert({
+      user_id: booking.user_id,
+      title: 'Payment Failed',
+      message: `Your payment for "${itemTitle}" could not be processed. Please update your payment method and try again.`,
+      type: 'error',
+      link: '/profile',
+    })
+
+    console.warn(`Payment failed: booking ${booking.id}, payment_intent ${paymentIntentId}`)
+  }
+
+  if (event.type === 'charge.dispute.created') {
+    const dispute = event.data.object as Stripe.Dispute
+    const paymentIntentId = dispute.payment_intent as string | undefined
+
+    if (paymentIntentId) {
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('id, user_id')
+        .eq('payment_intent_id', paymentIntentId)
+        .limit(1)
+        .maybeSingle()
+
+      if (booking) {
+        await supabase
+          .from('bookings')
+          .update({ payment_status: 'failed' })
+          .eq('id', booking.id)
+      }
+
+      // Notify all admins
+      const { data: admins } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'admin')
+
+      if (admins && admins.length > 0) {
+        await supabase.from('notifications').insert(
+          admins.map((admin: { id: string }) => ({
+            user_id: admin.id,
+            title: 'Charge Dispute Filed',
+            message: `A dispute has been filed for payment intent ${paymentIntentId}${booking ? `. Booking ID: ${booking.id}` : ''}. Dispute reason: ${dispute.reason ?? 'unknown'}.`,
+            type: 'warning',
+            link: '/admin/bookings',
+          }))
+        )
+      }
+
+      console.warn(`Dispute created: payment_intent ${paymentIntentId}, booking ${booking?.id ?? 'not found'}, reason: ${dispute.reason}`)
+    }
+  }
+
   return new Response(JSON.stringify({ received: true }), {
     headers: { 'Content-Type': 'application/json' },
   })
