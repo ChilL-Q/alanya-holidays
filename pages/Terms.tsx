@@ -102,11 +102,13 @@ export const Terms: React.FC = () => {
                 </div>
                 <p>
                     Alanya Holidays acts as an intermediary platform connecting guests and hosts. We verify listings for existence and basic standards, but we are not liable for:
-                    <ul>
-                        <li>Direct damages arising from the use of the property.</li>
-                        <li>Personal injuries occurring on the premises.</li>
-                        <li>Theft or loss of personal belongings.</li>
-                    </ul>
+                </p>
+                <ul>
+                    <li>Direct damages arising from the use of the property.</li>
+                    <li>Personal injuries occurring on the premises.</li>
+                    <li>Theft or loss of personal belongings.</li>
+                </ul>
+                <p>
                     However, we will actively assist in mediating disputes and hold a host guarantee fund for extreme cases.
                 </p>
             </section>
