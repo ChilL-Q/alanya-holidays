@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { seedAuthSession, mockSupabaseRest } from './utils/mock-utils';
 
 test.describe('Booking Flow', () => {
   test('should navigate to stays page and see listings', async ({ page }) => {
@@ -78,6 +79,8 @@ test.describe('Booking Flow', () => {
   });
 
   test('should verify cart persists across navigation', async ({ page }) => {
+    await seedAuthSession(page);
+    await mockSupabaseRest(page);
     await page.addInitScript(() => {
       localStorage.setItem('cart', JSON.stringify([{
         id: 'test-cart-item',
