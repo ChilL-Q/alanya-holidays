@@ -10,18 +10,53 @@ export const mockUser = {
   app_metadata: {},
 };
 
+// Minimal valid JWT (header.payload.sig) that Supabase JS can decode client-side.
+// Signature is fake — Supabase JS does not verify signatures client-side.
+// header:  {"alg":"HS256","typ":"JWT"}
+// payload: {"sub":"test-user-1","aud":"authenticated","exp":9999999999,"role":"authenticated","email":"test@example.com"}
+const MOCK_JWT =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+  '.eyJzdWIiOiJ0ZXN0LXVzZXItMSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJleHAiOjk5OTk5OTk5OTksInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIn0' +
+  '.fake_signature_not_verified_client_side';
+
 export const mockSessionResponse = {
-  access_token: 'mock-access-token',
+  access_token: MOCK_JWT,
   token_type: 'bearer',
   expires_in: 3600,
   refresh_token: 'mock-refresh-token',
   user: mockUser,
 };
 
-/** Setup full auth mock for Supabase auth flow */
+// Supabase project ref from VITE_SUPABASE_URL
+const SUPABASE_STORAGE_KEY = 'sb-mdmizeyiyebvhkujjyjg-auth-token';
+
+/**
+ * Seeds a valid Supabase session into localStorage BEFORE page load.
+ * Use this for tests that require the user to already be authenticated
+ * (e.g. protected routes like /checkout, /profile).
+ * Do NOT use for login-flow tests — it will make the user already logged in.
+ */
+export async function seedAuthSession(page: Page) {
+  await page.addInitScript(({ storageKey, session }) => {
+    localStorage.setItem(storageKey, JSON.stringify({
+      access_token: session.access_token,
+      token_type: session.token_type,
+      expires_in: session.expires_in,
+      refresh_token: session.refresh_token,
+      user: session.user,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    }));
+  }, { storageKey: SUPABASE_STORAGE_KEY, session: mockSessionResponse });
+}
+
+/**
+ * Intercepts Supabase auth HTTP endpoints.
+ * Use for login/signup flow tests where the user starts unauthenticated.
+ */
 export async function setupAuthMocks(page: Page) {
-  // getSession (called on mount)
-  await page.route('**/auth/v1/session', async (route) => {
+  // HTTP intercepts for session refresh / login / user info
+  // Note: patterns must end with ** to also match query strings like ?grant_type=password
+  await page.route('**/auth/v1/session**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({ data: { session: mockSessionResponse }, error: null }),
@@ -29,8 +64,7 @@ export async function setupAuthMocks(page: Page) {
     });
   });
 
-  // token (login endpoint)
-  await page.route('**/auth/v1/token', async (route) => {
+  await page.route('**/auth/v1/token**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify(mockSessionResponse),
@@ -38,8 +72,7 @@ export async function setupAuthMocks(page: Page) {
     });
   });
 
-  // user (current user info)
-  await page.route('**/auth/v1/user', async (route) => {
+  await page.route('**/auth/v1/user**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify(mockUser),
@@ -50,17 +83,31 @@ export async function setupAuthMocks(page: Page) {
 
 /** Mock Supabase REST API calls */
 export async function mockSupabaseRest(page: Page) {
-  // Profile fetch
+  // AuthContext calls profiles.select().eq().single() — expects single JSON object
+  // when Accept: application/vnd.pgrst.object+json header is present.
+  // Return single object (not array) to satisfy .single().
   await page.route('**/rest/v1/profiles*', async (route) => {
+    const accept = route.request().headers()['accept'] || '';
+    const isSingle = accept.includes('pgrst.object');
+    const profile = {
+      id: mockUser.id,
+      full_name: 'Test User',
+      email: 'test@example.com',
+      role: 'guest',
+      created_at: '2024-01-01T00:00:00Z',
+    };
     await route.fulfill({
       status: 200,
-      body: JSON.stringify([{
-        id: mockUser.id,
-        full_name: 'Test User',
-        email: 'test@example.com',
-        role: 'guest',
-        created_at: '2024-01-01T00:00:00Z',
-      }]),
+      body: JSON.stringify(isSingle ? profile : [profile]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  // Suppress notification fetches so they don't cause errors
+  await page.route('**/rest/v1/notifications*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
       headers: { 'Content-Type': 'application/json' },
     });
   });
@@ -79,7 +126,7 @@ export async function mockStripePayment(page: Page) {
 
 /** Mock Supabase signup success */
 export async function mockSignup(page: Page) {
-  await page.route('**/auth/v1/signup', async (route) => {
+  await page.route('**/auth/v1/signup**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({ user: mockUser, session: null }),
@@ -88,9 +135,9 @@ export async function mockSignup(page: Page) {
   });
 }
 
-/** Mock Supabase OTP verification success */
+/** Mock Supabase OTP verification success — also seeds session after verify */
 export async function mockVerifyOtp(page: Page) {
-  await page.route('**/auth/v1/verify', async (route) => {
+  await page.route('**/auth/v1/verify**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify(mockSessionResponse),
@@ -118,7 +165,6 @@ export const mockProperty = {
 
 /** Mock Supabase REST API calls for properties */
 export async function mockPropertyData(page: Page) {
-  // RPC for searching available properties
   await page.route('**/rest/v1/rpc/get_available_properties*', async (route) => {
     await route.fulfill({
       status: 200,
@@ -127,7 +173,6 @@ export async function mockPropertyData(page: Page) {
     });
   });
 
-  // REST fetch for single property or list
   await page.route('**/rest/v1/properties*', async (route) => {
     await route.fulfill({
       status: 200,

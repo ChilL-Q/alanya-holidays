@@ -20,8 +20,8 @@ test.describe('Navigation Flow', () => {
         await page.getByText('Wellness & Health').click();
         await expect(page).toHaveURL(/\/services\/health/);
         
-        // Click on Visa
-        await page.getByText('Consulting').click();
+        // Click on Visa — use button role to avoid matching footer link
+        await page.getByRole('button', { name: 'Consulting' }).click();
         await expect(page).toHaveURL(/\/services\/visa/);
     });
 });
