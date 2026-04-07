@@ -84,7 +84,8 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
         const hasLocationChanged = prev.location !== location;
         const hasDatesChanged = prev.checkIn !== checkIn || prev.checkOut !== checkOut;
         const hasSortChanged = prev.sort !== sort;
-        const hasFiltersChanged = prev.filters !== filters;
+        // Deep compare filters object to avoid reference comparison issues
+        const hasFiltersChanged = JSON.stringify(prev.filters) !== JSON.stringify(filters);
 
         if (hasLocationChanged || hasDatesChanged || hasSortChanged || hasFiltersChanged) {
             setPageState(1);

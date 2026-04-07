@@ -376,7 +376,7 @@ describe('CheckoutPaymentSection', () => {
 
             const grid = screen.getByText('checkout.payment').closest('div')?.querySelector('.grid');
             expect(grid).toBeInTheDocument();
-            expect(grid).toHaveClass('grid-cols-2');
+            expect(grid).toHaveClass('sm:grid-cols-2');
             expect(grid).toHaveClass('gap-4');
         });
 

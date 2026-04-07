@@ -43,7 +43,7 @@ export const Navbar: React.FC = () => {
           <Link to="/" className="flex-shrink-0 flex items-center gap-3 group relative z-10">
             <div className="relative">
               <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
-              <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
+              <img src="/logo.png" alt="Alanya Holidays" className="w-12 h-12 sm:w-10 sm:h-10 object-contain relative z-10 rounded-full" />
             </div>
             <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate max-w-[120px] md:max-w-none">
               Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
@@ -94,14 +94,14 @@ export const Navbar: React.FC = () => {
                     }
                   }}
                   data-testid="profile-button"
-                  className="flex items-center gap-2 p-1 pr-3 rounded-full border border-slate-200 dark:border-slate-800/50 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800/80"
+                  className="flex items-center gap-2 p-2 pr-3 rounded-full border border-slate-200 dark:border-slate-800/50 hover:shadow-md transition-all active:scale-95 bg-white dark:bg-slate-800/80"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 overflow-hidden ring-2 ring-white dark:ring-slate-900">
+                  <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 overflow-hidden ring-2 ring-white dark:ring-slate-900">
                     {isAuthenticated && user?.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <User size={16} />
+                        <User size={20} />
                         {/* Burger Menu Icon on Mobile for Guests/Auth? Maybe just User icon is enough or we can swap icon */}
                       </div>
                     )}

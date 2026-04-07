@@ -50,9 +50,9 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+                        className="absolute bottom-0 right-0 p-3 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
                     >
-                        <Camera size={14} />
+                        <Camera size={16} />
                     </button>
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{user.name}</h2>
