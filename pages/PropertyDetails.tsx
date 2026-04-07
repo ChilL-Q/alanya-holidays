@@ -14,7 +14,7 @@ import { Modal } from '../components/ui/Modal';
 import { User, LogIn } from 'lucide-react';
 
 // Lazy load ChatWindow (heavy, only shown when user contacts host)
-const LazyChatWindow = React.lazy(() => import('../components/chat/ChatWindow'));
+const LazyChatWindow = React.lazy(() => import('../components/chat/ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 // Modular Components
 import { PropertyGallery } from '../components/properties/details/PropertyGallery';
