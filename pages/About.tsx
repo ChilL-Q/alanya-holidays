@@ -2,12 +2,20 @@ import React from 'react';
 import { Shield, Users, Heart, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Link } from 'react-router-dom';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const About: React.FC = () => {
     const { t } = useLanguage();
 
     return (
-        <div className="min-h-screen bg-white dark:bg-slate-900">
+        <>
+            <SEOHead
+                title="About Us"
+                description="Learn about Alanya Holidays - your trusted partner for premium vacation rentals in Alanya, Turkey. Zero fees, genuine hospitality."
+                type="website"
+                keywords={['about Alanya Holidays', 'vacation rental company', 'Turkey']}
+            />
+            <div className="min-h-screen bg-white dark:bg-slate-900">
             {/* Hero Section */}
             <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
@@ -111,5 +119,6 @@ export const About: React.FC = () => {
                 </div>
             </div>
         </div>
+    </>
     );
 };

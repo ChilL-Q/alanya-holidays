@@ -27,6 +27,8 @@ import { PropertyHospitalityGuide } from '../components/properties/details/Prope
 import { PropertyBookingCard } from '../components/properties/details/PropertyBookingCard';
 import { PropertyCrossSell } from '../components/properties/details/PropertyCrossSell';
 import { Property, UserProfile } from '../types/models';
+import { SEOHead } from '../components/seo/SEOHead';
+import { PropertyStructuredData } from '../components/seo/PropertyStructuredData';
 
 interface PropertyDetailsData extends Property {
     address?: string;
@@ -242,7 +244,20 @@ export const PropertyDetails: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
+        <>
+            {property && (
+                <>
+                    <SEOHead
+                        title={property.title}
+                        description={property.description}
+                        image={property.images?.[0]}
+                        type="product"
+                        keywords={['vacation rental', 'Alanya', 'Turkey', 'villa', 'apartment', ...(property.amenities?.slice(0, 5) || [])]}
+                        jsonLd={<PropertyStructuredData property={property} />}
+                    />
+                </>
+            )}
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
             <PropertyGallery
                 images={property.images || []}
                 title={property.title}
@@ -344,6 +359,7 @@ export const PropertyDetails: React.FC = () => {
     document.body
 )}
         </div>
+    </>
     );
 };
 

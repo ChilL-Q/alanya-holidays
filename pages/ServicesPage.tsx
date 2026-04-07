@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SEOHead } from '../components/seo/SEOHead';
 import { useLanguage } from '../context/LanguageContext';
 import { ServiceGrid } from '../components/services/ServiceGrid';
 import { ServiceCard } from '../components/services/ServiceCard';
@@ -102,6 +103,12 @@ export const ServicesPage: React.FC = () => {
     }, [activeCategory, priceRange, searchQuery, minPrices, t, transportFilter, brandFilter]);
 
     return (
+        <>
+        <SEOHead
+            title="Services in Alanya"
+            description="Book tours, car rentals, transfers, wellness, and more in Alanya, Turkey. All services in one place with best prices."
+            keywords={['Alanya services', 'tours Turkey', 'car rental Alanya', 'transfers Alanya', 'activities Turkey']}
+        />
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-20 pt-24">
             <div className="max-w-7xl mx-auto px-4 mb-8 text-center">
                 <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 dark:text-white mb-6">{t('services.hero.title')}</h1>
@@ -235,6 +242,7 @@ export const ServicesPage: React.FC = () => {
                 </ServiceGrid>
             </div>
         </div>
+        </>
     );
 };
 

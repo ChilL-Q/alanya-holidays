@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../api-services';
+import { SEOHead } from '../components/seo/SEOHead';
 import { ShoppingBag } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -117,6 +118,12 @@ export const Shop: React.FC = () => {
     };
 
     return (
+        <>
+        <SEOHead
+            title="Alanya Shop — Handcrafted Turkish Goods"
+            description="Buy authentic Turkish ceramics, textiles, jewelry, spices and handcrafted souvenirs from Alanya. Unique gifts and local artisan products."
+            keywords={['Alanya shop', 'Turkish souvenirs', 'handmade Turkey', 'ceramics Alanya', 'Turkish gifts']}
+        />
         <div className="min-h-screen bg-white dark:bg-slate-900 pb-20 animate-page-enter relative">
             {cartToast && (
                 <div className="fixed top-24 right-4 z-50 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-2xl animate-in slide-in-from-right flex items-center gap-3">
@@ -174,5 +181,6 @@ export const Shop: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
