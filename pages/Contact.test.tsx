@@ -22,7 +22,8 @@ vi.mock('../context/AuthContext', () => ({
 }));
 
 vi.mock('react-router-dom', () => ({
-    useSearchParams: () => [new URLSearchParams(), vi.fn()]
+    useSearchParams: () => [new URLSearchParams(), vi.fn()],
+    useLocation: () => ({ pathname: '/contact', search: '', hash: '', state: null })
 }));
 
 describe('Contact Page', () => {
