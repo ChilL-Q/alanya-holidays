@@ -7,7 +7,7 @@ import { getPropertyOverride } from '../config';
 import { retry } from '../../../utils/retry';
 import { createAuditLog } from '../audit';
 
-type PropertyUpdateInput = Omit<PropertyDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'ical_token' | 'ical_url' | 'last_synced_at'>;
+type _PropertyUpdateInput = Omit<PropertyDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'ical_token' | 'ical_url' | 'last_synced_at'>;
 
 export async function getPropertiesByIds(ids: string[]) {
     if (!ids.length) return [];
