@@ -253,8 +253,8 @@ export const PropertyDetails: React.FC = () => {
                         image={property.images?.[0]}
                         type="product"
                         keywords={['vacation rental', 'Alanya', 'Turkey', 'villa', 'apartment', ...(property.amenities?.slice(0, 5) || [])]}
-                        jsonLd={<PropertyStructuredData property={property} />}
                     />
+                    <PropertyStructuredData property={property} />
                 </>
             )}
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
