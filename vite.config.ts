@@ -36,7 +36,10 @@ export default defineConfig(() => {
               if (id.includes('recharts')) return 'vendor-charts';
               if (id.includes('@supabase')) return 'vendor-supabase';
               if (id.includes('lucide-react')) return 'vendor-icons';
-              if (id.includes('date-fns') || id.includes('react-datepicker') || id.includes('react-imask')) return 'vendor-forms-dates';
+              if (id.includes('react-datepicker')) return 'vendor-datepicker';
+              if (id.includes('date-fns')) return 'vendor-date-fns';
+              if (id.includes('react-imask')) return 'vendor-imask';
+              if (id.includes('@google/generative-ai')) return 'vendor-ai';
             }
           }
         }
