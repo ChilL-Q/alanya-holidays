@@ -7,6 +7,7 @@ import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
 import { ErrorBoundary as _ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { NotFound } from '../components/pages/NotFound';
 
 // Public Pages - Direct Imports (critical for immediate FCP)
 const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(module => ({ default: module.DirectoryHome })));
@@ -310,7 +311,7 @@ export const AppRoutes: React.FC = () => {
 
                 <Route path="/add-product" element={<AuthRoute><AddProduct /></AuthRoute>} />
 
-                <Route path="*" element={<DirectoryHome />} />
+                <Route path="*" element={<NotFound />} />
             </Routes>
     );
 };
