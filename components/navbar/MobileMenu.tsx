@@ -24,7 +24,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 shadow-2xl p-4 flex flex-col gap-4 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden max-h-[85vh] overflow-y-auto">
+        <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 shadow-2xl p-4 flex flex-col gap-4 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden max-h-[80vh] overflow-y-auto [-webkit-overflow-scrolling:touch]">
 
             {/* Auth Section */}
             {!isAuthenticated ? (
@@ -52,23 +52,23 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
             <div className="flex flex-col gap-1">
                 {/* Main Nav */}
-                <Link to="/stays" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                <Link to="/stays" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                     <Home size={18} className="text-slate-400" />
                     {t('nav.stays')}
                 </Link>
-                <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                     <Car size={18} className="text-slate-400" />
                     {t('nav.services')}
                 </Link>
-                <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                     <ShoppingBag size={18} className="text-slate-400" />
                     {t('shop')}
                 </Link>
-                <Link to="/zero-fees" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200 bg-teal-50/50 dark:bg-slate-800/50">
+                <Link to="/zero-fees" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200 bg-teal-50/50 dark:bg-slate-800/50">
                     <Banknote size={18} />
                     {t('value.zero_fees.title')}
                 </Link>
-                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                     <Home size={18} className="text-slate-400" />
                     {t('profile.become_host_title')}
                 </Link>
@@ -77,22 +77,22 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                 {isAuthenticated && (
                     <>
                         <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-2 mx-4"></div>
-                        <Link to="/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                        <Link to="/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                             <Heart size={18} className="text-slate-400" />
                             {t('nav.favorites')}
                         </Link>
-                        <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                        <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                             <User size={18} className="text-slate-400" />
                             {t('nav.profile')}
                         </Link>
                         {user?.role === 'admin' && (
-                            <Link to="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                            <Link to="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                                 <LayoutDashboard size={18} className="text-purple-600" />
                                 {t('nav.admin_panel')}
                             </Link>
                         )}
                         {(user?.role === 'host' || user?.role === 'admin') && (
-                            <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                            <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                                 <LayoutDashboard size={18} className="text-teal-500 dark:text-cyan-400 " />
                                 {t('nav.host_dashboard')}
                             </Link>

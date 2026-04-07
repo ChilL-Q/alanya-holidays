@@ -49,7 +49,7 @@ export const CartDrawer: React.FC = () => {
                 />
 
                 {/* Drawer */}
-                <div className={`relative h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className={`relative h-full w-full max-w-sm bg-white dark:bg-slate-900 shadow-2xl flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
                     {/* Header */}
                     <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800/50">
@@ -62,9 +62,9 @@ export const CartDrawer: React.FC = () => {
                         </div>
                         <button
                             onClick={() => setIsCartOpen(false)}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                            className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800/90 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                         >
-                            <X size={20} />
+                            <X size={24} />
                         </button>
                     </div>
 
