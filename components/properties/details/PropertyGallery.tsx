@@ -22,7 +22,7 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, title,
     const isSingleImage = images.length === 1;
 
     return (
-        <div className={`grid gap-2 h-[300px] md:h-[500px] relative animate-fade-in text-white overflow-hidden ${isSingleImage ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+        <div className={`grid gap-2 h-[250px] md:h-[500px] relative animate-fade-in text-white overflow-hidden ${isSingleImage ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
             {/* Left: Main Image */}
             <div
                 className="relative h-full w-full overflow-hidden group cursor-zoom-in"
@@ -107,9 +107,9 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, title,
             <div className="md:hidden absolute bottom-4 right-4 z-10">
                 <button
                     onClick={() => openLightbox(images, 0)}
-                    className="bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2"
+                    className="bg-black/70 backdrop-blur-sm text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2"
                 >
-                    <Camera size={14} />
+                    <Camera size={16} />
                     {images.length} Photos
                 </button>
             </div>
