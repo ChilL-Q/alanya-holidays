@@ -60,7 +60,7 @@ export const Footer: React.FC = () => {
                                         required
                                         className="bg-slate-900 border border-slate-700/50 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 w-full transition-all"
                                     />
-                                    <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-teal-500/20 active:translate-y-0">
+                                    <button type="submit" className="bg-teal-500 hover:bg-teal-400 text-white px-5 py-3 rounded-lg text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-teal-500/20 active:translate-y-0">
                                         {t('footer.join_button')}
                                     </button>
                                 </form>
@@ -68,16 +68,16 @@ export const Footer: React.FC = () => {
                         </div>
 
                         <div className="flex gap-4">
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
+                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
                                 <Instagram size={18} />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
+                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
                                 <Facebook size={18} />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
+                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
                                 <Twitter size={18} />
                             </a>
-                            <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
+                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
                                 <Youtube size={18} />
                             </a>
                         </div>

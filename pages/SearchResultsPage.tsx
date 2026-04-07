@@ -84,7 +84,7 @@ export const SearchResultsPage: React.FC = () => {
                                             className="fixed inset-0 z-10"
                                             onClick={() => setShowSortMenu(false)}
                                         />
-                                        <div className="absolute left-0 md:right-0 mt-2 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
+                                        <div className="absolute left-0 md:right-0 mt-2 w-64 md:w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-lg shadow-lg z-20 py-1 font-medium text-sm">
                                             {[
                                                 { label: 'Recommended', value: 'recommended' },
                                                 { label: 'Newest', value: 'newest' },
@@ -139,7 +139,7 @@ export const SearchResultsPage: React.FC = () => {
                         <div className="flex-1 flex items-center justify-center text-slate-500">Loading stays...</div>
                     ) : (
                         <div className={`flex-1 ${showMap ? 'overflow-y-auto px-6 py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 ${!showMap ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'} gap-8 pb-10`}>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 ${!showMap ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'} gap-4 sm:gap-6 lg:gap-8 pb-10`}>
                                 {filteredProperties.map((property, index) => {
                                     // Calculate relative index for animation delay
                                     const relativeIndex = index % 12;
@@ -219,9 +219,9 @@ export const SearchResultsPage: React.FC = () => {
                                 <h3 className="font-bold text-lg">Map View</h3>
                                 <button
                                     onClick={() => setShowMap(false)}
-                                    className="p-2 bg-slate-100 dark:bg-slate-800/80 rounded-full hover:bg-slate-200 transition-colors"
+                                    className="p-3 bg-slate-100 dark:bg-slate-800/80 rounded-full hover:bg-slate-200 transition-colors"
                                 >
-                                    <X size={20} />
+                                    <X size={24} />
                                 </button>
                             </div>
                             <div className="flex-1 relative">

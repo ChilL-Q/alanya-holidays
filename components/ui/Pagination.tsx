@@ -40,10 +40,10 @@ export const Pagination: React.FC<PaginationProps> = ({
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="p-2 rounded-full border border-slate-200 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-3 rounded-full border border-slate-200 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Previous Page"
             >
-                <ChevronLeft size={20} className="text-slate-600 dark:text-slate-400" />
+                <ChevronLeft size={24} className="text-slate-600 dark:text-slate-400" />
             </button>
 
             <div className="flex items-center gap-1">
@@ -52,7 +52,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                         <button
                             key={idx}
                             onClick={() => onPageChange(p)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-all
+                            className={`w-12 h-12 rounded-full flex items-center justify-center font-medium transition-all
                                 ${currentPage === p
                                     ? 'bg-slate-900 dark:bg-white text-white dark:text-white shadow-md transform scale-105'
                                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/90'
@@ -71,10 +71,10 @@ export const Pagination: React.FC<PaginationProps> = ({
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-full border border-slate-200 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-3 rounded-full border border-slate-200 dark:border-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Next Page"
             >
-                <ChevronRight size={20} className="text-slate-600 dark:text-slate-400" />
+                <ChevronRight size={24} className="text-slate-600 dark:text-slate-400" />
             </button>
         </div>
     );

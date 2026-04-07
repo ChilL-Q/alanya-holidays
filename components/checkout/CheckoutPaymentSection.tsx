@@ -47,7 +47,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">{t('checkout.payment')}</h2>
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 {[
                     { id: 'card', icon: CreditCard, label: 'checkout.method.card' },
                     { id: 'cash', icon: Banknote, label: 'checkout.method.cash' },
@@ -80,7 +80,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
             {paymentMethod === 'cash' && (
                 <div className="p-4 border border-orange-200 dark:border-slate-700/50 rounded-lg bg-orange-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
                     <p className="text-sm text-orange-800 dark:text-slate-200 font-medium mb-1">20% Non-refundable Deposit Required</p>
-                    <p className="text-xs text-orange-600 dark:text-slate-200">
+                    <p className="text-sm text-orange-600 dark:text-slate-200">
                         To secure your reservation with Cash on Arrival, we require a 20% deposit now via secure online payment. The remaining balance will be paid in cash upon arrival.
                     </p>
                 </div>
@@ -89,7 +89,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
             {paymentMethod === 'bank' && (
                 <div className="p-4 border border-teal-100 dark:border-slate-700/50 rounded-lg bg-teal-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
                     <p className="text-sm text-teal-800 dark:text-cyan-400 font-medium mb-2">{t('checkout.method.bank_desc')}</p>
-                    <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-slate-700/50">
+                    <div className="space-y-2 text-sm bg-white dark:bg-slate-900 p-3 rounded border border-teal-100 dark:border-slate-700/50">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-500">Bank Name</span>
                             <span className="font-semibold text-slate-700 dark:text-slate-300">{PAYMENT_DETAILS.bank.name}</span>
@@ -112,7 +112,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
             {paymentMethod === 'crypto' && (
                 <div className="p-4 border border-indigo-100 dark:border-indigo-900/50 rounded-lg bg-indigo-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
                     <p className="text-sm text-indigo-800 dark:text-slate-200 font-medium mb-2">{t('checkout.method.crypto_desc')}</p>
-                    <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-indigo-100 dark:border-indigo-900">
+                    <div className="space-y-2 text-sm bg-white dark:bg-slate-900 p-3 rounded border border-indigo-100 dark:border-indigo-900">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-500">Network</span>
                             <span className="font-semibold text-slate-700 dark:text-slate-300">{PAYMENT_DETAILS.crypto.network}</span>
@@ -134,7 +134,7 @@ export const CheckoutPaymentSection: React.FC<CheckoutPaymentSectionProps> = ({
             {paymentMethod === 'swift' && (
                 <div className="p-4 border border-blue-100 dark:border-slate-700/50 rounded-lg bg-blue-50 dark:bg-slate-800/50 mb-4 animate-in fade-in slide-in-from-top-2">
                     <p className="text-sm text-blue-800 dark:text-slate-200 font-medium mb-2">{t('checkout.method.swift_desc')}</p>
-                    <div className="space-y-2 text-xs bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-slate-700/50">
+                    <div className="space-y-2 text-sm bg-white dark:bg-slate-900 p-3 rounded border border-blue-100 dark:border-slate-700/50">
                         <div className="flex justify-between items-center">
                             <span className="text-slate-500">{t('checkout.bank_name')}</span>
                             <span className="font-semibold text-slate-700 dark:text-slate-300">{PAYMENT_DETAILS.swift.bankName}</span>

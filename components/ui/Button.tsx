@@ -19,10 +19,10 @@ export const buttonVariants = {
         danger: "bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-500/30"
     },
     size: {
-        sm: "h-9 px-4 text-sm",
+        sm: "h-10 px-4 text-sm",
         md: "h-11 px-6 text-base",
         lg: "h-14 px-8 text-lg",
-        icon: "h-10 w-10 p-2 flex items-center justify-center"
+        icon: "h-11 w-11 p-2.5 flex items-center justify-center"
     }
 };
 

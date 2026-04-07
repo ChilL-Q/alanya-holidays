@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useChat } from '../context/ChatContext';
-import { ChatWindow } from '../components/chat/ChatWindow';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
@@ -13,6 +12,9 @@ import { ReviewsSection } from '../components/reviews/ReviewsSection';
 import toast from 'react-hot-toast';
 import { Modal } from '../components/ui/Modal';
 import { User, LogIn } from 'lucide-react';
+
+// Lazy load ChatWindow (heavy, only shown when user contacts host)
+const LazyChatWindow = React.lazy(() => import('../components/chat/ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 // Modular Components
 import { PropertyGallery } from '../components/properties/details/PropertyGallery';
@@ -335,7 +337,12 @@ export const PropertyDetails: React.FC = () => {
                 </div>
             </Modal>
 
-            {showChat && createPortal(<ChatWindow className="z-[100]" />, document.body)}
+            {showChat && createPortal(
+    <Suspense fallback={null}>
+        <LazyChatWindow className="z-[100]" />
+    </Suspense>,
+    document.body
+)}
         </div>
     );
 };

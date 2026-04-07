@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Star } from 'lucide-react';
-import DatePicker from 'react-datepicker';
+
+// Lazy load react-datepicker to reduce initial bundle
+const LazyDatePicker = React.lazy(() =>
+  import('react-datepicker').then(module => {
+    import('react-datepicker/dist/react-datepicker.css');
+    return { default: module.default };
+  })
+);
+
 import { useLanguage } from '../../../context/LanguageContext';
 
 interface PropertyBookingCardProps {
@@ -29,6 +37,21 @@ const DateInput = React.forwardRef<HTMLInputElement, any>((props, ref) => (
     />
 ));
 
+// Wrapper for lazy-loaded DatePicker
+const DatePickerWrapper: React.FC<any> = ({ selected, onChange, selects, ...rest }) => (
+    <Suspense fallback={
+        <div className="w-full h-10 bg-slate-100 dark:bg-slate-800 animate-pulse rounded" />
+    }>
+        <LazyDatePicker
+            selected={selected}
+            onChange={onChange}
+            selects={selects}
+            customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
+            {...rest}
+        />
+    </Suspense>
+);
+
 export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
     pricePerNight,
     reviewsCount,
@@ -51,7 +74,7 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
     return (
         <div className="relative z-30">
             <div
-                className="sticky top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 p-6"
+                className="lg:sticky lg:top-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 p-6"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-end mb-6">
@@ -76,8 +99,8 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                 <div className="border border-slate-200 dark:border-slate-800/50 rounded-xl mb-4 overflow-hidden">
                     <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800/50">
                         <div className="p-3 border-r border-slate-200 dark:border-slate-800/50">
-                            <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
-                            <DatePicker
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
+                            <DatePickerWrapper
                                 selected={checkIn}
                                 onChange={setCheckIn}
                                 selectsStart
@@ -87,12 +110,12 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                                 excludeDates={blockedDates}
                                 placeholderText={t('date_format')}
                                 dateFormat="dd.MM.yyyy"
-                                customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
+                                customInput={<DateInput className="w-full h-12 text-base font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
                             />
                         </div>
                         <div className="p-3">
                             <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
-                            <DatePicker
+                            <DatePickerWrapper
                                 selected={checkOut}
                                 onChange={setCheckOut}
                                 selectsEnd
@@ -102,7 +125,7 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                                 excludeDates={blockedDates}
                                 placeholderText={t('date_format')}
                                 dateFormat="dd.MM.yyyy"
-                                customInput={<DateInput className="w-full text-sm font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
+                                customInput={<DateInput className="w-full h-12 text-base font-medium bg-transparent outline-none dark:text-slate-200 placeholder-slate-400" />}
                             />
                         </div>
                     </div>
@@ -116,7 +139,7 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                     </div>
                 </div>
 
-                <button onClick={onBook} className="w-full bg-teal-700 dark:bg-cyan-600 hover:bg-teal-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-teal-700/20">{t('prop.reserve')}</button>
+                <button onClick={onBook} className="w-full bg-teal-700 dark:bg-cyan-600 hover:bg-teal-800 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-700/20">{t('prop.reserve')}</button>
                 <p className="text-center text-xs text-slate-400 mt-3">{t('prop.no_charge')}</p>
 
                 <div className="mt-6 space-y-3">
