@@ -20,12 +20,12 @@ import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
-// Lazy load heavy components
-const Lightbox = React.lazy(() => import('./components/ui/Lightbox'));
-const CartDrawer = React.lazy(() => import('./components/ui/CartDrawer'));
-const TripAssistant = React.lazy(() => import('./components/TripAssistant'));
-const CookieConsent = React.lazy(() => import('./components/ui/CookieConsent'));
-const CommandPalette = React.lazy(() => import('./components/ui/CommandPalette'));
+// Lazy load heavy components (named exports → default)
+const Lightbox = React.lazy(() => import('./components/ui/Lightbox').then(m => ({ default: m.Lightbox })));
+const CartDrawer = React.lazy(() => import('./components/ui/CartDrawer').then(m => ({ default: m.CartDrawer })));
+const TripAssistant = React.lazy(() => import('./components/TripAssistant').then(m => ({ default: m.TripAssistant })));
+const CookieConsent = React.lazy(() => import('./components/ui/CookieConsent').then(m => ({ default: m.CookieConsent })));
+const CommandPalette = React.lazy(() => import('./components/ui/CommandPalette').then(m => ({ default: m.CommandPalette })));
 
 // Loading Component
 const PageLoader = () => (
