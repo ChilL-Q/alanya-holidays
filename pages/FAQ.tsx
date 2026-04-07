@@ -1,8 +1,15 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const FAQ: React.FC = () => {
     return (
+        <>
+        <SEOHead
+            title="Frequently Asked Questions"
+            description="Find answers to common questions about booking vacation rentals, car hire, tours and services with Alanya Holidays in Turkey."
+            keywords={['FAQ', 'Alanya Holidays help', 'booking questions', 'Turkey vacation rental FAQ']}
+        />
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
@@ -59,5 +66,6 @@ export const FAQ: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

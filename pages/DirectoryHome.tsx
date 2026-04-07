@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { Helmet } from 'react-helmet-async';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
@@ -24,12 +24,14 @@ export const DirectoryHome: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-            <Helmet>
-                <title>{t('dir.hero.page_title')}</title>
-                <meta name="description" content={t('dir.hero.meta_desc')} />
-            </Helmet>
-            {/* Hero Section */}
+        <>
+            <SEOHead
+                title={t('dir.hero.page_title')}
+                description={t('dir.hero.meta_desc')}
+                type="website"
+                keywords={['Alanya holidays', 'vacation rentals', ' Turkey', 'medical tourism', 'hotels', 'villas']}
+            />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
@@ -281,5 +283,6 @@ export const DirectoryHome: React.FC = () => {
                 </div>
             </div>
         </div>
+    </>
     );
 };

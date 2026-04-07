@@ -7,6 +7,7 @@ import { Map } from '../components/ui/Map';
 import { PropertyFilters } from '../components/ui/PropertyFilters';
 import { Pagination } from '../components/ui/Pagination';
 import { usePropertyFilters } from '../hooks/usePropertyFilters';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const SearchResultsPage: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -35,7 +36,14 @@ export const SearchResultsPage: React.FC = () => {
     } = usePropertyFilters({ checkIn, checkOut, location, guests });
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-16 transition-colors relative">
+        <>
+            <SEOHead
+                title={location ? `${location} - Properties` : 'Search Results'}
+                description={`Find the best vacation rentals in ${location || 'Alanya'}. Discover properties, villas, and apartments for your dream holiday.`}
+                type="website"
+                keywords={['vacation rental', location || 'Alanya', 'Turkey', 'holiday homes']}
+            />
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-16 transition-colors relative">
             <PropertyFilters
                 isOpen={showFilters}
                 onClose={() => setShowFilters(false)}
@@ -232,5 +240,6 @@ export const SearchResultsPage: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };

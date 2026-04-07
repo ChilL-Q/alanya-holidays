@@ -4,10 +4,18 @@ import { useSearchParams } from 'react-router-dom';
 import { messagesService } from '../api-services/api/misc';
 import { db } from '../api-services';
 import { useAuth } from '../context/AuthContext';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const Contact: React.FC = () => {
     return (
-        <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
+        <>
+            <SEOHead
+                title="Contact Us"
+                description="Get in touch with Alanya Holidays support. We're here to help with bookings, inquiries, and any questions about your vacation in Turkey."
+                type="website"
+                keywords={['contact Alanya Holidays', 'support', 'customer service', 'Turkey']}
+            />
+            <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <h1 className="text-4xl font-serif text-slate-900 dark:text-white mb-4">Contact Us</h1>
@@ -51,6 +59,7 @@ export const Contact: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

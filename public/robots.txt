@@ -1,4 +1,47 @@
-User-agent: *
-Disallow:
+# robots.txt for Alanya Holidays
+# Allows all public content, blocks private/admin routes
 
+User-agent: *
+Allow: /
+
+# Allow static assets (important for SPA)
+Allow: /static/
+Allow: /assets/
+Allow: /images/
+
+# Disallow private/admin routes
+Disallow: /admin/
+Disallow: /host/
+Disallow: /api/
+Disallow: /profile/
+Disallow: /inbox/
+Disallow: /add-
+Disallow: /edit-
+Disallow: /book-
+Disallow: /booking/
+Disallow: /checkout
+
+# Specific crawler handling
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block aggressive scrapers and bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+# Sitemap location
 Sitemap: https://alanya-holidays.com/sitemap.xml
