@@ -12,18 +12,20 @@ import { RegisterModal } from './components/auth/RegisterModal';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { LightboxProvider } from './context/LightboxContext';
-import { Lightbox } from './components/ui/Lightbox';
 import { NotificationProvider } from './context/NotificationContext';
-import { CartDrawer } from './components/ui/CartDrawer';
 import { PageTransition } from './components/PageTransition';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ChatProvider } from './context/ChatContext';
-import { TripAssistant } from './components/TripAssistant';
-import { CookieConsent } from './components/ui/CookieConsent';
-import { CommandPalette } from './components/ui/CommandPalette';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+
+// Lazy load heavy components
+const Lightbox = React.lazy(() => import('./components/ui/Lightbox'));
+const CartDrawer = React.lazy(() => import('./components/ui/CartDrawer'));
+const TripAssistant = React.lazy(() => import('./components/TripAssistant'));
+const CookieConsent = React.lazy(() => import('./components/ui/CookieConsent'));
+const CommandPalette = React.lazy(() => import('./components/ui/CommandPalette'));
 
 // Loading Component
 const PageLoader = () => (
@@ -79,11 +81,13 @@ const App: React.FC = () => {
                             </div>
                             <LoginModal />
                             <RegisterModal />
-                            <Lightbox />
-                            <CartDrawer />
-                            <TripAssistant />
-                            <CookieConsent />
-                            <CommandPalette />
+                            <React.Suspense fallback={null}>
+                              <Lightbox />
+                              <CartDrawer />
+                              <TripAssistant />
+                              <CookieConsent />
+                              <CommandPalette />
+                            </React.Suspense>
                           </ChatProvider>
                         </LightboxProvider>
                       </ModalProvider>
