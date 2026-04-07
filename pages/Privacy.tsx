@@ -1,5 +1,6 @@
 import React from 'react';
 import { LegalLayout } from '../components/LegalLayout';
+import { SEOHead } from '../components/seo/SEOHead';
 import { Shield, Lock, Eye, Server, RefreshCw } from 'lucide-react';
 
 export const Privacy: React.FC = () => {
@@ -13,6 +14,12 @@ export const Privacy: React.FC = () => {
     ];
 
     return (
+        <>
+        <SEOHead
+            title="Privacy Policy"
+            description="Read the Alanya Holidays privacy policy to understand how we collect, use, and protect your personal data when you use our vacation rental services."
+            keywords={['privacy policy', 'data protection', 'Alanya Holidays', 'GDPR']}
+        />
         <LegalLayout
             title="Privacy Policy"
             lastUpdated="January 14, 2026"
@@ -110,6 +117,7 @@ export const Privacy: React.FC = () => {
                 </div>
             </section>
         </LegalLayout>
+        </>
     );
 };
 

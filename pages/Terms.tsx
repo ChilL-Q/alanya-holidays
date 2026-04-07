@@ -1,5 +1,6 @@
 import React from 'react';
 import { LegalLayout } from '../components/LegalLayout';
+import { SEOHead } from '../components/seo/SEOHead';
 import { FileCheck, CreditCard, Ban, Gavel, Scale, AlertCircle } from 'lucide-react';
 
 export const Terms: React.FC = () => {
@@ -13,6 +14,12 @@ export const Terms: React.FC = () => {
     ];
 
     return (
+        <>
+        <SEOHead
+            title="Terms & Conditions"
+            description="Read the Alanya Holidays terms and conditions for booking vacation rentals, services and activities in Alanya, Turkey."
+            keywords={['terms and conditions', 'booking policy', 'Alanya Holidays', 'rental terms']}
+        />
         <LegalLayout
             title="Terms of Service"
             lastUpdated="January 14, 2026"
@@ -125,6 +132,7 @@ export const Terms: React.FC = () => {
                 </p>
             </section>
         </LegalLayout>
+        </>
     );
 };
 
