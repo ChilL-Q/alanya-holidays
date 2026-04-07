@@ -25,7 +25,7 @@ export class BasePage {
         await this.cookieAcceptButton.click();
         await expect(this.cookieAcceptButton).not.toBeVisible();
       }
-    } catch (e) {
+    } catch (_e) {
       // Banner might not appear, which is fine
     }
   }
