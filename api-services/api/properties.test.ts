@@ -267,7 +267,7 @@ describe('propertiesService', () => {
         mockSupabase.from.mockReturnValue(mockChain);
 
         const filters = {
-            priceRange: [50, 200],
+            priceRange: [50, 200] as [number, number],
             types: ['villa'],
             minGuests: 2,
             hasPhotos: true

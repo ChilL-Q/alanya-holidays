@@ -108,11 +108,11 @@ export const askLocalGuide = async (
             delay: 500, 
             factor: 2 
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("AI Service Error after retries:", error);
 
         // Handle rate limits gracefully with a specific message
-        if (error instanceof RateLimitError || error.isRateLimit || String(error).includes("429") || String(error).includes("rate")) {
+        if (error instanceof RateLimitError || (error as { isRateLimit?: boolean }).isRateLimit || String(error).includes("429") || String(error).includes("rate")) {
             return "I'm currently receiving too many requests. Please wait 10-20 seconds and try again! ⏳";
         }
 

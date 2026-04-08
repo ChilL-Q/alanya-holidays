@@ -70,6 +70,6 @@ export const favoritesService = {
             .eq('user_id', userId);
 
         if (error) throw error;
-        return data.map((f: any) => f.item_id);
+        return data.map((f) => f.item_id);
     }
 };

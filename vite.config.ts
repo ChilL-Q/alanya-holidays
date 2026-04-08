@@ -4,8 +4,11 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(() => {
+  const isAnalyze = process.env.ANALYZE === 'true';
+
   return {
     server: {
       port: 3000,
@@ -26,8 +29,20 @@ export default defineConfig(() => {
       port: 3000,
       host: '0.0.0.0'
     },
-    plugins: [react(), eslint(), tailwindcss()],
+    plugins: [
+      react(),
+      eslint(),
+      tailwindcss(),
+      ...(isAnalyze ? [visualizer({
+        filename: 'dist/bundle-analysis.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      })] : [])
+    ],
     build: {
+      chunkSizeWarningLimit: 500,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
@@ -40,7 +55,16 @@ export default defineConfig(() => {
               if (id.includes('date-fns')) return 'vendor-date-fns';
               if (id.includes('react-imask')) return 'vendor-imask';
               if (id.includes('@google/generative-ai')) return 'vendor-ai';
+              // Additional heavy libraries
+              if (id.includes('react-hook-form')) return 'vendor-forms';
+              if (id.includes('zod')) return 'vendor-validation';
+              if (id.includes('@tanstack/react-query')) return 'vendor-query';
+              if (id.includes('framer-motion')) return 'vendor-animation';
+              if (id.includes('zustand')) return 'vendor-state';
             }
+            // Split large internal modules
+            if (id.includes('pages/AiPlanner')) return 'pages-aiplanner';
+            if (id.includes('components/charts')) return 'components-charts';
           }
         }
       }

@@ -29,7 +29,7 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': 'off',
-      // Legacy Codebase Relaxation (to be re-enabled later)
+      // Disabled globally — being enabled gradually per directory (see override below)
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
       '@typescript-eslint/ban-ts-comment': 'off',
@@ -37,6 +37,14 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-constant-binary-expression': 'off',
       'no-empty': ['error', { allowEmptyCatch: true }],
+    },
+  },
+  // Phase 1: api-services source files are typed — no-explicit-any enforced here
+  {
+    files: ['api-services/**/*.{ts,tsx}'],
+    ignores: ['api-services/**/*.test.ts', 'api-services/**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
 );

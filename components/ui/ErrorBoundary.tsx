@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
             
             <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-sm">
               We're sorry, but the application encountered an unexpected error.
-              Our technical team has been notified.
+              Please try again or return to the home page.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

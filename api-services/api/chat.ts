@@ -43,7 +43,7 @@ export const chatService = {
         if (error) throw error;
         
         // Fetch last message for each conversation to display snippet
-        const conversations = await Promise.all(data.map(async (conv: any) => {
+        const conversations = await Promise.all(data.map(async (conv) => {
             const { data: lastMsg } = await supabase
                 .from('chat_messages')
                 .select('*')
