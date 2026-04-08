@@ -147,7 +147,7 @@ export async function getProperty(id: string) {
                     }
                 } else {
                     data = null;
-                    error = result.error || { message: 'Property not found' };
+                    error = result.error || new Error('Property not found');
                 }
             } catch (e: unknown) {
                 console.error('Error fetching property by ref_id:', e);
@@ -155,7 +155,7 @@ export async function getProperty(id: string) {
                 data = null;
             }
         } else {
-            error = { message: 'Invalid property ID format' };
+            error = new Error('Invalid property ID format');
         }
     }
 
