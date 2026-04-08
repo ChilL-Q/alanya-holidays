@@ -37,7 +37,15 @@ export async function createProperty(data: Omit<PropertyDB, 'id' | 'created_at' 
 export async function getProperties(
     page = 1,
     limit = 20,
-    filters?: any,
+    filters?: {
+        priceRange?: [number, number];
+        types?: string[];
+        minGuests?: number;
+        minBedrooms?: number;
+        minBeds?: number;
+        minBathrooms?: number;
+        hasPhotos?: boolean;
+    },
     location?: string,
     allowedIds?: string[],
     sort = 'newest'
@@ -105,7 +113,7 @@ export async function getProperty(id: string) {
     }
 
     const finalIsUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
-    let data: any, error: any;
+    let data: PropertyDB | null, error: Error | null;
 
     if (finalIsUUID) {
         const { data: authData } = await supabase.auth.getUser();
@@ -141,9 +149,9 @@ export async function getProperty(id: string) {
                     data = null;
                     error = result.error || { message: 'Property not found' };
                 }
-            } catch (e) {
+            } catch (e: unknown) {
                 console.error('Error fetching property by ref_id:', e);
-                error = e;
+                error = e as Error;
                 data = null;
             }
         } else {

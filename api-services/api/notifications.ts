@@ -62,7 +62,7 @@ export const notificationsService = {
         if (error) throw error;
     },
 
-    subscribeToNotifications(userId: string, callback: (payload: any) => void) {
+    subscribeToNotifications(userId: string, callback: (payload: { new: Notification }) => void) {
         return supabase
             .channel('public:notifications')
             .on(

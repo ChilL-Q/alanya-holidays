@@ -11,7 +11,7 @@ export async function getServiceBrands(type: string) {
         .select('brand')
         .eq('type', type);
     if (error) throw error;
-    return [...new Set(data.map((item: any) => item.brand))];
+    return [...new Set(data.map((item) => item.brand))];
 }
 
 export async function getServiceModels(type: string, brand: string) {

@@ -129,7 +129,7 @@ export async function getBookingsForHost(hostId: string, dateFrom?: string, date
         .select('id, full_name, email, avatar_url, phone')
         .in('id', guestIds);
 
-    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+    const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
 
     return bookings.map(booking => ({
         ...booking,

@@ -36,16 +36,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isLoading, setIsLoading] = useState(true);
 
     // Map Supabase session user to our app User type
-    const mapSessionToUser = (sessionUser: any): User => {
+    const mapSessionToUser = (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at?: string }): User => {
         const metadata = sessionUser.user_metadata || {};
         return {
             id: sessionUser.id,
-            name: metadata.full_name || metadata.name || sessionUser.email?.split('@')[0] || 'User',
-            email: sessionUser.email || '',
-            avatar: metadata.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(metadata.full_name || 'U')}&background=0D9488&color=fff`,
+            name: (metadata.full_name as string || metadata.name as string || sessionUser.email?.split('@')[0] || 'User') as string,
+            email: (sessionUser.email || '') as string,
+            avatar: (metadata.avatar_url as string || `https://ui-avatars.com/api/?name=${encodeURIComponent((metadata.full_name as string || 'U'))}&background=0D9488&color=fff`) as string | undefined,
             role: (metadata.role as 'guest' | 'host' | 'admin') || 'guest',
-            company_name: metadata.company_name,
-            joinedDate: sessionUser.created_at,
+            company_name: metadata.company_name as string | undefined,
+            joinedDate: sessionUser.created_at || '',
         };
     };
 
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         isMountedRef.current = true;
-        const checkUser = async (sessionUser: any) => {
+        const checkUser = async (sessionUser: { id: string; email?: string; user_metadata?: Record<string, unknown>; created_at?: string } | null) => {
             if (!sessionUser) {
                 if (isMountedRef.current) setUser(null);
                 if (isMountedRef.current) setIsLoading(false);
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const updateUser = useCallback(async (data: Partial<User>) => {
         if (!user) return;
 
-        const updates: any = {};
+        const updates: Record<string, string> = {};
         if (data.name) updates.full_name = data.name;
         if (data.avatar) updates.avatar_url = data.avatar;
         // NOTE: role is intentionally excluded — role changes must go through

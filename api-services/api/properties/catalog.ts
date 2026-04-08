@@ -4,7 +4,7 @@ import { PropertyDB } from '../../../types/index';
 export async function getPropertyTypes() {
     const { data, error } = await supabase.from('properties').select('type');
     if (error) throw error;
-    return [...new Set(data.map((p: any) => p.type))];
+    return [...new Set(data.map((p) => p.type))];
 }
 
 export async function getPropertyLocations(type: string) {
@@ -13,7 +13,7 @@ export async function getPropertyLocations(type: string) {
         .select('location')
         .eq('type', type);
     if (error) throw error;
-    return [...new Set(data.map((p: any) => p.location))];
+    return [...new Set(data.map((p) => p.location))];
 }
 
 export async function getPropertiesByLocation(type: string, location: string, page = 1, limit = 20) {
