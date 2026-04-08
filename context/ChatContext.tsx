@@ -138,7 +138,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [activeConversationId, refreshConversations]);
 
-    const submitReport = useCallback(async (data: any) => {
+    const submitReport = useCallback(async (data: { reporter_id: string; reported_id?: string; conversation_id: string; reason: string; description: string }) => {
         try {
             await chatService.submitReport(data);
         } catch (error) {

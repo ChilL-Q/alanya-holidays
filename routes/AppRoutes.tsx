@@ -6,7 +6,6 @@ import { HostLayout } from '../components/layouts/HostLayout';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
-import { ErrorBoundary as _ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { NotFound } from '../components/pages/NotFound';
 
 // Public Pages - Direct Imports (critical for immediate FCP)
