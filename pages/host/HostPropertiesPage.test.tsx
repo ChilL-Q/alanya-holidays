@@ -36,6 +36,11 @@ vi.mock('../../context/CurrencyContext', () => ({
     })
 }));
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() }
+}));
+
 describe('HostPropertiesPage', () => {
     const mockProperties = [
         {
@@ -390,8 +395,8 @@ describe('HostPropertiesPage', () => {
     });
 
     it('shows error alert when delete fails', async () => {
+        const { toast } = await import('react-hot-toast');
         const confirmSpy = vi.spyOn(window, 'confirm');
-        const alertSpy = vi.spyOn(window, 'alert');
         confirmSpy.mockImplementation(() => true);
         (db.deleteProperty as any).mockRejectedValue(new Error('Delete failed'));
 
@@ -409,11 +414,10 @@ describe('HostPropertiesPage', () => {
         });
 
         await waitFor(() => {
-            expect(alertSpy).toHaveBeenCalledWith('Failed to delete property');
+            expect(toast.error).toHaveBeenCalledWith('Failed to delete property');
         });
 
         confirmSpy.mockRestore();
-        alertSpy.mockRestore();
     });
 
     it('shows empty state when no properties', async () => {
