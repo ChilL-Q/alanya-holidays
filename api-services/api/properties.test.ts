@@ -278,7 +278,7 @@ describe('propertiesService', () => {
 
       it('getPropertiesByLocation', async () => {
           mockSupabase.from.mockReturnValue(createMockChain([]));
-          await propertiesService.getPropertiesByLocation('Alanya');
+          await propertiesService.getPropertiesByLocation('villa', 'Alanya');
           expect(mockSupabase.from).toHaveBeenCalledWith('properties');
       });
 
@@ -317,7 +317,7 @@ describe('propertiesService', () => {
 
       it('getPropertyLocations', async () => {
           mockSupabase.from.mockReturnValue(createMockChain([{ location: 'Alanya Center' }]));
-          const result = await propertiesService.getPropertyLocations();
+          const result = await propertiesService.getPropertyLocations('villa');
           expect(result).toContain('Alanya Center');
       });
   });
