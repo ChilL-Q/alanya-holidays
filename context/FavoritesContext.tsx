@@ -22,16 +22,16 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Sync with DB on login
     const isMountedRef = useRef(true);
 
-    useEffect(() => {
-        isMountedRef.current = true;
-        if (isAuthenticated && user?.id) {
-            db.getFavorites(user.id).then(dbFavorites => {
-                // Use functional update to avoid stale closure on favorites state
-                if (isMountedRef.current) setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
-            }).catch(console.error);
-        }
-        return () => { isMountedRef.current = false; };
-    }, [isAuthenticated, user]);
+     useEffect(() => {
+         isMountedRef.current = true;
+         if (isAuthenticated && user?.id) {
+             db.getFavorites().then(dbFavorites => {
+                 // Use functional update to avoid stale closure on favorites state
+                 if (isMountedRef.current) setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
+             }).catch(console.error);
+         }
+         return () => { isMountedRef.current = false; };
+     }, [isAuthenticated, user]);
 
     // Persist to LocalStorage
     useEffect(() => {
@@ -44,14 +44,14 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
             return prev;
         });
         if (isAuthenticated && user?.id) {
-            await db.addFavorite({ user_id: user.id, item_id: id }).catch(console.error);
+            await db.addFavorite({ item_id: id }).catch(console.error);
         }
     };
 
     const removeFavorite = async (id: string) => {
         setFavorites((prev) => prev.filter((favId) => favId !== id));
         if (isAuthenticated && user?.id) {
-            await db.removeFavorite({ user_id: user.id, item_id: id }).catch(console.error);
+            await db.removeFavorite({ item_id: id }).catch(console.error);
         }
     };
 
