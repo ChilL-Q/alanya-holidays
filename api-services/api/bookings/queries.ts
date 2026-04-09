@@ -1,11 +1,13 @@
 import { supabase } from '../../supabase';
+import { getUserRole } from '../../auth';
 import { PropertyDB, ServiceDB, UserProfile } from '../../../types/index';
 import type { EnrichedBooking } from './index';
 
 export async function getBookings(userId: string): Promise<EnrichedBooking[]> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-    if (user.id !== userId && user.user_metadata?.role !== 'admin') {
+    const role = await getUserRole(user.id);
+    if (user.id !== userId && role !== 'admin') {
         throw new Error('Not authorized');
     }
 
@@ -49,7 +51,8 @@ export async function getBookings(userId: string): Promise<EnrichedBooking[]> {
 
 export async function getAdminBookings(statusFilter?: string): Promise<EnrichedBooking[]> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.user_metadata?.role !== 'admin') throw new Error('Not authorized');
+    const role = await getUserRole(user.id);
+    if (!user || role !== 'admin') throw new Error('Not authorized');
 
     let query = supabase.from('bookings').select('*');
     if (statusFilter && statusFilter !== 'all') query = query.eq('status', statusFilter);
@@ -94,7 +97,8 @@ export async function getAdminBookings(statusFilter?: string): Promise<EnrichedB
 
 export async function getBookingsForHost(hostId: string, dateFrom?: string, dateTo?: string): Promise<EnrichedBooking[]> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || (user.id !== hostId && user.user_metadata?.role !== 'admin')) {
+    const role = await getUserRole(user.id);
+    if (!user || (user.id !== hostId && role !== 'admin')) {
         throw new Error('Not authorized');
     }
 

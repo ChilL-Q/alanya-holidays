@@ -14,6 +14,38 @@ export type BookingCreateInput = Omit<z.infer<typeof bookingSchema>, 'item_type'
     payment_status?: string;
 };
 
+export interface BookingConflictResult {
+    has_conflict: boolean;
+    conflict_type: string;
+    message: string;
+    existing_bookings?: number;
+}
+
+/**
+ * Check for booking conflicts BEFORE attempting to create a booking
+ * Call this from the frontend to validate dates before submission
+ */
+export async function checkBookingConflict(
+    itemId: string,
+    itemType: string,
+    checkIn: string,
+    checkOut: string
+): Promise<BookingConflictResult> {
+    const { data, error } = await supabase.rpc('check_booking_conflict', {
+        p_item_id: itemId,
+        p_item_type: itemType,
+        p_check_in: checkIn,
+        p_check_out: checkOut
+    });
+
+    if (error) {
+        console.error('Error checking booking conflicts:', error);
+        throw new Error('Failed to validate booking availability');
+    }
+
+    return data as BookingConflictResult;
+}
+
 export async function createBooking(data: BookingCreateInput) {
     const input = {
         ...data,
@@ -22,6 +54,24 @@ export async function createBooking(data: BookingCreateInput) {
 
     const validatedData = bookingSchema.parse(input);
 
+    // Step 1: Check for booking conflicts BEFORE attempting to create
+    const { data: conflictResult, error: conflictError } = await supabase.rpc('check_booking_conflict', {
+        p_item_id:   validatedData.item_id,
+        p_item_type: input.item_type,
+        p_check_in:  validatedData.check_in,
+        p_check_out: validatedData.check_out
+    });
+
+    if (conflictError) {
+        console.error('Error checking booking conflicts:', conflictError);
+        throw new Error('Failed to validate booking availability');
+    }
+
+    if (conflictResult?.has_conflict) {
+        throw new Error(conflictResult.message || 'Dates are not available');
+    }
+
+    // Step 2: Create the booking (RPC will also perform its own conflict checks as a safety net)
     const rpcParams = {
         p_item_id:        validatedData.item_id,
         p_user_id:        validatedData.user_id,
@@ -31,7 +81,7 @@ export async function createBooking(data: BookingCreateInput) {
         p_guests:         validatedData.guests,
         p_message:        validatedData.message,
         p_payment_method: validatedData.payment_method,
-        p_item_type:      validatedData.item_type
+        p_item_type:      input.item_type
     };
 
     const { data: result, error } = await supabase.rpc('create_booking', rpcParams);
