@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { servicesService } from './services';
 import { notificationsService } from './notifications';
+import { getUserRole } from '../auth';
 
 const { mockSupabase } = vi.hoisted(() => {
   return {
@@ -26,12 +27,18 @@ vi.mock('./notifications', () => ({
     }
 }));
 
+vi.mock('../auth', () => ({
+    getUserRole: vi.fn().mockResolvedValue('admin'),
+    isAdmin: vi.fn().mockResolvedValue(true),
+}));
+
 describe('servicesService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: { id: '550e8400-e29b-41d4-a716-446655440001' } }, error: null
     });
+    (getUserRole as any).mockResolvedValue('admin');
   });
 
   const createMockChain = (data: any = null, error: any = null) => {
@@ -65,11 +72,9 @@ describe('servicesService', () => {
 
     it('updateService', async () => {
         const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
-        const profileChain = createMockChain({ role: 'host' }); // getUserRole
         const updateChain = createMockChain();
         const refetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
         mockSupabase.from.mockReturnValueOnce(fetchChain);
-        mockSupabase.from.mockReturnValueOnce(profileChain);
         mockSupabase.from.mockReturnValueOnce(updateChain);
         mockSupabase.from.mockReturnValueOnce(refetchChain);
 
@@ -80,10 +85,8 @@ describe('servicesService', () => {
 
     it('deleteService', async () => {
         const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
-        const profileChain = createMockChain({ role: 'host' }); // getUserRole
         const deleteChain = createMockChain();
         mockSupabase.from.mockReturnValueOnce(fetchChain);
-        mockSupabase.from.mockReturnValueOnce(profileChain);
         mockSupabase.from.mockReturnValueOnce(deleteChain);
 
         await servicesService.deleteService('s1');
@@ -210,10 +213,7 @@ describe('servicesService', () => {
       });
 
       it('updateServiceModel', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001', user_metadata: { role: 'admin' } } }, error: null });
-          const profileChain = createMockChain({ role: 'admin' }); // getUserRole
           const updateChain = createMockChain();
-          mockSupabase.from.mockReturnValueOnce(profileChain);
           mockSupabase.from.mockReturnValueOnce(updateChain);
           await servicesService.updateServiceModel('1', { brand: 'BMW' });
           expect(updateChain.update).toHaveBeenCalled();
@@ -283,6 +283,7 @@ describe('servicesService', () => {
       it('approveServiceEdit', async () => {
           const mockEdit = { id: 'e1', service_id: 's1', changed_data: { title: 'N' } };
           const mockService = { provider_id: 'p1', title: 'T', type: 'car' };
+          const userId = '550e8400-e29b-41d4-a716-446655440001';
 
           // Mock fetching edit, updating service, deleting edit, fetching service for notification
           mockSupabase.from.mockImplementation((table) => {
@@ -301,13 +302,15 @@ describe('servicesService', () => {
                return createMockChain();
           });
 
-          await servicesService.approveServiceEdit('e1');
+          await servicesService.approveServiceEdit('e1', userId);
+          expect(getUserRole).toHaveBeenCalledWith(userId);
           expect(notificationsService.createNotification).toHaveBeenCalled();
       });
 
       it('rejectServiceEdit', async () => {
           const mockEdit = { id: 'e1', service_id: 's1' };
           const mockService = { provider_id: 'p1', title: 'T', type: 'car' };
+          const userId = '550e8400-e29b-41d4-a716-446655440001';
 
           let _editCalls = 0;
           mockSupabase.from.mockImplementation((table) => {
@@ -324,7 +327,8 @@ describe('servicesService', () => {
                return createMockChain();
           });
 
-          await servicesService.rejectServiceEdit('e1', 'reason');
+          await servicesService.rejectServiceEdit('e1', userId, 'reason');
+          expect(getUserRole).toHaveBeenCalledWith(userId);
           expect(notificationsService.createNotification).toHaveBeenCalled();
       });
   });
