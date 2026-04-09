@@ -65,9 +65,13 @@ describe('servicesService', () => {
 
     it('updateService', async () => {
         const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
+        const profileChain = createMockChain({ role: 'host' }); // getUserRole
         const updateChain = createMockChain();
+        const refetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
         mockSupabase.from.mockReturnValueOnce(fetchChain);
+        mockSupabase.from.mockReturnValueOnce(profileChain);
         mockSupabase.from.mockReturnValueOnce(updateChain);
+        mockSupabase.from.mockReturnValueOnce(refetchChain);
 
         await servicesService.updateService('s1', { title: 'New' });
         expect(updateChain.update).toHaveBeenCalledWith({ title: 'New' });
@@ -76,8 +80,10 @@ describe('servicesService', () => {
 
     it('deleteService', async () => {
         const fetchChain = createMockChain({ provider_id: '550e8400-e29b-41d4-a716-446655440001', title: 'T', type: 'car' });
+        const profileChain = createMockChain({ role: 'host' }); // getUserRole
         const deleteChain = createMockChain();
         mockSupabase.from.mockReturnValueOnce(fetchChain);
+        mockSupabase.from.mockReturnValueOnce(profileChain);
         mockSupabase.from.mockReturnValueOnce(deleteChain);
 
         await servicesService.deleteService('s1');
@@ -204,11 +210,13 @@ describe('servicesService', () => {
       });
 
       it('updateServiceModel', async () => {
-          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { user_metadata: { role: 'admin' } } }, error: null });
-          const chain = createMockChain();
-          mockSupabase.from.mockReturnValue(chain);
+          mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: '550e8400-e29b-41d4-a716-446655440001', user_metadata: { role: 'admin' } } }, error: null });
+          const profileChain = createMockChain({ role: 'admin' }); // getUserRole
+          const updateChain = createMockChain();
+          mockSupabase.from.mockReturnValueOnce(profileChain);
+          mockSupabase.from.mockReturnValueOnce(updateChain);
           await servicesService.updateServiceModel('1', { brand: 'BMW' });
-          expect(chain.update).toHaveBeenCalled();
+          expect(updateChain.update).toHaveBeenCalled();
       });
 
       it('getServicesByModel', async () => {
