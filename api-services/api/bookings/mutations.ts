@@ -110,11 +110,27 @@ export async function updateBookingStatus(
     status: 'confirmed' | 'cancelled' | 'pending' | 'completed',
     reason?: string
 ) {
+    // Authenticate user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const { data: currentBooking } = await supabase
         .from('bookings')
         .select('status, user_id, check_in, check_out, property:properties(title, host_id), service:services(title, provider_id)')
         .eq('id', id)
         .single();
+
+    // Authorization check: user must be booking owner, property host, service provider, or admin
+    const isBookingOwner = currentBooking.user_id === user.id;
+    const propertyObj = Array.isArray(currentBooking.property) ? currentBooking.property[0] : currentBooking.property;
+    const serviceObj = Array.isArray(currentBooking.service) ? currentBooking.service[0] : currentBooking.service;
+    const isPropertyHost = propertyObj?.host_id === user.id;
+    const isServiceProvider = serviceObj?.provider_id === user.id;
+    const isAdmin = user.user_metadata?.role === 'admin';
+
+    if (!isBookingOwner && !isPropertyHost && !isServiceProvider && !isAdmin) {
+        throw new Error('Not authorized');
+    }
 
     const { error } = await supabase
         .from('bookings')
