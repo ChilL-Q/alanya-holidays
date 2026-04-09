@@ -71,9 +71,11 @@ describe('ReviewsSection', () => {
         }
     ];
 
+    const mockPagination = { page: 1, limit: 20, total: 2, totalPages: 1 };
+
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getReviews as any).mockResolvedValue(mockReviews);
+        (db.getReviews as any).mockResolvedValue({ data: mockReviews, pagination: mockPagination });
     });
 
     const renderComponent = () => {
@@ -111,7 +113,7 @@ describe('ReviewsSection', () => {
     });
 
     it('shows "New" when there are no reviews', async () => {
-        (db.getReviews as any).mockResolvedValue([]);
+        (db.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
         renderComponent();
 
         await waitFor(() => {
@@ -259,7 +261,7 @@ describe('ReviewsSection', () => {
     });
 
     it('shows empty state when no reviews', async () => {
-        (db.getReviews as any).mockResolvedValue([]);
+        (db.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
         renderComponent();
 
         await waitFor(() => {
@@ -309,7 +311,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue(reviewsWithMultipleImages);
+        (db.getReviews as any).mockResolvedValue({ data: reviewsWithMultipleImages, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {
@@ -332,7 +334,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue(reviewsWithAnonymousUser);
+        (db.getReviews as any).mockResolvedValue({ data: reviewsWithAnonymousUser, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {
@@ -355,7 +357,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue(reviewsWithoutDate);
+        (db.getReviews as any).mockResolvedValue({ data: reviewsWithoutDate, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {

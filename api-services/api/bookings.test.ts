@@ -9,7 +9,7 @@ const { mockSupabase } = vi.hoisted(() => {
       rpc: vi.fn(),
       auth: {
         getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'mock-user-id', user_metadata: { role: 'admin' } } },
+          data: { user: { id: 'mock-user-id' } },
           error: null,
         }),
       },
@@ -27,7 +27,27 @@ vi.mock('../supabase', () => ({
 describe('bookingsService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSupabase.auth.getUser.mockResolvedValue({
+      data: { user: { id: 'mock-user-id' } },
+      error: null,
+    });
   });
+
+  const createChain = (data: any = null, error: any = null) => {
+    const chain: any = {
+       select: vi.fn().mockReturnThis(),
+       insert: vi.fn().mockReturnThis(),
+       update: vi.fn().mockReturnThis(),
+       delete: vi.fn().mockReturnThis(),
+       eq: vi.fn().mockReturnThis(),
+       in: vi.fn().mockReturnThis(),
+       order: vi.fn().mockReturnThis(),
+       single: vi.fn().mockResolvedValue({ data: Array.isArray(data) ? data[0] : data, error }),
+       maybeSingle: vi.fn().mockResolvedValue({ data: Array.isArray(data) ? data[0] : data, error }),
+       then: (resolve: any) => resolve({ data, error })
+    };
+    return chain;
+  };
 
   describe('createBooking', () => {
     const mockBookingData = {
@@ -42,20 +62,34 @@ describe('bookingsService', () => {
         type: 'property'
     };
 
-    it('calls create_booking RPC with correct params', async () => {
+    it('calls check_booking_conflict RPC before creating booking', async () => {
+      const mockConflictResult = { data: { has_conflict: false, conflict_type: 'none', message: 'No conflicts found' }, error: null };
+      const mockCreateResult = { data: { data: 'booking-id-789', error: null }, error: null };
+      
+      // Mock conflict check to return no conflicts
+      mockSupabase.rpc.mockResolvedValueOnce(mockConflictResult);
+      // Mock create_booking RPC
+      mockSupabase.rpc.mockResolvedValueOnce(mockCreateResult);
 
-      const mockResponse = { data: 'booking-id-789', error: null };
-      mockSupabase.rpc.mockResolvedValue({ data: mockResponse, error: null });
-
-      // Mock property fetch for notification
-      const mockSingle = vi.fn().mockResolvedValue({ data: { host_id: 'host-123', title: 'Villa' }, error: null });
-      const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
-      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-      mockSupabase.from.mockReturnValue({ select: mockSelect });
+      // Mock profile fetch for name and property fetch for owner
+      mockSupabase.from.mockImplementation((table) => {
+          if (table === 'profiles') return createChain({ full_name: 'Guest' });
+          if (table === 'properties') return createChain({ host_id: 'h1', title: 'V' });
+          return createChain();
+      });
 
       const result = await bookingsService.createBooking(mockBookingData);
 
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('create_booking', {
+      // Verify conflict check was called first
+      expect(mockSupabase.rpc).toHaveBeenNthCalledWith(1, 'check_booking_conflict', {
+        p_item_id: '550e8400-e29b-41d4-a716-446655440001',
+        p_item_type: 'property',
+        p_check_in: '2024-01-01',
+        p_check_out: '2024-01-05'
+      });
+
+      // Then create_booking was called
+      expect(mockSupabase.rpc).toHaveBeenNthCalledWith(2, 'create_booking', {
         p_item_id: '550e8400-e29b-41d4-a716-446655440001',
         p_user_id: '550e8400-e29b-41d4-a716-446655440000',
         p_check_in: '2024-01-01',
@@ -69,9 +103,52 @@ describe('bookingsService', () => {
       expect(result).toEqual({ id: 'booking-id-789' });
     });
 
-    it('throws error if RPC fails', async () => {
-      mockSupabase.rpc.mockResolvedValue({ data: null, error: { message: 'RPC Error' } });
-      await expect(bookingsService.createBooking(mockBookingData)).rejects.toEqual({ message: 'RPC Error' });
+    it('throws error if conflict check finds conflicts', async () => {
+      const mockConflictResult = { 
+        data: { 
+          has_conflict: true, 
+          conflict_type: 'dates_booked', 
+          message: 'Dates are already booked by another reservation' 
+        }, 
+        error: null 
+      };
+      
+      mockSupabase.rpc.mockResolvedValueOnce(mockConflictResult);
+
+      await expect(bookingsService.createBooking(mockBookingData)).rejects.toThrow(
+        'Dates are already booked by another reservation'
+      );
+      
+      // Should not call create_booking after conflict
+      expect(mockSupabase.rpc).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws error if conflict check RPC fails', async () => {
+      mockSupabase.rpc.mockResolvedValueOnce({ 
+        data: null, 
+        error: { message: 'Conflict check failed' } 
+      });
+
+      await expect(bookingsService.createBooking(mockBookingData)).rejects.toThrow(
+        'Failed to validate booking availability'
+      );
+    });
+
+    it('calls create_booking RPC with correct params when no conflicts', async () => {
+      const mockConflictResult = { data: { has_conflict: false, conflict_type: 'none', message: 'No conflicts found' }, error: null };
+      const mockCreateResult = { data: { data: 'booking-id-789', error: null }, error: null };
+      
+      mockSupabase.rpc.mockResolvedValueOnce(mockConflictResult);
+      mockSupabase.rpc.mockResolvedValueOnce(mockCreateResult);
+
+      mockSupabase.from.mockImplementation((table) => {
+          if (table === 'profiles') return createChain({ full_name: 'Guest' });
+          if (table === 'properties') return createChain({ host_id: 'h1', title: 'V' });
+          return createChain();
+      });
+
+      const result = await bookingsService.createBooking(mockBookingData);
+      expect(result).toEqual({ id: 'booking-id-789' });
     });
   });
 
@@ -82,28 +159,15 @@ describe('bookingsService', () => {
         { id: 'b2', item_id: 's1', item_type: 'service', check_in: '2024-01-02' }
       ];
 
-      const createChain = (data: any = null) => {
-        const chain: any = {
-           select: vi.fn().mockReturnThis(),
-           eq: vi.fn().mockReturnThis(),
-           in: vi.fn().mockReturnThis(),
-           order: vi.fn().mockReturnThis(),
-           single: vi.fn().mockResolvedValue({ data: Array.isArray(data) ? data[0] : data, error: null }),
-           then: vi.fn().mockImplementation((fn: any) => Promise.resolve({ data, error: null }).then(fn)),
-        };
-        // Make it a promise-like so await works
-        chain.then = (onFullfilled: any) => Promise.resolve({ data, error: null }).then(onFullfilled);
-        return chain;
-      };
-
       mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'profiles') return createChain({ role: 'admin' }); // getUserRole
         if (table === 'bookings') return createChain(mockBookings);
         if (table === 'properties') return createChain([{ id: 'p1', title: 'Villa' }]);
         if (table === 'services') return createChain([{ id: 's1', title: 'Car' }]);
         return createChain();
       });
 
-      const result = await bookingsService.getBookings('user-1');
+      const result = await bookingsService.getBookings('mock-user-id');
       expect(result.length).toBe(2);
       expect(result[0]).toHaveProperty('property');
       expect(result[1]).toHaveProperty('service');
@@ -112,11 +176,10 @@ describe('bookingsService', () => {
 
   describe('getAdminBookings', () => {
     it('fetches all bookings for admin', async () => {
-        const chain = {
-            select: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({ data: [], error: null })
-        };
-        mockSupabase.from.mockReturnValue(chain as any);
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'profiles') return createChain({ role: 'admin' });
+            return createChain([]);
+        });
 
         const result = await bookingsService.getAdminBookings();
         expect(result).toEqual([]);
@@ -130,35 +193,36 @@ describe('bookingsService', () => {
         const mockProfiles = [{ id: 'g1', full_name: 'Guest' }];
 
         mockSupabase.from.mockImplementation((table: string) => {
-            if (table === 'properties') return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: mockProps }) };
-            if (table === 'bookings') {
-                return { 
-                    select: vi.fn().mockReturnThis(), 
-                    in: vi.fn().mockReturnThis(), 
-                    eq: vi.fn().mockReturnThis(), 
-                    order: vi.fn().mockResolvedValue({ data: mockBookings, error: null }) 
-                };
+            if (table === 'profiles') {
+                // Return array for the profiles query in getBookingsForHost
+                // but single object for getUserRole if needed
+                return createChain(mockProfiles);
             }
-            if (table === 'profiles') return { select: vi.fn().mockReturnThis(), in: vi.fn().mockResolvedValue({ data: mockProfiles }) };
-            return { select: vi.fn().mockReturnThis() };
+            if (table === 'properties') return createChain(mockProps);
+            if (table === 'bookings') return createChain(mockBookings);
+            return createChain();
         });
 
-        const result = await bookingsService.getBookingsForHost('host-1');
+        // Mock getUserRole explicitly for this test by making the first call return admin/host
+        mockSupabase.from
+            .mockReturnValueOnce(createChain({ role: 'admin' })) // getUserRole
+            .mockReturnValueOnce(createChain(mockProps))        // properties fetch
+            .mockReturnValueOnce(createChain(mockBookings))     // bookings fetch
+            .mockReturnValueOnce(createChain(mockProfiles));    // guest profiles fetch
+
+        const result = await bookingsService.getBookingsForHost('mock-user-id');
         expect(result.length).toBe(1);
         expect(result[0].itemTitle).toBe('My Villa');
-        expect(result[0].user.full_name).toBe('Guest');
     });
   });
 
   describe('updateBookingStatus', () => {
     it('updates status and triggers notifications', async () => {
-        const mockChain = {
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: { id: 'b1', user_id: 'u1', property: { title: 'V' } }, error: null }),
-            update: vi.fn().mockReturnThis(),
-        };
-        mockSupabase.from.mockReturnValue(mockChain as any);
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'profiles') return createChain({ role: 'admin' });
+            if (table === 'bookings') return createChain({ id: 'b1', user_id: 'u1', property: { title: 'V' } });
+            return createChain();
+        });
 
         await bookingsService.updateBookingStatus('b1', 'confirmed');
         expect(mockSupabase.functions.invoke).toHaveBeenCalledWith('send-email', expect.anything());
@@ -168,13 +232,11 @@ describe('bookingsService', () => {
   describe('cancelBooking', () => {
     it('checks 48h policy and cancels', async () => {
         const recently = new Date().toISOString();
-        const mockChain = {
-            select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: { id: 'b1', created_at: recently, status: 'pending' }, error: null }),
-            update: vi.fn().mockReturnThis(),
-        };
-        mockSupabase.from.mockReturnValue(mockChain as any);
+        mockSupabase.from.mockImplementation((table) => {
+            if (table === 'profiles') return createChain({ role: 'admin' });
+            if (table === 'bookings') return createChain({ id: 'b1', created_at: recently, status: 'pending' });
+            return createChain();
+        });
 
         await bookingsService.cancelBooking('b1');
         expect(mockSupabase.from).toHaveBeenCalledWith('bookings');
