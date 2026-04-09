@@ -39,12 +39,35 @@ export default tseslint.config(
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
-  // Phase 1: api-services source files are typed — no-explicit-any enforced here
+  // Phase 2: Core logic and UI components — no-explicit-any is ERROR
   {
-    files: ['api-services/**/*.{ts,tsx}'],
-    ignores: ['api-services/**/*.test.ts', 'api-services/**/*.test.tsx'],
+    files: [
+      'api-services/**/*.{ts,tsx}',
+      'context/**/*.{ts,tsx}',
+      'components/ui/**/*.{ts,tsx}',
+      'hooks/**/*.{ts,tsx}',
+      'utils/**/*.{ts,tsx}',
+      'data/**/*.{ts,tsx}',
+      'routes/**/*.{ts,tsx}',
+    ],
+    ignores: [
+      'api-services/**/*.test.ts',
+      'api-services/**/*.test.tsx',
+      'context/**/*.test.ts',
+      'context/**/*.test.tsx',
+      'components/ui/**/*.test.ts',
+      'components/ui/**/*.test.tsx',
+      'hooks/**/*.test.ts',
+      'hooks/**/*.test.tsx',
+      'utils/**/*.test.ts',
+      'utils/**/*.test.tsx',
+      'data/**/*.test.ts',
+      'data/**/*.test.tsx',
+      'routes/**/*.test.ts',
+      'routes/**/*.test.tsx',
+    ],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
 );
