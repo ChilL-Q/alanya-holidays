@@ -4,6 +4,7 @@ import { supabase } from '../../api-services/supabase';
 import { BookingToolbar } from '../../components/admin/bookings/BookingToolbar';
 import { BookingTable } from '../../components/admin/bookings/BookingTable';
 import { BookingDetailsModal } from '../../components/admin/bookings/BookingDetailsModal';
+import { toast } from 'react-hot-toast';
 
 export const BookingsPage: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -38,9 +39,9 @@ export const BookingsPage: React.FC = () => {
             if (selectedBooking?.id === id) {
                 setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
             }
-        } catch {
-            alert('Failed to update status');
-        }
+             } catch {
+                 toast.error('Failed to update status');
+             }
     };
 
     const handlePayoutStatusChange = async (id: string, newStatus: 'paid' | 'pending' | 'processing') => {
@@ -53,9 +54,9 @@ export const BookingsPage: React.FC = () => {
             if (selectedBooking?.id === id) {
                 setSelectedBooking((prev: any) => ({ ...prev, payout_status: newStatus }));
             }
-        } catch {
-            alert('Failed to update payout status');
-        }
+             } catch {
+                 toast.error('Failed to update payout status');
+             }
     };
 
     const filteredBookings = bookings.filter(b => {

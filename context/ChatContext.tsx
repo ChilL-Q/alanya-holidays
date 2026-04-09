@@ -63,6 +63,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user, refreshConversations]);
 
     // Realtime subscription
+    // Use a ref to always call the latest refreshConversations without re-subscribing
+    const refreshConversationsRef = useRef(refreshConversations);
+    useEffect(() => {
+        refreshConversationsRef.current = refreshConversations;
+    }, [refreshConversations]);
+
     useEffect(() => {
         if (!user) return;
 
@@ -73,7 +79,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const newMessage = payload.new as ChatMessage;
 
                 // Refresh conversations to update unread counts/latest message
-                refreshConversations();
+                refreshConversationsRef.current();
 
                 // If message is NOT from current user AND (we are not in this conversation OR we are not in any conversation)
                 // Then trigger notification
@@ -95,7 +101,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             subscription.unsubscribe();
         };
-    }, [user, activeConversationId, refreshConversations, addNotification]);
+    }, [user, activeConversationId, addNotification]);
 
     const startConversation = useCallback(async (propertyId: string, hostId: string) => {
         setLoading(true);
