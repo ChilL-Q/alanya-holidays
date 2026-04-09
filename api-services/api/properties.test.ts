@@ -200,7 +200,7 @@ describe('propertiesService', () => {
         mockSupabase.from.mockReturnValue(createMockChain(mockReviews));
 
         const result = await propertiesService.getReviews('p1');
-        expect(result).toEqual(mockReviews);
+        expect(result.data).toEqual(mockReviews);
 
         // Add review (duplicate check returns null)
         const dupCheckChain = createMockChain(null);
@@ -474,14 +474,14 @@ describe('propertiesService', () => {
 
       it('throws error in updateProperty', async () => {
           mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: { id: 'h1' } }, error: null });
-          // First call: owner check (returns chain with .single())
-          // Second call: update (returns chain with .eq() that errors)
+          // First call: owner check, Second call: getUserRole (profiles), Third call: update
           const updateChain: any = createMockChain();
           updateChain.update = vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: new Error('DB Error') })
           });
           mockSupabase.from
               .mockReturnValueOnce(createMockChain({ host_id: 'h1', title: 'T', type: 'villa' }))
+              .mockReturnValueOnce(createMockChain({ role: 'host' })) // getUserRole
               .mockReturnValueOnce(updateChain);
           await expect(propertiesService.updateProperty('1', { price_per_night: 200 })).rejects.toThrow('DB Error');
       });
