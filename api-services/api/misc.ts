@@ -45,29 +45,41 @@ export const messagesService = {
 };
 
 export const favoritesService = {
-    async addFavorite(data: { user_id: string; item_id: string }) {
+    async addFavorite(data: { item_id: string }) {
+        // Authenticate user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         const { error } = await supabase
             .from('favorites')
-            .upsert([data], { onConflict: 'user_id,item_id', ignoreDuplicates: true });
+            .upsert([{ user_id: user.id, item_id: data.item_id }], { onConflict: 'user_id,item_id', ignoreDuplicates: true });
 
         if (error) throw error;
     },
 
-    async removeFavorite(data: { user_id: string; item_id: string }) {
+    async removeFavorite(data: { item_id: string }) {
+        // Authenticate user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         const { error } = await supabase
             .from('favorites')
             .delete()
-            .eq('user_id', data.user_id)
+            .eq('user_id', user.id)
             .eq('item_id', data.item_id);
 
         if (error) throw error;
     },
 
-    async getFavorites(userId: string) {
+    async getFavorites() {
+        // Authenticate user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
         const { data, error } = await supabase
             .from('favorites')
             .select('item_id')
-            .eq('user_id', userId);
+            .eq('user_id', user.id);
 
         if (error) throw error;
         return data.map((f) => f.item_id);
