@@ -153,8 +153,8 @@ export const AdminEditServicePage: React.FC = () => {
                 await db.deleteService(id);
                 navigate('/admin');
             } catch (error) {
-                console.error('Failed to delete', error);
-                alert('Error deleting service');
+                 console.error('Failed to delete', error);
+                 toast.error('Error deleting service');
             }
         }
     };

@@ -49,58 +49,74 @@ export async function createBooking(data: BookingCreateInput) {
 
     const guestName = profile?.full_name || 'Guest';
 
-    createAuditLog('BOOKING_CREATED', {
+    await createAuditLog('BOOKING_CREATED', {
         bookingId,
         userId:   validatedData.user_id,
         itemId:   validatedData.item_id,
         itemType: input.item_type
     });
 
-    retry(() => supabase.functions.invoke('send-email', {
-        body: {
-            type: 'booking_created',
-            userId: validatedData.user_id,
-            data: {
-                userName:      guestName,
-                itemTitle:     data.title || 'Item',
-                itemTypeLabel,
-                checkIn:       validatedData.check_in,
-                checkOut:      validatedData.check_out,
-                totalPrice:    validatedData.total_price,
-                guests:        validatedData.guests,
-                link:          getAppUrl('/profile')
+    // Send booking confirmation email to user
+    try {
+        await retry(() => supabase.functions.invoke('send-email', {
+            body: {
+                type: 'booking_created',
+                userId: validatedData.user_id,
+                data: {
+                    userName:      guestName,
+                    itemTitle:     data.title || 'Item',
+                    itemTypeLabel,
+                    checkIn:       validatedData.check_in,
+                    checkOut:      validatedData.check_out,
+                    totalPrice:    validatedData.total_price,
+                    guests:        validatedData.guests,
+                    link:          getAppUrl('/profile')
+                }
             }
+        }));
+    } catch (err) {
+        console.error('Failed to send booking confirmation email:', err);
+    }
+
+    // Send notification email to host/provider
+    try {
+        const table = input.item_type === 'service' ? 'services' : 'properties';
+        const ownerColumn = input.item_type === 'service' ? 'provider_id' : 'host_id';
+
+        const { data: itemOwner, error: ownerError } = await supabase
+            .from(table)
+            .select(`${ownerColumn}, title`)
+            .eq('id', validatedData.item_id)
+            .single();
+
+        if (ownerError) {
+            console.error('Failed to fetch item owner:', ownerError);
         }
-    })).catch(err => console.error('Failed to send email:', err));
 
-interface ItemOwner { host_id?: string; provider_id?: string; title?: string }
-    const table       = input.item_type === 'service' ? 'services' : 'properties';
-    const ownerParams = input.item_type === 'service' ? 'provider_id, title' : 'host_id, title';
+        const hostId = itemOwner ? (itemOwner as Record<string, unknown>)[ownerColumn] as string | undefined : null;
 
-    supabase.from(table).select(ownerParams).eq('id', validatedData.item_id).single()
-        .then(({ data }) => {
-            const item = data as ItemOwner;
-            const hostId   = item ? (item.host_id || item.provider_id) : null;
-            if (hostId) {
-                retry(() => supabase.functions.invoke('send-email', {
-                    body: {
-                        type: 'booking_request_host',
-                        userId: hostId,
-                        data: {
-                            guestName,
-                            itemTitle:     item?.title,
-                            itemTypeLabel,
-                            checkIn:       validatedData.check_in,
-                            checkOut:      validatedData.check_out,
-                            totalPrice:    validatedData.total_price,
-                            guests:        validatedData.guests,
-                            message:       validatedData.message,
-                            link:          getAppUrl('/host/bookings')
-                        }
+        if (hostId) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'booking_request_host',
+                    userId: hostId,
+                    data: {
+                        guestName,
+                        itemTitle:     itemOwner?.title,
+                        itemTypeLabel,
+                        checkIn:       validatedData.check_in,
+                        checkOut:      validatedData.check_out,
+                        totalPrice:    validatedData.total_price,
+                        guests:        validatedData.guests,
+                        message:       validatedData.message,
+                        link:          getAppUrl('/host/bookings')
                     }
-                })).catch(err => console.error('Failed to send host email:', err));
-            }
-        });
+                }
+            }));
+        }
+    } catch (err) {
+        console.error('Failed to send host notification email:', err);
+    }
 
     return { id: bookingId as string };
 }
@@ -125,10 +141,10 @@ export async function updateBookingStatus(
 
     if (currentBooking) {
         if (status === 'confirmed') {
-            createAuditLog('BOOKING_CONFIRMED', { bookingId: id }, currentBooking.user_id);
+            await createAuditLog('BOOKING_CONFIRMED', { bookingId: id }, currentBooking.user_id);
         } else if (status === 'cancelled') {
             const eventType = currentBooking.status === 'pending' ? 'BOOKING_REJECTED' : 'BOOKING_CANCELLED';
-            createAuditLog(eventType, { bookingId: id, reason }, currentBooking.user_id);
+            await createAuditLog(eventType, { bookingId: id, reason }, currentBooking.user_id);
         }
     }
 
@@ -147,36 +163,44 @@ export async function updateBookingStatus(
         }
 
         if (type) {
-            retry(() => supabase.functions.invoke('send-email', {
-                body: {
-                    type,
-                    userId: currentBooking.user_id,
-                    data: {
-                        itemTitle,
-                        itemTypeLabel,
-                        checkIn:  currentBooking.check_in,
-                        checkOut: currentBooking.check_out,
-                        reason,
-                        link: getAppUrl('/profile')
-                    }
-                }
-            })).catch(err => console.error('Failed to send status email:', err));
-
-            if (status === 'cancelled' && type === 'booking_cancelled' && hostId) {
-                retry(() => supabase.functions.invoke('send-email', {
+            try {
+                await retry(() => supabase.functions.invoke('send-email', {
                     body: {
-                        type: 'booking_cancelled_host',
-                        userId: hostId,
+                        type,
+                        userId: currentBooking.user_id,
                         data: {
-                            guestName: 'Guest',
                             itemTitle,
                             itemTypeLabel,
                             checkIn:  currentBooking.check_in,
                             checkOut: currentBooking.check_out,
-                            link: getAppUrl('/host/bookings')
+                            reason,
+                            link: getAppUrl('/profile')
                         }
                     }
-                })).catch(err => console.error('Failed to send host cancellation email:', err));
+                }));
+            } catch (err) {
+                console.error('Failed to send status email:', err);
+            }
+
+            if (status === 'cancelled' && type === 'booking_cancelled' && hostId) {
+                try {
+                    await retry(() => supabase.functions.invoke('send-email', {
+                        body: {
+                            type: 'booking_cancelled_host',
+                            userId: hostId,
+                            data: {
+                                guestName: 'Guest',
+                                itemTitle,
+                                itemTypeLabel,
+                                checkIn:  currentBooking.check_in,
+                                checkOut: currentBooking.check_out,
+                                link: getAppUrl('/host/bookings')
+                            }
+                        }
+                    }));
+                } catch (err) {
+                    console.error('Failed to send host cancellation email:', err);
+                }
             }
         }
     }

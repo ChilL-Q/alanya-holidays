@@ -4,6 +4,7 @@ import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { Trash2 } from 'lucide-react';
 import { ServiceToolbar } from '../../components/admin/services/ServiceToolbar';
 import { ServiceTable } from '../../components/admin/services/ServiceTable';
+import { toast } from 'react-hot-toast';
 
 interface AdminServicesPageProps {
     type?: 'fleet' | 'services';
@@ -64,13 +65,13 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
         if (action === 'delete') {
             if (confirm(`Are you sure you want to delete ${selectedIds.size} services? This cannot be undone.`)) {
                 try {
-                    await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
-                    setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
-                    setSelectedIds(new Set());
-                } catch (e) {
-                    console.error(e);
-                    alert('Failed to delete some services.');
-                }
+                     await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
+                     setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
+                     setSelectedIds(new Set());
+                 } catch (e) {
+                     console.error(e);
+                     toast.error('Failed to delete some services.');
+                 }
             }
             return;
         }
@@ -86,8 +87,8 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
                 loadServices();
                 setSelectedIds(new Set());
             } catch (e) {
-                console.error(e);
-                alert(`Failed to ${action} services.`);
+             console.error(e);
+                 toast.error(`Failed to ${action} services.`);
             }
         }
     };
@@ -159,10 +160,10 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
 
             loadServices();
             setModalConfig({ ...modalConfig, isOpen: false });
-        } catch (e: any) {
-            console.error(e);
-            alert(`Failed to ${type} service: ${e.message || 'Unknown error'}`);
-        }
+         } catch (e: any) {
+             console.error(e);
+             toast.error(`Failed to ${type} service: ${e.message || 'Unknown error'}`);
+         }
     };
 
     const filteredServices = services.filter(s => {

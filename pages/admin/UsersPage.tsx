@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../api-services';
 import { Search, Edit2, Trash2, Mail, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 export const UsersPage: React.FC = () => {
     const navigate = useNavigate();
@@ -16,8 +17,8 @@ export const UsersPage: React.FC = () => {
 
     const loadUsers = async () => {
         try {
-            const data = await db.getAllUsers() || [];
-            setUsers(data);
+            const response = await db.getAllUsers();
+            setUsers(response.data || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -30,10 +31,10 @@ export const UsersPage: React.FC = () => {
 
         try {
             // await db.deleteUser(id); // Ensure this method exists in db service
-            alert('Delete functionality would go here. (Ensure backend supports it)');
+            toast.error('Delete functionality would go here. (Ensure backend supports it)');
             // loadUsers();
         } catch {
-            alert('Failed to delete user');
+             toast.error('Failed to delete user');
         }
     };
 
