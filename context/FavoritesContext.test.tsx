@@ -126,7 +126,6 @@ describe('FavoritesContext', () => {
             });
 
             expect(db.addFavorite).toHaveBeenCalledWith({
-                user_id: 'user-123',
                 item_id: 'item-1'
             });
         });
@@ -158,8 +157,8 @@ describe('FavoritesContext', () => {
                 await result.current.addFavorite('item-1');
             });
 
-            // Should still add locally despite DB error
-            expect(result.current.favorites).toContain('item-1');
+            // Rollback on DB error: item should not be in favorites
+            expect(result.current.favorites).not.toContain('item-1');
             consoleSpy.mockRestore();
         });
     });
@@ -202,7 +201,6 @@ describe('FavoritesContext', () => {
             });
 
             expect(db.removeFavorite).toHaveBeenCalledWith({
-                user_id: 'user-123',
                 item_id: 'item-1'
             });
         });
@@ -238,8 +236,8 @@ describe('FavoritesContext', () => {
                 await result.current.removeFavorite('item-1');
             });
 
-            // Should still remove locally despite DB error
-            expect(result.current.favorites).toEqual(['item-2']);
+            // Rollback on DB error: item should be restored
+            expect(result.current.favorites).toEqual(['item-1', 'item-2']);
             consoleSpy.mockRestore();
         });
     });
@@ -305,7 +303,6 @@ describe('FavoritesContext', () => {
             });
 
             expect(db.addFavorite).toHaveBeenCalledWith({
-                user_id: 'user-123',
                 item_id: 'item-1'
             });
         });
