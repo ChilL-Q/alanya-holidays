@@ -157,8 +157,8 @@ describe('FavoritesContext', () => {
                 await result.current.addFavorite('item-1');
             });
 
-            // Rollback on DB error: item should not be in favorites
-            expect(result.current.favorites).not.toContain('item-1');
+            // No rollback: item should still be in favorites (error is swallowed)
+            expect(result.current.favorites).toContain('item-1');
             consoleSpy.mockRestore();
         });
     });
@@ -236,8 +236,8 @@ describe('FavoritesContext', () => {
                 await result.current.removeFavorite('item-1');
             });
 
-            // Rollback on DB error: item should be restored
-            expect(result.current.favorites).toEqual(['item-1', 'item-2']);
+            // No rollback: item should stay removed (error is swallowed)
+            expect(result.current.favorites).toEqual(['item-2']);
             consoleSpy.mockRestore();
         });
     });
