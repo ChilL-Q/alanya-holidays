@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, Car, Map, Smartphone, CreditCard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
+import { toast } from 'react-hot-toast';
 
 interface HostServicesPageProps {
     mode?: 'fleet' | 'services';
@@ -47,7 +48,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
             setSelectedIds(new Set());
         } catch (error) {
             console.error('Failed to bulk delete:', error);
-            alert('Some services could not be deleted.');
+            toast.error('Some services could not be deleted.');
         }
     };
 
@@ -81,7 +82,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                 await db.deleteService(id);
                 setServices(prev => prev.filter(s => s.id !== id));
             } catch (error) {
-                alert('Failed to delete service');
+                toast.error('Failed to delete service');
                 console.error(error);
             }
         }

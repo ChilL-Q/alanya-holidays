@@ -1,4 +1,5 @@
 import { supabase } from '../../supabase';
+import { getUserRole } from '../../auth';
 import { ServiceDB, ApprovalStatus } from '../../../types/index';
 import { notificationsService } from '../notifications';
 import { serviceSchema } from '../schemas';
@@ -86,7 +87,8 @@ export async function updateService(id: string, updates: Partial<ServiceDB>) {
         .eq('id', id)
         .single();
 
-    if (!existingService || (existingService.provider_id !== user.id && user.user_metadata?.role !== 'admin')) {
+    const role = await getUserRole(user.id);
+    if (!existingService || (existingService.provider_id !== user.id && role !== 'admin')) {
         throw new Error('Not authorized');
     }
 
@@ -123,7 +125,8 @@ export async function deleteService(id: string, reason?: string) {
 
     if (fetchError || !service) throw new Error('Service not found');
 
-    if (service.provider_id !== user.id && user.user_metadata?.role !== 'admin') {
+    const role = await getUserRole(user.id);
+    if (service.provider_id !== user.id && role !== 'admin') {
         throw new Error('Not authorized');
     }
 
@@ -147,13 +150,8 @@ export async function updateServiceStatus(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') throw new Error('Not authorized: only admins can change service status');
+    const role = await getUserRole(user.id);
+    if (role !== 'admin') throw new Error('Not authorized: only admins can change service status');
 
     const updates: Partial<ServiceDB> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;

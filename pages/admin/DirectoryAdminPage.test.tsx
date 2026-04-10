@@ -26,6 +26,11 @@ vi.mock('../../api-services', () => ({
     }
 }));
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() },
+}));
+
 // Mock data
 const mockListings = [
     { id: '1', name: 'Test Medical', category_id: 'medical', location: 'Alanya Center', is_featured: false, is_verified: true },
@@ -33,11 +38,12 @@ const mockListings = [
 ];
 
 describe('DirectoryAdminPage', () => {
+    const mockPagination = { page: 1, limit: 100, total: 2, totalPages: 1 };
+
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getDirectoryListings as any).mockResolvedValue(mockListings);
+        (db.getDirectoryListings as any).mockResolvedValue({ data: mockListings, pagination: mockPagination });
         vi.stubGlobal('confirm', vi.fn(() => true));
-        vi.stubGlobal('alert', vi.fn());
     });
 
     afterEach(() => {
@@ -162,15 +168,15 @@ describe('DirectoryAdminPage', () => {
         if (modalDeleteBtn) fireEvent.click(modalDeleteBtn);
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed to delete listing'));
             expect(consoleSpy).toHaveBeenCalled();
         });
-        
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Failed to delete listing'));
         consoleSpy.mockRestore();
     });
 
     it('handles mock data migration', async () => {
-        (db.getDirectoryListings as any).mockResolvedValueOnce([]).mockResolvedValue(mockListings);
+        (db.getDirectoryListings as any).mockResolvedValueOnce({ data: [], pagination: mockPagination }).mockResolvedValue({ data: mockListings, pagination: mockPagination });
         (db.createDirectoryListing as any).mockResolvedValue({ id: 'new' });
 
         render(
@@ -187,8 +193,9 @@ describe('DirectoryAdminPage', () => {
         
         await waitFor(() => {
             expect(db.createDirectoryListing).toHaveBeenCalled();
-            expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Successfully migrated'));
         });
+        const { toast } = await import('react-hot-toast');
+        expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Successfully migrated'));
     });
 
     it('handles API error when loading listings', async () => {

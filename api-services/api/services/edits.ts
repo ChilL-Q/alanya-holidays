@@ -1,6 +1,7 @@
 import { supabase } from '../../supabase';
 import { ServiceDB } from '../../../types/index';
 import { notificationsService } from '../notifications';
+import { getUserRole } from '../../auth';
 
 // Fields that must never be overwritten via service_edits
 export const IMMUTABLE_SERVICE_FIELDS = new Set([
@@ -68,7 +69,13 @@ export async function deleteServiceEdit(editId: string) {
     if (error) throw error;
 }
 
-export async function approveServiceEdit(editId: string) {
+export async function approveServiceEdit(editId: string, userId: string) {
+    // Admin authorization check
+    const role = await getUserRole(userId);
+    if (role !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+    }
+
     const { data: edit, error: fetchError } = await supabase
         .from('service_edits')
         .select('*')
@@ -112,7 +119,13 @@ export async function approveServiceEdit(editId: string) {
     }
 }
 
-export async function rejectServiceEdit(editId: string, reason?: string) {
+export async function rejectServiceEdit(editId: string, userId: string, reason?: string) {
+    // Admin authorization check
+    const role = await getUserRole(userId);
+    if (role !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+    }
+
     const { error } = await supabase
         .from('service_edits')
         .update({ status: 'rejected', rejection_reason: reason })

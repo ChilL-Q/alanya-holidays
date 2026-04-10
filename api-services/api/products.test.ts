@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { productsService } from './products';
 
+vi.mock('../auth', () => ({
+    getUserRole: vi.fn().mockResolvedValue('host'),
+    isAdmin: vi.fn().mockResolvedValue(false),
+}));
+
 const { mockSupabase } = vi.hoisted(() => {
     return {
         mockSupabase: {

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { HostBookingToolbar } from '../../components/host/bookings/HostBookingToolbar';
 import { HostBookingTable } from '../../components/host/bookings/HostBookingTable';
 import { HostBookingDetailsModal } from '../../components/host/bookings/HostBookingDetailsModal';
+import { toast } from 'react-hot-toast';
 
 export const HostBookingsPage: React.FC = () => {
     const { user } = useAuth();
@@ -39,7 +40,7 @@ export const HostBookingsPage: React.FC = () => {
                     setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
                 }
             } catch (error) {
-                alert('Failed to update booking status');
+                toast.error('Failed to update booking status');
                 console.error(error);
             }
         }

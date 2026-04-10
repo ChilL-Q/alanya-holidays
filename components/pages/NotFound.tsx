@@ -36,7 +36,7 @@ export const NotFound: React.FC = () => {
           </Link>
 
           <Link
-            to="/properties"
+            to="/search-results"
             className="group flex items-center gap-2 px-8 py-4 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
           >
             <Search size={20} />
