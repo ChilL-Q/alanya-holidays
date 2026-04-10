@@ -4,14 +4,26 @@ import { reviewSchema } from '../schemas';
 import { getAppUrl } from '../../../utils/appUrl';
 import { retry } from '../../../utils/retry';
 
-export async function getReviews(propertyId: string) {
-    const { data, error } = await supabase
+export async function getReviews(propertyId: string, page: number = 1, limit: number = 10) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
         .from('reviews')
-        .select('*, user:profiles(full_name, avatar_url)')
+        .select('*, user:profiles(full_name, avatar_url)', { count: 'exact' })
         .eq('property_id', propertyId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
     if (error) throw error;
-    return data as Review[];
+    return {
+        data: data as Review[],
+        pagination: {
+            page,
+            limit,
+            total: count || 0,
+            totalPages: Math.ceil((count || 0) / limit)
+        }
+    };
 }
 
 export async function getReviewCount(propertyId: string) {

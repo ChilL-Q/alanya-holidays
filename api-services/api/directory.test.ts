@@ -53,17 +53,19 @@ describe('directoryService', () => {
     describe('getDirectoryListings', () => {
         it('returns listings on success', async () => {
             const chain = makeChain();
-            chain.order.mockResolvedValue({ data: [mockListing], error: null });
+            const mockRange = vi.fn().mockResolvedValue({ data: [mockListing], count: 1, error: null });
+            chain.order.mockReturnValue({ range: mockRange });
             mockSupabase.from.mockReturnValue(chain);
 
             const result = await directoryService.getDirectoryListings();
-            expect(result).toEqual([mockListing]);
+            expect(result.data).toEqual([mockListing]);
             expect(mockSupabase.from).toHaveBeenCalledWith('directory_listings');
         });
 
         it('throws on error', async () => {
             const chain = makeChain();
-            chain.order.mockResolvedValue({ data: null, error: { message: 'DB error' } });
+            const mockRange = vi.fn().mockResolvedValue({ data: null, count: 0, error: { message: 'DB error' } });
+            chain.order.mockReturnValue({ range: mockRange });
             mockSupabase.from.mockReturnValue(chain);
 
             await expect(directoryService.getDirectoryListings()).rejects.toEqual({ message: 'DB error' });

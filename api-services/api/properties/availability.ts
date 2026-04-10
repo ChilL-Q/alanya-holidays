@@ -1,4 +1,5 @@
 import { supabase } from '../../supabase';
+import { getUserRole } from '../../auth';
 import { PropertyAvailability } from '../../../types/index';
 
 export async function getPropertyAvailability(propertyId: string, startDate: string, endDate: string) {
@@ -27,7 +28,8 @@ export async function updatePropertyAvailability(
         .eq('id', propertyId)
         .single();
 
-    if (!prop || (prop.host_id !== user.id && user.user_metadata?.role !== 'admin')) {
+    const role = await getUserRole(user.id);
+    if (!prop || (prop.host_id !== user.id && role !== 'admin')) {
         throw new Error('Not authorized');
     }
 

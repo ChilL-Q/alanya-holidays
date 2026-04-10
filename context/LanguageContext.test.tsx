@@ -29,6 +29,8 @@ describe('LanguageContext', () => {
         document.documentElement.lang = 'en';
         document.dir = 'ltr';
         document.body.classList.remove('font-arabic');
+        // Reset localStorage to avoid language leaking between tests
+        localStorage.removeItem('language');
     });
 
     it('provides default language "en"', () => {

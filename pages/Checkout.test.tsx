@@ -53,16 +53,17 @@ vi.mock('../api-services/supabase', () => ({
     },
 }));
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() },
+}));
+
 // Mock window.location
 const mockLocation = { href: '' };
 // @ts-ignore
 delete window.location;
 // @ts-ignore
 window.location = mockLocation;
-
-// Mock alert
-const mockAlert = vi.fn();
-vi.stubGlobal('alert', mockAlert);
 
 describe('Checkout', () => {
     const mockItems = [
@@ -136,7 +137,8 @@ describe('Checkout', () => {
             fireEvent.click(payBtn);
         });
 
-        expect(mockAlert).toHaveBeenCalledWith("Please login to complete booking");
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith("Please login to complete booking");
     });
 
     it('handles Stripe redirect for card payment', async () => {
@@ -238,7 +240,8 @@ describe('Checkout', () => {
             fireEvent.click(screen.getByTestId('pay-button'));
         });
 
-        expect(mockAlert).toHaveBeenCalledWith('DB Error');
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith('DB Error');
     });
 
     it('handles stripe function error', async () => {
@@ -249,6 +252,7 @@ describe('Checkout', () => {
             fireEvent.click(screen.getByTestId('pay-button'));
         });
 
-        expect(mockAlert).toHaveBeenCalledWith('Stripe Error');
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith('Stripe Error');
     });
 });

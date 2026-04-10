@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../api-services';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { toast } from 'react-hot-toast';
 import { ProductToolbar } from '../../components/admin/products/ProductToolbar';
 import { ProductTable } from '../../components/admin/products/ProductTable';
 
@@ -62,7 +63,7 @@ export const ProductsPage: React.FC = () => {
             setModalConfig({ ...modalConfig, isOpen: false });
         } catch (e: any) {
             console.error(e);
-            alert(`Failed to delete product: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to delete product: ${e.message || 'Unknown error'}`);
         }
     };
 

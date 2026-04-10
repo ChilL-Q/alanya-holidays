@@ -13,6 +13,18 @@ interface ModalProps {
     lockBodyScroll?: boolean;
 }
 
+const maxWidthClasses: Record<NonNullable<ModalProps['maxWidth']>, string> = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-lg',
+    xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+    full: 'max-w-full'
+};
+
 export const Modal: React.FC<ModalProps> = ({
     isOpen,
     onClose,
@@ -65,7 +77,7 @@ export const Modal: React.FC<ModalProps> = ({
                 <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
                     {/* Modal Panel */}
                     <div
-                        className={`relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all w-full max-w-${maxWidth} animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800/50`}
+                        className={`relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all w-full ${maxWidthClasses[maxWidth]} animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800/50`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Conditional Standard Header */}

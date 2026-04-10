@@ -1,8 +1,9 @@
 import { Booking, UserProfile } from '../../../types/index';
 import { getBookings, getAdminBookings, getBookingsForHost } from './queries';
-import { createBooking, updateBookingStatus, cancelBooking } from './mutations';
+import { createBooking, updateBookingStatus, cancelBooking, checkBookingConflict } from './mutations';
 
 export type { BookingCreateInput } from './mutations';
+export type { BookingConflictResult } from './mutations';
 
 export type EnrichedBooking = Booking & {
     user?: Partial<UserProfile>;
@@ -11,6 +12,7 @@ export type EnrichedBooking = Booking & {
 
 export const bookingsService = {
     createBooking,
+    checkBookingConflict,
     getBookings,
     getAdminBookings,
     getBookingsByStatus: (status: string) => getAdminBookings(status),
