@@ -9,7 +9,7 @@ const { mockSupabase } = vi.hoisted(() => {
       rpc: vi.fn(),
       auth: {
         getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'mock-user-id' } },
+          data: { user: { id: 'mock-user-id', user_metadata: { role: 'admin' } } },
           error: null,
         }),
       },
@@ -28,7 +28,7 @@ describe('bookingsService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: 'mock-user-id' } },
+      data: { user: { id: 'mock-user-id', user_metadata: { role: 'admin' } } },
       error: null,
     });
   });
