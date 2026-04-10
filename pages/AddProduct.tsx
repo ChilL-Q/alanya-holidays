@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { ShoppingBag, Tag, Box, DollarSign } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export const AddProduct: React.FC = () => {
     const { user } = useAuth();
@@ -36,7 +37,7 @@ export const AddProduct: React.FC = () => {
             setFormData({ title: '', description: '', price: '', stock: '1', category: 'souvenir' });
         } catch (error) {
             console.error(error);
-            alert('Error adding product');
+            toast.error('Error adding product');
         } finally {
             setIsSubmitting(false);
         }

@@ -39,19 +39,33 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
     }, [favorites]);
 
     const addFavorite = async (id: string) => {
+        const previousFavorites = [...favorites];
         setFavorites((prev) => {
             if (!prev.includes(id)) return [...prev, id];
             return prev;
         });
         if (isAuthenticated && user?.id) {
-            await db.addFavorite({ item_id: id }).catch(console.error);
+            try {
+                await db.addFavorite({ item_id: id });
+            } catch (error) {
+                console.error('Failed to add favorite:', error);
+                // Rollback on DB error
+                setFavorites(previousFavorites);
+            }
         }
     };
 
     const removeFavorite = async (id: string) => {
+        const previousFavorites = [...favorites];
         setFavorites((prev) => prev.filter((favId) => favId !== id));
         if (isAuthenticated && user?.id) {
-            await db.removeFavorite({ item_id: id }).catch(console.error);
+            try {
+                await db.removeFavorite({ item_id: id });
+            } catch (error) {
+                console.error('Failed to remove favorite:', error);
+                // Rollback on DB error
+                setFavorites(previousFavorites);
+            }
         }
     };
 

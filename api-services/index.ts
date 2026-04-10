@@ -16,6 +16,7 @@ export * from './api/notifications';
 export * from './api/chat';
 export * from './api/directory';
 export * from './supabase';
+export * from './auth';
 export * from './aiService';
 
 import { propertiesService } from './api/properties';

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { getUserRole } from '../auth';
 import { Product } from '../../types/index';
 import { productSchema } from './schemas';
 
@@ -75,7 +76,8 @@ export const productsService = {
             .eq('id', id)
             .single();
 
-        if (!existingProduct || (existingProduct.seller_id !== user.id && user.user_metadata?.role !== 'admin')) {
+        const role = await getUserRole(user.id);
+        if (!existingProduct || (existingProduct.seller_id !== user.id && role !== 'admin')) {
             throw new Error('Not authorized');
         }
 
@@ -100,7 +102,8 @@ export const productsService = {
             .eq('id', id)
             .single();
 
-        if (!existingProduct || (existingProduct.seller_id !== user.id && user.user_metadata?.role !== 'admin')) {
+        const role = await getUserRole(user.id);
+        if (!existingProduct || (existingProduct.seller_id !== user.id && role !== 'admin')) {
             throw new Error('Not authorized');
         }
 

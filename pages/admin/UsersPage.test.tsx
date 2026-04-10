@@ -24,6 +24,11 @@ vi.mock('../../api-services', () => ({
     }
 }));
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() },
+}));
+
 // Mock lucide-react
 vi.mock('lucide-react', () => ({
     Search: () => <svg data-testid="search-icon" />,
@@ -38,11 +43,11 @@ import { UsersPage } from './UsersPage';
 import { db } from '../../api-services';
 
 describe('UsersPage', () => {
+    const mockPagination = { page: 1, limit: 1000, total: 3, totalPages: 1 };
+
     beforeEach(() => {
         vi.clearAllMocks();
-        // Mock window.confirm and window.alert
         vi.stubGlobal('confirm', vi.fn(() => true));
-        vi.stubGlobal('alert', vi.fn());
     });
 
     const mockUsers = [
@@ -66,7 +71,7 @@ describe('UsersPage', () => {
     });
 
     it('renders users table after fetch', async () => {
-        (db.getAllUsers as any).mockResolvedValue(mockUsers);
+        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => {
@@ -77,7 +82,7 @@ describe('UsersPage', () => {
     });
 
     it('shows empty state when no users found', async () => {
-        (db.getAllUsers as any).mockResolvedValue([]);
+        (db.getAllUsers as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 1000, total: 0, totalPages: 0 } });
         renderUsersPage();
 
         await waitFor(() => {
@@ -86,7 +91,7 @@ describe('UsersPage', () => {
     });
 
     it('filters users by role', async () => {
-        (db.getAllUsers as any).mockResolvedValue(mockUsers);
+        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -99,7 +104,7 @@ describe('UsersPage', () => {
     });
 
     it('filters users by search query', async () => {
-        (db.getAllUsers as any).mockResolvedValue(mockUsers);
+        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -112,7 +117,7 @@ describe('UsersPage', () => {
     });
 
     it('navigates to edit user page on edit click', async () => {
-        (db.getAllUsers as any).mockResolvedValue(mockUsers);
+        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -124,7 +129,7 @@ describe('UsersPage', () => {
     });
 
     it('handles delete click with confirmation', async () => {
-        (db.getAllUsers as any).mockResolvedValue(mockUsers);
+        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -133,7 +138,8 @@ describe('UsersPage', () => {
         fireEvent.click(deleteBtns[0]);
 
         expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Are you sure'));
-        expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Delete functionality would go here'));
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Delete functionality would go here'));
     });
 
     it('handles API error gracefully', async () => {

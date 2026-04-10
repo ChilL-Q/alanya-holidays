@@ -6,6 +6,7 @@ import { DirectoryListingDB } from '../../types/models';
 import { MOCK_DIRECTORY_DATA } from '../../data/directoryData';
 import { DirectoryToolbar } from '../../components/admin/directory/DirectoryToolbar';
 import { DirectoryTable } from '../../components/admin/directory/DirectoryTable';
+import { toast } from 'react-hot-toast';
 
 export const DirectoryAdminPage: React.FC = () => {
     const navigate = useNavigate();
@@ -35,8 +36,8 @@ export const DirectoryAdminPage: React.FC = () => {
     const loadListings = async () => {
         setLoading(true);
         try {
-            const data = await db.getDirectoryListings();
-            setListings(data || []);
+            const response = await db.getDirectoryListings();
+            setListings(response.data || []);
         } catch (e) {
             console.error('Failed to load listings', e);
         } finally {
@@ -66,7 +67,7 @@ export const DirectoryAdminPage: React.FC = () => {
             setModalConfig({ ...modalConfig, isOpen: false });
         } catch (e: any) {
             console.error(e);
-            alert(`Failed to delete listing: ${e.message || 'Unknown error'}`);
+             toast.error(`Failed to delete listing: ${e.message || 'Unknown error'}`);
         }
     };
 
@@ -95,11 +96,11 @@ export const DirectoryAdminPage: React.FC = () => {
                 });
                 count++;
             }
-            alert(`Successfully migrated ${count} listings to Supabase!`);
+             toast.success(`Successfully migrated ${count} listings to Supabase!`);
             loadListings();
         } catch (error: any) {
             console.error(error);
-            alert('Migration failed: ' + error.message);
+             toast.error('Migration failed: ' + error.message);
         } finally {
             setLoading(false);
         }
