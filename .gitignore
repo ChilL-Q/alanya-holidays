@@ -64,3 +64,8 @@ testsprite_tests/
 
 # Conductor
 conductor/
+
+.claude
+.qwen
+.geminiignore
+
