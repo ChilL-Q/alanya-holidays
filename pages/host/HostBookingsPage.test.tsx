@@ -19,6 +19,11 @@ vi.mock('react-router-dom', async (importOriginal) => {
     };
 });
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() },
+}));
+
 vi.mock('../../context/AuthContext', () => ({
     useAuth: () => ({
         user: { id: 'host-1', full_name: 'Test Host', role: 'host' },
@@ -83,7 +88,6 @@ describe('HostBookingsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.stubGlobal('confirm', vi.fn(() => true));
-        vi.stubGlobal('alert', vi.fn());
     });
 
     const mockBookings = [
@@ -180,9 +184,10 @@ describe('HostBookingsPage', () => {
         fireEvent.click(screen.getAllByText('Confirm')[0]);
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith('Failed to update booking status');
             expect(consoleSpy).toHaveBeenCalled();
         });
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith('Failed to update booking status');
         
         consoleSpy.mockRestore();
     });
