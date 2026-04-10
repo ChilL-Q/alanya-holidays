@@ -68,7 +68,7 @@ vi.mock('../api-services', () => ({
         getProperty: vi.fn(),
         getUnavailableDates: vi.fn().mockResolvedValue([]),
         getReviewCount: vi.fn().mockResolvedValue(0),
-        getReviews: vi.fn().mockResolvedValue([]),
+        getReviews: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } }),
         getBookings: vi.fn().mockResolvedValue([]),
         getServices: vi.fn().mockResolvedValue({ data: [] })
     }

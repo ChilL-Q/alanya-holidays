@@ -1,4 +1,5 @@
 import { supabase } from '../../supabase';
+import { getUserRole } from '../../auth';
 import { ServiceDB, ServiceModel } from '../../../types/index';
 
 export async function getServiceTypes() {
@@ -38,7 +39,10 @@ export async function getServiceModel(type: string, brand: string, model: string
 
 export async function updateServiceModel(id: string, updates: Partial<ServiceModel>) {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user || user.user_metadata?.role !== 'admin') throw new Error('Not authorized');
+    if (!user) throw new Error('Not authenticated');
+
+    const role = await getUserRole(user.id);
+    if (role !== 'admin') throw new Error('Not authorized');
 
     const { error } = await supabase.from('service_models').update(updates).eq('id', id);
     if (error) throw error;

@@ -51,7 +51,7 @@ describe('Admin Dashboard', () => {
         // Setup default mocks
         (db.getAdminProperties as any).mockResolvedValue({ count: 10 });
         (db.getAdminServices as any).mockResolvedValue({ count: 5 });
-        (db.getAllUsers as any).mockResolvedValue(new Array(20).fill({}));
+        (db.getAllUsers as any).mockResolvedValue({ data: new Array(20).fill({}), pagination: { page: 1, limit: 1000, total: 20, totalPages: 1 } });
         (db.getBookingsByStatus as any).mockImplementation((status: string) => {
             const now = new Date().toISOString();
             if (status === 'confirmed') return [

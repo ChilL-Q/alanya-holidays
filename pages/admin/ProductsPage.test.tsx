@@ -52,6 +52,11 @@ vi.mock('../../components/admin/products/ProductTable', () => ({
     )
 }));
 
+vi.mock('react-hot-toast', () => ({
+    toast: { error: vi.fn(), success: vi.fn() },
+    default: { error: vi.fn(), success: vi.fn() },
+}));
+
 vi.mock('../../components/ui/ConfirmationModal', () => ({
     ConfirmationModal: ({ isOpen, onConfirm, onClose, title }: any) => isOpen ? (
         <div data-testid="confirmation-modal">
@@ -69,7 +74,6 @@ import { db } from '../../api-services';
 describe('ProductsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.stubGlobal('alert', vi.fn());
     });
 
     const mockProducts = [
@@ -163,10 +167,10 @@ describe('ProductsPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Failed to delete product'));
+            expect(consoleSpy).toHaveBeenCalled();
         });
-        
-        expect(consoleSpy).toHaveBeenCalled();
+        const { toast } = await import('react-hot-toast');
+        expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('Failed to delete product'));
         consoleSpy.mockRestore();
     });
 });

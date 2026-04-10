@@ -35,7 +35,7 @@ export const Dashboard: React.FC = () => {
                 const countsPromise = Promise.all([
                     db.getAdminProperties('all', 1, 1),
                     db.getAdminServices('all', [], 1, 1),
-                    db.getAllUsers(),
+                    db.getAllUsers(1, 1000), // Get reasonable number of users for stats
                 ]);
 
                 // Fire all booking status requests in parallel
@@ -47,7 +47,7 @@ export const Dashboard: React.FC = () => {
                 ]);
 
                 const [counts, bookings] = await Promise.all([countsPromise, bookingsPromise]);
-                const [{ count: totalProperties }, { count: totalServices }, users] = counts;
+                const [{ count: totalProperties }, { count: totalServices }, { data: users }] = counts;
                 const [allBookings = [], pendingBookings = [], completedBookings = [], cancelledBookings = []] = bookings;
 
                 const confirmedRevenue = allBookings.reduce((sum: number, b: any) => sum + (Number(b.total_price) || 0), 0);

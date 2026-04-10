@@ -1,19 +1,35 @@
 import { supabase } from '../supabase';
+import { getUserRole } from '../auth';
 import { UserProfile } from '../../types/index';
 
 export const usersService = {
-    async getAllUsers() { // For User Manager
+    async getAllUsers(page: number = 1, limit: number = 20) { // For User Manager
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session || session.user.user_metadata?.role !== 'admin') {
+        if (!session) throw new Error('Not authenticated');
+
+        const role = await getUserRole(session.user.id);
+        if (role !== 'admin') {
             throw new Error('Not authorized');
         }
 
-        const { data, error } = await supabase
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await supabase
             .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, to);
         if (error) throw error;
-        return data as UserProfile[];
+        return {
+            data: data as UserProfile[],
+            pagination: {
+                page,
+                limit,
+                total: count || 0,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        };
     },
 
     async getUserProfile(id: string) {
@@ -30,14 +46,16 @@ export const usersService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
+        const role = await getUserRole(user.id);
+
         // Only allow users to update their own profile, admins can update anyone
-        if (user.id !== id && user.user_metadata?.role !== 'admin') {
+        if (user.id !== id && role !== 'admin') {
             throw new Error('Not authorized');
         }
 
         // Strip sensitive fields from non-admin updates
         const safeUpdates = { ...updates };
-        if (user.user_metadata?.role !== 'admin') {
+        if (role !== 'admin') {
             delete safeUpdates.role;
         }
 
@@ -48,18 +66,33 @@ export const usersService = {
         if (error) throw error;
     },
 
-    async getUsersByRole(role: string) {
+    async getUsersByRole(role: string, page: number = 1, limit: number = 20) {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session || session.user.user_metadata?.role !== 'admin') {
+        if (!session) throw new Error('Not authenticated');
+
+        const userRole = await getUserRole(session.user.id);
+        if (userRole !== 'admin') {
             throw new Error('Not authorized');
         }
 
-        const { data, error } = await supabase
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await supabase
             .from('profiles')
-            .select('*')
+            .select('*', { count: 'exact' })
             .eq('role', role)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(from, to);
         if (error) throw error;
-        return data as UserProfile[];
+        return {
+            data: data as UserProfile[],
+            pagination: {
+                page,
+                limit,
+                total: count || 0,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        };
     }
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../api-services';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { toast } from 'react-hot-toast';
 
 import { PropertyToolbar } from '../../components/admin/property/PropertyToolbar';
 import { PropertyTable } from '../../components/admin/property/PropertyTable';
@@ -89,7 +90,7 @@ export const PropertiesPage: React.FC = () => {
             setModalConfig({ ...modalConfig, isOpen: false });
         } catch (e: any) {
             console.error(e);
-            alert(`Failed to ${type} property: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to ${type} property: ${e.message || 'Unknown error'}`);
         }
     };
 

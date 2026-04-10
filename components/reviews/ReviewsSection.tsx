@@ -21,8 +21,8 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
 
     const fetchReviews = useCallback(async () => {
         try {
-            const data = await db.getReviews(propertyId);
-            setReviews(data);
+            const response = await db.getReviews(propertyId);
+            setReviews(response.data);
         } catch (error) {
             console.error('Failed to fetch reviews:', error);
         } finally {

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { supabase } from '../api-services/supabase';
 import { getBaseUrl } from '../utils/appUrl';
+import { toast } from 'react-hot-toast';
 
 // Modular Components
 import { CheckoutSuccessView } from '../components/checkout/CheckoutSuccessView';
@@ -28,7 +29,7 @@ export const Checkout: React.FC = () => {
 
     const handlePayment = async () => {
         if (!isAuthenticated) {
-            alert("Please login to complete booking");
+            toast.error("Please login to complete booking");
             return;
         }
 
@@ -123,7 +124,7 @@ export const Checkout: React.FC = () => {
 
         } catch (error: any) {
             console.error("Booking error:", error);
-            alert(error.message || "Payment failed. Please try again.");
+            toast.error(error.message || "Payment failed. Please try again.");
         } finally {
             setIsProcessing(false);
         }

@@ -131,13 +131,13 @@ export const AdminEditServicePage: React.FC = () => {
     useSaveShortcut(handleSave);
 
     const handleRejectEdit = async () => {
-        if (!editId) return;
+        if (!editId || !user) return;
         if (!confirm('Reject this update request?')) return;
         const reason = prompt("Please provide a reason for rejection:");
         if (reason === null) return;
 
         try {
-            await db.rejectServiceEdit(editId, reason);
+            await db.rejectServiceEdit(editId, user.id, reason);
             toast.success('Update rejected');
             navigate('/admin');
         } catch (e) {
@@ -153,8 +153,8 @@ export const AdminEditServicePage: React.FC = () => {
                 await db.deleteService(id);
                 navigate('/admin');
             } catch (error) {
-                console.error('Failed to delete', error);
-                alert('Error deleting service');
+                 console.error('Failed to delete', error);
+                 toast.error('Error deleting service');
             }
         }
     };

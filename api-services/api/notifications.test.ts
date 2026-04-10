@@ -177,7 +177,7 @@ describe('notificationsService', () => {
             const callback = vi.fn();
             const _result = notificationsService.subscribeToNotifications('user-1', callback);
 
-            expect(mockChannel).toHaveBeenCalledWith('public:notifications');
+            expect(mockChannel).toHaveBeenCalledWith('notifications:user-1');
             expect(mockOn).toHaveBeenCalledWith(
                 'postgres_changes',
                 {

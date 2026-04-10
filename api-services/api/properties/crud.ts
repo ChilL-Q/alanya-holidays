@@ -1,4 +1,5 @@
 import { supabase } from '../../supabase';
+import { getUserRole } from '../../auth';
 import { PropertyDB, ApprovalStatus } from '../../../types/index';
 import { notificationsService } from '../notifications';
 import { propertySchema } from '../schemas';
@@ -197,7 +198,8 @@ export async function updateProperty(id: string, updates: Partial<PropertyDB>) {
         .eq('id', id)
         .single();
 
-    if (!existingProp || (existingProp.host_id !== user.id && user.user_metadata?.role !== 'admin')) {
+    const role = await getUserRole(user.id);
+    if (!existingProp || (existingProp.host_id !== user.id && role !== 'admin')) {
         throw new Error('Not authorized');
     }
 
@@ -225,13 +227,8 @@ export async function updatePropertyStatus(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
+    const role = await getUserRole(user.id);
+    if (role !== 'admin') {
         throw new Error('Not authorized: only admins can change property status');
     }
 
@@ -297,16 +294,9 @@ export async function deleteProperty(id: string, reason?: string) {
 
     if (!property) throw new Error('Property not found');
 
-    if (property.host_id !== user.id) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (profile?.role !== 'admin') {
-            throw new Error('Not authorized: only owner or admin can delete properties');
-        }
+    const role = await getUserRole(user.id);
+    if (property.host_id !== user.id && role !== 'admin') {
+        throw new Error('Not authorized: only owner or admin can delete properties');
     }
 
     createAuditLog('PROPERTY_DELETED', { propertyId: id, reason });

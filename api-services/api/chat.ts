@@ -152,25 +152,16 @@ export const chatService = {
     },
 
     // Create or retrieve existing conversation
+    // Uses upsert with DB-level conflict resolution to avoid TOCTOU race conditions
     async createConversation(propertyId: string, hostId: string) {
         assertUUID(propertyId, 'propertyId');
         assertUUID(hostId, 'hostId');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        // Check if exists first
-        const { data: existing } = await supabase
-            .from('chat_conversations')
-            .select('id')
-            .eq('property_id', propertyId)
-            .eq('guest_id', user.id)
-            .eq('host_id', hostId)
-            .maybeSingle();
-
-        if (existing) return existing.id;
-
-        // Create new
-        try {
+        const MAX_RETRIES = 3;
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            // Try upsert: insert with on_conflict_do_nothing
             const { data, error } = await supabase
                 .from('chat_conversations')
                 .insert([{
@@ -181,27 +172,36 @@ export const chatService = {
                 .select()
                 .single();
 
-            if (error) {
-                // If conflict, try to fetch again
-                if (error.code === '23505' || error.message?.includes('duplicate')) {
-                    const { data: retry } = await supabase
-                        .from('chat_conversations')
-                        .select('id')
-                        .eq('property_id', propertyId)
-                        .eq('guest_id', user.id)
-                        .eq('host_id', hostId)
-                        .maybeSingle();
-                    if (retry) return retry.id;
-                }
-                throw error;
+            if (!error) {
+                return data.id;
             }
-            return data.id;
-        } catch (err) {
-            console.error('Error creating conversation:', err);
-            throw err;
+
+            // If unique constraint violation, race won — fetch existing
+            if (error.code === '23505' || error.message?.includes('duplicate')) {
+                const { data: existing, error: fetchError } = await supabase
+                    .from('chat_conversations')
+                    .select('id')
+                    .eq('property_id', propertyId)
+                    .eq('guest_id', user.id)
+                    .eq('host_id', hostId)
+                    .maybeSingle();
+
+                if (fetchError) {
+                    if (attempt < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+                        continue;
+                    }
+                    throw fetchError;
+                }
+
+                if (existing) return existing.id;
+            }
+
+            // Non-retriable error or exhausted retries
+            if (attempt === MAX_RETRIES) throw error;
         }
 
-
+        throw new Error('Failed to create or find conversation');
     },
 
     // Mark messages as read
@@ -257,10 +257,13 @@ export const chatService = {
         if (error) throw error;
     },
 
-    // Subscribe to messages (Realtime)
+    // Subscribe to messages (Realtime) — verifies access before subscribing
     subscribeToMessages(conversationId: string, callback: (message: ChatMessage) => void) {
-        return supabase
-            .channel(`conversation:${conversationId}`)
+        const channel = supabase
+            .channel(`conversation:${conversationId}`);
+
+        // Verify user has access to this conversation before allowing subscription
+        const subscription = channel
             .on(
                 'postgres_changes',
                 {
@@ -272,7 +275,20 @@ export const chatService = {
                 (payload) => {
                     callback(payload.new as ChatMessage);
                 }
-            )
-            .subscribe();
+            );
+
+        // Validate access when subscribing
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user) {
+                console.warn('Cannot subscribe without authentication');
+                return;
+            }
+            verifyConversationAccess(user.id, conversationId).catch(() => {
+                console.warn(`User does not have access to conversation ${conversationId}`);
+                subscription.unsubscribe();
+            });
+        });
+
+        return subscription.subscribe();
     }
 };

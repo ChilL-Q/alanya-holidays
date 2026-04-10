@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, MapPin, Star, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCurrency } from '../../context/CurrencyContext';
+import { toast } from 'react-hot-toast';
 
 export const HostPropertiesPage = () => {
     const { user } = useAuth();
@@ -38,7 +39,7 @@ export const HostPropertiesPage = () => {
                 await db.deleteProperty(id);
                 setProperties(prev => prev.filter(p => p.id !== id));
             } catch (error) {
-                alert('Failed to delete property');
+                toast.error('Failed to delete property');
                 console.error(error);
             }
         }
