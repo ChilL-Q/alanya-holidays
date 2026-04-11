@@ -15,15 +15,20 @@ const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
 };
 
 export const directoryService = {
-    async getDirectoryListings(page: number = 1, limit: number = 20): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+    async getDirectoryListings(page: number = 1, limit: number = 20, category?: string): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
-        const { data, error, count } = await supabase
+        let query = supabase
             .from('directory_listings')
             .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .range(from, to);
+            .order('created_at', { ascending: false });
+
+        if (category) {
+            query = query.eq('category_id', category);
+        }
+
+        const { data, error, count } = await query.range(from, to);
 
         if (error) {
             console.error('Error fetching directory listings:', error);
@@ -39,6 +44,10 @@ export const directoryService = {
                 totalPages: Math.ceil((count || 0) / limit)
             }
         };
+    },
+
+    async getRestaurantsListings(page: number = 1, limit: number = 20) {
+        return this.getDirectoryListings(page, limit, 'restaurants');
     },
 
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {

@@ -8,12 +8,14 @@ import { DirectoryToolbar } from '../../components/admin/directory/DirectoryTool
 import { DirectoryTable } from '../../components/admin/directory/DirectoryTable';
 import { toast } from 'react-hot-toast';
 
-export const DirectoryAdminPage: React.FC = () => {
+export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ defaultCategory }) => {
     const navigate = useNavigate();
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filterCategory, setFilterCategory] = useState<string>('all');
+    const [filterCategory, setFilterCategory] = useState<string>(defaultCategory || 'all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    const isCategoryLocked = !!defaultCategory;
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -36,7 +38,8 @@ export const DirectoryAdminPage: React.FC = () => {
     const loadListings = async () => {
         setLoading(true);
         try {
-            const response = await db.getDirectoryListings();
+            const category = isCategoryLocked ? defaultCategory : undefined;
+            const response = await db.getDirectoryListings(1, 100, category);
             setListings(response.data || []);
         } catch (e) {
             console.error('Failed to load listings', e);
@@ -107,8 +110,8 @@ export const DirectoryAdminPage: React.FC = () => {
     };
 
     const filteredListings = listings.filter(l => {
-        const matchesCategory = filterCategory === 'all' || l.category_id === filterCategory;
-        const matchesSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        const matchesCategory = isCategoryLocked || filterCategory === 'all' || l.category_id === filterCategory;
+        const matchesSearch = l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               l.location.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
@@ -134,6 +137,7 @@ export const DirectoryAdminPage: React.FC = () => {
                 showMigrateButton={listings.length === 0}
                 onMigrate={handleMigrateMockData}
                 onAddListing={() => navigate('/admin/directory/new')}
+                hideCategories={isCategoryLocked}
             />
 
             <DirectoryTable
