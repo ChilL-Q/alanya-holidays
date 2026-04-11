@@ -8,7 +8,11 @@ declare const Deno: any;
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
+
+// 10 AI requests per minute per user
+const AI_RATE_LIMIT = 10
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -31,8 +35,8 @@ Deno.serve(async (req: Request) => {
     // --- Authentication Check ---
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { 
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
@@ -43,15 +47,35 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } }
     })
-    
+
     // Validate the token and ensure user exists
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), { 
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
     // ----------------------------
+
+    // --- Rate Limiting ---
+    if (SUPABASE_SERVICE_ROLE_KEY) {
+      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const { data: allowed, error: rlError } = await adminClient.rpc('check_rate_limit', {
+        p_user_id: user.id,
+        p_function_name: 'ai-proxy',
+        p_max_requests: AI_RATE_LIMIT,
+      })
+      if (rlError) {
+        console.error('Rate limit check failed:', rlError)
+        // Fail open — don't block users if DB check fails
+      } else if (!allowed) {
+        return new Response(
+          JSON.stringify({ answer: "I'm receiving too many requests from you. Please wait a moment and try again! ⏳" }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+        )
+      }
+    }
+    // ---------------------
 
     if (!GEMINI_API_KEY) {
       throw new Error('Missing GEMINI_API_KEY in environment')
@@ -98,8 +122,8 @@ Deno.serve(async (req: Request) => {
       ${recentHistory}
 
       User Question: "${sanitizedQuestion}"
-      
-      Provide a helpful, concise answer (max 100 words). 
+
+      Provide a helpful, concise answer (max 100 words).
       If asked about services (health, transport, shopping), mention that Alanya Holidays offers verified direct bookings.
       Focus on distance, local tips, and atmosphere. Be enthusiastic about Alanya.
       IMPORTANT: Do not use markdown formatting (no bolding with asterisks, no headers). Use plain text only.
