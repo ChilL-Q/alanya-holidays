@@ -181,6 +181,9 @@ Deno.serve(async (req: Request) => {
         .update({
           stripe_session_id: session.id,
           payment_expires_at: paymentExpiresAt,
+          // payment_intent_id is NOT saved here — Stripe only provides it
+          // after the session is completed. It's saved by stripe-webhook
+          // on the 'checkout.session.completed' event.
         })
         .in('id', verifiedIds)
     }

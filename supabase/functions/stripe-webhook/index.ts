@@ -31,6 +31,10 @@ Deno.serve(async (req: Request) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
+    const paymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent as any)?.id ?? null
+
     // Idempotency: skip if already processed (payment_status already 'paid')
     const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
     if (bookingIds.length > 0) {
@@ -51,12 +55,18 @@ Deno.serve(async (req: Request) => {
 
     if (session.payment_status === 'paid') {
       if (bookingIds.length > 0) {
+        const updatePayload: Record<string, unknown> = {
+          status: 'confirmed',
+          payment_status: 'paid',
+        }
+
+        if (paymentIntentId) {
+          updatePayload.payment_intent_id = paymentIntentId
+        }
+
         const { error } = await supabase
           .from('bookings')
-          .update({
-            status: 'confirmed',
-            payment_status: 'paid',
-          })
+          .update(updatePayload)
           .in('id', bookingIds)
 
         if (error) {
