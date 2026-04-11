@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../../api-services';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
@@ -31,11 +31,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         message: ''
     });
 
-    useEffect(() => {
-        loadListings();
-    }, []);
-
-    const loadListings = async () => {
+    const loadListings = useCallback(async () => {
         setLoading(true);
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
@@ -46,7 +42,11 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         } finally {
             setLoading(false);
         }
-    };
+    }, [isCategoryLocked, defaultCategory]);
+
+    useEffect(() => {
+        loadListings();
+    }, [loadListings]);
 
     const openActionModal = (action: 'delete', id: string, title: string) => {
         setModalConfig({
