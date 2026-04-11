@@ -126,7 +126,11 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/creative-professionals/:subcategory" element={<CreativeServices />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/profile" element={<AuthRoute><Profile /></AuthRoute>} />
-                <Route path="/add-service" element={<AuthRoute><AddService /></AuthRoute>} />
+                <Route path="/add-service" element={
+                    <HostRoute>
+                        <AddService />
+                    </HostRoute>
+                } />
                 <Route path="/bookmarks" element={<FavoritesPage />} />
                 <Route path="/book-vehicle/:id" element={<BookVehicle />} />
                 <Route path="/book-tour/:id" element={<BookTour />} />
@@ -308,7 +312,11 @@ export const AppRoutes: React.FC = () => {
                     </AdminRoute>
                 } />
 
-                <Route path="/add-product" element={<AuthRoute><AddProduct /></AuthRoute>} />
+                <Route path="/add-product" element={
+                    <HostRoute>
+                        <AddProduct />
+                    </HostRoute>
+                } />
 
                 <Route path="*" element={<NotFound />} />
             </Routes>
