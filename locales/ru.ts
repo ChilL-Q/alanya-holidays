@@ -754,6 +754,8 @@ export const ru = {
   'dir.cat.visa': 'Виза и ВНЖ',
   'dir.cat.shopping': 'Шопинг и сувениры',
   'dir.cat.nature': 'Природные достопримечательности',
+  'dir.cat.spa_hamam': 'Спа и хаммамы',
+  'dir.cat.hair_beauty': 'Волосы и красота',
   'dir.cat.title': 'Выберите Категорию',
   'dir.cat.subtitle': 'Найдите все необходимое для идеального пребывания.',
   'dir.trust.title': 'Почему выбирают Alanya Holidays Hub?',

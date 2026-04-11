@@ -754,6 +754,8 @@ export const ar = {
     'dir.cat.visa': 'التأشيرة والإقامة',
     'dir.cat.shopping': 'التسوق والهدايا التذكارية',
     'dir.cat.nature': 'المعالم الطبيعية',
+    'dir.cat.spa_hamam': 'سبا والحمامات',
+    'dir.cat.hair_beauty': 'الشعر والجمال',
     'dir.cat.title': 'تصفح حسب الفئة',
     'dir.cat.subtitle': 'اعثر على كل ما تحتاجه لإقامة مثالية.',
     'dir.trust.title': 'لماذا تثق بمركز عطلات ألانيا؟',

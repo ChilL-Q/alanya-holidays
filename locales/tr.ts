@@ -754,6 +754,8 @@ export const tr = {
     'dir.cat.visa': 'Vize ve İkamet',
     'dir.cat.shopping': 'Alışveriş ve Hediyelik',
     'dir.cat.nature': 'Doğal Güzellikler',
+    'dir.cat.spa_hamam': 'Spa ve Hamamlar',
+    'dir.cat.hair_beauty': 'Saç ve Güzellik',
     'dir.cat.title': 'Kategorileri Keşfedin',
     'dir.cat.subtitle': 'Kusursuz bir konaklama için ihtiyacınız olan her şeyi bulun.',
     'dir.trust.title': 'Neden Alanya Holidays Hub?',

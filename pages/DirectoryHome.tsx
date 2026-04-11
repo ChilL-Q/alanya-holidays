@@ -21,8 +21,8 @@ export const DirectoryHome: React.FC = () => {
         { id: 'visa', icon: '🛂', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
         { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
         { id: 'nature', icon: '🌿', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
-        { id: 'spa-hamam', icon: '🧖', title: t('dir.cat.spa_hamam') || 'Spa & Hamams', path: '/alanya-spa-hamam' },
-        { id: 'hair-beauty', icon: '💇', title: t('dir.cat.hair_beauty') || 'Hair & Beauty', path: '/alanya-hair-beauty' },
+        { id: 'spa-hamam', icon: '🧖', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
+        { id: 'hair-beauty', icon: '💇', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
     ];
 
     return (

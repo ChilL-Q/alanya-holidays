@@ -763,6 +763,8 @@ export const en = {
   'dir.cat.visa': 'Visa & Residency',
   'dir.cat.shopping': 'Shopping & Souvenirs',
   'dir.cat.nature': 'Natural Attractions',
+  'dir.cat.spa_hamam': 'Spa & Hammams',
+  'dir.cat.hair_beauty': 'Hair & Beauty',
   'dir.cat.title': 'Explore by Category',
   'dir.cat.subtitle': 'Find everything you need for your perfect stay.',
   'dir.trust.title': 'Why Trust Alanya Holidays Hub?',
