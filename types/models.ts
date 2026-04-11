@@ -235,6 +235,8 @@ export interface Review {
     comment: string;
     images?: string[];
     created_at?: string;
+    is_flagged?: boolean;
+    is_hidden?: boolean;
     user?: {
         full_name: string;
         avatar_url: string;

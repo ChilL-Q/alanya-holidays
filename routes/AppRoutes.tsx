@@ -56,6 +56,7 @@ const PropertiesPage = React.lazy(() => import('../pages/admin/PropertiesPage').
 const UsersPage = React.lazy(() => import('../pages/admin/UsersPage').then(module => ({ default: module.UsersPage })));
 const AdminServicesPage = React.lazy(() => import('../pages/admin/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const ReportsPage = React.lazy(() => import('../pages/admin/ReportsPage').then(module => ({ default: module.ReportsPage })));
+const ReviewsAdminPage = React.lazy(() => import('../pages/admin/ReviewsAdminPage').then(module => ({ default: module.ReviewsAdminPage })));
 const AdminProductsPage = React.lazy(() => import('../pages/admin/ProductsPage').then(module => ({ default: module.ProductsPage })));
 const AdminEditProductPage = React.lazy(() => import('../pages/admin/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 const DirectoryAdminPage = React.lazy(() => import('../pages/admin/DirectoryAdminPage').then(module => ({ default: module.DirectoryAdminPage })));
@@ -259,6 +260,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <ReportsPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/reviews" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <ReviewsAdminPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />
