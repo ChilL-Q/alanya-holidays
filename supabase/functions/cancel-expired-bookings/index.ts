@@ -66,7 +66,23 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) throw updateError
 
-    // 3. Отправить email гостю и хосту по каждому бронированию
+    // 3. Unblock dates in property_availability for all cancelled bookings
+    // Uses centralized RPC (DRY principle) — delegates calendar cleanup to the database
+    const unblockResults = await Promise.allSettled(
+      ids.map((bookingId: string) =>
+        supabase.rpc('unblock_dates_for_booking', { p_booking_id: bookingId })
+      )
+    )
+
+    const unblockErrors = unblockResults
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map((r) => r.reason)
+
+    if (unblockErrors.length > 0) {
+      console.error('Failed to unblock some dates:', unblockErrors)
+    }
+
+    // 4. Отправить email гостю и хосту по каждому бронированию
     const emailPromises = expiredBookings.map(async (booking: any) => {
       const guestEmail = booking.guest?.email
       const guestName  = booking.guest?.full_name || 'Guest'
