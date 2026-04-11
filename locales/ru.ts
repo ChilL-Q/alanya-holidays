@@ -203,6 +203,26 @@ export const ru = {
   'services.connectivity.esim': 'eSIM Пакеты',
   'services.connectivity.esim_desc': 'Мгновенная мобильная связь для вашей поездки.',
 
+  // Спа и Велнес
+  'services.spa.title': 'Спа и Велнес',
+  'services.spa.subtitle': 'Расслабьтесь и восстановите силы в autentичных турецких спа-салонах.',
+  'services.spa.turkish_hamam': 'Традиционный турецкий хамам',
+  'services.spa.turkish_hamam_desc': 'Вековые ритуалы турецкой бани с пенным массажем и скрабом.',
+  'services.spa.massage': 'Расслабляющий массаж',
+  'services.spa.massage_desc': 'Глубокий массаж тканей, ароматерапия и массаж горячими камнями.',
+  'services.spa.wellness_package': 'Полный спа-день',
+  'services.spa.wellness_package_desc': 'Комплексный велнес: хамам, массаж, уход за лицом и ароматерапия.',
+
+  // Волосы и Красота
+  'services.hair.title': 'Волосы и Красота',
+  'services.hair.subtitle': 'Лучшие салоны для идеального преображения во время вашего отдыха.',
+  'services.hair.styling': 'Укладка и окрашивание',
+  'services.hair.styling_desc': 'Профессиональные стрижки, окрашивание, балаяж и укладка от опытных мастеров.',
+  'services.hair.nails': 'Маникюр и педикюр',
+  'services.hair.nails_desc': 'Маникюр, педикюр, гель-лак и нейл-арт в расслабляющей атмосфере.',
+  'services.hair.makeover': 'Полное преображение',
+  'services.hair.makeover_desc': 'Комплексный бьюти-пакет: волосы, макияж, ногти и уход за кожей за один сеанс.',
+
   'book_button': 'Забронировать сейчас',
   'buy_button': 'Купить',
   'consult_button': 'Консультация',

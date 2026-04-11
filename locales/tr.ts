@@ -204,6 +204,26 @@ export const tr = {
     'services.connectivity.esim': 'eSIM Paketleri',
     'services.connectivity.esim_desc': 'Seyahatiniz için anında veri bağlantısı.',
 
+    // Spa & Wellness
+    'services.spa.title': 'Spa & Sağlık',
+    'services.spa.subtitle': 'Otantik Türk hamamı ve spa deneyimleriyle rahatlayın ve yenilenin.',
+    'services.spa.turkish_hamam': 'Geleneksel Türk Hamamı',
+    'services.spa.turkish_hamam_desc': 'Köpük masajı ve kese ile yüzyıllık Türk banyosu ritüeli.',
+    'services.spa.massage': 'Rahatlatıcı Masaj',
+    'services.spa.massage_desc': 'Dokusu derin doku, aromaterapi ve sıcak taş masaj seansları.',
+    'services.spa.wellness_package': 'Tam Spa Günü Paketi',
+    'services.spa.wellness_package_desc': 'Tam wellness deneyimi: hamam, masaj, yüz bakımı ve aromaterapi.',
+
+    // Saç & Güzellik
+    'services.hair.title': 'Saç & Güzellik',
+    'services.hair.subtitle': 'Kalışınızda mükemmel bir görünüm için en iyi kuaförler.',
+    'services.hair.styling': 'Saç Tasarımı ve Boyama',
+    'services.hair.styling_desc': 'Uzman kuaförlerden profesyonel kesim, boyama, balyaj ve styling.',
+    'services.hair.nails': 'Tırnak Salonu',
+    'services.hair.nails_desc': 'Manikür, pedikür, jel tırnak ve nail art rahatlatıcı bir atmosferde.',
+    'services.hair.makeover': 'Tam Güzellik Dönüşümü',
+    'services.hair.makeover_desc': 'Tam güzellik paketi: saç, makyaj, tırnak ve cilt bakımı tek seansta.',
+
     'book_button': 'Hemen Rezervasyon Yap',
     'consult_button': 'Ücretsiz Danışma',
     'view_shop': 'Mağazayı Gez',
