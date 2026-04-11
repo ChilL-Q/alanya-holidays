@@ -10,27 +10,30 @@ interface DirectoryToolbarProps {
     showMigrateButton: boolean;
     onMigrate: () => void;
     onAddListing: () => void;
+    hideCategories?: boolean;
 }
 
 export const DirectoryToolbar: React.FC<DirectoryToolbarProps> = ({
-    categories, filterCategory, onFilterCategory, searchQuery, onSearchQuery, showMigrateButton, onMigrate, onAddListing
+    categories, filterCategory, onFilterCategory, searchQuery, onSearchQuery, showMigrateButton, onMigrate, onAddListing, hideCategories = false
 }) => {
     return (
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
-            <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl overflow-x-auto max-w-full md:max-w-xl scrollbar-hide">
-                {categories.map(cat => (
-                    <button
-                        key={cat}
-                        onClick={() => onFilterCategory(cat)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterCategory === cat
-                            ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                            }`}
-                    >
-                        {cat === 'all' ? 'All' : cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </button>
-                ))}
-            </div>
+            {!hideCategories && (
+                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl overflow-x-auto max-w-full md:max-w-xl scrollbar-hide">
+                    {categories.map(cat => (
+                        <button
+                            key={cat}
+                            onClick={() => onFilterCategory(cat)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterCategory === cat
+                                ? 'bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                        >
+                            {cat === 'all' ? 'All' : cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                 <div className="relative w-full md:w-64">

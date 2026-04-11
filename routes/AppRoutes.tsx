@@ -290,6 +290,13 @@ export const AppRoutes: React.FC = () => {
                         </AdminLayout>
                     </AdminRoute>
                 } />
+                <Route path="/admin/restaurants" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <DirectoryAdminPage defaultCategory="restaurants" />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
 
                 {/* Edit Routes (Wrapped in Layout) */}
                 <Route path="/admin/edit-property/:id" element={
