@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, ChefHat } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, ChefHat, MessageSquare } from 'lucide-react';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AdminLayoutProps {
@@ -32,6 +32,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
         { path: '/admin/products', label: 'Products', icon: ShoppingBag },
         { path: '/admin/users', label: 'Users', icon: Users },
+        { path: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
 

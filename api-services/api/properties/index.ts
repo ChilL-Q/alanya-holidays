@@ -3,7 +3,7 @@ import {
     getProperty, getPropertiesByHost, getAdminProperties,
     updateProperty, updatePropertyStatus, deleteProperty
 } from './crud';
-import { getReviews, getReviewCount, addReview, deleteReview } from './reviews';
+import { getReviews, getReviewCount, addReview, deleteReview, flagReview, unflagReview, getFlaggedReviews, bulkDeleteReviews } from './reviews';
 import { getPropertyTypes, getPropertyLocations, getPropertiesByLocation } from './catalog';
 import {
     getPropertyAvailability, updatePropertyAvailability,
@@ -30,6 +30,10 @@ export const propertiesService = {
     getReviewCount,
     addReview,
     deleteReview,
+    flagReview,
+    unflagReview,
+    getFlaggedReviews,
+    bulkDeleteReviews,
 
     // Catalog
     getPropertyTypes,
