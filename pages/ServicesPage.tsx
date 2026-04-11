@@ -42,6 +42,8 @@ export const ServicesPage: React.FC = () => {
         { id: 'transport', label: t('services.transport.title') },
         { id: 'experiences', label: t('footer.experiences') },
         { id: 'health', label: t('services.health.title') },
+        { id: 'spa-wellness', label: t('services.spa.title') },
+        { id: 'hair-beauty', label: t('services.hair.title') },
         { id: 'visa', label: t('services.visa.title') },
         { id: 'creative', label: t('services.creative.title') },
         { id: 'connectivity', label: t('services.connectivity.title') },

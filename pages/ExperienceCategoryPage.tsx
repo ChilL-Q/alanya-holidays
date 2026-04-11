@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car } from 'lucide-react';
+import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car, Sparkles, Scissors } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
@@ -63,6 +63,20 @@ export const ExperienceCategoryPage: React.FC = () => {
             heroImage: '/images/experiences/atv_buggy_hero.png',
             features: ['Hourly Rentals', 'Safety Briefing', 'Helmet Included'],
             icon: Car
+        },
+        'spa-wellness': {
+            title: t('services.spa.title'),
+            subtitle: t('services.spa.subtitle'),
+            heroImage: '/images/experiences/wellness_hero.png',
+            features: ['Certified Therapists', 'Premium Products', 'Relaxing Ambiance'],
+            icon: Sparkles
+        },
+        'hair-beauty': {
+            title: t('services.hair.title'),
+            subtitle: t('services.hair.subtitle'),
+            heroImage: '/images/experiences/hair_beauty_hero.png',
+            features: ['Expert Stylists', 'Modern Techniques', 'Luxury Products'],
+            icon: Scissors
         }
     };
 
