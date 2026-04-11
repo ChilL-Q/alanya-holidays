@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Star, User, Trash2 } from 'lucide-react';
+import { Star, User, Trash2, Flag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { db, Review } from '../../api-services';
 import { ReviewModal } from './ReviewModal';
@@ -59,6 +59,23 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
             toast.error(error instanceof Error ? error.message : 'Failed to delete review');
         } finally {
             setDeletingReviewId(null);
+        }
+    };
+
+    const handleFlagReview = async (reviewId: string) => {
+        if (!user) return;
+
+        if (!confirm('Flag this review as fake or inappropriate? An admin will review it.')) {
+            return;
+        }
+
+        try {
+            await db.flagReview(reviewId);
+            toast.success('Review flagged. An admin will review it.');
+            await fetchReviews();
+        } catch (error) {
+            console.error('❌ Failed to flag review:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to flag review');
         }
     };
 
@@ -135,6 +152,16 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
                                             aria-label="Delete review"
                                         >
                                             <Trash2 size={14} />
+                                        </button>
+                                    )}
+                                    {user && review.user_id !== user.id && (
+                                        <button
+                                            onClick={() => handleFlagReview(review.id!)}
+                                            className="ml-2 p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/20 rounded-lg transition"
+                                            title="Flag as fake"
+                                            aria-label="Flag as fake"
+                                        >
+                                            <Flag size={14} />
                                         </button>
                                     )}
                                 </div>
