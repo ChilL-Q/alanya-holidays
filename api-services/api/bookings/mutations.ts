@@ -209,6 +209,22 @@ export async function updateBookingStatus(
 
     if (error) throw error;
 
+    // Unblock dates in property_availability when booking is cancelled/rejected
+    // Uses centralized RPC (DRY principle) — same logic as cancel-expired-bookings Edge Function
+    if (status === 'cancelled') {
+        try {
+            const { error: unblockError } = await supabase.rpc('unblock_dates_for_booking', {
+                p_booking_id: id
+            });
+
+            if (unblockError) {
+                console.error('Failed to unblock dates for cancelled booking:', unblockError);
+            }
+        } catch (err) {
+            console.error('Error calling unblock_dates_for_booking RPC:', err);
+        }
+    }
+
     if (currentBooking) {
         if (status === 'confirmed') {
             await createAuditLog('BOOKING_CONFIRMED', { bookingId: id }, currentBooking.user_id);
