@@ -27,6 +27,7 @@
     "@headlessui/react": "^2.2.9",
     "@iflow-mcp/maestro-mcp": "^1.0.0",
     "@react-google-maps/api": "^2.20.8",
+    "@sentry/react": "^10.48.0",
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/vite": "^4.2.1",
