@@ -19,6 +19,12 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 )
 
+// Rate limits: createOrder is expensive (real money), so keep it strict
+const RATE_LIMITS: Record<string, number> = {
+  createOrder: 5,  // 5 orders per minute per user
+  getPlans:    30, // 30 plan fetches per minute per user
+}
+
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || ''
   const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : SITE_URL
@@ -32,6 +38,20 @@ function getCorsHeaders(req: Request) {
 const yesimHeaders = () => {
   if (!YESIM_API_TOKEN) return {}
   return { Authorization: `Bearer ${YESIM_API_TOKEN}` }
+}
+
+async function checkRateLimit(userId: string, action: string): Promise<boolean> {
+  const maxRequests = RATE_LIMITS[action] ?? 10
+  const { data, error } = await supabase.rpc('check_rate_limit', {
+    p_user_id: userId,
+    p_function_name: `yesim-proxy:${action}`,
+    p_max_requests: maxRequests,
+  })
+  if (error) {
+    console.error('Rate limit check failed:', error)
+    return true // Fail open on DB error to avoid blocking legitimate users
+  }
+  return data === true
 }
 
 interface YesimPlan {
@@ -116,6 +136,15 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Rate limit check
+    const allowed = await checkRateLimit(user.id, body.action)
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment and try again.' }),
+        { status: 429, headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': '60' } }
       )
     }
 
