@@ -93,6 +93,8 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-shopping-guide" element={<DirectoryCategoryPage categoryId="shopping" />} />
                 <Route path="/alanya-nature-attractions" element={<DirectoryCategoryPage categoryId="nature" />} />
                 <Route path="/nightlife" element={<DirectoryCategoryPage categoryId="nightlife" />} />
+                <Route path="/alanya-spa-hamam" element={<DirectoryCategoryPage categoryId="spa-hamam" />} />
+                <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
 
                 <Route path="/list-property" element={<ListProperty />} />
 

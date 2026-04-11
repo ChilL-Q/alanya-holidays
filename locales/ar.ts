@@ -204,6 +204,26 @@ export const ar = {
     'services.connectivity.esim': 'باقات eSIM',
     'services.connectivity.esim_desc': 'اتصال بيانات فوري لرحلتك.',
 
+    // سبا والعافية
+    'services.spa.title': 'سبا والعافية',
+    'services.spa.subtitle': 'استرخِ وجدد نشاطك مع تجارب السبا والحمام التركي الأصيل.',
+    'services.spa.turkish_hamam': 'الحمام التركي التقليدي',
+    'services.spa.turkish_hamam_desc': 'تجربة الحمام التركي العريقة مع تدليك رغوي وتقشير.',
+    'services.spa.massage': 'تدليك استرخائي',
+    'services.spa.massage_desc': 'جلسات تدليك عميق للأنسجة، بالعطور العلاجية والحجارة الساخنة.',
+    'services.spa.wellness_package': 'باقة يوم سبا كامل',
+    'services.spa.wellness_package_desc': 'تجربة عافية شاملة: حمام، تدليك، عناية بالوجه، وعلاج عطري.',
+
+    // الشعر والتجميل
+    'services.hair.title': 'الشعر والتجميل',
+    'services.hair.subtitle': 'أفضل صالونات التجميل لإطلالة مثالية أثناء إقامتك.',
+    'services.hair.styling': 'تصفيف الشعر وتلوينه',
+    'services.hair.styling_desc': 'قصات احترافية، تلوين، بالياج، وتصفيف من مصففين خبراء.',
+    'services.hair.nails': 'صالون الأظافر',
+    'services.hair.nails_desc': 'مانيكير، باديكير، أظافر جل، وتصاميم في أجواء مريحة.',
+    'services.hair.makeover': 'تحول تجميل شامل',
+    'services.hair.makeover_desc': 'باقة تجميل متكاملة: شعر، مكياج، أظافر، وعناية بالبشرة في جلسة واحدة.',
+
     'book_button': 'احجز الآن',
     'consult_button': 'استشارة مجانية',
     'view_shop': 'زيارة المتجر',
@@ -734,6 +754,8 @@ export const ar = {
     'dir.cat.visa': 'التأشيرة والإقامة',
     'dir.cat.shopping': 'التسوق والهدايا التذكارية',
     'dir.cat.nature': 'المعالم الطبيعية',
+    'dir.cat.spa_hamam': 'سبا والحمامات',
+    'dir.cat.hair_beauty': 'الشعر والجمال',
     'dir.cat.title': 'تصفح حسب الفئة',
     'dir.cat.subtitle': 'اعثر على كل ما تحتاجه لإقامة مثالية.',
     'dir.trust.title': 'لماذا تثق بمركز عطلات ألانيا؟',

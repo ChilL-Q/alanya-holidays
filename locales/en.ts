@@ -210,6 +210,26 @@ export const en = {
   'services.connectivity.esim': 'eSIM',
   'services.connectivity.esim_desc': 'Instant data connectivity for your trip.',
 
+  // Spa & Wellness
+  'services.spa.title': 'Spa & Wellness',
+  'services.spa.subtitle': 'Relax and rejuvenate with authentic Turkish spa experiences.',
+  'services.spa.turkish_hamam': 'Traditional Turkish Hamam',
+  'services.spa.turkish_hamam_desc': 'Experience the centuries-old Turkish bath ritual with foam massage and scrub.',
+  'services.spa.massage': 'Relaxing Massage',
+  'services.spa.massage_desc': 'Deep tissue, aromatherapy, and hot stone massage sessions.',
+  'services.spa.wellness_package': 'Full Spa Day Package',
+  'services.spa.wellness_package_desc': 'Complete wellness experience: hamam, massage, facial, and aromatherapy.',
+
+  // Hair & Beauty
+  'services.hair.title': 'Hair & Beauty',
+  'services.hair.subtitle': 'Top-rated salons for a perfect makeover during your stay.',
+  'services.hair.styling': 'Hair Styling & Coloring',
+  'services.hair.styling_desc': 'Professional cuts, coloring, balayage, and styling by expert hairdressers.',
+  'services.hair.nails': 'Nail Salon',
+  'services.hair.nails_desc': 'Manicure, pedicure, gel nails, and nail art in a relaxing atmosphere.',
+  'services.hair.makeover': 'Full Beauty Makeover',
+  'services.hair.makeover_desc': 'Complete beauty package: hair, makeup, nails, and skincare in one session.',
+
   'request_details': 'Request details',
   'book_button': 'Book Now',
   'buy_button': 'Buy',
@@ -743,6 +763,8 @@ export const en = {
   'dir.cat.visa': 'Visa & Residency',
   'dir.cat.shopping': 'Shopping & Souvenirs',
   'dir.cat.nature': 'Natural Attractions',
+  'dir.cat.spa_hamam': 'Spa & Hammams',
+  'dir.cat.hair_beauty': 'Hair & Beauty',
   'dir.cat.title': 'Explore by Category',
   'dir.cat.subtitle': 'Find everything you need for your perfect stay.',
   'dir.trust.title': 'Why Trust Alanya Holidays Hub?',

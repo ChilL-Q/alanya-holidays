@@ -1,4 +1,4 @@
-import { Car, Anchor, Heart, Stethoscope, Cloud, Mountain, Bike, Camera, Video } from 'lucide-react';
+import { Car, Anchor, Heart, Stethoscope, Cloud, Mountain, Bike, Camera, Video, Sparkles, Scissors } from 'lucide-react';
 
 export const SERVICES_DATA = [
     // Transport
@@ -236,6 +236,74 @@ export const SERVICES_DATA = [
         description: 'services.health.cave_desc',
         icon: Heart,
         price: 10,
+        route: '/contact',
+        actionLabel: 'book_button'
+    },
+    // Spa & Wellness
+    {
+        id: 'turkish-hamam',
+        category: 'spa-wellness',
+        title: 'services.spa.turkish_hamam',
+        description: 'services.spa.turkish_hamam_desc',
+        icon: Sparkles,
+        price: 40,
+        priceLabel: '/person',
+        route: '/experiences/wellness',
+        actionLabel: 'book_button'
+    },
+    {
+        id: 'spa-massage',
+        category: 'spa-wellness',
+        title: 'services.spa.massage',
+        description: 'services.spa.massage_desc',
+        icon: Heart,
+        price: 50,
+        priceLabel: '/session',
+        route: '/experiences/wellness',
+        actionLabel: 'book_button'
+    },
+    {
+        id: 'spa-wellness-package',
+        category: 'spa-wellness',
+        title: 'services.spa.wellness_package',
+        description: 'services.spa.wellness_package_desc',
+        icon: Sparkles,
+        price: 80,
+        priceLabel: '/person',
+        route: '/experiences/wellness',
+        actionLabel: 'book_button'
+    },
+    // Hair & Beauty
+    {
+        id: 'hair-styling',
+        category: 'hair-beauty',
+        title: 'services.hair.styling',
+        description: 'services.hair.styling_desc',
+        icon: Scissors,
+        price: 30,
+        priceLabel: '/session',
+        route: '/contact',
+        actionLabel: 'book_button'
+    },
+    {
+        id: 'nail-salon',
+        category: 'hair-beauty',
+        title: 'services.hair.nails',
+        description: 'services.hair.nails_desc',
+        icon: Sparkles,
+        price: 25,
+        priceLabel: '/session',
+        route: '/contact',
+        actionLabel: 'book_button'
+    },
+    {
+        id: 'beauty-makeover',
+        category: 'hair-beauty',
+        title: 'services.hair.makeover',
+        description: 'services.hair.makeover_desc',
+        icon: Scissors,
+        price: 60,
+        priceLabel: '/session',
         route: '/contact',
         actionLabel: 'book_button'
     }
