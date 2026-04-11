@@ -2,7 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { initSentry, Sentry } from './utils/sentry';
 import './index.css';
+
+// Initialize Sentry error tracking (no-op if VITE_SENTRY_DSN is not set)
+initSentry();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -29,8 +33,34 @@ if (import.meta.hot) {
 
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
+
+/** Minimal fallback shown only when Sentry's own boundary catches
+ *  something our custom ErrorBoundary missed (e.g. render-time errors
+ *  inside ErrorBoundary itself). */
+function ErrorFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-8 text-center shadow-xl">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+          Something went wrong
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          The error has been reported. Please try refreshing the page.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-6 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-semibold transition-colors"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  );
+}
