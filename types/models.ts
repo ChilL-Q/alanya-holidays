@@ -5,6 +5,14 @@ export interface Amenity {
     label: string;
 }
 
+export interface SocialLinks {
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+    tiktok?: string;
+    youtube?: string;
+}
+
 export interface UserProfile {
   id: string;
   full_name: string;
@@ -18,6 +26,9 @@ export interface UserProfile {
   bank_name?: string;
   bank_account_holder_name?: string;
   crypto_wallet?: string;
+
+  // Social Links
+  social_links?: SocialLinks;
 
   created_at?: string;
   role?: 'guest' | 'user' | 'host' | 'admin';

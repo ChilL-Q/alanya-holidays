@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { SocialLinks } from '../types/models';
 import { toast } from 'react-hot-toast';
 import { BecomeHostModal } from '../components/modals/BecomeHostModal';
 import { ProfileSidebar } from '../components/user/profile/ProfileSidebar';
@@ -34,7 +35,8 @@ export const Profile: React.FC = () => {
     const [profileForm, setProfileForm] = useState({
         name: user?.name || '',
         phone: '',
-        companyName: user?.company_name || ''
+        companyName: user?.company_name || '',
+        socialLinks: {} as SocialLinks
     });
 
     const [emailForm, setEmailForm] = useState({
@@ -90,7 +92,8 @@ export const Profile: React.FC = () => {
                             ...prev,
                             name: profile.full_name || user.name,
                             phone: profile.phone || '',
-                            companyName: profile.company_name || user.company_name || ''
+                            companyName: profile.company_name || user.company_name || '',
+                            socialLinks: profile.social_links || {}
                         }));
                         setPayoutForm({
                             iban: profile.iban || '',
@@ -150,7 +153,8 @@ export const Profile: React.FC = () => {
             await db.updateUserProfile(user.id, {
                 full_name: profileForm.name,
                 phone: profileForm.phone,
-                company_name: profileForm.companyName
+                company_name: profileForm.companyName,
+                social_links: profileForm.socialLinks
             });
             await updateUser({
                 name: profileForm.name,
@@ -272,6 +276,7 @@ export const Profile: React.FC = () => {
                     {/* Sidebar Navigation */}
                     <ProfileSidebar
                         user={user}
+                        socialLinks={profileForm.socialLinks}
                         activeTab={activeTab}
                         setActiveTab={setActiveTab}
                         fileInputRef={fileInputRef}
