@@ -3,7 +3,7 @@ import { db } from '../../api-services';
 import { Review } from '../../types/models';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
-import { Star, Flag, Trash2, CheckCircle, XCircle, User } from 'lucide-react';
+import { Star, Flag, Trash2, CheckCircle, User } from 'lucide-react';
 
 export const ReviewsAdminPage: React.FC = () => {
     const [reviews, setReviews] = useState<(Review & { user?: { full_name: string; avatar_url: string }; properties?: { title: string } })[]>([]);
