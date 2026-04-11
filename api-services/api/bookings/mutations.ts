@@ -3,6 +3,7 @@ import { bookingSchema } from '../schemas';
 import { getAppUrl } from '../../../utils/appUrl';
 import { retry } from '../../../utils/retry';
 import { createAuditLog } from '../audit';
+import { getUserRole } from '../../auth';
 import { z } from 'zod';
 
 export type BookingCreateInput = Omit<z.infer<typeof bookingSchema>, 'item_type' | 'payment_method'> & {
@@ -192,7 +193,10 @@ export async function updateBookingStatus(
     const serviceObj = Array.isArray(currentBooking.service) ? currentBooking.service[0] : currentBooking.service;
     const isPropertyHost = propertyObj?.host_id === user.id;
     const isServiceProvider = serviceObj?.provider_id === user.id;
-    const isAdmin = user.user_metadata?.role === 'admin';
+    
+    // Use database-based role check instead of client-side user_metadata
+    const role = await getUserRole(user.id);
+    const isAdmin = role === 'admin';
 
     if (!isBookingOwner && !isPropertyHost && !isServiceProvider && !isAdmin) {
         throw new Error('Not authorized');
