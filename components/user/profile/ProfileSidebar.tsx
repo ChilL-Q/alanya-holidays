@@ -1,9 +1,11 @@
 import React from 'react';
-import { Camera, Grid, Home, Car, Banknote, Settings, Shield, LogOut } from 'lucide-react';
+import { Camera, Grid, Home, Car, Banknote, Settings, Shield, LogOut, Globe, Instagram, Facebook, Video, Music } from 'lucide-react';
 import { useLanguage } from '../../../context/LanguageContext';
+import { SocialLinks } from '../../../types/models';
 
 interface ProfileSidebarProps {
     user: any;
+    socialLinks?: SocialLinks;
     activeTab: string;
     setActiveTab: (tab: any) => void;
     fileInputRef: React.RefObject<HTMLInputElement>;
@@ -14,8 +16,17 @@ interface ProfileSidebarProps {
     loading: boolean;
 }
 
+const socialIcons: { key: keyof SocialLinks; icon: React.FC<{ size: number; className?: string }>; color: string }[] = [
+    { key: 'website', icon: Globe, color: 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200' },
+    { key: 'instagram', icon: Instagram, color: 'text-pink-500 hover:text-pink-600' },
+    { key: 'facebook', icon: Facebook, color: 'text-blue-600 hover:text-blue-700' },
+    { key: 'tiktok', icon: Music, color: 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white' },
+    { key: 'youtube', icon: Video, color: 'text-red-500 hover:text-red-600' },
+];
+
 export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     user,
+    socialLinks,
     activeTab,
     setActiveTab,
     fileInputRef,
@@ -61,6 +72,28 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                     <span className={`w-2 h-2 rounded-full ${user.role === 'admin' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
                     {user.role === 'host' ? t('profile.role.host') : user.role === 'admin' ? t('profile.role.admin') : t('profile.role.guest')}
                 </div>
+
+                {/* Social Links Icons */}
+                {socialLinks && Object.values(socialLinks).some(Boolean) && (
+                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                        {socialIcons.map(({ key, icon: Icon, color }) => {
+                            const url = socialLinks[key];
+                            if (!url) return null;
+                            return (
+                                <a
+                                    key={key}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`transition-colors ${color}`}
+                                    title={key}
+                                >
+                                    <Icon size={18} />
+                                </a>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Navigation Tabs */}

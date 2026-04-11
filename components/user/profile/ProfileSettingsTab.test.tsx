@@ -11,10 +11,15 @@ vi.mock('lucide-react', () => ({
     Phone: () => <div data-testid="phone-icon" />,
     Home: () => <div data-testid="home-icon" />,
     Save: () => <div data-testid="save-icon" />,
+    Globe: () => <div data-testid="globe-icon" />,
+    Instagram: () => <div data-testid="instagram-icon" />,
+    Facebook: () => <div data-testid="facebook-icon" />,
+    Video: () => <div data-testid="video-icon" />,
+    Music: () => <div data-testid="music-icon" />,
 }));
 
 const defaultProps = {
-    profileForm: { name: 'John Doe', phone: '+90555000', companyName: '' },
+    profileForm: { name: 'John Doe', phone: '+90555000', companyName: '', socialLinks: {} },
     setProfileForm: vi.fn(),
     savingProfile: false,
     handleUpdateProfile: vi.fn(),
