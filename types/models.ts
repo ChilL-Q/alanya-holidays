@@ -413,6 +413,7 @@ export interface DirectoryListingDB {
   location: string;
   google_map_url?: string;
   price_level?: 1 | 2 | 3 | 4;
+  net_votes?: number;
   created_at?: string;
   updated_at?: string;
 }

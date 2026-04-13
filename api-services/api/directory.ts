@@ -71,6 +71,7 @@ export const directoryService = {
             .select('*')
             .eq('category_id', categoryId)
             .order('is_featured', { ascending: false })
+            .order('net_votes', { ascending: false, nullsFirst: false })
             .order('name', { ascending: true });
 
         if (error) {
@@ -79,6 +80,59 @@ export const directoryService = {
         }
 
         return data as DirectoryListingDB[];
+    },
+
+    async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
+        const { data, error } = await supabase
+            .rpc('vote_listing', {
+                p_listing_id: listingId,
+                p_listing_type: 'directory',
+                p_vote: vote
+            });
+
+        if (error) {
+            console.error('Error voting for listing:', error);
+            throw error;
+        }
+
+        return {
+            netVotes: data[0].net_votes,
+            userVote: data[0].user_vote
+        };
+    },
+
+    async getUserVotesBatch(listingIds: string[]): Promise<Record<string, 1 | -1>> {
+        const { data, error } = await supabase
+            .rpc('get_user_votes_batch', {
+                p_listing_ids: listingIds,
+                p_listing_type: 'directory'
+            });
+
+        if (error) {
+            console.error('Error getting user votes batch:', error);
+            return {};
+        }
+
+        const votes: Record<string, 1 | -1> = {};
+        for (const row of (data as { listing_id: string; vote: 1 | -1 }[])) {
+            votes[row.listing_id] = row.vote;
+        }
+        return votes;
+    },
+
+    async removeListingVote(listingId: string): Promise<{ netVotes: number }> {
+        const { data, error } = await supabase
+            .rpc('remove_listing_vote', {
+                p_listing_id: listingId,
+                p_listing_type: 'directory'
+            });
+
+        if (error) {
+            console.error('Error removing vote:', error);
+            throw error;
+        }
+
+        return { netVotes: data[0].net_votes };
     },
 
     async createDirectoryListing(listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>): Promise<DirectoryListingDB> {

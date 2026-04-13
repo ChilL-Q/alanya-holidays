@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
+import { toast } from 'react-hot-toast';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
@@ -30,6 +32,11 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [_loading, setLoading] = useState(true);
 
+    // Auth & Voting State
+    const { isAuthenticated, user } = useAuth();
+    const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({});
+    const [votingId, setVotingId] = useState<string | null>(null);
+
     // Fetch from Supabase
     React.useEffect(() => {
         if (!categoryId) return;
@@ -46,6 +53,48 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         };
         fetchListings();
     }, [categoryId]);
+
+    // Fetch user's votes for current listings — single batch call
+    useEffect(() => {
+        if (!isAuthenticated || !user || listings.length === 0) return;
+
+        const ids = listings.map(l => l.id);
+        db.getUserVotesBatch(ids).then(setUserVotes);
+    }, [isAuthenticated, user?.id, listings.length]);
+
+    const handleVote = useCallback(async (listingId: string, vote: 1 | -1) => {
+        if (!isAuthenticated || votingId) return;
+
+        const currentVote = userVotes[listingId];
+        const isToggleOff = currentVote === vote;
+
+        setVotingId(listingId);
+        try {
+            if (isToggleOff) {
+                // Remove vote via dedicated RPC
+                const result = await db.removeListingVote(listingId);
+                setUserVotes(prev => {
+                    const next = { ...prev };
+                    delete next[listingId];
+                    return next;
+                });
+                setListings(prev => prev.map(l =>
+                    l.id === listingId ? { ...l, net_votes: result.netVotes } : l
+                ));
+            } else {
+                const result = await db.voteForListing(listingId, vote);
+                setUserVotes(prev => ({ ...prev, [listingId]: result.userVote as 1 | -1 }));
+                setListings(prev => prev.map(l =>
+                    l.id === listingId ? { ...l, net_votes: result.netVotes } : l
+                ));
+            }
+        } catch (e: any) {
+            console.error('Failed to vote:', e);
+            toast.error(e.message || 'Failed to vote');
+        } finally {
+            setVotingId(null);
+        }
+    }, [isAuthenticated, userVotes, votingId]);
 
     // Extract unique locations and languages for this category to populate filter
     const availableLocations = useMemo(() => {
@@ -274,7 +323,15 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {featuredListings.map(listing => (
-                                <DirectoryListingCard key={listing.id} listing={listing} onClick={setSelectedListing} />
+                                <DirectoryListingCard
+                                    key={listing.id}
+                                    listing={listing}
+                                    onClick={setSelectedListing}
+                                    userVote={userVotes[listing.id] ?? null}
+                                    onVote={handleVote}
+                                    isAuthenticated={isAuthenticated}
+                                    isVoting={votingId === listing.id}
+                                />
                             ))}
                         </div>
                     </div>
@@ -288,7 +345,15 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     {standardListings.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {standardListings.map(listing => (
-                                <DirectoryListingCard key={listing.id} listing={listing} onClick={setSelectedListing} />
+                                <DirectoryListingCard
+                                    key={listing.id}
+                                    listing={listing}
+                                    onClick={setSelectedListing}
+                                    userVote={userVotes[listing.id] ?? null}
+                                    onVote={handleVote}
+                                    isAuthenticated={isAuthenticated}
+                                    isVoting={votingId === listing.id}
+                                />
                             ))}
                         </div>
                     ) : (
