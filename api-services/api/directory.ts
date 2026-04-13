@@ -82,6 +82,47 @@ export const directoryService = {
         return data as DirectoryListingDB[];
     },
 
+    // ============================================================
+    // Landing Page Listings
+    // ============================================================
+
+    /**
+     * Top community-voted free listings (limit 6, ordered by net_votes DESC)
+     */
+    async getFreeListings(): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('is_premium', false)
+            .order('net_votes', { ascending: false, nullsFirst: false })
+            .limit(6);
+
+        if (error) {
+            console.error('Error fetching free listings:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB[];
+    },
+
+    /**
+     * Premium / promoted listings (limit 6, is_premium = true)
+     */
+    async getPremiumListings(): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('is_premium', true)
+            .limit(6);
+
+        if (error) {
+            console.error('Error fetching premium listings:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB[];
+    },
+
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
         const { data, error } = await supabase
             .rpc('vote_listing', {
