@@ -155,7 +155,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    console.log(`Cleanup complete: ${deletedCount}/${orphanedFiles.length} orphaned files deleted`)
+    console.warn(`Cleanup complete: ${deletedCount}/${orphanedFiles.length} orphaned files deleted`)
 
     return new Response(
       JSON.stringify({

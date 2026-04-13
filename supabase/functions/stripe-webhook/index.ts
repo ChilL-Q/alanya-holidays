@@ -81,7 +81,7 @@ Deno.serve(async (req: Request) => {
               return new Response('DB update failed', { status: 500 })
             }
 
-            console.log(`Confirmed blog submission payment: ${submissionId}`)
+            console.warn(`Confirmed blog submission payment: ${submissionId}`)
 
             // Notify all admins about new submission awaiting review
             const { data: admins } = await supabase
@@ -122,7 +122,7 @@ Deno.serve(async (req: Request) => {
                     },
                   },
                 })
-                console.log(`Sent received email to ${authorEmail}`)
+                console.warn(`Sent received email to ${authorEmail}`)
               } catch (e) {
                 console.error('Failed to send received email:', e)
               }
