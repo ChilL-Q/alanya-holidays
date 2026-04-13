@@ -416,6 +416,7 @@ export interface DirectoryListingDB {
   name: string;
   short_description: string;
   is_featured?: boolean;
+  is_premium?: boolean;
   is_verified?: boolean;
   website?: string;
   whatsapp?: string;
