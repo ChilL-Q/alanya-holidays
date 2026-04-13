@@ -432,3 +432,42 @@ export interface DirectoryListingDB {
   created_at?: string;
   updated_at?: string;
 }
+
+// ============================================================
+// Blog
+// ============================================================
+
+export type BlogPostStatus = 'draft' | 'published' | 'archived';
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string | null;
+  excerpt: string | null;
+  video_url: string | null;
+  cover_image_url: string | null;
+  author_id: string | null;
+  category: string | null;
+  status: BlogPostStatus;
+  is_featured: boolean;
+  views: number;
+  published_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+
+  // Virtual / joined fields
+  author?: { full_name: string | null; avatar_url: string | null };
+  tags?: BlogTag[];
+}
+
+export interface BlogTag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface BlogPostTag {
+  post_id: string;
+  tag_id: string;
+}
