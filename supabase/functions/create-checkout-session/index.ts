@@ -29,6 +29,13 @@ interface CartItem {
   listingId: string
   title: string
 }
+
+interface BlogSubmissionPayload {
+  submissionId: string
+  title: string
+  authorEmail?: string
+}
+
 interface SupabaseEmptyResponse {
   data: unknown[]
   error: null
@@ -59,9 +66,9 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { items, email, origin } = await req.json()
+    const { items, email, origin, mode, blogSubmission } = await req.json()
 
-    if (!items?.length || !origin) {
+    if (!origin) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -76,6 +83,93 @@ Deno.serve(async (req: Request) => {
     }
 
     const verifiedUserId = user.id
+
+    // --- Blog submission checkout ---
+    if (mode === 'blog_submission') {
+      const payload = blogSubmission as BlogSubmissionPayload | undefined
+      if (!payload?.submissionId) {
+        return new Response(
+          JSON.stringify({ error: 'submissionId is required for blog_submission mode' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Verify ownership
+      const { data: submission, error: subError } = await supabase
+        .from('blog_submissions')
+        .select('id, title, user_id, status')
+        .eq('id', payload.submissionId)
+        .single()
+
+      if (subError || !submission) {
+        return new Response(
+          JSON.stringify({ error: 'Submission not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (submission.user_id !== verifiedUserId) {
+        return new Response(
+          JSON.stringify({ error: 'Not authorized' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (submission.status !== 'pending_payment') {
+        return new Response(
+          JSON.stringify({ error: 'Submission is not in pending_payment status' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60
+      const paymentExpiresAt = new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60 * 1000).toISOString()
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: email,
+        expires_at: expiresAt,
+        line_items: [{
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Blog Post Submission Fee',
+              description: `Publication fee for: ${submission.title}`,
+            },
+            unit_amount: 500, // $5.00
+          },
+          quantity: 1,
+        }],
+        success_url: `${origin}/blog/submission-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/blog/submit`,
+        metadata: {
+          userId: verifiedUserId,
+          type: 'blog_submission',
+          submissionId: payload.submissionId,
+        },
+      })
+
+      await supabase
+        .from('blog_submissions')
+        .update({
+          stripe_session_id: session.id,
+          payment_expires_at: paymentExpiresAt,
+        })
+        .eq('id', payload.submissionId)
+
+      return new Response(
+        JSON.stringify({ url: session.url }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // --- Standard cart/booking checkout ---
+    if (!items?.length) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: items' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // --- Server-side price verification ---
     const propertyIds: string[] = []
