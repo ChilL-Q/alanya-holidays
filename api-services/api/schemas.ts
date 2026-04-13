@@ -85,3 +85,10 @@ export const blogTagSchema = z.object({
     name: z.string().min(1, "Tag name is required"),
     slug: z.string().min(1, "Tag slug is required"),
 });
+
+export const blogSubmissionSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    content: z.string().min(100, "Content must be at least 100 characters"),
+    video_url: z.string().url().optional().or(z.literal('')),
+    media_urls: z.array(z.string()).default([]),
+});

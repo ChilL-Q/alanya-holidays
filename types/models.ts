@@ -471,3 +471,23 @@ export interface BlogPostTag {
   post_id: string;
   tag_id: string;
 }
+
+export type BlogSubmissionStatus = 'pending_payment' | 'pending_review' | 'approved' | 'rejected';
+
+export interface BlogSubmission {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  video_url: string | null;
+  media_urls: string[];
+  status: BlogSubmissionStatus;
+  stripe_session_id: string | null;
+  payment_expires_at: string | null;
+  payment_status: string;
+  rejection_reason: string | null;
+  created_at: string | null;
+
+  // Virtual / joined
+  user?: { full_name: string | null; email: string | null };
+}
