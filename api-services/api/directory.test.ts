@@ -104,8 +104,9 @@ describe('directoryService', () => {
     describe('getDirectoryListingsByCategory', () => {
         it('returns listings filtered by category', async () => {
             const chain = makeChain();
-            // Second order call resolves with data
+            // Three order calls: is_featured, net_votes, name — last one resolves
             chain.order
+                .mockReturnValueOnce(chain)
                 .mockReturnValueOnce(chain)
                 .mockResolvedValueOnce({ data: [mockListing], error: null });
             mockSupabase.from.mockReturnValue(chain);
@@ -117,6 +118,7 @@ describe('directoryService', () => {
         it('throws on error', async () => {
             const chain = makeChain();
             chain.order
+                .mockReturnValueOnce(chain)
                 .mockReturnValueOnce(chain)
                 .mockResolvedValueOnce({ data: null, error: { message: 'fail' } });
             mockSupabase.from.mockReturnValue(chain);

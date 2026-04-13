@@ -1,13 +1,27 @@
 import React from 'react';
-import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check } from 'lucide-react';
+import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { DirectoryListingDB } from '../../types/models';
 
 interface DirectoryListingCardProps {
     listing: DirectoryListingDB;
     onClick?: (listing: DirectoryListingDB) => void;
+    userVote?: 1 | -1 | null;
+    onVote?: (listingId: string, vote: 1 | -1) => void;
+    isAuthenticated?: boolean;
+    isVoting?: boolean;
 }
 
-export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({ listing, onClick }) => {
+export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
+    listing, onClick, userVote, onVote, isAuthenticated, isVoting
+}) => {
+    const netVotes = listing.net_votes || 0;
+
+    const handleVote = (e: React.MouseEvent, vote: 1 | -1) => {
+        e.stopPropagation();
+        if (!isAuthenticated || isVoting) return;
+        onVote?.(listing.id, vote);
+    };
+
     return (
         <div 
             className={`group flex flex-col bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 h-full ${onClick ? 'cursor-pointer' : ''}`}
@@ -57,6 +71,41 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({ list
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
                     {listing.short_description}
                 </p>
+
+                {/* Vote Buttons */}
+                <div className="flex items-center gap-3 mb-4">
+                    <button
+                        onClick={(e) => handleVote(e, 1)}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            userVote === 1
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                : isAuthenticated && !isVoting
+                                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 dark:hover:text-green-400'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                        }`}
+                        title={isAuthenticated ? 'Helpful' : 'Login to vote'}
+                        disabled={!isAuthenticated || isVoting}
+                    >
+                        <ThumbsUp size={14} className={userVote === 1 ? 'fill-green-600 dark:fill-green-400' : ''} />
+                    </button>
+                    <button
+                        onClick={(e) => handleVote(e, -1)}
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            userVote === -1
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                                : isAuthenticated && !isVoting
+                                    ? 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                        }`}
+                        title={isAuthenticated ? 'Not helpful' : 'Login to vote'}
+                        disabled={!isAuthenticated || isVoting}
+                    >
+                        <ThumbsDown size={14} className={userVote === -1 ? 'fill-red-600 dark:fill-red-400' : ''} />
+                    </button>
+                    <span className={`text-xs font-medium ${netVotes > 0 ? 'text-green-600 dark:text-green-400' : netVotes < 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400'}`}>
+                        {netVotes > 0 ? `+${netVotes}` : netVotes}
+                    </span>
+                </div>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
