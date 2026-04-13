@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SEOHead } from '../components/seo/SEOHead';
+import { db } from '../api-services';
+import { DirectoryListingDB } from '../types/models';
+import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
+import { FreeListingsSection } from '../components/home/FreeListingsSection';
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
@@ -10,6 +14,34 @@ export const DirectoryHome: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+
+    // Landing page listings
+    const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
+    const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
+    const [listingsLoading, setListingsLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function loadListings() {
+            setListingsLoading(true);
+            try {
+                const [premium, free] = await Promise.all([
+                    db.getPremiumListings(),
+                    db.getFreeListings(),
+                ]);
+                if (!cancelled) {
+                    setPremiumListings(premium);
+                    setFreeListings(free);
+                }
+            } catch (err) {
+                console.error('Failed to load landing listings:', err);
+            } finally {
+                if (!cancelled) setListingsLoading(false);
+            }
+        }
+        loadListings();
+        return () => { cancelled = true; };
+    }, []);
 
     const categories = [
         { id: 'medical', icon: '🏥', title: t('dir.cat.medical'), path: '/medical-tourism-alanya' },
@@ -191,6 +223,12 @@ export const DirectoryHome: React.FC = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Premium Listings Section */}
+            <PremiumListingsSection listings={premiumListings} loading={listingsLoading} />
+
+            {/* Free Listings / Community Favorites Section */}
+            <FreeListingsSection listings={freeListings} loading={listingsLoading} />
 
             {/* Authority Building Section */}
             <div className="bg-slate-50 dark:bg-slate-900/50 py-16 md:py-24 border-t border-slate-100 dark:border-slate-800/50">
