@@ -105,6 +105,9 @@ export const CartDrawer: React.FC = () => {
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                                         <div>
                                             <h3 className="font-bold text-slate-900 dark:text-white text-sm line-clamp-2">{item.title}</h3>
+                                            {item.variant_label && (
+                                                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5">Size: {item.variant_label}</p>
+                                            )}
                                             <p className="text-xs text-slate-500 mt-1">
                                                 {item.startDate ? `${new Date(item.startDate).toLocaleDateString()} - ${new Date(item.endDate!).toLocaleDateString()}` : (item.date ? new Date(item.date).toLocaleDateString() : 'Date: Flexible')}
                                             </p>

@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { ProductBasicDetailsForm } from '../../components/admin/products/ProductBasicDetailsForm';
 import { ProductSettingsSidebar } from '../../components/admin/products/ProductSettingsSidebar';
 import { ProductMediaForm } from '../../components/admin/products/ProductMediaForm';
+import { ProductVariantsForm } from '../../components/admin/products/ProductVariantsForm';
 
 export const AdminEditProductPage: React.FC = () => {
     const { id } = useParams();
@@ -149,13 +150,15 @@ export const AdminEditProductPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in duration-500">
                     <div className="md:col-span-2 space-y-6">
                         <ProductBasicDetailsForm formData={formData} handleChange={handleChange} />
-                        
-                        <ProductMediaForm 
-                            existingImages={existingImages} 
-                            removeExistingImage={removeExistingImage} 
-                            files={files} 
-                            setFiles={setFiles} 
+
+                        <ProductMediaForm
+                            existingImages={existingImages}
+                            removeExistingImage={removeExistingImage}
+                            files={files}
+                            setFiles={setFiles}
                         />
+
+                        {isEditing && <ProductVariantsForm productId={id} />}
                     </div>
 
                     <div className="space-y-6">

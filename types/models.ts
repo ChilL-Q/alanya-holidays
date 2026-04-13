@@ -213,6 +213,16 @@ export interface ServiceModel {
     image_url: string;
 }
 
+export interface ProductVariant {
+    id: string;
+    product_id: string;
+    size_label: string;
+    price: number;
+    stock: number;
+    sku: string | null;
+    created_at: string;
+}
+
 export interface Product {
     id?: string;
     title: string;
@@ -222,7 +232,8 @@ export interface Product {
     stock: number;
     seller_id: string;
     images: string[];
-    
+    variants?: ProductVariant[];
+
     seller?: Partial<UserProfile>;
     created_at?: string;
 }
@@ -260,6 +271,7 @@ export interface Booking {
     user_id: string;
     item_id: string;
     item_type: 'property' | 'service' | 'product';
+    variant_id?: string;
     check_in?: string;
     check_out?: string;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
@@ -387,6 +399,8 @@ export interface CartItem {
   cleaningFee?: number;
   pricePerNight?: number;
   nights?: number;
+  variant_id?: string;
+  variant_label?: string;
 }
 
 export interface SearchFilters {

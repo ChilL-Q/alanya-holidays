@@ -1,16 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Star, User } from 'lucide-react';
-import { Product } from '../../types/models';
+import { Product, ProductVariant } from '../../types/models';
+import { VariantSelector } from './VariantSelector';
+import { productsService } from '../../api-services/api/products';
 
 interface ProductCardProps {
     product: Product;
     index: number;
-    onAddToCart: (product: Product) => void;
+    onAddToCart: (product: Product, variant?: ProductVariant) => void;
     formatPrice: (price: string | number) => string;
     convertPrice: (price: number, from: 'USD' | 'EUR') => number;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, index, onAddToCart, formatPrice, convertPrice }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+    product,
+    index,
+    onAddToCart,
+    formatPrice,
+    convertPrice,
+}) => {
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function fetchVariants() {
+            if (!product.id) return;
+            setLoading(true);
+            try {
+                const data = await productsService.getProductVariants(product.id!);
+                if (!cancelled && data.length > 0) {
+                    setVariants(data);
+                }
+            } catch {
+                // Silently fail — fall back to base price
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
+        fetchVariants();
+        return () => { cancelled = true; };
+    }, [product.id]);
+
+    const displayPrice = selectedVariant ? selectedVariant.price : product.price;
+
+    const handleAddToCart = () => {
+        onAddToCart(product, selectedVariant ?? undefined);
+    };
+
     return (
         <div
             className="group bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-800/50 animate-stagger-enter flex flex-col"
@@ -29,7 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index, onAddT
                     </div>
                 )}
                 <button
-                    onClick={() => onAddToCart(product)}
+                    onClick={handleAddToCart}
                     className="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-amber-500 hover:text-white"
                     title="Add to Basket"
                 >
@@ -52,6 +90,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index, onAddT
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 min-h-[40px] flex-grow">
                     {product.description}
                 </p>
+
+                {/* Variant Selector */}
+                {variants.length > 0 && (
+                    <VariantSelector
+                        variants={variants}
+                        selectedVariant={selectedVariant}
+                        onSelect={setSelectedVariant}
+                    />
+                )}
+
                 <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/50 pt-4 mt-auto">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center text-slate-400">
@@ -62,16 +110,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index, onAddT
                         </span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <span className="text-xl font-bold text-slate-900 dark:text-white">
-                            {formatPrice(convertPrice(product.price, 'EUR'))}
-                        </span>
+                        {loading ? (
+                            <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                        ) : (
+                            <span className="text-xl font-bold text-slate-900 dark:text-white">
+                                {formatPrice(convertPrice(displayPrice, 'EUR'))}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <button
-                    onClick={() => onAddToCart(product)}
-                    className="w-full mt-4 bg-slate-100 dark:bg-slate-800/50 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm"
+                    onClick={handleAddToCart}
+                    disabled={selectedVariant !== null && selectedVariant.stock <= 0}
+                    className="w-full mt-4 bg-slate-100 dark:bg-slate-800/50 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Add to Basket
+                    {selectedVariant !== null && selectedVariant.stock <= 0
+                        ? 'Out of Stock'
+                        : 'Add to Basket'}
                 </button>
             </div>
         </div>
