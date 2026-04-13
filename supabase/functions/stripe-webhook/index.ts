@@ -54,7 +54,87 @@ Deno.serve(async (req: Request) => {
     }
 
     if (session.payment_status === 'paid') {
-      if (bookingIds.length > 0) {
+      // --- Handle blog submission payment ---
+      if (session.metadata?.type === 'blog_submission') {
+        const submissionId = session.metadata.submissionId
+        if (submissionId) {
+          const { data: submission, error: subError } = await supabase
+            .from('blog_submissions')
+            .select('id, user_id, title, status, payment_status')
+            .eq('id', submissionId)
+            .maybeSingle()
+
+          if (subError) {
+            console.error('Blog submission lookup error:', subError)
+          } else if (submission && submission.payment_status !== 'paid') {
+            // Idempotency: skip if already paid
+            const { error: updateError } = await supabase
+              .from('blog_submissions')
+              .update({
+                payment_status: 'paid',
+                status: 'pending_review',
+              })
+              .eq('id', submissionId)
+
+            if (updateError) {
+              console.error('Failed to confirm blog submission payment:', updateError)
+              return new Response('DB update failed', { status: 500 })
+            }
+
+            console.log(`Confirmed blog submission payment: ${submissionId}`)
+
+            // Notify all admins about new submission awaiting review
+            const { data: admins } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('role', 'admin')
+
+            if (admins && admins.length > 0) {
+              await supabase.from('notifications').insert(
+                admins.map((admin: { id: string }) => ({
+                  user_id: admin.id,
+                  title: 'New Blog Submission',
+                  message: `A new blog submission "${submission.title}" is ready for review.`,
+                  type: 'info',
+                  link: `/admin/blog-submissions/${submissionId}`,
+                }))
+              )
+            }
+
+            // Send email to author: submission received, awaiting moderation
+            const { data: authorProfile } = await supabase
+              .from('profiles')
+              .select('email, full_name')
+              .eq('id', submission.user_id)
+              .maybeSingle()
+
+            const authorEmail = authorProfile?.email
+            if (authorEmail) {
+              const siteUrl = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
+              try {
+                await supabase.functions.invoke('send-email', {
+                  body: {
+                    to: authorEmail,
+                    type: 'blog_submission_received',
+                    data: {
+                      postTitle: submission.title,
+                      link: `${siteUrl}/blog`,
+                    },
+                  },
+                })
+                console.log(`Sent received email to ${authorEmail}`)
+              } catch (e) {
+                console.error('Failed to send received email:', e)
+              }
+            }
+          } else {
+            console.warn(`Skipping duplicate webhook for submission ${submissionId}`)
+          }
+        }
+      }
+
+      // --- Handle booking payments (existing logic) ---
+      else if (bookingIds.length > 0) {
         const updatePayload: Record<string, unknown> = {
           status: 'confirmed',
           payment_status: 'paid',

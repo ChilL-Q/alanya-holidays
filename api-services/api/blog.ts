@@ -1,7 +1,7 @@
 import { supabase } from '../supabase';
 import { getUserRole } from '../auth';
-import { BlogPost, BlogTag, BlogPostStatus } from '../../types/models';
-import { blogPostSchema } from './schemas';
+import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../types/models';
+import { blogPostSchema, blogSubmissionSchema } from './schemas';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
 
 // ============================================================
@@ -420,5 +420,266 @@ export const blogService = {
             .eq('tag_id', tagId);
 
         if (error) throw error;
+    },
+
+    // ============================================================
+    // Blog Submissions (User-submitted posts requiring payment + moderation)
+    // ============================================================
+
+    /**
+     * Create a blog submission and return Stripe checkout URL.
+     * Creates submission with status='pending_payment', then invokes Stripe edge function.
+     */
+    async createBlogSubmission(data: {
+        title: string;
+        content: string;
+        video_url?: string;
+        media_urls?: string[];
+    }): Promise<{ submissionId: string; checkoutUrl: string }> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const validatedData = blogSubmissionSchema.parse(data);
+
+        // Create submission record
+        const { data: submission, error: subError } = await supabase
+            .from('blog_submissions')
+            .insert([{
+                user_id: user.id,
+                title: validatedData.title,
+                content: validatedData.content,
+                video_url: validatedData.video_url || null,
+                media_urls: validatedData.media_urls || [],
+                status: 'pending_payment',
+                payment_status: 'unpaid',
+            }])
+            .select()
+            .single();
+
+        if (subError || !submission) throw subError || new Error('Failed to create submission');
+
+        // Get user email for Stripe
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', user.id)
+            .single();
+
+        // Invoke Stripe edge function for blog submission checkout
+        const { data: stripeData, error: stripeError } = await supabase.functions.invoke('create-checkout-session', {
+            body: {
+                mode: 'blog_submission',
+                email: profile?.email,
+                origin: window.location.origin,
+                blogSubmission: {
+                    submissionId: submission.id,
+                    title: submission.title,
+                    authorEmail: profile?.email,
+                },
+            },
+        });
+
+        if (stripeError || !stripeData?.url) {
+            // Clean up the submission if Stripe checkout failed
+            await supabase.from('blog_submissions').delete().eq('id', submission.id);
+            throw stripeError || new Error('Failed to create Stripe checkout session');
+        }
+
+        return { submissionId: submission.id, checkoutUrl: stripeData.url };
+    },
+
+    /**
+     * Get all blog submissions. Admin only.
+     */
+    async getBlogSubmissions(filters?: { status?: string; userId?: string }): Promise<BlogSubmission[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const role = await getUserRole(user.id);
+        if (role !== 'admin') throw new Error('Only admins can view all submissions');
+
+        let query = supabase
+            .from('blog_submissions')
+            .select(`
+                *,
+                user:profiles!blog_submissions_user_id_fkey(full_name, email)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (filters?.status) query = query.eq('status', filters.status);
+        if (filters?.userId) query = query.eq('user_id', filters.userId);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data as BlogSubmission[];
+    },
+
+    /**
+     * Get current user's own blog submissions.
+     */
+    async getUserBlogSubmissions(): Promise<BlogSubmission[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase
+            .from('blog_submissions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data as BlogSubmission[];
+    },
+
+    /**
+     * Approve a blog submission: creates a blog_post from the submission data.
+     * Admin only. Sends email to author.
+     */
+    async approveBlogSubmission(submissionId: string): Promise<BlogPost> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const role = await getUserRole(user.id);
+        if (role !== 'admin') throw new Error('Only admins can approve submissions');
+
+        // Get submission
+        const { data: submission, error: subError } = await supabase
+            .from('blog_submissions')
+            .select('*')
+            .eq('id', submissionId)
+            .single();
+
+        if (subError || !submission) throw subError || new Error('Submission not found');
+        if (submission.payment_status !== 'paid') throw new Error('Submission payment not confirmed');
+        if (submission.status !== 'pending_review') throw new Error('Submission is not pending review');
+
+        // Create blog post from submission
+        const baseSlug = slugify(submission.title);
+        const uniqueSlug = await resolveSlug(baseSlug);
+
+        const { data: post, error: postError } = await supabase
+            .from('blog_posts')
+            .insert([{
+                title: submission.title,
+                slug: uniqueSlug,
+                content: submission.content,
+                excerpt: generateExcerpt(submission.content),
+                video_url: submission.video_url,
+                cover_image_url: submission.media_urls?.[0] || null,
+                author_id: submission.user_id,
+                status: 'published',
+                is_featured: false,
+                published_at: new Date().toISOString(),
+            }])
+            .select()
+            .single();
+
+        if (postError || !post) throw postError || new Error('Failed to create blog post');
+
+        // Update submission status
+        await supabase
+            .from('blog_submissions')
+            .update({ status: 'approved' })
+            .eq('id', submissionId);
+
+        // Notify author
+        const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', submission.user_id)
+            .single();
+
+        await supabase.from('notifications').insert({
+            user_id: submission.user_id,
+            title: 'Blog Post Published!',
+            message: `Your submission "${submission.title}" has been approved and published.`,
+            type: 'success',
+            link: `/blog/${uniqueSlug}`,
+        });
+
+        // Send approval email
+        if (authorProfile?.email) {
+            try {
+                await supabase.functions.invoke('send-email', {
+                    body: {
+                        to: authorProfile.email,
+                        type: 'blog_submission_approved',
+                        data: {
+                            postTitle: submission.title,
+                            postUrl: `${window.location.origin}/blog/${uniqueSlug}`,
+                            authorName: authorProfile.full_name || 'Author',
+                        },
+                    },
+                });
+            } catch (e) {
+                console.error('Failed to send approval email:', e);
+            }
+        }
+
+        return post as BlogPost;
+    },
+
+    /**
+     * Reject a blog submission. Admin only. Sends email to author with reason.
+     */
+    async rejectBlogSubmission(submissionId: string, reason: string): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const role = await getUserRole(user.id);
+        if (role !== 'admin') throw new Error('Only admins can reject submissions');
+        if (!reason || reason.trim().length < 10) throw new Error('Rejection reason must be at least 10 characters');
+
+        // Get submission
+        const { data: submission, error: subError } = await supabase
+            .from('blog_submissions')
+            .select('*')
+            .eq('id', submissionId)
+            .single();
+
+        if (subError || !submission) throw subError || new Error('Submission not found');
+
+        // Update submission
+        await supabase
+            .from('blog_submissions')
+            .update({
+                status: 'rejected',
+                rejection_reason: reason,
+            })
+            .eq('id', submissionId);
+
+        // Notify author
+        await supabase.from('notifications').insert({
+            user_id: submission.user_id,
+            title: 'Blog Submission Rejected',
+            message: `Your submission "${submission.title}" was not approved. Reason: ${reason}`,
+            type: 'warning',
+            link: '/blog/submit',
+        });
+
+        // Send rejection email
+        const { data: authorProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', submission.user_id)
+            .single();
+
+        if (authorProfile?.email) {
+            try {
+                await supabase.functions.invoke('send-email', {
+                    body: {
+                        to: authorProfile.email,
+                        type: 'blog_submission_rejected',
+                        data: {
+                            postTitle: submission.title,
+                            reason,
+                            authorName: authorProfile.full_name || 'Author',
+                        },
+                    },
+                });
+            } catch (e) {
+                console.error('Failed to send rejection email:', e);
+            }
+        }
     },
 };

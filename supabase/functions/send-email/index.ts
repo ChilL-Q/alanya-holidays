@@ -44,6 +44,9 @@ const emailDataSchemas = {
   refund_processed:      z.object({ amount: z.coerce.string(), itemTitle: s, link: sOpt }),
   new_review:            z.object({ itemTitle: s, guestName: s, rating: z.coerce.number().min(1).max(5), comment: s, link: sOpt }),
   admin_contact_message: z.object({ subject: s, name: s, email: s, message: s }),
+  blog_submission_received: z.object({ postTitle: s, link: sOpt }),
+  blog_submission_approved: z.object({ postTitle: s, postUrl: s, authorName: s }),
+  blog_submission_rejected: z.object({ postTitle: s, reason: s, authorName: s }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -633,6 +636,66 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     `,
                     `mailto:${encodeURIComponent(data.email || '')}`,
                     'Reply via Email'
+                )
+            };
+
+        // --- Blog Submissions ---
+        case 'blog_submission_received':
+            return {
+                subject: `📝 Blog Submission Received: ${escapeHtml(data.postTitle)}`,
+                html: getHtmlTemplate(
+                    'Submission Received',
+                    `
+                    <p style="font-size: 16px;">Thank you! Your blog post <strong>${escapeHtml(data.postTitle)}</strong> has been received.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0;">Your submission is awaiting payment confirmation. Once payment is processed, our editorial team will review your content within 3-5 business days.</p>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">You will receive an email once your post is reviewed and published.</p>
+                    `,
+                    data.link,
+                    'View Blog'
+                )
+            };
+
+        case 'blog_submission_approved':
+            return {
+                subject: `🎉 Your blog post is Live: ${escapeHtml(data.postTitle)}!`,
+                html: getHtmlTemplate(
+                    'Blog Post Published!',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.authorName)},</p>
+                    <p>Great news! Your blog post <strong>${escapeHtml(data.postTitle)}</strong> has been approved and is now live on our website.</p>
+                    <div class="card">
+                         <div style="text-align: center; margin-bottom: 16px;">
+                            <div style="background: #d1fae5; color: #059669; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                <span style="font-size: 32px;">✓</span>
+                            </div>
+                         </div>
+                         <p style="text-align: center; font-weight: 600; color: ${HEADING_COLOR}; margin: 0;">${escapeHtml(data.postTitle)}</p>
+                         <p style="text-align: center; font-size: 14px; color: #64748b; margin-top: 8px;">Now visible to all readers</p>
+                    </div>
+                    `,
+                    data.postUrl,
+                    'Read Your Post'
+                )
+            };
+
+        case 'blog_submission_rejected':
+            return {
+                subject: `⚠️ Blog Submission Update: ${escapeHtml(data.postTitle)}`,
+                html: getHtmlTemplate(
+                    'Submission Review Complete',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.authorName)},</p>
+                    <p>Thank you for your submission <strong>${escapeHtml(data.postTitle)}</strong>. After careful review, we are unable to publish it at this time.</p>
+                     <div class="card">
+                         <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(data.reason)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">You can revise your content and submit again.</p>
+                    `,
+                    undefined,
+                    undefined,
+                    true
                 )
             };
 
