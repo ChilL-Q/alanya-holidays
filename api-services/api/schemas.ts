@@ -67,3 +67,21 @@ export const reviewSchema = z.object({
     comment: z.string().min(5, "Comment must be at least 5 characters").max(1000, "Comment cannot exceed 1000 characters"),
     images: z.array(z.string()).default([]),
 });
+
+export const blogPostSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    slug: z.string().min(3, "Slug must be at least 3 characters").optional(),
+    content: z.string().optional(),
+    excerpt: z.string().max(500).optional(),
+    video_url: z.string().url().optional().or(z.literal('')),
+    cover_image_url: z.string().url().optional().or(z.literal('')),
+    category: z.string().optional(),
+    status: z.enum(['draft', 'published', 'archived']).default('draft'),
+    is_featured: z.boolean().default(false),
+    tag_ids: z.array(z.string().uuid()).default([]),
+});
+
+export const blogTagSchema = z.object({
+    name: z.string().min(1, "Tag name is required"),
+    slug: z.string().min(1, "Tag slug is required"),
+});
