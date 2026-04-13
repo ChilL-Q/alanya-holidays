@@ -10,7 +10,7 @@ import { ServiceType } from '../types/index';
 // Modular Components
 import { ProductCard } from '../components/shop/ProductCard';
 import { ShopHero } from '../components/shop/ShopHero';
-import { Product as DBProduct } from '../types/models';
+import { Product as DBProduct, ProductVariant } from '../types/models';
 
 // Mock Data
 const mockProducts: DBProduct[] = [
@@ -105,15 +105,18 @@ export const Shop: React.FC = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleAddToCart = (product: DBProduct) => {
+    const handleAddToCart = (product: DBProduct, variant?: ProductVariant) => {
         contextAddToCart({
             id: product.id,
             title: product.title,
-            price: product.price,
+            price: variant ? variant.price : product.price,
             image: product.images[0],
-            type: ServiceType.PRODUCT
+            type: ServiceType.PRODUCT,
+            variant_id: variant?.id,
+            variant_label: variant?.size_label,
         });
-        setCartToast(`Added ${product.title} to basket`);
+        const label = variant ? `${product.title} (${variant.size_label})` : product.title;
+        setCartToast(`Added ${label} to basket`);
         setTimeout(() => setCartToast(null), 3000);
     };
 

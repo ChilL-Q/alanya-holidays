@@ -26,7 +26,8 @@ export const bookingSchema = z.object({
     guests: z.number().int().min(1),
     message: z.string().max(500).optional(),
     payment_method: z.enum(['card', 'cash', 'bank', 'crypto', 'swift']).default('card'),
-    item_type: z.enum(['property', 'service', 'product'])
+    item_type: z.enum(['property', 'service', 'product']),
+    variant_id: z.string().uuid().optional(),
 }).refine(data => new Date(data.check_out) > new Date(data.check_in), {
     message: "Check-out date must be after check-in date",
     path: ["check_out"]
@@ -50,6 +51,13 @@ export const productSchema = z.object({
     category: z.string().min(1, "Category is required"),
     images: z.array(z.string()).min(1, "At least one image is required"),
     seller_id: z.string().uuid("Invalid seller ID"),
+});
+
+export const productVariantSchema = z.object({
+    size_label: z.string().min(1, "Size label is required"),
+    price: z.number().positive("Price must be positive"),
+    stock: z.number().int().nonnegative("Stock cannot be negative"),
+    sku: z.string().optional(),
 });
 
 export const reviewSchema = z.object({
