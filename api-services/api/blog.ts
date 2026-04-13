@@ -49,7 +49,7 @@ function generateExcerpt(content: string | null, maxLength: number = 200): strin
     if (!content) return null;
     const stripped = content.replace(/<[^>]*>/g, '').trim();
     if (stripped.length <= maxLength) return stripped;
-    return stripped.slice(0, maxLength).trimEnd() + '…';
+    return stripped.slice(0, maxLength).trimEnd() + '\u2026';
 }
 
 // ============================================================
@@ -621,6 +621,7 @@ export const blogService = {
 
     /**
      * Reject a blog submission. Admin only. Sends email to author with reason.
+     * Deletes associated media files from storage.
      */
     async rejectBlogSubmission(submissionId: string, reason: string): Promise<void> {
         const { data: { user } } = await supabase.auth.getUser();
@@ -638,6 +639,29 @@ export const blogService = {
             .single();
 
         if (subError || !submission) throw subError || new Error('Submission not found');
+
+        // Delete media files from storage
+        if (submission.media_urls && submission.media_urls.length > 0) {
+            try {
+                // Extract file paths from public URLs
+                const filePaths = submission.media_urls
+                    .map((url: string) => {
+                        // URL format: {supabaseUrl}/storage/v1/object/public/blog-media/{userId}/{filename}
+                        const match = url.match(/\/blog-media\/(.+)$/);
+                        return match ? match[1] : null;
+                    })
+                    .filter(Boolean) as string[];
+
+                if (filePaths.length > 0) {
+                    await supabase.storage
+                        .from('blog-media')
+                        .remove(filePaths);
+                }
+            } catch (e) {
+                console.error('Failed to delete submission media files:', e);
+                // Non-critical — continue with rejection
+            }
+        }
 
         // Update submission
         await supabase
