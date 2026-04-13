@@ -7,6 +7,7 @@ import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
+import { TravelGuideSection } from '../components/home/TravelGuideSection';
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
@@ -223,6 +224,9 @@ export const DirectoryHome: React.FC = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Travel Guide / Featured Blog Posts */}
+            <TravelGuideSection />
 
             {/* Premium Listings Section */}
             <PremiumListingsSection listings={premiumListings} loading={listingsLoading} />
