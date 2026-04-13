@@ -53,8 +53,8 @@ CREATE POLICY "listing_votes_delete" ON listing_votes
 -- UPSERTs the vote and returns the new state
 CREATE OR REPLACE FUNCTION vote_listing(
     p_listing_id UUID,
-    p_listing_type TEXT DEFAULT 'directory',
-    p_vote SMALLINT
+    p_vote SMALLINT,
+    p_listing_type TEXT DEFAULT 'directory'
 )
 RETURNS TABLE (
     net_votes INT,

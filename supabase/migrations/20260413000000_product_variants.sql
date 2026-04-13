@@ -6,7 +6,7 @@
 -- 1. CREATE product_variants table
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.product_variants (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
     size_label TEXT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
