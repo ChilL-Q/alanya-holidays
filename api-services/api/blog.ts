@@ -38,7 +38,21 @@ interface BlogPostRaw {
     tags?: Array<{ tag: BlogTag | null } | null>;
 }
 
-interface BlogPostWithTags extends BlogPost {
+export interface BlogPostWithTags extends BlogPost {
+    tags?: BlogTag[];
+}
+
+/** Lightweight version for card/list views — no content field */
+export interface BlogPostPreview {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    cover_image_url: string | null;
+    category: string | null;
+    published_at: string | null;
+    views?: number;
+    author?: { full_name: string | null; avatar_url: string | null } | null;
     tags?: BlogTag[];
 }
 
@@ -129,6 +143,32 @@ export const blogService = {
         })) as BlogPostWithTags[];
 
         return { data: flattened, total: count || 0 };
+    },
+
+    /**
+     * Fetch featured blog posts for the landing page.
+     * Uses idx_blog_posts_featured partial index (is_featured=true AND status='published').
+     */
+    async getFeaturedBlogPosts(limit: number = 3): Promise<BlogPostPreview[]> {
+        const { data, error } = await supabase
+            .from('blog_posts')
+            .select(`
+                id,
+                title,
+                slug,
+                excerpt,
+                cover_image_url,
+                category,
+                published_at,
+                author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)
+            `)
+            .eq('is_featured', true)
+            .eq('status', 'published')
+            .order('published_at', { ascending: false, nullsFirst: false })
+            .limit(limit);
+
+        if (error) throw error;
+        return (data || []) as unknown as BlogPostPreview[];
     },
 
     /**
