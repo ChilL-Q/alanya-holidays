@@ -60,6 +60,8 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
         const ids = listings.map(l => l.id);
         db.getUserVotesBatch(ids).then(setUserVotes);
+    // Intentional: user?.id and listings.length to avoid refetching on vote count updates
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, user?.id, listings.length]);
 
     const handleVote = useCallback(async (listingId: string, vote: 1 | -1) => {
