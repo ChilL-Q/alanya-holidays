@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, Car, LogOut, User, LayoutDashboard, Heart, Banknote, ShoppingBag } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, BookOpen, Car } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
@@ -52,21 +52,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
             <div className="flex flex-col gap-1">
                 {/* Main Nav */}
-                <Link to="/stays" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                     <Home size={18} className="text-slate-400" />
-                    {t('nav.stays')}
+                    {t('nav.directory')}
                 </Link>
-                <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                    <Car size={18} className="text-slate-400" />
-                    {t('nav.services')}
+                <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                    <BookOpen size={18} className="text-slate-400" />
+                    {t('nav.blog')}
                 </Link>
                 <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                     <ShoppingBag size={18} className="text-slate-400" />
                     {t('shop')}
-                </Link>
-                <Link to="/zero-fees" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200 bg-teal-50/50 dark:bg-slate-800/50">
-                    <Banknote size={18} />
-                    {t('value.zero_fees.title')}
                 </Link>
                 <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                     <Home size={18} className="text-slate-400" />

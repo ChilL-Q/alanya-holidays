@@ -26,6 +26,7 @@ const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default:
 const ListProperty = React.lazy(() => import('../pages/ListProperty').then(module => ({ default: module.ListProperty })));
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
 const BlogPostPage = React.lazy(() => import('../pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
+const BlogPage = React.lazy(() => import('../pages/BlogPage').then(module => ({ default: module.BlogPage })));
 const VisaConsult = React.lazy(() => import('../pages/VisaConsult').then(module => ({ default: module.VisaConsult })));
 const CarRental = React.lazy(() => import('../pages/CarRental').then(module => ({ default: module.CarRental })));
 const CarModelDetails = React.lazy(() => import('../pages/CarModelDetails').then(module => ({ default: module.CarModelDetails })));
@@ -104,6 +105,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/stays" element={<SearchResultsPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
+                <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
 
                 {/* Auth Redirects */}

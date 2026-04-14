@@ -2,6 +2,8 @@ export const en = {
   // Navbar
   'nav.stays': 'Stays',
   'nav.services': 'Services',
+  'nav.directory': 'Directory',
+  'nav.blog': 'Blog',
   'shop': 'Shop',
   'nav.about': 'About',
   'nav.profile': 'Profile',
