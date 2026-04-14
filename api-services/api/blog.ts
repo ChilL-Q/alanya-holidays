@@ -76,7 +76,8 @@ async function resolveSlug(baseSlug: string): Promise<string> {
         .eq('slug', baseSlug)
         .or(`slug.like.${baseSlug}-%`);
 
-    const existingSlugs = (data || []).map((row: { slug: string }) => row.slug);
+    const rows = Array.isArray(data) ? data : (data ? [data] : []);
+    const existingSlugs = rows.map((row: { slug: string }) => row.slug);
     return generateUniqueSlug(baseSlug, existingSlugs);
 }
 
