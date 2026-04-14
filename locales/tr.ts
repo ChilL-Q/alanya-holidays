@@ -2,6 +2,8 @@ export const tr = {
     // Navbar
     'nav.stays': 'Konaklama',
     'nav.services': 'Hizmetler',
+    'nav.directory': 'Rehber',
+    'nav.blog': 'Blog',
     'nav.about': 'Hakkımızda',
     'shop': 'Mağaza',
     'nav.profile': 'Profil',

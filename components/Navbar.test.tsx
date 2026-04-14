@@ -84,8 +84,8 @@ describe('Navbar', () => {
         );
         expect(screen.getByText('Alanya')).toBeDefined();
         // Check desktop links by text key
-        expect(screen.getAllByText('nav.stays').length).toBeGreaterThan(0);
-        expect(screen.getByText('nav.services')).toBeDefined();
+        expect(screen.getAllByText('nav.directory').length).toBeGreaterThan(0);
+        expect(screen.getByText('nav.blog')).toBeDefined();
     });
 
     it('opens login modal when guest clicks profile -> login', () => {

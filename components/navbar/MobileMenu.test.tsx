@@ -59,7 +59,8 @@ vi.mock('lucide-react', () => ({
     LayoutDashboard: () => <svg data-testid="dashboard-icon" />,
     Heart: () => <svg data-testid="heart-icon" />,
     Banknote: () => <svg data-testid="banknote-icon" />,
-    ShoppingBag: () => <svg data-testid="shop-icon" />
+    ShoppingBag: () => <svg data-testid="shop-icon" />,
+    BookOpen: () => <svg data-testid="book-open-icon" />
 }));
 
 // Import component after mocks
@@ -113,10 +114,9 @@ describe('MobileMenu', () => {
 
     it('renders main navigation links', () => {
         renderMenu();
-        expect(screen.getByText('nav.stays')).toBeInTheDocument();
-        expect(screen.getByText('nav.services')).toBeInTheDocument();
+        expect(screen.getByText('nav.directory')).toBeInTheDocument();
+        expect(screen.getByText('nav.blog')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
-        expect(screen.getByText('value.zero_fees.title')).toBeInTheDocument();
     });
 
     it('renders user links when authenticated', () => {
@@ -172,7 +172,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.stays'));
+        fireEvent.click(screen.getByText('nav.directory'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 

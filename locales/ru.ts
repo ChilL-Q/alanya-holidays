@@ -2,6 +2,8 @@ export const ru = {
   // Navbar
   'nav.stays': 'Жилье',
   'nav.services': 'Сервисы',
+  'nav.directory': 'Каталог',
+  'nav.blog': 'Блог',
   'shop': 'Магазин',
   'nav.about': 'О нас',
   'nav.profile': 'Профиль',
