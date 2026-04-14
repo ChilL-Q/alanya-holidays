@@ -2,6 +2,8 @@ export const ar = {
     // Navbar
     'nav.stays': 'إقامة',
     'nav.services': 'خدمات',
+    'nav.directory': 'الدليل',
+    'nav.blog': 'المدونة',
     'shop': 'المتجر',
     'nav.about': 'معلومات عنا',
     'nav.profile': 'الملف الشخصي',

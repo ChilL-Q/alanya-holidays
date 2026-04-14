@@ -8,13 +8,25 @@ import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
+import { ModeToggle, LandingMode } from '../components/home/ModeToggle';
+
+const RENTAL_CATEGORIES = new Set(['accommodations', 'transport', 'real-estate']);
+const SERVICES_CATEGORIES = new Set(['medical', 'tours', 'restaurants', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty']);
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
+    const [mode, setMode] = useState<LandingMode>(() => {
+        return (localStorage.getItem('landingMode') as LandingMode) || 'rental';
+    });
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+
+    const handleModeChange = (newMode: LandingMode) => {
+        setMode(newMode);
+        localStorage.setItem('landingMode', newMode);
+    };
 
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
@@ -57,6 +69,9 @@ export const DirectoryHome: React.FC = () => {
         { id: 'spa-hamam', icon: '🧖', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
         { id: 'hair-beauty', icon: '💇', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
     ];
+
+    const allowedIds = mode === 'rental' ? RENTAL_CATEGORIES : SERVICES_CATEGORIES;
+    const filteredCategories = categories.filter(cat => allowedIds.has(cat.id));
 
     return (
         <>
@@ -155,7 +170,7 @@ export const DirectoryHome: React.FC = () => {
                     <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-2xl mx-auto px-2">
                         <button
                             onClick={() => navigate('/search-results')}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-xl sm:rounded-full font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-xl sm:rounded-full font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
                         >
                             <MapPin className="w-5 h-5 text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
                             {t('dir.cta.explore')}
@@ -165,7 +180,7 @@ export const DirectoryHome: React.FC = () => {
                             onClick={() => {
                                 document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
                         >
                             <Grid className="w-5 h-5" />
                             {t('dir.cta.categories')}
@@ -173,7 +188,7 @@ export const DirectoryHome: React.FC = () => {
 
                         <button
                             onClick={() => navigate('/list-property')}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
                         >
                             <Briefcase className="w-5 h-5" />
                             {t('dir.cta.list')}
@@ -184,7 +199,7 @@ export const DirectoryHome: React.FC = () => {
                     <div className="mt-8 sm:mt-12 px-2 max-w-sm mx-auto w-full">
                         <button
                             onClick={() => navigate('/ai-planner')}
-                            className="group relative w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl sm:rounded-full font-bold shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                            className="group relative w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl sm:rounded-full font-bold shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                         >
                             <Sparkles className="w-5 h-5 animate-pulse" />
                             <span className="tracking-wide">{t('dir.cta.ai')}</span>
@@ -199,14 +214,17 @@ export const DirectoryHome: React.FC = () => {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('dir.cat.title')}</h2>
                     <p className="mt-4 text-slate-600 dark:text-slate-400">{t('dir.cat.subtitle')}</p>
+                    <div className="mt-6 flex justify-center">
+                        <ModeToggle mode={mode} onChange={handleModeChange} />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                    {categories.map((category) => (
+                    {filteredCategories.map((category) => (
                         <button
                             key={category.id}
                             onClick={() => navigate(category.path)}
-                            className="group flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800/50 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all duration-300 text-left sm:text-center text-slate-900 dark:text-white gap-4 sm:gap-0"
+                            className="group flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800/50 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all duration-300 text-left sm:text-center text-slate-900 dark:text-white gap-4 sm:gap-0 cursor-pointer"
                         >
                             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl sm:mb-4 group-hover:bg-teal-50 dark:group-hover:bg-slate-700/50 group-hover:scale-110 transition-all duration-300 flex-shrink-0">
                                 {category.icon}
