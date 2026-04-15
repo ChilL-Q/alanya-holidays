@@ -28,6 +28,290 @@ Deno.serve(async (req: Request) => {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 })
   }
 
+  // ============================================================
+  // Premium Subscription Handlers (Task 90)
+  // ============================================================
+
+  if (event.type === 'customer.subscription.created') {
+    const subscription = event.data.object as Stripe.Subscription
+    const customerId = subscription.customer as string
+    const metadata = subscription.metadata
+
+    if (!metadata?.userId || !metadata?.plan) {
+      console.warn('subscription.created: Missing metadata (userId or plan) — skipping premium flow')
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // Idempotency: check if already exists
+    const { data: existing } = await supabase
+      .from('premium_subscriptions')
+      .select('id')
+      .eq('stripe_subscription_id', subscription.id)
+      .maybeSingle()
+
+    if (existing) {
+      console.warn(`Skipping duplicate subscription.created webhook for sub ${subscription.id}`)
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // Determine status: trialing if trial_end < now, otherwise active
+    let status: 'active' | 'trialing' = 'active'
+    if (subscription.status === 'trialing' || (subscription.trial_end && new Date(subscription.trial_end * 1000) > new Date())) {
+      status = 'trialing'
+    }
+
+    const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+
+    // Insert into DB
+    const { error: insertError } = await supabase
+      .from('premium_subscriptions')
+      .insert({
+        user_id: metadata.userId,
+        plan: metadata.plan,
+        status: status,
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: customerId,
+        current_period_end: currentPeriodEnd,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+      })
+
+    if (insertError) {
+      console.error('Failed to insert premium subscription:', insertError)
+      return new Response(JSON.stringify({ error: 'DB insert failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    console.warn(`Premium subscription created for user ${metadata.userId} — plan: ${metadata.plan}`)
+
+    // In-app notification
+    await supabase.from('notifications').insert({
+      user_id: metadata.userId,
+      title: '🎉 Welcome to Premium!',
+      message: 'You now have access to AI Trip Planner and Premium benefits.',
+      type: 'success',
+      link: '/profile',
+    })
+
+    // Email
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', metadata.userId)
+      .maybeSingle()
+
+    if (userProfile?.email) {
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: userProfile.email,
+            type: 'welcome_email', // Using existing template, or we can add 'welcome_premium'
+            data: {
+              name: userProfile.full_name || 'there',
+              link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+            },
+          },
+        })
+      } catch (e) {
+        console.error('Failed to send welcome email:', e)
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+  } // end customer.subscription.created
+
+  if (event.type === 'customer.subscription.updated') {
+    const subscription = event.data.object as Stripe.Subscription
+
+    // Find sub record by stripe_subscription_id
+    const { data: subRecord, error: fetchError } = await supabase
+      .from('premium_subscriptions')
+      .select('id, stripe_customer_id, user_id, status, cancel_at_period_end')
+      .eq('stripe_subscription_id', subscription.id)
+      .maybeSingle()
+
+    if (fetchError || !subRecord) {
+      console.error('subscription.updated: Failed to find subscription record:', fetchError?.message ?? 'not found')
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // Always update period end and cancel flag first
+    const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+    const cancelAtPeriodEnd = subscription.cancel_at_period_end ?? false
+    const newStatus: 'active' | 'trialing' | 'past_due' | 'cancelled' = subscription.status === 'active' ? 'active' : subscription.status === 'trialing' ? 'trialing' : subscription.status === 'past_due' ? 'past_due' : 'cancelled'
+
+    const { error: updateError } = await supabase
+      .from('premium_subscriptions')
+      .update({
+        status: newStatus,
+        current_period_end: currentPeriodEnd,
+        cancel_at_period_end: cancelAtPeriodEnd,
+      })
+      .eq('id', subRecord.id)
+
+    if (updateError) {
+      console.error('Failed to update premium subscription status:', updateError)
+      return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    console.warn(`Premium subscription updated: id ${subRecord.id}, status -> ${newStatus}`)
+
+    // Recovery notification: if it was past_due and now active
+    if (subRecord.status === 'past_due' && newStatus === 'active') {
+      await supabase.from('notifications').insert({
+        user_id: subRecord.user_id,
+        title: 'Subscription Restored',
+        message: 'Your Premium subscription has been restored. Enjoy your benefits!',
+        type: 'success',
+        link: '/profile',
+      })
+    }
+
+    // Cancellation notification (Stripe sets cancel_at_period_end but status is still active until period ends)
+    if (cancelAtPeriodEnd && !subRecord.cancel_at_period_end) {
+      await supabase.from('notifications').insert({
+        user_id: subRecord.user_id,
+        title: 'Subscription Cancellation Scheduled',
+        message: `Your Premium subscription will end on ${currentPeriodEnd}. You still have access until then.`,
+        type: 'warning',
+        link: '/profile',
+      })
+    }
+
+    return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+  } // end customer.subscription.updated
+
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object as Stripe.Subscription
+
+    const { data: subRecord, error: fetchError } = await supabase
+      .from('premium_subscriptions')
+      .select('id, user_id, stripe_customer_id, current_period_end')
+      .eq('stripe_subscription_id', subscription.id)
+      .maybeSingle()
+
+    if (fetchError || !subRecord) {
+      console.warn('subscription.deleted: Subscription record not found or already deleted')
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    const { error: updateError } = await supabase
+      .from('premium_subscriptions')
+      .update({ status: 'cancelled' })
+      .eq('id', subRecord.id)
+
+    if (updateError) {
+      console.error('Failed to cancel premium subscription in DB:', updateError)
+      return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    console.warn(`Premium subscription cancelled: id ${subRecord.id}`)
+
+    // Notification
+    await supabase.from('notifications').insert({
+      user_id: subRecord.user_id,
+      title: 'Subscription Cancelled',
+      message: `Your Premium subscription has ended. You had access until ${new Date(subRecord.current_period_end).toLocaleDateString()}.`,
+      type: 'info',
+      link: '/profile',
+    })
+
+    // Email
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', subRecord.user_id)
+      .maybeSingle()
+
+    if (userProfile?.email) {
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: userProfile.email,
+            type: 'refund_processed', // We can add a specific 'subscription_cancelled' later if needed
+            data: {
+              amount: '',
+              itemTitle: 'Premium Subscription',
+              link: `${Deno.env.get('SITE_URL') ?? 'https://alnya-holidays.com'}/profile`,
+            },
+          },
+        })
+      } catch (e) {
+        console.error('Failed to send cancellation email:', e)
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+  } // end customer.subscription.deleted
+
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object as Stripe.Invoice
+    const customerId = invoice.customer as string
+
+    // Find user's subscription by customer ID
+    const { data: subRecord, error: fetchError } = await supabase
+      .from('premium_subscriptions')
+      .select('id, user_id, stripe_subscription_id')
+      .eq('stripe_customer_id', customerId)
+      .eq('status', 'active') // Only update if it was active
+      .maybeSingle()
+
+    if (fetchError || !subRecord) {
+      console.warn('invoice.payment_failed: No active subscription found for customer')
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    const { error: updateError } = await supabase
+      .from('premium_subscriptions')
+      .update({ status: 'past_due' })
+      .eq('id', subRecord.id)
+
+    if (updateError) {
+      console.error('Failed to update subscription to past_due:', updateError)
+      return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    console.warn(`Premium subscription marked past_due: id ${subRecord.id}`)
+
+    // Notification
+    await supabase.from('notifications').insert({
+      user_id: subRecord.user_id,
+      title: '⚠️ Payment Failed',
+      message: 'Your Premium subscription payment failed. Please update your payment method to maintain access.',
+      type: 'error',
+      link: '/profile',
+    })
+
+    // Email
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', subRecord.user_id)
+      .maybeSingle()
+
+    if (userProfile?.email) {
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            to: userProfile.email,
+            type: 'booking_rejected', // Reusing template for payment issue (no specific template exists)
+            data: {
+              itemTitle: 'Premium Subscription',
+              reason: 'Payment failed. Please update your card details.',
+              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alnya-holidays.com'}/profile`,
+            },
+          },
+        })
+      } catch (e) {
+        console.error('Failed to send payment failed email:', e)
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+  } // end invoice.payment_failed
+
+  // ============================================================
+  // Existing Booking / Blog Subscription Handlers
+  // ============================================================
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
