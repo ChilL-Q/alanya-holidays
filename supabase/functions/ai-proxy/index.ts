@@ -20,10 +20,11 @@ const corsHeaders = {
 }
 
 interface AiProxyRequest {
-  propertyName: string | null;
-  location: string | null;
+  propertyName?: string | null;
+  location?: string | null;
   userQuestion: string;
-  history: { role: 'user' | 'model'; content: string }[];
+  history?: { role: 'user' | 'model'; content: string }[];
+  mode?: 'chat' | 'structured';
 }
 
 Deno.serve(async (req: Request) => {
@@ -78,15 +79,18 @@ Deno.serve(async (req: Request) => {
     // ---------------------
 
     if (!GEMINI_API_KEY) {
-      throw new Error('Missing GEMINI_API_KEY in environment')
+      return new Response(
+        JSON.stringify({ error: 'Config Error: GEMINI_API_KEY is missing in Supabase secrets.' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const { propertyName, location, userQuestion, history = [] }: AiProxyRequest = await req.json()
+    const { propertyName, location, userQuestion, history = [], mode }: AiProxyRequest = await req.json()
 
-    if (!userQuestion || typeof userQuestion !== 'string' || !userQuestion.trim()) {
+    if (!userQuestion?.trim()) {
       return new Response(
-        JSON.stringify({ error: 'Missing or empty userQuestion' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Missing userQuestion' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -114,7 +118,11 @@ Deno.serve(async (req: Request) => {
       })
       .join('\n')
 
-    const contextPrompt = `
+    const isStructured = mode === 'structured' || userQuestion.includes('JSON');
+    
+    const contextPrompt = isStructured 
+      ? userQuestion 
+      : `
       You are a friendly, knowledgeable local travel guide in Alanya, Turkey.
       ${safePropertyName ? `The user is considering booking a property named "${safePropertyName}" located in "${safeLocation}".` : 'The user is planning a trip to Alanya.'}
 
@@ -136,7 +144,7 @@ Deno.serve(async (req: Request) => {
       "gemini-flash-latest"
     ]
 
-    let lastError: string = ''
+    let lastError = ''
 
     for (const modelName of modelsToTry) {
       try {
@@ -150,22 +158,18 @@ Deno.serve(async (req: Request) => {
           },
           body: JSON.stringify({
             contents: [{ parts: [{ text: contextPrompt }] }],
+// Version: 1.0.4 - Official JSON Mode
             generationConfig: {
-              maxOutputTokens: 256,
-              temperature: 0.7,
+              maxOutputTokens: isStructured ? 8192 : 512,
+              temperature: isStructured ? 0.1 : 0.7,
+              response_mime_type: isStructured ? "application/json" : "text/plain",
             }
           })
         })
 
         if (!response.ok) {
           const errBody = await response.text()
-          if (response.status === 429) {
-            console.warn(`Model ${modelName} rate limited.`)
-            lastError = `429: Rate limited`
-            continue
-          }
           lastError = `${response.status}: ${errBody}`
-          console.warn(`Model ${modelName} failed: ${lastError}`)
           continue
         }
 
@@ -183,25 +187,15 @@ Deno.serve(async (req: Request) => {
         )
       } catch (err) {
         lastError = String(err)
-        console.warn(`Model ${modelName} error:`, err)
       }
     }
 
-    // All models failed
-    if (lastError.includes('429')) {
-      return new Response(
-        JSON.stringify({ answer: "I'm currently receiving too many requests. Please wait 10-20 seconds and try again! ⏳" }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     return new Response(
-      JSON.stringify({ error: 'AI service temporarily unavailable. Please try again later.' }),
+      JSON.stringify({ error: `AI service temporarily unavailable. Please try again later. Debug: ${lastError}` }),
       { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('AI Proxy Error:', error)
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
