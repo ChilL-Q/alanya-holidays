@@ -64,12 +64,13 @@ export const consultantsService = {
 
         return createBooking({
             item_id: consultantId,
+            user_id: user.id,
             item_type: 'consultant',
             check_in: checkIn.toISOString(),
             check_out: checkOut.toISOString(),
             guests: 1,
             total_price: hourlyRate * durationHours,
-            special_requests: message,
+            message: message,
         });
     },
 };
