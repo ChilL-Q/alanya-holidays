@@ -44,7 +44,24 @@ vi.mock('../components/shop/ShopHero', () => ({
 vi.mock('lucide-react', () => ({
     ShoppingBag: () => <svg data-testid="shopping-bag" />,
     Star: () => <svg data-testid="star" />,
-    User: () => <svg data-testid="user" />
+    User: () => <svg data-testid="user" />,
+    Scale: () => <svg data-testid="scale" />,
+    Send: () => <svg data-testid="send" />,
+    Loader2: () => <svg data-testid="loader2" />
+}));
+
+vi.mock('../components/shop/LawyerBanner', () => ({
+    LawyerBanner: ({ onOpen }: any) => (
+        <button data-testid="lawyer-banner" onClick={onOpen}>Connect with a Lawyer</button>
+    )
+}));
+
+vi.mock('../components/shop/LawyerContactModal', () => ({
+    LawyerContactModal: () => <div data-testid="lawyer-modal" />
+}));
+
+vi.mock('../components/shop/ProductModal', () => ({
+    ProductModal: () => <div data-testid="product-modal" />
 }));
 
 let mockSearchParams = new URLSearchParams();
