@@ -195,7 +195,7 @@ Deno.serve(async (req: Request) => {
       { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred. Please try again later.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
