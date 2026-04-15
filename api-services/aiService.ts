@@ -71,7 +71,8 @@ export const askLocalGuide = async (
     propertyName: string | null,
     location: string | null,
     userQuestion: string,
-    history: { role: 'user' | 'model'; content: string }[] = []
+    history: { role: 'user' | 'model'; content: string }[] = [],
+    mode: 'chat' | 'structured' = 'chat'
 ): Promise<string> => {
     const invokeAiProxy = async () => {
         const { data, error } = await supabase.functions.invoke('ai-proxy', {
@@ -80,6 +81,7 @@ export const askLocalGuide = async (
                 location,
                 userQuestion,
                 history: history.slice(-15),
+                mode,
             },
         });
 
@@ -119,4 +121,49 @@ export const askLocalGuide = async (
         // For other errors (network, 500s, etc.), return the curated fallback
         return getFallbackResponse();
     }
+};
+export const planTrip = async (
+    prefs: { 
+        duration: number; 
+        companion: string; 
+        interests: string[];
+        pace: string;
+        budget: string;
+    }
+): Promise<string> => {
+    const prompt = `Act as an expert Alanya tour guide. Generate a detailed ${prefs.duration}-day trip itinerary for a ${prefs.companion}.
+    Interests: ${prefs.interests.join(', ')}.
+    Pace: ${prefs.pace}.
+    Budget Level: ${prefs.budget}.
+    
+    IMPORTANT GUIDELINES:
+    - If budget is "economy": Suggest using "Dolmuş" (local buses) for transport. Recommend free public beaches (Damlataş, Kleopatra), local Pide/Lavaş restaurants, and hiking the Castle hills.
+    - If budget is "standard": Suggest car/scooter rentals. Recommend a mix of local favorites and popular tourist spots like Dim Çayı or Sapadere Canyon.
+    - If budget is "luxury": Suggest private VIP transfers or luxury car rentals. Recommend premium beach clubs (e.g., Illusia, Envie), private yacht tours from the harbor, and fine dining with castle views.
+    - If pace is "relaxed": Focus on 1-2 key locations per day with plenty of "Beach time" or "Leisure at harbor".
+    - If pace is "intense": Include 3-4 distinct stops per day (e.g., Morning: Castle & Red Tower; Afternoon: Dim Cave; Evening: Harbor & Nightlife).
+
+    YOUR ENTIRE RESPONSE MUST BE A SINGLE JSON OBJECT. DO NOT USE MARKDOWN BLOCKS (\`\`\`json). DO NOT ADD PREAMBLE OR POSTAMBLE.
+    
+    Structure:
+    {
+      "itinerary": [
+        {
+          "day": 1,
+          "title": "Day Title",
+          "items": [
+            {"time": "09:00", "title": "Activity Name", "description": "Brief description", "location": "Area", "link": "/services/..."}
+          ]
+        }
+      ]
+    }
+    
+    Link suggestions:
+    - /services/car-rental
+    - /things-to-do-in-alanya
+    - /medical-tourism-alanya
+    - /alanya-real-estate
+    - /alanya-hotels`;
+
+    return askLocalGuide(null, "Alanya", prompt, [], 'structured');
 };
