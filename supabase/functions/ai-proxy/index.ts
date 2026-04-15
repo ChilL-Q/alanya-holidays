@@ -58,10 +58,33 @@ Deno.serve(async (req: Request) => {
     }
     // ----------------------------
 
+    // Admin client for server-side operations
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+    // --- Premium Subscription Gate (Task 91.2) ---
+    // Check BEFORE rate limit — non-premium requests should not consume quota
+    if (SUPABASE_SERVICE_ROLE_KEY) {
+        const { data: isPremium, error: premError } = await supabaseAdmin.rpc('is_premium', {
+            p_user_id: user.id
+        })
+        if (premError) {
+            console.error('Premium check failed:', premError)
+            // Fail open (allow) if DB check fails — don't block users if DB is temporarily unavailable
+        } else if (!isPremium) {
+            return new Response(
+                JSON.stringify({
+                    error: 'upgrade_required',
+                    message: 'Trip Planner requires a Premium subscription. Click Upgrade to unlock full access.'
+                }),
+                { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+    }
+    // ----------------------
+
     // --- Rate Limiting ---
     if (SUPABASE_SERVICE_ROLE_KEY) {
-      const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-      const { data: allowed, error: rlError } = await adminClient.rpc('check_rate_limit', {
+      const { data: allowed, error: rlError } = await supabaseAdmin.rpc('check_rate_limit', {
         p_user_id: user.id,
         p_function_name: 'ai-proxy',
         p_max_requests: AI_RATE_LIMIT,
