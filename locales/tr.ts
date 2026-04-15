@@ -775,5 +775,23 @@ export const tr = {
     'dir.testi.t1.role': 'İngiltere\'den Ziyaretçi',
     'dir.testi.t2.text': '"Bir tur operatörü olarak, burada listelenmek bize doğrudan nitelikli müşteriler getirdi."',
     'dir.testi.t2.name': 'Ahmet K.',
-    'dir.testi.t2.role': 'Alanya Tours'
+    'dir.testi.t2.role': 'Alanya Tours',
+
+    // Lawyer Contact
+    'shop.lawyer.title': "Türkiye'de Hukuki Yardıma mı İhtiyacınız var?",
+    'shop.lawyer.description': "Mülk satın alma, anlaşmazlık çözümü veya iş kurma mı? Türk hukuku alanında uzmanlaşmış, İngilizce konuşan güvenilir bir avukata bağlanın.",
+    'shop.lawyer.cta': 'Avukatla İletişime Geçin',
+    'shop.lawyer.modal.title': 'Hukuki Danışmanlık Talebi',
+    'shop.lawyer.form.name': 'İsim',
+    'shop.lawyer.form.name_placeholder': 'Ahmet Yılmaz',
+    'shop.lawyer.form.email': 'E-posta',
+    'shop.lawyer.form.email_placeholder': 'ahmet@example.com',
+    'shop.lawyer.form.phone': 'Telefon',
+    'shop.lawyer.form.phone_placeholder': '+90 500 000 00 00',
+    'shop.lawyer.form.message': 'Nasıl yardımcı olabiliriz?',
+    'shop.lawyer.form.message_placeholder': 'Hukuki sorunuzu veya durumunuzu açıklayın...',
+    'shop.lawyer.form.submit': 'Talep Gönder',
+    'shop.lawyer.form.loading': 'Gönderiliyor...',
+    'shop.lawyer.success': 'Talebiniz gönderildi. En kısa sürede size ulaşacağız.',
+    'shop.lawyer.confidential': 'Bilgileriniz gizli tutulur.',
 };

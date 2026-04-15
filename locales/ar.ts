@@ -775,5 +775,23 @@ export const ar = {
     'dir.testi.t1.role': 'زائر من المملكة المتحدة',
     'dir.testi.t2.text': '"كمنظم رحلات محلي، جلب لنا التواجد هنا عملاء مؤهلين بشكل كبير مباشرة إلى هاتفنا."',
     'dir.testi.t2.name': 'أحمد ك.',
-    'dir.testi.t2.role': 'ألانيا تورز'
+    'dir.testi.t2.role': 'ألانيا تورز',
+
+    // Lawyer Contact
+    'shop.lawyer.title': 'هل تحتاج مساعدة قانونية في تركيا؟',
+    'shop.lawyer.description': 'شراء العقارات، تسوية النزاعات أو بدء عمل تجاري؟ تواصل مع محامٍ موثوق يتحدث الإنجليزية والمتخصص في القانون التركي.',
+    'shop.lawyer.cta': 'تواصل مع محامٍ',
+    'shop.lawyer.modal.title': 'طلب استشارة قانونية',
+    'shop.lawyer.form.name': 'الاسم',
+    'shop.lawyer.form.name_placeholder': 'أحمد محمد',
+    'shop.lawyer.form.email': 'البريد الإلكتروني',
+    'shop.lawyer.form.email_placeholder': 'ahmed@example.com',
+    'shop.lawyer.form.phone': 'الهاتف',
+    'shop.lawyer.form.phone_placeholder': '+90 500 000 00 00',
+    'shop.lawyer.form.message': 'كيف يمكننا المساعدة؟',
+    'shop.lawyer.form.message_placeholder': 'صف سؤالك القانوني أو موقفك...',
+    'shop.lawyer.form.submit': 'إرسال الطلب',
+    'shop.lawyer.form.loading': 'جارٍ الإرسال...',
+    'shop.lawyer.success': 'تم إرسال طلبك. سنتواصل معك في أقرب وقت ممكن.',
+    'shop.lawyer.confidential': 'تظل معلوماتك سرية.',
 };
