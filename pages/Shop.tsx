@@ -10,6 +10,7 @@ import { ServiceType } from '../types/index';
 // Modular Components
 import { ProductCard } from '../components/shop/ProductCard';
 import { ShopHero } from '../components/shop/ShopHero';
+import { ProductModal } from '../components/shop/ProductModal';
 import { Product as DBProduct, ProductVariant } from '../types/models';
 
 // Mock Data
@@ -77,6 +78,7 @@ export const Shop: React.FC = () => {
     const [products, setProducts] = useState<DBProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [cartToast, setCartToast] = useState<string | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<DBProduct | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -176,6 +178,7 @@ export const Shop: React.FC = () => {
                                 product={product}
                                 index={index}
                                 onAddToCart={handleAddToCart}
+                                onCardClick={() => setSelectedProduct(product)}
                                 formatPrice={formatPrice}
                                 convertPrice={convertPrice}
                             />
@@ -183,6 +186,15 @@ export const Shop: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <ProductModal
+                isOpen={!!selectedProduct}
+                product={selectedProduct}
+                onClose={() => setSelectedProduct(null)}
+                onAddToCart={handleAddToCart}
+                formatPrice={formatPrice}
+                convertPrice={convertPrice}
+            />
         </div>
         </>
     );
