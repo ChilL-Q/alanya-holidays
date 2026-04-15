@@ -36,6 +36,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
 
+    const navGroups = [
+        {
+            label: 'Listings',
+            items: navItems.filter(i => ['Properties', 'Fleet', 'Services', 'Directory', 'Restaurants', 'Products'].includes(i.label))
+        },
+        {
+            label: 'Commerce',
+            items: navItems.filter(i => ['Bookings'].includes(i.label))
+        },
+        {
+            label: 'Content',
+            items: navItems.filter(i => ['Reviews'].includes(i.label))
+        },
+        {
+            label: 'Users',
+            items: navItems.filter(i => ['Users', 'Reports'].includes(i.label))
+        },
+    ];
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex font-sans">
             {/* Mobile Sidebar Overlay */}
@@ -63,31 +82,65 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-1 overflow-y-auto">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = item.exact
-                            ? location.pathname === item.path
-                            : location.pathname.startsWith(item.path);
-
+                <nav className="p-4 space-y-6 overflow-y-auto">
+                    {/* Dashboard (always on top, outside groups) */}
+                    {(() => {
+                        const dashboardItem = navItems[0];
+                        const Icon = dashboardItem.icon;
+                        const isActive = dashboardItem.exact
+                            ? location.pathname === dashboardItem.path
+                            : location.pathname.startsWith(dashboardItem.path);
                         return (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={({ isActive: _linkActive }) => `
-                                    flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
-                                    ${isActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
-                                `}
-                            >
-                                <Icon size={20} className={isActive ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
-                                <span>{item.label}</span>
-                                {item.label === 'Bookings' && (
-                                    <span className="ml-auto w-2 h-2 rounded-full bg-orange-500 hidden" />
-                                )}
-                            </NavLink>
+                            <div key={dashboardItem.path} className="space-y-1">
+                                <NavLink
+                                    to={dashboardItem.path}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={`
+                                        flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                                        ${isActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
+                                    `}
+                                >
+                                    <Icon size={20} className={isActive ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
+                                    <span>{dashboardItem.label}</span>
+                                </NavLink>
+
+                                {/* Nav Groups */}
+                                {navGroups.map((group) => (
+                                    <div key={group.label} className="pt-4 first:pt-0">
+                                        <h3 className="px-4 mb-2 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                            {group.label}
+                                        </h3>
+                                        <div className="space-y-1">
+                                            {group.items.map((item) => {
+                                                const ItemIcon = item.icon;
+                                                const isItemActive = item.exact
+                                                    ? location.pathname === item.path
+                                                    : location.pathname.startsWith(item.path);
+
+                                                return (
+                                                    <NavLink
+                                                        key={item.path}
+                                                        to={item.path}
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                        className={`
+                                                            flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
+                                                            ${isItemActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
+                                                        `}
+                                                    >
+                                                        <ItemIcon size={20} className={isItemActive ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
+                                                        <span>{item.label}</span>
+                                                        {item.label === 'Bookings' && (
+                                                            <span className="ml-auto w-2 h-2 rounded-full bg-orange-500 hidden" />
+                                                        )}
+                                                    </NavLink>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         );
-                    })}
+                    })()}
                 </nav>
 
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 space-y-1">
