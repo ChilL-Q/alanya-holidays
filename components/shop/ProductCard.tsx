@@ -8,6 +8,7 @@ interface ProductCardProps {
     product: Product;
     index: number;
     onAddToCart: (product: Product, variant?: ProductVariant) => void;
+    onCardClick: () => void;
     formatPrice: (price: string | number) => string;
     convertPrice: (price: number, from: 'USD' | 'EUR') => number;
 }
@@ -16,6 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     product,
     index,
     onAddToCart,
+    onCardClick,
     formatPrice,
     convertPrice,
 }) => {
@@ -51,8 +53,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
     return (
         <div
-            className="group bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-800/50 animate-stagger-enter flex flex-col"
+            className="group bg-white dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-100 dark:border-slate-800/50 animate-stagger-enter flex flex-col cursor-pointer"
             style={{ animationDelay: `${0.1 * index}s` }}
+            onClick={onCardClick}
         >
             <div className="aspect-[4/3] bg-slate-200 dark:bg-slate-800/50 relative overflow-hidden group">
                 {product?.images?.[0] ? (
@@ -67,7 +70,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </div>
                 )}
                 <button
-                    onClick={handleAddToCart}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart();
+                    }}
                     className="absolute bottom-4 right-4 bg-white text-slate-900 p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-amber-500 hover:text-white"
                     title="Add to Basket"
                 >
@@ -120,7 +126,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </div>
                 </div>
                 <button
-                    onClick={handleAddToCart}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart();
+                    }}
                     disabled={selectedVariant !== null && selectedVariant.stock <= 0}
                     className="w-full mt-4 bg-slate-100 dark:bg-slate-800/50 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-600 text-slate-900 dark:text-white py-2 rounded-lg font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
