@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
     // Rate limit check: if insert was ignored due to UNIQUE conflict, insertData will be null
     // In that case, we still return success to prevent email enumeration
     if (!insertData) {
-      console.log(`Rate limit hit for email: ${email}`);
+      console.warn(`Rate limit hit for email: ${email.split('@')[0]}@***`);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
