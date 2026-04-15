@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Clock, MapPin, ExternalLink, Sun, CloudRain, Star, ChevronRight, Share2, Download } from 'lucide-react';
+import React from 'react';
+import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export interface ItineraryItem {
@@ -35,8 +35,7 @@ export const TripItinerary: React.FC<Props> = ({ itinerary }) => {
                     text: t('ai.itinerary.shareText'),
                     url: window.location.href,
                 });
-            } catch (error) {
-                console.log('Error sharing:', error);
+            } catch (_error) {
             }
         } else {
             // Fallback: Copy to clipboard
