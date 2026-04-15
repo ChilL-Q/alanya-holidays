@@ -144,8 +144,7 @@ Deno.serve(async (req: Request) => {
     // Generate Content based on Type
     const { subject, html } = generateEmailContent(type, validatedData);
 
-    // eslint-disable-next-line no-console
-    console.log(`Sending '${type}' email to: ${targetEmail}`)
+    console.warn(`Sending '${type}' email to: ${targetEmail}`)
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',

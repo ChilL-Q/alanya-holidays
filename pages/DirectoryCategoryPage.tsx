@@ -59,7 +59,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         if (!isAuthenticated || !user || listings.length === 0) return;
 
         const ids = listings.map(l => l.id);
-        db.getUserVotesBatch(ids).then(setUserVotes);
+        db.getUserVotesBatch(ids).then(setUserVotes).catch(e => console.error('Failed to load votes:', e));
     // Intentional: user?.id and listings.length to avoid refetching on vote count updates
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, user?.id, listings.length]);
