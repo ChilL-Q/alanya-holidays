@@ -784,5 +784,23 @@ export const en = {
   'dir.testi.t1.role': 'UK Visitor',
   'dir.testi.t2.text': '"As a local tour operator, getting listed here has brought us highly qualified leads directly to our phone."',
   'dir.testi.t2.name': 'Ahmet K.',
-  'dir.testi.t2.role': 'Alanya Tours'
+  'dir.testi.t2.role': 'Alanya Tours',
+
+  // Lawyer Contact
+  'shop.lawyer.title': 'Need Legal Help in Turkey?',
+  'shop.lawyer.description': 'Buying property, resolving disputes, or starting a business? Connect with a trusted English-speaking lawyer specializing in Turkish law.',
+  'shop.lawyer.cta': 'Connect with a Lawyer',
+  'shop.lawyer.modal.title': 'Legal Consultation Request',
+  'shop.lawyer.form.name': 'Name',
+  'shop.lawyer.form.name_placeholder': 'John Doe',
+  'shop.lawyer.form.email': 'Email',
+  'shop.lawyer.form.email_placeholder': 'john@example.com',
+  'shop.lawyer.form.phone': 'Phone',
+  'shop.lawyer.form.phone_placeholder': '+90 500 000 00 00',
+  'shop.lawyer.form.message': 'How can we help?',
+  'shop.lawyer.form.message_placeholder': 'Describe your legal question or situation...',
+  'shop.lawyer.form.submit': 'Submit Request',
+  'shop.lawyer.form.loading': 'Sending...',
+  'shop.lawyer.success': 'Your request has been sent. We will contact you shortly.',
+  'shop.lawyer.confidential': 'Your information is kept confidential.',
 };

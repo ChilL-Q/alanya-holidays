@@ -775,5 +775,23 @@ export const ru = {
   'dir.testi.t1.role': 'Туристка из Великобритании',
   'dir.testi.t2.text': '"Как местный туроператор, размещение здесь принесло нам качественные лиды прямо на телефон."',
   'dir.testi.t2.name': 'Ахмет К.',
-  'dir.testi.t2.role': 'Alanya Tours'
+  'dir.testi.t2.role': 'Alanya Tours',
+
+  // Lawyer Contact
+  'shop.lawyer.title': 'Нужна юридическая помощь в Турции?',
+  'shop.lawyer.description': 'Покупка недвижимости, разрешение споров или открытие бизнеса? Свяжитесь с проверенным юристом, говорящим на английском языке и специализирующимся на турецком праве.',
+  'shop.lawyer.cta': 'Связаться с юристом',
+  'shop.lawyer.modal.title': 'Запрос на юридическую консультацию',
+  'shop.lawyer.form.name': 'Имя',
+  'shop.lawyer.form.name_placeholder': 'Иван Иванов',
+  'shop.lawyer.form.email': 'Email',
+  'shop.lawyer.form.email_placeholder': 'ivan@example.com',
+  'shop.lawyer.form.phone': 'Телефон',
+  'shop.lawyer.form.phone_placeholder': '+90 500 000 00 00',
+  'shop.lawyer.form.message': 'Чем мы можем помочь?',
+  'shop.lawyer.form.message_placeholder': 'Опишите ваш юридический вопрос или ситуацию...',
+  'shop.lawyer.form.submit': 'Отправить запрос',
+  'shop.lawyer.form.loading': 'Отправка...',
+  'shop.lawyer.success': 'Ваш запрос отправлен. Мы свяжемся с вами в ближайшее время.',
+  'shop.lawyer.confidential': 'Ваша информация конфиденциальна.',
 };

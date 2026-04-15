@@ -11,6 +11,8 @@ import { ServiceType } from '../types/index';
 import { ProductCard } from '../components/shop/ProductCard';
 import { ShopHero } from '../components/shop/ShopHero';
 import { ProductModal } from '../components/shop/ProductModal';
+import { LawyerBanner } from '../components/shop/LawyerBanner';
+import { LawyerContactModal } from '../components/shop/LawyerContactModal';
 import { Product as DBProduct, ProductVariant } from '../types/models';
 
 // Mock Data
@@ -79,6 +81,7 @@ export const Shop: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [cartToast, setCartToast] = useState<string | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<DBProduct | null>(null);
+    const [isLawyerModalOpen, setIsLawyerModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -187,6 +190,8 @@ export const Shop: React.FC = () => {
                 )}
             </div>
 
+            <LawyerBanner onOpen={() => setIsLawyerModalOpen(true)} />
+
             <ProductModal
                 isOpen={!!selectedProduct}
                 product={selectedProduct}
@@ -194,6 +199,11 @@ export const Shop: React.FC = () => {
                 onAddToCart={handleAddToCart}
                 formatPrice={formatPrice}
                 convertPrice={convertPrice}
+            />
+
+            <LawyerContactModal
+                isOpen={isLawyerModalOpen}
+                onClose={() => setIsLawyerModalOpen(false)}
             />
         </div>
         </>
