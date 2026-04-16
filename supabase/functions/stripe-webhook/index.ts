@@ -2,6 +2,8 @@
 import Stripe from 'npm:stripe@17'
 // @ts-ignore
 import { createClient } from 'npm:@supabase/supabase-js@2'
+// @ts-ignore
+import { z } from 'npm:zod@3'
 
 declare const Deno: any
 
@@ -37,10 +39,13 @@ Deno.serve(async (req: Request) => {
     const customerId = subscription.customer as string
     const metadata = subscription.metadata
 
-    if (!metadata?.userId || !metadata?.plan) {
-      console.warn('subscription.created: Missing metadata (userId or plan) — skipping premium flow')
+    const metadataSchema = z.object({ userId: z.string().uuid(), plan: z.enum(['monthly', 'annual']) })
+    const metadataResult = metadataSchema.safeParse(metadata)
+    if (!metadataResult.success) {
+      console.warn('subscription.created: Invalid or missing metadata', metadataResult.error.issues)
       return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
     }
+    const { userId: metaUserId, plan: metaPlan } = metadataResult.data
 
     // Idempotency: check if already exists
     const { data: existing } = await supabase
@@ -66,8 +71,8 @@ Deno.serve(async (req: Request) => {
     const { error: insertError } = await supabase
       .from('premium_subscriptions')
       .insert({
-        user_id: metadata.userId,
-        plan: metadata.plan,
+        user_id: metaUserId,
+        plan: metaPlan,
         status: status,
         stripe_subscription_id: subscription.id,
         stripe_customer_id: customerId,
@@ -80,11 +85,11 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'DB insert failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
-    console.warn(`Premium subscription created for user ${metadata.userId} — plan: ${metadata.plan}`)
+    console.warn(`Premium subscription created for user ${metaUserId} — plan: ${metaPlan}`)
 
     // In-app notification
     await supabase.from('notifications').insert({
-      user_id: metadata.userId,
+      user_id: metaUserId,
       title: '🎉 Welcome to Premium!',
       message: 'You now have access to AI Trip Planner and Premium benefits.',
       type: 'success',
@@ -95,7 +100,7 @@ Deno.serve(async (req: Request) => {
     const { data: userProfile } = await supabase
       .from('profiles')
       .select('email, full_name')
-      .eq('id', metadata.userId)
+      .eq('id', metaUserId)
       .maybeSingle()
 
     if (userProfile?.email) {

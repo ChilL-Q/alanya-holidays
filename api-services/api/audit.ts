@@ -20,7 +20,8 @@ export async function createAuditLog(
         | 'PROPERTY_REJECTED'
         | 'PROPERTY_DELETED'
         | 'SERVICE_APPROVED'
-        | 'SERVICE_REJECTED', 
+        | 'SERVICE_REJECTED'
+        | 'EMAIL_DELIVERY_FAILED',
     details: object,
     userId?: string
 ): Promise<void> {

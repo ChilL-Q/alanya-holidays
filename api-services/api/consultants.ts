@@ -56,6 +56,9 @@ export const consultantsService = {
         durationHours: number,
         message?: string
     ): Promise<{ id: string }> {
+        if (hourlyRate <= 0) throw new Error('Invalid hourly rate');
+        if (durationHours < 0.5 || durationHours > 8) throw new Error('Duration must be between 0.5 and 8 hours');
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
