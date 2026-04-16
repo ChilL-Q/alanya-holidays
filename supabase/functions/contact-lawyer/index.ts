@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Alanya Holidays <noreply@alnya-holidays.com>',
+        from: 'Alanya Holidays <noreply@alanyaholidays.com>',
         to: LAWYER_ADMIN_EMAIL,
         subject: `⚖️ New Lawyer Contact: ${escapeHtml(name)}`,
         html: emailHtml,

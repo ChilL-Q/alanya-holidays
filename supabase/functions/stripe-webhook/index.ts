@@ -230,7 +230,7 @@ Deno.serve(async (req: Request) => {
             data: {
               amount: '',
               itemTitle: 'Premium Subscription',
-              link: `${Deno.env.get('SITE_URL') ?? 'https://alnya-holidays.com'}/profile`,
+              link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
             },
           },
         })
@@ -296,7 +296,7 @@ Deno.serve(async (req: Request) => {
             data: {
               itemTitle: 'Premium Subscription',
               reason: 'Payment failed. Please update your card details.',
-              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alnya-holidays.com'}/profile`,
+              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
             },
           },
         })
