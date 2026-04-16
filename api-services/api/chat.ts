@@ -29,6 +29,7 @@ export const chatService = {
         if (!user) throw new Error('Not authenticated');
 
         // Fetch conversations where I am guest or host
+        assertUUID(user.id, 'userId');
         const { data, error } = await supabase
             .from('chat_conversations')
             .select(`
