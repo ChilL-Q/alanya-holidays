@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { db } from '../../api-services';
 import { PropertyCard } from '../ui/PropertyCard';
+import type { Property } from '../../types/models';
 
 export const FeaturedProperties: React.FC = () => {
     const { t } = useLanguage();
-    const [properties, setProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<Property[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Curated Featured Properties (Hardcoded for high-quality display)
@@ -19,7 +20,7 @@ export const FeaturedProperties: React.FC = () => {
 
                 if (!isMountedRef.current) return;
 
-                const formattedData = (data || []).map((p: any) => ({
+                const formattedData = (data || []).map((p) => ({
                     ...p,
                     pricePerNight: p.price_per_night,
                     amenities: p.amenities || [],
@@ -28,8 +29,9 @@ export const FeaturedProperties: React.FC = () => {
                     rating: p.rating || 5,
                     reviewsCount: p.reviews_count || 0,
                     guests: p.max_guests || 2,
-                    bedrooms: p.bedrooms || 1
-                }));
+                    bedrooms: p.bedrooms || 1,
+                    hostName: (p.profiles as { full_name?: string } | null)?.full_name || '',
+                })) as Property[];
 
                 setProperties(formattedData);
             } catch (_error) {

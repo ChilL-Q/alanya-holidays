@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Sun, History, Mountain, Utensils } from 'lucide-react';
+import { Sun, History, Mountain, Utensils, type LucideIcon } from 'lucide-react';
 import { DestinationModal } from './DestinationModal';
+
+interface DestinationSection {
+    key: string;
+    icon: LucideIcon;
+    image: string;
+}
+
+interface SelectedDestination {
+    title: string;
+    description: string;
+    image: string;
+}
 
 export const AlanyaIntro: React.FC = () => {
     const { t } = useLanguage();
-    const [selectedDestination, setSelectedDestination] = useState<any>(null);
+    const [selectedDestination, setSelectedDestination] = useState<SelectedDestination | null>(null);
 
     const sections = [
         {
@@ -30,7 +42,7 @@ export const AlanyaIntro: React.FC = () => {
         }
     ];
 
-    const handleCardClick = (section: any) => {
+    const handleCardClick = (section: DestinationSection) => {
         setSelectedDestination({
             title: t(`intro.${section.key}.title`),
             description: t(`intro.${section.key}.long_desc`),

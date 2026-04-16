@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
     if (!GEMINI_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'Config Error: GEMINI_API_KEY is missing in Supabase secrets.' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

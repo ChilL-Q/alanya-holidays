@@ -127,6 +127,7 @@ export async function createBooking(data: BookingCreateInput) {
         }));
     } catch (err) {
         console.error('Failed to send booking confirmation email:', err);
+        await createAuditLog('EMAIL_DELIVERY_FAILED', { bookingId, reason: String(err) }, validatedData.user_id).catch(() => {});
     }
 
     // Send notification email to host/provider
@@ -202,15 +203,8 @@ export async function updateBookingStatus(
         throw new Error('Not authorized');
     }
 
-    const { error } = await supabase
-        .from('bookings')
-        .update({ status })
-        .eq('id', id);
-
-    if (error) throw error;
-
-    // Unblock dates in property_availability when booking is cancelled/rejected
-    // Uses centralized RPC (DRY principle) — same logic as cancel-expired-bookings Edge Function
+    // Unblock dates BEFORE updating status — if status update fails later,
+    // unblocked dates are recoverable; blocked dates on a cancelled booking are not.
     if (status === 'cancelled') {
         try {
             const { error: unblockError } = await supabase.rpc('unblock_dates_for_booking', {
@@ -224,6 +218,13 @@ export async function updateBookingStatus(
             console.error('Error calling unblock_dates_for_booking RPC:', err);
         }
     }
+
+    const { error } = await supabase
+        .from('bookings')
+        .update({ status })
+        .eq('id', id);
+
+    if (error) throw error;
 
     if (currentBooking) {
         if (status === 'confirmed') {
