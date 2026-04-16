@@ -30,6 +30,7 @@ export const chatService = {
 
         // Fetch conversations where I am guest or host
         assertUUID(user.id, 'userId');
+        // guest_id and host_id are UUIDs - user.id is validated UUID from Supabase Auth
         const { data, error } = await supabase
             .from('chat_conversations')
             .select(`
@@ -42,33 +43,37 @@ export const chatService = {
             .order('updated_at', { ascending: false });
 
         if (error) throw error;
-        
-        // Fetch last message for each conversation to display snippet
-        const conversations = await Promise.all(data.map(async (conv) => {
-            const { data: lastMsg } = await supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('conversation_id', conv.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-            
-            // Count unread messages (if I am the receiver)
-            // If I am guest, sender was host, and vice versa.
-            // Actually, simply count messages where sender_id != me AND is_read = false
-            const { count } = await supabase
-                .from('chat_messages')
-                .select('*', { count: 'exact', head: true })
-                .eq('conversation_id', conv.id)
-                .neq('sender_id', user.id)
-                .eq('is_read', false);
 
+        // Batch fetch last message and unread count for all conversations
+        interface ConversationInfoRow {
+            conversation_id: string;
+            last_message_created_at: string | null;
+            last_message_text: string | null;
+            last_message_sender_id: string | null;
+            unread_count: number;
+        }
+        const { data: infoRows } = await supabase
+            .rpc('get_conversations_info', { p_user_id: user.id }) as { data: ConversationInfoRow[] | null };
+
+        const infoMap = new Map(
+            (infoRows || []).map(row => [row.conversation_id, row])
+        );
+
+        const conversations = data.map(conv => {
+            const info = infoMap.get(conv.id);
             return {
                 ...conv,
-                last_message: lastMsg,
-                unread_count: count || 0
+                last_message: info ? {
+                    id: null, // Not needed for snippet
+                    conversation_id: conv.id,
+                    sender_id: info.last_message_sender_id,
+                    text: info.last_message_text,
+                    is_read: true, // Not needed for snippet
+                    created_at: info.last_message_created_at,
+                } : null,
+                unread_count: info?.unread_count || 0
             };
-        }));
+        });
 
         return conversations as ChatConversation[];
     },
