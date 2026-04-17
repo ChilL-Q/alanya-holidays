@@ -37,7 +37,7 @@ vi.mock('../../utils/slugify', () => ({
 }));
 
 // Import after mocks are set up
-import { blogService, BlogPostPreview } from './blog';
+import { blogService } from './blog';
 
 // ============================================================
 // Helpers
@@ -171,7 +171,7 @@ describe('blogService', () => {
                 blog_post_tags: null,
             });
 
-            const result = await blogService.createBlogPost({
+            await blogService.createBlogPost({
                 title: 'My Post',
                 content: '<p>Content here with enough characters to pass the minimum validation requirement successfully.</p>',
             });
@@ -196,7 +196,7 @@ describe('blogService', () => {
                 blog_post_tags: null,
             });
 
-            const result = await blogService.createBlogPost({
+            await blogService.createBlogPost({
                 title: 'My Post',
                 content: '<p>Valid content here with enough characters to pass.</p>',
             });

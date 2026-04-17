@@ -424,6 +424,33 @@ Deno.serve(async (req: Request) => {
 
       // --- Handle booking payments (existing logic) ---
       else if (bookingIds.length > 0) {
+        // A1-C1: Verify all bookingIds belong to the userId from this session
+        const sessionUserId = session.metadata?.userId
+        if (!sessionUserId) {
+          // Return 200 to prevent Stripe retries — this is a code bug, retrying won't fix it
+          console.error(`Missing userId in session metadata: ${session.id}`)
+          return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+        }
+
+        const { data: ownedBookings, error: ownerCheckError } = await supabase
+          .from('bookings')
+          .select('id')
+          .in('id', bookingIds)
+          .eq('user_id', sessionUserId)
+
+        if (ownerCheckError) {
+          console.error('Ownership check failed:', ownerCheckError)
+          return new Response('Ownership check failed', { status: 500 })
+        }
+
+        const ownedIds = (ownedBookings ?? []).map((b: { id: string }) => b.id)
+        const unauthorized = bookingIds.filter((id: string) => !ownedIds.includes(id))
+        if (unauthorized.length > 0) {
+          // Return 200 to prevent Stripe retries — security alert goes to logs
+          console.error(`Unauthorized booking IDs in session ${session.id}:`, unauthorized)
+          return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+        }
+
         const updatePayload: Record<string, unknown> = {
           status: 'confirmed',
           payment_status: 'paid',
@@ -433,19 +460,28 @@ Deno.serve(async (req: Request) => {
           updatePayload.payment_intent_id = paymentIntentId
         }
 
-        const { error } = await supabase
+        // A1-C2: Use .select() to detect if any rows were actually updated
+        const { data: updatedRows, error } = await supabase
           .from('bookings')
           .update(updatePayload)
           .in('id', bookingIds)
+          .select('id')
 
         if (error) {
           console.error('Failed to confirm bookings:', error)
           return new Response('DB update failed', { status: 500 })
         }
 
-        console.warn(`Confirmed bookings: ${bookingIds.join(', ')}`)
+        if (!updatedRows || updatedRows.length === 0) {
+          console.error(`No rows updated for bookings: ${bookingIds.join(', ')} — state machine may have rejected transition`)
+          return new Response('DB update failed: no rows updated', { status: 500 })
+        }
 
-        // Fetch all bookings at once to avoid N+1
+        // Use only the IDs that were actually confirmed (state machine may have skipped some)
+        const confirmedIds = updatedRows.map((r: { id: string }) => r.id)
+        console.warn(`Confirmed bookings: ${confirmedIds.join(', ')}`)
+
+        // Fetch only confirmed bookings for email sending (not original bookingIds — some may have been skipped by state machine)
         const { data: bookings, error: fetchError } = await supabase
           .from('bookings')
           .select(`
@@ -454,7 +490,7 @@ Deno.serve(async (req: Request) => {
             service:services(title),
             profile:profiles!bookings_user_id_fkey(email)
           `)
-          .in('id', bookingIds)
+          .in('id', confirmedIds)
 
         if (fetchError) {
           console.error('Failed to fetch bookings for emails:', fetchError)

@@ -7,7 +7,8 @@ const { mockSupabase } = vi.hoisted(() => {
       from: vi.fn(),
       auth: { getUser: vi.fn() },
       functions: { invoke: vi.fn().mockResolvedValue({}) },
-      channel: vi.fn()
+      channel: vi.fn(),
+      rpc: vi.fn()
     }
   }
 });
@@ -57,21 +58,23 @@ describe('chatService', () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
 
       const mockConvs = [{ id: CONV_ID }];
-
       mockSupabase.from.mockImplementation((table) => {
           if (table === 'chat_conversations') return createMockChain(mockConvs);
-          if (table === 'chat_messages') {
-              const chain = createMockChain();
-              chain.then = (cb: any) => cb({ count: 5, data: [] });
-              chain.maybeSingle = vi.fn().mockResolvedValue({ data: { content: 'hi' }, error: null });
-              return chain;
-          }
       });
+
+      const mockInfoRows = [{
+          conversation_id: CONV_ID,
+          last_message_created_at: '2026-04-17T10:00:00Z',
+          last_message_text: 'hi',
+          last_message_sender_id: HOST_ID,
+          unread_count: 5,
+      }];
+      mockSupabase.rpc.mockResolvedValue({ data: mockInfoRows, error: null });
 
       const result = await chatService.getConversations();
       expect(result).toHaveLength(1);
       expect(result[0].unread_count).toBe(5);
-      expect(result[0].last_message).toEqual({ content: 'hi' });
+      expect(result[0].last_message).toMatchObject({ text: 'hi', sender_id: HOST_ID });
     });
 
     it('throws on db error', async () => {
