@@ -6,7 +6,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 declare const Deno: any
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
 })
 
 const supabase = createClient(
