@@ -21,7 +21,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
     const { user } = useAuth();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputText, setInputText] = useState('');
-    const [_loading, setLoading] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -33,11 +32,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
 
     useEffect(() => {
         let isMounted = true;
-        let isFirstLoad = true;
 
         const fetchMessages = async () => {
             if (!activeConversationId) return;
-            if (isFirstLoad) setLoading(true);
 
             try {
                 const data = await chatService.getMessages(activeConversationId);
@@ -54,11 +51,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
                 // If unauthorized, go back to inbox view
                 if (err instanceof Error && err.message.toLowerCase().includes('authorized')) {
                     setActiveConversationId(null);
-                }
-            } finally {
-                if (isMounted && isFirstLoad) {
-                    setLoading(false);
-                    isFirstLoad = false;
                 }
             }
         };
