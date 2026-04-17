@@ -351,6 +351,12 @@ Deno.serve(async (req: Request) => {
       if (session.metadata?.type === 'blog_submission') {
         const submissionId = session.metadata.submissionId
         if (submissionId) {
+          // M1: verify amount_total is $5 (500 cents) — protects against our own billing bugs
+          if (session.amount_total !== 500) {
+            console.error(`Blog submission amount mismatch: expected 500, got ${session.amount_total}`)
+            return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+          }
+
           const { data: submission, error: subError } = await supabase
             .from('blog_submissions')
             .select('id, user_id, title, status, payment_status')
@@ -359,7 +365,12 @@ Deno.serve(async (req: Request) => {
 
           if (subError) {
             console.error('Blog submission lookup error:', subError)
-          } else if (submission && submission.payment_status !== 'paid') {
+          } else if (submission) {
+            // M2: early-exit race protection — if already paid, skip immediately
+            if (submission.payment_status === 'paid') {
+              console.warn(`Skipping duplicate webhook for blog submission ${submissionId}`)
+              return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+            }
             // Idempotency: skip if already paid
             const { error: updateError } = await supabase
               .from('blog_submissions')
@@ -404,24 +415,29 @@ Deno.serve(async (req: Request) => {
             const authorEmail = authorProfile?.email
             if (authorEmail) {
               const siteUrl = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
-              try {
-                await supabase.functions.invoke('send-email', {
-                  body: {
-                    to: authorEmail,
-                    type: 'blog_submission_received',
-                    data: {
-                      postTitle: submission.title,
-                      link: `${siteUrl}/blog`,
-                    },
+              // M4: fire-and-forget + M5: audit_logs on failure
+              supabase.functions.invoke('send-email', {
+                body: {
+                  to: authorEmail,
+                  type: 'blog_submission_received',
+                  data: {
+                    postTitle: submission.title,
+                    link: `${siteUrl}/blog`,
                   },
-                })
+                },
+              }).then(() => {
                 console.warn(`Sent received email to ${authorEmail}`)
-              } catch (e) {
-                console.error('Failed to send received email:', e)
-              }
+              }).catch((e: unknown) => {
+                const msg = e instanceof Error ? e.message : String(e)
+                console.error(`Failed to send blog submission received email:`, msg)
+                supabase.from('audit_logs').insert({
+                  event_type: 'EMAIL_DELIVERY_FAILED',
+                  details: { email_type: 'blog_submission_received', submission_id: submissionId, error: msg },
+                }).then(() => {}).catch(() => {})
+              })
             }
           } else {
-            console.warn(`Skipping duplicate webhook for submission ${submissionId}`)
+            console.warn(`Blog submission not found in DB: ${submissionId}`)
           }
         }
       }
@@ -505,41 +521,36 @@ Deno.serve(async (req: Request) => {
         }
 
         // Отправляем email гостю по каждой брони
+        // M4: fire-and-forget — don't block on email delivery to stay within Stripe 30s timeout
         if (bookings && bookings.length > 0) {
-          await Promise.all(bookings.map(async (booking: any) => {
+          type BookingRow = { id: string; check_in: string; check_out: string; guests: number | null; property: { title: string } | null; service: { title: string } | null; profile: { email: string } | null }
+          bookings.forEach((booking: BookingRow) => {
             const itemTitle = booking.property?.title ?? booking.service?.title ?? 'Booking'
             const guestEmail = booking.profile?.email
+            if (!guestEmail) return
 
-            if (guestEmail) {
-              const maxRetries = 3
-              for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                  await supabase.functions.invoke('send-email', {
-                    body: {
-                      to: guestEmail,
-                      type: 'booking_confirmed',
-                      data: {
-                        itemTitle,
-                        checkIn: booking.check_in,
-                        checkOut: booking.check_out,
-                        guests: String(booking.guests ?? 1),
-                        link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
-                      },
-                    },
-                  })
-                  break
-                } catch (e: any) {
-                  if (attempt < maxRetries) {
-                    const delayMs = Math.pow(2, attempt) * 1000
-                    console.warn(`Email send failed for booking ${booking.id}, attempt ${attempt}/${maxRetries}. Retrying in ${delayMs}ms...`)
-                    await new Promise(resolve => setTimeout(resolve, delayMs))
-                  } else {
-                    console.error(`Email send failed for booking ${booking.id} after ${maxRetries} attempts:`, e)
-                  }
-                }
-              }
-            }
-          }))
+            supabase.functions.invoke('send-email', {
+              body: {
+                to: guestEmail,
+                type: 'booking_confirmed',
+                data: {
+                  itemTitle,
+                  checkIn: booking.check_in,
+                  checkOut: booking.check_out,
+                  guests: String(booking.guests ?? 1),
+                  link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+                },
+              },
+            }).catch((e: unknown) => {
+              // M5: audit_logs on failure
+              const msg = e instanceof Error ? e.message : String(e)
+              console.error(`Email send failed for booking ${booking.id}:`, msg)
+              supabase.from('audit_logs').insert({
+                event_type: 'EMAIL_DELIVERY_FAILED',
+                details: { email_type: 'booking_confirmed', booking_id: booking.id, error: msg },
+              }).then(() => {}).catch(() => {})
+            })
+          })
         }
       }
     }
@@ -735,13 +746,14 @@ Deno.serve(async (req: Request) => {
             },
           })
           break
-        } catch (e: any) {
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e)
           if (attempt < maxRetries) {
             const delayMs = Math.pow(2, attempt) * 1000
             console.warn(`Refund email send failed for booking ${booking.id}, attempt ${attempt}/${maxRetries}. Retrying in ${delayMs}ms...`)
             await new Promise(resolve => setTimeout(resolve, delayMs))
           } else {
-            console.error(`Refund email send failed for booking ${booking.id} after ${maxRetries} attempts:`, e)
+            console.error(`Refund email send failed for booking ${booking.id} after ${maxRetries} attempts:`, msg)
           }
         }
       }
