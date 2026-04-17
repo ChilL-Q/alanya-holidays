@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "chrome-devtools": {
+    "playwright": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp"]
+      "args": ["-y", "@playwright/mcp@latest"]
     },
     "supabase": {
       "type": "http",

@@ -490,7 +490,9 @@ export const blogService = {
                 title: validatedData.title,
                 content: validatedData.content,
                 video_url: validatedData.video_url || null,
-                media_urls: validatedData.media_urls || [],
+                media_urls: (validatedData.media_urls || []).filter(url =>
+                    url.includes(`/blog-media/${user.id}/`)
+                ),
                 status: 'pending_payment',
                 payment_status: 'unpaid',
             }])
@@ -594,34 +596,53 @@ export const blogService = {
         if (submission.payment_status !== 'paid') throw new Error('Submission payment not confirmed');
         if (submission.status !== 'pending_review') throw new Error('Submission is not pending review');
 
-        // Create blog post from submission
-        const baseSlug = slugify(submission.title);
-        const uniqueSlug = await resolveSlug(baseSlug);
-
-        const { data: post, error: postError } = await supabase
-            .from('blog_posts')
-            .insert([{
-                title: submission.title,
-                slug: uniqueSlug,
-                content: submission.content,
-                excerpt: generateExcerpt(submission.content),
-                video_url: submission.video_url,
-                cover_image_url: submission.media_urls?.[0] || null,
-                author_id: submission.user_id,
-                status: 'published',
-                is_featured: false,
-                published_at: new Date().toISOString(),
-            }])
-            .select()
-            .single();
-
-        if (postError || !post) throw postError || new Error('Failed to create blog post');
-
-        // Update submission status
-        await supabase
+        // A2-C2: Update submission status first (optimistic lock)
+        const { data: updatedSubRows, error: updateError } = await supabase
             .from('blog_submissions')
             .update({ status: 'approved' })
-            .eq('id', submissionId);
+            .eq('id', submissionId)
+            .eq('status', 'pending_review')
+            .select('id');
+
+        if (updateError) throw updateError;
+        if (!updatedSubRows || updatedSubRows.length === 0) {
+            throw new Error('Submission is already being processed or not in pending state');
+        }
+
+        let post;
+        let uniqueSlug = '';
+        try {
+            // Create blog post from submission
+            const baseSlug = slugify(submission.title);
+            uniqueSlug = await resolveSlug(baseSlug);
+
+            const { data: newPost, error: postError } = await supabase
+                .from('blog_posts')
+                .insert([{
+                    title: submission.title,
+                    slug: uniqueSlug,
+                    content: submission.content,
+                    excerpt: generateExcerpt(submission.content),
+                    video_url: submission.video_url,
+                    cover_image_url: submission.media_urls?.[0] || null,
+                    author_id: submission.user_id,
+                    status: 'published',
+                    is_featured: false,
+                    published_at: new Date().toISOString(),
+                }])
+                .select()
+                .single();
+
+            if (postError || !newPost) throw postError || new Error('Failed to create blog post');
+            post = newPost;
+        } catch (err) {
+            // Compensation: rollback status if post creation fails
+            await supabase
+                .from('blog_submissions')
+                .update({ status: 'pending_review' })
+                .eq('id', submissionId);
+            throw err;
+        }
 
         // Notify author
         const { data: authorProfile } = await supabase
@@ -689,7 +710,7 @@ export const blogService = {
                     .map((url: string) => {
                         // URL format: {supabaseUrl}/storage/v1/object/public/blog-media/{userId}/{filename}
                         const match = url.match(/\/blog-media\/(.+)$/);
-                        return match ? match[1] : null;
+                        return match && match[1].startsWith(`${submission.user_id}/`) ? match[1] : null;
                     })
                     .filter(Boolean) as string[];
 
