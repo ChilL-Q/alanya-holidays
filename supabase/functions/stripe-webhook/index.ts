@@ -231,11 +231,11 @@ Deno.serve(async (req: Request) => {
         await supabase.functions.invoke('send-email', {
           body: {
             to: userProfile.email,
-            type: 'refund_processed', // We can add a specific 'subscription_cancelled' later if needed
+            type: 'booking_rejected', // L1: closest available template for subscription ended notification
             data: {
-              amount: '',
               itemTitle: 'Premium Subscription',
-              link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+              reason: 'Your subscription period has ended.',
+              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
             },
           },
         })
@@ -252,15 +252,18 @@ Deno.serve(async (req: Request) => {
     const customerId = invoice.customer as string
 
     // Find user's subscription by customer ID
+    // M1: include 'trialing' — trial-period invoices can also fail
+    // M2: .limit(1) before .maybeSingle() — prevents PostgREST error if customer has 2 records
     const { data: subRecord, error: fetchError } = await supabase
       .from('premium_subscriptions')
       .select('id, user_id, stripe_subscription_id')
       .eq('stripe_customer_id', customerId)
-      .eq('status', 'active') // Only update if it was active
+      .in('status', ['active', 'trialing'])
+      .limit(1)
       .maybeSingle()
 
     if (fetchError || !subRecord) {
-      console.warn('invoice.payment_failed: No active subscription found for customer')
+      console.warn('invoice.payment_failed: No active/trialing subscription found for customer')
       return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
     }
 
@@ -327,12 +330,13 @@ Deno.serve(async (req: Request) => {
     // Idempotency: skip if already processed (payment_status already 'paid')
     const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
     if (bookingIds.length > 0) {
+      // H1: .single() throws on 0 rows — use .maybeSingle() for proper null handling
       const { data: existing } = await supabase
         .from('bookings')
         .select('id, payment_status')
         .eq('stripe_session_id', session.id)
         .limit(1)
-        .single()
+        .maybeSingle()
 
       if (existing?.payment_status === 'paid') {
         console.warn(`Skipping duplicate webhook for session ${session.id}`)
@@ -460,11 +464,15 @@ Deno.serve(async (req: Request) => {
           updatePayload.payment_intent_id = paymentIntentId
         }
 
-        // A1-C2: Use .select() to detect if any rows were actually updated
+        // A1-C2 + H2 + H3: Use .select() to detect rows actually updated
+        // H2: .eq('status', 'pending') prevents confirming already-cancelled (cron race)
+        // H3: .eq('stripe_session_id', session.id) prevents concurrent retries from updating
         const { data: updatedRows, error } = await supabase
           .from('bookings')
           .update(updatePayload)
           .in('id', bookingIds)
+          .eq('status', 'pending')
+          .eq('stripe_session_id', session.id)
           .select('id')
 
         if (error) {
@@ -596,10 +604,13 @@ Deno.serve(async (req: Request) => {
         .maybeSingle()
 
       if (booking) {
-        await supabase
+        const { error: disputeUpdateError } = await supabase
           .from('bookings')
           .update({ payment_status: 'failed' })
           .eq('id', booking.id)
+        if (disputeUpdateError) {
+          console.error(`Failed to mark booking ${booking.id} as failed on dispute:`, disputeUpdateError)
+        }
       }
 
       // Notify all admins
