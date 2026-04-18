@@ -393,12 +393,17 @@ describe('blogService', () => {
             const mockSubmission = {
                 id: 's1', user_id: 'user-1', title: 'Approved Post',
                 content: 'This is a long content that will be used as the blog post content for publication.',
-                video_url: null, media_urls: ['img1.jpg'],
+                video_url: null, media_urls: ['http://localhost:54321/storage/v1/object/public/blog-media/user-1/img1.jpg'],
                 payment_status: 'paid', status: 'pending_review',
             };
+            let blogSubmissionsCallCount = 0;
             let blogPostsCallCount = 0;
             mockSupabase.from.mockImplementation((table: string) => {
-                if (table === 'blog_submissions') return createChain(mockSubmission);
+                if (table === 'blog_submissions') {
+                    blogSubmissionsCallCount++;
+                    if (blogSubmissionsCallCount === 1) return createChain(mockSubmission); // SELECT .single()
+                    return createChain([{ id: 's1' }]); // UPDATE .select('id') → array with 1 row (optimistic lock matched)
+                }
                 if (table === 'blog_posts') {
                     blogPostsCallCount++;
                     if (blogPostsCallCount === 1) return createChain([]); // resolveSlug
@@ -413,6 +418,28 @@ describe('blogService', () => {
 
             expect(result.title).toBe('Approved Post');
             expect(mockSupabase.from).toHaveBeenCalledWith('blog_posts');
+        });
+
+        it('throws if optimistic lock fails (concurrent approval)', async () => {
+            setupAuth(mockAdminUser);
+            const mockSubmission = {
+                id: 's1', user_id: 'user-1', title: 'Approved Post',
+                content: 'This is a long content that will be used as the blog post content for publication.',
+                video_url: null, media_urls: [],
+                payment_status: 'paid', status: 'pending_review',
+            };
+            let blogSubmissionsCallCount = 0;
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'blog_submissions') {
+                    blogSubmissionsCallCount++;
+                    if (blogSubmissionsCallCount === 1) return createChain(mockSubmission); // SELECT .single()
+                    return createChain([]); // UPDATE returns 0 rows — race condition
+                }
+                return createChain(null);
+            });
+
+            await expect(blogService.approveBlogSubmission('s1'))
+                .rejects.toThrow('Submission is already being processed or not in pending state');
         });
 
         it('rejects approval if payment not confirmed', async () => {
@@ -447,7 +474,7 @@ describe('blogService', () => {
         it('rejects submission with reason and deletes media files', async () => {
             setupAuth(mockAdminUser);
             const mockSubmission = {
-                id: 's1', user_id: 'user-1', title: 'Rejected',
+                id: 's1', user_id: 'user-1', title: 'Rejected', status: 'pending_review',
                 content: 'Long enough content for the submission.', media_urls: ['https://example.com/storage/v1/object/public/blog-media/user-1/abc.jpg'],
             };
             mockFromTable({

@@ -367,6 +367,9 @@ Deno.serve(async (req: Request) => {
             console.error('Blog submission lookup error:', subError)
           } else if (submission) {
             // A2-C4: Use UPDATE with WHERE to detect if this is the first successful run
+            // Guard: also check status='pending_payment' to avoid triggering the H4 state machine
+            // if the submission was rejected by an admin before payment arrived (rejected → pending_review
+            // is blocked by the trigger, causing a DB exception and an infinite Stripe retry loop).
             const { data: updatedSub, error: updateError } = await supabase
               .from('blog_submissions')
               .update({
@@ -375,6 +378,7 @@ Deno.serve(async (req: Request) => {
               })
               .eq('id', submissionId)
               .eq('payment_status', 'unpaid')
+              .eq('status', 'pending_payment')
               .select('id')
 
             if (updateError) {
