@@ -49,7 +49,7 @@ async function checkRateLimit(userId: string, action: string): Promise<boolean> 
   })
   if (error) {
     console.error('Rate limit check failed:', error)
-    return true // Fail open on DB error to avoid blocking legitimate users
+    return false // Fail closed on DB error to prevent abuse
   }
   return data === true
 }
