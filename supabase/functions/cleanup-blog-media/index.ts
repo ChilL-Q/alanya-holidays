@@ -35,19 +35,30 @@ Deno.serve(async (req: Request) => {
     // Step 1: Get all files in the blog-media bucket (files are stored as {userId}/{filename})
     // .list('') returns top-level folder entries (userId dirs), not actual files
     // We must list each userId folder to get the real files
-    const { data: folders, error: foldersError } = await supabase.storage
-      .from(BLOG_MEDIA_BUCKET)
-      .list('', { limit: 1000 })
+    const allFolders: any[] = []
+    let folderOffset = 0
+    const PAGE_LIMIT = 1000
 
-    if (foldersError) {
-      console.error('Failed to list folders:', foldersError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to list folders', details: foldersError }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    while (true) {
+      const { data: folders, error: foldersError } = await supabase.storage
+        .from(BLOG_MEDIA_BUCKET)
+        .list('', { limit: PAGE_LIMIT, offset: folderOffset })
+
+      if (foldersError) {
+        console.error('Failed to list folders:', foldersError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to list folders', details: foldersError }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (!folders || folders.length === 0) break
+      allFolders.push(...folders)
+      if (folders.length < PAGE_LIMIT) break
+      folderOffset += PAGE_LIMIT
     }
 
-    if (!folders || folders.length === 0) {
+    if (allFolders.length === 0) {
       return new Response(
         JSON.stringify({ message: 'No files to clean up', deleted: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -58,21 +69,29 @@ Deno.serve(async (req: Request) => {
     type StorageObject = { name: string; created_at: string; [key: string]: any }
     const objects: (StorageObject & { folderName: string })[] = []
 
-    for (const folder of folders) {
+    for (const folder of allFolders) {
       // Skip non-folder entries (files at root level, if any)
       if (!folder.id && folder.metadata === null) {
-        // Virtual folder entry — list its contents
-        const { data: files, error: filesError } = await supabase.storage
-          .from(BLOG_MEDIA_BUCKET)
-          .list(folder.name, { limit: 1000 })
+        // Virtual folder entry — list its contents with pagination
+        let fileOffset = 0
+        while (true) {
+          const { data: files, error: filesError } = await supabase.storage
+            .from(BLOG_MEDIA_BUCKET)
+            .list(folder.name, { limit: PAGE_LIMIT, offset: fileOffset })
 
-        if (filesError) {
-          console.error(`Failed to list files in folder ${folder.name}:`, filesError)
-          continue
-        }
+          if (filesError) {
+            console.error(`Failed to list files in folder ${folder.name}:`, filesError)
+            break
+          }
 
-        for (const file of (files || [])) {
-          objects.push({ ...file, folderName: folder.name })
+          if (!files || files.length === 0) break
+
+          for (const file of files) {
+            objects.push({ ...file, folderName: folder.name })
+          }
+
+          if (files.length < PAGE_LIMIT) break
+          fileOffset += PAGE_LIMIT
         }
       }
     }
@@ -90,6 +109,23 @@ Deno.serve(async (req: Request) => {
 
     const abandonedCutoff = new Date()
     abandonedCutoff.setDate(abandonedCutoff.getDate() - 1) // 24 hours [A2-H3]
+
+    // A2-M2: Auto-reject expired submissions
+    const { data: expiredSubmissions, error: expiredError } = await supabase
+      .from('blog_submissions')
+      .update({
+        status: 'rejected',
+        rejection_reason: 'Payment expired'
+      })
+      .eq('status', 'pending_payment')
+      .lt('payment_expires_at', now.toISOString())
+      .select('id')
+
+    if (expiredError) {
+      console.error('Failed to auto-reject expired submissions:', expiredError)
+    } else if (expiredSubmissions && expiredSubmissions.length > 0) {
+      console.warn(`Auto-rejected ${expiredSubmissions.length} expired submissions`)
+    }
 
     // Get submissions to determine which files to keep or delete aggressively
     const { data: rawSubmissions } = await supabase

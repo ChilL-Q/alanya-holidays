@@ -3,6 +3,8 @@ import { getUserRole } from '../auth';
 import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../types/models';
 import { blogPostSchema, blogSubmissionSchema } from './schemas';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
+import { retry } from '../../utils/retry';
+import DOMPurify from 'dompurify';
 
 const SUPABASE_HOST = new URL(import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321').hostname;
 const IS_DEV = import.meta.env.DEV === true;
@@ -494,7 +496,23 @@ export const blogService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
+        // A2-L1: Rate limiting (3-5 per day)
+        const { data: withinLimit, error: limitError } = await supabase.rpc('check_blog_submission_limit', {
+            p_user_id: user.id,
+            p_limit: 5 // Default limit
+        });
+
+        if (limitError) console.error('Rate limit check failed:', limitError);
+        if (withinLimit === false) {
+            throw new Error('Daily submission limit reached (max 5 per 24h). Please try again tomorrow.');
+        }
+
         const validatedData = blogSubmissionSchema.parse(data);
+
+        // A2-L2: Sanitize content before storage (Defense-in-depth)
+        const sanitizedContent = typeof window !== 'undefined'
+            ? DOMPurify.sanitize(validatedData.content)
+            : validatedData.content;
 
         // Create submission record
         const { data: submission, error: subError } = await supabase
@@ -502,7 +520,7 @@ export const blogService = {
             .insert([{
                 user_id: user.id,
                 title: validatedData.title,
-                content: validatedData.content,
+                content: sanitizedContent,
                 video_url: validatedData.video_url || null,
                 media_urls: (validatedData.media_urls || []).filter(url =>
                     isAuthorizedStorageUrl(url, user.id)
@@ -696,18 +714,23 @@ export const blogService = {
             .eq('id', submission.user_id)
             .single();
 
-        await supabase.from('notifications').insert({
-            user_id: submission.user_id,
-            title: 'Blog Post Published!',
-            message: `Your submission "${submission.title}" has been approved and published.`,
-            type: 'success',
-            link: `/blog/${uniqueSlug}`,
-        });
+        try {
+            await supabase.from('notifications').insert({
+                user_id: submission.user_id,
+                title: 'Blog Post Published!',
+                message: `Your submission "${submission.title}" has been approved and published.`,
+                type: 'success',
+                link: `/blog/${uniqueSlug}`,
+            });
+        } catch (err) {
+            console.error('Failed to create approval notification:', err);
+        }
 
         // Send approval email
         if (authorProfile?.email) {
             try {
-                await supabase.functions.invoke('send-email', {
+                // A2-M4: Retry email invocation
+                await retry(() => supabase.functions.invoke('send-email', {
                     body: {
                         to: authorProfile.email,
                         type: 'blog_submission_approved',
@@ -717,9 +740,9 @@ export const blogService = {
                             authorName: authorProfile.full_name || 'Author',
                         },
                     },
-                });
+                }), { attempts: 3, delay: 1000 });
             } catch (e) {
-                console.error('Failed to send approval email:', e);
+                console.error('Failed to send approval email after retries:', e);
             }
         }
 
@@ -737,6 +760,7 @@ export const blogService = {
         const role = await getUserRole(user.id);
         if (role !== 'admin') throw new Error('Only admins can reject submissions');
         if (!reason || reason.trim().length < 10) throw new Error('Rejection reason must be at least 10 characters');
+        if (reason.length > 500) throw new Error('Rejection reason cannot exceed 500 characters');
 
         // Get submission
         const { data: submission, error: subError } = await supabase
@@ -767,9 +791,18 @@ export const blogService = {
                 // Extract file paths from public URLs
                 const filePaths = submission.media_urls
                     .map((url: string) => {
-                        // URL format: {supabaseUrl}/storage/v1/object/public/blog-media/{userId}/{filename}
-                        const match = url.match(/\/blog-media\/(.+)$/);
-                        return match && match[1].startsWith(`${submission.user_id}/`) ? match[1] : null;
+                        try {
+                            const parsed = new URL(url);
+                            // Path format: /storage/v1/object/public/blog-media/{userId}/{filename}
+                            const prefix = '/storage/v1/object/public/blog-media/';
+                            if (parsed.pathname.startsWith(prefix)) {
+                                const relativePath = parsed.pathname.slice(prefix.length);
+                                return relativePath.startsWith(`${submission.user_id}/`) ? relativePath : null;
+                            }
+                            return null;
+                        } catch {
+                            return null;
+                        }
                     })
                     .filter(Boolean) as string[];
 
@@ -785,13 +818,17 @@ export const blogService = {
         }
 
         // Notify author
-        await supabase.from('notifications').insert({
-            user_id: submission.user_id,
-            title: 'Blog Submission Rejected',
-            message: `Your submission "${submission.title}" was not approved. Reason: ${reason}`,
-            type: 'warning',
-            link: '/blog/submit',
-        });
+        try {
+            await supabase.from('notifications').insert({
+                user_id: submission.user_id,
+                title: 'Blog Submission Rejected',
+                message: `Your submission "${submission.title}" was not approved. Reason: ${reason}`,
+                type: 'warning',
+                link: '/blog/submit',
+            });
+        } catch (err) {
+            console.error('Failed to create rejection notification:', err);
+        }
 
         // Send rejection email
         const { data: authorProfile } = await supabase
@@ -802,7 +839,8 @@ export const blogService = {
 
         if (authorProfile?.email) {
             try {
-                await supabase.functions.invoke('send-email', {
+                // A2-M4: Retry email invocation
+                await retry(() => supabase.functions.invoke('send-email', {
                     body: {
                         to: authorProfile.email,
                         type: 'blog_submission_rejected',
@@ -812,9 +850,9 @@ export const blogService = {
                             authorName: authorProfile.full_name || 'Author',
                         },
                     },
-                });
+                }), { attempts: 3, delay: 1000 });
             } catch (e) {
-                console.error('Failed to send rejection email:', e);
+                console.error('Failed to send rejection email after retries:', e);
             }
         }
     },
