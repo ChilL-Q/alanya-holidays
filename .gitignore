@@ -69,3 +69,5 @@ conductor/
 .qwen
 .geminiignore
 
+.playwright-mcp
+

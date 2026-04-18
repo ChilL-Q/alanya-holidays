@@ -88,14 +88,24 @@ Deno.serve(async (req: Request) => {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - ORPHANED_DAYS)
 
-    // Get active submissions (pending_review or pending_payment) with media_urls
-    const { data: activeSubmissions } = await supabase
+    // [A2-H3] Get active submissions, excluding expired pending_payment
+    const { data: rawSubmissions } = await supabase
       .from('blog_submissions')
-      .select('media_urls')
+      .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
 
-    // Get published blog posts (we'd need to extract media from cover_image_url too,
-    // but cover_image_url is a single URL, not an array)
+    const now = new Date()
+    const activeSubmissions = (rawSubmissions || []).filter((sub: any) => {
+      if (sub.status === 'pending_review') return true
+      if (sub.status === 'pending_payment') {
+        // No expiry = Stripe session was never created (H2 scenario) → not protected, orphan logic handles it
+        if (!sub.payment_expires_at) return false
+        return new Date(sub.payment_expires_at) > now
+      }
+      return false
+    })
+
+    // Get published blog posts
     const { data: publishedPosts } = await supabase
       .from('blog_posts')
       .select('cover_image_url')

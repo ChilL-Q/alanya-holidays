@@ -366,26 +366,34 @@ Deno.serve(async (req: Request) => {
           if (subError) {
             console.error('Blog submission lookup error:', subError)
           } else if (submission) {
-            // M2: early-exit race protection — if already paid, skip immediately
-            if (submission.payment_status === 'paid') {
-              console.warn(`Skipping duplicate webhook for blog submission ${submissionId}`)
-              return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
-            }
-            // Idempotency: skip if already paid
-            const { error: updateError } = await supabase
+            // A2-C4: Use UPDATE with WHERE to detect if this is the first successful run
+            // Guard: also check status='pending_payment' to avoid triggering the H4 state machine
+            // if the submission was rejected by an admin before payment arrived (rejected → pending_review
+            // is blocked by the trigger, causing a DB exception and an infinite Stripe retry loop).
+            const { data: updatedSub, error: updateError } = await supabase
               .from('blog_submissions')
               .update({
                 payment_status: 'paid',
                 status: 'pending_review',
               })
               .eq('id', submissionId)
+              .eq('payment_status', 'unpaid')
+              .eq('status', 'pending_payment')
+              .select('id')
 
             if (updateError) {
               console.error('Failed to confirm blog submission payment:', updateError)
               return new Response('DB update failed', { status: 500 })
             }
 
-            console.warn(`Confirmed blog submission payment: ${submissionId}`)
+            // If updatedSub.length > 0, it's the first time.
+            // If 0, it's a retry (or already paid), but we proceed to notifications anyway
+            // to ensure they are sent if the previous run failed mid-way.
+            if (updatedSub && updatedSub.length > 0) {
+              console.warn(`Confirmed blog submission payment: ${submissionId}`)
+            } else {
+              console.warn(`Webhook retry or already paid for blog submission: ${submissionId}`)
+            }
 
             // Notify all admins about new submission awaiting review
             const { data: admins } = await supabase

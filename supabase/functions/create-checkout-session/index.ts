@@ -149,13 +149,26 @@ Deno.serve(async (req: Request) => {
         },
       })
 
-      await supabase
-        .from('blog_submissions')
-        .update({
-          stripe_session_id: session.id,
-          payment_expires_at: paymentExpiresAt,
-        })
-        .eq('id', payload.submissionId)
+      try {
+        const { error: updateError } = await supabase
+          .from('blog_submissions')
+          .update({
+            stripe_session_id: session.id,
+            payment_expires_at: paymentExpiresAt,
+          })
+          .eq('id', payload.submissionId)
+
+        if (updateError) throw updateError
+      } catch (err) {
+        console.error('Failed to update blog_submission with session ID:', err)
+        // H1: Expire Stripe session if DB update fails [A2-H1]
+        try {
+          await stripe.checkout.sessions.expire(session.id)
+        } catch (expireErr) {
+          console.error('Failed to expire Stripe session:', expireErr)
+        }
+        throw new Error('Failed to record payment session. Please try again.')
+      }
 
       return new Response(
         JSON.stringify({ url: session.url }),
@@ -270,16 +283,29 @@ Deno.serve(async (req: Request) => {
         )
       }
 
-      await supabase
-        .from('bookings')
-        .update({
-          stripe_session_id: session.id,
-          payment_expires_at: paymentExpiresAt,
-          // payment_intent_id is NOT saved here — Stripe only provides it
-          // after the session is completed. It's saved by stripe-webhook
-          // on the 'checkout.session.completed' event.
-        })
-        .in('id', verifiedIds)
+      try {
+        const { error: updateError } = await supabase
+          .from('bookings')
+          .update({
+            stripe_session_id: session.id,
+            payment_expires_at: paymentExpiresAt,
+            // payment_intent_id is NOT saved here — Stripe only provides it
+            // after the session is completed. It's saved by stripe-webhook
+            // on the 'checkout.session.completed' event.
+          })
+          .in('id', verifiedIds)
+
+        if (updateError) throw updateError
+      } catch (err) {
+        console.error('Failed to update bookings with session ID:', err)
+        // H1: Expire Stripe session if DB update fails [A2-H1]
+        try {
+          await stripe.checkout.sessions.expire(session.id)
+        } catch (expireErr) {
+          console.error('Failed to expire Stripe session:', expireErr)
+        }
+        throw new Error('Failed to record payment session. Please try again.')
+      }
     }
 
     return new Response(
