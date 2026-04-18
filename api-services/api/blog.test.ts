@@ -13,6 +13,9 @@ const { mockSupabase, mockGetUserRole } = vi.hoisted(() => ({
         functions: {
             invoke: vi.fn(),
         },
+        storage: {
+            from: vi.fn(),
+        },
     },
     mockGetUserRole: vi.fn(),
 }));
@@ -312,6 +315,7 @@ describe('blogService', () => {
                 blog_submissions: { id: 'sub-1', user_id: 'user-123', title: 'My Blog', content: longContent },
                 profiles: { email: 'author@example.com' },
             });
+            mockSupabase.rpc.mockResolvedValue({ data: true, error: null });
             mockSupabase.functions.invoke.mockResolvedValue({
                 data: { url: 'https://checkout.stripe.com/test' },
                 error: null,
@@ -413,6 +417,9 @@ describe('blogService', () => {
                 return createChain(null);
             });
             mockSupabase.functions.invoke.mockResolvedValue({ data: {}, error: null });
+            mockSupabase.storage.from.mockReturnValue({
+                list: vi.fn().mockResolvedValue({ data: [{ name: 'img1.jpg' }], error: null }),
+            });
 
             const result = await blogService.approveBlogSubmission('s1');
 
