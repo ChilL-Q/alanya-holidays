@@ -84,26 +84,40 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Step 2: Build a set of active media_urls from submissions and published posts
+    // Step 2: Build sets of active and abandoned media_urls
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - ORPHANED_DAYS)
 
-    // [A2-H3] Get active submissions, excluding expired pending_payment
+    const abandonedCutoff = new Date()
+    abandonedCutoff.setDate(abandonedCutoff.getDate() - 1) // 24 hours [A2-H3]
+
+    // Get submissions to determine which files to keep or delete aggressively
     const { data: rawSubmissions } = await supabase
       .from('blog_submissions')
       .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
 
     const now = new Date()
-    const activeSubmissions = (rawSubmissions || []).filter((sub: any) => {
-      if (sub.status === 'pending_review') return true
-      if (sub.status === 'pending_payment') {
-        // No expiry = Stripe session was never created (H2 scenario) → not protected, orphan logic handles it
-        if (!sub.payment_expires_at) return false
-        return new Date(sub.payment_expires_at) > now
+    const activeUrls = new Set<string>()
+    const abandonedUrls = new Set<string>()
+
+    for (const sub of (rawSubmissions || [])) {
+      const urls = sub.media_urls || []
+
+      if (sub.status === 'pending_review') {
+        urls.forEach((url: string) => activeUrls.add(url))
+      } else if (sub.status === 'pending_payment') {
+        if (sub.payment_expires_at && new Date(sub.payment_expires_at) > now) {
+          // Still active (within payment window)
+          urls.forEach((url: string) => activeUrls.add(url))
+        } else if (sub.payment_expires_at && new Date(sub.payment_expires_at) < abandonedCutoff) {
+          // Abandoned for > 24h [A2-H3]
+          urls.forEach((url: string) => abandonedUrls.add(url))
+        }
+        // Note: if expired but < 24h ago, we don't put in activeUrls (they become orphans)
+        // but we don't put in abandonedUrls yet (so they follow the 7-day rule).
       }
-      return false
-    })
+    }
 
     // Get published blog posts
     const { data: publishedPosts } = await supabase
@@ -111,23 +125,14 @@ Deno.serve(async (req: Request) => {
       .select('cover_image_url')
       .eq('status', 'published')
 
-    // Collect all active URLs
-    const activeUrls = new Set<string>()
-
-    for (const sub of (activeSubmissions || [])) {
-      for (const url of (sub.media_urls || [])) {
-        activeUrls.add(url)
-      }
-    }
-
-    // Also include cover_image_url from published posts
+    // Add cover images to activeUrls
     for (const post of (publishedPosts || [])) {
       if (post.cover_image_url) {
         activeUrls.add(post.cover_image_url)
       }
     }
 
-    // Step 3: Identify orphaned files older than cutoff
+    // Step 3: Identify orphaned files
     const orphanedFiles: string[] = []
 
     for (const obj of objects) {
@@ -135,12 +140,18 @@ Deno.serve(async (req: Request) => {
       const fullPath = `${BLOG_MEDIA_BUCKET}/${filePath}`
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
 
-      // Check if this URL is in active usage
+      // 1. Keep if in active usage
       if (activeUrls.has(publicUrl) || activeUrls.has(filePath)) {
         continue
       }
 
-      // Check file age
+      // 2. Delete if in abandoned submissions (> 24h since expiry) [A2-H3]
+      if (abandonedUrls.has(publicUrl) || abandonedUrls.has(filePath)) {
+        orphanedFiles.push(filePath)
+        continue
+      }
+
+      // 3. Delete if general orphan older than cutoff (7 days)
       const fileCreatedAt = new Date(obj.created_at)
       if (fileCreatedAt < cutoffDate) {
         orphanedFiles.push(filePath)

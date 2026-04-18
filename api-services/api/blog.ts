@@ -628,8 +628,30 @@ export const blogService = {
         try {
             // H5: Strict domain + path validation for cover image [A2-H5]
             // Inside try-catch so rollback fires if validation fails after status was set to 'approved'
-            if (coverImageUrl && !isAuthorizedStorageUrl(coverImageUrl, submission.user_id)) {
-                throw new Error('Invalid cover image domain');
+            if (coverImageUrl) {
+                if (!isAuthorizedStorageUrl(coverImageUrl, submission.user_id)) {
+                    throw new Error('Invalid cover image domain');
+                }
+
+                // H5: Verify file exists in storage to prevent dead links [A2-H5]
+                // Path format: .../blog-media/{userId}/{fileName}
+                const pathParts = coverImageUrl.split(`${submission.user_id}/`);
+                const fileName = pathParts[pathParts.length - 1];
+
+                if (!fileName) {
+                    throw new Error('Invalid cover image path');
+                }
+
+                const { data: files, error: listError } = await supabase.storage
+                    .from('blog-media')
+                    .list(submission.user_id, {
+                        search: fileName,
+                        limit: 1
+                    });
+
+                if (listError || !files || files.length === 0 || files[0].name !== fileName) {
+                    throw new Error('Cover image not found in storage. It may have been deleted.');
+                }
             }
 
             // Create blog post from submission
