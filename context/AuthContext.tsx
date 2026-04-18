@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             name: (metadata.full_name as string || metadata.name as string || sessionUser.email?.split('@')[0] || 'User') as string,
             email: (sessionUser.email || '') as string,
             avatar: (metadata.avatar_url as string || `https://ui-avatars.com/api/?name=${encodeURIComponent((metadata.full_name as string || 'U'))}&background=0D9488&color=fff`) as string | undefined,
-            role: (metadata.role as 'guest' | 'host' | 'admin') || 'guest',
+            role: 'guest', // Never trust JWT metadata for role — always fetch from DB profiles table
             company_name: metadata.company_name as string | undefined,
             joinedDate: sessionUser.created_at || '',
         };
@@ -86,7 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
             } catch (err) {
                 console.error('Error fetching user profile:', err);
-                if (isMountedRef.current) setUser(mapSessionToUser(sessionUser));
+                // On DB error: keep user logged in but default to guest role for safety
+                if (isMountedRef.current) setUser({ ...mapSessionToUser(sessionUser), role: 'guest' });
             } finally {
                 if (isMountedRef.current) setIsLoading(false);
             }
