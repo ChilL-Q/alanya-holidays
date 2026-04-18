@@ -45,7 +45,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
 
             await db.addReview({
                 property_id: propertyId,
-                user_id: userId,
                 rating,
                 comment,
                 images: uploadedUrls

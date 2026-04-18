@@ -205,7 +205,7 @@ Deno.serve(async (req: Request) => {
           .remove(batch)
 
         if (deleteError) {
-          console.error('Failed to delete batch:', deleteError)
+          console.error('Failed to delete batch:', batch, deleteError)
         } else {
           deletedCount += batch.length
         }

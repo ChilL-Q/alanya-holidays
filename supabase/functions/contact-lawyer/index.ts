@@ -2,6 +2,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
 // @ts-ignore
 import { z } from "npm:zod@3"
+// @ts-ignore
+import { retry } from '../../utils/retry';
 
 declare const Deno: any;
 
@@ -9,9 +11,10 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const LAWYER_ADMIN_EMAIL = Deno.env.get('LAWYER_ADMIN_EMAIL')
+const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': SITE_URL,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -114,26 +117,32 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: 'Alanya Holidays <noreply@alanyaholidays.com>',
-        to: LAWYER_ADMIN_EMAIL,
-        subject: `⚖️ New Lawyer Contact: ${escapeHtml(name)}`,
-        html: emailHtml,
-        reply_to: email, // Allow admin to reply directly to user
-      }),
-    });
+    try {
+      await retry(async () => {
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: 'Alanya Holidays <noreply@alanyaholidays.com>',
+            to: LAWYER_ADMIN_EMAIL,
+            subject: `⚖️ New Lawyer Contact: ${escapeHtml(name)}`,
+            html: emailHtml,
+            reply_to: email, // Allow admin to reply directly to user
+          }),
+        });
 
-    if (!resendRes.ok) {
-      const errorData = await resendRes.json();
-      console.error('Resend Error:', errorData);
+        if (!resendRes.ok) {
+          const errorData = await resendRes.json();
+          throw new Error(`Resend API error: ${JSON.stringify(errorData)}`);
+        }
+      });
+    } catch (emailError) {
+      console.error('Failed to send lawyer contact email after multiple retries:', emailError);
       // Don't throw here — DB write succeeded. Admin can check DB if email failed.
-      // But we should probably alert ourselves. For now, log and return success.
+      // We just log the failure.
     }
 
     return new Response(JSON.stringify({ success: true }), {

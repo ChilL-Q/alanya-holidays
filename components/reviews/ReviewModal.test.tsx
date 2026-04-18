@@ -127,7 +127,6 @@ describe('ReviewModal', () => {
 
         expect(db.addReview).toHaveBeenCalledWith(expect.objectContaining({
             property_id: 'prop-1',
-            user_id: 'user-1',
             rating: 5,
             comment: 'Wonderful place!'
         }));
