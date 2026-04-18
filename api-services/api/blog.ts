@@ -4,6 +4,20 @@ import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../types/m
 import { blogPostSchema, blogSubmissionSchema } from './schemas';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
 
+const SUPABASE_HOST = new URL(import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321').hostname;
+const IS_DEV = import.meta.env.DEV === true;
+
+function isAuthorizedStorageUrl(url: string, userId: string): boolean {
+    try {
+        const parsed = new URL(url);
+        const validHost = parsed.hostname === SUPABASE_HOST || (IS_DEV && parsed.hostname === 'localhost');
+        const validPath = parsed.pathname.startsWith(`/storage/v1/object/public/blog-media/${userId}/`);
+        return validHost && validPath;
+    } catch {
+        return false;
+    }
+}
+
 // ============================================================
 // Types
 // ============================================================
@@ -490,7 +504,9 @@ export const blogService = {
                 title: validatedData.title,
                 content: validatedData.content,
                 video_url: validatedData.video_url || null,
-                media_urls: validatedData.media_urls || [],
+                media_urls: (validatedData.media_urls || []).filter(url =>
+                    isAuthorizedStorageUrl(url, user.id)
+                ),
                 status: 'pending_payment',
                 payment_status: 'unpaid',
             }])
@@ -521,8 +537,6 @@ export const blogService = {
         });
 
         if (stripeError || !stripeData?.url) {
-            // Clean up the submission if Stripe checkout failed
-            await supabase.from('blog_submissions').delete().eq('id', submission.id);
             throw stripeError || new Error('Failed to create Stripe checkout session');
         }
 
@@ -594,34 +608,64 @@ export const blogService = {
         if (submission.payment_status !== 'paid') throw new Error('Submission payment not confirmed');
         if (submission.status !== 'pending_review') throw new Error('Submission is not pending review');
 
-        // Create blog post from submission
-        const baseSlug = slugify(submission.title);
-        const uniqueSlug = await resolveSlug(baseSlug);
-
-        const { data: post, error: postError } = await supabase
-            .from('blog_posts')
-            .insert([{
-                title: submission.title,
-                slug: uniqueSlug,
-                content: submission.content,
-                excerpt: generateExcerpt(submission.content),
-                video_url: submission.video_url,
-                cover_image_url: submission.media_urls?.[0] || null,
-                author_id: submission.user_id,
-                status: 'published',
-                is_featured: false,
-                published_at: new Date().toISOString(),
-            }])
-            .select()
-            .single();
-
-        if (postError || !post) throw postError || new Error('Failed to create blog post');
-
-        // Update submission status
-        await supabase
+        // A2-C2: Update submission status first (optimistic lock)
+        const { data: updatedSubRows, error: updateError } = await supabase
             .from('blog_submissions')
             .update({ status: 'approved' })
-            .eq('id', submissionId);
+            .eq('id', submissionId)
+            .eq('status', 'pending_review')
+            .select('id');
+
+        if (updateError) throw updateError;
+        if (!updatedSubRows || updatedSubRows.length === 0) {
+            throw new Error('Submission is already being processed or not in pending state');
+        }
+
+        const coverImageUrl = submission.media_urls?.[0] || null;
+
+        let post;
+        let uniqueSlug = '';
+        try {
+            // H5: Strict domain + path validation for cover image [A2-H5]
+            // Inside try-catch so rollback fires if validation fails after status was set to 'approved'
+            if (coverImageUrl && !isAuthorizedStorageUrl(coverImageUrl, submission.user_id)) {
+                throw new Error('Invalid cover image domain');
+            }
+
+            // Create blog post from submission
+            const baseSlug = slugify(submission.title);
+            uniqueSlug = await resolveSlug(baseSlug);
+
+            const { data: newPost, error: postError } = await supabase
+                .from('blog_posts')
+                .insert([{
+                    title: submission.title,
+                    slug: uniqueSlug,
+                    content: submission.content,
+                    excerpt: generateExcerpt(submission.content),
+                    video_url: submission.video_url,
+                    cover_image_url: coverImageUrl,
+                    author_id: submission.user_id,
+                    status: 'published',
+                    is_featured: false,
+                    published_at: new Date().toISOString(),
+                }])
+                .select()
+                .single();
+
+            if (postError || !newPost) throw postError || new Error('Failed to create blog post');
+            post = newPost;
+        } catch (err) {
+            // Compensation: rollback status if post creation fails
+            const { error: rollbackError } = await supabase
+                .from('blog_submissions')
+                .update({ status: 'pending_review' })
+                .eq('id', submissionId);
+            if (rollbackError) {
+                console.error(`Compensation rollback failed for submission ${submissionId}:`, rollbackError.message, '— submission stuck in approved without a post');
+            }
+            throw err;
+        }
 
         // Notify author
         const { data: authorProfile } = await supabase
@@ -680,8 +724,22 @@ export const blogService = {
             .single();
 
         if (subError || !submission) throw subError || new Error('Submission not found');
+        if (!['pending_payment', 'pending_review'].includes(submission.status)) {
+            throw new Error(`Cannot reject submission with status '${submission.status}'`);
+        }
 
-        // Delete media files from storage
+        // Update submission status first — only delete files if this succeeds
+        const { error: rejectError } = await supabase
+            .from('blog_submissions')
+            .update({
+                status: 'rejected',
+                rejection_reason: reason,
+            })
+            .eq('id', submissionId);
+
+        if (rejectError) throw rejectError;
+
+        // Delete media files from storage only after status is committed
         if (submission.media_urls && submission.media_urls.length > 0) {
             try {
                 // Extract file paths from public URLs
@@ -689,7 +747,7 @@ export const blogService = {
                     .map((url: string) => {
                         // URL format: {supabaseUrl}/storage/v1/object/public/blog-media/{userId}/{filename}
                         const match = url.match(/\/blog-media\/(.+)$/);
-                        return match ? match[1] : null;
+                        return match && match[1].startsWith(`${submission.user_id}/`) ? match[1] : null;
                     })
                     .filter(Boolean) as string[];
 
@@ -703,15 +761,6 @@ export const blogService = {
                 // Non-critical — continue with rejection
             }
         }
-
-        // Update submission
-        await supabase
-            .from('blog_submissions')
-            .update({
-                status: 'rejected',
-                rejection_reason: reason,
-            })
-            .eq('id', submissionId);
 
         // Notify author
         await supabase.from('notifications').insert({
