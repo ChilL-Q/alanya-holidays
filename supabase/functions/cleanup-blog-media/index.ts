@@ -104,6 +104,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Step 2: Build sets of active and abandoned media_urls
+    const now = new Date()
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - ORPHANED_DAYS)
 
@@ -133,7 +134,6 @@ Deno.serve(async (req: Request) => {
       .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
 
-    const now = new Date()
     const activeUrls = new Set<string>()
     const abandonedUrls = new Set<string>()
 
