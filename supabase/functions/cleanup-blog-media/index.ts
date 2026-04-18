@@ -35,19 +35,30 @@ Deno.serve(async (req: Request) => {
     // Step 1: Get all files in the blog-media bucket (files are stored as {userId}/{filename})
     // .list('') returns top-level folder entries (userId dirs), not actual files
     // We must list each userId folder to get the real files
-    const { data: folders, error: foldersError } = await supabase.storage
-      .from(BLOG_MEDIA_BUCKET)
-      .list('', { limit: 1000 })
+    const allFolders: any[] = []
+    let folderOffset = 0
+    const PAGE_LIMIT = 1000
 
-    if (foldersError) {
-      console.error('Failed to list folders:', foldersError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to list folders', details: foldersError }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    while (true) {
+      const { data: folders, error: foldersError } = await supabase.storage
+        .from(BLOG_MEDIA_BUCKET)
+        .list('', { limit: PAGE_LIMIT, offset: folderOffset })
+
+      if (foldersError) {
+        console.error('Failed to list folders:', foldersError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to list folders', details: foldersError }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (!folders || folders.length === 0) break
+      allFolders.push(...folders)
+      if (folders.length < PAGE_LIMIT) break
+      folderOffset += PAGE_LIMIT
     }
 
-    if (!folders || folders.length === 0) {
+    if (allFolders.length === 0) {
       return new Response(
         JSON.stringify({ message: 'No files to clean up', deleted: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -58,21 +69,29 @@ Deno.serve(async (req: Request) => {
     type StorageObject = { name: string; created_at: string; [key: string]: any }
     const objects: (StorageObject & { folderName: string })[] = []
 
-    for (const folder of folders) {
+    for (const folder of allFolders) {
       // Skip non-folder entries (files at root level, if any)
       if (!folder.id && folder.metadata === null) {
-        // Virtual folder entry — list its contents
-        const { data: files, error: filesError } = await supabase.storage
-          .from(BLOG_MEDIA_BUCKET)
-          .list(folder.name, { limit: 1000 })
+        // Virtual folder entry — list its contents with pagination
+        let fileOffset = 0
+        while (true) {
+          const { data: files, error: filesError } = await supabase.storage
+            .from(BLOG_MEDIA_BUCKET)
+            .list(folder.name, { limit: PAGE_LIMIT, offset: fileOffset })
 
-        if (filesError) {
-          console.error(`Failed to list files in folder ${folder.name}:`, filesError)
-          continue
-        }
+          if (filesError) {
+            console.error(`Failed to list files in folder ${folder.name}:`, filesError)
+            break
+          }
 
-        for (const file of (files || [])) {
-          objects.push({ ...file, folderName: folder.name })
+          if (!files || files.length === 0) break
+
+          for (const file of files) {
+            objects.push({ ...file, folderName: folder.name })
+          }
+
+          if (files.length < PAGE_LIMIT) break
+          fileOffset += PAGE_LIMIT
         }
       }
     }
@@ -84,26 +103,57 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Step 2: Build a set of active media_urls from submissions and published posts
+    // Step 2: Build sets of active and abandoned media_urls
+    const now = new Date()
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - ORPHANED_DAYS)
 
-    // [A2-H3] Get active submissions, excluding expired pending_payment
+    const abandonedCutoff = new Date()
+    abandonedCutoff.setDate(abandonedCutoff.getDate() - 1) // 24 hours [A2-H3]
+
+    // A2-M2: Auto-reject expired submissions
+    const { data: expiredSubmissions, error: expiredError } = await supabase
+      .from('blog_submissions')
+      .update({
+        status: 'rejected',
+        rejection_reason: 'Payment expired'
+      })
+      .eq('status', 'pending_payment')
+      .lt('payment_expires_at', now.toISOString())
+      .select('id')
+
+    if (expiredError) {
+      console.error('Failed to auto-reject expired submissions:', expiredError)
+    } else if (expiredSubmissions && expiredSubmissions.length > 0) {
+      console.warn(`Auto-rejected ${expiredSubmissions.length} expired submissions`)
+    }
+
+    // Get submissions to determine which files to keep or delete aggressively
     const { data: rawSubmissions } = await supabase
       .from('blog_submissions')
       .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
 
-    const now = new Date()
-    const activeSubmissions = (rawSubmissions || []).filter((sub: any) => {
-      if (sub.status === 'pending_review') return true
-      if (sub.status === 'pending_payment') {
-        // No expiry = Stripe session was never created (H2 scenario) → not protected, orphan logic handles it
-        if (!sub.payment_expires_at) return false
-        return new Date(sub.payment_expires_at) > now
+    const activeUrls = new Set<string>()
+    const abandonedUrls = new Set<string>()
+
+    for (const sub of (rawSubmissions || [])) {
+      const urls = sub.media_urls || []
+
+      if (sub.status === 'pending_review') {
+        urls.forEach((url: string) => activeUrls.add(url))
+      } else if (sub.status === 'pending_payment') {
+        if (sub.payment_expires_at && new Date(sub.payment_expires_at) > now) {
+          // Still active (within payment window)
+          urls.forEach((url: string) => activeUrls.add(url))
+        } else if (sub.payment_expires_at && new Date(sub.payment_expires_at) < abandonedCutoff) {
+          // Abandoned for > 24h [A2-H3]
+          urls.forEach((url: string) => abandonedUrls.add(url))
+        }
+        // Note: if expired but < 24h ago, we don't put in activeUrls (they become orphans)
+        // but we don't put in abandonedUrls yet (so they follow the 7-day rule).
       }
-      return false
-    })
+    }
 
     // Get published blog posts
     const { data: publishedPosts } = await supabase
@@ -111,23 +161,14 @@ Deno.serve(async (req: Request) => {
       .select('cover_image_url')
       .eq('status', 'published')
 
-    // Collect all active URLs
-    const activeUrls = new Set<string>()
-
-    for (const sub of (activeSubmissions || [])) {
-      for (const url of (sub.media_urls || [])) {
-        activeUrls.add(url)
-      }
-    }
-
-    // Also include cover_image_url from published posts
+    // Add cover images to activeUrls
     for (const post of (publishedPosts || [])) {
       if (post.cover_image_url) {
         activeUrls.add(post.cover_image_url)
       }
     }
 
-    // Step 3: Identify orphaned files older than cutoff
+    // Step 3: Identify orphaned files
     const orphanedFiles: string[] = []
 
     for (const obj of objects) {
@@ -135,12 +176,18 @@ Deno.serve(async (req: Request) => {
       const fullPath = `${BLOG_MEDIA_BUCKET}/${filePath}`
       const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${fullPath}`
 
-      // Check if this URL is in active usage
+      // 1. Keep if in active usage
       if (activeUrls.has(publicUrl) || activeUrls.has(filePath)) {
         continue
       }
 
-      // Check file age
+      // 2. Delete if in abandoned submissions (> 24h since expiry) [A2-H3]
+      if (abandonedUrls.has(publicUrl) || abandonedUrls.has(filePath)) {
+        orphanedFiles.push(filePath)
+        continue
+      }
+
+      // 3. Delete if general orphan older than cutoff (7 days)
       const fileCreatedAt = new Date(obj.created_at)
       if (fileCreatedAt < cutoffDate) {
         orphanedFiles.push(filePath)

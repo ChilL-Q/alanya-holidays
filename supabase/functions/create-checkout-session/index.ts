@@ -75,7 +75,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    if (!origin.startsWith(ALLOWED_ORIGIN)) {
+    if (origin !== ALLOWED_ORIGIN && origin !== 'http://localhost:5173') {
       return new Response(
         JSON.stringify({ error: 'Invalid origin' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
