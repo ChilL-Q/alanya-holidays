@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
 import { format } from 'date-fns';
+import DOMPurify from 'dompurify';
 import { db } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 import { BlogPostWithTags } from '../api-services/api/blog';
@@ -41,6 +42,11 @@ export const BlogPostPage: React.FC = () => {
         // getBlogPost already increments views, but if called without incrementViews=true,
         // we'd do it here. Since we pass true above, this is a safety guard.
     }, [post]);
+
+    const sanitizedContent = useMemo(() =>
+        post ? DOMPurify.sanitize(post.content || '') : '',
+        [post]
+    );
 
     if (loading) {
         return (
@@ -177,7 +183,7 @@ export const BlogPostPage: React.FC = () => {
                             prose-ul:text-slate-700 dark:prose-ul:text-slate-300
                             prose-li:text-slate-700 dark:prose-li:text-slate-300
                             prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
-                        dangerouslySetInnerHTML={{ __html: post.content || '' }}
+                        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                     />
 
                     {/* Excerpt fallback if no content */}
