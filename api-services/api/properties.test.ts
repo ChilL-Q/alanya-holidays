@@ -199,15 +199,17 @@ describe('propertiesService', () => {
           expect(reviews.data).toHaveLength(1);
 
           const noExistingChain = createMockChain(null);
+          const bookingChain = createMockChain(null);
+          bookingChain.then = (resolve: any) => resolve({ data: null, count: 1, error: null });
           const insertChain = createMockChain({ id: 'r2' });
           const propChain = createMockChain({ host_id: 'h1', title: 'T' });
           mockSupabase.from
               .mockReturnValueOnce(noExistingChain)
+              .mockReturnValueOnce(bookingChain)
               .mockReturnValueOnce(insertChain)
               .mockReturnValueOnce(propChain);
           await propertiesService.addReview({
               property_id: '550e8400-e29b-41d4-a716-446655440001',
-              user_id: '550e8400-e29b-41d4-a716-446655440002',
               rating: 5,
               comment: 'Great stay at this property'
           });
