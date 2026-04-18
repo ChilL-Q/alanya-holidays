@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidVideoUrl } from '../../utils/videoEmbed';
 
 export const propertySchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
@@ -89,6 +90,9 @@ export const blogTagSchema = z.object({
 export const blogSubmissionSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
     content: z.string().min(100, "Content must be at least 100 characters"),
-    video_url: z.string().url().optional().or(z.literal('')),
+    video_url: z.string().url().optional().or(z.literal(''))
+        .refine(val => !val || isValidVideoUrl(val), {
+            message: "Only YouTube and Vimeo links are supported",
+        }),
     media_urls: z.array(z.string()).default([]),
 });
