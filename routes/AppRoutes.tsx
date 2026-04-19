@@ -139,9 +139,9 @@ export const AppRoutes: React.FC = () => {
                     </HostRoute>
                 } />
                 <Route path="/bookmarks" element={<FavoritesPage />} />
-                <Route path="/book-vehicle/:id" element={<BookVehicle />} />
-                <Route path="/book-tour/:id" element={<BookTour />} />
-                <Route path="/book-wellness/:id" element={<BookWellness />} />
+                <Route path="/book-vehicle/:id" element={<AuthRoute><BookVehicle /></AuthRoute>} />
+                <Route path="/book-tour/:id" element={<AuthRoute><BookTour /></AuthRoute>} />
+                <Route path="/book-wellness/:id" element={<AuthRoute><BookWellness /></AuthRoute>} />
                 <Route path="/inbox" element={<AuthRoute><InboxPage /></AuthRoute>} />
 
                 {/* Host Routes - Protected */}
