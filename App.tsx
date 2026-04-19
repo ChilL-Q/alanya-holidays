@@ -10,7 +10,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LoginModal } from './components/auth/LoginModal';
 import { RegisterModal } from './components/auth/RegisterModal';
 import { LanguageProvider } from './context/LanguageContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { LightboxProvider } from './context/LightboxContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { PageTransition } from './components/PageTransition';
@@ -50,6 +50,34 @@ const ScrollToTop = () => {
   return null;
 };
 
+const AppContent: React.FC = () => {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
+      <Navbar />
+      <main className="flex-grow">
+        <PageTransition>
+          <ErrorBoundary>
+            <React.Suspense fallback={<PageLoader />}>
+              <AppRoutes />
+            </React.Suspense>
+          </ErrorBoundary>
+        </PageTransition>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <HelmetProvider>
@@ -66,19 +94,7 @@ const App: React.FC = () => {
                       <ModalProvider>
                         <LightboxProvider>
                           <ChatProvider>
-                            <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
-                              <Navbar />
-                              <main className="flex-grow">
-                                <PageTransition>
-                                  <ErrorBoundary>
-                                    <React.Suspense fallback={<PageLoader />}>
-                                      <AppRoutes />
-                                    </React.Suspense>
-                                  </ErrorBoundary>
-                                </PageTransition>
-                              </main>
-                              <Footer />
-                            </div>
+                            <AppContent />
                             <LoginModal />
                             <RegisterModal />
                             <React.Suspense fallback={null}>

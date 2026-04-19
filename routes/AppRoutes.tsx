@@ -78,7 +78,7 @@ export const AppRoutes: React.FC = () => {
     return (
         <Routes>
             <Route path="/" element={<DirectoryHome />} />
-                <Route path="/ai-planner" element={<AiPlanner />} />
+                <Route path="/ai-planner" element={<AuthRoute><AiPlanner /></AuthRoute>} />
 
                 {/* SEO-Optimized Directory Category Routes */}
                 <Route path="/medical-tourism-alanya" element={<DirectoryCategoryPage categoryId="medical" />} />
