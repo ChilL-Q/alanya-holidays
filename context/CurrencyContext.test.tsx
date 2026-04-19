@@ -91,7 +91,7 @@ describe('CurrencyContext', () => {
 
         // Initial currency is EUR. Convert 100 EUR to EUR.
         expect(screen.getByTestId('converted').textContent).toBe('100');
-        expect(convertPrice).toHaveBeenCalledWith(100, 'EUR', 'EUR');
+        expect(convertPrice).toHaveBeenCalledWith(100, 'EUR', 'EUR', expect.any(Object));
     });
 
     it('uses current currency for conversion target', () => {
@@ -108,7 +108,7 @@ describe('CurrencyContext', () => {
 
         // Now currency is USD. Convert 100 EUR to USD.
         expect(screen.getByTestId('converted').textContent).toBe('110');
-        expect(convertPrice).toHaveBeenCalledWith(100, 'EUR', 'USD');
+        expect(convertPrice).toHaveBeenCalledWith(100, 'EUR', 'USD', expect.any(Object));
     });
 
     it('calls utils.formatPrice correctly', () => {
