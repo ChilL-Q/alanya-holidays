@@ -51,6 +51,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
                 }
             } catch (err) {
                 console.error(err);
+                // If unauthorized, go back to inbox view
+                if (err instanceof Error && err.message.toLowerCase().includes('authorized')) {
+                    setActiveConversationId(null);
+                }
             } finally {
                 if (isMounted && isFirstLoad) {
                     setLoading(false);

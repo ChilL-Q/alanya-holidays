@@ -454,6 +454,65 @@ describe('AuthContext', () => {
         consoleSpy.mockRestore();
     });
 
+    // ─── A5-C2: role must never be read from JWT metadata ────────────────────
+
+    it('A5-C2: forces guest role on DB error even when JWT metadata has admin role', async () => {
+        const adminJwtUser = {
+            id: 'user-admin',
+            email: 'admin@example.com',
+            created_at: '2024-01-01',
+            user_metadata: { full_name: 'Admin User', role: 'admin' },
+        };
+
+        (supabase.auth.getSession as any).mockResolvedValue({
+            data: { session: { user: adminJwtUser } }
+        });
+        (supabase.from as any).mockReturnValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockRejectedValue(new Error('DB unavailable'))
+        });
+
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        // User stays logged in but role must be guest, not 'admin' from JWT
+        expect(result.current.isAuthenticated).toBe(true);
+        expect(result.current.user?.role).toBe('guest');
+
+        consoleSpy.mockRestore();
+    });
+
+    it('A5-C2: forces guest role on DB error even when JWT metadata has host role', async () => {
+        const hostJwtUser = {
+            id: 'user-host',
+            email: 'host@example.com',
+            created_at: '2024-01-01',
+            user_metadata: { full_name: 'Host User', role: 'host' },
+        };
+
+        (supabase.auth.getSession as any).mockResolvedValue({
+            data: { session: { user: hostJwtUser } }
+        });
+        (supabase.from as any).mockReturnValue({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockRejectedValue(new Error('DB timeout'))
+        });
+
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        expect(result.current.isAuthenticated).toBe(true);
+        expect(result.current.user?.role).toBe('guest');
+
+        consoleSpy.mockRestore();
+    });
+
     it('useAuth throws when used outside of AuthProvider', () => {
         // renderHook without the wrapper means no AuthProvider
         expect(() => renderHook(() => useAuth())).toThrow(

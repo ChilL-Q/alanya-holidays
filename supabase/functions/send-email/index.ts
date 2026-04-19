@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
     
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), { 
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       })
     }
@@ -177,7 +177,7 @@ Deno.serve(async (req: Request) => {
     const safeMessage = error instanceof Error && error.message ? 'An error occurred sending the email' : 'An unexpected error occurred';
     return new Response(JSON.stringify({ error: safeMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 500,
     })
   }
 })

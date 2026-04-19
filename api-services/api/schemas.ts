@@ -63,7 +63,6 @@ export const productVariantSchema = z.object({
 
 export const reviewSchema = z.object({
     property_id: z.string().uuid("Invalid property ID"),
-    user_id: z.string().uuid("Invalid user ID"),
     rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
     comment: z.string().min(5, "Comment must be at least 5 characters").max(1000, "Comment cannot exceed 1000 characters"),
     images: z.array(z.string()).default([]),
