@@ -309,17 +309,12 @@ describe('blogService', () => {
     describe('createBlogSubmission', () => {
         const longContent = 'This is a long enough content for the blog submission to be valid. It has more than one hundred characters to pass the Zod schema validation check successfully.';
 
-        it('creates submission and returns Stripe checkout URL', async () => {
+        it('creates submission and returns submissionId', async () => {
             setupAuth();
             mockFromTable({
                 blog_submissions: { id: 'sub-1', user_id: 'user-123', title: 'My Blog', content: longContent },
-                profiles: { email: 'author@example.com' },
             });
             mockSupabase.rpc.mockResolvedValue({ data: true, error: null });
-            mockSupabase.functions.invoke.mockResolvedValue({
-                data: { url: 'https://checkout.stripe.com/test' },
-                error: null,
-            });
 
             const result = await blogService.createBlogSubmission({
                 title: 'My Blog',
@@ -327,24 +322,22 @@ describe('blogService', () => {
             });
 
             expect(result.submissionId).toBe('sub-1');
-            expect(result.checkoutUrl).toBe('https://checkout.stripe.com/test');
         });
 
-        it('cleans up submission if Stripe checkout fails', async () => {
+        it('creates submission with optional payment_details', async () => {
             setupAuth();
             mockFromTable({
-                blog_submissions: { id: 'sub-1', user_id: 'user-123', title: 'My Blog', content: longContent },
-                profiles: { email: 'author@example.com' },
+                blog_submissions: { id: 'sub-2', user_id: 'user-123', title: 'My Blog', content: longContent, payment_details: 'paypal@example.com' },
             });
-            mockSupabase.functions.invoke.mockResolvedValue({
-                data: null,
-                error: new Error('Stripe failed'),
-            });
+            mockSupabase.rpc.mockResolvedValue({ data: true, error: null });
 
-            await expect(blogService.createBlogSubmission({
+            const result = await blogService.createBlogSubmission({
                 title: 'My Blog',
                 content: longContent,
-            })).rejects.toThrow();
+                payment_details: 'paypal@example.com',
+            });
+
+            expect(result.submissionId).toBe('sub-2');
         });
     });
 
@@ -449,15 +442,6 @@ describe('blogService', () => {
                 .rejects.toThrow('Submission is already being processed or not in pending state');
         });
 
-        it('rejects approval if payment not confirmed', async () => {
-            setupAuth(mockAdminUser);
-            mockFromTable({
-                blog_submissions: { id: 's1', payment_status: 'unpaid', status: 'pending_review' },
-            });
-
-            await expect(blogService.approveBlogSubmission('s1'))
-                .rejects.toThrow('Submission payment not confirmed');
-        });
 
         it('rejects approval if status not pending_review', async () => {
             setupAuth(mockAdminUser);

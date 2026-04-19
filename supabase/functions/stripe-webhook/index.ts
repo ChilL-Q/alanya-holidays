@@ -318,20 +318,25 @@ Deno.serve(async (req: Request) => {
   } // end invoice.payment_failed
 
   // ============================================================
-  // Existing Booking / Blog Subscription Handlers
+  // Booking / Checkout Handler
   // ============================================================
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
+    // Blog submissions are now free — log and ignore if an old link triggers this
+    if (session.metadata?.type === 'blog_submission') {
+      console.warn(`Unexpected blog_submission payment received for session: ${session.id}`)
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
     const paymentIntentId = typeof session.payment_intent === 'string'
       ? session.payment_intent
       : (session.payment_intent as any)?.id ?? null
 
-    // Idempotency: skip if already processed (payment_status already 'paid')
+    // Idempotency: skip if already processed
     const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
     if (bookingIds.length > 0) {
-      // H1: .single() throws on 0 rows — use .maybeSingle() for proper null handling
       const { data: existing } = await supabase
         .from('bookings')
         .select('id, payment_status')
@@ -341,118 +346,12 @@ Deno.serve(async (req: Request) => {
 
       if (existing?.payment_status === 'paid') {
         console.warn(`Skipping duplicate webhook for session ${session.id}`)
-        return new Response(JSON.stringify({ received: true }), {
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
       }
     }
 
     if (session.payment_status === 'paid') {
-      // --- Handle blog submission payment ---
-      if (session.metadata?.type === 'blog_submission') {
-        const submissionId = session.metadata.submissionId
-        if (submissionId) {
-          // M1: verify amount_total is $5 (500 cents) — protects against our own billing bugs
-          if (session.amount_total !== 500) {
-            console.error(`Blog submission amount mismatch: expected 500, got ${session.amount_total}`)
-            return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
-          }
-
-          const { data: submission, error: subError } = await supabase
-            .from('blog_submissions')
-            .select('id, user_id, title, status, payment_status')
-            .eq('id', submissionId)
-            .maybeSingle()
-
-          if (subError) {
-            console.error('Blog submission lookup error:', subError)
-          } else if (submission) {
-            // A2-C4: Use UPDATE with WHERE to detect if this is the first successful run
-            // Guard: also check status='pending_payment' to avoid triggering the H4 state machine
-            // if the submission was rejected by an admin before payment arrived (rejected → pending_review
-            // is blocked by the trigger, causing a DB exception and an infinite Stripe retry loop).
-            const { data: updatedSub, error: updateError } = await supabase
-              .from('blog_submissions')
-              .update({
-                payment_status: 'paid',
-                status: 'pending_review',
-              })
-              .eq('id', submissionId)
-              .eq('payment_status', 'unpaid')
-              .eq('status', 'pending_payment')
-              .select('id')
-
-            if (updateError) {
-              console.error('Failed to confirm blog submission payment:', updateError)
-              return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
-            }
-
-            // If updatedSub.length > 0, it's the first time.
-            // If 0, it's a retry (or already paid), but we proceed to notifications anyway
-            // to ensure they are sent if the previous run failed mid-way.
-            if (updatedSub && updatedSub.length > 0) {
-              console.warn(`Confirmed blog submission payment: ${submissionId}`)
-            } else {
-              console.warn(`Webhook retry or already paid for blog submission: ${submissionId}`)
-            }
-
-            // Notify all admins about new submission awaiting review
-            const { data: admins } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('role', 'admin')
-
-            if (admins && admins.length > 0) {
-              await supabase.from('notifications').insert(
-                admins.map((admin: { id: string }) => ({
-                  user_id: admin.id,
-                  title: 'New Blog Submission',
-                  message: `A new blog submission "${submission.title}" is ready for review.`,
-                  type: 'info',
-                  link: `/admin/blog-submissions/${submissionId}`,
-                }))
-              )
-            }
-
-            // Send email to author: submission received, awaiting moderation
-            const { data: authorProfile } = await supabase
-              .from('profiles')
-              .select('email, full_name')
-              .eq('id', submission.user_id)
-              .maybeSingle()
-
-            const authorEmail = authorProfile?.email
-            if (authorEmail) {
-              const siteUrl = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
-              // M4: fire-and-forget + M5: audit_logs on failure
-              supabase.functions.invoke('send-email', {
-                body: {
-                  to: authorEmail,
-                  type: 'blog_submission_received',
-                  data: {
-                    postTitle: submission.title,
-                    link: `${siteUrl}/blog`,
-                  },
-                },
-              }).then(() => {
-                console.warn(`Sent received email to ${authorEmail}`)
-              }).catch((e: unknown) => {
-                const msg = e instanceof Error ? e.message : String(e)
-                console.error(`Failed to send blog submission received email:`, msg)
-                supabase.from('audit_logs').insert({
-                  event_type: 'EMAIL_DELIVERY_FAILED',
-                  details: { email_type: 'blog_submission_received', submission_id: submissionId, error: msg },
-                }).then(() => {}).catch(() => {})
-              })
-            }
-          } else {
-            console.warn(`Blog submission not found in DB: ${submissionId}`)
-          }
-        }
-      }
-
-      // --- Handle booking payments (existing logic) ---
-      else if (bookingIds.length > 0) {
+      if (bookingIds.length > 0) {
         // A1-C1: Verify all bookingIds belong to the userId from this session
         const sessionUserId = session.metadata?.userId
         if (!sessionUserId) {
@@ -562,8 +461,8 @@ Deno.serve(async (req: Request) => {
           })
         }
       }
-    }
-  }
+    } // end if session.payment_status === 'paid'
+  } // end checkout.session.completed
 
   if (event.type === 'payment_intent.payment_failed') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
