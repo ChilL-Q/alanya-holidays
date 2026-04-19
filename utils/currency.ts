@@ -1,10 +1,11 @@
 
 export type Currency = 'USD' | 'EUR' | 'TRY';
 
+// Fallback rates used when live fetch fails or cache is empty
 export const RATES: Record<Currency, number> = {
-    USD: 1.09, // 1 EUR = 1.09 USD
     EUR: 1,
-    TRY: 35.5 // 1 EUR = ~35.5 TRY
+    USD: 1.09,
+    TRY: 38.5,
 };
 
 export const SYMBOLS: Record<Currency, string> = {
@@ -13,14 +14,15 @@ export const SYMBOLS: Record<Currency, string> = {
     TRY: '₺'
 };
 
-export const convertPrice = (amount: number, fromCurrency: Currency, toCurrency: Currency): number => {
+export const convertPrice = (
+    amount: number,
+    fromCurrency: Currency,
+    toCurrency: Currency,
+    rates: Record<Currency, number> = RATES
+): number => {
     if (fromCurrency === toCurrency) return amount;
-
-    // Convert to Base (EUR) first
-    const amountInBase = amount / RATES[fromCurrency];
-
-    // Convert to target currency
-    return amountInBase * RATES[toCurrency];
+    const amountInEur = amount / rates[fromCurrency];
+    return amountInEur * rates[toCurrency];
 };
 
 export const formatPrice = (amount: number, currency: Currency): string => {

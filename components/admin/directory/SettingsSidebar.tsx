@@ -14,7 +14,7 @@ export interface SettingsSidebarProps {
 export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     categoryId, isFeatured, isVerified, priceLevel, reviewsAverage, reviewsCount, onChange
 }) => {
-    const categories = ['medical', 'accommodations', 'tours', 'transport', 'restaurants', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
+    const categories = ['medical', 'accommodations', 'tours', 'transport', 'restaurants', 'cafes', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
 
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50 lg:sticky top-24">
