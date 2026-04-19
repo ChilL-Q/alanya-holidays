@@ -85,7 +85,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ className = '', embedded
             isMounted = false;
             channel.unsubscribe();
         };
-    }, [activeConversationId]);
+    }, [activeConversationId, setActiveConversationId]);
 
     useEffect(() => {
         if (autoScroll && messagesContainerRef.current) {
