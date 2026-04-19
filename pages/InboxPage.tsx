@@ -23,6 +23,17 @@ export const InboxPage: React.FC = () => {
         }
     }, [searchParams, refreshConversations, setActiveConversationId]);
 
+    // A5-H1: validate ownership of deep-linked conversation once conversations are loaded.
+    // Fires whenever conversations list updates — if activeConversationId is not in the
+    // user's own list, clear it so ChatWindow never renders for a foreign conversation.
+    useEffect(() => {
+        if (!activeConversationId || conversations.length === 0) return;
+        const isOwned = conversations.some(c => c.id === activeConversationId);
+        if (!isOwned) {
+            setActiveConversationId(null);
+        }
+    }, [conversations, activeConversationId, setActiveConversationId]);
+
     // Redirect if not logged in
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;

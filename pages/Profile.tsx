@@ -15,7 +15,7 @@ import { ProfileSecurityTab } from '../components/user/profile/ProfileSecurityTa
 import { ProfilePayoutTab } from '../components/user/profile/ProfilePayoutTab';
 
 export const Profile: React.FC = () => {
-    const { user, logout, isAuthenticated, updateUser, updateEmail, updatePassword } = useAuth();
+    const { user, logout, isAuthenticated, updateUser, updateEmail, updatePassword, refreshUser } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
 
@@ -257,7 +257,8 @@ export const Profile: React.FC = () => {
             await updateUser({ role: 'host' });
             toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');
             setIsHostModalOpen(false);
-            // Refresh page or state to show new tabs
+            // A5-M2: re-fetch profile from DB so role change is confirmed via server state
+            await refreshUser();
         } catch (error: any) {
             console.error('Error upgrading to host:', error);
             toast.error('Failed to update role');
@@ -335,7 +336,7 @@ export const Profile: React.FC = () => {
                             />
                         )}
 
-                        {activeTab === 'payouts' && (
+                        {activeTab === 'payouts' && (user.role === 'host' || user.role === 'admin') && (
                             <ProfilePayoutTab
                                 payoutForm={payoutForm}
                                 setPayoutForm={setPayoutForm}
