@@ -11,7 +11,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: '2025-01-27.acacia'
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
 })
 
 const corsHeaders = {
