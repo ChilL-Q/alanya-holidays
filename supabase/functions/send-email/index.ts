@@ -647,7 +647,7 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     `
                     <p style="font-size: 16px;">Thank you! Your blog post <strong>${escapeHtml(data.postTitle)}</strong> has been received.</p>
                     <div class="card">
-                        <p style="text-align: center; margin: 0;">Your submission is awaiting payment confirmation. Once payment is processed, our editorial team will review your content within 3-5 business days.</p>
+                <p style="text-align: center; margin: 0;">Your submission is under review by our editorial team. We will check it shortly.</p>
                     </div>
                     <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">You will receive an email once your post is reviewed and published.</p>
                     `,

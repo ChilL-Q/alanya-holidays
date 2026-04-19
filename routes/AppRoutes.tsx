@@ -65,6 +65,7 @@ const AdminProductsPage = React.lazy(() => import('../pages/admin/ProductsPage')
 const AdminEditProductPage = React.lazy(() => import('../pages/admin/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 const DirectoryAdminPage = React.lazy(() => import('../pages/admin/DirectoryAdminPage').then(module => ({ default: module.DirectoryAdminPage })));
 const AdminEditDirectoryPage = React.lazy(() => import('../pages/admin/AdminEditDirectoryPage').then(module => ({ default: module.AdminEditDirectoryPage })));
+const AdminBlogSubmissionsPage = React.lazy(() => import('../pages/admin/AdminBlogSubmissionsPage').then(module => ({ default: module.AdminBlogSubmissionsPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -305,6 +306,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <AdminEditDirectoryPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/blog-submissions" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminBlogSubmissionsPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

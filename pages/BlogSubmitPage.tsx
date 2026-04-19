@@ -1,20 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
 import { toast } from 'react-hot-toast';
-import { PenLine, X, ImagePlus, Video, ArrowLeft, CreditCard, Info } from 'lucide-react';
+import { PenLine, X, ImagePlus, Video, ArrowLeft, Send, Info } from 'lucide-react';
 
 const MAX_IMAGES = 5;
-const SUBMISSION_FEE_EUR = 5;
 
 export const BlogSubmitPage: React.FC = () => {
     const { user } = useAuth();
-    const { convertPrice, formatPrice } = useCurrency();
     const navigate = useNavigate();
-
-    const displayFee = formatPrice(convertPrice(SUBMISSION_FEE_EUR, 'EUR'));
 
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
@@ -99,18 +94,17 @@ export const BlogSubmitPage: React.FC = () => {
                 }
             }
 
-            // Create submission + get Stripe URL
-            const toastId = toast.loading('Creating submission...');
-            const { checkoutUrl } = await db.createBlogSubmission({
+            // Create submission
+            const toastId = toast.loading('Submitting article...');
+            await db.createBlogSubmission({
                 title: title.trim(),
                 content: content.trim(),
                 video_url: videoUrl.trim() || undefined,
                 media_urls: uploadedUrls,
             });
 
-            toast.success('Redirecting to payment...', { id: toastId });
-            // Redirect to Stripe Checkout
-            window.location.href = checkoutUrl;
+            toast.success('Article submitted successfully!', { id: toastId });
+            navigate('/blog/submission-success');
         } catch (err: any) {
             toast.error(err.message || 'Failed to submit article');
         } finally {
@@ -143,7 +137,7 @@ export const BlogSubmitPage: React.FC = () => {
                         Share Your Story
                     </h1>
                     <p className="mt-2 text-slate-500 dark:text-slate-400">
-                        Write about Alanya — tips, guides, hidden gems. After a one-time publication fee of <strong className="text-slate-700 dark:text-slate-300">{displayFee}</strong>, your article goes through editorial review before being published.
+                        Write about Alanya — tips, guides, hidden gems. If your article is accepted and published, we will send you €5 as a token of appreciation!
                     </p>
                 </div>
 
@@ -151,7 +145,7 @@ export const BlogSubmitPage: React.FC = () => {
                 <div className="flex gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl mb-8">
                     <Info size={18} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                     <div className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>How it works:</strong> Fill in the form → pay {displayFee} via Stripe → our team reviews within 2–3 business days → you get an email when it's published.
+                        <strong>How it works:</strong> Fill in the form → our team reviews within 2–3 business days → if approved, we publish your article and pay €5 to your provided payment details.
                     </div>
                 </div>
 
@@ -271,8 +265,7 @@ export const BlogSubmitPage: React.FC = () => {
                     {/* Submit */}
                     <div className="flex items-center justify-between pt-2">
                         <div className="text-sm text-slate-500 dark:text-slate-400">
-                            <span className="font-semibold text-slate-700 dark:text-slate-300">Publication fee: {displayFee}</span>
-                            {' '}— charged once via Stripe
+                            Submission is <span className="font-semibold text-slate-700 dark:text-slate-300">free</span> — best articles earn €5
                         </div>
                         <button
                             type="submit"
@@ -289,8 +282,8 @@ export const BlogSubmitPage: React.FC = () => {
                                 </>
                             ) : (
                                 <>
-                                    <CreditCard size={16} />
-                                    Continue to Payment
+                                    <Send size={16} />
+                                    Submit Article
                                 </>
                             )}
                         </button>

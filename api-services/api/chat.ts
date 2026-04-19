@@ -210,6 +210,37 @@ export const chatService = {
         throw new Error('Failed to create or find conversation');
     },
 
+    // Create or retrieve a direct conversation between admin (as host) and a user (as guest), no property
+    async createDirectConversation(guestId: string): Promise<string> {
+        assertUUID(guestId, 'guestId');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase
+            .from('chat_conversations')
+            .insert([{ guest_id: guestId, host_id: user.id }])
+            .select('id')
+            .single();
+
+        if (!error) return data.id;
+
+        // Conversation already exists — fetch it
+        if (error.code === '23505' || error.message?.includes('duplicate')) {
+            const { data: existing, error: fetchError } = await supabase
+                .from('chat_conversations')
+                .select('id')
+                .eq('guest_id', guestId)
+                .eq('host_id', user.id)
+                .is('property_id', null)
+                .maybeSingle();
+
+            if (fetchError) throw fetchError;
+            if (existing) return existing.id;
+        }
+
+        throw error;
+    },
+
     // Mark messages as read
     async markAsRead(conversationId: string) {
         const { data: { user } } = await supabase.auth.getUser();
