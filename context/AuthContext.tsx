@@ -86,8 +86,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }
             } catch (err) {
                 console.error('Error fetching user profile:', err);
-                // On DB error: keep user logged in but default to guest role for safety
-                if (isMountedRef.current) setUser({ ...mapSessionToUser(sessionUser), role: 'guest' });
+                // On DB error: keep user logged in but force guest role for safety
+                if (isMountedRef.current) {
+                    setUser({
+                        ...mapSessionToUser(sessionUser),
+                        role: 'guest'
+                    });
+                }
             } finally {
                 if (isMountedRef.current) setIsLoading(false);
             }
