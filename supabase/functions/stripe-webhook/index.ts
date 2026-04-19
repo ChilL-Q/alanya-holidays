@@ -318,22 +318,40 @@ Deno.serve(async (req: Request) => {
   } // end invoice.payment_failed
 
   // ============================================================
-  // Blog Submission Payment Handler
+  // Booking / Checkout Handler
   // ============================================================
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
+    // Blog submissions are now free — log and ignore if an old link triggers this
     if (session.metadata?.type === 'blog_submission') {
-        // Blog submissions are now free — this handler should no longer be triggered by Stripe.
-        // We log it just in case an old link is used or manual payment attempt occurs.
-        console.warn(`Unexpected blog_submission payment received for session: ${session.id}`)
-        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+      console.warn(`Unexpected blog_submission payment received for session: ${session.id}`)
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
     }
 
-    // Existing Booking Handler
-    // ...
+    const paymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent as any)?.id ?? null
 
+    // Idempotency: skip if already processed
+    const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
+    if (bookingIds.length > 0) {
+      const { data: existing } = await supabase
+        .from('bookings')
+        .select('id, payment_status')
+        .eq('stripe_session_id', session.id)
+        .limit(1)
+        .maybeSingle()
+
+      if (existing?.payment_status === 'paid') {
+        console.warn(`Skipping duplicate webhook for session ${session.id}`)
+        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+      }
+    }
+
+    if (session.payment_status === 'paid') {
+      if (bookingIds.length > 0) {
         // A1-C1: Verify all bookingIds belong to the userId from this session
         const sessionUserId = session.metadata?.userId
         if (!sessionUserId) {
@@ -443,8 +461,8 @@ Deno.serve(async (req: Request) => {
           })
         }
       }
-    }
-  }
+    } // end if session.payment_status === 'paid'
+  } // end checkout.session.completed
 
   if (event.type === 'payment_intent.payment_failed') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent

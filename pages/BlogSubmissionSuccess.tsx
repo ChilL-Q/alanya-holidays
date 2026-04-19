@@ -1,10 +1,8 @@
 import React from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { CheckCircle, BookOpen, Clock, Mail } from 'lucide-react';
 
 export const BlogSubmissionSuccess: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const sessionId = searchParams.get('session_id');
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16 flex items-center">
