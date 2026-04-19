@@ -8,7 +8,8 @@ import { z } from 'npm:zod@3'
 declare const Deno: any
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
-  apiVersion: '2025-01-27.acacia',
+  // L1: Allow override via env var for easy API version updates without code change
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
 })
 
 const supabase = createClient(
@@ -27,7 +28,7 @@ Deno.serve(async (req: Request) => {
     event = await stripe.webhooks.constructEventAsync(body, signature!, webhookSecret)
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message)
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 })
+    return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), { status: 400, headers: { 'Content-Type': 'application/json' } })
   }
 
   // ============================================================
@@ -383,7 +384,7 @@ Deno.serve(async (req: Request) => {
 
             if (updateError) {
               console.error('Failed to confirm blog submission payment:', updateError)
-              return new Response('DB update failed', { status: 500 })
+              return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
             }
 
             // If updatedSub.length > 0, it's the first time.
@@ -468,7 +469,7 @@ Deno.serve(async (req: Request) => {
 
         if (ownerCheckError) {
           console.error('Ownership check failed:', ownerCheckError)
-          return new Response('Ownership check failed', { status: 500 })
+          return new Response(JSON.stringify({ error: 'Ownership check failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
         }
 
         const ownedIds = (ownedBookings ?? []).map((b: { id: string }) => b.id)
@@ -501,12 +502,12 @@ Deno.serve(async (req: Request) => {
 
         if (error) {
           console.error('Failed to confirm bookings:', error)
-          return new Response('DB update failed', { status: 500 })
+          return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
         }
 
         if (!updatedRows || updatedRows.length === 0) {
           console.error(`No rows updated for bookings: ${bookingIds.join(', ')} — state machine may have rejected transition`)
-          return new Response('DB update failed: no rows updated', { status: 500 })
+          return new Response(JSON.stringify({ error: 'DB update failed: no rows updated' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
         }
 
         // Use only the IDs that were actually confirmed (state machine may have skipped some)
@@ -577,7 +578,7 @@ Deno.serve(async (req: Request) => {
 
     if (fetchError) {
       console.error('Failed to fetch booking for payment_intent:', fetchError)
-      return new Response('DB lookup failed', { status: 500 })
+      return new Response(JSON.stringify({ error: 'DB lookup failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     if (!booking) {
@@ -594,7 +595,7 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) {
       console.error('Failed to update booking payment_status to failed:', updateError)
-      return new Response('DB update failed', { status: 500 })
+      return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     const itemTitle = (booking.property as any)?.title ?? (booking.service as any)?.title ?? 'your booking'
@@ -682,7 +683,7 @@ Deno.serve(async (req: Request) => {
 
     if (fetchError) {
       console.error('Failed to fetch booking for refund:', fetchError)
-      return new Response('DB lookup failed', { status: 500 })
+      return new Response(JSON.stringify({ error: 'DB lookup failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     if (!booking) {
@@ -708,7 +709,7 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) {
       console.error('Failed to update booking payment_status to refunded:', updateError)
-      return new Response('DB update failed', { status: 500 })
+      return new Response(JSON.stringify({ error: 'DB update failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
     }
 
     // Create audit log
