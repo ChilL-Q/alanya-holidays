@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Search } from 'lucide-react';
+import { BookOpen, Search, PenLine } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { db } from '../api-services';
 import { BlogPostPreview } from '../api-services/api/blog';
 import { BlogPostCard } from '../components/home/BlogPostCard';
 import { SEOHead } from '../components/seo/SEOHead';
+import { useAuth } from '../context/AuthContext';
 
 const POSTS_PER_PAGE = 9;
 
 export const BlogPage: React.FC = () => {
+    const { isAuthenticated } = useAuth();
     const [posts, setPosts] = useState<BlogPostPreview[]>([]);
     const [allCategories, setAllCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -134,6 +137,17 @@ export const BlogPage: React.FC = () => {
                         Expert tips, hidden gems, and insider guides from locals.
                         Discover the real Alanya beyond the tourist trail.
                     </p>
+                    {isAuthenticated && (
+                        <div className="mt-8">
+                            <Link
+                                to="/blog/submit"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+                            >
+                                <PenLine size={16} />
+                                Submit an Article
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </section>
 
