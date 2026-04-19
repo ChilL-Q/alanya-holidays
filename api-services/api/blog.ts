@@ -492,7 +492,8 @@ export const blogService = {
         content: string;
         video_url?: string;
         media_urls?: string[];
-    }): Promise<{ submissionId: string; checkoutUrl: string }> {
+        payment_details?: string;
+    }): Promise<{ submissionId: string }> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
@@ -525,40 +526,15 @@ export const blogService = {
                 media_urls: (validatedData.media_urls || []).filter(url =>
                     isAuthorizedStorageUrl(url, user.id)
                 ),
-                status: 'pending_payment',
-                payment_status: 'unpaid',
+                status: 'pending_review',
+                payment_details: data.payment_details || null,
             }])
             .select()
             .single();
 
         if (subError || !submission) throw subError || new Error('Failed to create submission');
 
-        // Get user email for Stripe
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', user.id)
-            .single();
-
-        // Invoke Stripe edge function for blog submission checkout
-        const { data: stripeData, error: stripeError } = await supabase.functions.invoke('create-checkout-session', {
-            body: {
-                mode: 'blog_submission',
-                email: profile?.email,
-                origin: window.location.origin,
-                blogSubmission: {
-                    submissionId: submission.id,
-                    title: submission.title,
-                    authorEmail: profile?.email,
-                },
-            },
-        });
-
-        if (stripeError || !stripeData?.url) {
-            throw stripeError || new Error('Failed to create Stripe checkout session');
-        }
-
-        return { submissionId: submission.id, checkoutUrl: stripeData.url };
+        return { submissionId: submission.id };
     },
 
     /**
@@ -623,13 +599,14 @@ export const blogService = {
             .single();
 
         if (subError || !submission) throw subError || new Error('Submission not found');
-        if (submission.payment_status !== 'paid') throw new Error('Submission payment not confirmed');
         if (submission.status !== 'pending_review') throw new Error('Submission is not pending review');
 
         // A2-C2: Update submission status first (optimistic lock)
         const { data: updatedSubRows, error: updateError } = await supabase
             .from('blog_submissions')
-            .update({ status: 'approved' })
+            .update({
+                status: 'approved',
+            })
             .eq('id', submissionId)
             .eq('status', 'pending_review')
             .select('id');

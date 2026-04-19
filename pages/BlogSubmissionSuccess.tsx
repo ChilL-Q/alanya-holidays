@@ -1,10 +1,8 @@
 import React from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { CheckCircle, BookOpen, Clock, Mail } from 'lucide-react';
 
 export const BlogSubmissionSuccess: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const sessionId = searchParams.get('session_id');
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16 flex items-center">
@@ -22,7 +20,7 @@ export const BlogSubmissionSuccess: React.FC = () => {
                     Submission Received!
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-                    Thank you for submitting your article. Payment confirmed — our editorial team will review it shortly.
+                    Thank you for submitting your article. It has been accepted for review — our editorial team will check it shortly.
                 </p>
 
                 {/* Steps */}
@@ -32,8 +30,8 @@ export const BlogSubmissionSuccess: React.FC = () => {
                             <CheckCircle size={16} className="text-teal-600 dark:text-cyan-400" />
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Payment confirmed</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">€5 publication fee received</p>
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Submission received</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">We'll review your article soon</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -51,16 +49,10 @@ export const BlogSubmissionSuccess: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Email notification</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">You'll be emailed when your article is published or if we need changes</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">You'll be emailed if your article is selected and published</p>
                         </div>
                     </div>
                 </div>
-
-                {sessionId && (
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-6">
-                        Reference: {sessionId}
-                    </p>
-                )}
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
