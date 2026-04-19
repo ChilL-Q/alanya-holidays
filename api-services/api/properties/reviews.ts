@@ -38,19 +38,36 @@ export async function getReviewCount(propertyId: string) {
     return count || 0;
 }
 
-export async function addReview(review: Omit<Review, 'id' | 'created_at'>) {
+export async function addReview(review: Omit<Review, 'id' | 'created_at' | 'user_id'>) {
     const validatedData = reviewSchema.parse(review);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('Not authenticated');
 
     const { data: existing } = await supabase
         .from('reviews')
         .select('id')
         .eq('property_id', validatedData.property_id)
-        .eq('user_id', validatedData.user_id)
+        .eq('user_id', user.id) // Use authenticated user's ID
         .maybeSingle();
 
     if (existing) throw new Error('You have already submitted a review for this property');
 
-    const { error } = await supabase.from('reviews').insert([validatedData]).select().single();
+    // Verify user has a confirmed or completed booking for this property
+    const { count: bookingCount, error: bookingError } = await supabase
+        .from('bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id) // Use authenticated user's ID
+        .eq('item_id', validatedData.property_id)
+        .eq('item_type', 'property')
+        .in('status', ['confirmed', 'completed']);
+
+    if (bookingError) throw bookingError;
+    if (!bookingCount) { // Check for 0 or null
+        throw new Error('You can only review properties you have booked and completed your stay at.');
+    }
+
+    const { error } = await supabase.from('reviews').insert([{ ...validatedData, user_id: user.id }]).select().single();
     if (error) throw error;
 
     const { data: property } = await supabase
