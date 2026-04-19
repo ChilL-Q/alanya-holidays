@@ -35,6 +35,21 @@ export const AiPlanner: React.FC = () => {
             .finally(() => setPremiumLoading(false));
     }, [user]);
 
+    // A5-M3: re-check premium status when user returns to tab
+    // Handles case: subscription cancelled/created while app was in background
+    useEffect(() => {
+        if (!user) return;
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                subscriptionsService.getPremiumStatus()
+                    .then(s => setIsPremium(s.isPremium))
+                    .catch(() => setIsPremium(false));
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [user]);
+
     useEffect(() => {
         sessionStorage.setItem('ai-planner-status', status);
         if (status === 'results') {

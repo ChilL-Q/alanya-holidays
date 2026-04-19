@@ -27,6 +27,7 @@ interface AuthContextType {
     updateProfile: (data: Partial<User>) => void;
     updateEmail: (email: string) => Promise<void>;
     updatePassword: (password: string) => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -223,6 +224,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }, [user]);
 
+    // A5-M2: force re-fetch of profile from DB after role changes (e.g., become-host)
+    const refreshUser = useCallback(async () => {
+        await supabase.auth.refreshSession();
+        // refreshSession triggers onAuthStateChange → checkUser → re-fetches profile from DB
+    }, []);
+
     const updateEmail = useCallback(async (email: string) => {
         const { error } = await supabase.auth.updateUser({ email });
         if (error) throw error;
@@ -246,8 +253,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateUser,
         updateProfile: updateUser,
         updateEmail,
-        updatePassword
-    }), [user, isLoading, login, register, sendOtp, verifyOtp, logout, updateUser, updateEmail, updatePassword]);
+        updatePassword,
+        refreshUser,
+    }), [user, isLoading, login, register, sendOtp, verifyOtp, logout, updateUser, updateEmail, updatePassword, refreshUser]);
 
     return (
         <AuthContext.Provider value={value}>
