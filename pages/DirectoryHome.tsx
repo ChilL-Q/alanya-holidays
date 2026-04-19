@@ -11,7 +11,7 @@ import { TravelGuideSection } from '../components/home/TravelGuideSection';
 import { ModeToggle, LandingMode } from '../components/home/ModeToggle';
 
 const RENTAL_CATEGORIES = new Set(['accommodations', 'transport', 'real-estate']);
-const SERVICES_CATEGORIES = new Set(['medical', 'tours', 'restaurants', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty']);
+const SERVICES_CATEGORIES = new Set(['medical', 'tours', 'restaurants', 'cafes', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty']);
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
@@ -62,6 +62,7 @@ export const DirectoryHome: React.FC = () => {
         { id: 'tours', icon: '⛵', title: t('dir.cat.tours'), path: '/things-to-do-in-alanya' },
         { id: 'transport', icon: '🚗', title: t('dir.cat.transport'), path: '/airport-transfer' },
         { id: 'restaurants', icon: '🍽️', title: t('dir.cat.restaurants'), path: '/restaurants' },
+        { id: 'cafes', icon: '☕', title: t('dir.cat.cafes'), path: '/cafes' },
         { id: 'real-estate', icon: '🏠', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
         { id: 'visa', icon: '🛂', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
         { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },

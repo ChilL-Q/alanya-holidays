@@ -27,6 +27,8 @@ const ListProperty = React.lazy(() => import('../pages/ListProperty').then(modul
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
 const BlogPostPage = React.lazy(() => import('../pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
 const BlogPage = React.lazy(() => import('../pages/BlogPage').then(module => ({ default: module.BlogPage })));
+const BlogSubmitPage = React.lazy(() => import('../pages/BlogSubmitPage').then(module => ({ default: module.BlogSubmitPage })));
+const BlogSubmissionSuccess = React.lazy(() => import('../pages/BlogSubmissionSuccess').then(module => ({ default: module.BlogSubmissionSuccess })));
 const VisaConsult = React.lazy(() => import('../pages/VisaConsult').then(module => ({ default: module.VisaConsult })));
 const CarRental = React.lazy(() => import('../pages/CarRental').then(module => ({ default: module.CarRental })));
 const CarModelDetails = React.lazy(() => import('../pages/CarModelDetails').then(module => ({ default: module.CarModelDetails })));
@@ -91,6 +93,8 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/car-rental" element={<DirectoryCategoryPage categoryId="transport" />} />
                 <Route path="/restaurants" element={<DirectoryCategoryPage categoryId="restaurants" />} />
                 <Route path="/alanya-restaurants" element={<Navigate to="/restaurants" replace />} />
+                <Route path="/cafes" element={<DirectoryCategoryPage categoryId="cafes" />} />
+                <Route path="/alanya-cafes" element={<Navigate to="/cafes" replace />} />
                 <Route path="/alanya-real-estate" element={<DirectoryCategoryPage categoryId="real-estate" />} />
                 <Route path="/alanya-residency-guide" element={<DirectoryCategoryPage categoryId="visa" />} />
                 <Route path="/alanya-shopping-guide" element={<DirectoryCategoryPage categoryId="shopping" />} />
@@ -106,6 +110,8 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
                 <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/submit" element={<AuthRoute><BlogSubmitPage /></AuthRoute>} />
+                <Route path="/blog/submission-success" element={<BlogSubmissionSuccess />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
 
                 {/* Auth Redirects */}
@@ -306,6 +312,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <DirectoryAdminPage defaultCategory="restaurants" />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/cafes" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <DirectoryAdminPage defaultCategory="cafes" />
                         </AdminLayout>
                     </AdminRoute>
                 } />

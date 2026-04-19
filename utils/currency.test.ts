@@ -15,8 +15,8 @@ describe('Currency Utils', () => {
         });
 
         it('should correctly convert EUR to TRY', () => {
-            // 1 EUR = 35.5 TRY
-            expect(convertPrice(10, 'EUR', 'TRY')).toBeCloseTo(355);
+            // 1 EUR = 38.5 TRY
+            expect(convertPrice(10, 'EUR', 'TRY')).toBeCloseTo(385);
         });
 
         it('should correctly convert USD to EUR', () => {
@@ -25,9 +25,9 @@ describe('Currency Utils', () => {
         });
 
         it('should handle cross pairs (USD to TRY)', () => {
-            // 100 USD -> EUR (100/1.09) -> TRY (*35.5)
+            // 100 USD -> EUR (100/1.09) -> TRY (*38.5)
             const eur = 100 / 1.09;
-            const tryVal = eur * 35.5;
+            const tryVal = eur * 38.5;
             expect(convertPrice(100, 'USD', 'TRY')).toBeCloseTo(tryVal);
         });
     });
