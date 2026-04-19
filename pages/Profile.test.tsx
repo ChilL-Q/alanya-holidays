@@ -6,12 +6,13 @@ import { db } from '../api-services';
 import { toast } from 'react-hot-toast';
 
 // Rule 1: vi.hoisted for shared mocks
-const { mockNavigate, mockLogout, mockUpdateUser, mockUpdateEmail, mockUpdatePassword } = vi.hoisted(() => ({
+const { mockNavigate, mockLogout, mockUpdateUser, mockUpdateEmail, mockUpdatePassword, mockRefreshUser } = vi.hoisted(() => ({
     mockNavigate: vi.fn(),
     mockLogout: vi.fn(),
     mockUpdateUser: vi.fn().mockResolvedValue(undefined),
     mockUpdateEmail: vi.fn().mockResolvedValue(undefined),
     mockUpdatePassword: vi.fn().mockResolvedValue(undefined),
+    mockRefreshUser: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Rule 2: Standard mocks
@@ -25,12 +26,13 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 vi.mock('../context/AuthContext', () => ({
     useAuth: () => ({
-        user: { id: 'user-123', name: 'Test User', email: 'test@example.com', role: 'guest' },
+        user: { id: 'user-123', name: 'Test User', email: 'test@example.com', role: 'host' },
         isAuthenticated: true,
         logout: mockLogout,
         updateUser: mockUpdateUser,
         updateEmail: mockUpdateEmail,
         updatePassword: mockUpdatePassword,
+        refreshUser: mockRefreshUser,
     })
 }));
 
@@ -58,7 +60,7 @@ vi.mock('../api-services', () => ({
         getUserProfile: vi.fn().mockResolvedValue({
             full_name: 'Test User',
             email: 'test@example.com',
-            role: 'guest'
+            role: 'host'
         }),
         updateUserProfile: vi.fn().mockResolvedValue({}),
         uploadAvatar: vi.fn().mockResolvedValue('https://example.com/new-avatar.jpg'),
