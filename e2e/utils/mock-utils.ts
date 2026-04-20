@@ -1,7 +1,10 @@
 import { Page } from '@playwright/test';
 
+// Use a valid UUID for user id so Zod uuid() validation passes in service layer
+export const MOCK_USER_ID = '00000000-0000-4000-a000-000000000001';
+
 export const mockUser = {
-  id: 'test-user-1',
+  id: MOCK_USER_ID,
   email: 'test@example.com',
   created_at: '2024-01-01T00:00:00Z',
   aud: 'authenticated',
@@ -13,10 +16,10 @@ export const mockUser = {
 // Minimal valid JWT (header.payload.sig) that Supabase JS can decode client-side.
 // Signature is fake — Supabase JS does not verify signatures client-side.
 // header:  {"alg":"HS256","typ":"JWT"}
-// payload: {"sub":"test-user-1","aud":"authenticated","exp":9999999999,"role":"authenticated","email":"test@example.com"}
+// payload: {"sub":"00000000-0000-4000-a000-000000000001","aud":"authenticated","exp":9999999999,"role":"authenticated","email":"test@example.com"}
 const MOCK_JWT =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-  '.eyJzdWIiOiJ0ZXN0LXVzZXItMSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQiLCJleHAiOjk5OTk5OTk5OTksInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIn0' +
+  '.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTQwMDAtYTAwMC0wMDAwMDAwMDAwMDEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjo5OTk5OTk5OTk5LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSJ9' +
   '.fake_signature_not_verified_client_side';
 
 export const mockSessionResponse = {
@@ -32,21 +35,24 @@ const SUPABASE_STORAGE_KEY = 'sb-mdmizeyiyebvhkujjyjg-auth-token';
 
 /**
  * Seeds a valid Supabase session into localStorage BEFORE page load.
- * Use this for tests that require the user to already be authenticated
- * (e.g. protected routes like /checkout, /profile).
- * Do NOT use for login-flow tests — it will make the user already logged in.
+ * Accepts an optional role ('guest' | 'host' | 'admin') to test role-gated routes.
  */
-export async function seedAuthSession(page: Page) {
-  await page.addInitScript(({ storageKey, session }) => {
+export async function seedAuthSession(page: Page, options?: { role?: string }) {
+  const role = options?.role ?? 'guest';
+  await page.addInitScript(({ storageKey, session, userRole }) => {
+    const user = {
+      ...session.user,
+      user_metadata: { ...session.user.user_metadata, role: userRole },
+    };
     localStorage.setItem(storageKey, JSON.stringify({
       access_token: session.access_token,
       token_type: session.token_type,
       expires_in: session.expires_in,
       refresh_token: session.refresh_token,
-      user: session.user,
+      user,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
     }));
-  }, { storageKey: SUPABASE_STORAGE_KEY, session: mockSessionResponse });
+  }, { storageKey: SUPABASE_STORAGE_KEY, session: mockSessionResponse, userRole: role });
 }
 
 /**
@@ -54,8 +60,6 @@ export async function seedAuthSession(page: Page) {
  * Use for login/signup flow tests where the user starts unauthenticated.
  */
 export async function setupAuthMocks(page: Page) {
-  // HTTP intercepts for session refresh / login / user info
-  // Note: patterns must end with ** to also match query strings like ?grant_type=password
   await page.route('**/auth/v1/session**', async (route) => {
     await route.fulfill({
       status: 200,
@@ -81,19 +85,32 @@ export async function setupAuthMocks(page: Page) {
   });
 }
 
-/** Mock Supabase REST API calls */
-export async function mockSupabaseRest(page: Page) {
-  // AuthContext calls profiles.select().eq().single() — expects single JSON object
-  // when Accept: application/vnd.pgrst.object+json header is present.
-  // Return single object (not array) to satisfy .single().
+/** Mock Supabase REST API calls. Pass role to simulate host/admin profile. */
+export async function mockSupabaseRest(page: Page, options?: { role?: string }) {
+  const role = options?.role ?? 'guest';
+
   await page.route('**/rest/v1/profiles*', async (route) => {
+    const method = route.request().method();
+    // Handle profile updates (PATCH) — return success so toast fires
+    if (method === 'PATCH') {
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify([{ id: mockUser.id }]),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return;
+    }
     const accept = route.request().headers()['accept'] || '';
     const isSingle = accept.includes('pgrst.object');
     const profile = {
       id: mockUser.id,
       full_name: 'Test User',
+      name: 'Test User',
       email: 'test@example.com',
-      role: 'guest',
+      role,
+      phone: '',
+      company_name: '',
+      social_links: {},
       created_at: '2024-01-01T00:00:00Z',
     };
     await route.fulfill({
@@ -103,7 +120,6 @@ export async function mockSupabaseRest(page: Page) {
     });
   });
 
-  // Suppress notification fetches so they don't cause errors
   await page.route('**/rest/v1/notifications*', async (route) => {
     await route.fulfill({
       status: 200,
@@ -115,10 +131,18 @@ export async function mockSupabaseRest(page: Page) {
 
 /** Mock Stripe Checkout Session creation */
 export async function mockStripePayment(page: Page) {
-  await page.route('**/functions/v1/create-checkout-session', async (route) => {
+  await page.route('**/functions/v1/create-checkout-session**', async (route) => {
     await route.fulfill({
       status: 200,
       body: JSON.stringify({ url: 'https://checkout.stripe.com/mock-session' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  await page.route('**/functions/v1/create-subscription-checkout**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify({ url: 'https://checkout.stripe.com/mock-sub-session' }),
       headers: { 'Content-Type': 'application/json' },
     });
   });
@@ -135,7 +159,7 @@ export async function mockSignup(page: Page) {
   });
 }
 
-/** Mock Supabase OTP verification success — also seeds session after verify */
+/** Mock Supabase OTP verification success */
 export async function mockVerifyOtp(page: Page) {
   await page.route('**/auth/v1/verify**', async (route) => {
     await route.fulfill({
@@ -147,7 +171,7 @@ export async function mockVerifyOtp(page: Page) {
 }
 
 export const mockProperty = {
-  id: 'prop-1',
+  id: '00000000-0000-4000-a000-000000000010',
   title: 'Luxury Villa Alanya',
   description: 'A beautiful villa with sea view',
   price_per_night: 100,
@@ -159,7 +183,10 @@ export const mockProperty = {
   beds: 2,
   bathrooms: 2,
   amenities: ['wifi', 'pool', 'ac'],
-  host_id: 'host-1',
+  host_id: '00000000-0000-4000-a000-000000000099',
+  status: 'active',
+  rating: 4.8,
+  reviews_count: 12,
   created_at: '2024-01-01T00:00:00Z',
 };
 
@@ -174,9 +201,152 @@ export async function mockPropertyData(page: Page) {
   });
 
   await page.route('**/rest/v1/properties*', async (route) => {
+    const accept = route.request().headers()['accept'] || '';
+    const isSingle = accept.includes('pgrst.object');
     await route.fulfill({
       status: 200,
-      body: JSON.stringify([mockProperty]),
+      body: JSON.stringify(isSingle ? mockProperty : [mockProperty]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  // PropertyDetails page secondary fetches — must be mocked to avoid Promise.all rejecting
+  await page.route('**/rest/v1/property_availability*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  await page.route('**/rest/v1/reviews*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json', 'Content-Range': '*/0' },
+    });
+  });
+
+  await page.route('**/rest/v1/bookings*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/** Mock blog posts and submissions */
+export async function mockBlogData(page: Page) {
+  const mockPost = {
+    id: 'post-1',
+    title: 'Top Places in Alanya',
+    slug: 'top-places-alanya',
+    excerpt: 'Discover the best spots in Alanya.',
+    content: '<p>Alanya is a beautiful city.</p>',
+    status: 'published',
+    author_id: mockUser.id,
+    created_at: '2024-01-01T00:00:00Z',
+    published_at: '2024-01-01T00:00:00Z',
+    tags: [],
+  };
+
+  await page.route('**/rest/v1/blog_posts*', async (route) => {
+    const accept = route.request().headers()['accept'] || '';
+    const isSingle = accept.includes('pgrst.object');
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(isSingle ? mockPost : [mockPost]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  await page.route('**/rest/v1/blog_submissions*', async (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      await route.fulfill({
+        status: 201,
+        body: JSON.stringify([{ id: 'sub-1' }]),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } else {
+      await route.fulfill({
+        status: 200,
+        body: JSON.stringify([]),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  });
+}
+
+/** Mock directory listings and voting RPC */
+export async function mockDirectoryData(page: Page) {
+  const mockListing = {
+    id: 'dir-1',
+    name: 'Bosphorus Restaurant',
+    description: 'Great Turkish food in Alanya.',
+    category_id: 'restaurants',
+    is_premium: false,
+    net_votes: 5,
+    phone: '+90 555 000 0000',
+    address: 'Alanya, Turkey',
+    images: [],
+    created_at: '2024-01-01T00:00:00Z',
+  };
+
+  await page.route('**/rest/v1/directory_listings*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([mockListing]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  // The directory service uses vote_listing RPC (not upvote/downvote separately)
+  await page.route('**/rest/v1/rpc/vote_listing**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(true),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  await page.route('**/rest/v1/rpc/remove_listing_vote**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(true),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+
+  await page.route('**/rest/v1/rpc/get_user_votes_batch**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/** Mock favorites endpoint */
+export async function mockFavoritesData(page: Page) {
+  await page.route('**/rest/v1/favorites*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+}
+
+/** Mock AI proxy Edge Function */
+export async function mockAIProxy(page: Page) {
+  await page.route('**/functions/v1/ai-proxy**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify({
+        text: 'Alanya has beautiful beaches like Cleopatra Beach. You can also visit the Alanya Castle for amazing views.',
+      }),
       headers: { 'Content-Type': 'application/json' },
     });
   });
