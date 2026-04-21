@@ -187,36 +187,46 @@ Deno.serve(async (req: Request) => {
     // --- Server-side price verification ---
     const propertyIds: string[] = []
     const serviceIds: string[] = []
+    const productIds: string[] = []
 
     for (const item of items as CartItem[]) {
-      if (item.type === 'service' || item.listingType === 'service') {
+      if (item.type === 'product' || item.listingType === 'product') {
+        productIds.push(item.listingId)
+      } else if (item.type === 'service' || item.listingType === 'service') {
         serviceIds.push(item.listingId)
       } else {
         propertyIds.push(item.listingId)
       }
     }
 
-    const [propertiesResult, servicesResult] = await Promise.all([
+    const [propertiesResult, servicesResult, productsResult] = await Promise.all([
       propertyIds.length > 0
         ? supabase.from('properties').select('id, title, price_per_night, images').in('id', propertyIds)
-    : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null }),
+        : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null }),
       serviceIds.length > 0
         ? supabase.from('services').select('id, title, price, images').in('id', serviceIds)
-    : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null })
+        : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null }),
+      productIds.length > 0
+        ? supabase.from('products').select('id, title, price, images').in('id', productIds)
+        : Promise.resolve<SupabaseEmptyResponse>({ data: [], error: null }),
     ])
 
     if (propertiesResult.error) throw propertiesResult.error
     if (servicesResult.error) throw servicesResult.error
+    if (productsResult.error) throw productsResult.error
 
     const propertyMap = new Map((propertiesResult.data || []).map((p: any) => [p.id, p.price_per_night]))
     const serviceMap = new Map((servicesResult.data || []).map((s: any) => [s.id, s.price]))
+    const productMap = new Map((productsResult.data || []).map((p: any) => [p.id, p.price]))
 
     const lineItems: any[] = []
 
     for (const item of items as CartItem[]) {
       let serverPrice: number | null = null
 
-      if (item.type === 'service' || item.listingType === 'service') {
+      if (item.type === 'product' || item.listingType === 'product') {
+        serverPrice = productMap.get(item.listingId) ?? null
+      } else if (item.type === 'service' || item.listingType === 'service') {
         serverPrice = serviceMap.get(item.listingId) ?? null
       } else {
         serverPrice = propertyMap.get(item.listingId) ?? null

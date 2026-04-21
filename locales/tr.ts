@@ -478,6 +478,18 @@ export const tr = {
     'visa.consult.agent': 'Harith',
     'visa.consult.availability': 'WhatsApp\'ta müsait • İngilizce / Arapça / Türkçe',
     'visa.consult.disclaimer': 'Ortağımızla iletişime geçerek, hizmetlerin bağımsız bir üçüncü tarafça sağlandığını kabul edersiniz.',
+    'visa.consult.form.title': 'Danışmanlık Talebi',
+    'visa.consult.form.name': 'Ad Soyad',
+    'visa.consult.form.email': 'E-posta Adresi',
+    'visa.consult.form.phone': 'Telefon Numarası',
+    'visa.consult.form.visa_type': 'Vize Türü',
+    'visa.consult.form.visa_type.tourist': 'Turist Vizesi',
+    'visa.consult.form.visa_type.residence': 'İkamet İzni',
+    'visa.consult.form.visa_type.other': 'Diğer',
+    'visa.consult.form.message': 'Sorunuz',
+    'visa.consult.form.submit': 'Talep Gönder',
+    'visa.consult.form.success': 'Talep gönderildi! Harith kısa süre içinde sizinle iletişime geçecektir.',
+    'visa.consult.form.error': 'Talep gönderilemedi. Lütfen tekrar deneyin.',
 
     // eSIM Page
     'esim.hero.title': '<span class="text-teal-600 dark:text-cyan-400 ">Anında</span> Bağlanın',
