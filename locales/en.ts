@@ -486,6 +486,18 @@ export const en = {
   'visa.consult.agent': 'Harith',
   'visa.consult.availability': 'Available on WhatsApp • English / Arabic / Turkish',
   'visa.consult.disclaimer': 'By contacting our partner, you acknowledge that services are provided by an independent third party.',
+  'visa.consult.form.title': 'Request a Consultation',
+  'visa.consult.form.name': 'Full Name',
+  'visa.consult.form.email': 'Email Address',
+  'visa.consult.form.phone': 'Phone Number',
+  'visa.consult.form.visa_type': 'Visa Type',
+  'visa.consult.form.visa_type.tourist': 'Tourist Visa',
+  'visa.consult.form.visa_type.residence': 'Residence Permit (Ikamet)',
+  'visa.consult.form.visa_type.other': 'Other',
+  'visa.consult.form.message': 'Your Question',
+  'visa.consult.form.submit': 'Send Request',
+  'visa.consult.form.success': 'Request sent! Harith will contact you shortly.',
+  'visa.consult.form.error': 'Failed to send request. Please try again.',
 
   // eSIM Page
   'esim.hero.title': 'Tourist SIM Card',

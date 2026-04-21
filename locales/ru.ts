@@ -478,6 +478,18 @@ export const ru = {
   'visa.consult.agent': 'Харит',
   'visa.consult.availability': 'Доступен в WhatsApp • Английский / Арабский / Турецкий',
   'visa.consult.disclaimer': 'Связываясь с нашим партнером, вы подтверждаете, что услуги предоставляются независимой третьей стороной.',
+  'visa.consult.form.title': 'Запросить Консультацию',
+  'visa.consult.form.name': 'Полное Имя',
+  'visa.consult.form.email': 'Электронная Почта',
+  'visa.consult.form.phone': 'Номер Телефона',
+  'visa.consult.form.visa_type': 'Тип Визы',
+  'visa.consult.form.visa_type.tourist': 'Туристическая Виза',
+  'visa.consult.form.visa_type.residence': 'Вид на Жильё (Икамет)',
+  'visa.consult.form.visa_type.other': 'Другое',
+  'visa.consult.form.message': 'Ваш Вопрос',
+  'visa.consult.form.submit': 'Отправить Запрос',
+  'visa.consult.form.success': 'Запрос отправлен! Харит свяжется с вами в ближайшее время.',
+  'visa.consult.form.error': 'Не удалось отправить запрос. Пожалуйста, попробуйте ещё раз.',
 
   // eSIM Page
   'esim.hero.title': 'Будь на связи <span class="text-teal-600 dark:text-cyan-400 ">Мгновенно</span>',
