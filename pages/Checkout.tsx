@@ -63,7 +63,7 @@ export const Checkout: React.FC = () => {
                 const result = await db.createBooking({
                     user_id: user!.id,
                     item_id: item.id,
-                    type: (item.type === 'RENTAL' || item.type === 'property') ? 'property' : 'service',
+                    type: (item.type === 'RENTAL' || item.type === 'property') ? 'property' : item.type === 'product' ? 'product' : 'service',
                     status: bookingStatus,
                     payment_method: paymentMethod,
                     payment_status: paymentStatus,
