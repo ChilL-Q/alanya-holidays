@@ -14,7 +14,7 @@ interface ReviewModalProps {
     onSuccess: () => void;
 }
 
-export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, propertyId, userId, onSuccess }) => {
+export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, propertyId, userId: _userId, onSuccess }) => {
     const { t } = useLanguage();
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');

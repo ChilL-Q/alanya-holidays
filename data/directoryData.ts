@@ -122,6 +122,24 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
       { question: 'Are there good breakfast cafés in Alanya?', answer: 'Yes — Turkish breakfast is a highlight of any visit. Look for cafés advertising "serpme kahvaltı" (spread breakfast) in Mahmutlar and Oba. Expect a full spread of cheeses, eggs, olives, honey, and fresh bread for around €8–€15 per person.' }
     ]
   },
+  'cafes': {
+    title: 'Best Cafés & Coffee Shops in Alanya 2026 | Local Guide',
+    description: 'Find the best cafés and coffee shops in Alanya. From specialty coffee in the Old Town to beachside breakfast spots and neighbourhood patisseries. Updated 2026 local guide.',
+    longDescription: [
+      'Alanya\'s café scene has grown considerably over the last few years, moving well beyond the tourist strip into neighbourhood spots that rival anything you\'d find in Istanbul. Whether you\'re after a slow Turkish breakfast, specialty espresso, or a quiet spot to work, the city has more to offer than most visitors realise.',
+      'Old Town & Castle District: The streets around the castle and the historic bazaar area have a cluster of atmospheric small cafés serving Turkish tea, Turkish coffee, and light breakfasts. Many have rooftop or terrace seating with views over the Red Tower and harbour. These are the best spots for a leisurely morning before the heat sets in.',
+      'Cleopatra Beach Area: The main beach strip has plenty of cafés aimed at tourists, but step back one or two streets and you\'ll find more characterful options. Specialty coffee has arrived here — a handful of independent cafés now serve proper espresso-based drinks using quality Turkish and Ethiopian beans.',
+      'Mahmutlar: The neighbourhood\'s café culture is built around the local community — mostly expats and long-term residents. You\'ll find excellent Turkish breakfast cafés (serpme kahvaltı) for €8–€12 per person, alongside small pastry shops and tea gardens. The pace is slower and the prices significantly lower than the tourist areas.',
+      'Oba & Kestel: These residential neighbourhoods have become home to a newer wave of Turkish specialty coffee shops catering to young locals and expat families. If you\'re staying in either area, it\'s worth exploring the side streets for hidden gems that don\'t appear in travel guides.'
+    ],
+    faqs: [
+      { question: 'Where can I get good specialty coffee in Alanya?', answer: 'Specialty coffee options are concentrated around the Old Town, Cleopatra Beach area, and increasingly in Oba and Mahmutlar. Look for cafés advertising "filter coffee" or "V60" — these are reliably good indicators of quality.' },
+      { question: 'What is a traditional Turkish breakfast like?', answer: 'A full Turkish breakfast (serpme kahvaltı) includes an assortment of cheeses, olives, tomatoes, cucumbers, eggs cooked to order, honey, clotted cream (kaymak), jams, and fresh bread. Many cafés in Mahmutlar and Oba serve this spread for €8–€15 per person. It\'s one of the best-value meals in Alanya.' },
+      { question: 'Do cafés in Alanya have Wi-Fi?', answer: 'Most cafés in tourist and expat areas offer free Wi-Fi. Quality varies — the more established specialty coffee spots tend to have better connections. It\'s worth asking before settling in for a work session.' },
+      { question: 'What is Turkish tea (çay) culture like?', answer: 'Tea is the national drink and is served in small tulip-shaped glasses. It\'s brewed strong and drunk without milk, sometimes with a sugar cube. Tea is often complimentary or very cheap (€0.50–€1) and is a social ritual as much as a drink. Refusing tea is mildly impolite — accepting and sipping slowly is the local norm.' },
+      { question: 'Are there vegan or dairy-free café options in Alanya?', answer: 'Options are improving. Several cafés in the tourist areas now offer oat milk and almond milk alternatives. The specialty coffee shops are the safest bet. Traditional Turkish cafés may not always have alternatives, so it\'s worth checking beforehand.' }
+    ]
+  },
   'real-estate': {
     title: 'Buy Property in Alanya, Turkey | Foreigner & Expat Guide to Real Estate 2026',
     description: 'Complete guide to buying property in Alanya as a foreigner. Neighbourhood breakdowns for Oba, Kestel, Mahmutlar and more. Trusted local agents, legal process explained.',

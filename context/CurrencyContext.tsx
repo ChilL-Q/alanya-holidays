@@ -29,15 +29,13 @@ function loadCachedRates(): Record<Currency, number> | null {
 }
 
 async function fetchLiveRates(): Promise<Record<Currency, number>> {
-    const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,TRY');
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const res = await fetch(`${supabaseUrl}/functions/v1/currency-rates`, {
+        headers: { apikey: supabaseKey },
+    });
     if (!res.ok) throw new Error('Failed to fetch rates');
-    const json = await res.json();
-    // json.rates = { USD: 1.08, TRY: 38.5 }
-    const rates: Record<Currency, number> = {
-        EUR: 1,
-        USD: json.rates.USD,
-        TRY: json.rates.TRY,
-    };
+    const rates: Record<Currency, number> = await res.json();
     const cache: RatesCache = { rates, fetchedAt: Date.now() };
     localStorage.setItem(RATES_CACHE_KEY, JSON.stringify(cache));
     return rates;

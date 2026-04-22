@@ -21,11 +21,8 @@ vi.mock('react-router-dom', () => ({
 }));
 
 describe('PremiumGate', () => {
-    let mockLocationHref = '';
-
     beforeEach(() => {
         vi.clearAllMocks();
-        mockLocationHref = '';
         Object.defineProperty(window, 'location', {
             value: { href: '' },
             writable: true,
