@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: E2E Smoke Tests
 
 on:
   push:
@@ -11,15 +11,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Principle of Least Privilege
 permissions:
   contents: read
 
 jobs:
-  ci:
-    name: Lint → Test → Build
+  e2e-smoke:
+    name: E2E Critical Flows
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     env:
       VITE_SUPABASE_URL: "https://mock-supabase-url.supabase.co"
@@ -39,29 +38,8 @@ jobs:
     - name: Install Dependencies
       run: npm ci
 
-    - name: Security Audit
-      run: npm audit --audit-level=high
-      continue-on-error: true
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
 
-    - name: Lint Code
-      run: npm run lint
-
-    - name: Type Check
-      run: npm run type-check
-
-    - name: Run Tests
-      run: npm run test -- --run
-
-    - name: Run Coverage
-      run: npm run test:coverage
-
-    - name: Supabase Functions Lint
-      run: npm run supabase:lint
-
-    - name: Supabase Functions Type Check
-      run: npm run supabase:type-check
-
-    - name: Verify Build
-      run: npm run build
-      env:
-        CI: true
+    - name: Run E2E Smoke Tests
+      run: npx playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --project=chromium

@@ -23,6 +23,12 @@ export default defineConfig({
         '**/*.d.ts',
         'e2e/**',
       ],
+      thresholds: {
+        lines: 70,
+        functions: 65,
+        branches: 60,
+        statements: 70,
+      },
     },
     alias: {
       '@': path.resolve(__dirname, './src'),
