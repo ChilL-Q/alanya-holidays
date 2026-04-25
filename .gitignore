@@ -70,4 +70,6 @@ conductor/
 .geminiignore
 
 .playwright-mcp
-
+playwright-report/
+test_sprite.txt
+.openclaude
