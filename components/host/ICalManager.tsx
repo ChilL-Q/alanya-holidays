@@ -163,7 +163,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
                     <button
                         onClick={handleAddFeed}
                         disabled={isAdding}
-                        className="px-4 py-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                        className="px-4 py-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
                     >
                         {isAdding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                         <span className="ml-2 hidden sm:inline">Add</span>

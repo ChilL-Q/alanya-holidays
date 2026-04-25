@@ -38,7 +38,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     <button
                         type="submit"
                         disabled={!inputText.trim()}
-                        className={`p-3 rounded-full shadow-sm flex-shrink-0 transform transition-all duration-200 ${inputText.trim() ? 'bg-teal-600 dark:bg-cyan-600 text-white hover:bg-teal-700 dark:bg-cyan-600 scale-100 rotate-0' : 'bg-slate-200 dark:bg-slate-800/50 text-slate-400 scale-90 rotate-90 disabled:cursor-not-allowed'}`}
+                        className={`p-3 rounded-full shadow-sm flex-shrink-0 transform transition-all duration-200 ${inputText.trim() ? 'bg-teal-600 dark:bg-cyan-600 text-white hover:bg-teal-700 scale-100 rotate-0' : 'bg-slate-200 dark:bg-slate-800/50 text-slate-400 scale-90 rotate-90 disabled:cursor-not-allowed'}`}
                     >
                         <Send size={18} className={inputText.trim() ? 'ml-0.5' : ''} />
                     </button>

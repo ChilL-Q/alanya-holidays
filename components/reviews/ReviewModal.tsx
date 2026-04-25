@@ -162,7 +162,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isSubmitting ? t('reviews.submitting') : t('reviews.submit')}
                     </button>

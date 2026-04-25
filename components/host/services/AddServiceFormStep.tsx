@@ -270,7 +270,7 @@ export const AddServiceFormStep: React.FC<AddServiceFormStepProps> = ({
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
+                    className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 text-lg flex items-center justify-center gap-2"
                 >
                     {isSubmitting ? 'Listing Service...' : 'List Service'}
                     <ChevronRight />

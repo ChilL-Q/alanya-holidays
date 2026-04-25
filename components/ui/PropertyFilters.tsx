@@ -273,7 +273,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                         </button>
                         <button
                             onClick={onClose}
-                            className="flex-1 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-500/30 transition-all active:scale-[0.98]"
+                            className="flex-1 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-500/30 transition-all active:scale-[0.98]"
                         >
                             Show Results
                         </button>

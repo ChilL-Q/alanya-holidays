@@ -75,7 +75,7 @@ export const FavoritesPage: React.FC = () => {
                         </p>
                         <Link
                             to="/search"
-                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 transition-colors"
+                            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 transition-colors"
                         >
                             Explore Stays
                         </Link>

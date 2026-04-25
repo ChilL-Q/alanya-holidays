@@ -168,7 +168,7 @@ export const TripAssistant: React.FC = () => {
         <button
           onClick={handleAsk}
           disabled={isLoading || !query.trim()}
-          className="bg-teal-600 dark:bg-cyan-600 text-white p-3 rounded-xl hover:bg-teal-700 dark:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-md shadow-teal-500/20"
+          className="bg-teal-600 dark:bg-cyan-600 text-white p-3 rounded-xl hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105 active:scale-95 shadow-md shadow-teal-500/20"
         >
           <Send size={18} />
         </button>

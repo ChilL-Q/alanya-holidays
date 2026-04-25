@@ -92,7 +92,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, conve
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-teal-600 dark:bg-cyan-600 text-white font-medium py-3 rounded-xl hover:bg-teal-700 dark:bg-cyan-600 active:scale-[0.98] transition-all shadow-lg shadow-teal-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full bg-teal-600 dark:bg-cyan-600 text-white font-medium py-3 rounded-xl hover:bg-teal-700 active:scale-[0.98] transition-all shadow-lg shadow-teal-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? 'Submitting...' : 'Submit Report'}
                             </button>

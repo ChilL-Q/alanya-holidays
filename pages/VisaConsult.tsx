@@ -196,7 +196,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:hover:bg-cyan-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:hover:bg-cyan-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
                 {isLoading ? (
                     <>

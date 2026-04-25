@@ -247,7 +247,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                 disabled={!date || guests <= 0}
                                 className={`w-full text-white font-bold py-4 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isWhatsAppBooking
                                     ? 'bg-green-600 hover:bg-green-700'
-                                    : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 '
+                                    : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 '
                                     }`}
                             >
                                 {isWhatsAppBooking ? (

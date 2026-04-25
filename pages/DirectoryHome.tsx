@@ -161,7 +161,7 @@ export const DirectoryHome: React.FC = () => {
                                 </select>
                             </div>
 
-                            <button className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 dark:bg-cyan-600 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm">
+                            <button className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm">
                                 {t('dir.search.btn')}
                             </button>
                         </div>

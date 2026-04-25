@@ -139,7 +139,7 @@ export const CartDrawer: React.FC = () => {
                                     setIsCartOpen(false);
                                     navigate('/checkout');
                                 }}
-                                className="w-full py-4 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full py-4 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 <span>Proceed to Checkout</span>
                                 <ArrowRight size={20} />

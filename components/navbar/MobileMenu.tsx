@@ -30,7 +30,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             {!isAuthenticated ? (
                 <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => { openLogin(); onClose(); }} className="py-3 rounded-xl border border-slate-200 dark:border-slate-800/50 text-slate-900 dark:text-white font-bold text-center hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors">{t('nav.login')}</button>
-                    <button onClick={() => { openRegister(); onClose(); }} className="py-3 rounded-xl bg-teal-600 dark:bg-cyan-600 text-white font-bold text-center hover:bg-teal-700 dark:bg-cyan-600 transition-colors">{t('nav.signup')}</button>
+                    <button onClick={() => { openRegister(); onClose(); }} className="py-3 rounded-xl bg-teal-600 dark:bg-cyan-600 text-white font-bold text-center hover:bg-teal-700 transition-colors">{t('nav.signup')}</button>
                 </div>
             ) : (
                 <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl flex items-center gap-4">

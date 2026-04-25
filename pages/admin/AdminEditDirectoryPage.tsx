@@ -178,7 +178,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                         <button
                             onClick={() => handleSubmit()}
                             disabled={submitting}
-                            className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm disabled:opacity-50"
+                            className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm disabled:opacity-50"
                         >
                             <Save size={18} />
                             <span>{submitting ? 'Saving...' : 'Save'}</span>

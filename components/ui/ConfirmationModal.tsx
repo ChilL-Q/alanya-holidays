@@ -115,7 +115,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                         className={`px-5 py-2.5 text-sm font-bold text-white rounded-xl shadow-lg transition-all flex items-center gap-2
                             ${isDestructive
                                 ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
-                                : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 shadow-teal-500/20'
+                                : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 shadow-teal-500/20'
                             }
                             ${(requireReason && !reason.trim()) ? 'opacity-50 cursor-not-allowed shadow-none' : ''}
                         `}

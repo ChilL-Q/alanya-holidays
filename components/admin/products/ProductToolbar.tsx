@@ -46,7 +46,7 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
 
                 <button
                     onClick={() => navigate('/admin/products/new')}
-                    className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white px-4 py-2 rounded-xl transition-colors font-medium whitespace-nowrap shadow-sm"
+                    className="flex items-center gap-2 bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl transition-colors font-medium whitespace-nowrap shadow-sm"
                 >
                     <Plus size={18} />
                     <span className="hidden sm:inline">Add Product</span>

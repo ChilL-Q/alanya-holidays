@@ -28,7 +28,7 @@ export const CheckoutWelcomePack: React.FC<CheckoutWelcomePackProps> = ({ isAdde
                 disabled={isAdded}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm whitespace-nowrap ${isAdded
                     ? 'bg-green-100 text-green-700 cursor-default'
-                    : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 dark:bg-cyan-600 text-white hover:shadow-md active:scale-95'}`}
+                    : 'bg-teal-600 dark:bg-cyan-600 hover:bg-teal-700 text-white hover:shadow-md active:scale-95'}`}
             >
                 {isAdded ? (t('checkout.added') || 'Added') : (t('checkout.add_welcome') || 'Add')}
             </button>

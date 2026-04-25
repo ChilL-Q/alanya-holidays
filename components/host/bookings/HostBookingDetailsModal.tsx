@@ -76,7 +76,7 @@ export const HostBookingDetailsModal: React.FC<HostBookingDetailsModalProps> = (
                         <div className="mt-4 flex gap-2">
                             <button
                                 onClick={() => navigate('/host/messages')}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 dark:bg-cyan-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 dark:bg-cyan-600 transition"
+                                className="flex items-center gap-2 px-3 py-1.5 bg-teal-600 dark:bg-cyan-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 transition"
                             >
                                 <MessageSquare size={14} />
                                 Message Guest
@@ -140,7 +140,7 @@ export const HostBookingDetailsModal: React.FC<HostBookingDetailsModalProps> = (
                         </button>
                         <button
                             onClick={() => onStatusUpdate(booking.id, 'confirmed')}
-                            className="p-3 rounded-xl bg-teal-600 dark:bg-cyan-600 text-white font-bold hover:bg-teal-700 dark:bg-cyan-600 transition shadow-lg shadow-teal-500/20"
+                            className="p-3 rounded-xl bg-teal-600 dark:bg-cyan-600 text-white font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20"
                         >
                             Accept Booking
                         </button>
