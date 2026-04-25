@@ -105,6 +105,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle()
 
     if (userProfile?.email) {
+      console.warn(`Sending welcome email to user ${metaUserId} at ${userProfile.email}`)
       try {
         await supabase.functions.invoke('send-email', {
           body: {
@@ -228,6 +229,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle()
 
     if (userProfile?.email) {
+      console.warn(`Sending cancellation email to user ${subRecord.user_id} at ${userProfile.email}`)
       try {
         await supabase.functions.invoke('send-email', {
           body: {
@@ -297,6 +299,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle()
 
     if (userProfile?.email) {
+      console.warn(`Sending payment-failed email to user ${subRecord.user_id} at ${userProfile.email}`)
       try {
         await supabase.functions.invoke('send-email', {
           body: {
@@ -437,6 +440,7 @@ Deno.serve(async (req: Request) => {
             const guestEmail = booking.profile?.email
             if (!guestEmail) return
 
+            console.warn(`Sending booking confirmation email for booking ${booking.id} to ${guestEmail}`)
             supabase.functions.invoke('send-email', {
               body: {
                 to: guestEmail,
@@ -638,6 +642,7 @@ Deno.serve(async (req: Request) => {
     // Email to guest (uses existing 'refund_processed' template)
     const guestEmail = (booking.profile as any)?.email
     if (guestEmail) {
+      console.warn(`Sending refund email for booking ${booking.id} to ${guestEmail}`)
       const siteUrl = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
       const maxRetries = 3
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
