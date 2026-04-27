@@ -47,6 +47,8 @@ const emailDataSchemas = {
   blog_submission_received: z.object({ postTitle: s, link: sOpt }),
   blog_submission_approved: z.object({ postTitle: s, postUrl: s, authorName: s }),
   blog_submission_rejected: z.object({ postTitle: s, reason: s, authorName: s }),
+  subscription_cancelled:  z.object({ name: sOpt, periodEnd: s, link: sOpt }),
+  subscription_payment_failed: z.object({ name: sOpt, link: sOpt }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -72,22 +74,27 @@ Deno.serve(async (req: Request) => {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error('Missing Supabase credentials')
 
     // --- Authentication Check ---
+    // Allow two auth modes:
+    // 1. Service role key — used by other Edge Functions (stripe-webhook, cron jobs)
+    // 2. User JWT — used by client-side calls
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), { 
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
     const token = authHeader.replace(/^Bearer\s+/i, '')
-    
-    // We can use the service role client, but pass the token explicitly to getUser()
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      })
+
+    const isServiceRoleCall = token === SUPABASE_SERVICE_ROLE_KEY
+
+    if (!isServiceRoleCall) {
+      const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
     // ----------------------------
     
@@ -130,8 +137,8 @@ Deno.serve(async (req: Request) => {
 
     // Resolve Email via Auth if not provided
     if (!targetEmail && userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId)
+        const supabaseResolver = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+        const { data: userData, error: userError } = await supabaseResolver.auth.admin.getUserById(userId)
         if (!userError && userData?.user?.email) {
             targetEmail = userData.user.email
         } else {
@@ -694,6 +701,42 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     `,
                     undefined,
                     undefined,
+                    true
+                )
+            };
+
+        // --- Subscription ---
+        case 'subscription_cancelled':
+            return {
+                subject: 'Your Premium Subscription Has Ended',
+                html: getHtmlTemplate(
+                    'Subscription Ended',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.name) || 'there'},</p>
+                    <p>Your Premium subscription has ended. You had access until <strong>${escapeHtml(data.periodEnd)}</strong>.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0;">You can resubscribe at any time to regain access to AI Trip Planner and other Premium features.</p>
+                    </div>
+                    `,
+                    data.link,
+                    'Resubscribe'
+                )
+            };
+
+        case 'subscription_payment_failed':
+            return {
+                subject: '⚠️ Premium Payment Failed — Action Required',
+                html: getHtmlTemplate(
+                    'Payment Failed',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.name) || 'there'},</p>
+                    <p>We were unable to process your Premium subscription payment. Please update your payment method to maintain access.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0; color: #ef4444; font-weight: 600;">Your access may be suspended if payment is not resolved.</p>
+                    </div>
+                    `,
+                    data.link,
+                    'Update Payment Method',
                     true
                 )
             };

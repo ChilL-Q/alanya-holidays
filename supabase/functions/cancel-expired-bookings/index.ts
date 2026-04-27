@@ -131,8 +131,31 @@ Deno.serve(async (req: Request) => {
 
     console.warn(`Cancelled ${expiredBookings.length} expired bookings`)
 
+    // --- Auto-reject expired blog submissions ---
+    let rejectedSubmissions = 0
+    try {
+      const { data: expired, error: expiredError } = await supabase
+        .from('blog_submissions')
+        .update({
+          status: 'rejected',
+          rejection_reason: 'Payment expired'
+        })
+        .eq('status', 'pending_payment')
+        .lt('payment_expires_at', new Date().toISOString())
+        .select('id')
+
+      if (expiredError) {
+        console.error('Failed to auto-reject expired blog submissions:', expiredError)
+      } else if (expired && expired.length > 0) {
+        rejectedSubmissions = expired.length
+        console.warn(`Auto-rejected ${rejectedSubmissions} expired blog submissions`)
+      }
+    } catch (blogError: any) {
+      console.error('Blog submission auto-reject error:', blogError.message)
+    }
+
     return new Response(
-      JSON.stringify({ cancelled: expiredBookings.length, ids }),
+      JSON.stringify({ cancelled: expiredBookings.length, ids, rejectedBlogSubmissions: rejectedSubmissions }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
       })
       .join('\n')
 
-    const isStructured = mode === 'structured' || userQuestion.includes('JSON');
+    const isStructured = mode === 'structured';
     
     const contextPrompt = isStructured 
       ? userQuestion 
@@ -213,8 +213,9 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    console.error('All AI models failed. Last error:', lastError)
     return new Response(
-      JSON.stringify({ error: `AI service temporarily unavailable. Please try again later. Debug: ${lastError}` }),
+      JSON.stringify({ error: 'AI service temporarily unavailable. Please try again later.' }),
       { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

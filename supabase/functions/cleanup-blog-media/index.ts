@@ -111,22 +111,7 @@ Deno.serve(async (req: Request) => {
     const abandonedCutoff = new Date()
     abandonedCutoff.setDate(abandonedCutoff.getDate() - 1) // 24 hours [A2-H3]
 
-    // A2-M2: Auto-reject expired submissions
-    const { data: expiredSubmissions, error: expiredError } = await supabase
-      .from('blog_submissions')
-      .update({
-        status: 'rejected',
-        rejection_reason: 'Payment expired'
-      })
-      .eq('status', 'pending_payment')
-      .lt('payment_expires_at', now.toISOString())
-      .select('id')
-
-    if (expiredError) {
-      console.error('Failed to auto-reject expired submissions:', expiredError)
-    } else if (expiredSubmissions && expiredSubmissions.length > 0) {
-      console.warn(`Auto-rejected ${expiredSubmissions.length} expired submissions`)
-    }
+    // Note: auto-reject of expired blog submissions is handled by cancel-expired-bookings cron
 
     // Get submissions to determine which files to keep or delete aggressively
     const { data: rawSubmissions } = await supabase
