@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
       .eq('user_id', userId)
       .maybeSingle()
 
-    if (existingSub && existingSub.status === 'active') {
+    if (existingSub && (existingSub.status === 'active' || existingSub.status === 'trialing')) {
       return new Response(JSON.stringify({ error: 'User already has an active subscription' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -80,18 +80,9 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    // --- Get or Create Stripe Customer ---
+    // --- Reuse Stripe Customer if exists (from previous cancelled subscription) ---
     let customerId: string | null = null
 
-    if (existingSub?.id) {
-      // If user has a previous record (even cancelled), reuse customer ID
-      // We stored customer_id there.
-    }
-
-    // For simplicity, we always create a new Customer for the checkout.
-    // Stripe Customer Portal will allow them to manage existing cards.
-    // However, to reuse, we should have stored stripe_customer_id.
-    // Let's try to find existing customer from previous attempts
     if (existingSub) {
       const { data: subDetails } = await supabaseAdmin
         .from('premium_subscriptions')

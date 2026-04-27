@@ -2,8 +2,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
 // @ts-ignore
 import { z } from "npm:zod@3"
-// @ts-ignore
-import { retry } from '../../utils/retry';
 
 declare const Deno: any;
 
@@ -117,8 +115,10 @@ Deno.serve(async (req: Request) => {
       </div>
     `;
 
-    try {
-      await retry(async () => {
+    // Retry with exponential backoff (max 3 attempts: 2s, 4s)
+    const maxRetries = 3
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
         const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -130,7 +130,7 @@ Deno.serve(async (req: Request) => {
             to: LAWYER_ADMIN_EMAIL,
             subject: `⚖️ New Lawyer Contact: ${escapeHtml(name)}`,
             html: emailHtml,
-            reply_to: email, // Allow admin to reply directly to user
+            reply_to: email,
           }),
         });
 
@@ -138,11 +138,17 @@ Deno.serve(async (req: Request) => {
           const errorData = await resendRes.json();
           throw new Error(`Resend API error: ${JSON.stringify(errorData)}`);
         }
-      });
-    } catch (emailError) {
-      console.error('Failed to send lawyer contact email after multiple retries:', emailError);
-      // Don't throw here — DB write succeeded. Admin can check DB if email failed.
-      // We just log the failure.
+        break
+      } catch (emailError) {
+        if (attempt < maxRetries) {
+          const delayMs = Math.pow(2, attempt) * 1000
+          console.warn(`Lawyer contact email failed, attempt ${attempt}/${maxRetries}. Retrying in ${delayMs}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+        } else {
+          console.error('Failed to send lawyer contact email after all retries:', emailError)
+          // Don't throw — DB write succeeded. Admin can check DB if email failed.
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

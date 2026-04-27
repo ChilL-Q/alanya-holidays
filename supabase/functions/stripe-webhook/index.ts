@@ -20,12 +20,17 @@ const supabase = createClient(
 Deno.serve(async (req: Request) => {
   const signature = req.headers.get('stripe-signature')
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+
+  if (!signature) {
+    return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+  }
+
   const body = await req.text()
 
   let event: Stripe.Event
 
   try {
-    event = await stripe.webhooks.constructEventAsync(body, signature!, webhookSecret)
+    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message)
     return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), { status: 400, headers: { 'Content-Type': 'application/json' } })
@@ -234,11 +239,11 @@ Deno.serve(async (req: Request) => {
         await supabase.functions.invoke('send-email', {
           body: {
             to: userProfile.email,
-            type: 'booking_rejected', // L1: closest available template for subscription ended notification
+            type: 'subscription_cancelled',
             data: {
-              itemTitle: 'Premium Subscription',
-              reason: 'Your subscription period has ended.',
-              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+              name: userProfile.full_name || 'there',
+              periodEnd: new Date(subRecord.current_period_end).toLocaleDateString(),
+              link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
             },
           },
         })
@@ -304,11 +309,10 @@ Deno.serve(async (req: Request) => {
         await supabase.functions.invoke('send-email', {
           body: {
             to: userProfile.email,
-            type: 'booking_rejected', // Reusing template for payment issue (no specific template exists)
+            type: 'subscription_payment_failed',
             data: {
-              itemTitle: 'Premium Subscription',
-              reason: 'Payment failed. Please update your card details.',
-              searchLink: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+              name: 'there',
+              link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
             },
           },
         })
@@ -408,8 +412,10 @@ Deno.serve(async (req: Request) => {
         }
 
         if (!updatedRows || updatedRows.length === 0) {
-          console.error(`No rows updated for bookings: ${bookingIds.join(', ')} — state machine may have rejected transition`)
-          return new Response(JSON.stringify({ error: 'DB update failed: no rows updated' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+          // Bookings were likely already cancelled by cron or state machine rejected the transition.
+          // Return 200 to prevent Stripe from retrying — retries won't fix this.
+          console.warn(`No rows updated for bookings: ${bookingIds.join(', ')} — likely cancelled by cron or already processed`)
+          return new Response(JSON.stringify({ received: true, note: 'no rows updated' }), { headers: { 'Content-Type': 'application/json' } })
         }
 
         // Use only the IDs that were actually confirmed (state machine may have skipped some)

@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
       .from('premium_subscriptions')
       .select('id, stripe_subscription_id, status')
       .eq('user_id', userId)
-      .eq('status', 'active')
+      .in('status', ['active', 'trialing'])
       .maybeSingle()
 
     if (fetchError) {
