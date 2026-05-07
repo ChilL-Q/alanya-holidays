@@ -62,6 +62,12 @@ vi.mock('./ui/NotificationBell', () => ({
 vi.mock('./navbar/MobileMenu', () => ({
     MobileMenu: () => <div data-testid="mobile-menu">MobileMenu</div>
 }));
+vi.mock('./navbar/NavIndicator', () => ({
+    NavIndicator: () => <div data-testid="nav-indicator" />
+}));
+vi.mock('./navbar/NavModeToggle', () => ({
+    NavModeToggle: () => <div data-testid="nav-mode-toggle" />
+}));
 
 import { useAuth } from '../context/AuthContext';
 
@@ -83,9 +89,8 @@ describe('Navbar', () => {
             </BrowserRouter>
         );
         expect(screen.getByText('Alanya')).toBeDefined();
-        // Check desktop links by text key
+        // Default mode is 'rental', check for rental nav links
         expect(screen.getAllByText('nav.directory').length).toBeGreaterThan(0);
-        expect(screen.getByText('nav.blog')).toBeDefined();
     });
 
     it('opens login modal when guest clicks profile -> login', () => {

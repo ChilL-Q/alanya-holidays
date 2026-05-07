@@ -125,11 +125,18 @@ describe('MobileMenu', () => {
         expect(screen.getByText('nav.signup')).toBeInTheDocument();
     });
 
-    it('renders main navigation links', () => {
+    it('renders main navigation links in services mode', () => {
         renderMenu();
-        expect(screen.getByText('nav.directory')).toBeInTheDocument();
+        expect(screen.getByText('nav.services')).toBeInTheDocument();
         expect(screen.getByText('nav.blog')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
+    });
+
+    it('renders main navigation links in rental mode', () => {
+        renderMenu(true, 'rental');
+        expect(screen.getByText('directory.villas')).toBeInTheDocument();
+        expect(screen.getByText('directory.apartments')).toBeInTheDocument();
+        expect(screen.getByText('nav.directory')).toBeInTheDocument();
     });
 
     it('renders user links when authenticated', () => {
@@ -185,7 +192,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.directory'));
+        fireEvent.click(screen.getByText('nav.services'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 
