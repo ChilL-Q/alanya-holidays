@@ -358,3 +358,39 @@ export async function seedCartAndWait(page: Page, cart: any[]) {
     localStorage.setItem('cart', JSON.stringify(cartData));
   }, cart);
 }
+
+/**
+ * Catch-all mock for ALL Supabase requests that aren't already intercepted
+ * by more specific route handlers. Prevents "Failed to fetch" errors in CI.
+ * MUST be called AFTER specific mocks (Playwright matches routes in registration order,
+ * but falls through if the first handler calls route.fallback()).
+ *
+ * Instead, we register this as a catch-all that returns safe empty responses.
+ */
+export async function mockAllSupabaseRequests(page: Page) {
+  // Catch-all for REST API (returns empty array)
+  await page.route('**/rest/v1/**', async (route) => {
+    const accept = route.request().headers()['accept'] || '';
+    const isSingle = accept.includes('pgrst.object');
+    const method = route.request().method();
+    if (method === 'POST' || method === 'PATCH' || method === 'PUT' || method === 'DELETE') {
+      await route.fulfill({ status: 200, body: '[]', headers: { 'Content-Type': 'application/json' } });
+    } else {
+      await route.fulfill({
+        status: 200,
+        body: isSingle ? '{}' : '[]',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  });
+
+  // Catch-all for Edge Functions
+  await page.route('**/functions/v1/**', async (route) => {
+    await route.fulfill({ status: 200, body: '{}', headers: { 'Content-Type': 'application/json' } });
+  });
+
+  // Catch-all for Supabase realtime
+  await page.route('**/realtime/**', async (route) => {
+    await route.abort('connectionrefused');
+  });
+}
