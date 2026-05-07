@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { toast } from 'react-hot-toast';
-import { PenLine, X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
+import { X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
 
 const MAX_IMAGES = 5;
 

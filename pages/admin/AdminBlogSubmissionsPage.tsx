@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
 import { chatService } from '../../api-services/api/chat';
@@ -18,7 +18,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
     
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
         try {
             if (activeTab === 'submissions') {
@@ -33,9 +33,9 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [activeTab]);
 
-    useEffect(() => { fetchData(); }, [activeTab]);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     // Submissions Actions
     const handleApprove = async (id: string) => {
