@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-export const NavIndicator = () => {
+interface NavIndicatorProps {
+    mode?: 'rental' | 'services';
+}
+
+export const NavIndicator: React.FC<NavIndicatorProps> = ({ mode }) => {
     const location = useLocation();
     const [style, setStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
     useEffect(() => {
-        const activeLink = document.querySelector(`[data-nav-link="${location.pathname}"]`) as HTMLElement;
-        if (activeLink) {
-            setStyle({
-                left: activeLink.offsetLeft,
-                width: activeLink.offsetWidth,
-                opacity: 1,
-            });
-        } else {
-            setStyle({ opacity: 0 });
-        }
-    }, [location.pathname]);
+        const timer = setTimeout(() => {
+            const activeLink = document.querySelector(`[data-nav-link="${location.pathname}"]`) as HTMLElement;
+            if (activeLink) {
+                setStyle({
+                    left: activeLink.offsetLeft,
+                    width: activeLink.offsetWidth,
+                    opacity: 1,
+                });
+            } else {
+                setStyle({ opacity: 0 });
+            }
+        }, 50);
+        return () => clearTimeout(timer);
+    }, [location.pathname, mode]);
 
     return (
         <div

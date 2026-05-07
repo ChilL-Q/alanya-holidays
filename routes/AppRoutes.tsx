@@ -66,6 +66,8 @@ const AdminEditProductPage = React.lazy(() => import('../pages/admin/AdminEditPr
 const DirectoryAdminPage = React.lazy(() => import('../pages/admin/DirectoryAdminPage').then(module => ({ default: module.DirectoryAdminPage })));
 const AdminEditDirectoryPage = React.lazy(() => import('../pages/admin/AdminEditDirectoryPage').then(module => ({ default: module.AdminEditDirectoryPage })));
 const AdminBlogSubmissionsPage = React.lazy(() => import('../pages/admin/AdminBlogSubmissionsPage').then(module => ({ default: module.AdminBlogSubmissionsPage })));
+const AdminAddBlogPostPage = React.lazy(() => import('../pages/admin/AdminAddBlogPostPage').then(module => ({ default: module.AdminAddBlogPostPage })));
+const AdminTestimonialsPage = React.lazy(() => import('../pages/admin/AdminTestimonialsPage').then(module => ({ default: module.AdminTestimonialsPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -100,6 +102,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-residency-guide" element={<DirectoryCategoryPage categoryId="visa" />} />
                 <Route path="/alanya-shopping-guide" element={<DirectoryCategoryPage categoryId="shopping" />} />
                 <Route path="/alanya-nature-attractions" element={<DirectoryCategoryPage categoryId="nature" />} />
+                <Route path="/alanya-weather" element={<DirectoryCategoryPage categoryId="weather" />} />
                 <Route path="/nightlife" element={<DirectoryCategoryPage categoryId="nightlife" />} />
                 <Route path="/alanya-spa-hamam" element={<DirectoryCategoryPage categoryId="spa-hamam" />} />
                 <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
@@ -313,6 +316,20 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <AdminBlogSubmissionsPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/blog-submissions/new" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminAddBlogPostPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/testimonials" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminTestimonialsPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

@@ -8,7 +8,8 @@ interface CategoryTabsProps {
 
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, activeCategory, onSelect }) => {
     return (
-        <div className="flex overflow-x-auto pb-4 pt-2 gap-2 md:gap-4 no-scrollbar mb-12 justify-start md:justify-center px-4">
+        <div className="w-full overflow-x-auto pb-4 pt-2 no-scrollbar mb-12">
+            <div className="flex w-max mx-auto gap-2 md:gap-4 px-4">
             {categories.map((category) => (
                 <button
                     key={category.id}
@@ -21,6 +22,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({ categories, activeCa
                     {category.label}
                 </button>
             ))}
+            </div>
         </div>
     );
 };

@@ -3,6 +3,8 @@ export const tr = {
     'nav.stays': 'Konaklama',
     'nav.services': 'Hizmetler',
     'nav.directory': 'Rehber',
+    'directory.villas': 'Villalar',
+    'directory.apartments': 'Daireler',
     'nav.blog': 'Blog',
     'nav.about': 'Hakkımızda',
     'shop': 'Mağaza',

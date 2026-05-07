@@ -3,6 +3,8 @@ export const ru = {
   'nav.stays': 'Жилье',
   'nav.services': 'Сервисы',
   'nav.directory': 'Каталог',
+  'directory.villas': 'Виллы',
+  'directory.apartments': 'Апартаменты',
   'nav.blog': 'Блог',
   'shop': 'Магазин',
   'nav.about': 'О нас',

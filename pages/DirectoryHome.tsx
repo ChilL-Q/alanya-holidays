@@ -31,6 +31,7 @@ export const DirectoryHome: React.FC = () => {
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
     const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
+    const [testimonials, setTestimonials] = useState<any[]>([]);
     const [listingsLoading, setListingsLoading] = useState(true);
 
     useEffect(() => {
@@ -38,13 +39,15 @@ export const DirectoryHome: React.FC = () => {
         async function loadListings() {
             setListingsLoading(true);
             try {
-                const [premium, free] = await Promise.all([
+                const [premium, free, tests] = await Promise.all([
                     db.getPremiumListings(),
                     db.getFreeListings(),
+                    db.getPublicTestimonials(),
                 ]);
                 if (!cancelled) {
                     setPremiumListings(premium);
                     setFreeListings(free);
+                    setTestimonials(tests);
                 }
             } catch (err) {
                 console.error('Failed to load landing listings:', err);
@@ -244,11 +247,11 @@ export const DirectoryHome: React.FC = () => {
                 </div>
             </div>
 
-            {/* Travel Guide / Featured Blog Posts */}
-            <TravelGuideSection />
-
             {/* Premium Listings Section */}
             <PremiumListingsSection listings={premiumListings} loading={listingsLoading} />
+
+            {/* Travel Guide / Featured Blog Posts */}
+            <TravelGuideSection />
 
             {/* Free Listings / Community Favorites Section */}
             <FreeListingsSection listings={freeListings} loading={listingsLoading} />
@@ -299,49 +302,31 @@ export const DirectoryHome: React.FC = () => {
                             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{t('dir.testi.subtitle')}</p>
                         </div>
 
-                        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                            {/* Card 1 */}
-                            <div className="group bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-white/50 dark:border-slate-700/50 hover:border-teal-500/30 dark:hover:border-cyan-500/30 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-teal-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                                <div className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 mb-6 bg-amber-50 dark:bg-amber-400/10 w-fit px-3 py-1.5 rounded-full">
-                                    {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-amber-500 dark:fill-amber-400" />)}
-                                </div>
-                                <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-6 leading-relaxed">
-                                    {t('dir.testi.t1.text')}
-                                </p>
-                                <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-700/50 pt-6">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold shadow-md">
-                                        {t('dir.testi.t1.name').charAt(0)}
+                        {testimonials.length > 0 && (
+                            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4">
+                                {testimonials.map((t) => (
+                                    <div key={t.id} className="group bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-white/50 dark:border-slate-700/50 hover:border-teal-500/30 dark:hover:border-cyan-500/30 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden flex flex-col">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-teal-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        
+                                        <div className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 mb-6 bg-amber-50 dark:bg-amber-400/10 w-fit px-3 py-1.5 rounded-full">
+                                            {[...Array(5)].map((_, i) => <Star key={i} size={14} className={i < t.rating ? "fill-amber-500 dark:fill-amber-400" : "text-slate-300 dark:text-slate-600"} />)}
+                                        </div>
+                                        <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-6 leading-relaxed flex-grow">
+                                            "{t.content}"
+                                        </p>
+                                        <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-700/50 pt-6">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold shadow-md">
+                                                {t.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-900 dark:text-white">{t.name}</p>
+                                                {t.role && <p className="text-sm text-slate-500 dark:text-slate-400">{t.role}</p>}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 dark:text-white">{t('dir.testi.t1.name')}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{t('dir.testi.t1.role')}</p>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-
-                            {/* Card 2 */}
-                            <div className="group bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-white/50 dark:border-slate-700/50 hover:border-blue-500/30 dark:hover:border-blue-400/30 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                                <div className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 mb-6 bg-amber-50 dark:bg-amber-400/10 w-fit px-3 py-1.5 rounded-full">
-                                    {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-amber-500 dark:fill-amber-400" />)}
-                                </div>
-                                <p className="text-lg text-slate-700 dark:text-slate-300 italic mb-6 leading-relaxed">
-                                    {t('dir.testi.t2.text')}
-                                </p>
-                                <div className="flex items-center gap-4 mt-auto border-t border-slate-100 dark:border-slate-700/50 pt-6">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
-                                        {t('dir.testi.t2.name').charAt(0)}
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-900 dark:text-white">{t('dir.testi.t2.name')}</p>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400">{t('dir.testi.t2.role')}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div>

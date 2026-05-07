@@ -3,6 +3,8 @@ export const en = {
   'nav.stays': 'Stays',
   'nav.services': 'Services',
   'nav.directory': 'Directory',
+  'directory.villas': 'Villas',
+  'directory.apartments': 'Apartments',
   'nav.blog': 'Blog',
   'shop': 'Shop',
   'nav.about': 'About',

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import { SEOHead } from '../components/seo/SEOHead';
 import { useAuth } from '../context/AuthContext';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
@@ -22,6 +22,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const [minRating, setMinRating] = useState<number>(0);
     const [maxPriceLevel, setMaxPriceLevel] = useState<number>(4);
     const [languageFilter, setLanguageFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('recommended');
 
     // UI State
     const [showFullIntro, setShowFullIntro] = useState(false);
@@ -136,8 +137,12 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             data = data.filter(item => item.languages_spoken?.includes(languageFilter));
         }
 
+        if (sortBy === 'most_upvoted') {
+            data = [...data].sort((a, b) => (b.net_votes || 0) - (a.net_votes || 0));
+        }
+
         return data;
-    }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter]);
+    }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter, sortBy]);
 
     // Basic validation if category exists
     if (!categoryId || !intro) {
@@ -181,18 +186,11 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16">
-            <Helmet>
-                <title>{title} - Alanya Holidays</title>
-                <meta name="description" content={description} />
-                <script type="application/ld+json">
-                    {JSON.stringify(itemListSchema)}
-                </script>
-                {faqSchema && (
-                    <script type="application/ld+json">
-                        {JSON.stringify(faqSchema)}
-                    </script>
-                )}
-            </Helmet>
+            <SEOHead
+                title={`${title} - Alanya Holidays`}
+                description={description}
+                jsonLd={faqSchema ? [itemListSchema, faqSchema] : itemListSchema}
+            />
 
             {/* 1. Intro Paragraph (SEO Optimized) */}
             <div className="bg-white dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800/50 shadow-sm mb-8">
@@ -289,6 +287,18 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
 
+                        <div className="relative shrink-0">
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
+                            >
+                                <option value="recommended">Recommended</option>
+                                <option value="most_upvoted">Most Upvoted</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+
                         <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             <input
                                 type="checkbox"
@@ -299,7 +309,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                             Verified Only
                         </label>
 
-                        {(locationFilter !== 'all' || verifiedOnly || minRating > 0 || maxPriceLevel < 4 || languageFilter !== 'all') && (
+                        {(locationFilter !== 'all' || verifiedOnly || minRating > 0 || maxPriceLevel < 4 || languageFilter !== 'all' || sortBy !== 'recommended') && (
                             <button
                                 onClick={() => {
                                     setLocationFilter('all');
@@ -307,6 +317,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                     setMinRating(0);
                                     setMaxPriceLevel(4);
                                     setLanguageFilter('all');
+                                    setSortBy('recommended');
                                 }}
                                 className="text-sm text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-medium whitespace-nowrap flex-shrink-0"
                             >

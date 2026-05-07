@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, BookOpen, Car } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, BookOpen, Car, Building2, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
 import { useModal } from '../../context/ModalContext';
 import { useCurrency, Currency } from '../../context/CurrencyContext';
+import { NavModeToggle } from './NavModeToggle';
 
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
+    mode: 'rental' | 'services';
+    setMode: (mode: 'rental' | 'services') => void;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
+export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, setMode }) => {
     const { user, isAuthenticated, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const { t, language, setLanguage } = useLanguage();
@@ -25,6 +28,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 shadow-2xl p-4 flex flex-col gap-4 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden max-h-[80vh] overflow-y-auto [-webkit-overflow-scrolling:touch]">
+
+            {/* Global Toggle for Mobile Menu */}
+            <div className="flex justify-center mb-2">
+                <NavModeToggle mode={mode} setMode={setMode} />
+            </div>
 
             {/* Auth Section */}
             {!isAuthenticated ? (
@@ -51,19 +59,39 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             )}
 
             <div className="flex flex-col gap-1">
-                {/* Main Nav */}
-                <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                    <Home size={18} className="text-slate-400" />
-                    {t('nav.directory')}
-                </Link>
-                <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                    <BookOpen size={18} className="text-slate-400" />
-                    {t('nav.blog')}
-                </Link>
-                <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
-                    <ShoppingBag size={18} className="text-slate-400" />
-                    {t('shop')}
-                </Link>
+                {/* Main Nav Conditionally Rendered by Mode */}
+                {mode === 'rental' ? (
+                    <>
+                        <Link to="/alanya-villas" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <Home size={18} className="text-slate-400" />
+                            {t('directory.villas') || 'Villas'}
+                        </Link>
+                        <Link to="/alanya-apartments" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <Building2 size={18} className="text-slate-400" />
+                            {t('directory.apartments') || 'Apartments'}
+                        </Link>
+                        <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <MapPin size={18} className="text-slate-400" />
+                            {t('nav.directory')}
+                        </Link>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <Car size={18} className="text-slate-400" />
+                            {t('nav.services') || 'Services'}
+                        </Link>
+                        <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <ShoppingBag size={18} className="text-slate-400" />
+                            {t('shop')}
+                        </Link>
+                        <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <BookOpen size={18} className="text-slate-400" />
+                            {t('nav.blog')}
+                        </Link>
+                    </>
+                )}
+                
                 <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                     <Home size={18} className="text-slate-400" />
                     {t('profile.become_host_title')}

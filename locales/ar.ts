@@ -3,6 +3,8 @@ export const ar = {
     'nav.stays': 'إقامة',
     'nav.services': 'خدمات',
     'nav.directory': 'الدليل',
+    'directory.villas': 'فيلات',
+    'directory.apartments': 'شقق',
     'nav.blog': 'المدونة',
     'shop': 'المتجر',
     'nav.about': 'معلومات عنا',

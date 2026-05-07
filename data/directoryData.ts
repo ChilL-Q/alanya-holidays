@@ -252,6 +252,59 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
       { question: 'Where are the best hair salons in Alanya?', answer: 'Good salons are found throughout Alanya Center, Mahmutlar, and Oba. The Saray neighbourhood of central Alanya has a concentration of well-regarded salons serving both locals and expats. Browse the listings on Alanya Holidays for verified salons with direct WhatsApp booking.' },
       { question: 'Can I book a hair or beauty appointment via WhatsApp?', answer: 'Yes — WhatsApp booking is standard practice in Alanya for hair and beauty services. All salons listed on Alanya Holidays show their WhatsApp number for direct contact.' }
     ]
+  },
+  'villas': {
+    title: 'Villas for Rent in Alanya | Private Pools & Sea Views',
+    description: 'Find the perfect villa in Alanya. Explore private homes with pools in Kargicak, Tepe, and Bektas for a secluded holiday experience.',
+    longDescription: [
+      'Alanya offers some of the most stunning villa rentals on the Turkish Riviera. For those wanting total seclusion, the hillside areas of Kargicak, Tepe, and Bektas offer private villas with infinity pools and panoramic sea views. These are best suited to groups, families, or couples who are happy to drive and want privacy above all else.',
+      'Renting a villa provides a completely different experience compared to staying in a hotel or a central apartment. You get your own private space, cooking facilities, and often a private garden and pool. Most villas are located a short drive up the mountainside, offering cooler breezes and spectacular sunsets over the Mediterranean and Alanya Castle.'
+    ],
+    faqs: [
+      { question: 'Which area is best for renting a villa in Alanya?', answer: 'Tepe, Bektas, and Kargicak are the premier villa districts. They are located on the hillsides behind Alanya and offer incredible views and privacy.' },
+      { question: 'Do I need a car if I rent a villa?', answer: 'Yes, it is highly recommended. Because most villas are located in hillside neighbourhoods, having a rental car is essential for grocery shopping, visiting the beach, and exploring the city.' }
+    ]
+  },
+  'apartments': {
+    title: 'Apartments for Rent in Alanya | Beachfront & City Center',
+    description: 'Discover the best apartments for holiday rentals in Alanya. Compare Mahmutlar, Oba, and City Center for your perfect stay.',
+    longDescription: [
+      'Apartment rentals are the most popular accommodation choice for visitors staying in Alanya for more than a few days. From luxury penthouses overlooking Cleopatra Beach to family-friendly complexes in Oba with large communal pools, there is an apartment for every budget.',
+      'Alanya Center is ideal for those who want to be walking distance from the bazaar, restaurants, and nightlife. Mahmutlar has become the go-to district for long-term stays and expats due to lower prices and excellent local amenities. Oba sits slightly inland and is favoured by families wanting a quieter base with easy access to the city.'
+    ],
+    faqs: [
+      { question: 'Where is the best area to rent an apartment for a family?', answer: 'Oba and Mahmutlar are excellent choices for families. They offer quieter streets, good supermarkets, and many complexes feature shared swimming pools and children\'s play areas.' },
+      { question: 'Can I rent an apartment long-term?', answer: 'Yes, Mahmutlar and Kestel offer excellent value for long-term furnished rentals, particularly popular during the winter months.' }
+    ]
+  },
+  'weather': {
+    title: 'Alanya Weather Guide 2026 | Best Time to Visit',
+    description: 'Plan your trip to Alanya with our complete weather guide. Average temperatures, rainfall, and the best months for beach holidays and sightseeing.',
+    longDescription: [
+      'Alanya enjoys a classic Mediterranean climate, characterised by long, hot, and dry summers, and mild, relatively rainy winters. The Taurus Mountains directly behind the city protect it from cold northern winds, creating a microclimate that makes Alanya one of the warmest destinations in Turkey year-round.',
+      'Summer (June to September) is hot and humid, with daytime temperatures regularly exceeding 35°C (95°F) in July and August. This is the peak season for beachgoers. The sea temperature peaks around 28°C in August, feeling like a warm bath.',
+      'Spring (April to May) and Autumn (October to November) are widely considered the best times to visit. Temperatures are a comfortable 22°C to 28°C, perfect for sightseeing, hiking, and enjoying the outdoors without the intense summer heat. The sea remains warm enough for swimming well into November.',
+      'Winter (December to March) is mild but can be wet. Daytime temperatures usually hover around 15°C to 18°C. While it is too cold for swimming for most, the sunny days are glorious, and the lack of crowds makes it an ideal time for long-term stays and exploring historical sites.'
+    ],
+    faqs: [
+      { question: 'What is the hottest month in Alanya?', answer: 'August is typically the hottest month, with average daytime highs around 35°C (95°F) and very high humidity.' },
+      { question: 'Can you swim in the sea in Alanya in winter?', answer: 'The sea temperature drops to about 17°C in February. While some hardy locals and expats swim year-round, it is generally considered too cold for comfortable swimming from December to March.' },
+      { question: 'When is the best time to visit Alanya?', answer: 'May, June, September, and October offer the best balance of warm weather, comfortable sea temperatures, and fewer crowds compared to the peak summer months.' }
+    ]
+  },
+  'nightlife': {
+    title: 'Alanya Nightlife Guide 2026 | Best Bars & Clubs',
+    description: 'Discover the best nightlife in Alanya. From the bustling Bar Street by the harbour to relaxed beach clubs and rooftop lounges.',
+    longDescription: [
+      'Alanya has one of the most vibrant nightlife scenes on the Turkish Riviera. Whether you are looking for massive open-air nightclubs, cozy pubs, or elegant rooftop lounges, the city caters to all tastes.',
+      'The epicentre of Alanya\'s nightlife is the harbour area, commonly referred to as "Bar Street" (Barlar Sokağı). Here, dozens of bars and large nightclubs are packed next to each other, pumping out music until the early hours. Venues like Havana Club, Robin Hood, and Summer Garden (located slightly out of town in Konaklı) are legendary among tourists and locals alike.',
+      'For a more relaxed evening, the area around Cleopatra Beach offers sophisticated beach clubs that transition from daytime lounging to evening cocktails with sunset views. The Castle Hill district also features several atmospheric rooftop bars and restaurants offering stunning panoramic views of the city lights and the harbour below.'
+    ],
+    faqs: [
+      { question: 'Where is the main nightlife area in Alanya?', answer: 'The main nightlife hub is the harbour area (Barlar Sokağı), located just below the Red Tower. It is packed with bars, pubs, and multi-story nightclubs.' },
+      { question: 'Is Alanya safe at night?', answer: 'Yes, Alanya is generally very safe at night, especially in the busy tourist areas like the harbour and Cleopatra Beach. There is a strong police presence, and violent crime is rare. However, standard precautions against pickpockets should be taken in crowded clubs.' },
+      { question: 'What time do clubs close in Alanya?', answer: 'Most bars and clubs in the harbour area stay open until 3:00 AM or 4:00 AM during the peak summer season.' }
+    ]
   }
 };
 

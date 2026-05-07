@@ -5,6 +5,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { yesimService, YesimPlan } from '../api-services/api/yesim';
 import { toast } from 'react-hot-toast';
 import { EsimModal } from '../components/services/EsimModal';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const Esim: React.FC = () => {
     const { t } = useLanguage();
@@ -62,7 +63,11 @@ export const Esim: React.FC = () => {
     };
 
     return (
-        <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans">
+            <SEOHead
+                title="Tourist eSIM Card for Turkey | Alanya Holidays"
+                description="Get an eSIM for Turkey. Instant activation, high-speed 4G/5G data, no roaming charges. Stay connected during your Alanya holiday."
+            />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-24">
