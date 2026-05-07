@@ -60,7 +60,19 @@ vi.mock('lucide-react', () => ({
     Heart: () => <svg data-testid="heart-icon" />,
     Banknote: () => <svg data-testid="banknote-icon" />,
     ShoppingBag: () => <svg data-testid="shop-icon" />,
-    BookOpen: () => <svg data-testid="book-open-icon" />
+    BookOpen: () => <svg data-testid="book-open-icon" />,
+    Building2: () => <svg data-testid="building-icon" />,
+    MapPin: () => <svg data-testid="mappin-icon" />
+}));
+
+vi.mock('./NavModeToggle', () => ({
+    NavModeToggle: ({ mode, setMode }: any) => (
+        <div data-testid="nav-mode-toggle">
+            <button onClick={() => setMode('rental')}>Rental</button>
+            <button onClick={() => setMode('services')}>Services</button>
+            <span>{mode}</span>
+        </div>
+    )
 }));
 
 // Import component after mocks
@@ -69,6 +81,7 @@ import { useAuth } from '../../context/AuthContext';
 
 describe('MobileMenu', () => {
     const mockOnClose = vi.fn();
+    const mockSetMode = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -80,10 +93,10 @@ describe('MobileMenu', () => {
         });
     });
 
-    const renderMenu = (isOpen = true) => {
+    const renderMenu = (isOpen = true, mode: 'rental' | 'services' = 'services') => {
         return render(
             <MemoryRouter>
-                <MobileMenu isOpen={isOpen} onClose={mockOnClose} />
+                <MobileMenu isOpen={isOpen} onClose={mockOnClose} mode={mode} setMode={mockSetMode} />
             </MemoryRouter>
         );
     };
