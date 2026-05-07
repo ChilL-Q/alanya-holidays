@@ -30,8 +30,15 @@ export const mockSessionResponse = {
   user: mockUser,
 };
 
-// Supabase project ref from VITE_SUPABASE_URL
-const SUPABASE_STORAGE_KEY = 'sb-mdmizeyiyebvhkujjyjg-auth-token';
+// Supabase project ref extracted from VITE_SUPABASE_URL
+// Must match the key the Supabase client constructs: `sb-{project_ref}-auth-token`
+function getSupabaseStorageKey(): string {
+  const url = process.env.VITE_SUPABASE_URL || '';
+  const match = url.match(/https:\/\/([^.]+)\.supabase/);
+  const projectRef = match ? match[1] : 'mock-supabase-url';
+  return `sb-${projectRef}-auth-token`;
+}
+const SUPABASE_STORAGE_KEY = getSupabaseStorageKey();
 
 /**
  * Seeds a valid Supabase session into localStorage BEFORE page load.
