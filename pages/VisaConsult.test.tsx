@@ -4,8 +4,12 @@ import { VisaConsult } from './VisaConsult';
 import { BrowserRouter } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
-const mockAlert = vi.fn();
-vi.stubGlobal('alert', mockAlert);
+const mockToastError = vi.fn();
+vi.mock('react-hot-toast', () => ({
+    toast: {
+        error: (...args: any[]) => mockToastError(...args)
+    }
+}));
 
 const mockInvoke = vi.fn();
 
@@ -49,7 +53,7 @@ describe('VisaConsult', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockNavigate.mockClear();
-        mockAlert.mockClear();
+        mockToastError.mockClear();
         mockInvoke.mockResolvedValue({ data: null, error: null });
     });
 
@@ -178,7 +182,7 @@ describe('VisaConsult', () => {
         });
     });
 
-    it('handles submission error via alert', async () => {
+    it('handles submission error via toast', async () => {
         mockInvoke.mockResolvedValue({ data: null, error: new Error('Network error') });
 
         await act(async () => {
@@ -195,7 +199,7 @@ describe('VisaConsult', () => {
         });
 
         await waitFor(() => {
-            expect(mockAlert).toHaveBeenCalledWith('visa.consult.form.error');
+            expect(mockToastError).toHaveBeenCalledWith('visa.consult.form.error');
         });
     });
 

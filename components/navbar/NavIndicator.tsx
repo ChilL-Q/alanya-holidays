@@ -27,7 +27,7 @@ export const NavIndicator: React.FC<NavIndicatorProps> = ({ mode }) => {
 
     return (
         <div
-            className="absolute bottom-0 h-0.5 bg-primary dark:bg-accent dark:bg-amber-600 rounded-full transition-all duration-300 ease-out z-10"
+            className="absolute bottom-0 h-0.5 bg-primary dark:bg-accent rounded-full transition-all duration-300 ease-out z-10"
             style={style}
         />
     );
