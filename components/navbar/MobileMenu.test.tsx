@@ -60,7 +60,19 @@ vi.mock('lucide-react', () => ({
     Heart: () => <svg data-testid="heart-icon" />,
     Banknote: () => <svg data-testid="banknote-icon" />,
     ShoppingBag: () => <svg data-testid="shop-icon" />,
-    BookOpen: () => <svg data-testid="book-open-icon" />
+    BookOpen: () => <svg data-testid="book-open-icon" />,
+    Building2: () => <svg data-testid="building-icon" />,
+    MapPin: () => <svg data-testid="mappin-icon" />
+}));
+
+vi.mock('./NavModeToggle', () => ({
+    NavModeToggle: ({ mode, setMode }: any) => (
+        <div data-testid="nav-mode-toggle">
+            <button onClick={() => setMode('rental')}>Rental</button>
+            <button onClick={() => setMode('services')}>Services</button>
+            <span>{mode}</span>
+        </div>
+    )
 }));
 
 // Import component after mocks
@@ -69,6 +81,7 @@ import { useAuth } from '../../context/AuthContext';
 
 describe('MobileMenu', () => {
     const mockOnClose = vi.fn();
+    const mockSetMode = vi.fn();
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -80,10 +93,10 @@ describe('MobileMenu', () => {
         });
     });
 
-    const renderMenu = (isOpen = true) => {
+    const renderMenu = (isOpen = true, mode: 'rental' | 'services' = 'services') => {
         return render(
             <MemoryRouter>
-                <MobileMenu isOpen={isOpen} onClose={mockOnClose} />
+                <MobileMenu isOpen={isOpen} onClose={mockOnClose} mode={mode} setMode={mockSetMode} />
             </MemoryRouter>
         );
     };
@@ -112,11 +125,18 @@ describe('MobileMenu', () => {
         expect(screen.getByText('nav.signup')).toBeInTheDocument();
     });
 
-    it('renders main navigation links', () => {
+    it('renders main navigation links in services mode', () => {
         renderMenu();
-        expect(screen.getByText('nav.directory')).toBeInTheDocument();
+        expect(screen.getByText('nav.services')).toBeInTheDocument();
         expect(screen.getByText('nav.blog')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
+    });
+
+    it('renders main navigation links in rental mode', () => {
+        renderMenu(true, 'rental');
+        expect(screen.getByText('directory.villas')).toBeInTheDocument();
+        expect(screen.getByText('directory.apartments')).toBeInTheDocument();
+        expect(screen.getByText('nav.directory')).toBeInTheDocument();
     });
 
     it('renders user links when authenticated', () => {
@@ -172,7 +192,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.directory'));
+        fireEvent.click(screen.getByText('nav.services'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 

@@ -1,12 +1,13 @@
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { VisaConsult } from './VisaConsult';
-import { messagesService } from '../api-services/api/misc';
 import { BrowserRouter } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
 const mockAlert = vi.fn();
 vi.stubGlobal('alert', mockAlert);
+
+const mockInvoke = vi.fn();
 
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
@@ -24,9 +25,15 @@ vi.mock('../context/LanguageContext', () => ({
     })
 }));
 
-vi.mock('../api-services/api/misc', () => ({
-    messagesService: {
-        sendMessage: vi.fn()
+vi.mock('../components/seo/SEOHead', () => ({
+    SEOHead: () => null
+}));
+
+vi.mock('../api-services/supabase', () => ({
+    supabase: {
+        functions: {
+            invoke: (...args: any[]) => mockInvoke(...args)
+        }
     }
 }));
 
@@ -43,6 +50,7 @@ describe('VisaConsult', () => {
         vi.clearAllMocks();
         mockNavigate.mockClear();
         mockAlert.mockClear();
+        mockInvoke.mockResolvedValue({ data: null, error: null });
     });
 
     it('renders visa consult page with heading', async () => {
@@ -122,7 +130,7 @@ describe('VisaConsult', () => {
     });
 
     it('submits form with correct data', async () => {
-        (messagesService.sendMessage as any).mockResolvedValue(true);
+        mockInvoke.mockResolvedValue({ data: null, error: null });
 
         await act(async () => {
             render(
@@ -138,18 +146,19 @@ describe('VisaConsult', () => {
         });
 
         await waitFor(() => {
-            expect(messagesService.sendMessage).toHaveBeenCalledWith({
-                name: 'John Doe',
-                email: 'john@example.com',
-                phone: '+90 530 123 45 67',
-                visa_type: 'tourist',
-                message: '[TOURIST] Tourist visa question'
+            expect(mockInvoke).toHaveBeenCalledWith('contact-lawyer', {
+                body: {
+                    name: 'John Doe',
+                    email: 'john@example.com',
+                    phone: '+90 530 123 45 67',
+                    message: '[VISA: TOURIST] Tourist visa question'
+                }
             });
         });
     });
 
     it('shows success state after submission', async () => {
-        (messagesService.sendMessage as any).mockResolvedValue(true);
+        mockInvoke.mockResolvedValue({ data: null, error: null });
 
         await act(async () => {
             render(
@@ -170,7 +179,7 @@ describe('VisaConsult', () => {
     });
 
     it('handles submission error via alert', async () => {
-        (messagesService.sendMessage as any).mockRejectedValue(new Error('Network error'));
+        mockInvoke.mockResolvedValue({ data: null, error: new Error('Network error') });
 
         await act(async () => {
             render(
@@ -221,8 +230,8 @@ describe('VisaConsult', () => {
     });
 
     it('submit button is disabled while loading', async () => {
-        (messagesService.sendMessage as any).mockImplementation(
-            () => new Promise(resolve => setTimeout(() => resolve(true), 200))
+        mockInvoke.mockImplementation(
+            () => new Promise(resolve => setTimeout(() => resolve({ data: null, error: null }), 200))
         );
 
         await act(async () => {

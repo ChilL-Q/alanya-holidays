@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedAuthSession, mockSupabaseRest } from './utils/mock-utils';
+import { seedAuthSession, setupAuthMocks, mockSupabaseRest, mockAllSupabaseRequests } from './utils/mock-utils';
 
 test.describe('Booking Flow', () => {
   test('should navigate to stays page and see listings', async ({ page }) => {
@@ -79,7 +79,10 @@ test.describe('Booking Flow', () => {
   });
 
   test('should verify cart persists across navigation', async ({ page }) => {
+    // Catch-all first (lowest priority), then specific mocks
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
+    await setupAuthMocks(page);
     await mockSupabaseRest(page);
     await page.addInitScript(() => {
       localStorage.setItem('cart', JSON.stringify([{

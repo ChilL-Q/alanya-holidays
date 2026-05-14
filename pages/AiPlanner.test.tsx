@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { AiPlanner } from './AiPlanner';
 import { planTrip } from '../api-services/aiService';
 import { subscriptionsService } from '../api-services/api/subscriptions';
@@ -15,6 +16,10 @@ vi.mock('react-router-dom', async () => {
         useNavigate: () => mockNavigate
     };
 });
+
+vi.mock('../components/seo/SEOHead', () => ({
+    SEOHead: () => null
+}));
 
 vi.mock('../context/LanguageContext', () => ({
     useLanguage: () => ({
@@ -68,7 +73,7 @@ describe('AiPlanner', () => {
 
     it('renders AI planner page with title', async () => {
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         expect(screen.getByText(/AI Concierge/i)).toBeInTheDocument();
@@ -76,7 +81,7 @@ describe('AiPlanner', () => {
 
     it('renders trip planner form for premium user', async () => {
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {
@@ -90,7 +95,7 @@ describe('AiPlanner', () => {
         );
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         // Should still show something while loading
@@ -101,7 +106,7 @@ describe('AiPlanner', () => {
 
     it('calls getPremiumStatus on mount', async () => {
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {
@@ -115,7 +120,7 @@ describe('AiPlanner', () => {
         );
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {
@@ -137,7 +142,7 @@ describe('AiPlanner', () => {
         (planTrip as any).mockResolvedValue(JSON.stringify({ itinerary: mockItinerary }));
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {
@@ -149,7 +154,7 @@ describe('AiPlanner', () => {
         (planTrip as any).mockRejectedValue(new Error('API Error'));
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {
@@ -171,7 +176,7 @@ describe('AiPlanner', () => {
         (planTrip as any).mockResolvedValue(JSON.stringify({ itinerary: mockItinerary }));
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         // First generate
@@ -197,7 +202,7 @@ describe('AiPlanner', () => {
         (planTrip as any).mockResolvedValue(JSON.stringify({ itinerary: mockItinerary }));
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         expect(sessionStorage.getItem('ai-planner-status')).toBeTruthy();
@@ -208,7 +213,7 @@ describe('AiPlanner', () => {
         sessionStorage.setItem('ai-planner-itinerary', JSON.stringify([]));
 
         await act(async () => {
-            render(<AiPlanner />);
+            render(<MemoryRouter><AiPlanner /></MemoryRouter>);
         });
 
         await waitFor(() => {

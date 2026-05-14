@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedAuthSession, mockSupabaseRest, seedCartAndWait } from './utils/mock-utils';
+import { seedAuthSession, setupAuthMocks, mockSupabaseRest, seedCartAndWait, mockAllSupabaseRequests } from './utils/mock-utils';
 
 const seedCart = [
   {
@@ -20,7 +20,9 @@ const seedCart = [
 test.describe('Stripe Checkout Flow', () => {
 
   test('should render checkout page with cart items', async ({ page }) => {
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
+    await setupAuthMocks(page);
     await mockSupabaseRest(page);
     await seedCartAndWait(page, seedCart);
 
@@ -32,7 +34,9 @@ test.describe('Stripe Checkout Flow', () => {
   });
 
   test('should show empty cart state', async ({ page }) => {
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
+    await setupAuthMocks(page);
     await mockSupabaseRest(page);
     // No cart seeded
 
@@ -44,7 +48,9 @@ test.describe('Stripe Checkout Flow', () => {
   });
 
   test('should display order summary total', async ({ page }) => {
+    await mockAllSupabaseRequests(page);
     await seedAuthSession(page);
+    await setupAuthMocks(page);
     await mockSupabaseRest(page);
     await seedCartAndWait(page, seedCart);
 

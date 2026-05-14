@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Phone, ArrowLeft, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { messagesService } from '../api-services/api/misc';
+import { supabase } from '../api-services/supabase';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const VisaConsult: React.FC = () => {
     const navigate = useNavigate();
@@ -32,6 +33,10 @@ export const VisaConsult: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-12 px-4">
+            <SEOHead
+                title="Visa & Residency Consultation | Alanya Holidays"
+                description="Get professional legal advice for your Turkish visa or residency application. Consult with expert lawyers in Alanya."
+            />
             <div className="max-w-2xl mx-auto">
                 <button
                     onClick={() => navigate(-1)}
@@ -100,13 +105,15 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await messagesService.sendMessage({
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                visa_type: formData.visa_type,
-                message: `[${formData.visa_type.toUpperCase()}] ${formData.message}`,
+            const { error } = await supabase.functions.invoke('contact-lawyer', {
+                body: {
+                    name: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    message: `[VISA: ${formData.visa_type.toUpperCase()}] ${formData.message}`,
+                }
             });
+            if (error) throw error;
             onSuccess();
         } catch {
             alert(t('visa.consult.form.error'));

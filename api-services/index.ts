@@ -16,6 +16,7 @@ export * from './api/notifications';
 export * from './api/chat';
 export * from './api/directory';
 export * from './api/blog';
+export * from './api/testimonials';
 export * from './supabase';
 export * from './auth';
 export * from './aiService';
@@ -32,6 +33,7 @@ import { chatService } from './api/chat';
 import { yesimService } from './api/yesim';
 import { directoryService } from './api/directory';
 import { blogService } from './api/blog';
+import { testimonialService } from './api/testimonials';
 
 export const db = {
     ...propertiesService,
@@ -46,5 +48,6 @@ export const db = {
     ...chatService,
     ...directoryService,
     ...blogService,
+    ...testimonialService,
     yesimService
 };

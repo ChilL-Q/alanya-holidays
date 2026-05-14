@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useCart } from '../context/CartContext';
@@ -11,19 +11,30 @@ import { UserDropdown } from './navbar/UserDropdown';
 import { DesktopNav } from './navbar/DesktopNav';
 import { NavbarActions } from './navbar/NavbarActions';
 import { ListPropertyAction } from './navbar/ListPropertyAction';
+import { NavModeToggle } from './navbar/NavModeToggle';
+
+export type NavMode = 'rental' | 'services';
 
 export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
-  // useModal is kept if it provides context needed by other logic, but unused vars removed
   useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [navMode, setNavMode] = useState<NavMode>('rental');
   const profileRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
 
-  // Handle Mobile Menu and Profile dropdown clicks
+  useEffect(() => {
+    if (['/services', '/shop', '/blog'].includes(location.pathname)) {
+      setNavMode('services');
+    } else if (['/', '/alanya-villas', '/alanya-apartments'].includes(location.pathname)) {
+      setNavMode('rental');
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -39,19 +50,26 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20">
 
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-3 group relative z-10">
-            <div className="relative">
-              <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
-              <img src="/logo.png" alt="Alanya Holidays" className="w-12 h-12 sm:w-10 sm:h-10 object-contain relative z-10 rounded-full" />
-            </div>
-            <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate max-w-[120px] md:max-w-none">
-              Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
-            </span>
-          </Link>
+          {/* Logo & Toggle */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 z-10">
+            <Link to="/" className="flex items-center gap-3 group relative">
+              <div className="relative hidden sm:block">
+                <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
+                <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
+              </div>
+              <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate hidden md:block">
+                Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
+              </span>
+            </Link>
+            
+            {/* Global Mode Toggle */}
+            <NavModeToggle mode={navMode} setMode={setNavMode} />
+          </div>
 
           {/* Desktop Nav Links */}
-          <DesktopNav />
+          <div className="flex-1 flex justify-center">
+            <DesktopNav mode={navMode} />
+          </div>
 
           {/* Right Section */}
           <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
@@ -124,7 +142,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} mode={navMode} setMode={setNavMode} />
 
       {/* Host Upgrade Modal */}
       {/* Host Upgrade Modal - Now inside ListPropertyAction */}

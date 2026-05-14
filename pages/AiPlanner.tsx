@@ -7,6 +7,7 @@ import { subscriptionsService } from '../api-services/api/subscriptions';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const AiPlanner: React.FC = () => {
     const { t } = useLanguage();
@@ -103,6 +104,10 @@ export const AiPlanner: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20">
+            <SEOHead
+                title="AI Trip Planner | Alanya Holidays"
+                description="Plan your perfect trip to Alanya with our AI-powered trip planner. Get personalized itineraries, recommendations, and more."
+            />
             <div className="container mx-auto px-4">
                 <PremiumGate isPremium={isPremium} isLoading={premiumLoading}>
                     {status === 'form' && (

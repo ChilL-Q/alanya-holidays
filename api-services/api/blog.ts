@@ -484,8 +484,8 @@ export const blogService = {
     // ============================================================
 
     /**
-     * Create a blog submission and return Stripe checkout URL.
-     * Creates submission with status='pending_payment', then invokes Stripe edge function.
+     * Create a blog submission.
+     * Creates submission with status='pending_review'.
      */
     async createBlogSubmission(data: {
         title: string;
@@ -747,7 +747,7 @@ export const blogService = {
             .single();
 
         if (subError || !submission) throw subError || new Error('Submission not found');
-        if (!['pending_payment', 'pending_review'].includes(submission.status)) {
+        if (submission.status !== 'pending_review') {
             throw new Error(`Cannot reject submission with status '${submission.status}'`);
         }
 

@@ -24,24 +24,25 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-        { path: '/admin/properties', label: 'Properties', icon: Home },
-        { path: '/admin/fleet', label: 'Fleet', icon: Car },
-        { path: '/admin/services', label: 'Services', icon: MapIcon },
         { path: '/admin/directory', label: 'Directory', icon: BookOpen },
         { path: '/admin/restaurants', label: 'Restaurants', icon: ChefHat },
         { path: '/admin/cafes', label: 'Cafes', icon: Coffee },
-        { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
         { path: '/admin/products', label: 'Products', icon: ShoppingBag },
-        { path: '/admin/users', label: 'Users', icon: Users },
+        { path: '/admin/properties', label: 'Properties', icon: Home },
+        { path: '/admin/fleet', label: 'Fleet', icon: Car },
+        { path: '/admin/services', label: 'Services', icon: MapIcon },
+        { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
         { path: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
         { path: '/admin/blog-submissions', label: 'Blog Submissions', icon: PenLine },
+        { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+        { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
 
     const navGroups = [
         {
             label: 'Listings',
-            items: navItems.filter(i => ['Properties', 'Fleet', 'Services', 'Directory', 'Restaurants', 'Cafes', 'Products'].includes(i.label))
+            items: navItems.filter(i => ['Directory', 'Restaurants', 'Cafes', 'Products', 'Properties', 'Fleet', 'Services'].includes(i.label))
         },
         {
             label: 'Commerce',
@@ -49,7 +50,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         },
         {
             label: 'Content',
-            items: navItems.filter(i => ['Reviews', 'Blog Submissions'].includes(i.label))
+            items: navItems.filter(i => ['Reviews', 'Blog Submissions', 'Testimonials'].includes(i.label))
         },
         {
             label: 'Users',

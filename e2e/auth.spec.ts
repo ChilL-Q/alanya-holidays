@@ -38,7 +38,7 @@ test.describe('Authentication Flow', () => {
 
   test('should show error on invalid credentials', async ({ page }) => {
     // Mock failed login
-    await page.route('**/auth/v1/token', async (route) => {
+    await page.route('**/auth/v1/token**', async (route) => {
       await route.fulfill({
         status: 400,
         body: JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid login credentials' }),
