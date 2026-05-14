@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 import { Sentry } from '../../utils/sentry';
+import { ServerError } from '../pages/ServerError';
 
 interface Props {
   children?: ReactNode;
@@ -10,8 +11,6 @@ interface State {
   hasError: boolean;
   error: Error | null;
 }
-
-import { ServerError } from '../pages/ServerError';
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {

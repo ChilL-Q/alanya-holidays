@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, ArrowLeft, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../api-services/supabase';
@@ -116,7 +117,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
             if (error) throw error;
             onSuccess();
         } catch {
-            alert(t('visa.consult.form.error'));
+            toast.error(t('visa.consult.form.error'));
         } finally {
             setIsLoading(false);
         }

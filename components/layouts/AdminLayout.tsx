@@ -100,10 +100,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={`
                                         flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
-                                        ${isActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
+                                        ${isActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
                                     `}
                                 >
-                                    <Icon size={20} className={isActive ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
+                                    <Icon size={20} className={isActive ? 'text-teal-600 dark:text-cyan-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
                                     <span>{dashboardItem.label}</span>
                                 </NavLink>
 
@@ -127,10 +127,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                         className={`
                                                             flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group
-                                                            ${isItemActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 dark:text-slate-200 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
+                                                            ${isItemActive ? 'bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 font-medium shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/90 hover:text-slate-900 dark:hover:text-white'}
                                                         `}
                                                     >
-                                                        <ItemIcon size={20} className={isItemActive ? 'text-teal-600 dark:text-cyan-400 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
+                                                        <ItemIcon size={20} className={isItemActive ? 'text-teal-600 dark:text-cyan-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
                                                         <span>{item.label}</span>
                                                         {item.label === 'Bookings' && (
                                                             <span className="ml-auto w-2 h-2 rounded-full bg-orange-500 hidden" />
