@@ -62,14 +62,15 @@ vi.mock('lucide-react', () => ({
     ShoppingBag: () => <svg data-testid="shop-icon" />,
     BookOpen: () => <svg data-testid="book-open-icon" />,
     Building2: () => <svg data-testid="building-icon" />,
-    MapPin: () => <svg data-testid="mappin-icon" />
+    MapPin: () => <svg data-testid="mappin-icon" />,
+    MessageCircle: () => <svg data-testid="message-circle-icon" />
 }));
 
 vi.mock('./NavModeToggle', () => ({
     NavModeToggle: ({ mode, setMode }: any) => (
         <div data-testid="nav-mode-toggle">
+            <button onClick={() => setMode('directory')}>Directory</button>
             <button onClick={() => setMode('rental')}>Rental</button>
-            <button onClick={() => setMode('services')}>Services</button>
             <span>{mode}</span>
         </div>
     )
@@ -93,7 +94,7 @@ describe('MobileMenu', () => {
         });
     });
 
-    const renderMenu = (isOpen = true, mode: 'rental' | 'services' = 'services') => {
+    const renderMenu = (isOpen = true, mode: 'directory' | 'rental' = 'directory') => {
         return render(
             <MemoryRouter>
                 <MobileMenu isOpen={isOpen} onClose={mockOnClose} mode={mode} setMode={mockSetMode} />
@@ -125,9 +126,9 @@ describe('MobileMenu', () => {
         expect(screen.getByText('nav.signup')).toBeInTheDocument();
     });
 
-    it('renders main navigation links in services mode', () => {
+    it('renders main navigation links in directory mode', () => {
         renderMenu();
-        expect(screen.getByText('nav.services')).toBeInTheDocument();
+        expect(screen.getByText('nav.directory')).toBeInTheDocument();
         expect(screen.getByText('nav.blog')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
     });
@@ -136,7 +137,8 @@ describe('MobileMenu', () => {
         renderMenu(true, 'rental');
         expect(screen.getByText('directory.villas')).toBeInTheDocument();
         expect(screen.getByText('directory.apartments')).toBeInTheDocument();
-        expect(screen.getByText('nav.directory')).toBeInTheDocument();
+        expect(screen.getByText('nav.vehicles')).toBeInTheDocument();
+        expect(screen.getByText('nav.services')).toBeInTheDocument();
     });
 
     it('renders user links when authenticated', () => {
@@ -166,8 +168,13 @@ describe('MobileMenu', () => {
         expect(mockToggleTheme).toHaveBeenCalled();
     });
 
-    it('expands currency section and changes currency', () => {
-        renderMenu();
+    it('hides currency section in directory mode', () => {
+        renderMenu(true, 'directory');
+        expect(screen.queryByText('nav.currency')).not.toBeInTheDocument();
+    });
+
+    it('expands currency section and changes currency in rental mode', () => {
+        renderMenu(true, 'rental');
         const currencyBtn = screen.getByText('nav.currency').closest('button');
         fireEvent.click(currencyBtn!);
 
@@ -190,9 +197,9 @@ describe('MobileMenu', () => {
         expect(mockSetLanguage).toHaveBeenCalledWith('ru');
     });
 
-    it('calls onClose when a link is clicked', () => {
+    it('calls onClose when a directory link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.services'));
+        fireEvent.click(screen.getByText('nav.blog'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 
@@ -203,14 +210,20 @@ describe('MobileMenu', () => {
         expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it('renders listing CTA buttons', () => {
-        renderMenu();
+    it('renders listing CTA buttons in rental mode', () => {
+        renderMenu(true, 'rental');
         expect(screen.getByText('nav.list_property')).toBeInTheDocument();
         expect(screen.getByText('nav.list_service')).toBeInTheDocument();
     });
 
-    it('calls onClose when listing CTA clicked', () => {
-        renderMenu();
+    it('hides listing CTA buttons in directory mode', () => {
+        renderMenu(true, 'directory');
+        expect(screen.queryByText('nav.list_property')).not.toBeInTheDocument();
+        expect(screen.queryByText('nav.list_service')).not.toBeInTheDocument();
+    });
+
+    it('calls onClose when listing CTA clicked in rental mode', () => {
+        renderMenu(true, 'rental');
         fireEvent.click(screen.getByText('nav.list_property'));
         expect(mockOnClose).toHaveBeenCalled();
     });

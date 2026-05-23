@@ -154,7 +154,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                         <div className="flex items-start gap-3 p-4 bg-teal-50 dark:bg-cyan-900/10 rounded-xl text-teal-800 dark:text-cyan-300">
                             <Info size={18} className="flex-shrink-0 mt-0.5" />
                             <p className="text-xs leading-relaxed">
-                                Please mention <strong>Alanya Holidays</strong> when contacting the provider to ensure you receive our special agreed rates and priority service.
+                                Please mention <strong>Alanya Holidays</strong> when contacting the provider.
                             </p>
                         </div>
                     </div>

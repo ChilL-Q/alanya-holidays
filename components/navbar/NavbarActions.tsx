@@ -5,7 +5,11 @@ import { useCurrency, Currency } from '../../context/CurrencyContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
 import { useClickOutside } from '../../hooks/useClickOutside';
 
-export const NavbarActions: React.FC = () => {
+interface NavbarActionsProps {
+    mode?: 'directory' | 'rental';
+}
+
+export const NavbarActions: React.FC<NavbarActionsProps> = ({ mode = 'directory' }) => {
     const { theme, toggleTheme } = useTheme();
     const { currency, setCurrency } = useCurrency();
     const { language, setLanguage } = useLanguage();
@@ -39,34 +43,37 @@ export const NavbarActions: React.FC = () => {
                 {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-800/50 mx-1"></div>
-
-            {/* Currency */}
-            <div className="relative" ref={currencyRef}>
-                <button
-                    onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/80 transition-all shadow-sm hover:shadow border border-transparent hover:border-slate-100 dark:hover:border-slate-600"
-                >
-                    {currency}
-                    <ChevronDown size={12} className={`opacity-50 transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isCurrencyOpen && (
-                    <div className="absolute top-full mt-2 right-0 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                        <div className="py-1">
-                            {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
-                                <button
-                                    key={curr}
-                                    onClick={() => handleCurrencySelect(curr)}
-                                    className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center justify-between ${currency === curr ? 'text-teal-600 dark:text-cyan-400 bg-teal-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-400'}`}
-                                >
-                                    {curr}
-                                    {currency === curr && <Check size={12} />}
-                                </button>
-                            ))}
-                        </div>
+            {/* Currency — visible in rental mode only */}
+            {mode === 'rental' && (
+                <>
+                    <div className="w-px h-4 bg-slate-200 dark:bg-slate-800/50 mx-1"></div>
+                    <div className="relative" ref={currencyRef}>
+                        <button
+                            onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700/80 transition-all shadow-sm hover:shadow border border-transparent hover:border-slate-100 dark:hover:border-slate-600"
+                        >
+                            {currency}
+                            <ChevronDown size={12} className={`opacity-50 transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isCurrencyOpen && (
+                            <div className="absolute top-full mt-2 right-0 w-32 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                                <div className="py-1">
+                                    {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
+                                        <button
+                                            key={curr}
+                                            onClick={() => handleCurrencySelect(curr)}
+                                            className={`w-full text-left px-4 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors flex items-center justify-between ${currency === curr ? 'text-teal-600 dark:text-cyan-400 bg-teal-50 dark:bg-slate-800/50' : 'text-slate-600 dark:text-slate-400'}`}
+                                        >
+                                            {curr}
+                                            {currency === curr && <Check size={12} />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            )}
 
             {/* Language */}
             <div className="relative" ref={langRef}>

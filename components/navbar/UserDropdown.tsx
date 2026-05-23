@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, LayoutDashboard, LogOut } from 'lucide-react';
+import { User, LayoutDashboard, LogOut, PlusCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -67,10 +67,16 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose }) =
                             </Link>
                         )}
                         {(user?.role === 'host' || user?.role === 'admin') && (
-                            <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-lg transition-colors">
-                                <LayoutDashboard size={16} className="text-teal-500 dark:text-cyan-400 " />
-                                {t('nav.host_dashboard')}
-                            </Link>
+                            <>
+                                <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-lg transition-colors">
+                                    <LayoutDashboard size={16} className="text-teal-500 dark:text-cyan-400 " />
+                                    {t('nav.host_dashboard')}
+                                </Link>
+                                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-lg transition-colors">
+                                    <PlusCircle size={16} className="text-teal-500 dark:text-cyan-400" />
+                                    {t('nav.list_rental_or_service')}
+                                </Link>
+                            </>
                         )}
                         <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-2"></div>
                         <button onClick={() => { logout(); onClose(); }} className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors">

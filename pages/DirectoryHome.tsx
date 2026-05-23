@@ -8,25 +8,13 @@ import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
-import { ModeToggle, LandingMode } from '../components/home/ModeToggle';
-
-const RENTAL_CATEGORIES = new Set(['accommodations', 'transport', 'real-estate']);
-const SERVICES_CATEGORIES = new Set(['medical', 'tours', 'restaurants', 'cafes', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty']);
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
-    const [mode, setMode] = useState<LandingMode>(() => {
-        return (localStorage.getItem('landingMode') as LandingMode) || 'rental';
-    });
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-
-    const handleModeChange = (newMode: LandingMode) => {
-        setMode(newMode);
-        localStorage.setItem('landingMode', newMode);
-    };
 
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
@@ -66,16 +54,13 @@ export const DirectoryHome: React.FC = () => {
         { id: 'transport', icon: '🚗', title: t('dir.cat.transport'), path: '/airport-transfer' },
         { id: 'restaurants', icon: '🍽️', title: t('dir.cat.restaurants'), path: '/restaurants' },
         { id: 'cafes', icon: '☕', title: t('dir.cat.cafes'), path: '/cafes' },
-        { id: 'real-estate', icon: '🏠', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
-        { id: 'visa', icon: '🛂', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
-        { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
         { id: 'nature', icon: '🌿', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
         { id: 'spa-hamam', icon: '🧖', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
         { id: 'hair-beauty', icon: '💇', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
+        { id: 'real-estate', icon: '🏠', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
+        { id: 'visa', icon: '🛂', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
+        { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
     ];
-
-    const allowedIds = mode === 'rental' ? RENTAL_CATEGORIES : SERVICES_CATEGORIES;
-    const filteredCategories = categories.filter(cat => allowedIds.has(cat.id));
 
     return (
         <>
@@ -218,13 +203,10 @@ export const DirectoryHome: React.FC = () => {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('dir.cat.title')}</h2>
                     <p className="mt-4 text-slate-600 dark:text-slate-400">{t('dir.cat.subtitle')}</p>
-                    <div className="mt-6 flex justify-center">
-                        <ModeToggle mode={mode} onChange={handleModeChange} />
-                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                    {filteredCategories.map((category) => (
+                    {categories.map((category) => (
                         <button
                             key={category.id}
                             onClick={() => navigate(category.path)}
