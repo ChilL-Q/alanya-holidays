@@ -127,6 +127,26 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         return Array.from(langs).sort();
     }, [listings]);
 
+    const activeFilterCount = useMemo(() => {
+        let count = 0;
+        if (locationFilter !== 'all') count++;
+        if (verifiedOnly) count++;
+        if (minRating > 0) count++;
+        if (maxPriceLevel < 4) count++;
+        if (languageFilter !== 'all') count++;
+        if (sortBy !== 'recommended') count++;
+        return count;
+    }, [locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter, sortBy]);
+
+    const clearFilters = useCallback(() => {
+        setLocationFilter('all');
+        setVerifiedOnly(false);
+        setMinRating(0);
+        setMaxPriceLevel(4);
+        setLanguageFilter('all');
+        setSortBy('recommended');
+    }, []);
+
     const filteredData = useMemo(() => {
         let data = listings;
 
@@ -344,14 +364,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
                         {(locationFilter !== 'all' || verifiedOnly || minRating > 0 || maxPriceLevel < 4 || languageFilter !== 'all' || sortBy !== 'recommended') && (
                             <button
-                                onClick={() => {
-                                    setLocationFilter('all');
-                                    setVerifiedOnly(false);
-                                    setMinRating(0);
-                                    setMaxPriceLevel(4);
-                                    setLanguageFilter('all');
-                                    setSortBy('recommended');
-                                }}
+                                onClick={clearFilters}
                                 className="text-sm text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-medium whitespace-nowrap flex-shrink-0"
                             >
                                 Clear Filters
@@ -417,6 +430,23 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     <DirectoryMapView
                         listings={filteredData}
                         onListingClick={handleListingClick}
+                        filters={{
+                            locationFilter,
+                            verifiedOnly,
+                            minRating,
+                            maxPriceLevel,
+                            sortBy,
+                            locationOptions: locations,
+                        }}
+                        filterActions={{
+                            setLocationFilter,
+                            setVerifiedOnly,
+                            setMinRating,
+                            setMaxPriceLevel,
+                            setSortBy,
+                            clearFilters,
+                        }}
+                        activeFilterCount={activeFilterCount}
                     />
                 )}
 

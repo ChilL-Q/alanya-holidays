@@ -184,6 +184,31 @@ Deno.serve(async (req: Request) => {
         type: 'success',
         link: '/profile',
       })
+
+      // Send recovery email
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', subRecord.user_id)
+        .maybeSingle()
+
+      if (userProfile?.email) {
+        console.warn(`Sending subscription restored email to user ${subRecord.user_id} at ${userProfile.email}`)
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: userProfile.email,
+              type: 'subscription_restored',
+              data: {
+                name: userProfile.full_name || 'there',
+                link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+              },
+            },
+          })
+        } catch (e) {
+          console.error('Failed to send subscription restored email:', e)
+        }
+      }
     }
 
     // Cancellation notification (Stripe sets cancel_at_period_end but status is still active until period ends)

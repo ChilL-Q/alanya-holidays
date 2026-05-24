@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react'
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { useTheme } from '../../context/ThemeContext';
 import { DirectoryListingDB } from '../../types/models';
-import { Star, MapPin, Navigation, X } from 'lucide-react';
+import { Star, MapPin, Navigation, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import toast from 'react-hot-toast';
 
@@ -99,9 +99,30 @@ const darkMapStyles = [
     },
 ];
 
+export interface FilterState {
+    locationFilter: string;
+    verifiedOnly: boolean;
+    minRating: number;
+    maxPriceLevel: number;
+    sortBy: string;
+    locationOptions: string[];
+}
+
+export interface FilterActions {
+    setLocationFilter: (v: string) => void;
+    setVerifiedOnly: (v: boolean) => void;
+    setMinRating: (v: number) => void;
+    setMaxPriceLevel: (v: number) => void;
+    setSortBy: (v: string) => void;
+    clearFilters: () => void;
+}
+
 interface DirectoryMapViewProps {
     listings: DirectoryListingDB[];
     onListingClick: (listing: DirectoryListingDB) => void;
+    filters: FilterState;
+    filterActions: FilterActions;
+    activeFilterCount: number;
 }
 
 interface ListingWithCoords extends DirectoryListingDB {
@@ -147,7 +168,7 @@ function getDeterministicCoords(listing: DirectoryListingDB): { lat: number; lng
     };
 }
 
-export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, onListingClick }) => {
+export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, onListingClick, filters, filterActions, activeFilterCount }) => {
     const { theme } = useTheme();
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
@@ -161,6 +182,7 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
     const [selectedListing, setSelectedListing] = useState<ListingWithCoords | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [locating, setLocating] = useState(false);
+    const [panelOpen, setPanelOpen] = useState(false);
 
     const listingsWithCoords = useMemo(() => {
         return listings.map(l => {
@@ -348,6 +370,122 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
                 <Navigation size={16} className={locating ? 'animate-spin' : ''} />
                 {locating ? 'Locating...' : 'Near Me'}
             </button>
+
+            {/* Filters Button */}
+            <button
+                onClick={() => setPanelOpen(prev => !prev)}
+                className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors font-medium text-sm"
+            >
+                <SlidersHorizontal size={16} />
+                Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+            </button>
+
+            {/* Filter Panel */}
+            {panelOpen && (
+                <div className="absolute top-16 left-4 z-20 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/50 p-4 w-72 max-w-xs">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Filter Listings</h3>
+                        <button
+                            onClick={() => setPanelOpen(false)}
+                            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {/* Location */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Location</label>
+                            <div className="relative">
+                                <select
+                                    value={filters.locationFilter}
+                                    onChange={(e) => filterActions.setLocationFilter(e.target.value)}
+                                    className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="all">All Locations</option>
+                                    {filters.locationOptions.map(loc => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        {/* Price Level */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Price Level</label>
+                            <div className="relative">
+                                <select
+                                    value={filters.maxPriceLevel}
+                                    onChange={(e) => filterActions.setMaxPriceLevel(Number(e.target.value))}
+                                    className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value={4}>Any Price</option>
+                                    <option value={1}>$ (Budget)</option>
+                                    <option value={2}>$$ (Moderate)</option>
+                                    <option value={3}>$$$ (Premium)</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        {/* Min Rating */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Min Rating</label>
+                            <div className="relative">
+                                <select
+                                    value={filters.minRating}
+                                    onChange={(e) => filterActions.setMinRating(Number(e.target.value))}
+                                    className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value={0}>Any Rating</option>
+                                    <option value={4.0}>4.0+ Stars</option>
+                                    <option value={4.5}>4.5+ Stars</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        {/* Sort */}
+                        <div>
+                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Sort By</label>
+                            <div className="relative">
+                                <select
+                                    value={filters.sortBy}
+                                    onChange={(e) => filterActions.setSortBy(e.target.value)}
+                                    className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                >
+                                    <option value="recommended">Recommended</option>
+                                    <option value="most_upvoted">Most Upvoted</option>
+                                </select>
+                                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+
+                        {/* Verified Only */}
+                        <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={filters.verifiedOnly}
+                                onChange={(e) => filterActions.setVerifiedOnly(e.target.checked)}
+                                className="w-4 h-4 text-teal-600 dark:text-cyan-400 rounded border-slate-300 focus:ring-teal-500"
+                            />
+                            Verified Only
+                        </label>
+
+                        {/* Clear All */}
+                        {activeFilterCount > 0 && (
+                            <button
+                                onClick={filterActions.clearFilters}
+                                className="w-full text-sm text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:hover:text-cyan-300 font-medium py-2 border border-teal-200 dark:border-cyan-900/30 rounded-lg hover:bg-teal-50 dark:hover:bg-cyan-900/10 transition-colors"
+                            >
+                                Clear All ({activeFilterCount})
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Selected Listing Card */}
             {selectedListing && (
