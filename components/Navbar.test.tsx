@@ -89,7 +89,7 @@ describe('Navbar', () => {
             </BrowserRouter>
         );
         expect(screen.getByText('Alanya')).toBeDefined();
-        // Default mode is 'rental', check for rental nav links
+        // Default mode is 'directory', check for directory nav links
         expect(screen.getAllByText('nav.directory').length).toBeGreaterThan(0);
     });
 
@@ -135,25 +135,20 @@ describe('Navbar', () => {
         expect(screen.getByText('test@test.com')).toBeDefined();
         expect(screen.getByText('auth.logout')).toBeDefined();
 
-        // Verify "List Property" / "Upgrade" is NOT in the dropdown, but IS in the header (count = 1)
+        // In directory mode, ListPropertyAction is hidden — neither list_property nor upgrade_btn visible
         expect(screen.queryByText('nav.list_property')).toBeNull();
-        expect(screen.getAllByText('profile.upgrade_btn')).toHaveLength(1);
+        expect(screen.queryByText('profile.upgrade_btn')).toBeNull();
     });
 
-    it('toggles currency dropdown', () => {
+    it('hides currency selector in directory mode', () => {
         render(
             <BrowserRouter>
                 <Navbar />
             </BrowserRouter>
         );
 
-        const currencyBtn = screen.getByText('EUR');
-        fireEvent.click(currencyBtn);
-
-        expect(screen.getByText('USD')).toBeDefined();
-
-        fireEvent.click(screen.getByText('USD'));
-        expect(mockSetCurrency).toHaveBeenCalledWith('USD');
+        // Currency is hidden in directory mode (default)
+        expect(screen.queryByText('EUR')).toBeNull();
     });
 
     it('toggles language dropdown', () => {

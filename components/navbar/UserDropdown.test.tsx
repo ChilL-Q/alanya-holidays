@@ -29,7 +29,8 @@ vi.mock('../../context/LanguageContext', () => ({
 vi.mock('lucide-react', () => ({
     User: () => <svg data-testid="user-icon" />,
     LayoutDashboard: () => <svg data-testid="dashboard-icon" />,
-    LogOut: () => <svg data-testid="logout-icon" />
+    LogOut: () => <svg data-testid="logout-icon" />,
+    PlusCircle: () => <svg data-testid="plus-circle-icon" />
 }));
 
 // Import component after mocks

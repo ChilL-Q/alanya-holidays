@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 interface NavIndicatorProps {
-    mode?: 'rental' | 'services';
+    mode?: 'directory' | 'rental';
 }
 
 export const NavIndicator: React.FC<NavIndicatorProps> = ({ mode }) => {

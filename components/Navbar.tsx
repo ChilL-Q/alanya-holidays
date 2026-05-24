@@ -13,7 +13,7 @@ import { NavbarActions } from './navbar/NavbarActions';
 import { ListPropertyAction } from './navbar/ListPropertyAction';
 import { NavModeToggle } from './navbar/NavModeToggle';
 
-export type NavMode = 'rental' | 'services';
+export type NavMode = 'directory' | 'rental';
 
 export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
@@ -23,15 +23,15 @@ export const Navbar: React.FC = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [navMode, setNavMode] = useState<NavMode>('rental');
+  const [navMode, setNavMode] = useState<NavMode>('directory');
   const profileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   useEffect(() => {
-    if (['/services', '/shop', '/blog'].includes(location.pathname)) {
-      setNavMode('services');
-    } else if (['/', '/alanya-villas', '/alanya-apartments'].includes(location.pathname)) {
+    if (['/services', '/alanya-villas', '/alanya-apartments', '/services/car-rental', '/services/bike-rental', '/services/bicycle-rental'].includes(location.pathname) || location.pathname.startsWith('/services/')) {
       setNavMode('rental');
+    } else {
+      setNavMode('directory');
     }
   }, [location.pathname]);
 
@@ -75,10 +75,10 @@ export const Navbar: React.FC = () => {
           <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
 
             {/* Utilities Group (Desktop) */}
-            <NavbarActions />
+            <NavbarActions mode={navMode} />
 
-            {/* List Property CTA (Desktop) */}
-            <ListPropertyAction />
+            {/* List Property CTA — visible in rental mode only */}
+            {navMode === 'rental' && <ListPropertyAction />}
 
             {/* User Actions */}
             <div className="flex items-center gap-1 sm:gap-2 pl-2">

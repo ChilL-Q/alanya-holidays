@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, BookOpen, Car, Building2, MapPin } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, BookOpen, Car, Building2, MapPin, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
@@ -11,8 +11,8 @@ import { NavModeToggle } from './NavModeToggle';
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
-    mode: 'rental' | 'services';
-    setMode: (mode: 'rental' | 'services') => void;
+    mode: 'directory' | 'rental';
+    setMode: (mode: 'directory' | 'rental') => void;
 }
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, setMode }) => {
@@ -60,7 +60,26 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
 
             <div className="flex flex-col gap-1">
                 {/* Main Nav Conditionally Rendered by Mode */}
-                {mode === 'rental' ? (
+                {mode === 'directory' ? (
+                    <>
+                        <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <MapPin size={18} className="text-slate-400" />
+                            {t('nav.directory')}
+                        </Link>
+                        <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <BookOpen size={18} className="text-slate-400" />
+                            {t('nav.blog')}
+                        </Link>
+                        <Link to="/forum" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <MessageCircle size={18} className="text-slate-400" />
+                            {t('nav.forum') || 'Forum'}
+                        </Link>
+                        <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <ShoppingBag size={18} className="text-slate-400" />
+                            {t('shop')}
+                        </Link>
+                    </>
+                ) : (
                     <>
                         <Link to="/alanya-villas" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Home size={18} className="text-slate-400" />
@@ -70,32 +89,16 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                             <Building2 size={18} className="text-slate-400" />
                             {t('directory.apartments') || 'Apartments'}
                         </Link>
-                        <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                            <MapPin size={18} className="text-slate-400" />
-                            {t('nav.directory')}
-                        </Link>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <Link to="/services/car-rental" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Car size={18} className="text-slate-400" />
-                            {t('nav.services') || 'Services'}
+                            {t('nav.vehicles') || 'Vehicles'}
                         </Link>
-                        <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <ShoppingBag size={18} className="text-slate-400" />
-                            {t('shop')}
-                        </Link>
-                        <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                            <BookOpen size={18} className="text-slate-400" />
-                            {t('nav.blog')}
+                            {t('nav.services') || 'Services'}
                         </Link>
                     </>
                 )}
-                
-                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
-                    <Home size={18} className="text-slate-400" />
-                    {t('profile.become_host_title')}
-                </Link>
 
                 {/* User Links (if auth) */}
                 {isAuthenticated && (
@@ -125,23 +128,26 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                 )}
             </div>
 
-            <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
-
-            {/* Listing CTA */}
-            <div className="flex gap-2">
-                <Link to="/list-property" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                        <Home size={18} />
+            {/* Listing CTA — visible in rental mode only */}
+            {mode === 'rental' && (
+                <>
+                    <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
+                    <div className="flex gap-2">
+                        <Link to="/list-property" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
+                            <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                                <Home size={18} />
+                            </div>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_property')}</span>
+                        </Link>
+                        <Link to="/add-service" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
+                            <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-purple-600 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                                <Car size={18} />
+                            </div>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_service')}</span>
+                        </Link>
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_property')}</span>
-                </Link>
-                <Link to="/add-service" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-purple-600 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                        <Car size={18} />
-                    </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_service')}</span>
-                </Link>
-            </div>
+                </>
+            )}
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
 
@@ -156,29 +162,31 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                     </div>
                 </div>
 
-                {/* Currency */}
-                <div className="flex flex-col gap-2">
-                    <button onClick={() => setExpandedSection(expandedSection === 'curr' ? null : 'curr')} className="flex items-center justify-between px-2 py-1">
-                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('nav.currency')}</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-900 dark:text-white">{currency}</span>
-                            <ChevronDown size={16} className={`text-slate-400 transition-transform ${expandedSection === 'curr' ? 'rotate-180' : ''}`} />
-                        </div>
-                    </button>
-                    {expandedSection === 'curr' && (
-                        <div className="grid grid-cols-3 gap-2 px-2 animate-fade-in">
-                            {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
-                                <button
-                                    key={curr}
-                                    onClick={() => { setCurrency(curr); setExpandedSection(null); }}
-                                    className={`py-2 rounded-lg text-sm font-medium border ${currency === curr ? 'bg-teal-50 dark:bg-slate-800/50 border-teal-200 dark:border-slate-700/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'border-slate-100 dark:border-slate-800/50 text-slate-600 dark:text-slate-400'}`}
-                                >
-                                    {curr}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {/* Currency — visible in rental mode only */}
+                {mode === 'rental' && (
+                    <div className="flex flex-col gap-2">
+                        <button onClick={() => setExpandedSection(expandedSection === 'curr' ? null : 'curr')} className="flex items-center justify-between px-2 py-1">
+                            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('nav.currency')}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-slate-900 dark:text-white">{currency}</span>
+                                <ChevronDown size={16} className={`text-slate-400 transition-transform ${expandedSection === 'curr' ? 'rotate-180' : ''}`} />
+                            </div>
+                        </button>
+                        {expandedSection === 'curr' && (
+                            <div className="grid grid-cols-3 gap-2 px-2 animate-fade-in">
+                                {(['USD', 'EUR', 'TRY'] as Currency[]).map((curr) => (
+                                    <button
+                                        key={curr}
+                                        onClick={() => { setCurrency(curr); setExpandedSection(null); }}
+                                        className={`py-2 rounded-lg text-sm font-medium border ${currency === curr ? 'bg-teal-50 dark:bg-slate-800/50 border-teal-200 dark:border-slate-700/50 text-teal-700 dark:text-cyan-400 dark:text-slate-200' : 'border-slate-100 dark:border-slate-800/50 text-slate-600 dark:text-slate-400'}`}
+                                    >
+                                        {curr}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Language */}
                 <div className="flex flex-col gap-2">
