@@ -14,7 +14,14 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ files, onChange, m
     const handleFiles = (newFiles: FileList | null) => {
         if (!newFiles) return;
 
-        const validFiles = Array.from(newFiles).filter(file => file.type.startsWith('image/'));
+        const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+        const isValidImage = (file: File): boolean => {
+            if (file.type.startsWith('image/')) return true;
+            const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+            return ALLOWED_EXTENSIONS.includes(ext);
+        };
+
+        const validFiles = Array.from(newFiles).filter(isValidImage);
         const combinedFiles = [...files, ...validFiles].slice(0, maxFiles);
         onChange(combinedFiles);
     };

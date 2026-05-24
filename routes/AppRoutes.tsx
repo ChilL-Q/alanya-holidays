@@ -119,7 +119,7 @@ export const AppRoutes: React.FC = () => {
 
                 <Route path="/search-results" element={<SearchResultsPage />} />
                 <Route path="/stays" element={<SearchResultsPage />} />
-                <Route path="/favorites" element={<FavoritesPage />} />
+                <Route path="/favorites" element={<AuthRoute><FavoritesPage /></AuthRoute>} />
                 <Route path="/property/:id" element={<PropertyDetails />} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/submit" element={<AuthRoute><BlogSubmitPage /></AuthRoute>} />
@@ -159,14 +159,14 @@ export const AppRoutes: React.FC = () => {
                         <AddService />
                     </HostRoute>
                 } />
-                <Route path="/bookmarks" element={<FavoritesPage />} />
+                <Route path="/bookmarks" element={<AuthRoute><FavoritesPage /></AuthRoute>} />
                 <Route path="/book-vehicle/:id" element={<AuthRoute><BookVehicle /></AuthRoute>} />
                 <Route path="/book-tour/:id" element={<AuthRoute><BookTour /></AuthRoute>} />
                 <Route path="/book-wellness/:id" element={<AuthRoute><BookWellness /></AuthRoute>} />
                 <Route path="/inbox" element={<AuthRoute><InboxPage /></AuthRoute>} />
 
                 {/* Host Routes - Protected */}
-                <Route path="/booking/success" element={<BookingSuccess />} />
+                <Route path="/booking/success" element={<AuthRoute><BookingSuccess /></AuthRoute>} />
                 <Route path="/host" element={
                     <HostRoute>
                         <HostLayout>

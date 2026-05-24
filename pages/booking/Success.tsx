@@ -33,10 +33,17 @@ export const BookingSuccess: React.FC = () => {
             }
 
             try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    navigate('/');
+                    return;
+                }
+
                 const { data, error } = await supabase
                     .from('bookings')
                     .select('id, status, payment_status, check_in, check_out, total_price')
                     .eq('stripe_session_id', sessionId)
+                    .eq('user_id', user.id)
                     .single();
 
                 if (error || !data) {

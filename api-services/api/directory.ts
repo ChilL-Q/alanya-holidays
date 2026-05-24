@@ -15,14 +15,19 @@ const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
 };
 
 export const directoryService = {
-    async getDirectoryListings(page: number = 1, limit: number = 20, category?: string): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+    async getDirectoryListings(
+        page: number = 1,
+        limit: number = 20,
+        category?: string,
+        sortBy: 'created_at' | 'base_score' = 'created_at'
+    ): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
         const from = (page - 1) * limit;
         const to = from + limit - 1;
 
         let query = supabase
             .from('directory_listings')
             .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false });
+            .order(sortBy, { ascending: false });
 
         if (category) {
             query = query.eq('category_id', category);
@@ -182,19 +187,27 @@ export const directoryService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
+        const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+        const tier = listing.tier || 'explorer';
+        const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
+        const limit = TIER_LIMITS[tier] ?? 5;
+        if (gallery.length > limit) {
+            throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
+        }
+
         const safeData = sanitize({
             name: (listing.name ?? '').slice(0, 200),
             short_description: (listing.short_description ?? '').slice(0, 500),
             category_id: listing.category_id,
             website: listing.website?.slice(0, 500),
             whatsapp: listing.whatsapp?.slice(0, 50),
-            gallery: Array.isArray(listing.gallery) ? listing.gallery : [],
+            gallery,
             location: (listing.location ?? '').slice(0, 200),
             google_map_url: listing.google_map_url?.slice(0, 500),
             video_url: listing.video_url?.slice(0, 500) || null,
             is_featured: false,
             is_verified: false,
-            tier: listing.tier || 'explorer',
+            tier,
             base_score: listing.base_score ?? 0,
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
         });
@@ -226,6 +239,16 @@ export const directoryService = {
         delete safeUpdates.is_featured;
         delete safeUpdates.base_score;
         delete safeUpdates.subscription_id;
+
+        // Validate gallery length against tier limit
+        if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
+            const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+            const tier = (safeUpdates.tier as string) || 'explorer';
+            const limit = TIER_LIMITS[tier] ?? 5;
+            if ((safeUpdates.gallery as string[]).length > limit) {
+                throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
+            }
+        }
 
         const sanitized = sanitize(safeUpdates as Record<string, unknown>);
 

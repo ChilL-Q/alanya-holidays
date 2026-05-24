@@ -5,8 +5,9 @@ declare const Deno: any
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const CRON_SECRET = Deno.env.get('CRON_SECRET')
 
-const BASE_URL = 'https://alanya-holidays.com'
+const BASE_URL = 'https://alanyaholidays.com'
 
 interface SitemapUrl {
   loc: string
@@ -43,6 +44,14 @@ Deno.serve(async (req: Request) => {
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
       },
     })
+  }
+
+  const reqSecret = req.headers.get('x-cron-secret')
+  if (!CRON_SECRET || reqSecret !== CRON_SECRET) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
