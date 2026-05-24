@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import '../../print-itinerary.css';
 
 export interface ItineraryItem {
     time: string;
@@ -46,50 +47,6 @@ export const TripItinerary: React.FC<Props> = ({ itinerary }) => {
 
     return (
         <div className="max-w-4xl mx-auto py-12 px-4 print:py-0 print:px-0">
-            {/* Print-only CSS */}
-            <style dangerouslySetInnerHTML={{ __html: `
-                @media print {
-                    nav, footer, .no-print, button, .print-hidden {
-                        display: none !important;
-                    }
-                    body {
-                        background: white !important;
-                        color: black !important;
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    .print-header {
-                        display: flex !important;
-                        align-items: center;
-                        justify-content: space-between;
-                        padding: 40px 0;
-                        border-bottom: 2px solid #f1f5f9;
-                        margin-bottom: 40px;
-                    }
-                    .print-footer {
-                        display: block !important;
-                        text-align: center;
-                        padding: 40px 0;
-                        border-top: 1px solid #f1f5f9;
-                        margin-top: 60px;
-                        font-size: 12px;
-                        color: #64748b;
-                    }
-                    .itinerary-card {
-                        break-inside: avoid;
-                        border: 1px solid #e2e8f0 !important;
-                        box-shadow: none !important;
-                        background: #f8fafc !important;
-                    }
-                    .day-marker {
-                        background: #0f172a !important;
-                        color: white !important;
-                        -webkit-print-color-adjust: exact;
-                    }
-                }
-                .print-header, .print-footer { display: none; }
-            `}} />
-            
             {/* Print Header */}
             <div className="print-header">
                 <div className="flex items-center gap-3">
