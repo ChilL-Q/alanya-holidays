@@ -114,6 +114,7 @@ export const directoryService = {
             .from('directory_listings')
             .select('*')
             .eq('is_premium', true)
+            .order('base_score', { ascending: false })
             .limit(6);
 
         if (error) {
