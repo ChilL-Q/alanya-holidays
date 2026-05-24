@@ -33,10 +33,15 @@ vi.mock('lucide-react', () => ({
 // Mock Supabase
 vi.mock('../../api-services/supabase', () => ({
     supabase: {
+        auth: {
+            getUser: vi.fn()
+        },
         from: vi.fn(() => ({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                    single: vi.fn()
+                    eq: vi.fn(() => ({
+                        single: vi.fn()
+                    }))
                 }))
             }))
         }))
@@ -60,6 +65,10 @@ describe('BookingSuccess', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockSearchParams = new URLSearchParams('session_id=sess_123');
+        vi.mocked(supabase.auth.getUser).mockResolvedValue({
+            data: { user: { id: 'user-123', email: 'test@test.com' } },
+            error: null
+        } as any);
     });
 
     const renderBookingSuccess = (sessionId: string | null = 'sess_123') => {
@@ -88,7 +97,9 @@ describe('BookingSuccess', () => {
         vi.mocked(supabase.from).mockReturnValue({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                    single: vi.fn(() => new Promise(() => {})) // Never resolves
+                    eq: vi.fn(() => ({
+                        single: vi.fn(() => new Promise(() => {})) // Never resolves
+                    }))
                 }))
             }))
         } as any);
@@ -112,7 +123,9 @@ describe('BookingSuccess', () => {
         vi.mocked(supabase.from).mockReturnValue({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                    single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                    }))
                 }))
             }))
         } as any);
@@ -140,7 +153,9 @@ describe('BookingSuccess', () => {
         vi.mocked(supabase.from).mockReturnValue({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                    single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: mockBooking, error: null })
+                    }))
                 }))
             }))
         } as any);
@@ -158,7 +173,9 @@ describe('BookingSuccess', () => {
         vi.mocked(supabase.from).mockReturnValue({
             select: vi.fn(() => ({
                 eq: vi.fn(() => ({
-                    single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } })
+                    eq: vi.fn(() => ({
+                        single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Not found' } })
+                    }))
                 }))
             }))
         } as any);
