@@ -35,7 +35,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         setLoading(true);
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
-            const response = await db.getDirectoryListings(1, 100, category);
+            const response = await db.getDirectoryListings(1, 100, category, 'base_score');
             setListings(response.data || []);
         } catch (e) {
             console.error('Failed to load listings', e);

@@ -48,6 +48,7 @@ const emailDataSchemas = {
   blog_submission_approved: z.object({ postTitle: s, postUrl: s, authorName: s }),
   blog_submission_rejected: z.object({ postTitle: s, reason: s, authorName: s }),
   subscription_cancelled:  z.object({ name: sOpt, periodEnd: s, link: sOpt }),
+  subscription_cancellation_scheduled: z.object({ name: sOpt, periodEnd: s, link: sOpt }),
   subscription_payment_failed: z.object({ name: sOpt, link: sOpt }),
 } as const
 
@@ -714,6 +715,23 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     `
                     <p style="font-size: 16px;">Hi ${escapeHtml(data.name) || 'there'},</p>
                     <p>Your Premium subscription has ended. You had access until <strong>${escapeHtml(data.periodEnd)}</strong>.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0;">You can resubscribe at any time to regain access to AI Trip Planner and other Premium features.</p>
+                    </div>
+                    `,
+                    data.link,
+                    'Resubscribe'
+                )
+            };
+
+        case 'subscription_cancellation_scheduled':
+            return {
+                subject: 'Your Premium Subscription Cancellation is Scheduled',
+                html: getHtmlTemplate(
+                    'Cancellation Scheduled',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.name) || 'there'},</p>
+                    <p>You have cancelled your Premium subscription. You will continue to have access until <strong>${escapeHtml(data.periodEnd)}</strong>.</p>
                     <div class="card">
                         <p style="text-align: center; margin: 0;">You can resubscribe at any time to regain access to AI Trip Planner and other Premium features.</p>
                     </div>

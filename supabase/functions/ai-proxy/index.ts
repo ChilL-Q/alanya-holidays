@@ -69,7 +69,10 @@ Deno.serve(async (req: Request) => {
         })
         if (premError) {
             console.error('Premium check failed:', premError)
-            // Fail open (allow) if DB check fails — don't block users if DB is temporarily unavailable
+            return new Response(
+                JSON.stringify({ error: 'Service temporarily unavailable. Please try again later.' }),
+                { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         } else if (!isPremium) {
             return new Response(
                 JSON.stringify({

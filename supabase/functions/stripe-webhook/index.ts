@@ -195,6 +195,32 @@ Deno.serve(async (req: Request) => {
         type: 'warning',
         link: '/profile',
       })
+
+      // Email notification
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', subRecord.user_id)
+        .maybeSingle()
+
+      if (userProfile?.email) {
+        console.warn(`Sending cancellation scheduled email to user ${subRecord.user_id} at ${userProfile.email}`)
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: userProfile.email,
+              type: 'subscription_cancellation_scheduled',
+              data: {
+                name: userProfile.full_name || 'there',
+                periodEnd: new Date(currentPeriodEnd).toLocaleDateString(),
+                link: `${Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'}/profile`,
+              },
+            },
+          })
+        } catch (e) {
+          console.error('Failed to send cancellation scheduled email:', e)
+        }
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })

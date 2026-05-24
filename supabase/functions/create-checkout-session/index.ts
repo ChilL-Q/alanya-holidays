@@ -66,6 +66,14 @@ Deno.serve(async (req: Request) => {
 
     const { items, email, origin } = await req.json()
 
+    const MAX_ITEMS = 10
+    if (!Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) {
+      return new Response(
+        JSON.stringify({ error: `Invalid items count. Must be between 1 and ${MAX_ITEMS}.` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     if (!origin) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
@@ -174,6 +182,13 @@ Deno.serve(async (req: Request) => {
     // Сохраняем stripe_session_id и payment_expires_at во все брони этого чекаута
     const paymentExpiresAt = new Date(Date.now() + PAYMENT_WINDOW_MINUTES * 60 * 1000).toISOString()
     const bookingIds = items.map((i: any) => i.bookingId).filter(Boolean)
+
+    if (bookingIds.length > MAX_ITEMS) {
+      return new Response(
+        JSON.stringify({ error: `Too many bookings: max ${MAX_ITEMS}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     if (bookingIds.length > 0) {
       const { data: verifiedBookings, error: verifyError } = await supabase
