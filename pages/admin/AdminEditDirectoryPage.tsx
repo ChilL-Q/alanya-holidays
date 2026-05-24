@@ -7,7 +7,6 @@ import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
 import { DirectoryListingDB, LocationDB } from '../../types/models';
-import { locationsService } from '../../api-services/api/locations';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -92,7 +91,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
     }, [isEditing, loadListing]);
 
     useEffect(() => {
-        locationsService.getLocations()
+        db.getLocations()
             .then(setAvailableLocations)
             .catch(err => console.error('Failed to load locations:', err));
     }, []);

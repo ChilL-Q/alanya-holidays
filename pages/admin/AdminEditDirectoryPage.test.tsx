@@ -30,12 +30,7 @@ vi.mock('../../api-services', () => ({
         getDirectoryListing: vi.fn(),
         createDirectoryListing: vi.fn(),
         updateDirectoryListing: vi.fn(),
-        uploadImage: vi.fn()
-    }
-}));
-
-vi.mock('../../api-services/api/locations', () => ({
-    locationsService: {
+        uploadImage: vi.fn(),
         getLocations: vi.fn().mockResolvedValue([])
     }
 }));

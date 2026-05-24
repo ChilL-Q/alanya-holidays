@@ -252,7 +252,8 @@ export const directoryService = {
                 location_id: lid,
                 display_order: i,
             }));
-            await supabase.from('listing_locations').insert(rows);
+            const { error: locError } = await supabase.from('listing_locations').insert(rows);
+            if (locError) console.error('Failed to link listing locations on create:', locError);
         }
 
         return data as DirectoryListingDB;
@@ -275,6 +276,7 @@ export const directoryService = {
         delete safeUpdates.is_featured;
         delete safeUpdates.base_score;
         delete safeUpdates.subscription_id;
+        delete safeUpdates.listing_locations;
 
         // Validate gallery length against tier limit
         if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
@@ -301,14 +303,16 @@ export const directoryService = {
         }
 
         if (locationIds !== undefined) {
-            await supabase.from('listing_locations').delete().eq('listing_id', id);
+            const { error: delError } = await supabase.from('listing_locations').delete().eq('listing_id', id);
+            if (delError) console.error('Failed to clear listing locations on update:', delError);
             if (locationIds.length) {
                 const rows = locationIds.map((lid, i) => ({
                     listing_id: id,
                     location_id: lid,
                     display_order: i,
                 }));
-                await supabase.from('listing_locations').insert(rows);
+                const { error: insError } = await supabase.from('listing_locations').insert(rows);
+                if (insError) console.error('Failed to link listing locations on update:', insError);
             }
         }
 

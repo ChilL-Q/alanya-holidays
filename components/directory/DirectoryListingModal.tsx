@@ -60,7 +60,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                     </div>
                     {listing.listing_locations && listing.listing_locations.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                            {listing.listing_locations
+                            {[...listing.listing_locations]
                                 .sort((a, b) => a.display_order - b.display_order)
                                 .map(ll => (
                                     <span
