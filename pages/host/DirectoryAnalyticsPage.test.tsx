@@ -6,6 +6,7 @@ import { ListingAnalyticsSummary } from '../../types/models';
 const { mockDb } = vi.hoisted(() => ({
     mockDb: {
         getDirectoryAnalyticsForOwner: vi.fn(),
+        getCategoryAnalyticsAverage: vi.fn(),
     }
 }));
 
@@ -17,6 +18,7 @@ const mockAnalytics: ListingAnalyticsSummary[] = [
     {
         listing_id: 'dir-1',
         listing_name: 'Test Clinic',
+        listing_category_id: 'medical',
         total_views: 150,
         total_whatsapp_clicks: 12,
         total_website_clicks: 8,
@@ -31,6 +33,7 @@ const mockAnalytics: ListingAnalyticsSummary[] = [
 describe('DirectoryAnalyticsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockDb.getCategoryAnalyticsAverage.mockResolvedValue(null);
     });
 
     it('shows loading state initially', () => {
@@ -87,6 +90,7 @@ describe('DirectoryAnalyticsPage', () => {
             {
                 listing_id: 'dir-2',
                 listing_name: 'Second Clinic',
+                listing_category_id: 'medical',
                 total_views: 50,
                 total_whatsapp_clicks: 5,
                 total_website_clicks: 3,

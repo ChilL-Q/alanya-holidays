@@ -6,7 +6,8 @@ import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
-import { DirectoryListingDB } from '../../types/models';
+import { DirectoryListingDB, LocationDB } from '../../types/models';
+import { locationsService } from '../../api-services/api/locations';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -46,6 +47,8 @@ export const AdminEditDirectoryPage: React.FC = () => {
     });
 
     const [generatingDescription, setGeneratingDescription] = useState(false);
+    const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
+    const [availableLocations, setAvailableLocations] = useState<LocationDB[]>([]);
 
     const loadListing = useCallback(async () => {
         try {
@@ -71,6 +74,9 @@ export const AdminEditDirectoryPage: React.FC = () => {
                 setExistingImages(listing.gallery || []);
                 setLanguages(listing.languages_spoken?.length ? listing.languages_spoken : ['']);
                 setCertifications(listing.certifications?.length ? listing.certifications : ['']);
+                setSelectedLocationIds(
+                    listing.listing_locations?.map(ll => ll.location_id) ?? []
+                );
             }
         } catch (error) {
             console.error(error);
@@ -84,6 +90,12 @@ export const AdminEditDirectoryPage: React.FC = () => {
             loadListing();
         }
     }, [isEditing, loadListing]);
+
+    useEffect(() => {
+        locationsService.getLocations()
+            .then(setAvailableLocations)
+            .catch(err => console.error('Failed to load locations:', err));
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -180,10 +192,10 @@ export const AdminEditDirectoryPage: React.FC = () => {
             };
 
             if (isEditing) {
-                await db.updateDirectoryListing(id!, listingData);
+                await db.updateDirectoryListing(id!, listingData, selectedLocationIds);
                 toast.success('Listing updated successfully');
             } else {
-                await db.createDirectoryListing(listingData);
+                await db.createDirectoryListing(listingData, selectedLocationIds);
                 toast.success('Listing created successfully');
             }
 
@@ -262,6 +274,10 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             website={formData.website}
                             whatsapp={formData.whatsapp}
                             onChange={handleChange}
+                            availableLocations={availableLocations}
+                            selectedLocationIds={selectedLocationIds}
+                            onLocationIdsChange={setSelectedLocationIds}
+                            tier={formData.tier}
                         />
 
                         <DetailsFeaturesForm

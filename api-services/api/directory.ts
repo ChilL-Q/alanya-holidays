@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, ListingAnalyticsSummary } from '../../types/models';
+import { DirectoryListingDB, ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
 
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
@@ -58,7 +58,7 @@ export const directoryService = {
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select('*, listing_locations(id, location_id, display_order, locations(id, name))')
             .eq('id', id)
             .single();
 
@@ -203,7 +203,10 @@ export const directoryService = {
         return { netVotes: data[0].net_votes };
     },
 
-    async createDirectoryListing(listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>): Promise<DirectoryListingDB> {
+    async createDirectoryListing(
+        listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>,
+        locationIds?: string[]
+    ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
@@ -243,10 +246,23 @@ export const directoryService = {
             throw error;
         }
 
+        if (locationIds?.length) {
+            const rows = locationIds.map((lid, i) => ({
+                listing_id: data.id,
+                location_id: lid,
+                display_order: i,
+            }));
+            await supabase.from('listing_locations').insert(rows);
+        }
+
         return data as DirectoryListingDB;
     },
 
-    async updateDirectoryListing(id: string, updates: Partial<DirectoryListingDB>): Promise<DirectoryListingDB> {
+    async updateDirectoryListing(
+        id: string,
+        updates: Partial<DirectoryListingDB>,
+        locationIds?: string[]
+    ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
@@ -282,6 +298,18 @@ export const directoryService = {
         if (error) {
             console.error('Error updating directory listing:', error);
             throw error;
+        }
+
+        if (locationIds !== undefined) {
+            await supabase.from('listing_locations').delete().eq('listing_id', id);
+            if (locationIds.length) {
+                const rows = locationIds.map((lid, i) => ({
+                    listing_id: id,
+                    location_id: lid,
+                    display_order: i,
+                }));
+                await supabase.from('listing_locations').insert(rows);
+            }
         }
 
         return data as DirectoryListingDB;
@@ -326,5 +354,17 @@ export const directoryService = {
 
         if (error) throw error;
         return (data || []) as ListingAnalyticsSummary[];
+    },
+
+    async getCategoryAnalyticsAverage(
+        categoryId: string,
+        days: number = 30
+    ): Promise<CategoryAnalyticsAverage | null> {
+        const { data, error } = await supabase.rpc('get_category_analytics_average', {
+            p_category_id: categoryId,
+            p_days: days,
+        });
+        if (error) throw error;
+        return (data?.[0] ?? null) as CategoryAnalyticsAverage | null;
     }
 };

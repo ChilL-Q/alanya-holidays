@@ -58,6 +58,20 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                         <MapPin size={16} className="text-slate-400" />
                         {listing.location}
                     </div>
+                    {listing.listing_locations && listing.listing_locations.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                            {listing.listing_locations
+                                .sort((a, b) => a.display_order - b.display_order)
+                                .map(ll => (
+                                    <span
+                                        key={ll.location_id}
+                                        className="text-xs bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full"
+                                    >
+                                        {ll.locations.name}
+                                    </span>
+                                ))}
+                        </div>
+                    )}
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
                         <div className="flex text-amber-500">
                             {[1, 2, 3, 4, 5].map((star) => (

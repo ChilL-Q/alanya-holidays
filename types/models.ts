@@ -438,6 +438,12 @@ export interface DirectoryListingDB {
   net_votes?: number;
   created_at?: string;
   updated_at?: string;
+  listing_locations?: {
+    id: string;
+    location_id: string;
+    display_order: number;
+    locations: { id: string; name: string };
+  }[];
 }
 
 // ============================================================
@@ -529,9 +535,18 @@ export interface ListingAnalyticsDaily {
 export interface ListingAnalyticsSummary {
   listing_id: string;
   listing_name: string;
+  listing_category_id: string;
   total_views: number;
   total_whatsapp_clicks: number;
   total_website_clicks: number;
   total_map_clicks: number;
   daily_data: ListingAnalyticsDaily[];
+}
+
+export interface CategoryAnalyticsAverage {
+  avg_views: number;
+  avg_whatsapp_clicks: number;
+  avg_website_clicks: number;
+  avg_map_clicks: number;
+  listing_count: number;
 }
