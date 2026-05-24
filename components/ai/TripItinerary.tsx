@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import '../../print-itinerary.css';
 
 export interface ItineraryItem {
     time: string;
