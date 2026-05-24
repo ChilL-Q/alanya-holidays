@@ -432,6 +432,7 @@ export interface DirectoryListingDB {
   certifications?: string[];
   location: string;
   google_map_url?: string;
+  video_url?: string;
   price_level?: 1 | 2 | 3 | 4;
   net_votes?: number;
   created_at?: string;
@@ -510,4 +511,26 @@ export interface BlogSubmission {
 
   // Virtual / joined
   user?: { full_name: string | null; email: string | null };
+}
+
+// ============================================================
+// Listing Analytics (LST-004)
+// ============================================================
+
+export interface ListingAnalyticsDaily {
+  date: string;
+  views: number;
+  whatsapp_clicks: number;
+  website_clicks: number;
+  map_clicks: number;
+}
+
+export interface ListingAnalyticsSummary {
+  listing_id: string;
+  listing_name: string;
+  total_views: number;
+  total_whatsapp_clicks: number;
+  total_website_clicks: number;
+  total_map_clicks: number;
+  daily_data: ListingAnalyticsDaily[];
 }

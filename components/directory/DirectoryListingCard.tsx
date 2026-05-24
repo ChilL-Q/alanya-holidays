@@ -1,6 +1,7 @@
 import React from 'react';
-import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown, Award } from 'lucide-react';
 import { DirectoryListingDB } from '../../types/models';
+import { db } from '../../api-services';
 
 interface DirectoryListingCardProps {
     listing: DirectoryListingDB;
@@ -15,6 +16,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
     listing, onClick, userVote, onVote, isAuthenticated, isVoting
 }) => {
     const netVotes = listing.net_votes || 0;
+    const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
 
     const handleVote = (e: React.MouseEvent, vote: 1 | -1) => {
         e.stopPropagation();
@@ -37,6 +39,11 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                 {listing.is_featured && (
                     <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                         <Star size={12} className="fill-white" /> Featured
+                    </div>
+                )}
+                {isPaidTier(listing.tier) && (
+                    <div className="absolute top-4 right-4 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                        <Award size={12} className="fill-white" /> Recommended
                     </div>
                 )}
             </div>
@@ -135,21 +142,28 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                 </div>
 
                 {/* Actions CTA (Subtle buttons, retaining functionality) */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className={`grid gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 ${
+                    isPaidTier(listing.tier) && listing.whatsapp ? 'grid-cols-3' : 'grid-cols-2'
+                }`}>
+                    {isPaidTier(listing.tier) && listing.whatsapp && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                db.trackListingClick(listing.id, 'whatsapp').catch(console.error);
+                                window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
+                            }}
+                            className="flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                        >
+                            <MessageCircle size={16} /> WhatsApp
+                        </button>
+                    )}
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
-                        }}
-                        className={`flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg transition-colors ${listing.whatsapp ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-slate-400 opacity-50 cursor-not-allowed'}`}
-                        disabled={!listing.whatsapp}
-                    >
-                        <MessageCircle size={16} /> WhatsApp
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (listing.website) window.open(listing.website, '_blank');
+                            if (listing.website) {
+                                db.trackListingClick(listing.id, 'website').catch(console.error);
+                                window.open(listing.website, '_blank');
+                            }
                         }}
                         className={`flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg transition-colors ${listing.website ? 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'text-slate-400 opacity-50 cursor-not-allowed'}`}
                         disabled={!listing.website}
@@ -160,6 +174,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         className="flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
+                            db.trackListingClick(listing.id, 'map').catch(console.error);
                             if (listing.google_map_url) {
                                 window.open(listing.google_map_url, '_blank');
                             } else {

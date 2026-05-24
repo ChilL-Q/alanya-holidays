@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB } from '../../types/models';
+import { DirectoryListingDB, ListingAnalyticsSummary } from '../../types/models';
 
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
@@ -190,6 +190,7 @@ export const directoryService = {
             gallery: Array.isArray(listing.gallery) ? listing.gallery : [],
             location: (listing.location ?? '').slice(0, 200),
             google_map_url: listing.google_map_url?.slice(0, 500),
+            video_url: listing.video_url?.slice(0, 500) || null,
             is_featured: false,
             is_verified: false,
             tier: listing.tier || 'explorer',
@@ -255,5 +256,31 @@ export const directoryService = {
             console.error('Error deleting directory listing:', error);
             throw error;
         }
+    },
+
+    async trackListingView(listingId: string): Promise<void> {
+        const { error } = await supabase.rpc('track_listing_view', { p_listing_id: listingId });
+        if (error) console.error('Error tracking view:', error);
+    },
+
+    async trackListingClick(listingId: string, clickType: 'whatsapp' | 'website' | 'map'): Promise<void> {
+        const { error } = await supabase.rpc('track_listing_click', {
+            p_listing_id: listingId,
+            p_click_type: clickType
+        });
+        if (error) console.error('Error tracking click:', error);
+    },
+
+    async getDirectoryAnalyticsForOwner(days: number = 30): Promise<ListingAnalyticsSummary[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase.rpc('get_directory_analytics_for_owner', {
+            p_owner_id: user.id,
+            p_days: days
+        });
+
+        if (error) throw error;
+        return (data || []) as ListingAnalyticsSummary[];
     }
 };
