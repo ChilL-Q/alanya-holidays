@@ -1,7 +1,9 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DirectoryListingCard } from './DirectoryListingCard';
 import { DirectoryListingDB } from '../../types/models';
+import { LanguageProvider } from '../../context/LanguageContext';
 
 const { mockDb } = vi.hoisted(() => ({
     mockDb: {
@@ -29,13 +31,16 @@ const baseListing: DirectoryListingDB = {
     google_map_url: 'https://maps.google.com',
 };
 
+const renderWithLanguage = (ui: React.ReactElement) =>
+    render(<LanguageProvider>{ui}</LanguageProvider>);
+
 describe('DirectoryListingCard', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     it('shows WhatsApp button for Voyager tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={{ ...baseListing, tier: 'voyager' }}
                 onClick={() => {}}
@@ -46,7 +51,7 @@ describe('DirectoryListingCard', () => {
     });
 
     it('hides WhatsApp button for Explorer tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={baseListing}
                 onClick={() => {}}
@@ -57,7 +62,7 @@ describe('DirectoryListingCard', () => {
     });
 
     it('shows Recommended badge for paid tiers', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={{ ...baseListing, tier: 'voyager' }}
                 onClick={() => {}}
@@ -68,7 +73,7 @@ describe('DirectoryListingCard', () => {
     });
 
     it('hides Recommended badge for Explorer tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={baseListing}
                 onClick={() => {}}
@@ -79,7 +84,7 @@ describe('DirectoryListingCard', () => {
     });
 
     it('tracks website click', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={baseListing}
                 onClick={() => {}}
@@ -92,7 +97,7 @@ describe('DirectoryListingCard', () => {
     });
 
     it('tracks map click', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingCard
                 listing={baseListing}
                 onClick={() => {}}

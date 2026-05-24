@@ -4,14 +4,25 @@ import { DirectoryListingDB, ListingAnalyticsSummary, CategoryAnalyticsAverage }
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
 
-const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
-    const result: Record<string, unknown> = { ...obj };
-    for (const [key, value] of Object.entries(result)) {
-        if (typeof value === 'string') {
-            result[key] = value.replace(STRIP_CONTROL, '').trim();
-        }
+function sanitizeValue(value: unknown): unknown {
+    if (typeof value === 'string') {
+        return value.replace(STRIP_CONTROL, '').trim();
     }
-    return result as T;
+    if (Array.isArray(value)) {
+        return value.map(sanitizeValue);
+    }
+    if (value !== null && typeof value === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value)) {
+            result[k] = sanitizeValue(v);
+        }
+        return result;
+    }
+    return value;
+}
+
+const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
+    return sanitizeValue(obj) as T;
 };
 
 export const directoryService = {
@@ -232,6 +243,7 @@ export const directoryService = {
             is_verified: false,
             tier,
             base_score: listing.base_score ?? 0,
+            descriptions: listing.descriptions ?? {},
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
         });
 

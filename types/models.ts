@@ -412,11 +412,19 @@ export interface SearchFilters {
   guests: number;
 }
 
+export interface ListingDescriptions {
+  en?: string;
+  tr?: string;
+  ru?: string;
+  ar?: string;
+}
+
 export interface DirectoryListingDB {
   id: string;
   category_id: string;
   name: string;
   short_description: string;
+  descriptions?: ListingDescriptions;
   is_featured?: boolean;
   is_premium?: boolean;
   is_verified?: boolean;
