@@ -45,13 +45,17 @@ Deno.serve(async (req: Request) => {
     const customerId = subscription.customer as string
     const metadata = subscription.metadata
 
-    const metadataSchema = z.object({ userId: z.string().uuid(), plan: z.enum(['monthly', 'annual']) })
+    const metadataSchema = z.object({
+      userId: z.string().uuid(),
+      plan: z.enum(['monthly', 'annual']),
+      tier: z.enum(['voyager', 'signature']).optional(),
+    })
     const metadataResult = metadataSchema.safeParse(metadata)
     if (!metadataResult.success) {
       console.warn('subscription.created: Invalid or missing metadata', metadataResult.error.issues)
       return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
     }
-    const { userId: metaUserId, plan: metaPlan } = metadataResult.data
+    const { userId: metaUserId, plan: metaPlan, tier: metaTier } = metadataResult.data
 
     // Idempotency: check if already exists
     const { data: existing } = await supabase
@@ -74,17 +78,22 @@ Deno.serve(async (req: Request) => {
     const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString()
 
     // Insert into DB
+    const insertPayload: Record<string, unknown> = {
+      user_id: metaUserId,
+      plan: metaPlan,
+      status: status,
+      stripe_subscription_id: subscription.id,
+      stripe_customer_id: customerId,
+      current_period_end: currentPeriodEnd,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+    }
+    if (metaTier) {
+      insertPayload.tier = metaTier
+    }
+
     const { error: insertError } = await supabase
       .from('premium_subscriptions')
-      .insert({
-        user_id: metaUserId,
-        plan: metaPlan,
-        status: status,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: customerId,
-        current_period_end: currentPeriodEnd,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-      })
+      .insert(insertPayload)
 
     if (insertError) {
       console.error('Failed to insert premium subscription:', insertError)

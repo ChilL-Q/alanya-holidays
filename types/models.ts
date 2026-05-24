@@ -420,6 +420,9 @@ export interface DirectoryListingDB {
   is_featured?: boolean;
   is_premium?: boolean;
   is_verified?: boolean;
+  tier?: 'explorer' | 'voyager' | 'signature' | 'partner';
+  base_score?: number;
+  subscription_id?: string;
   website?: string;
   whatsapp?: string;
   gallery: string[];
@@ -433,6 +436,23 @@ export interface DirectoryListingDB {
   net_votes?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+// ============================================================
+// Locations (LST-001)
+// ============================================================
+
+export interface LocationDB {
+  id: string;
+  name: string;
+  name_tr?: string;
+  lat?: number;
+  lng?: number;
+  parent_region?: 'Antalya City' | 'Alanya' | 'Other';
+  type?: 'city' | 'district' | 'town';
+  display_order?: number;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 // ============================================================

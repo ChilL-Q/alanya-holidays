@@ -49,6 +49,11 @@ const BookWellness = React.lazy(() => import('../pages/booking/BookWellness').th
 const BookingSuccess = React.lazy(() => import('../pages/booking/Success').then(module => ({ default: module.BookingSuccess })));
 const InboxPage = React.lazy(() => import('../pages/InboxPage').then(module => ({ default: module.InboxPage })));
 const CreativeServices = React.lazy(() => import('../pages/CreativeServices').then(module => ({ default: module.CreativeServices })));
+const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').then(module => ({ default: module.ListingTiersPage })));
+const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
+const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
+const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
+const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -108,6 +113,8 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
 
                 <Route path="/list-property" element={<ListProperty />} />
+                <Route path="/list-business" element={<ListingTiersPage />} />
+                <Route path="/subscribe" element={<AuthRoute><SubscribePage /></AuthRoute>} />
 
                 <Route path="/search-results" element={<SearchResultsPage />} />
                 <Route path="/stays" element={<SearchResultsPage />} />
@@ -117,6 +124,9 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/blog/submit" element={<AuthRoute><BlogSubmitPage /></AuthRoute>} />
                 <Route path="/blog/submission-success" element={<BlogSubmissionSuccess />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/blog/category/:category" element={<BlogCategoryPage />} />
+                <Route path="/hidden-gems-alanya" element={<HiddenGemsPage />} />
+                <Route path="/best-beaches-alanya" element={<BestBeachesPage />} />
 
                 {/* Auth Redirects */}
                 <Route path="/login" element={<LoginRedirect mode="login" />} />

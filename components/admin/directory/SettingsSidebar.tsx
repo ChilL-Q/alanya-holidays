@@ -5,6 +5,7 @@ export interface SettingsSidebarProps {
     categoryId: string;
     isFeatured: boolean;
     isVerified: boolean;
+    tier?: string;
     priceLevel: number;
     reviewsAverage: number;
     reviewsCount: number;
@@ -12,7 +13,7 @@ export interface SettingsSidebarProps {
 }
 
 export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
-    categoryId, isFeatured, isVerified, priceLevel, reviewsAverage, reviewsCount, onChange
+    categoryId, isFeatured, isVerified, tier = 'explorer', priceLevel, reviewsAverage, reviewsCount, onChange
 }) => {
     const categories = ['medical', 'accommodations', 'tours', 'transport', 'restaurants', 'cafes', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
 
@@ -38,6 +39,21 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                             ))}
                         </select>
                     </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tier</label>
+                    <select
+                        name="tier"
+                        value={tier}
+                        onChange={onChange}
+                        className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white appearance-none"
+                    >
+                        <option value="explorer">Explorer</option>
+                        <option value="voyager">Voyager</option>
+                        <option value="signature">Signature</option>
+                        <option value="partner">Partner</option>
+                    </select>
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50">

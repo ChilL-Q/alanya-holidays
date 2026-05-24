@@ -70,6 +70,7 @@ export const directoryService = {
             .from('directory_listings')
             .select('*')
             .eq('category_id', categoryId)
+            .order('base_score', { ascending: false })
             .order('is_featured', { ascending: false })
             .order('net_votes', { ascending: false, nullsFirst: false })
             .order('name', { ascending: true });
@@ -191,6 +192,8 @@ export const directoryService = {
             google_map_url: listing.google_map_url?.slice(0, 500),
             is_featured: false,
             is_verified: false,
+            tier: listing.tier || 'explorer',
+            base_score: listing.base_score ?? 0,
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
         });
 
@@ -219,6 +222,8 @@ export const directoryService = {
         delete safeUpdates.updated_at;
         delete safeUpdates.is_verified;
         delete safeUpdates.is_featured;
+        delete safeUpdates.base_score;
+        delete safeUpdates.subscription_id;
 
         const sanitized = sanitize(safeUpdates as Record<string, unknown>);
 

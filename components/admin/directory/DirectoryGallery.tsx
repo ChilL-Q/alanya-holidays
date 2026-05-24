@@ -7,10 +7,11 @@ interface DirectoryGalleryProps {
     onRemoveExisting: (index: number) => void;
     files: File[];
     onFilesChange: (files: File[]) => void;
+    maxFiles?: number;
 }
 
 export const DirectoryGallery: React.FC<DirectoryGalleryProps> = ({
-    existingImages, onRemoveExisting, files, onFilesChange
+    existingImages, onRemoveExisting, files, onFilesChange, maxFiles = 10
 }) => {
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
@@ -34,7 +35,7 @@ export const DirectoryGallery: React.FC<DirectoryGalleryProps> = ({
                 </div>
             )}
 
-            <PhotoUploader files={files} onChange={onFilesChange} maxFiles={10} />
+            <PhotoUploader files={files} onChange={onFilesChange} maxFiles={maxFiles} />
         </div>
     );
 };
