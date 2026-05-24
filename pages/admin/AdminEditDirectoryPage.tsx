@@ -104,10 +104,10 @@ export const AdminEditDirectoryPage: React.FC = () => {
         setGeneratingDescription(true);
         try {
             const { data, error } = await supabase.functions.invoke('ai-proxy', {
-                body: { prompt: buildDescriptionPrompt(formData) }
+                body: { userQuestion: buildDescriptionPrompt(formData) }
             });
             if (error) throw error;
-            const generated = data?.text || data?.response || data?.content;
+            const generated = data?.answer;
             if (generated) {
                 setFormData(prev => ({ ...prev, short_description: generated.trim() }));
                 toast.success('Description generated!');
