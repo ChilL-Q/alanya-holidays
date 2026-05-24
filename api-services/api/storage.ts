@@ -21,9 +21,9 @@ function validateFile(file: File) {
         throw new Error(`File type ".${ext}" is not allowed. Allowed types: ${Array.from(ALLOWED_EXTENSIONS).join(', ')}`);
     }
 
-    // Check MIME type (if available on client side)
+    // MIME type is required — empty type is treated as invalid
     if (!file.type || !ALLOWED_MIME_TYPES.includes(file.type)) {
-        throw new Error(`MIME type "${file.type}" is not allowed. Only image files are accepted`);
+        throw new Error(`MIME type "${file.type || 'unknown'}" is not allowed. Only image files are accepted`);
     }
 }
 
@@ -38,7 +38,7 @@ function validateBlogMedia(file: File) {
     }
 
     if (!file.type || !BLOG_ALLOWED_MIME_TYPES.includes(file.type)) {
-        throw new Error(`MIME type "${file.type}" is not allowed. Only JPEG, PNG, and WebP images are accepted`);
+        throw new Error(`MIME type "${file.type || 'unknown'}" is not allowed. Only JPEG, PNG, and WebP images are accepted`);
     }
 }
 
