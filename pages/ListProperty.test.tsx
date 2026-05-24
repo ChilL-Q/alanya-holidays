@@ -58,7 +58,11 @@ vi.mock('react-hot-toast', () => ({
 vi.mock('../api-services', () => ({
     db: {
         createProperty: vi.fn().mockResolvedValue({ id: 'new-prop-1' }),
-        uploadImage: vi.fn().mockResolvedValue('http://example.com/image.jpg')
+        uploadImage: vi.fn().mockResolvedValue('http://example.com/image.jpg'),
+        getLocations: vi.fn().mockResolvedValue([
+            { id: 'loc-1', name: 'Alanya' },
+            { id: 'loc-2', name: 'Antalya' }
+        ])
     }
 }));
 

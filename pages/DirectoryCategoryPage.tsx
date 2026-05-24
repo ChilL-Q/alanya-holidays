@@ -31,6 +31,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
+    const [locations, setLocations] = useState<string[]>([]);
     const [_loading, setLoading] = useState(true);
 
     // Auth & Voting State
@@ -44,8 +45,12 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         const fetchListings = async () => {
             setLoading(true);
             try {
-                const data = await db.getDirectoryListingsByCategory(categoryId);
+                const [data, locs] = await Promise.all([
+                    db.getDirectoryListingsByCategory(categoryId),
+                    db.getLocations()
+                ]);
                 setListings(data || []);
+                setLocations(locs.map(l => l.name));
             } catch (e) {
                 console.error('Failed to load category listings', e);
             } finally {
@@ -99,15 +104,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         }
     }, [isAuthenticated, userVotes, votingId]);
 
-    // Extract unique locations and languages for this category to populate filter
-    const availableLocations = useMemo(() => {
-        const locs = new Set<string>();
-        listings.forEach(d => {
-            if (d.location) locs.add(d.location);
-        });
-        return Array.from(locs);
-    }, [listings]);
-
+    // Languages filter still derived from listings; locations now come from DB
     const availableLanguages = useMemo(() => {
         const langs = new Set<string>();
         listings.forEach(d => {
@@ -237,7 +234,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                 className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                             >
                                 <option value="all">All Locations</option>
-                                {availableLocations.map(loc => (
+                                {locations.map(loc => (
                                     <option key={loc} value={loc}>{loc}</option>
                                 ))}
                             </select>

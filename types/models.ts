@@ -436,6 +436,23 @@ export interface DirectoryListingDB {
 }
 
 // ============================================================
+// Locations (LST-001)
+// ============================================================
+
+export interface LocationDB {
+  id: string;
+  name: string;
+  name_tr?: string;
+  lat?: number;
+  lng?: number;
+  parent_region?: 'Antalya City' | 'Alanya' | 'Other';
+  type?: 'city' | 'district' | 'town';
+  display_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+// ============================================================
 // Blog
 // ============================================================
 

@@ -1,9 +1,11 @@
-import React from 'react';
-import { Info } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Info, MapPin } from 'lucide-react';
 import { useLanguage } from '../../../../context/LanguageContext';
 import { LocationPicker } from '../../../ui/LocationPicker';
 import toast from 'react-hot-toast';
 import { PropertyFormData } from '../../../../types/models';
+import { db } from '../../../../api-services';
+import { LocationDB } from '../../../../types/models';
 
 interface PropertyLocationProps {
     formData: PropertyFormData;
@@ -13,6 +15,13 @@ interface PropertyLocationProps {
 
 export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, handleChange, setFormData }) => {
     const { t } = useLanguage();
+    const [dbLocations, setDbLocations] = useState<LocationDB[]>([]);
+
+    useEffect(() => {
+        db.getLocations()
+            .then(setDbLocations)
+            .catch(() => setDbLocations([]));
+    }, []);
 
     return (
         <div className="space-y-6">
@@ -36,6 +45,24 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
                 />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                    <MapPin size={16} className="text-slate-400" />
+                    {t('prop_form.location') || 'Location'}
+                </label>
+                <select
+                    name="location"
+                    value={formData.location || ''}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-accent outline-none transition-all"
+                >
+                    <option value="">{formData.location || 'Select location'}</option>
+                    {dbLocations.map(loc => (
+                        <option key={loc.id} value={loc.name}>{loc.name}</option>
+                    ))}
+                </select>
             </div>
 
             <div>
