@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp, Map as MapIcon, List } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
+import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { useAuth } from '../context/AuthContext';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
@@ -220,6 +221,16 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                 description={description}
                 jsonLd={faqSchema ? [itemListSchema, faqSchema] : itemListSchema}
             />
+
+            {/* Breadcrumb */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+                <Breadcrumb
+                    items={[
+                        { label: 'Home', href: '/' },
+                        { label: title },
+                    ]}
+                />
+            </div>
 
             {/* 1. Intro Paragraph (SEO Optimized) */}
             <div className="bg-white dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800/50 shadow-sm mb-8">

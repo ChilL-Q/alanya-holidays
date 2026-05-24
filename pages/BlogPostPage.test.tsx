@@ -149,7 +149,8 @@ describe('BlogPostPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Travel')).toBeInTheDocument();
+      const travelElements = screen.getAllByText('Travel');
+      expect(travelElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -164,13 +165,15 @@ describe('BlogPostPage', () => {
     });
   });
 
-  it('shows back button', async () => {
+  it('shows breadcrumb', async () => {
     await act(async () => {
       render(<BlogPostPage />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Back')).toBeInTheDocument();
+      expect(screen.getByRole('navigation', { name: /breadcrumb/i })).toBeInTheDocument();
+      expect(screen.getByText('Home')).toBeInTheDocument();
+      expect(screen.getByText('Blog')).toBeInTheDocument();
     });
   });
 
