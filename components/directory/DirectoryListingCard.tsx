@@ -41,7 +41,12 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         <Star size={12} className="fill-white" /> Featured
                     </div>
                 )}
-                {isPaidTier(listing.tier) && (
+                {listing.tier === 'signature' && (
+                    <div className="absolute top-4 right-4 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                        <BadgeCheck size={12} className="fill-white" /> Verified Premium
+                    </div>
+                )}
+                {(listing.tier === 'voyager' || listing.tier === 'partner') && (
                     <div className="absolute top-4 right-4 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                         <Award size={12} className="fill-white" /> Recommended
                     </div>

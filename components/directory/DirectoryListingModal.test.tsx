@@ -75,10 +75,21 @@ describe('DirectoryListingModal', () => {
         expect(screen.queryByText('Chat on WhatsApp')).not.toBeInTheDocument();
     });
 
-    it('shows Recommended badge for Signature tier', () => {
+    it('shows Verified Premium badge for Signature tier', () => {
         render(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'signature' }}
+                isOpen={true}
+                onClose={() => {}}
+            />
+        );
+        expect(screen.getByText('Verified Premium')).toBeInTheDocument();
+    });
+
+    it('shows Recommended badge for Voyager tier', () => {
+        render(
+            <DirectoryListingModal
+                listing={{ ...baseListing, tier: 'voyager' }}
                 isOpen={true}
                 onClose={() => {}}
             />
@@ -95,6 +106,7 @@ describe('DirectoryListingModal', () => {
             />
         );
         expect(screen.queryByText('Recommended')).not.toBeInTheDocument();
+        expect(screen.queryByText('Verified Premium')).not.toBeInTheDocument();
     });
 
     it('renders video iframe when video_url is present', () => {

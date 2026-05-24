@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Star, CheckCircle2 } from 'lucide-react';
+import { Tag, Star, CheckCircle2, Mail } from 'lucide-react';
 
 export interface SettingsSidebarProps {
     categoryId: string;
@@ -9,11 +9,12 @@ export interface SettingsSidebarProps {
     priceLevel: number;
     reviewsAverage: number;
     reviewsCount: number;
+    newsletterFeatured?: boolean;
     onChange: (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void;
 }
 
 export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
-    categoryId, isFeatured, isVerified, tier = 'explorer', priceLevel, reviewsAverage, reviewsCount, onChange
+    categoryId, isFeatured, isVerified, tier = 'explorer', priceLevel, reviewsAverage, reviewsCount, newsletterFeatured, onChange
 }) => {
     const categories = ['medical', 'accommodations', 'tours', 'transport', 'restaurants', 'cafes', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
 
@@ -88,6 +89,26 @@ export const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
                         <div className="flex flex-col">
                             <span className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5"><CheckCircle2 size={14} className="text-blue-500" /> Verified Partner</span>
                             <span className="text-xs text-slate-500">Adds a verification badge to the business</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div className="pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <div className="relative flex items-start mt-0.5">
+                            <input
+                                type="checkbox"
+                                name="newsletter_featured"
+                                checked={newsletterFeatured || false}
+                                onChange={onChange}
+                                className="w-5 h-5 rounded border-slate-300 text-purple-500 focus:ring-purple-500"
+                            />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5"><Mail size={14} className="text-purple-500" /> Include in Newsletter</span>
+                            <span className="text-xs text-slate-500">
+                                {tier === 'signature' ? 'Featured in upcoming newsletter campaigns' : 'Signature tier only'}
+                            </span>
                         </div>
                     </label>
                 </div>
