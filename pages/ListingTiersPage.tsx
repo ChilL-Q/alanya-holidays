@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, X, Sparkles, Star, Crown, Building2, ArrowRight } from 'lucide-react';
+import { Check, X, Sparkles, Star, Building2, ArrowRight } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 
 interface Feature {
@@ -62,7 +62,7 @@ const tiers: Tier[] = [
         annualPrice: 499,
         description: 'Stand out from the crowd with featured placement and premium tools.',
         ctaLabel: 'Upgrade to Voyager',
-        ctaTo: '/checkout?voyager',
+        ctaTo: '/subscribe?tier=voyager',
         ctaPrimary: true,
         features: [
             { label: 'Everything in Explorer', included: true },
@@ -92,7 +92,7 @@ const tiers: Tier[] = [
         annualPrice: 1999,
         description: 'Maximum visibility and premium features for established businesses.',
         ctaLabel: 'Go Signature',
-        ctaTo: '/checkout?signature',
+        ctaTo: '/subscribe?tier=signature',
         ctaPrimary: true,
         features: [
             { label: 'Everything in Voyager', included: true },

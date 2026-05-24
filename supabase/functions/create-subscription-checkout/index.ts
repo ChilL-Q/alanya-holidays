@@ -8,11 +8,21 @@ import { z } from "npm:zod@3"
 declare const Deno: any;
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
-const STRIPE_PREMIUM_MONTHLY_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_MONTHLY_PRICE_ID')
-const STRIPE_PREMIUM_ANNUAL_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_ANNUAL_PRICE_ID')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
+
+// Tier-specific price IDs take precedence; generic IDs are the fallback
+const PRICE_IDS: Record<string, Record<string, string | undefined>> = {
+  voyager: {
+    monthly: Deno.env.get('STRIPE_VOYAGER_MONTHLY_PRICE_ID') || Deno.env.get('STRIPE_PREMIUM_MONTHLY_PRICE_ID'),
+    annual: Deno.env.get('STRIPE_VOYAGER_ANNUAL_PRICE_ID') || Deno.env.get('STRIPE_PREMIUM_ANNUAL_PRICE_ID'),
+  },
+  signature: {
+    monthly: Deno.env.get('STRIPE_SIGNATURE_MONTHLY_PRICE_ID') || Deno.env.get('STRIPE_PREMIUM_MONTHLY_PRICE_ID'),
+    annual: Deno.env.get('STRIPE_SIGNATURE_ANNUAL_PRICE_ID') || Deno.env.get('STRIPE_PREMIUM_ANNUAL_PRICE_ID'),
+  },
+}
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
@@ -23,7 +33,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const planSchema = z.enum(['monthly', 'annual'])
+const bodySchema = z.object({
+  plan: z.enum(['monthly', 'annual']),
+  // tier is optional — omitting it uses generic STRIPE_PREMIUM_* price IDs (AI Planner flow)
+  tier: z.enum(['voyager', 'signature']).optional(),
+})
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -50,19 +64,18 @@ Deno.serve(async (req: Request) => {
 
     const userId = user.id
     const body = await req.json()
-    const validationResult = planSchema.safeParse(body.plan)
+    const validationResult = bodySchema.safeParse(body)
     if (!validationResult.success) {
-      return new Response(JSON.stringify({ error: 'Invalid plan. Must be "monthly" or "annual"' }), {
+      return new Response(JSON.stringify({ error: 'Invalid request. Must provide plan ("monthly"|"annual") and tier ("voyager"|"signature")' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-    const plan = validationResult.data
+    const { plan, tier } = validationResult.data
 
     // --- Check if already subscribed ---
-    // Check status in DB directly (no RLS for admin client)
     const { data: existingSub } = await supabaseAdmin
       .from('premium_subscriptions')
-      .select('id, status')
+      .select('id, status, stripe_customer_id')
       .eq('user_id', userId)
       .maybeSingle()
 
@@ -73,29 +86,18 @@ Deno.serve(async (req: Request) => {
     }
 
     // --- Select Price ID ---
-    const priceId = plan === 'monthly' ? STRIPE_PREMIUM_MONTHLY_PRICE_ID : STRIPE_PREMIUM_ANNUAL_PRICE_ID
+    const STRIPE_PREMIUM_MONTHLY_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_MONTHLY_PRICE_ID')
+    const STRIPE_PREMIUM_ANNUAL_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_ANNUAL_PRICE_ID')
+    const genericPriceId = plan === 'monthly' ? STRIPE_PREMIUM_MONTHLY_PRICE_ID : STRIPE_PREMIUM_ANNUAL_PRICE_ID
+    const priceId = tier ? (PRICE_IDS[tier]?.[plan] ?? genericPriceId) : genericPriceId
     if (!priceId) {
-      return new Response(JSON.stringify({ error: 'Stripe Price ID not configured' }), {
+      return new Response(JSON.stringify({ error: `Stripe Price ID not configured for ${tier ?? 'generic'}/${plan}` }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     // --- Reuse Stripe Customer if exists (from previous cancelled subscription) ---
-    let customerId: string | null = null
-
-    if (existingSub) {
-      const { data: subDetails } = await supabaseAdmin
-        .from('premium_subscriptions')
-        .select('stripe_customer_id')
-        .eq('user_id', userId)
-        .not('stripe_customer_id', 'is', null)
-        .limit(1)
-        .maybeSingle()
-
-      if (subDetails) {
-        customerId = subDetails.stripe_customer_id
-      }
-    }
+    const customerId: string | null = existingSub?.stripe_customer_id ?? null
 
     // --- Create Checkout Session ---
     const sessionParams: any = {
@@ -103,19 +105,21 @@ Deno.serve(async (req: Request) => {
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         userId: userId,
-        plan: plan
+        plan: plan,
+        tier: tier,
       },
       // CRITICAL: subscription_data.metadata is what appears on the Subscription object.
       // The top-level metadata is only on the CheckoutSession — not copied to Subscription.
-      // stripe-webhook reads subscription.metadata.userId and subscription.metadata.plan.
+      // stripe-webhook reads subscription.metadata.userId, plan, and tier.
       subscription_data: {
         metadata: {
           userId: userId,
           plan: plan,
+          tier: tier,
         }
       },
       success_url: `${SITE_URL}/profile?subscription=success`,
-      cancel_url: `${SITE_URL}/profile?subscription=cancelled`,
+      cancel_url: `${SITE_URL}/list-business`,
       allow_promotion_codes: true,
     }
 

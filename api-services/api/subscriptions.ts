@@ -1,7 +1,10 @@
 import { supabase } from '../supabase';
 
+export type SubscriptionTier = 'voyager' | 'signature';
+
 export interface PremiumStatus {
   isPremium: boolean;
+  tier: SubscriptionTier | null;
   plan: 'monthly' | 'annual' | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
@@ -14,21 +17,22 @@ export const subscriptionsService = {
    */
   async getPremiumStatus(): Promise<PremiumStatus> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { isPremium: false, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
+    if (!user) return { isPremium: false, tier: null, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
 
     // Use direct client with RLS
     const { data, error } = await supabase
       .from('premium_subscriptions')
-      .select('plan, status, current_period_end, cancel_at_period_end')
+      .select('tier, plan, status, current_period_end, cancel_at_period_end')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (error || !data) {
-      return { isPremium: false, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
+      return { isPremium: false, tier: null, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
     }
 
     return {
       isPremium: data.status === 'active',
+      tier: (data.tier as SubscriptionTier | null) ?? null,
       plan: data.plan as 'monthly' | 'annual' | null,
       currentPeriodEnd: data.current_period_end,
       cancelAtPeriodEnd: data.cancel_at_period_end,
@@ -36,14 +40,14 @@ export const subscriptionsService = {
   },
 
   /**
-   * Create a Stripe Checkout Session for subscription.
+   * Create a Stripe Checkout Session for a tier subscription.
    */
-  async createSubscriptionCheckout(plan: 'monthly' | 'annual'): Promise<{ url: string }> {
+  async createSubscriptionCheckout(plan: 'monthly' | 'annual', tier?: SubscriptionTier): Promise<{ url: string }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
     const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-      body: { plan },
+      body: tier ? { plan, tier } : { plan },
     });
 
     if (error) throw error;
