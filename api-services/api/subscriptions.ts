@@ -31,7 +31,7 @@ export const subscriptionsService = {
     }
 
     return {
-      isPremium: data.status === 'active',
+      isPremium: data.status === 'active' || data.status === 'trialing',
       tier: (data.tier as SubscriptionTier | null) ?? null,
       plan: data.plan as 'monthly' | 'annual' | null,
       currentPeriodEnd: data.current_period_end,
