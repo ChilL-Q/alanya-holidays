@@ -4,6 +4,7 @@ import { directoryService } from './directory';
 const { mockSupabase } = vi.hoisted(() => ({
     mockSupabase: {
         from: vi.fn(),
+        rpc: vi.fn(),
         auth: {
             getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
         }
@@ -27,6 +28,7 @@ const mockListing = {
     price_level: 2,
     languages_spoken: ['en'],
     certifications: [],
+    video_url: null,
     created_at: '2025-01-01',
     updated_at: '2025-01-01'
 };
@@ -187,6 +189,56 @@ describe('directoryService', () => {
             mockSupabase.from.mockReturnValue(chain);
 
             await expect(directoryService.deleteDirectoryListing('dir-1')).rejects.toEqual({ message: 'delete failed' });
+        });
+    });
+
+    describe('trackListingView', () => {
+        it('calls track_listing_view RPC', async () => {
+            mockSupabase.rpc = vi.fn().mockResolvedValue({ error: null });
+
+            await directoryService.trackListingView('dir-1');
+            expect(mockSupabase.rpc).toHaveBeenCalledWith('track_listing_view', { p_listing_id: 'dir-1' });
+        });
+    });
+
+    describe('trackListingClick', () => {
+        it('calls track_listing_click RPC with correct type', async () => {
+            mockSupabase.rpc = vi.fn().mockResolvedValue({ error: null });
+
+            await directoryService.trackListingClick('dir-1', 'whatsapp');
+            expect(mockSupabase.rpc).toHaveBeenCalledWith('track_listing_click', {
+                p_listing_id: 'dir-1',
+                p_click_type: 'whatsapp'
+            });
+        });
+    });
+
+    describe('getDirectoryAnalyticsForOwner', () => {
+        it('returns analytics data', async () => {
+            const mockAnalytics = [
+                {
+                    listing_id: 'dir-1',
+                    listing_name: 'Test Clinic',
+                    total_views: 100,
+                    total_whatsapp_clicks: 10,
+                    total_website_clicks: 5,
+                    total_map_clicks: 3,
+                    daily_data: []
+                }
+            ];
+            mockSupabase.rpc = vi.fn().mockResolvedValue({ data: mockAnalytics, error: null });
+
+            const result = await directoryService.getDirectoryAnalyticsForOwner(30);
+            expect(result).toEqual(mockAnalytics);
+            expect(mockSupabase.rpc).toHaveBeenCalledWith('get_directory_analytics_for_owner', {
+                p_owner_id: 'u1',
+                p_days: 30
+            });
+        });
+
+        it('throws when not authenticated', async () => {
+            mockSupabase.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
+            await expect(directoryService.getDirectoryAnalyticsForOwner()).rejects.toThrow('Not authenticated');
         });
     });
 });

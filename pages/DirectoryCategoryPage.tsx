@@ -29,6 +29,16 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const [showFullIntro, setShowFullIntro] = useState(false);
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
     const [selectedListing, setSelectedListing] = useState<DirectoryListingDB | null>(null);
+
+    const handleListingClick = useCallback((listing: DirectoryListingDB) => {
+        setSelectedListing(listing);
+
+        const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
+        if (!sessionStorage.getItem(sessionKey)) {
+            sessionStorage.setItem(sessionKey, '1');
+            db.trackListingView(listing.id).catch(console.error);
+        }
+    }, []);
     const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
     // Data State
@@ -364,7 +374,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                         <DirectoryListingCard
                                             key={listing.id}
                                             listing={listing}
-                                            onClick={setSelectedListing}
+                                            onClick={handleListingClick}
                                             userVote={userVotes[listing.id] ?? null}
                                             onVote={handleVote}
                                             isAuthenticated={isAuthenticated}
@@ -386,7 +396,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                         <DirectoryListingCard
                                             key={listing.id}
                                             listing={listing}
-                                            onClick={setSelectedListing}
+                                            onClick={handleListingClick}
                                             userVote={userVotes[listing.id] ?? null}
                                             onVote={handleVote}
                                             isAuthenticated={isAuthenticated}
@@ -406,7 +416,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                 ) : (
                     <DirectoryMapView
                         listings={filteredData}
-                        onListingClick={setSelectedListing}
+                        onListingClick={handleListingClick}
                     />
                 )}
 

@@ -1,7 +1,9 @@
 import React from 'react';
-import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, Info } from 'lucide-react';
+import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, Info, Award } from 'lucide-react';
 import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
+import { db } from '../../api-services';
+import { parseVideoEmbed } from '../../utils/videoEmbed';
 
 interface DirectoryListingModalProps {
     listing: DirectoryListingDB | null;
@@ -11,6 +13,9 @@ interface DirectoryListingModalProps {
 
 export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ listing, isOpen, onClose }) => {
     if (!listing) return null;
+
+    const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
+    const videoEmbed = listing.video_url ? parseVideoEmbed(listing.video_url) : null;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title={listing.name} lockBodyScroll={false}>
@@ -37,6 +42,11 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                     {listing.is_verified && (
                         <div className="flex items-center gap-1 font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg">
                             <BadgeCheck size={16} /> Verified
+                        </div>
+                    )}
+                    {isPaidTier(listing.tier) && (
+                        <div className="flex items-center gap-1 font-medium bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 px-3 py-1.5 rounded-lg">
+                            <Award size={16} /> Recommended
                         </div>
                     )}
                     <div className="flex items-center gap-1 font-medium bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
@@ -70,6 +80,22 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                                 {listing.short_description}
                             </p>
                         </div>
+
+                        {videoEmbed && (
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Video</h4>
+                                <div className="relative w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video">
+                                    <iframe
+                                        src={videoEmbed.embedUrl}
+                                        title="Listing video"
+                                        className="absolute inset-0 w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        loading="lazy"
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         {(listing.certifications?.length || listing.languages_spoken?.length) ? (
                             <div className="space-y-4">
@@ -119,25 +145,35 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                             <h3 className="font-bold text-slate-900 dark:text-white mb-4">Contact provider</h3>
                             
                             <div className="space-y-3">
+                                {isPaidTier(listing.tier) && listing.whatsapp ? (
+                                    <button
+                                        onClick={() => {
+                                            db.trackListingClick(listing.id, 'whatsapp').catch(console.error);
+                                            window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-semibold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow transition-all"
+                                    >
+                                        <MessageCircle size={18} /> Chat on WhatsApp
+                                    </button>
+                                ) : null}
+
                                 <button
-                                    onClick={() => window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank')}
-                                    className={`w-full flex items-center justify-center gap-2 py-3.5 px-4 font-semibold rounded-xl transition-all ${listing.whatsapp ? 'bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
-                                    disabled={!listing.whatsapp}
-                                >
-                                    <MessageCircle size={18} /> Chat on WhatsApp
-                                </button>
-                                
-                                <button
-                                    onClick={() => listing.website && window.open(listing.website, '_blank')}
+                                    onClick={() => {
+                                        if (listing.website) {
+                                            db.trackListingClick(listing.id, 'website').catch(console.error);
+                                            window.open(listing.website, '_blank');
+                                        }
+                                    }}
                                     className={`w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all ${listing.website ? 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' : 'text-slate-400 bg-slate-50 dark:bg-slate-800/30 cursor-not-allowed'}`}
                                     disabled={!listing.website}
                                 >
                                     <Globe size={18} /> Visit Website
                                 </button>
-                                
+
                                 <button
                                     className="w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                                     onClick={() => {
+                                        db.trackListingClick(listing.id, 'map').catch(console.error);
                                         if (listing.google_map_url) {
                                             window.open(listing.google_map_url, '_blank');
                                         } else {

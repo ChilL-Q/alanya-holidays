@@ -82,6 +82,7 @@ const HostEditServicePage = React.lazy(() => import('../pages/host/HostEditServi
 const HostBookingsPage = React.lazy(() => import('../pages/host/HostBookingsPage').then(module => ({ default: module.HostBookingsPage })));
 const HostCalendarPage = React.lazy(() => import('../pages/host/HostCalendarPage').then(module => ({ default: module.HostCalendarPage })));
 const HostMessagesPage = React.lazy(() => import('../pages/host/HostMessagesPage').then(module => ({ default: module.HostMessagesPage })));
+const DirectoryAnalyticsPage = React.lazy(() => import('../pages/host/DirectoryAnalyticsPage').then(module => ({ default: module.DirectoryAnalyticsPage })));
 
 
 export const AppRoutes: React.FC = () => {
@@ -233,6 +234,13 @@ export const AppRoutes: React.FC = () => {
                     <HostRoute>
                         <HostLayout>
                             <HostMessagesPage />
+                        </HostLayout>
+                    </HostRoute>
+                } />
+                <Route path="/host/directory-analytics" element={
+                    <HostRoute>
+                        <HostLayout>
+                            <DirectoryAnalyticsPage />
                         </HostLayout>
                     </HostRoute>
                 } />

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
+import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
 import { DirectoryListingDB } from '../../types/models';
 
@@ -33,6 +34,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
         website: '',
         whatsapp: '',
         google_map_url: '',
+        video_url: '',
         price_level: 2,
         reviews_average: 0.0,
         reviews_count: 0,
@@ -53,6 +55,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                     website: listing.website || '',
                     whatsapp: listing.whatsapp || '',
                     google_map_url: listing.google_map_url || '',
+                    video_url: listing.video_url || '',
                     price_level: listing.price_level || 2,
                     reviews_average: listing.reviews_average || 0,
                     reviews_count: listing.reviews_count || 0,
@@ -131,6 +134,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                 website: formData.website || undefined,
                 whatsapp: formData.whatsapp || undefined,
                 google_map_url: formData.google_map_url || undefined,
+                video_url: formData.video_url || undefined,
                 price_level: Number(formData.price_level) as 1 | 2 | 3 | 4,
                 reviews_average: Number(formData.reviews_average),
                 reviews_count: Number(formData.reviews_count),
@@ -223,6 +227,24 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             onFilesChange={setFiles}
                             maxFiles={formData.tier === 'explorer' ? 5 : formData.tier === 'voyager' ? 50 : 100}
                         />
+
+                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Video</h2>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Video URL (YouTube or Vimeo)
+                            </label>
+                            <input
+                                type="url"
+                                name="video_url"
+                                value={formData.video_url}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
+                                placeholder="https://youtube.com/watch?v=..."
+                            />
+                            {formData.video_url && !parseVideoEmbed(formData.video_url) && (
+                                <p className="mt-2 text-xs text-red-500">Please enter a valid YouTube or Vimeo URL.</p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Right Column - Status & Settings */}
