@@ -4,10 +4,11 @@ import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
 import { db } from '../api-services';
 import { PropertyCard } from '../components/ui/PropertyCard';
+import { Property, PropertyDB } from '../types/models';
 
 export const FavoritesPage: React.FC = () => {
     const { favorites } = useFavorites();
-    const [properties, setProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -17,14 +18,30 @@ export const FavoritesPage: React.FC = () => {
                 // Fetch only favorite properties directly using IDs
                 const data = await db.getPropertiesByIds(favorites);
 
-                const formattedData = data?.map((p: any) => ({
-                    ...p,
+                const formattedData: Property[] = data?.map((p: PropertyDB) => ({
+                    id: p.id,
+                    ref_id: p.ref_id,
+                    title: p.title,
+                    location: p.location,
+                    latitude: p.latitude,
+                    longitude: p.longitude,
                     pricePerNight: p.price_per_night,
+                    rating: p.rating ?? 0,
+                    reviewsCount: p.reviews_count ?? 0,
                     image: p.images?.[0] || '',
-                    guests: p.guests || 2,
-                    bedrooms: p.bedrooms || 1,
-                    rating: p.rating || 0,
-                    reviewsCount: p.reviews_count || 0
+                    images: p.images || [],
+                    guests: p.max_guests ?? 2,
+                    bedrooms: p.bedrooms ?? 1,
+                    beds: p.beds ?? 1,
+                    bathrooms: p.bathrooms ?? 1,
+                    description: p.description ?? '',
+                    amenities: p.amenities ?? [],
+                    hostName: p.host?.full_name ?? '',
+                    type: p.type,
+                    cleaning_fee: p.cleaning_fee,
+                    isPromoted: p.is_promoted,
+                    promotionPrice: p.promotion_price,
+                    promotionDescription: p.promotion_description
                 })) || [];
 
                 setProperties(formattedData);
