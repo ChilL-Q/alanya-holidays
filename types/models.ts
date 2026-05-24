@@ -420,6 +420,9 @@ export interface DirectoryListingDB {
   is_featured?: boolean;
   is_premium?: boolean;
   is_verified?: boolean;
+  tier?: 'explorer' | 'voyager' | 'signature' | 'partner';
+  base_score?: number;
+  subscription_id?: string;
   website?: string;
   whatsapp?: string;
   gallery: string[];

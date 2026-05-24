@@ -75,6 +75,11 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({ files, onChange, m
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                     Upload up to {maxFiles} photos (JPG, PNG)
                 </p>
+                {files.length >= maxFiles && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400 font-medium mt-2">
+                        Maximum {maxFiles} photos reached
+                    </p>
+                )}
             </div>
 
             {/* Previews */}

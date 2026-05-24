@@ -37,7 +37,8 @@ export const AdminEditDirectoryPage: React.FC = () => {
         reviews_average: 0.0,
         reviews_count: 0,
         is_featured: false,
-        is_verified: false
+        is_verified: false,
+        tier: 'explorer' as DirectoryListingDB['tier']
     });
 
     const loadListing = useCallback(async () => {
@@ -56,7 +57,8 @@ export const AdminEditDirectoryPage: React.FC = () => {
                     reviews_average: listing.reviews_average || 0,
                     reviews_count: listing.reviews_count || 0,
                     is_featured: listing.is_featured || false,
-                    is_verified: listing.is_verified || false
+                    is_verified: listing.is_verified || false,
+                    tier: listing.tier || 'explorer'
                 });
                 setExistingImages(listing.gallery || []);
                 setLanguages(listing.languages_spoken?.length ? listing.languages_spoken : ['']);
@@ -134,6 +136,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                 reviews_count: Number(formData.reviews_count),
                 is_featured: formData.is_featured,
                 is_verified: formData.is_verified,
+                tier: formData.tier,
                 gallery: finalImages,
                 languages_spoken: languages.filter(l => l.trim() !== ''),
                 certifications: certifications.filter(c => c.trim() !== '')
@@ -218,6 +221,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             onRemoveExisting={removeExistingImage}
                             files={files}
                             onFilesChange={setFiles}
+                            maxFiles={formData.tier === 'explorer' ? 5 : formData.tier === 'voyager' ? 50 : 100}
                         />
                     </div>
 
@@ -227,6 +231,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             categoryId={formData.category_id}
                             isFeatured={formData.is_featured}
                             isVerified={formData.is_verified}
+                            tier={formData.tier}
                             priceLevel={formData.price_level}
                             reviewsAverage={formData.reviews_average}
                             reviewsCount={formData.reviews_count}

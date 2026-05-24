@@ -84,6 +84,26 @@ export const BlogPostPage: React.FC = () => {
         ? Math.max(1, Math.ceil(post.content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
         : 1;
 
+    const articleJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        author: post.author?.full_name
+            ? { '@type': 'Person', name: post.author.full_name }
+            : undefined,
+        datePublished: post.published_at || undefined,
+        dateModified: post.updated_at || undefined,
+        image: post.cover_image_url || undefined,
+        publisher: {
+            '@type': 'Organization',
+            name: 'AlanyaHolidays',
+            logo: {
+                '@type': 'ImageObject',
+                url: 'https://alanya-holidays.com/logo.png',
+            },
+        },
+    };
+
     return (
         <>
             <SEOHead
@@ -92,6 +112,7 @@ export const BlogPostPage: React.FC = () => {
                 image={post.cover_image_url || undefined}
                 type="article"
                 keywords={post.category ? [post.category, 'Alanya', 'Turkey', 'travel guide'] : ['Alanya', 'Turkey', 'travel guide']}
+                jsonLd={articleJsonLd}
             />
 
             <article className="min-h-screen bg-white dark:bg-slate-900">

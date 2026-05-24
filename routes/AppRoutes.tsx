@@ -53,6 +53,7 @@ const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').th
 const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
+const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -123,6 +124,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/blog/submit" element={<AuthRoute><BlogSubmitPage /></AuthRoute>} />
                 <Route path="/blog/submission-success" element={<BlogSubmissionSuccess />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/blog/category/:category" element={<BlogCategoryPage />} />
                 <Route path="/hidden-gems-alanya" element={<HiddenGemsPage />} />
                 <Route path="/best-beaches-alanya" element={<BestBeachesPage />} />
 

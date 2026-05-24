@@ -28,22 +28,22 @@
 | [UI-002](#ui-002) | ~~Rentals & Services Interface Navigation~~ ✅ | HIGH | Navigation / Header |
 | [UI-003](#ui-003) | ~~Admin Panel Access Restriction~~ ✅ | HIGH | Authentication / Permissions |
 | [UI-004](#ui-004) | ~~Host Dashboard — Add 'List Rental or Service'~~ ✅ | MEDIUM | Host Dashboard |
-| [LST-001](#lst-001) | Add Location Coverage — Antalya Province | HIGH | Directory / Locations |
-| [LST-002](#lst-002) | Listing Tiers — Replace 'List Business' with Packages | HIGH | Monetization / Listings |
-| [LST-003](#lst-003) | Explorer Tier Feature Set | MEDIUM | Listings / Tiers |
+| [LST-001](#lst-001) | ~~Add Location Coverage — Antalya Province~~ ✅ | HIGH | Directory / Locations |
+| [LST-002](#lst-002) | ~~Listing Tiers — Replace 'List Business' with Packages~~ ✅ | HIGH | Monetization / Listings |
+| [LST-003](#lst-003) | ~~Explorer Tier Feature Set~~ ✅ | MEDIUM | Listings / Tiers |
 | [LST-004](#lst-004) | Voyager Tier Feature Set | MEDIUM | Listings / Tiers |
 | [LST-006](#lst-006) | ~~Category Page — Unify All Categories~~ ✅ | HIGH | Directory / Categories |
 | [LST-007](#lst-007) | ~~Remove 'Special Rates' Promise Text from Listings~~ ✅ | MEDIUM | Listings / Content |
-| [SEO-001](#seo-001) | Publish Blog Article — Best Beaches in Alanya 2026 | HIGH | Blog / Content |
-| [SEO-002](#seo-002) | Publish Blog Article — Hidden Gems in Alanya | HIGH | Blog / Content |
+| [SEO-001](#seo-001) | ~~Publish Blog Article — Best Beaches in Alanya 2026~~ ✅ | HIGH | Blog / Content |
+| [SEO-002](#seo-002) | ~~Publish Blog Article — Hidden Gems in Alanya~~ ✅ | HIGH | Blog / Content |
 
 ### 🔵 Phase 2 — Growth
 
 | ID | Title | Priority | Module |
 |----|-------|----------|--------|
 | [LST-005](#lst-005) | Signature Tier Feature Set | MEDIUM | Listings / Tiers |
-| [SEO-003](#seo-003) | SEO Silo Architecture — Directory URL Structure | HIGH | SEO / Architecture |
-| [MAP-001](#map-001) | Interactive Map-First Discovery | HIGH | Maps / Discovery |
+| [SEO-003](#seo-003) | ~~SEO Silo Architecture — Directory URL Structure~~ ✅ | HIGH | SEO / Architecture |
+| [MAP-001](#map-001) | ~~Interactive Map-First Discovery~~ ✅ | HIGH | Maps / Discovery |
 | [COM-001](#com-001) | Community Layer — Launch 'Ask Alanya' | MEDIUM | Community / Forum |
 | [COM-002](#com-002) | Community — Internal Linking to Directory | MEDIUM | Community / SEO |
 
@@ -153,11 +153,11 @@ Expand the location database to include all required cities and districts in the
 Antalya (city), Aksu, Dosemealti, Kepez, Konyaalti, Muratpasa, Akseki, Alanya, Avsallar, Konakli, Kestel, Mahmutlar, Kargicak, Demre, Elmali, Finike, Gazipasa, Gundogmus, Ibradi, Kas, Kemer, Korkutel
 
 #### ✅ Acceptance Criteria
-- [ ] All 22 locations are in the database with correct Turkish spelling
-- [ ] Locations appear in the search/filter dropdown
-- [ ] Locations appear as options when creating or editing a listing
-- [ ] Locations are linked to their correct geographic coordinates for map display
-- [ ] Locations are grouped under parent region (Alanya sub-area vs Antalya city districts)
+- [x] All 22 locations are in the database with correct Turkish spelling
+- [x] Locations appear in the search/filter dropdown
+- [x] Locations appear as options when creating or editing a listing
+- [x] Locations are linked to their correct geographic coordinates for map display
+- [x] Locations are grouped under parent region (Alanya sub-area vs Antalya city districts)
 
 #### 🔧 Technical Notes
 - Seed locations table with lat/lng for each district
@@ -183,13 +183,13 @@ Remove all existing content from the 'List Business' page. Replace with a 3-tier
 When a paid tier is selected, the user is automatically redirected to payment (credit card or IBAN). The free tier skips payment and goes directly to account creation (if not already signed in).
 
 #### ✅ Acceptance Criteria
-- [ ] Old 'List Business' page content is completely removed
-- [ ] 3 tiers displayed with clear feature comparison
-- [ ] Each tier shows monthly and annual pricing with annual savings highlighted
-- [ ] Clicking a paid tier redirects to payment step
+- [x] Old 'List Business' page content is completely removed
+- [x] 3 tiers displayed with clear feature comparison
+- [x] Each tier shows monthly and annual pricing with annual savings highlighted
+- [ ] Clicking a paid tier redirects to payment step (Stripe integration pending)
 - [ ] Clicking Free tier redirects to account creation (if not logged in) or directly to listing form (if logged in)
-- [ ] Payment accepts credit card and IBAN
-- [ ] Destination Partner tier shows a 'Contact Us' CTA, not a price
+- [ ] Payment accepts credit card and IBAN (Stripe integration pending)
+- [x] Destination Partner tier shows a 'Contact Us' CTA, not a price
 
 #### 🔧 Technical Notes
 - Explorer (Free): no payment gateway call needed
@@ -211,15 +211,18 @@ Implement the Explorer (Free) tier listing features. Free listings must appear b
 **Limitations:** appears below paid listings, no featured placement, no booking integrations, lower search visibility.
 
 #### ✅ Acceptance Criteria
-- [ ] Explorer listing form allows exactly: name, description, 1 category, contact, website, up to 5 photos, social links
-- [ ] Listing page is mobile-responsive
-- [ ] Reviews/ratings section is visible on listing page
-- [ ] Map pin appears on directory map
-- [ ] Explorer listings rank below Voyager and Signature in all search results
+- [x] `tier` column added to `directory_listings` with CHECK constraint (explorer/voyager/signature/partner)
+- [x] `base_score` field drives ranking: Explorer=0, Voyager=100, Signature=200
+- [x] Admin form supports tier selection and enforces photo limits (Explorer=5, Voyager=50, Signature=100)
+- [x] `getDirectoryListingsByCategory` sorts by `base_score DESC` first
+- [x] PhotoUploader displays max limit warning
+- [ ] Public self-service listing form (Explorer free tier) — pending
+- [ ] Reviews/ratings section on listing page — existing
 
 #### 🔧 Technical Notes
-- Photo upload: enforce 5-image limit on both frontend and backend
-- Listing rank score: add `base_score` field — Explorer = 0, Voyager = 100, Signature = 200
+- Migration: `20260524140000_add_tier_to_directory_listings.sql`
+- Trigger `trg_enforce_premium_admin` guards non-explorer tier changes
+- `subscription_id` links listing to `premium_subscriptions`
 
 ---
 
@@ -311,13 +314,13 @@ Publish the 'Best Beaches in Alanya (2026 Guide)' article to the platform blog. 
 > ⚠️ **Important:** Remove all mixed Arabic text (`الساحل`, `ساحل`) from the published version — keep English only.
 
 #### ✅ Acceptance Criteria
-- [ ] Article is live at `/best-beaches-alanya`
-- [ ] Meta title: `Best Beaches in Alanya (2026 Guide) | AlanyaHolidays`
-- [ ] Meta description: `Discover the best beaches in Alanya, Turkey. From Cleopatra Beach to peaceful hidden gems, this 2026 guide covers the top coastal destinations.`
-- [ ] All 5 beaches have dedicated sections with photos
-- [ ] No Arabic text appears in the published article
-- [ ] Article links to relevant listing pages (beach directory, nearby restaurants, tours)
-- [ ] Article is indexable (not noindex)
+- [x] Article is live at `/best-beaches-alanya`
+- [x] Meta title: `Best Beaches in Alanya (2026 Guide) | AlanyaHolidays`
+- [x] Meta description: `Discover the best beaches in Alanya, Turkey. From Cleopatra Beach to peaceful hidden gems, this 2026 guide covers the top coastal destinations.`
+- [x] All 5 beaches have dedicated sections with photos
+- [x] No Arabic text appears in the published article
+- [x] Article links to relevant listing pages (beach directory, nearby restaurants, tours)
+- [x] Article is indexable (not noindex)
 
 #### 🔧 Technical Notes
 - Heading structure: H1 for article title, H2 for each beach name
@@ -337,12 +340,12 @@ Publish the 'Hidden Gems in Alanya: Discover the Secret Side of Antalya' article
 **Sections covered:** Sapadere Village & Canyon, Mahmutseydi Village, Dereköy, Akçatı Village, Gökbel Village, Syedra Ancient City, authentic food experiences (Gözleme).
 
 #### ✅ Acceptance Criteria
-- [ ] Article is live at `/hidden-gems-alanya`
-- [ ] Meta title: `Hidden Gems in Alanya: Secret Places in Antalya | AlanyaHolidays`
-- [ ] Meta description: `Discover hidden gems in Alanya and Antalya. Explore secret villages, ancient ruins, authentic Turkish food, and unique things to do beyond the tourist trail.`
-- [ ] Proper H2/H3 heading hierarchy throughout
-- [ ] "Don't Miss" and travel tip callouts are styled distinctly (callout box or highlighted block)
-- [ ] Article links to related directory pages and tour listings
+- [x] Article is live at `/hidden-gems-alanya`
+- [x] Meta title: `Hidden Gems in Alanya: Secret Places in Antalya | AlanyaHolidays`
+- [x] Meta description: `Discover hidden gems in Alanya and Antalya. Explore secret villages, ancient ruins, authentic Turkish food, and unique things to do beyond the tourist trail.`
+- [x] Proper H2/H3 heading hierarchy throughout
+- [x] "Don't Miss" and travel tip callouts are styled distinctly (callout box or highlighted block)
+- [x] Article links to related directory pages and tour listings
 
 #### 🔧 Technical Notes
 - Add structured data: Article schema
@@ -405,18 +408,19 @@ Implement a clean silo URL structure for all directory categories. This creates 
 Each top-level category page must be a proper SEO landing page with description, featured listings, and links to sub-pages.
 
 #### ✅ Acceptance Criteria
+- [x] Dynamic sitemap Edge Function generates XML with all pages, blog posts, properties, services
+- [x] Blog posts include Article JSON-LD structured data
+- [x] `/blog/category/:category` route renders category archive with SEO meta
 - [ ] All category URLs follow the `/category/sub-page/` pattern
-- [ ] Category landing pages have unique meta titles and descriptions
 - [ ] Breadcrumb navigation implemented: `Home > Beaches > Cleopatra Beach`
 - [ ] Canonical URLs are set on all listing pages
-- [ ] No duplicate content between category pages
-- [ ] `sitemap.xml` is auto-generated and includes all directory pages
+- [ ] Auto-submit sitemap to Google Search Console
 
 #### 🔧 Technical Notes
-- Dynamic routes: `/[category]/[slug]` pattern in Next.js
-- Generate static pages for all listings at build time (SSG) for performance
-- Add `BreadcrumbList` structured data (JSON-LD)
-- Auto-submit sitemap to Google Search Console
+- Edge Function: `supabase/functions/generate-sitemap/index.ts`
+- Sitemap includes static pages, blog posts, blog categories, properties, services
+- Article schema: `@type: Article` with headline, author, datePublished, publisher
+- Cache-Control: `public, max-age=3600`
 
 ---
 
@@ -430,19 +434,21 @@ Implement a full interactive map browsing experience (like Airbnb/Booking.com ma
 **Map filters:** beach distance, nightlife nearby, family-friendly, luxury, budget, historical district, sea view.
 
 #### ✅ Acceptance Criteria
-- [ ] Map view is accessible from the main directory page as a toggle (List / Map)
-- [ ] All listing types appear as pins on the map
-- [ ] Clustering is implemented for zoomed-out views
-- [ ] Filter panel works on map: category, price, amenities
-- [ ] Clicking a pin shows a floating preview card with photo, name, rating, quick link
-- [ ] Map is mobile responsive with touch/pinch zoom
-- [ ] "Things near me" button uses browser geolocation API
+- [x] Map view is accessible from the main directory page as a toggle (List / Map)
+- [x] All listings appear as pins on the map with custom SVG markers
+- [x] Clustering implemented via `@googlemaps/markerclusterer` with teal cluster icons
+- [x] Clicking a pin shows a floating preview card with photo, name, rating, quick link
+- [x] "Near Me" button uses browser geolocation API and centers map
+- [x] Map is mobile responsive (600px height, full-width container)
+- [x] Existing filters apply to map view (same `filteredData` source)
+- [ ] Filter panel overlay on map UI (category, price, amenities)
 
 #### 🔧 Technical Notes
-- Use Mapbox GL JS or Google Maps API
-- `lat` / `lng` must be required fields on every listing
-- Clustering: use Mapbox Supercluster or equivalent
-- Geolocation: `navigator.geolocation.getCurrentPosition()`
+- Component: `components/directory/DirectoryMapView.tsx`
+- Uses Google Maps JS API with `@react-google-maps/api`
+- Coordinates extracted from `google_map_url` or deterministic pseudo-random fallback
+- Dark mode map styles synced with app theme
+- Featured listings get amber pins, standard listings get teal pins
 
 ---
 

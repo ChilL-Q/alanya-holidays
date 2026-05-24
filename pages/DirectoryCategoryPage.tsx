@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Filter, Star, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, Star, Info, ChevronDown, ChevronUp, Map as MapIcon, List } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 import { useAuth } from '../context/AuthContext';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
+import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
@@ -28,6 +29,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const [showFullIntro, setShowFullIntro] = useState(false);
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
     const [selectedListing, setSelectedListing] = useState<DirectoryListingDB | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
@@ -296,6 +298,30 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
 
+                        {/* View Mode Toggle */}
+                        <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700/50 shrink-0">
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                    viewMode === 'list'
+                                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                            >
+                                <List size={16} /> List
+                            </button>
+                            <button
+                                onClick={() => setViewMode('map')}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                    viewMode === 'map'
+                                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                            >
+                                <MapIcon size={16} /> Map
+                            </button>
+                        </div>
+
                         <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             <input
                                 type="checkbox"
@@ -324,56 +350,65 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     </div>
                 </div>
 
-                {/* 3. Featured Listings (Monetization Zone) */}
-                {featuredListings.length > 0 && (
-                    <div className="mb-12">
-                        <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
-                            <Star className="text-amber-500 fill-amber-500" size={24} />
-                            Featured Providers
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {featuredListings.map(listing => (
-                                <DirectoryListingCard
-                                    key={listing.id}
-                                    listing={listing}
-                                    onClick={setSelectedListing}
-                                    userVote={userVotes[listing.id] ?? null}
-                                    onVote={handleVote}
-                                    isAuthenticated={isAuthenticated}
-                                    isVoting={votingId === listing.id}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {viewMode === 'list' ? (
+                    <>
+                        {/* 3. Featured Listings (Monetization Zone) */}
+                        {featuredListings.length > 0 && (
+                            <div className="mb-12">
+                                <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
+                                    <Star className="text-amber-500 fill-amber-500" size={24} />
+                                    Featured Providers
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {featuredListings.map(listing => (
+                                        <DirectoryListingCard
+                                            key={listing.id}
+                                            listing={listing}
+                                            onClick={setSelectedListing}
+                                            userVote={userVotes[listing.id] ?? null}
+                                            onVote={handleVote}
+                                            isAuthenticated={isAuthenticated}
+                                            isVoting={votingId === listing.id}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                {/* 4. Standard Listings */}
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
-                        All Listings
-                    </h2>
-                    {standardListings.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {standardListings.map(listing => (
-                                <DirectoryListingCard
-                                    key={listing.id}
-                                    listing={listing}
-                                    onClick={setSelectedListing}
-                                    userVote={userVotes[listing.id] ?? null}
-                                    onVote={handleVote}
-                                    isAuthenticated={isAuthenticated}
-                                    isVoting={votingId === listing.id}
-                                />
-                            ))}
+                        {/* 4. Standard Listings */}
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
+                                All Listings
+                            </h2>
+                            {standardListings.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {standardListings.map(listing => (
+                                        <DirectoryListingCard
+                                            key={listing.id}
+                                            listing={listing}
+                                            onClick={setSelectedListing}
+                                            userVote={userVotes[listing.id] ?? null}
+                                            onVote={handleVote}
+                                            isAuthenticated={isAuthenticated}
+                                            isVoting={votingId === listing.id}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-white dark:bg-slate-800/80 border md:col-span-2 border-slate-200 dark:border-slate-800/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
+                                    <Info className="w-16 h-16 text-slate-300 dark:text-slate-400 mb-4" />
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No standard listings found</h3>
+                                    <p className="text-slate-500 dark:text-slate-400 max-w-sm">We couldn't find any standard listings matching your current filters. Try removing some filters or check our Featured items above.</p>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="bg-white dark:bg-slate-800/80 border md:col-span-2 border-slate-200 dark:border-slate-800/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center shadow-sm">
-                            <Info className="w-16 h-16 text-slate-300 dark:text-slate-400 mb-4" />
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No standard listings found</h3>
-                            <p className="text-slate-500 dark:text-slate-400 max-w-sm">We couldn't find any standard listings matching your current filters. Try removing some filters or check our Featured items above.</p>
-                        </div>
-                    )}
-                </div>
+                    </>
+                ) : (
+                    <DirectoryMapView
+                        listings={filteredData}
+                        onListingClick={setSelectedListing}
+                    />
+                )}
 
                 {/* 5. FAQ Section (SEO Optimized) */}
                 {faqs && faqs.length > 0 && (
