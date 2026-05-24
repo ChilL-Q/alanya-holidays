@@ -50,6 +50,7 @@ const emailDataSchemas = {
   subscription_cancelled:  z.object({ name: sOpt, periodEnd: s, link: sOpt }),
   subscription_cancellation_scheduled: z.object({ name: sOpt, periodEnd: s, link: sOpt }),
   subscription_payment_failed: z.object({ name: sOpt, link: sOpt }),
+  subscription_restored: z.object({ name: sOpt, link: sOpt }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -756,6 +757,23 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     data.link,
                     'Update Payment Method',
                     true
+                )
+            };
+
+        case 'subscription_restored':
+            return {
+                subject: 'Your Premium Subscription Has Been Restored',
+                html: getHtmlTemplate(
+                    'Subscription Restored',
+                    `
+                    <p style="font-size: 16px;">Hi ${escapeHtml(data.name) || 'there'},</p>
+                    <p>Good news! Your Premium subscription has been successfully restored. You now have full access to AI Trip Planner and all Premium features.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0; color: #059669; font-weight: 600;">Your subscription is active again.</p>
+                    </div>
+                    `,
+                    data.link,
+                    'View Profile'
                 )
             };
 
