@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface VehicleRentalTemplateProps {
     titleHtml?: string;
@@ -41,7 +42,7 @@ export const VehicleRentalTemplate: React.FC<VehicleRentalTemplateProps> = ({
                         {titleHtml ? (
                             <h1
                                 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6 leading-tight"
-                                dangerouslySetInnerHTML={{ __html: titleHtml }}
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(titleHtml) }}
                             />
                         ) : (
                             <h1 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white mb-6 leading-tight">

@@ -3,6 +3,15 @@ import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { ServiceType } from '../types/index';
 import { useNavigate } from 'react-router-dom';
+
+interface StripeCheckoutItem {
+    bookingId: string;
+    listingId: string;
+    title: string;
+    price: number;
+    image?: string;
+    type: string;
+}
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
@@ -36,7 +45,7 @@ export const Checkout: React.FC = () => {
         setIsProcessing(true);
 
         try {
-            const bookingItemsForStripe: any[] = [];
+            const bookingItemsForStripe: StripeCheckoutItem[] = [];
             const wpItem = items.find(i => i.id === 'rec-2');
             let wpHandled = false;
 

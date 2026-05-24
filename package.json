@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/generate-vercel-json.js && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --report-unused-disable-directives --max-warnings=0",

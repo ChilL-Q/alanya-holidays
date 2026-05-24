@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, TrendingUp, Settings } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Button } from '../../ui/Button';
 import { useLanguage } from '../../../context/LanguageContext';
 
@@ -16,7 +17,7 @@ export const ListPropertyHero: React.FC<ListPropertyHeroProps> = ({ onRegister, 
             <div className="relative bg-slate-900 text-white py-24 overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80')] bg-cover bg-center opacity-20"></div>
                 <div className="relative max-w-7xl mx-auto px-4 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6" dangerouslySetInnerHTML={{ __html: t('list.hero.title') }} />
+                    <h1 className="text-4xl md:text-6xl font-bold mb-6" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t('list.hero.title')) }} />
                     <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
                         {t('list.hero.desc')}
                     </p>
