@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
-import { ArrowLeft, Save } from 'lucide-react';
+import { supabase } from '../../api-services/supabase';
+import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
@@ -40,8 +41,11 @@ export const AdminEditDirectoryPage: React.FC = () => {
         reviews_count: 0,
         is_featured: false,
         is_verified: false,
-        tier: 'explorer' as DirectoryListingDB['tier']
+        tier: 'explorer' as DirectoryListingDB['tier'],
+        newsletter_featured: false,
     });
+
+    const [generatingDescription, setGeneratingDescription] = useState(false);
 
     const loadListing = useCallback(async () => {
         try {
@@ -61,7 +65,8 @@ export const AdminEditDirectoryPage: React.FC = () => {
                     reviews_count: listing.reviews_count || 0,
                     is_featured: listing.is_featured || false,
                     is_verified: listing.is_verified || false,
-                    tier: listing.tier || 'explorer'
+                    tier: listing.tier || 'explorer',
+                    newsletter_featured: listing.newsletter_featured || false,
                 });
                 setExistingImages(listing.gallery || []);
                 setLanguages(listing.languages_spoken?.length ? listing.languages_spoken : ['']);
@@ -87,6 +92,33 @@ export const AdminEditDirectoryPage: React.FC = () => {
             setFormData(prev => ({ ...prev, [name]: checked }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const buildDescriptionPrompt = (listing: typeof formData) => {
+        return `Write a compelling 2-3 sentence business description for "${listing.name}", a ${listing.category_id} business in ${listing.location || 'Alanya'}. Current description: "${listing.short_description || 'None'}". Make it professional, SEO-friendly, and around 150 characters.`;
+    };
+
+    const handleGenerateDescription = async () => {
+        if (formData.tier !== 'signature') return;
+        setGeneratingDescription(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('ai-proxy', {
+                body: { userQuestion: buildDescriptionPrompt(formData) }
+            });
+            if (error) throw error;
+            const generated = data?.answer;
+            if (generated) {
+                setFormData(prev => ({ ...prev, short_description: generated.trim() }));
+                toast.success('Description generated!');
+            } else {
+                throw new Error('Empty response from AI');
+            }
+        } catch (err: any) {
+            console.error('AI generation failed:', err);
+            toast.error(err.message || 'Failed to generate description');
+        } finally {
+            setGeneratingDescription(false);
         }
     };
 
@@ -141,6 +173,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                 is_featured: formData.is_featured,
                 is_verified: formData.is_verified,
                 tier: formData.tier,
+                newsletter_featured: formData.newsletter_featured,
                 gallery: finalImages,
                 languages_spoken: languages.filter(l => l.trim() !== ''),
                 certifications: certifications.filter(c => c.trim() !== '')
@@ -204,6 +237,25 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             onChange={handleChange}
                         />
 
+                        {formData.tier === 'signature' && (
+                            <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
+                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">AI Description</h3>
+                                <button
+                                    onClick={handleGenerateDescription}
+                                    disabled={generatingDescription}
+                                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 text-sm"
+                                >
+                                    {generatingDescription ? (
+                                        <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
+                                    ) : (
+                                        <Sparkles size={16} />
+                                    )}
+                                    {generatingDescription ? 'Generating...' : 'Generate AI Description'}
+                                </button>
+                                <p className="mt-2 text-xs text-slate-500">Uses AI to write an SEO-friendly description based on listing details.</p>
+                            </div>
+                        )}
+
                         <ContactLocationForm
                             location={formData.location}
                             googleMapUrl={formData.google_map_url}
@@ -257,6 +309,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                             priceLevel={formData.price_level}
                             reviewsAverage={formData.reviews_average}
                             reviewsCount={formData.reviews_count}
+                            newsletterFeatured={formData.newsletter_featured}
                             onChange={handleChange}
                         />
                     </div>

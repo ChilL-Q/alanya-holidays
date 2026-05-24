@@ -434,6 +434,7 @@ export interface DirectoryListingDB {
   google_map_url?: string;
   video_url?: string;
   price_level?: 1 | 2 | 3 | 4;
+  newsletter_featured?: boolean;
   net_votes?: number;
   created_at?: string;
   updated_at?: string;

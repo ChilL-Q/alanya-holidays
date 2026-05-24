@@ -44,7 +44,12 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                             <BadgeCheck size={16} /> Verified
                         </div>
                     )}
-                    {isPaidTier(listing.tier) && (
+                    {listing.tier === 'signature' && (
+                        <div className="flex items-center gap-1 font-medium bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-3 py-1.5 rounded-lg">
+                            <BadgeCheck size={16} /> Verified Premium
+                        </div>
+                    )}
+                    {(listing.tier === 'voyager' || listing.tier === 'partner') && (
                         <div className="flex items-center gap-1 font-medium bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 px-3 py-1.5 rounded-lg">
                             <Award size={16} /> Recommended
                         </div>

@@ -7,6 +7,7 @@ import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
+import { SignatureListingsSection } from '../components/home/SignatureListingsSection';
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
 
 export const DirectoryHome: React.FC = () => {
@@ -19,6 +20,7 @@ export const DirectoryHome: React.FC = () => {
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
     const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
+    const [signatureListings, setSignatureListings] = useState<DirectoryListingDB[]>([]);
     const [testimonials, setTestimonials] = useState<any[]>([]);
     const [listingsLoading, setListingsLoading] = useState(true);
 
@@ -27,14 +29,16 @@ export const DirectoryHome: React.FC = () => {
         async function loadListings() {
             setListingsLoading(true);
             try {
-                const [premium, free, tests] = await Promise.all([
+                const [premium, free, signatures, tests] = await Promise.all([
                     db.getPremiumListings(),
                     db.getFreeListings(),
+                    db.getSignatureListings(),
                     db.getPublicTestimonials(),
                 ]);
                 if (!cancelled) {
                     setPremiumListings(premium);
                     setFreeListings(free);
+                    setSignatureListings(signatures);
                     setTestimonials(tests);
                 }
             } catch (err) {
@@ -230,6 +234,10 @@ export const DirectoryHome: React.FC = () => {
             </div>
 
             {/* Premium Listings Section */}
+            {signatureListings.length > 0 && (
+                <SignatureListingsSection listings={signatureListings} loading={listingsLoading} />
+            )}
+
             <PremiumListingsSection listings={premiumListings} loading={listingsLoading} />
 
             {/* Travel Guide / Featured Blog Posts */}

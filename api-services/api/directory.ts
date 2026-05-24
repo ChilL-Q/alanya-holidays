@@ -130,6 +130,26 @@ export const directoryService = {
         return data as DirectoryListingDB[];
     },
 
+    /**
+     * Signature tier listings (limit 4, is_premium = true, tier = signature)
+     */
+    async getSignatureListings(): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('tier', 'signature')
+            .eq('is_premium', true)
+            .order('base_score', { ascending: false })
+            .limit(4);
+
+        if (error) {
+            console.error('Error fetching signature listings:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB[];
+    },
+
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
         const { data, error } = await supabase
             .rpc('vote_listing', {
