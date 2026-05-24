@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
+import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
 import { db } from '../api-services';
@@ -9,7 +10,6 @@ import { BlogPostWithTags } from '../api-services/api/blog';
 
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
-    const navigate = useNavigate();
     const [post, setPost] = useState<BlogPostWithTags | null>(null);
     const [loading, setLoading] = useState(true);
     const viewsIncremented = useRef(false);
@@ -116,16 +116,16 @@ export const BlogPostPage: React.FC = () => {
             />
 
             <article className="min-h-screen bg-white dark:bg-slate-900">
-                {/* Back Navigation */}
+                {/* Breadcrumb */}
                 <div className="border-b border-slate-100 dark:border-slate-800/50">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-                        >
-                            <ArrowLeft size={16} />
-                            <span className="text-sm font-medium">Back</span>
-                        </button>
+                        <Breadcrumb
+                            items={[
+                                { label: 'Home', href: '/' },
+                                { label: 'Blog', href: '/blog' },
+                                { label: post.category || 'Article' },
+                            ]}
+                        />
                     </div>
                 </div>
 

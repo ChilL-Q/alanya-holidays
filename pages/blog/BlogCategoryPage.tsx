@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
+import { Breadcrumb } from '../../components/seo/Breadcrumb';
 import { db } from '../../api-services';
 import { BlogPostPreview } from '../../api-services/api/blog';
 import { BlogPostCard } from '../../components/home/BlogPostCard';
@@ -114,15 +115,15 @@ export const BlogCategoryPage: React.FC = () => {
                 }} />
 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <Link
-                        to="/blog"
-                        className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-6"
-                    >
-                        <ArrowLeft size={16} />
-                        <span className="text-sm font-medium">Back to Blog</span>
-                    </Link>
+                    <Breadcrumb
+                        items={[
+                            { label: 'Home', href: '/' },
+                            { label: 'Blog', href: '/blog' },
+                            { label: capitalizedCategory || decodedCategory },
+                        ]}
+                    />
 
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-cyan-400 rounded-full text-sm font-semibold mb-4">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-cyan-400 rounded-full text-sm font-semibold mt-4 mb-4">
                         <BookOpen size={16} />
                         Category
                     </div>

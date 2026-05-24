@@ -174,6 +174,16 @@ Deno.serve(async (req: Request) => {
 
     const sitemapXml = buildSitemap(urls)
 
+    // Ping Google about the updated sitemap
+    const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
+    try {
+      const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/sitemap.xml`)}`
+      await fetch(pingUrl)
+      console.warn('Sitemap ping sent to Google')
+    } catch (e) {
+      console.error('Failed to ping Google sitemap:', e)
+    }
+
     return new Response(sitemapXml, {
       headers: {
         'Content-Type': 'application/xml',
