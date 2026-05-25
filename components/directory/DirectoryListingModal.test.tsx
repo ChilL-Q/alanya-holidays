@@ -6,11 +6,21 @@ import { DirectoryListingDB } from '../../types/models';
 const { mockDb } = vi.hoisted(() => ({
     mockDb: {
         trackListingClick: vi.fn().mockResolvedValue(undefined),
+        getListingReviews: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+        getUserReviewForListing: vi.fn().mockResolvedValue(null),
     }
 }));
 
 vi.mock('../../api-services', () => ({
     db: mockDb
+}));
+
+vi.mock('../../context/AuthContext', () => ({
+    useAuth: vi.fn(() => ({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+    }))
 }));
 
 vi.mock('../../utils/videoEmbed', () => ({

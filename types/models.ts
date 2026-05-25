@@ -535,3 +535,63 @@ export interface ListingAnalyticsSummary {
   total_map_clicks: number;
   daily_data: ListingAnalyticsDaily[];
 }
+
+export interface CategoryAnalyticsAverage {
+  avg_views: number;
+  avg_whatsapp_clicks: number;
+  avg_website_clicks: number;
+  avg_map_clicks: number;
+  listing_count: number;
+}
+
+// ============================================================
+// AI Itinerary (AI-001)
+// ============================================================
+
+export interface ItineraryItem {
+  time: string;
+  title: string;
+  description: string;
+  location?: string;
+  link?: string;
+  lat?: number;
+  lng?: number;
+}
+
+export interface ItineraryDay {
+  day: number;
+  title: string;
+  items: ItineraryItem[];
+}
+
+export interface TripParams {
+  duration: number;
+  companion: string;
+  interests: string[];
+  pace: string;
+  budget: string;
+}
+
+export interface SavedItinerary {
+  id: string;
+  user_id: string;
+  title: string;
+  params: TripParams;
+  itinerary: ItineraryDay[];
+  created_at: string;
+}
+
+// ============================================================
+// Listing Reviews (GAP-002)
+// ============================================================
+
+export interface ListingReview {
+  id: string;
+  listing_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  user?: { full_name: string | null; avatar_url: string | null };
+}

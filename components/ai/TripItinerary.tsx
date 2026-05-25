@@ -1,47 +1,52 @@
-import React from 'react';
-import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download, BookmarkPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useLanguage } from '../../context/LanguageContext';
+import type { ItineraryDay } from '../../types/models';
+import { ItineraryMap } from './ItineraryMap';
 import '../../print-itinerary.css';
-
-export interface ItineraryItem {
-    time: string;
-    title: string;
-    description: string;
-    location?: string;
-    link?: string;
-}
-
-export interface ItineraryDay {
-    day: number;
-    title: string;
-    items: ItineraryItem[];
-}
 
 interface Props {
     itinerary: ItineraryDay[];
+    savedId?: string | null;
+    onSave?: () => void;
+    saving?: boolean;
 }
 
-export const TripItinerary: React.FC<Props> = ({ itinerary }) => {
+export const TripItinerary: React.FC<Props> = ({ itinerary, savedId, onSave, saving }) => {
     const { t } = useLanguage();
     
+    const mapItems = useMemo(
+        () =>
+            itinerary.flatMap((day, di) =>
+                day.items
+                    .filter((item) => item.lat != null && item.lng != null)
+                    .map((item) => ({ ...item, dayIndex: di }))
+            ),
+        [itinerary]
+    );
+
     const handleDownloadPDF = () => {
         window.print();
     };
 
     const handleShare = async () => {
+        const shareUrl = savedId
+            ? `${window.location.origin}/itinerary/${savedId}`
+            : window.location.href;
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: t('ai.itinerary.shareTitle'),
                     text: t('ai.itinerary.shareText'),
-                    url: window.location.href,
+                    url: shareUrl,
                 });
             } catch (_error) {
+                // User cancelled share
             }
         } else {
-            // Fallback: Copy to clipboard
-            navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+            navigator.clipboard.writeText(shareUrl);
+            toast.success('Link copied to clipboard!');
         }
     };
 
@@ -151,23 +156,45 @@ export const TripItinerary: React.FC<Props> = ({ itinerary }) => {
                     <h3 className="text-2xl font-bold mb-3 relative z-10">{t('ai.itinerary.enjoy')}</h3>
                     <p className="text-slate-400 mb-6 relative z-10">{t('ai.itinerary.saved')}</p>
                     <div className="flex justify-center gap-4 relative z-10 no-print">
-                        <button 
+                        <button
                             onClick={handleDownloadPDF}
                             className="px-6 py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-50 transition-colors flex items-center gap-2"
                         >
                             <Download size={18} />
                             {t('ai.itinerary.downloadPDF')}
                         </button>
-                        <button 
+                        <button
                             onClick={handleShare}
                             className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl font-bold hover:bg-white/20 transition-colors flex items-center gap-2"
                         >
                             <Share2 size={18} />
                             {t('ai.itinerary.share')}
                         </button>
+                        {onSave && (
+                            <button
+                                onClick={onSave}
+                                disabled={saving || !!savedId}
+                                className={`px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors ${
+                                    savedId
+                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-default'
+                                        : 'bg-white/10 border border-white/20 hover:bg-white/20 text-white'
+                                } ${(saving || savedId) ? 'opacity-70' : ''}`}
+                            >
+                                <BookmarkPlus size={18} />
+                                {savedId ? 'Saved' : saving ? 'Saving…' : 'Save'}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Map */}
+            {mapItems.length > 0 && (
+                <div className="mt-10 print:hidden">
+                    <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Trip Map</h2>
+                    <ItineraryMap items={mapItems} />
+                </div>
+            )}
 
             {/* Print Footer */}
             <div className="print-footer">
