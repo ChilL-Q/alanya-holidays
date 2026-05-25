@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { itinerariesService } from '../api-services/api/itineraries';
 import { SavedItinerary } from '../types/models';
 import { TripItinerary } from '../components/ai/TripItinerary';
@@ -51,12 +51,12 @@ export const SharedItineraryPage: React.FC = () => {
                         <Compass className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-6" />
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{error}</h2>
                         <p className="text-slate-500 dark:text-slate-400 mb-6">The itinerary you are looking for does not exist or has been removed.</p>
-                        <a
-                            href="/ai-planner"
+                        <Link
+                            to="/ai-planner"
                             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
                         >
                             Plan Your Own Trip
-                        </a>
+                        </Link>
                     </div>
                 )}
 

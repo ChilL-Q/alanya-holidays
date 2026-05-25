@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Clock, MapPin, ExternalLink, Star, ChevronRight, Share2, Download, BookmarkPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useLanguage } from '../../context/LanguageContext';
 import type { ItineraryDay } from '../../types/models';
 import { ItineraryMap } from './ItineraryMap';
@@ -45,7 +46,7 @@ export const TripItinerary: React.FC<Props> = ({ itinerary, savedId, onSave, sav
             }
         } else {
             navigator.clipboard.writeText(shareUrl);
-            alert('Link copied to clipboard!');
+            toast.success('Link copied to clipboard!');
         }
     };
 

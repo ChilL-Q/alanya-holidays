@@ -20,8 +20,12 @@ export const AiPlanner: React.FC = () => {
     const [premiumLoading, setPremiumLoading] = useState(true);
 
     const [lastPrefs, setLastPrefs] = useState<TripParams | null>(() => {
-        const savedPrefs = sessionStorage.getItem('ai-planner-prefs');
-        return savedPrefs ? JSON.parse(savedPrefs) : null;
+        try {
+            const savedPrefs = sessionStorage.getItem('ai-planner-prefs');
+            return savedPrefs ? (JSON.parse(savedPrefs) as TripParams) : null;
+        } catch {
+            return null;
+        }
     });
     const [savedId, setSavedId] = useState<string | null>(() => {
         return sessionStorage.getItem('ai-planner-saved-id') || null;
@@ -29,12 +33,17 @@ export const AiPlanner: React.FC = () => {
     const [saving, setSaving] = useState(false);
 
     const [status, setStatus] = useState<'form' | 'loading' | 'results' | 'error'>(() => {
+        // Never restore 'loading' — it means a request was in-flight when the tab closed
         const savedStatus = sessionStorage.getItem('ai-planner-status');
-        return (savedStatus as any) || 'form';
+        return savedStatus === 'results' ? 'results' : 'form';
     });
     const [itinerary, setItinerary] = useState<ItineraryDay[]>(() => {
-        const savedItinerary = sessionStorage.getItem('ai-planner-itinerary');
-        return savedItinerary ? JSON.parse(savedItinerary) : [];
+        try {
+            const savedItinerary = sessionStorage.getItem('ai-planner-itinerary');
+            return savedItinerary ? (JSON.parse(savedItinerary) as ItineraryDay[]) : [];
+        } catch {
+            return [];
+        }
     });
     const [errorMsg, setErrorMsg] = useState('');
 
