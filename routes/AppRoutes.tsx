@@ -55,6 +55,7 @@ const CreativeServices = React.lazy(() => import('../pages/CreativeServices').th
 const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').then(module => ({ default: module.ListingTiersPage })));
 const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
 const AddListingPage = React.lazy(() => import('../pages/AddListingPage').then(module => ({ default: module.AddListingPage })));
+const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingPage').then(module => ({ default: module.DirectoryListingPage })));
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
 const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
@@ -119,6 +120,25 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/nightlife" element={<DirectoryCategoryPage categoryId="nightlife" />} />
                 <Route path="/alanya-spa-hamam" element={<DirectoryCategoryPage categoryId="spa-hamam" />} />
                 <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
+
+                {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
+                <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />
+                <Route path="/alanya-hotels/:slug" element={<DirectoryListingPage categoryId="accommodations" />} />
+                <Route path="/alanya-villas/:slug" element={<DirectoryListingPage categoryId="villas" />} />
+                <Route path="/alanya-apartments/:slug" element={<DirectoryListingPage categoryId="apartments" />} />
+                <Route path="/things-to-do-in-alanya/:slug" element={<DirectoryListingPage categoryId="tours" />} />
+                <Route path="/airport-transfer/:slug" element={<DirectoryListingPage categoryId="transport" />} />
+                <Route path="/car-rental/:slug" element={<DirectoryListingPage categoryId="transport" />} />
+                <Route path="/restaurants/:slug" element={<DirectoryListingPage categoryId="restaurants" />} />
+                <Route path="/cafes/:slug" element={<DirectoryListingPage categoryId="cafes" />} />
+                <Route path="/alanya-real-estate/:slug" element={<DirectoryListingPage categoryId="real-estate" />} />
+                <Route path="/alanya-residency-guide/:slug" element={<DirectoryListingPage categoryId="visa" />} />
+                <Route path="/alanya-shopping-guide/:slug" element={<DirectoryListingPage categoryId="shopping" />} />
+                <Route path="/alanya-nature-attractions/:slug" element={<DirectoryListingPage categoryId="nature" />} />
+                <Route path="/alanya-weather/:slug" element={<DirectoryListingPage categoryId="weather" />} />
+                <Route path="/nightlife/:slug" element={<DirectoryListingPage categoryId="nightlife" />} />
+                <Route path="/alanya-spa-hamam/:slug" element={<DirectoryListingPage categoryId="spa-hamam" />} />
+                <Route path="/alanya-hair-beauty/:slug" element={<DirectoryListingPage categoryId="hair-beauty" />} />
 
                 <Route path="/list-property" element={<ListProperty />} />
                 <Route path="/list-business" element={<ListingTiersPage />} />

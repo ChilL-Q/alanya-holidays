@@ -416,6 +416,7 @@ export interface DirectoryListingDB {
   id: string;
   category_id: string;
   name: string;
+  slug?: string;
   short_description: string;
   is_featured?: boolean;
   is_premium?: boolean;

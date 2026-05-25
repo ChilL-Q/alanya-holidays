@@ -7,7 +7,26 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const CRON_SECRET = Deno.env.get('CRON_SECRET')
 
-const BASE_URL = 'https://alanyaholidays.com'
+const BASE_URL = Deno.env.get('SITE_URL') ?? 'https://alanya-holidays.com'
+
+const CATEGORY_PATHS: Record<string, string> = {
+  'medical':        '/medical-tourism-alanya',
+  'accommodations': '/alanya-hotels',
+  'villas':         '/alanya-villas',
+  'apartments':     '/alanya-apartments',
+  'tours':          '/things-to-do-in-alanya',
+  'transport':      '/airport-transfer',
+  'restaurants':    '/restaurants',
+  'cafes':          '/cafes',
+  'real-estate':    '/alanya-real-estate',
+  'visa':           '/alanya-residency-guide',
+  'shopping':       '/alanya-shopping-guide',
+  'nature':         '/alanya-nature-attractions',
+  'weather':        '/alanya-weather',
+  'nightlife':      '/nightlife',
+  'spa-hamam':      '/alanya-spa-hamam',
+  'hair-beauty':    '/alanya-hair-beauty',
+}
 
 interface SitemapUrl {
   loc: string
@@ -172,12 +191,34 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Directory listing detail pages
+    const { data: listings, error: listingsError } = await supabase
+      .from('directory_listings')
+      .select('slug, category_id, updated_at')
+      .not('slug', 'is', null)
+      .order('updated_at', { ascending: false })
+
+    if (listingsError) {
+      console.error('Failed to fetch directory listings for sitemap:', listingsError)
+    } else if (listings) {
+      for (const listing of listings) {
+        if (!listing.slug || !listing.category_id) continue
+        const prefix = CATEGORY_PATHS[listing.category_id]
+        if (!prefix) continue
+        urls.push({
+          loc: `${BASE_URL}${prefix}/${listing.slug}`,
+          lastmod: listing.updated_at ? new Date(listing.updated_at).toISOString().split('T')[0] : undefined,
+          changefreq: 'weekly',
+          priority: '0.7',
+        })
+      }
+    }
+
     const sitemapXml = buildSitemap(urls)
 
     // Ping Google about the updated sitemap
-    const SITE_URL = Deno.env.get('SITE_URL') ?? 'https://alanyaholidays.com'
     try {
-      const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/sitemap.xml`)}`
+      const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(`${BASE_URL}/sitemap.xml`)}`
       await fetch(pingUrl)
       console.warn('Sitemap ping sent to Google')
     } catch (e) {
