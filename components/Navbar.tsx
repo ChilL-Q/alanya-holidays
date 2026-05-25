@@ -49,8 +49,8 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-20">
 
-          {/* Logo & Toggle */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 z-10">
+          {/* Logo */}
+          <div className="flex items-center flex-shrink-0 z-10">
             <Link to="/" className="flex items-center gap-3 group relative">
               <div className="relative hidden sm:block">
                 <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
@@ -60,10 +60,9 @@ export const Navbar: React.FC = () => {
                 Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
               </span>
             </Link>
-            
           </div>
 
-          {/* Desktop Nav Links */}
+          {/* Desktop Nav — centered */}
           <div className="flex-1 flex justify-center">
             <DesktopNav mode={navMode} />
           </div>
