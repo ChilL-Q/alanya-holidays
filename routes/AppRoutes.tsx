@@ -15,6 +15,8 @@ const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').the
 
 // Public Pages - Lazy Loaded
 const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => ({ default: module.AiPlanner })));
+const MyItinerariesPage = React.lazy(() => import('../pages/MyItinerariesPage').then(module => ({ default: module.MyItinerariesPage })));
+const SharedItineraryPage = React.lazy(() => import('../pages/SharedItineraryPage').then(module => ({ default: module.SharedItineraryPage })));
 const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
 const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
@@ -90,6 +92,8 @@ export const AppRoutes: React.FC = () => {
         <Routes>
             <Route path="/" element={<DirectoryHome />} />
                 <Route path="/ai-planner" element={<AuthRoute><AiPlanner /></AuthRoute>} />
+                <Route path="/my-itineraries" element={<AuthRoute><MyItinerariesPage /></AuthRoute>} />
+                <Route path="/itinerary/:id" element={<SharedItineraryPage />} />
 
                 {/* SEO-Optimized Directory Category Routes */}
                 <Route path="/medical-tourism-alanya" element={<DirectoryCategoryPage categoryId="medical" />} />

@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { TripPlannerForm } from '../components/ai/TripPlannerForm';
-import { TripItinerary, ItineraryDay } from '../components/ai/TripItinerary';
+import { TripItinerary } from '../components/ai/TripItinerary';
 import { PremiumGate } from '../components/ui/PremiumGate';
 import { planTrip } from '../api-services/aiService';
+import { itinerariesService } from '../api-services/api/itineraries';
 import { subscriptionsService } from '../api-services/api/subscriptions';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { SEOHead } from '../components/seo/SEOHead';
+import { TripParams, ItineraryDay } from '../types/models';
+import { planTripResponseSchema } from '../utils/itinerarySchema';
+import toast from 'react-hot-toast';
 
 export const AiPlanner: React.FC = () => {
     const { t } = useLanguage();
     const { user } = useAuth();
     const [isPremium, setIsPremium] = useState(false);
     const [premiumLoading, setPremiumLoading] = useState(true);
+
+    const [lastPrefs, setLastPrefs] = useState<TripParams | null>(() => {
+        const savedPrefs = sessionStorage.getItem('ai-planner-prefs');
+        return savedPrefs ? JSON.parse(savedPrefs) : null;
+    });
+    const [savedId, setSavedId] = useState<string | null>(() => {
+        return sessionStorage.getItem('ai-planner-saved-id') || null;
+    });
+    const [saving, setSaving] = useState(false);
 
     const [status, setStatus] = useState<'form' | 'loading' | 'results' | 'error'>(() => {
         const savedStatus = sessionStorage.getItem('ai-planner-status');
@@ -58,14 +71,26 @@ export const AiPlanner: React.FC = () => {
         }
     }, [status, itinerary]);
 
-    const handleGenerate = async (prefs: {
-        duration: number;
-        companion: string;
-        interests: string[];
-        pace: string;
-        budget: string;
-    }) => {
+    useEffect(() => {
+        if (lastPrefs) {
+            sessionStorage.setItem('ai-planner-prefs', JSON.stringify(lastPrefs));
+        } else {
+            sessionStorage.removeItem('ai-planner-prefs');
+        }
+    }, [lastPrefs]);
+
+    useEffect(() => {
+        if (savedId) {
+            sessionStorage.setItem('ai-planner-saved-id', savedId);
+        } else {
+            sessionStorage.removeItem('ai-planner-saved-id');
+        }
+    }, [savedId]);
+
+    const handleGenerate = async (prefs: TripParams) => {
         setStatus('loading');
+        setLastPrefs(prefs);
+        setSavedId(null);
         try {
             const response = await planTrip(prefs);
 
@@ -76,12 +101,14 @@ export const AiPlanner: React.FC = () => {
                 if (firstBrace !== -1 && lastBrace !== -1) {
                     cleanResponse = cleanResponse.substring(firstBrace, lastBrace + 1);
                 }
-                const data = JSON.parse(cleanResponse);
-                if (data.itinerary && Array.isArray(data.itinerary)) {
-                    setItinerary(data.itinerary);
+                const rawData = JSON.parse(cleanResponse);
+                const parsed = planTripResponseSchema.safeParse(rawData);
+                if (parsed.success) {
+                    setItinerary(parsed.data.itinerary);
                     setStatus('results');
                 } else {
-                    throw new Error('Missing itinerary array');
+                    console.error('Validation error:', parsed.error.flatten());
+                    throw new Error('Invalid itinerary structure');
                 }
             } catch (e) {
                 console.error('Parsing error:', e, 'Raw response:', response);
@@ -98,8 +125,28 @@ export const AiPlanner: React.FC = () => {
     const handleReset = () => {
         setStatus('form');
         setItinerary([]);
+        setLastPrefs(null);
+        setSavedId(null);
         sessionStorage.removeItem('ai-planner-status');
         sessionStorage.removeItem('ai-planner-itinerary');
+        sessionStorage.removeItem('ai-planner-prefs');
+        sessionStorage.removeItem('ai-planner-saved-id');
+    };
+
+    const handleSave = async () => {
+        if (!lastPrefs) return;
+        setSaving(true);
+        try {
+            const title = `${lastPrefs.duration}-Day Trip for ${lastPrefs.companion}`;
+            const saved = await itinerariesService.saveItinerary(title, lastPrefs, itinerary);
+            setSavedId(saved.id);
+            toast.success('Itinerary saved!');
+        } catch (err) {
+            console.error('Save failed:', err);
+            toast.error('Failed to save itinerary');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -146,7 +193,12 @@ export const AiPlanner: React.FC = () => {
 
                     {status === 'results' && (
                         <div className="animate-in fade-in slide-in-from-bottom-10 duration-1000">
-                            <TripItinerary itinerary={itinerary} />
+                            <TripItinerary
+                                itinerary={itinerary}
+                                savedId={savedId}
+                                onSave={user ? handleSave : undefined}
+                                saving={saving}
+                            />
                             <div className="text-center mt-12">
                                 <button
                                     onClick={handleReset}
