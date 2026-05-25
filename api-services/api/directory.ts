@@ -244,7 +244,11 @@ export const directoryService = {
             is_verified: false,
             tier,
             base_score: listing.base_score ?? 0,
+            ...(listing.slug ? { slug: listing.slug.slice(0, 200) } : {}),
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
+            ...(listing.certifications?.length ? { certifications: listing.certifications } : {}),
+            ...(listing.languages_spoken?.length ? { languages_spoken: listing.languages_spoken } : {}),
+            ...(listing.newsletter_featured !== undefined ? { newsletter_featured: listing.newsletter_featured } : {}),
         });
 
         const { data, error } = await supabase
