@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, X, Sparkles, Star, Building2, ArrowRight } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
+import { useAuth } from '../context/AuthContext';
 
 interface Feature {
     label: string;
@@ -9,7 +10,7 @@ interface Feature {
 }
 
 interface Tier {
-    id: string;
+    id: 'explorer' | 'voyager' | 'signature' | 'partner';
     name: string;
     badge?: string;
     badgeColor?: string;
@@ -17,7 +18,7 @@ interface Tier {
     annualPrice?: number;
     description: string;
     ctaLabel: string;
-    ctaTo: string;
+    ctaTo?: string;
     ctaPrimary: boolean;
     features: Feature[];
 }
@@ -30,7 +31,6 @@ const tiers: Tier[] = [
         annualPrice: 0,
         description: 'Get discovered by travelers looking for local businesses in Alanya.',
         ctaLabel: 'Get Started',
-        ctaTo: '/register',
         ctaPrimary: false,
         features: [
             { label: 'Business name & description', included: true },
@@ -147,6 +147,8 @@ function annualSavings(monthly: number, annual: number): number {
 
 export const ListingTiersPage: React.FC = () => {
     const [isAnnual, setIsAnnual] = useState(true);
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <>
@@ -301,19 +303,28 @@ export const ListingTiersPage: React.FC = () => {
 
                                     {/* CTA */}
                                     <div className="p-6 pt-0">
-                                        <Link
-                                            to={tier.ctaTo}
-                                            className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                                                tier.ctaPrimary
-                                                    ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-md hover:shadow-lg'
-                                                    : tier.id === 'partner'
-                                                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
-                                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
-                                            }`}
-                                        >
-                                            {tier.ctaLabel}
-                                            {tier.ctaPrimary && <ArrowRight size={16} />}
-                                        </Link>
+                                        {tier.id === 'explorer' ? (
+                                            <button
+                                                onClick={() => navigate(isAuthenticated ? '/add-listing' : '/register')}
+                                                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700"
+                                            >
+                                                {tier.ctaLabel}
+                                            </button>
+                                        ) : (
+                                            <Link
+                                                to={tier.ctaTo}
+                                                className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                                                    tier.ctaPrimary
+                                                        ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-md hover:shadow-lg'
+                                                        : tier.id === 'partner'
+                                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'
+                                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
+                                                }`}
+                                            >
+                                                {tier.ctaLabel}
+                                                {tier.ctaPrimary && <ArrowRight size={16} />}
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             );

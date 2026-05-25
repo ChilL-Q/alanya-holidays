@@ -54,6 +54,7 @@ const InboxPage = React.lazy(() => import('../pages/InboxPage').then(module => (
 const CreativeServices = React.lazy(() => import('../pages/CreativeServices').then(module => ({ default: module.CreativeServices })));
 const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').then(module => ({ default: module.ListingTiersPage })));
 const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
+const AddListingPage = React.lazy(() => import('../pages/AddListingPage').then(module => ({ default: module.AddListingPage })));
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
 const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
@@ -122,6 +123,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/list-property" element={<ListProperty />} />
                 <Route path="/list-business" element={<ListingTiersPage />} />
                 <Route path="/subscribe" element={<AuthRoute><SubscribePage /></AuthRoute>} />
+                <Route path="/add-listing" element={<AuthRoute><AddListingPage /></AuthRoute>} />
 
                 <Route path="/search-results" element={<SearchResultsPage />} />
                 <Route path="/stays" element={<SearchResultsPage />} />

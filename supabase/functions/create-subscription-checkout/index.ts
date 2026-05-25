@@ -102,6 +102,7 @@ Deno.serve(async (req: Request) => {
     // --- Create Checkout Session ---
     const sessionParams: any = {
       mode: 'subscription',
+      payment_method_types: ['card', 'sepa_debit'],
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: {
         userId: userId,
@@ -118,7 +119,7 @@ Deno.serve(async (req: Request) => {
           tier: tier,
         }
       },
-      success_url: `${SITE_URL}/profile?subscription=success`,
+      success_url: `${SITE_URL}/add-listing?subscribed=true`,
       cancel_url: `${SITE_URL}/list-business`,
       allow_promotion_codes: true,
     }
