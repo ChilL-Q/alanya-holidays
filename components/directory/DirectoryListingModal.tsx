@@ -1,10 +1,12 @@
 import React from 'react';
-import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, Info, Award } from 'lucide-react';
+import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, Info, Award, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import { ListingReviewSection } from './ListingReviewSection';
+import { getListingUrl } from '../../constants/categoryPaths';
 
 interface DirectoryListingModalProps {
     listing: DirectoryListingDB | null;
@@ -21,7 +23,19 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title={listing.name} lockBodyScroll={false}>
             <div className="space-y-6">
-                
+
+                {listing.slug && (
+                    <div className="flex justify-end -mt-2">
+                        <Link
+                            to={getListingUrl(listing.category_id, listing.slug)}
+                            onClick={onClose}
+                            className="text-sm text-teal-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                        >
+                            <ExternalLink size={14} /> View full listing page
+                        </Link>
+                    </div>
+                )}
+
                 {/* Header Image */}
                 {listing.gallery?.[0] && (
                     <div className="relative w-full h-48 sm:h-64 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">

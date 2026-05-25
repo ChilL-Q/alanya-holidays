@@ -19,7 +19,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
             '@type': 'ListItem',
             position: index + 1,
             name: item.label,
-            item: item.href ? `https://alanyaholidays.com${item.href}` : undefined,
+            item: item.href ? `https://alanya-holidays.com${item.href}` : undefined,
         })),
     };
 

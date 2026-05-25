@@ -70,6 +70,21 @@ export const directoryService = {
         return data as DirectoryListingDB | null;
     },
 
+    async getDirectoryListingBySlug(slug: string): Promise<DirectoryListingDB | null> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('slug', slug)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching directory listing by slug:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB | null;
+    },
+
     async getDirectoryListingsByCategory(categoryId: string): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
