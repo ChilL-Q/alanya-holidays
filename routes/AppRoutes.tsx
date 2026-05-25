@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
-import { HostLayout } from '../components/layouts/HostLayout';
+import { HostLayoutController } from '../components/layouts/HostLayoutController';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
@@ -176,79 +176,79 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/booking/success" element={<AuthRoute><BookingSuccess /></AuthRoute>} />
                 <Route path="/host" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostDashboard />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/properties" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostPropertiesPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/fleet" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostServicesPage mode="fleet" />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/services" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostServicesPage mode="services" />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/edit-service/:id" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostEditServicePage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/edit-property/:id" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <AdminEditPropertyPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/bookings" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostBookingsPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/calendar" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostCalendarPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/dashboard" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostDashboard />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/messages" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostMessagesPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/directory-analytics" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <DirectoryAnalyticsPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
 
