@@ -875,4 +875,18 @@ export const en = {
   'shop.lawyer.form.loading': 'Sending...',
   'shop.lawyer.success': 'Your request has been sent. We will contact you shortly.',
   'shop.lawyer.confidential': 'Your information is kept confidential.',
+
+  // Community Hub
+  'community.hero.title': 'Community Hub',
+  'community.hero.subtitle': 'Connect, share, and plan your perfect Alanya experience.',
+  'community.card.blog.title': 'Travel Blog',
+  'community.card.blog.desc': 'Discover insider tips, hidden gems, and travel stories from Alanya.',
+  'community.card.forum.title': 'Community Forum',
+  'community.card.forum.desc': 'A dedicated Q&A space for Alanya travelers is on its way. Ask locals, share tips, get answers.',
+  'community.card.ai.title': 'AI Trip Planner',
+  'community.card.ai.desc': 'Let our AI craft a personalized itinerary tailored to your preferences.',
+  'community.card.directory.title': 'Business Directory',
+  'community.card.directory.desc': 'Explore verified local businesses, from restaurants to real estate.',
+  'community.card.submit.title': 'Share Your Story',
+  'community.card.submit.desc': 'Have a travel story? Submit your blog post and inspire others.',
 };

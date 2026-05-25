@@ -866,4 +866,18 @@ export const ru = {
   'shop.lawyer.form.loading': 'Отправка...',
   'shop.lawyer.success': 'Ваш запрос отправлен. Мы свяжемся с вами в ближайшее время.',
   'shop.lawyer.confidential': 'Ваша информация конфиденциальна.',
+
+  // Community Hub
+  'community.hero.title': 'Сообщество',
+  'community.hero.subtitle': 'Общайтесь, делитесь и планируйте идеальный отдых в Алании.',
+  'community.card.blog.title': 'Блог',
+  'community.card.blog.desc': 'Полезные советы, скрытые жемчужины и истории путешественников из Алании.',
+  'community.card.forum.title': 'Форум',
+  'community.card.forum.desc': 'Пространство для вопросов и ответов для путешественников по Алании. Скоро открытие.',
+  'community.card.ai.title': 'AI Планировщик',
+  'community.card.ai.desc': 'Попросите наш AI составить персональный маршрут под ваши предпочтения.',
+  'community.card.directory.title': 'Бизнес-директория',
+  'community.card.directory.desc': 'Проверенные местные компании: рестораны, агентства недвижимости и многое другое.',
+  'community.card.submit.title': 'Поделитесь историей',
+  'community.card.submit.desc': 'Есть история о путешествии? Отправьте статью в наш блог и вдохновите других.',
 };

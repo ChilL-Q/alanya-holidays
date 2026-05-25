@@ -866,4 +866,18 @@ export const tr = {
     'shop.lawyer.form.loading': 'Gönderiliyor...',
     'shop.lawyer.success': 'Talebiniz gönderildi. En kısa sürede size ulaşacağız.',
     'shop.lawyer.confidential': 'Bilgileriniz gizli tutulur.',
+
+    // Community Hub
+    'community.hero.title': 'Topluluk Merkezi',
+    'community.hero.subtitle': 'Bağlanın, paylaşın ve mükemmel Alanya deneyiminizi planlayın.',
+    'community.card.blog.title': 'Seyahat Blogu',
+    'community.card.blog.desc': "Alanya'dan içeriden ipuçları, gizli köşeler ve seyahat hikayeleri.",
+    'community.card.forum.title': 'Topluluk Forumu',
+    'community.card.forum.desc': "Alanya gezginleri için soru-cevap alanı yakında açılıyor.",
+    'community.card.ai.title': 'AI Seyahat Planlayıcı',
+    'community.card.ai.desc': "AI'ımızın tercihlerinize göre kişiselleştirilmiş bir rota oluşturmasını isteyin.",
+    'community.card.directory.title': 'İşletme Rehberi',
+    'community.card.directory.desc': 'Restoranlardan gayrimenkule kadar doğrulanmış yerel işletmeler.',
+    'community.card.submit.title': 'Hikayenizi Paylaşın',
+    'community.card.submit.desc': 'Bir seyahat hikayeniz mi var? Blog yazınızı gönderin ve başkalarına ilham verin.',
 };

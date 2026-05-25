@@ -814,4 +814,18 @@ export const ar = {
     'shop.lawyer.form.loading': 'جارٍ الإرسال...',
     'shop.lawyer.success': 'تم إرسال طلبك. سنتواصل معك في أقرب وقت ممكن.',
     'shop.lawyer.confidential': 'تظل معلوماتك سرية.',
+
+    // Community Hub
+    'community.hero.title': 'مركز المجتمع',
+    'community.hero.subtitle': 'تواصل وشارك وخطط لتجربتك المثالية في ألانيا.',
+    'community.card.blog.title': 'مدونة السفر',
+    'community.card.blog.desc': 'اكتشف نصائح من الداخل والأماكن المخفية وقصص السفر من ألانيا.',
+    'community.card.forum.title': 'منتدى المجتمع',
+    'community.card.forum.desc': 'مساحة للأسئلة والأجوبة لمسافري ألانيا — قريباً.',
+    'community.card.ai.title': 'مخطط الرحلات بالذكاء الاصطناعي',
+    'community.card.ai.desc': 'دع الذكاء الاصطناعي يصمم خط سير مخصص وفق تفضيلاتك.',
+    'community.card.directory.title': 'دليل الأعمال',
+    'community.card.directory.desc': 'استكشف الشركات المحلية الموثقة من المطاعم إلى العقارات.',
+    'community.card.submit.title': 'شارك قصتك',
+    'community.card.submit.desc': 'هل لديك قصة سفر؟ أرسل مقالتك وألهم الآخرين.',
 };
