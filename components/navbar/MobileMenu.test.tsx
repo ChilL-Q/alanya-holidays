@@ -63,7 +63,8 @@ vi.mock('lucide-react', () => ({
     BookOpen: () => <svg data-testid="book-open-icon" />,
     Building2: () => <svg data-testid="building-icon" />,
     MapPin: () => <svg data-testid="mappin-icon" />,
-    MessageCircle: () => <svg data-testid="message-circle-icon" />
+    MessageCircle: () => <svg data-testid="message-circle-icon" />,
+    Users: () => <svg data-testid="users-icon" />
 }));
 
 vi.mock('./NavModeToggle', () => ({
@@ -129,7 +130,7 @@ describe('MobileMenu', () => {
     it('renders main navigation links in directory mode', () => {
         renderMenu();
         expect(screen.getByText('nav.directory')).toBeInTheDocument();
-        expect(screen.getByText('nav.blog')).toBeInTheDocument();
+        expect(screen.getByText('nav.community')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
     });
 
@@ -199,7 +200,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a directory link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.blog'));
+        fireEvent.click(screen.getByText('nav.community'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 

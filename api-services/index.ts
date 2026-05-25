@@ -19,6 +19,7 @@ export * from './api/blog';
 export * from './api/testimonials';
 export * from './api/locations';
 export * from './api/itineraries';
+export * from './api/listingReviews';
 export * from './supabase';
 export * from './auth';
 export * from './aiService';
@@ -38,6 +39,7 @@ import { blogService } from './api/blog';
 import { testimonialService } from './api/testimonials';
 import { locationsService } from './api/locations';
 import { itinerariesService } from './api/itineraries';
+import { listingReviewsService } from './api/listingReviews';
 
 export const db = {
     ...propertiesService,
@@ -55,5 +57,6 @@ export const db = {
     ...testimonialService,
     ...locationsService,
     ...itinerariesService,
+    ...listingReviewsService,
     yesimService
 };

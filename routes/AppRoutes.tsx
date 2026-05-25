@@ -22,6 +22,7 @@ const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(modul
 const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
 const Contact = React.lazy(() => import('../pages/Contact').then(module => ({ default: module.Contact })));
 const FAQ = React.lazy(() => import('../pages/FAQ').then(module => ({ default: module.FAQ })));
+const CommunityPage = React.lazy(() => import('../pages/CommunityPage').then(module => ({ default: module.CommunityPage })));
 const Privacy = React.lazy(() => import('../pages/Privacy').then(module => ({ default: module.Privacy })));
 const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ default: module.Terms })));
 const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
@@ -75,6 +76,7 @@ const AdminEditDirectoryPage = React.lazy(() => import('../pages/admin/AdminEdit
 const AdminBlogSubmissionsPage = React.lazy(() => import('../pages/admin/AdminBlogSubmissionsPage').then(module => ({ default: module.AdminBlogSubmissionsPage })));
 const AdminAddBlogPostPage = React.lazy(() => import('../pages/admin/AdminAddBlogPostPage').then(module => ({ default: module.AdminAddBlogPostPage })));
 const AdminTestimonialsPage = React.lazy(() => import('../pages/admin/AdminTestimonialsPage').then(module => ({ default: module.AdminTestimonialsPage })));
+const AdminListingReviewsPage = React.lazy(() => import('../pages/admin/AdminListingReviewsPage').then(module => ({ default: module.AdminListingReviewsPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -147,6 +149,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/experiences/:category" element={<ExperienceCategoryPage />} />
+                <Route path="/community" element={<CommunityPage />} />
                 <Route path="/help" element={<FAQ />} />
                 <Route path="/support" element={<Contact />} />
                 <Route path="/services/car-rental" element={<CarRental />} />
@@ -303,6 +306,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <ReviewsAdminPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/listing-reviews" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminListingReviewsPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

@@ -580,3 +580,18 @@ export interface SavedItinerary {
   itinerary: ItineraryDay[];
   created_at: string;
 }
+
+// ============================================================
+// Listing Reviews (GAP-002)
+// ============================================================
+
+export interface ListingReview {
+  id: string;
+  listing_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  user?: { full_name: string | null; avatar_url: string | null };
+}

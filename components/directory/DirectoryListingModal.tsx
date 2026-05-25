@@ -4,6 +4,7 @@ import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
+import { ListingReviewSection } from './ListingReviewSection';
 
 interface DirectoryListingModalProps {
     listing: DirectoryListingDB | null;
@@ -200,6 +201,9 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                         </div>
                     </div>
                 </div>
+
+                <hr className="border-slate-100 dark:border-slate-800" />
+                <ListingReviewSection listingId={listing.id} />
 
             </div>
         </Modal>

@@ -16,8 +16,7 @@ export const DesktopNav: React.FC<DesktopNavProps> = ({ mode = 'directory' }) =>
             {mode === 'directory' ? (
                 <>
                     <NavLink to="/" label={t('nav.directory')} />
-                    <NavLink to="/blog" label={t('nav.blog')} />
-                    <NavLink to="/forum" label={t('nav.forum') || 'Forum'} />
+                    <NavLink to="/community" label={t('nav.community') || 'Community'} />
                     <NavLink to="/shop" label={t('shop')} />
                 </>
             ) : (
