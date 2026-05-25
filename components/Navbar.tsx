@@ -11,7 +11,6 @@ import { UserDropdown } from './navbar/UserDropdown';
 import { DesktopNav } from './navbar/DesktopNav';
 import { NavbarActions } from './navbar/NavbarActions';
 import { ListPropertyAction } from './navbar/ListPropertyAction';
-import { NavModeToggle } from './navbar/NavModeToggle';
 
 export type NavMode = 'directory' | 'rental';
 
@@ -62,8 +61,6 @@ export const Navbar: React.FC = () => {
               </span>
             </Link>
             
-            {/* Global Mode Toggle */}
-            <NavModeToggle mode={navMode} setMode={setNavMode} />
           </div>
 
           {/* Desktop Nav Links */}
