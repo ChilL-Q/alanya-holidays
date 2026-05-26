@@ -3,9 +3,6 @@ import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummar
 import { retry } from '../../utils/retry';
 import { sanitizeString } from '../../utils/sanitize';
 
-// eslint-disable-next-line no-control-regex
-const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
-
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function validateUUIDs(ids: string[]) {
