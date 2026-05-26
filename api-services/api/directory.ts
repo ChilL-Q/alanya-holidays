@@ -1,14 +1,13 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, ListingAnalyticsSummary } from '../../types/models';
-
-// eslint-disable-next-line no-control-regex
-const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary } from '../../types/models';
+import { retry } from '../../utils/retry';
+import { sanitizeString } from '../../utils/sanitize';
 
 const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
     const result: Record<string, unknown> = { ...obj };
     for (const [key, value] of Object.entries(result)) {
         if (typeof value === 'string') {
-            result[key] = value.replace(STRIP_CONTROL, '').trim();
+            result[key] = sanitizeString(value);
         }
     }
     return result as T;
@@ -218,7 +217,7 @@ export const directoryService = {
         return { netVotes: data[0].net_votes };
     },
 
-    async createDirectoryListing(listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>): Promise<DirectoryListingDB> {
+    async createDirectoryListing(listing: DirectoryListingCreateInput): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
@@ -242,8 +241,11 @@ export const directoryService = {
             video_url: listing.video_url?.slice(0, 500) || null,
             is_featured: false,
             is_verified: false,
+            is_premium: false,
             tier,
             base_score: listing.base_score ?? 0,
+            status: 'pending' as const,
+            owner_user_id: user.id,
             ...(listing.slug ? { slug: listing.slug.slice(0, 200) } : {}),
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
             ...(listing.certifications?.length ? { certifications: listing.certifications } : {}),
@@ -278,6 +280,9 @@ export const directoryService = {
         delete safeUpdates.is_featured;
         delete safeUpdates.base_score;
         delete safeUpdates.subscription_id;
+        delete safeUpdates.status;
+        delete safeUpdates.owner_user_id;
+        delete safeUpdates.rejection_reason;
 
         // Validate gallery length against tier limit
         if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
@@ -318,6 +323,75 @@ export const directoryService = {
         if (error) {
             console.error('Error deleting directory listing:', error);
             throw error;
+        }
+    },
+
+    async getDirectoryListingsByStatus(
+        status: 'approved' | 'rejected',
+        category?: string
+    ): Promise<DirectoryListingDB[]> {
+        let query = supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('status', status)
+            .order('base_score', { ascending: false });
+        if (category) query = query.eq('category_id', category);
+        const { data, error } = await query;
+        if (error) {
+            console.error(`Error fetching ${status} listings:`, error);
+            throw error;
+        }
+        return data as DirectoryListingDB[];
+    },
+
+    async getPendingDirectoryListings(): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: true });
+        if (error) {
+            console.error('Error fetching pending listings:', error);
+            throw error;
+        }
+        return data as DirectoryListingDB[];
+    },
+
+    async approveDirectoryListing(id: string): Promise<void> {
+        const { data: listing, error } = await supabase
+            .from('directory_listings')
+            .update({ status: 'approved' })
+            .eq('id', id)
+            .select('name, owner_user_id')
+            .single();
+        if (error) {
+            console.error('Error approving listing:', error);
+            throw error;
+        }
+        if (listing?.owner_user_id) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: { type: 'listing_approved', userId: listing.owner_user_id, data: { title: listing.name } },
+            })).catch(console.error);
+        }
+    },
+
+    async rejectDirectoryListing(id: string, reason: string): Promise<void> {
+        if (reason.length > 1000) throw new Error('Rejection reason must be 1000 characters or fewer');
+        const sanitizedReason = sanitizeString(reason);
+        const { data: listing, error } = await supabase
+            .from('directory_listings')
+            .update({ status: 'rejected', rejection_reason: sanitizedReason })
+            .eq('id', id)
+            .select('name, owner_user_id')
+            .single();
+        if (error) {
+            console.error('Error rejecting listing:', error);
+            throw error;
+        }
+        if (listing?.owner_user_id) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason: sanitizedReason } },
+            })).catch(console.error);
         }
     },
 

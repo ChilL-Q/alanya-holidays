@@ -20,9 +20,12 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 vi.mock('../../api-services', () => ({
     db: {
-        getDirectoryListings: vi.fn(),
+        getDirectoryListingsByStatus: vi.fn(),
+        getPendingDirectoryListings: vi.fn(),
         deleteDirectoryListing: vi.fn(),
-        createDirectoryListing: vi.fn()
+        createDirectoryListing: vi.fn(),
+        approveDirectoryListing: vi.fn(),
+        rejectDirectoryListing: vi.fn(),
     }
 }));
 
@@ -38,11 +41,10 @@ const mockListings = [
 ];
 
 describe('DirectoryAdminPage', () => {
-    const mockPagination = { page: 1, limit: 100, total: 2, totalPages: 1 };
-
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getDirectoryListings as any).mockResolvedValue({ data: mockListings, pagination: mockPagination });
+        (db.getDirectoryListingsByStatus as any).mockResolvedValue(mockListings);
+        (db.getPendingDirectoryListings as any).mockResolvedValue([]);
         vi.stubGlobal('confirm', vi.fn(() => true));
     });
 
@@ -58,7 +60,7 @@ describe('DirectoryAdminPage', () => {
         );
 
         await waitFor(() => {
-            expect(db.getDirectoryListings).toHaveBeenCalled();
+            expect(db.getDirectoryListingsByStatus).toHaveBeenCalledWith('approved', undefined);
             expect(screen.getByText('Test Medical')).toBeInTheDocument();
             expect(screen.getByText('Alanya Resort')).toBeInTheDocument();
         });
@@ -146,7 +148,8 @@ describe('DirectoryAdminPage', () => {
 
         await waitFor(() => {
             expect(db.deleteDirectoryListing).toHaveBeenCalledWith('1');
-            expect(db.getDirectoryListings).toHaveBeenCalledTimes(2); 
+            // loadListings calls getDirectoryListingsByStatus twice (approved + rejected) per invocation
+            expect(db.getDirectoryListingsByStatus).toHaveBeenCalledTimes(4);
         });
     });
 
@@ -176,7 +179,8 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('handles mock data migration', async () => {
-        (db.getDirectoryListings as any).mockResolvedValueOnce({ data: [], pagination: mockPagination }).mockResolvedValue({ data: mockListings, pagination: mockPagination });
+        (db.getDirectoryListingsByStatus as any).mockResolvedValueOnce([]).mockResolvedValue(mockListings);
+        (db.getPendingDirectoryListings as any).mockResolvedValue([]);
         (db.createDirectoryListing as any).mockResolvedValue({ id: 'new' });
 
         render(
@@ -200,7 +204,7 @@ describe('DirectoryAdminPage', () => {
 
     it('handles API error when loading listings', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getDirectoryListings as any).mockRejectedValue(new Error('Fetch failed'));
+        (db.getDirectoryListingsByStatus as any).mockRejectedValue(new Error('Fetch failed'));
         
         render(
             <BrowserRouter>
