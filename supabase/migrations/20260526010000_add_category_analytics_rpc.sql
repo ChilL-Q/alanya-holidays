@@ -14,6 +14,8 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+-- SECURITY DEFINER: required to bypass RLS on directory_listings for
+-- category-wide aggregation (averages span all owners' listings, not just caller's)
 SET search_path = public
 AS $$
 BEGIN
@@ -63,6 +65,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+    IF p_owner_id != auth.uid() THEN
+        RAISE EXCEPTION 'Not authorized';
+    END IF;
+
     RETURN QUERY
     SELECT
         dl.id AS listing_id,

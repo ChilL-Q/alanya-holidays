@@ -191,10 +191,12 @@ export const AdminEditDirectoryPage: React.FC = () => {
             };
 
             if (isEditing) {
-                await db.updateDirectoryListing(id!, listingData, selectedLocationIds);
+                const effectiveLocationIds = formData.tier === 'signature' ? selectedLocationIds : [];
+                await db.updateDirectoryListing(id!, listingData, effectiveLocationIds);
                 toast.success('Listing updated successfully');
             } else {
-                await db.createDirectoryListing(listingData, selectedLocationIds);
+                const effectiveLocationIds = formData.tier === 'signature' ? selectedLocationIds : [];
+                await db.createDirectoryListing(listingData, effectiveLocationIds);
                 toast.success('Listing created successfully');
             }
 
