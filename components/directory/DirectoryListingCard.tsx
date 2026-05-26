@@ -3,6 +3,8 @@ import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, Thumbs
 import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { db } from '../../api-services';
+import { useLanguage } from '../../context/LanguageContext';
+import { getListingDescription } from '../../utils/getListingDescription';
 import { getListingUrl } from '../../constants/categoryPaths';
 
 interface DirectoryListingCardProps {
@@ -17,6 +19,8 @@ interface DirectoryListingCardProps {
 export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
     listing, onClick, userVote, onVote, isAuthenticated, isVoting
 }) => {
+    const { language } = useLanguage();
+    const displayDescription = getListingDescription(listing, language);
     const netVotes = listing.net_votes || 0;
     const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
 
@@ -83,7 +87,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
 
                 {/* Description */}
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">
-                    {listing.short_description}
+                    {displayDescription}
                 </p>
 
                 {/* Vote Buttons */}

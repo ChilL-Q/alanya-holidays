@@ -20,6 +20,7 @@ const mockListing = {
     name: 'Test Clinic',
     category_id: 'medical',
     short_description: 'A clinic',
+    descriptions: {},
     location: 'Alanya Center',
     is_featured: false,
     is_verified: true,
@@ -188,6 +189,21 @@ describe('directoryService', () => {
             mockSupabase.from.mockReturnValue(chain);
 
             await expect(directoryService.createDirectoryListing({} as any)).rejects.toEqual({ message: 'insert failed' });
+        });
+
+        it('passes descriptions through sanitize', async () => {
+            const chain = makeChain();
+            chain.single.mockResolvedValue({ data: mockListing, error: null });
+            mockSupabase.from.mockReturnValue(chain);
+
+            const { id: _id, created_at: _created_at, updated_at: _updated_at, ...listingData } = mockListing;
+            await directoryService.createDirectoryListing({
+                ...listingData,
+                descriptions: { en: 'Hello\x00World', tr: 'Merhaba\n' }
+            } as any);
+
+            const insertCall = chain.insert.mock.calls[0][0];
+            expect(insertCall.descriptions).toEqual({ en: 'HelloWorld', tr: 'Merhaba' });
         });
 
         it('rejects invalid UUIDs in locationIds', async () => {

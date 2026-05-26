@@ -279,6 +279,7 @@ export const directoryService = {
             is_premium: false,
             tier,
             base_score: listing.base_score ?? 0,
+            descriptions: listing.descriptions ?? {},
             status: 'pending' as const,
             owner_user_id: user.id,
             ...(listing.slug ? { slug: listing.slug.slice(0, 200) } : {}),

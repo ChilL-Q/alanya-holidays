@@ -43,6 +43,18 @@ vi.mock('../../hooks/useSaveShortcut', () => ({
     useSaveShortcut: vi.fn()
 }));
 
+const { mockSupabaseFunctions } = vi.hoisted(() => ({
+    mockSupabaseFunctions: {
+        invoke: vi.fn()
+    }
+}));
+
+vi.mock('../../api-services/supabase', () => ({
+    supabase: {
+        functions: mockSupabaseFunctions
+    }
+}));
+
 const mockListing = {
     id: '1',
     name: 'Existing Clinic',
@@ -59,6 +71,7 @@ const mockListing = {
     price_level: 3,
     reviews_average: 4.9,
     reviews_count: 120,
+    descriptions: { en: '', tr: '', ru: '', ar: '' },
     tier: 'signature'
 };
 
@@ -226,5 +239,67 @@ describe('AdminEditDirectoryPage', () => {
         fireEvent.click(removeBtn);
 
         expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    });
+
+    it('hydrates descriptions from existing listing', async () => {
+        (db.getDirectoryListing as any).mockResolvedValue({
+            ...mockListing,
+            descriptions: { en: 'EN desc', tr: 'TR desc', ru: 'RU desc', ar: 'AR desc' }
+        });
+        renderPage('1');
+
+        await waitFor(() => {
+            expect(screen.getByText('Edit Listing')).toBeInTheDocument();
+        });
+
+        // Arabic tab should have content indicator (checkmark badge)
+        const arTab = screen.getByText('AR');
+        expect(arTab).toBeInTheDocument();
+    });
+
+    it('invokes AI generation with structured mode on Generate click', async () => {
+        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        mockSupabaseFunctions.invoke.mockResolvedValue({
+            data: { answer: '{"en":"Generated EN","tr":"Generated TR","ru":"Generated RU","ar":"Generated AR"}' },
+            error: null
+        });
+
+        renderPage('1');
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Generate AI/i })).toBeInTheDocument();
+        });
+
+        const generateBtn = screen.getByRole('button', { name: /Generate AI/i });
+        await act(async () => {
+            fireEvent.click(generateBtn);
+        });
+
+        expect(mockSupabaseFunctions.invoke).toHaveBeenCalledWith('ai-proxy', expect.objectContaining({
+            body: expect.objectContaining({ mode: 'structured' })
+        }));
+    });
+
+    it('shows error toast when AI returns invalid JSON', async () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        mockSupabaseFunctions.invoke.mockResolvedValue({
+            data: { answer: 'not json' },
+            error: null
+        });
+
+        renderPage('1');
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Generate AI/i })).toBeInTheDocument();
+        });
+
+        const generateBtn = screen.getByRole('button', { name: /Generate AI/i });
+        await act(async () => {
+            fireEvent.click(generateBtn);
+        });
+
+        expect(mockToast.error).toHaveBeenCalledWith('AI returned invalid JSON. Please try again.');
+        consoleSpy.mockRestore();
     });
 });

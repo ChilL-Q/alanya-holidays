@@ -5,6 +5,8 @@ import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
+import { useLanguage } from '../../context/LanguageContext';
+import { getListingDescription } from '../../utils/getListingDescription';
 import { ListingReviewSection } from './ListingReviewSection';
 import { getListingUrl } from '../../constants/categoryPaths';
 
@@ -15,8 +17,11 @@ interface DirectoryListingModalProps {
 }
 
 export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ listing, isOpen, onClose }) => {
+    const { language } = useLanguage();
+
     if (!listing) return null;
 
+    const displayDescription = getListingDescription(listing, language);
     const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
     const videoEmbed = listing.video_url ? parseVideoEmbed(listing.video_url) : null;
 
@@ -111,7 +116,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">About</h3>
                             <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm whitespace-pre-wrap">
-                                {listing.short_description}
+                                {displayDescription}
                             </p>
                         </div>
 

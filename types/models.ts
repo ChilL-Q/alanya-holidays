@@ -412,12 +412,27 @@ export interface SearchFilters {
   guests: number;
 }
 
+export interface ListingDescriptions {
+  en?: string;
+  tr?: string;
+  ru?: string;
+  ar?: string;
+}
+
+export interface ListingLocationJunction {
+  id: string;
+  location_id: string;
+  display_order: number;
+  locations: { id: string; name: string };
+}
+
 export interface DirectoryListingDB {
   id: string;
   category_id: string;
   name: string;
   slug?: string;
   short_description: string;
+  descriptions?: ListingDescriptions;
   is_featured?: boolean;
   is_premium?: boolean;
   is_verified?: boolean;
@@ -442,12 +457,7 @@ export interface DirectoryListingDB {
   rejection_reason: string | null;
   created_at?: string;
   updated_at?: string;
-  listing_locations?: {
-    id: string;
-    location_id: string;
-    display_order: number;
-    locations: { id: string; name: string };
-  }[];
+  listing_locations?: ListingLocationJunction[];
 }
 
 export type DirectoryListingCreateInput = Omit<

@@ -46,7 +46,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
                 console.error('Failed to load category average:', err);
                 setCategoryAvg(null);
             });
-    }, [selected]);
+    }, [selected?.listing_category_id]);
 
     const chartData = useMemo(() => {
         if (!selected) return [];

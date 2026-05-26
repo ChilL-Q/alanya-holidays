@@ -1,7 +1,9 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DirectoryListingModal } from './DirectoryListingModal';
 import { DirectoryListingDB } from '../../types/models';
+import { LanguageProvider } from '../../context/LanguageContext';
 
 const { mockDb } = vi.hoisted(() => ({
     mockDb: {
@@ -50,13 +52,16 @@ const baseListing: DirectoryListingDB = {
     rejection_reason: null,
 };
 
+const renderWithLanguage = (ui: React.ReactElement) =>
+    render(<LanguageProvider>{ui}</LanguageProvider>);
+
 describe('DirectoryListingModal', () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
     it('hides WhatsApp button for Explorer tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={baseListing}
                 isOpen={true}
@@ -67,7 +72,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('shows WhatsApp button for Voyager tier with whatsapp number', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'voyager' }}
                 isOpen={true}
@@ -78,7 +83,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('hides WhatsApp button for Voyager tier without whatsapp number', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'voyager', whatsapp: undefined }}
                 isOpen={true}
@@ -89,7 +94,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('shows Verified Premium badge for Signature tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'signature' }}
                 isOpen={true}
@@ -100,7 +105,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('shows Recommended badge for Voyager tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'voyager' }}
                 isOpen={true}
@@ -111,7 +116,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('hides Recommended badge for Explorer tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={baseListing}
                 isOpen={true}
@@ -123,7 +128,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('renders video iframe when video_url is present', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, video_url: 'https://youtube.com/watch?v=abc123' }}
                 isOpen={true}
@@ -136,7 +141,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('does not render video iframe when video_url is null', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, video_url: undefined }}
                 isOpen={true}
@@ -147,7 +152,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('tracks website click', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={baseListing}
                 isOpen={true}
@@ -160,7 +165,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('tracks map click', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={baseListing}
                 isOpen={true}
@@ -173,7 +178,7 @@ describe('DirectoryListingModal', () => {
     });
 
     it('tracks whatsapp click for paid tier', () => {
-        render(
+        renderWithLanguage(
             <DirectoryListingModal
                 listing={{ ...baseListing, tier: 'voyager' }}
                 isOpen={true}
