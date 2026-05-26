@@ -1,33 +1,50 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { NavLink } from './NavLink';
-import { NavIndicator } from './NavIndicator';
 
 interface DesktopNavProps {
     mode?: 'directory' | 'rental';
 }
 
+const TabLink: React.FC<{ to: string; label: string; exact?: boolean }> = ({ to, label, exact }) => {
+    const { pathname } = useLocation();
+    const isActive = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
+
+    return (
+        <Link
+            to={to}
+            className={`relative px-1 py-1 text-sm font-medium transition-colors whitespace-nowrap group ${
+                isActive
+                    ? 'text-slate-900 dark:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+        >
+            {label}
+            <span className={`absolute -bottom-[1px] left-0 right-0 h-0.5 rounded-full bg-slate-900 dark:bg-white transition-opacity ${
+                isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-20'
+            }`} />
+        </Link>
+    );
+};
+
 export const DesktopNav: React.FC<DesktopNavProps> = ({ mode = 'directory' }) => {
     const { t } = useLanguage();
 
     return (
-        <div className="hidden md:flex items-center space-x-1 lg:space-x-2 relative bg-slate-50 dark:bg-slate-800/80 p-1 rounded-full border border-slate-200 dark:border-slate-800/50 backdrop-blur-sm mx-4">
-            <NavIndicator mode={mode} />
+        <nav className="hidden md:flex items-center gap-6 mx-4">
             {mode === 'directory' ? (
                 <>
-                    <NavLink to="/" label={t('nav.directory')} />
-                    <NavLink to="/blog" label={t('nav.blog')} />
-                    <NavLink to="/forum" label={t('nav.forum') || 'Forum'} />
-                    <NavLink to="/shop" label={t('shop')} />
+                    <TabLink to="/" label={t('nav.directory') || 'Directory'} exact />
+                    <TabLink to="/community" label={t('nav.community') || 'Community'} />
                 </>
             ) : (
                 <>
-                    <NavLink to="/alanya-villas" label={t('directory.villas') || 'Villas'} />
-                    <NavLink to="/alanya-apartments" label={t('directory.apartments') || 'Apartments'} />
-                    <NavLink to="/services/car-rental" label={t('nav.vehicles') || 'Vehicles'} />
-                    <NavLink to="/services" label={t('nav.services') || 'Services'} />
+                    <TabLink to="/alanya-villas" label={t('directory.villas') || 'Villas'} />
+                    <TabLink to="/alanya-apartments" label={t('directory.apartments') || 'Apartments'} />
+                    <TabLink to="/services/car-rental" label={t('nav.vehicles') || 'Vehicles'} />
+                    <TabLink to="/services" label={t('nav.services') || 'Services'} exact />
                 </>
             )}
-        </div>
+        </nav>
     );
 };

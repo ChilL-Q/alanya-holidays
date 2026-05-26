@@ -6,7 +6,8 @@ import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
-import { DirectoryListingDB, LocationDB } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, LocationDB } from '../../types/models';
+import { slugify } from '../../utils/slugify';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -29,6 +30,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
 
     const [formData, setFormData] = useState({
         name: '',
+        slug: '',
         short_description: '',
         category_id: 'medical',
         location: '',
@@ -55,6 +57,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
             if (listing) {
                 setFormData({
                     name: listing.name,
+                    slug: listing.slug || '',
                     short_description: listing.short_description,
                     category_id: listing.category_id,
                     location: listing.location,
@@ -95,6 +98,13 @@ export const AdminEditDirectoryPage: React.FC = () => {
             .then(setAvailableLocations)
             .catch(err => console.error('Failed to load locations:', err));
     }, []);
+
+    // Auto-generate slug from name when creating a new listing
+    useEffect(() => {
+        if (!isEditing && formData.name && !formData.slug) {
+            setFormData(prev => ({ ...prev, slug: slugify(prev.name) }));
+        }
+    }, [formData.name, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -169,8 +179,9 @@ export const AdminEditDirectoryPage: React.FC = () => {
 
             const finalImages = [...existingImages, ...uploadedUrls];
 
-            const listingData: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'> = {
+            const listingData: DirectoryListingCreateInput = {
                 name: formData.name,
+                slug: formData.slug || undefined,
                 short_description: formData.short_description,
                 category_id: formData.category_id,
                 location: formData.location,
@@ -246,6 +257,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
                     <div className="lg:col-span-2 space-y-6">
                         <BasicDetailsForm
                             name={formData.name}
+                            slug={formData.slug}
                             description={formData.short_description}
                             onChange={handleChange}
                         />

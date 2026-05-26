@@ -1,19 +1,14 @@
 import { supabase } from '../supabase';
 import { Message } from '../../types/index';
 import { retry } from '../../utils/retry';
-
-// eslint-disable-next-line no-control-regex
-const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
-
-const sanitizeHeaderField = (value: string): string =>
-    value.replace(STRIP_CONTROL, '').trim();
+import { sanitizeString } from '../../utils/sanitize';
 
 const sanitizeMessage = (data: Message): Message => ({
     ...data,
-    name: sanitizeHeaderField(data.name).slice(0, 200),
-    email: sanitizeHeaderField(data.email).slice(0, 320),
-    subject: data.subject ? sanitizeHeaderField(data.subject).slice(0, 500) : data.subject,
-    message: sanitizeHeaderField(data.message).slice(0, 10000),
+    name: sanitizeString(data.name).slice(0, 200),
+    email: sanitizeString(data.email).slice(0, 320),
+    subject: data.subject ? sanitizeString(data.subject).slice(0, 500) : data.subject,
+    message: sanitizeString(data.message).slice(0, 10000),
 });
 
 export const messagesService = {

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { retry } from '../utils/retry';
+import { TripParams } from '../types/models';
 
 /**
  * Curated fallback recommendations for Alanya travel.
@@ -122,15 +123,7 @@ export const askLocalGuide = async (
         return getFallbackResponse();
     }
 };
-export const planTrip = async (
-    prefs: { 
-        duration: number; 
-        companion: string; 
-        interests: string[];
-        pace: string;
-        budget: string;
-    }
-): Promise<string> => {
+export const planTrip = async (prefs: TripParams): Promise<string> => {
     const prompt = `Act as an expert Alanya tour guide. Generate a detailed ${prefs.duration}-day trip itinerary for a ${prefs.companion}.
     Interests: ${prefs.interests.join(', ')}.
     Pace: ${prefs.pace}.
@@ -152,11 +145,23 @@ export const planTrip = async (
           "day": 1,
           "title": "Day Title",
           "items": [
-            {"time": "09:00", "title": "Activity Name", "description": "Brief description", "location": "Area", "link": "/services/..."}
+            {"time": "09:00", "title": "Activity Name", "description": "Brief description", "location": "Area", "link": "/services/...", "lat": 36.5438, "lng": 32.0000}
           ]
         }
       ]
     }
+
+    Coordinates guidelines (Alanya, Turkey):
+    - Include accurate lat/lng for each activity location when known.
+    - If you do not know the exact coordinates, omit lat and lng entirely rather than guessing.
+    - Examples:
+      - Alanya Castle (Kalesi): lat 36.5438, lng 31.9998
+      - Kleopatra Beach: lat 36.5480, lng 31.9850
+      - Damlatas Cave: lat 36.5450, lng 31.9900
+      - Red Tower (Kizil Kule): lat 36.5420, lng 31.9950
+      - Alanya Harbor: lat 36.5400, lng 32.0050
+      - Dim Cayi: lat 36.4700, lng 32.1500
+      - Sapadere Canyon: lat 36.4000, lng 32.2000
     
     Link suggestions:
     - /services/car-rental

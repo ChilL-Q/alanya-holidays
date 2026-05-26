@@ -1,7 +1,9 @@
 import React from 'react';
 import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { db } from '../../api-services';
+import { getListingUrl } from '../../constants/categoryPaths';
 
 interface DirectoryListingCardProps {
     listing: DirectoryListingDB;
@@ -191,6 +193,16 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         <MapPin size={16} /> Map
                     </button>
                 </div>
+
+                {listing.slug && (
+                    <Link
+                        to={getListingUrl(listing.category_id, listing.slug)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-teal-600 dark:text-cyan-400 hover:underline mt-2 block text-center"
+                    >
+                        View full page →
+                    </Link>
+                )}
             </div>
         </div>
     );

@@ -89,6 +89,7 @@ export const Footer: React.FC = () => {
                         <ul className="space-y-3 mt-4 text-sm">
                             <li><Link to="/about" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.about')}</Link></li>
                             <li><Link to="/stays" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('nav.stays')}</Link></li>
+                            <li><Link to="/list-property" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.listYourRental')}</Link></li>
                             <li><Link to="/contact" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.contact')}</Link></li>
                         </ul>
                     </div>

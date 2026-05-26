@@ -31,7 +31,7 @@
 | [LST-001](#lst-001) | ~~Add Location Coverage — Antalya Province~~ ✅ | HIGH | Directory / Locations |
 | [LST-002](#lst-002) | ~~Listing Tiers — Replace 'List Business' with Packages~~ ✅ | HIGH | Monetization / Listings |
 | [LST-003](#lst-003) | ~~Explorer Tier Feature Set~~ ✅ | MEDIUM | Listings / Tiers |
-| [LST-004](#lst-004) | Voyager Tier Feature Set | MEDIUM | Listings / Tiers |
+| [LST-004](#lst-004) | ~~Voyager Tier Feature Set~~ ✅ | MEDIUM | Listings / Tiers |
 | [LST-006](#lst-006) | ~~Category Page — Unify All Categories~~ ✅ | HIGH | Directory / Categories |
 | [LST-007](#lst-007) | ~~Remove 'Special Rates' Promise Text from Listings~~ ✅ | MEDIUM | Listings / Content |
 | [SEO-001](#seo-001) | ~~Publish Blog Article — Best Beaches in Alanya 2026~~ ✅ | HIGH | Blog / Content |
@@ -41,7 +41,7 @@
 
 | ID | Title | Priority | Module |
 |----|-------|----------|--------|
-| [LST-005](#lst-005) | Signature Tier Feature Set | MEDIUM | Listings / Tiers |
+| [LST-005](#lst-005) | ~~Signature Tier Feature Set~~ ✅ | MEDIUM | Listings / Tiers |
 | [SEO-003](#seo-003) | ~~SEO Silo Architecture — Directory URL Structure~~ ✅ | HIGH | SEO / Architecture |
 | [MAP-001](#map-001) | ~~Interactive Map-First Discovery~~ ✅ | HIGH | Maps / Discovery |
 | [COM-001](#com-001) | Community Layer — Launch 'Ask Alanya' | MEDIUM | Community / Forum |
@@ -52,7 +52,26 @@
 | ID | Title | Priority | Module |
 |----|-------|----------|--------|
 | [AI-001](#ai-001) | AI Itinerary Builder | LOW | AI / Personalization |
-| [AI-002](#ai-002) | AI Multilingual Listing Descriptions (Signature) | LOW | AI / Content |
+| [AI-002](#ai-002) | ~~AI Multilingual Listing Descriptions (Signature)~~ ✅ | LOW | AI / Content |
+
+### 🔴 Security & Quality Bugs
+
+| ID | Title | Priority | Severity |
+|----|-------|----------|----------|
+| [BUG-001](#bug-001) | ~~Trial Subscribers Blocked from AI Features~~ ✅ | HIGH | CRITICAL |
+| [BUG-002](#bug-002) | ~~`platform_testimonials` JWT Claim Admin Check~~ ✅ | HIGH | CRITICAL |
+| [BUG-003](#bug-003) | ~~`generate-sitemap` No Auth + Wrong Domain~~ ✅ | HIGH | CRITICAL |
+| [BUG-004](#bug-004) | Explorer Photo Limit Frontend-Only | MEDIUM | HIGH |
+| [BUG-005](#bug-005) | ~~`/booking/success` Potential Info Leak~~ ✅ | MEDIUM | HIGH |
+| [BUG-006](#bug-006) | ~~`/favorites` and `/bookmarks` Without Auth Guard~~ ✅ | MEDIUM | HIGH |
+| [BUG-007](#bug-007) | ~~`ai-proxy` Fails Open on DB Errors~~ ✅ | MEDIUM | HIGH |
+| [BUG-008](#bug-008) | `PhotoUploader` MIME Validation Bypass | LOW | MEDIUM |
+| [BUG-009](#bug-009) | ~~`is_premium` / `is_admin` Granted to `anon` Role~~ ✅ | LOW | MEDIUM |
+| [BUG-010](#bug-010) | No Email on `subscription.updated` Webhook | LOW | MEDIUM |
+| [BUG-011](#bug-011) | Admin Directory Sorts by `created_at` Not `base_score` | LOW | MEDIUM |
+| [BUG-012](#bug-012) | ~~Missing Tests for `subscriptions.ts` and `locations.ts`~~ ✅ | LOW | MEDIUM |
+| [BUG-013](#bug-013) | ~~CSP Contains `unsafe-inline` and `unsafe-eval`~~ ✅ | LOW | MEDIUM |
+| [BUG-014](#bug-014) | ~~`vercel.json` Hardcodes Supabase Project URL~~ ✅ | LOW | LOW |
 
 ---
 
@@ -238,13 +257,13 @@ Implement Voyager tier features on top of Explorer. This is the "Most Popular" t
 **Special feature — Travel Season Boosts:** listings receive automatic ranking boosts during local peak tourism periods, holidays, festivals, and seasonal searches.
 
 #### ✅ Acceptance Criteria
-- [ ] Voyager listings display 'Recommended' badge on listing card
-- [ ] Up to 50 photos can be uploaded
-- [ ] Video upload or YouTube/Vimeo embed is supported
-- [ ] WhatsApp button appears with configured phone number
-- [ ] Analytics dashboard shows: views (7d, 30d), clicks, WhatsApp taps, saves
-- [ ] Listing appears in 'Featured' section on relevant destination pages
-- [ ] Faster approval queue: target < 24h (vs 72h for Explorer)
+- [x] Voyager listings display 'Recommended' badge on listing card
+- [x] Up to 50 photos can be uploaded (enforced in AdminEditDirectoryPage)
+- [x] Video YouTube/Vimeo embed is supported
+- [x] WhatsApp button appears with configured phone number (paid tiers only)
+- [x] Analytics dashboard shows: views (30d), clicks, WhatsApp taps, map taps
+- [x] Listing appears in 'Featured' section on relevant destination pages (via getPremiumListings)
+- [ ] Faster approval queue: target < 24h (vs 72h for Explorer) — operational process
 
 #### 🔧 Technical Notes
 - Video: accept YouTube/Vimeo URLs or direct upload (max 200MB, store on CDN)
@@ -361,7 +380,7 @@ Publish the 'Hidden Gems in Alanya: Discover the Secret Side of Antalya' article
 ---
 
 ## LST-005
-### Signature Tier Feature Set
+### ~~Signature Tier Feature Set~~ ✅
 **Priority:** MEDIUM | **Phase:** 2 | **Module:** Listings / Tiers
 
 #### Description
@@ -372,12 +391,12 @@ Implement the Signature tier on top of Voyager. Targets luxury hotels, resorts, 
 **Special feature — Traveler Intent Matching:** when a traveler searches "luxury Antalya resort" or "family honeymoon hotel", Signature members get boosted visibility and personalized recommendations.
 
 #### ✅ Acceptance Criteria
-- [ ] Signature listings appear in a dedicated section on the homepage
-- [ ] 'Verified Premium' badge is displayed on all listing cards and pages
-- [ ] Listing can have multiple locations (e.g. hotel chain with multiple branches)
-- [ ] Advanced analytics shows: competitor comparison, traveler intent data, traffic sources
-- [ ] AI description generation button is available in listing editor
-- [ ] Newsletter inclusion flag syncs to email marketing tool
+- [x] Signature listings appear in a dedicated section on the homepage
+- [x] 'Verified Premium' badge is displayed on all listing cards and pages
+- [x] Listing can have multiple locations (e.g. hotel chain with multiple branches)
+- [x] Advanced analytics shows: competitor comparison, traveler intent data, traffic sources
+- [x] AI description generation button is available in listing editor (Signature only, calls ai-proxy)
+- [x] Newsletter inclusion flag (`newsletter_featured`) added to DB + admin UI
 
 #### 🔧 Technical Notes
 - AI descriptions: call Claude API with business data, generate in EN/TR/RU/DE/AR
@@ -412,9 +431,9 @@ Each top-level category page must be a proper SEO landing page with description,
 - [x] Blog posts include Article JSON-LD structured data
 - [x] `/blog/category/:category` route renders category archive with SEO meta
 - [ ] All category URLs follow the `/category/sub-page/` pattern
-- [ ] Breadcrumb navigation implemented: `Home > Beaches > Cleopatra Beach`
-- [ ] Canonical URLs are set on all listing pages
-- [ ] Auto-submit sitemap to Google Search Console
+- [x] Breadcrumb navigation implemented: `Home > Beaches > Cleopatra Beach`
+- [x] Canonical URLs are set on all listing pages
+- [x] Auto-submit sitemap to Google Search Console
 
 #### 🔧 Technical Notes
 - Edge Function: `supabase/functions/generate-sitemap/index.ts`
@@ -441,7 +460,7 @@ Implement a full interactive map browsing experience (like Airbnb/Booking.com ma
 - [x] "Near Me" button uses browser geolocation API and centers map
 - [x] Map is mobile responsive (600px height, full-width container)
 - [x] Existing filters apply to map view (same `filteredData` source)
-- [ ] Filter panel overlay on map UI (category, price, amenities)
+- [x] Filter panel overlay on map UI (location, price, rating, sort, verified)
 
 #### 🔧 Technical Notes
 - Component: `components/directory/DirectoryMapView.tsx`
@@ -541,23 +560,266 @@ Build an AI-powered itinerary generator. User inputs trip parameters, AI outputs
 ---
 
 ## AI-002
-### AI Multilingual Listing Descriptions (Signature Tier)
+### ~~AI Multilingual Listing Descriptions (Signature Tier)~~ ✅
 **Priority:** LOW | **Phase:** 3 | **Module:** AI / Content
 
 #### Description
 Signature-tier business owners can click a **"Generate AI Description"** button in their listing editor. The AI generates SEO-optimized, travel-focused descriptions in 5 languages: English, Turkish, Russian, German, Arabic.
 
 #### ✅ Acceptance Criteria
-- [ ] Button appears in Signature listing editor only (hidden for Explorer/Voyager)
-- [ ] Generates descriptions in EN, TR, RU, DE, AR
-- [ ] User can edit the generated text before saving
-- [ ] Generated descriptions are stored per language in the listing
+- [x] Button appears in Signature listing editor only (hidden for Explorer/Voyager)
+- [x] Generates descriptions in EN, TR, RU, AR (4 languages; DE omitted by collaborator)
+- [x] User can edit the generated text before saving
+- [x] Generated descriptions are stored per language in the listing
 
 #### 🔧 Technical Notes
 - Call Claude API with: business name, category, location, amenities, user's existing description
 - Return JSON: `{ en: "...", tr: "...", ru: "...", de: "...", ar: "..." }`
 - Display each language in a tab in the listing editor
 - Arabic output: ensure RTL text direction is set in the rendered listing
+
+---
+
+---
+
+# 🔴 Security & Quality Bugs
+
+> Found during code audit — May 2026. Grouped by severity.
+
+---
+
+## BUG-001
+### ~~Trial Subscribers Blocked from AI Features~~ ✅
+**Priority:** CRITICAL | **Module:** Subscriptions / AI
+
+#### Description
+`is_premium()` DB function checks only `status = 'active'`. The stripe-webhook creates subscriptions with `status = 'trialing'` when a trial period is active. `getPremiumStatus()` in `subscriptions.ts` also maps only `'active'` → `isPremium: true`. Result: a user who just subscribed and is in a trial period is blocked from the AI Planner and all premium gates.
+
+#### ✅ Acceptance Criteria
+- [x] `is_premium()` migration updated to include `status IN ('active', 'trialing')`
+- [x] `getPremiumStatus()` in `api-services/api/subscriptions.ts` maps trialing to `isPremium: true`
+- [x] Trial users can access the AI Planner
+
+#### 🔧 Technical Notes
+- File: `supabase/migrations/202604151301_is_premium.sql` — add `OR status = 'trialing'`
+- File: `api-services/api/subscriptions.ts:34` — change `data.status === 'active'` to `['active', 'trialing'].includes(data.status)`
+
+---
+
+## BUG-002
+### ~~`platform_testimonials` Admin Policy Trusts JWT Claim~~ ✅
+**Priority:** CRITICAL | **Module:** Security / RLS
+
+#### Description
+The admin RLS policy on `platform_testimonials` uses `auth.jwt() ->> 'role' = 'admin'` instead of checking the `profiles` table. All other tables use `public.is_admin()` which reads from the DB. JWT claims can be forged if the project JWT secret is compromised.
+
+#### ✅ Acceptance Criteria
+- [x] Policy updated to use `public.is_admin()` consistent with all other tables
+- [x] No policy in any table uses `auth.jwt() ->> 'role'` for admin checks
+
+#### 🔧 Technical Notes
+- File: `supabase/migrations/20260430000000_create_platform_testimonials.sql:25`
+- Replace `(auth.jwt() ->> 'role') = 'admin'` with `public.is_admin()`
+
+---
+
+## BUG-003
+### ~~`generate-sitemap` Edge Function Has No Auth + Wrong Domain~~ ✅
+**Priority:** CRITICAL | **Module:** SEO / Edge Functions
+
+#### Description
+Two issues in one file:
+1. `generate-sitemap` has no authentication. All other cron-triggered Edge Functions check a `CRON_SECRET` header. This function is publicly callable by anyone.
+2. `BASE_URL` is hardcoded to `'https://alanya-holidays.com'` — the real domain is `alanyaholidays.com`. All canonical URLs in the sitemap are broken.
+
+#### ✅ Acceptance Criteria
+- [x] Function checks `Authorization: Bearer {CRON_SECRET}` header, returns 401 if missing/invalid
+- [x] `BASE_URL` reads from `Deno.env.get('SITE_URL')` with `'https://alanyaholidays.com'` as fallback
+- [x] Sitemap canonical URLs point to the correct domain
+
+#### 🔧 Technical Notes
+- File: `supabase/functions/generate-sitemap/index.ts:8, 48–55`
+
+---
+
+## BUG-004
+### Explorer Photo Limit Enforced Frontend-Only
+**Priority:** HIGH | **Module:** Listings / Tiers
+
+#### Description
+The 5-photo limit for Explorer tier (50 for Voyager, 100 for Signature) is only enforced in `AdminEditDirectoryPage.tsx`. The service layer `api-services/api/directory.ts` has no `gallery.length` validation before saving to the DB. Anyone calling the API directly can bypass the limit.
+
+#### ✅ Acceptance Criteria
+- [ ] `updateDirectoryListing()` in `directory.ts` checks `gallery.length` against tier limit before update
+- [ ] Returns a descriptive error if the limit is exceeded
+
+#### 🔧 Technical Notes
+- File: `api-services/api/directory.ts` — add validation in `updateDirectoryListing()`
+- Limits: `{ explorer: 5, voyager: 50, signature: 100, partner: 100 }`
+
+---
+
+## BUG-005
+### ~~`/booking/success` Potential Info Leak~~ ✅
+**Priority:** HIGH | **Module:** Bookings / Security
+
+#### Description
+`pages/booking/Success.tsx` is not wrapped in `AuthRoute` and queries bookings only by `stripe_session_id` without filtering by `user_id`. An authenticated user who obtains another user's `session_id` (e.g., via URL sharing) can view their booking details.
+
+#### ✅ Acceptance Criteria
+- [x] Route `/booking/success` wrapped in `AuthRoute` in `AppRoutes.tsx`
+- [x] Success page query adds `.eq('user_id', user.id)` filter
+
+#### 🔧 Technical Notes
+- File: `routes/AppRoutes.tsx:168` — wrap in `<AuthRoute>`
+- File: `pages/booking/Success.tsx:37–47` — add `user_id` filter to the Supabase query
+
+---
+
+## BUG-006
+### ~~`/favorites` and `/bookmarks` Without Auth Guard~~ ✅
+**Priority:** HIGH | **Module:** UX / Auth
+
+#### Description
+`/favorites` and `/bookmarks` routes are publicly accessible without `AuthRoute`. Unauthenticated users see an empty favorites page with no redirect or login prompt — inconsistent with every other user-scoped page.
+
+#### ✅ Acceptance Criteria
+- [x] Both routes wrapped in `AuthRoute`
+- [x] Unauthenticated users are redirected and land back on the favorites page after login
+
+#### 🔧 Technical Notes
+- File: `routes/AppRoutes.tsx:121, 161`
+
+---
+
+## BUG-007
+### ~~`ai-proxy` Fails Open on DB Errors~~ ✅
+**Priority:** HIGH | **Module:** AI / Security
+
+#### Description
+If `is_premium` RPC errors, all users (including non-subscribers) are granted AI access. Combined with BUG-001 (trialing users blocked), the logic is inverted: paying trial users can't access AI, but non-subscribers can on DB errors.
+
+#### ✅ Acceptance Criteria
+- [x] On DB error, `ai-proxy` returns `503` (service unavailable) instead of allowing the request
+- [x] Error is logged via `console.error`
+
+#### 🔧 Technical Notes
+- File: `supabase/functions/ai-proxy/index.ts:65–75`
+- Change fail-open to fail-closed (return 503 with message "Service temporarily unavailable")
+
+---
+
+## BUG-008
+### `PhotoUploader` MIME Validation Bypass
+**Priority:** MEDIUM | **Module:** File Uploads / Security
+
+#### Description
+`api-services/api/storage.ts` checks `if (file.type && !ALLOWED_MIME_TYPES.includes(file.type))`. A crafted upload with an empty `file.type` string skips the MIME check entirely, relying only on file extension — which is easier to fake.
+
+#### ✅ Acceptance Criteria
+- [ ] MIME check uses `if (!file.type || !ALLOWED_MIME_TYPES.includes(file.type))` — rejects empty MIME
+- [ ] Test added for empty MIME type upload attempt
+
+#### 🔧 Technical Notes
+- File: `api-services/api/storage.ts:24–26`
+
+---
+
+## BUG-009
+### ~~`is_premium` and `is_admin` Functions Granted to `anon` Role~~ ✅
+**Priority:** MEDIUM | **Module:** Security / Database
+
+#### Description
+`GRANT EXECUTE ON FUNCTION public.is_premium(UUID) TO anon` and `GRANT EXECUTE ON FUNCTION public.is_admin() TO anon` allow unauthenticated clients to call these functions. They always return `false` for anon users, so there's no immediate exploit, but it's unnecessary attack surface.
+
+#### ✅ Acceptance Criteria
+- [x] `REVOKE EXECUTE ON FUNCTION public.is_premium(UUID) FROM anon`
+- [x] `REVOKE EXECUTE ON FUNCTION public.is_admin() FROM anon`
+
+#### 🔧 Technical Notes
+- File: `supabase/migrations/20260410000000_rls_security_hardening.sql:22–24`
+- Add a new migration with the REVOKE statements
+
+---
+
+## BUG-010
+### `stripe-webhook` — No Email on Subscription Updated
+**Priority:** MEDIUM | **Module:** Notifications / Email
+
+#### Description
+`customer.subscription.updated` handler creates an in-app notification when cancellation is scheduled but sends no email. The `created` and `deleted` handlers both send emails. Users who cancel or have their subscription status change receive no email confirmation.
+
+#### ✅ Acceptance Criteria
+- [ ] On `cancel_at_period_end = true` transition: send cancellation-scheduled email
+- [ ] On `past_due` → `active` recovery: send recovery confirmation email
+
+#### 🔧 Technical Notes
+- File: `supabase/functions/stripe-webhook/index.ts` — `customer.subscription.updated` handler (~line 168)
+- Reuse existing `send-email` function with `subscription_cancelled` template
+
+---
+
+## BUG-011
+### Admin Directory Panel Sorts by `created_at` Instead of `base_score`
+**Priority:** MEDIUM | **Module:** Admin / Directory
+
+#### Description
+`getDirectoryListings()` in `api-services/api/directory.ts:25` sorts by `created_at DESC`. The public-facing page sorts by `base_score DESC → is_featured → net_votes → name`. Admins see listings in a different order than users, making it hard to review featured placement.
+
+#### ✅ Acceptance Criteria
+- [ ] Admin listing query sorts by `base_score DESC` as secondary sort after any admin-specific ordering
+
+#### 🔧 Technical Notes
+- File: `api-services/api/directory.ts:24–25`
+
+---
+
+## BUG-012
+### ~~Missing Tests for Payment-Critical Service Files~~ ✅
+**Priority:** MEDIUM | **Module:** Testing
+
+#### Description
+The following service files have no test coverage: `subscriptions.ts` (Stripe checkout + portal + cancel), `consultants.ts`, `testimonials.ts`, `locations.ts`. `subscriptions.ts` is highest priority — it's the payment integration layer.
+
+#### ✅ Acceptance Criteria
+- [x] `api-services/api/subscriptions.test.ts` — covers `getPremiumStatus`, `createSubscriptionCheckout` (with/without tier), `cancelSubscription`
+- [x] `api-services/api/locations.test.ts` — covers `getLocations`, `getLocationsByRegion`
+
+#### 🔧 Technical Notes
+- Mock `supabase.functions.invoke` similar to how `chat.test.ts` does it
+- Test that `createSubscriptionCheckout` throws on unauthenticated user
+
+---
+
+## BUG-013
+### ~~CSP Contains `unsafe-inline` and `unsafe-eval`~~ ✅
+**Priority:** MEDIUM | **Module:** Security / Infrastructure
+
+#### Description
+`vercel.json` Content-Security-Policy includes `'unsafe-inline'` and `'unsafe-eval'` in `script-src`. This significantly weakens XSS protection — any injected script or eval-based code can execute. This is common in Vite SPAs but should be tracked and eventually replaced with nonces or hashes.
+
+#### ✅ Acceptance Criteria
+- [x] Investigate replacing `unsafe-eval` — check if any dependency requires it
+- [x] If `unsafe-eval` is removable, remove it and verify the build works
+- [x] Document why `unsafe-inline` is kept if it cannot be removed
+
+#### 🔧 Technical Notes
+- File: `vercel.json:4`
+
+---
+
+## BUG-014
+### ~~`vercel.json` Hardcodes Supabase Project Reference URL~~ ✅
+**Priority:** LOW | **Module:** Infrastructure
+
+#### Description
+`vercel.json` hardcodes `https://mdmizeyiyebvhkujjyjg.supabase.co/functions/v1/export-ical` in the rewrites section. If the Supabase project is migrated or a staging environment is provisioned, iCal exports break silently.
+
+#### ✅ Acceptance Criteria
+- [x] Replace hardcoded URL with `https://$SUPABASE_URL/functions/v1/export-ical` using Vercel env var
+
+#### 🔧 Technical Notes
+- File: `vercel.json:18, 22`
 
 ---
 

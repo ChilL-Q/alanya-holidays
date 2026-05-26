@@ -30,7 +30,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                         <option value="transfer">Transfer</option>
                         <option value="tour">Tour</option>
                         <option value="esim">eSIM</option>
-                        <option value="visa">Visa Service</option>
+                        <option value="visa">Residency &amp; Legal Service</option>
                     </select>
                 </div>
                 <div>
