@@ -14,6 +14,8 @@ export const ar = {
     'nav.profile': 'الملف الشخصي',
     'nav.messages': 'الرسائل',
     'nav.list_property': 'اعرض عقارك',
+    'nav.switch_to_rentals': 'الانتقال إلى الإيجارات والخدمات',
+    'nav.list_rental_or_service': 'إدراج إيجار أو خدمة',
     'nav.community': 'المجتمع',
     'nav.login': 'تسجيل الدخول',
     'nav.signup': 'تسجيل',

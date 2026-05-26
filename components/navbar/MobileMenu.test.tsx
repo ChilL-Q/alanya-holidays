@@ -130,7 +130,8 @@ describe('MobileMenu', () => {
     it('renders main navigation links in directory mode', () => {
         renderMenu();
         expect(screen.getByText('nav.directory')).toBeInTheDocument();
-        expect(screen.getByText('nav.community')).toBeInTheDocument();
+        expect(screen.getByText('nav.blog')).toBeInTheDocument();
+        expect(screen.getByText('nav.forum')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
     });
 
@@ -159,6 +160,7 @@ describe('MobileMenu', () => {
         renderMenu();
         expect(screen.getByText('nav.admin_panel')).toBeInTheDocument();
         expect(screen.getByText('nav.host_dashboard')).toBeInTheDocument();
+        expect(screen.getByText('nav.list_rental_or_service')).toBeInTheDocument();
     });
 
     it('handles theme toggle', () => {
@@ -200,7 +202,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a directory link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.community'));
+        fireEvent.click(screen.getByText('nav.forum'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 
