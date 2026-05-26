@@ -570,6 +570,7 @@ export interface CategoryAnalyticsAverage {
   listing_count: number;
 }
 
+
 // ============================================================
 // AI Itinerary (AI-001)
 // ============================================================

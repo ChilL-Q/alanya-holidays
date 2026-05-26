@@ -6,6 +6,24 @@ import { sanitizeString } from '../../utils/sanitize';
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateUUIDs(ids: string[]) {
+    for (const id of ids) {
+        if (!UUID_RE.test(id)) throw new Error(`Invalid UUID: ${id}`);
+    }
+}
+
+const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+
+function buildLocationRows(listingId: string, locationIds: string[]) {
+    return locationIds.map((lid, i) => ({
+        listing_id: listingId,
+        location_id: lid,
+        display_order: i,
+    }));
+}
+
 function sanitizeValue(value: unknown): unknown {
     if (typeof value === 'string') {
         return sanitizeString(value);
@@ -27,15 +45,7 @@ const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
     return sanitizeValue(obj) as T;
 };
 
-const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
-
-function buildLocationRows(listingId: string, locationIds: string[]) {
-    return locationIds.map((lid, i) => ({
-        listing_id: listingId,
-        location_id: lid,
-        display_order: i,
-    }));
-}
+const LISTING_LOCATIONS_SELECT = '*, listing_locations(id, location_id, display_order, locations(id, name))';
 
 export const directoryService = {
     async getDirectoryListings(
@@ -81,7 +91,7 @@ export const directoryService = {
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*, listing_locations(id, location_id, display_order, locations(id, name))')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('id', id)
             .single();
 
@@ -111,7 +121,7 @@ export const directoryService = {
     async getDirectoryListingsByCategory(categoryId: string): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('category_id', categoryId)
             .order('base_score', { ascending: false })
             .order('is_featured', { ascending: false })
@@ -136,7 +146,7 @@ export const directoryService = {
     async getFreeListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('is_premium', false)
             .order('net_votes', { ascending: false, nullsFirst: false })
             .limit(6);
@@ -155,7 +165,7 @@ export const directoryService = {
     async getPremiumListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('is_premium', true)
             .order('base_score', { ascending: false })
             .limit(6);
@@ -174,7 +184,7 @@ export const directoryService = {
     async getSignatureListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('tier', 'signature')
             .eq('is_premium', true)
             .order('base_score', { ascending: false })
@@ -248,6 +258,8 @@ export const directoryService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
+        if (locationIds?.length) validateUUIDs(locationIds);
+
         const tier = listing.tier || 'explorer';
         const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
         const limit = TIER_LIMITS[tier] ?? 5;
@@ -307,6 +319,8 @@ export const directoryService = {
     ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
+
+        if (locationIds?.length) validateUUIDs(locationIds);
 
         // Strip fields that should not be updated directly
         const safeUpdates: Record<string, unknown> = { ...updates };
