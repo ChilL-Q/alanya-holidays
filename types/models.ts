@@ -419,6 +419,13 @@ export interface ListingDescriptions {
   ar?: string;
 }
 
+export interface ListingLocationJunction {
+  id: string;
+  location_id: string;
+  display_order: number;
+  locations: { id: string; name: string };
+}
+
 export interface DirectoryListingDB {
   id: string;
   category_id: string;
@@ -446,12 +453,7 @@ export interface DirectoryListingDB {
   net_votes?: number;
   created_at?: string;
   updated_at?: string;
-  listing_locations?: {
-    id: string;
-    location_id: string;
-    display_order: number;
-    locations: { id: string; name: string };
-  }[];
+  listing_locations?: ListingLocationJunction[];
 }
 
 // ============================================================

@@ -46,7 +46,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
                 console.error('Failed to load category average:', err);
                 setCategoryAvg(null);
             });
-    }, [selected]);
+    }, [selected?.listing_category_id]);
 
     const chartData = useMemo(() => {
         if (!selected) return [];
@@ -57,7 +57,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
             website: day.website_clicks,
             map: day.map_clicks,
         }));
-    }, [selected]);
+    }, [selected?.listing_id]);
 
     const summaryCards = selected ? [
         { label: 'Views', value: selected.total_views, icon: Eye, color: 'text-teal-600', bg: 'bg-teal-50 dark:bg-teal-900/20' },

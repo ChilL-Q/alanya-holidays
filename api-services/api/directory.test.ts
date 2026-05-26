@@ -38,14 +38,23 @@ const makeChain = (overrides: any = {}) => {
     const chain: any = {
         select: vi.fn().mockReturnThis(),
         insert: vi.fn().mockReturnThis(),
+        upsert: vi.fn().mockReturnThis(),
         update: vi.fn().mockReturnThis(),
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
+        not: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         single: vi.fn(),
         ...overrides
     };
     return chain;
+};
+
+const setupTableDispatch = (listingChain: any, locationChain: any) => {
+    mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'listing_locations') return locationChain;
+        return listingChain;
+    });
 };
 
 describe('directoryService', () => {
@@ -147,19 +156,31 @@ describe('directoryService', () => {
         });
 
         it('syncs location ids after create when provided', async () => {
-            const chain = makeChain();
-            chain.single.mockResolvedValue({ data: mockListing, error: null });
-            mockSupabase.from.mockReturnValue(chain);
+            const listingChain = makeChain();
+            listingChain.single.mockResolvedValue({ data: mockListing, error: null });
+            const locationChain = makeChain();
+            locationChain.insert.mockResolvedValue({ error: null });
+            setupTableDispatch(listingChain, locationChain);
 
             const { id: _id, created_at: _created_at, updated_at: _updated_at, ...listingData } = mockListing;
             await directoryService.createDirectoryListing(listingData as any, ['loc-1', 'loc-2']);
 
-            expect(chain.insert).toHaveBeenCalledTimes(2); // listings + listing_locations
-            const junctionCall = chain.insert.mock.calls[1][0];
-            expect(junctionCall).toEqual([
+            expect(locationChain.insert).toHaveBeenCalledWith([
                 { listing_id: 'dir-1', location_id: 'loc-1', display_order: 0 },
                 { listing_id: 'dir-1', location_id: 'loc-2', display_order: 1 }
             ]);
+        });
+
+        it('throws when location sync fails after create', async () => {
+            const listingChain = makeChain();
+            listingChain.single.mockResolvedValue({ data: mockListing, error: null });
+            const locationChain = makeChain();
+            locationChain.insert.mockResolvedValue({ error: { message: 'RLS denied' } });
+            setupTableDispatch(listingChain, locationChain);
+
+            const { id: _id, created_at: _created_at, updated_at: _updated_at, ...listingData } = mockListing;
+            await expect(directoryService.createDirectoryListing(listingData as any, ['loc-1']))
+                .rejects.toThrow('Listing created but location sync failed: RLS denied');
         });
 
         it('throws on error', async () => {
@@ -201,14 +222,43 @@ describe('directoryService', () => {
         it('syncs location ids when provided', async () => {
             const chain = makeChain();
             chain.single.mockResolvedValue({ data: mockListing, error: null });
+            chain.upsert.mockResolvedValue({ error: null });
+            chain.not.mockResolvedValue({ error: null });
             mockSupabase.from.mockReturnValue(chain);
 
-            await directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, ['loc-1']);
+            await directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, ['loc-1', 'loc-2']);
+            expect(chain.upsert).toHaveBeenCalledWith(
+                [
+                    { listing_id: 'dir-1', location_id: 'loc-1', display_order: 0 },
+                    { listing_id: 'dir-1', location_id: 'loc-2', display_order: 1 }
+                ],
+                { onConflict: 'listing_id,location_id' }
+            );
             expect(chain.delete).toHaveBeenCalled();
-            expect(chain.eq).toHaveBeenCalledWith('listing_id', 'dir-1');
-            expect(chain.insert).toHaveBeenCalledWith([
-                { listing_id: 'dir-1', location_id: 'loc-1', display_order: 0 }
-            ]);
+            expect(chain.not).toHaveBeenCalledWith('location_id', 'in', '(loc-1,loc-2)');
+        });
+
+        it('throws when location upsert fails', async () => {
+            const listingChain = makeChain();
+            listingChain.single.mockResolvedValue({ data: mockListing, error: null });
+            const locationChain = makeChain();
+            locationChain.upsert.mockResolvedValue({ error: { message: 'upsert failed' } });
+            setupTableDispatch(listingChain, locationChain);
+
+            await expect(directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, ['loc-1']))
+                .rejects.toThrow('Location sync failed: upsert failed');
+        });
+
+        it('throws when location cleanup fails', async () => {
+            const listingChain = makeChain();
+            listingChain.single.mockResolvedValue({ data: mockListing, error: null });
+            const locationChain = makeChain();
+            locationChain.upsert.mockResolvedValue({ error: null });
+            locationChain.not.mockResolvedValue({ error: { message: 'delete failed' } });
+            setupTableDispatch(listingChain, locationChain);
+
+            await expect(directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, ['loc-1']))
+                .rejects.toThrow('Location cleanup failed: delete failed');
         });
 
         it('removes all location ids when empty array provided', async () => {
@@ -219,6 +269,18 @@ describe('directoryService', () => {
             await directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, []);
             expect(chain.delete).toHaveBeenCalled();
             expect(chain.insert).not.toHaveBeenCalled();
+            expect(chain.upsert).not.toHaveBeenCalled();
+        });
+
+        it('throws when clearing locations fails', async () => {
+            const listingChain = makeChain();
+            listingChain.single.mockResolvedValue({ data: mockListing, error: null });
+            const locationChain = makeChain();
+            locationChain.eq.mockResolvedValue({ error: { message: 'clear failed' } });
+            setupTableDispatch(listingChain, locationChain);
+
+            await expect(directoryService.updateDirectoryListing('dir-1', { name: 'Updated' }, []))
+                .rejects.toThrow('Failed to clear listing locations: clear failed');
         });
 
         it('throws on error', async () => {

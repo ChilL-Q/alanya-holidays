@@ -25,6 +25,16 @@ const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
     return sanitizeValue(obj) as T;
 };
 
+const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+
+function buildLocationRows(listingId: string, locationIds: string[]) {
+    return locationIds.map((lid, i) => ({
+        listing_id: listingId,
+        location_id: lid,
+        display_order: i,
+    }));
+}
+
 export const directoryService = {
     async getDirectoryListings(
         page: number = 1,
@@ -221,7 +231,6 @@ export const directoryService = {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
         const tier = listing.tier || 'explorer';
         const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
         const limit = TIER_LIMITS[tier] ?? 5;
@@ -259,13 +268,9 @@ export const directoryService = {
         }
 
         if (locationIds?.length) {
-            const rows = locationIds.map((lid, i) => ({
-                listing_id: data.id,
-                location_id: lid,
-                display_order: i,
-            }));
+            const rows = buildLocationRows(data.id, locationIds);
             const { error: locError } = await supabase.from('listing_locations').insert(rows);
-            if (locError) console.error('Failed to link listing locations on create:', locError);
+            if (locError) throw new Error(`Listing created but location sync failed: ${locError.message}`);
         }
 
         return data as DirectoryListingDB;
@@ -292,8 +297,7 @@ export const directoryService = {
 
         // Validate gallery length against tier limit
         if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
-            const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
-            const tier = (safeUpdates.tier as string) || 'explorer';
+            const tier = (safeUpdates.tier as string) || (updates as DirectoryListingDB).tier || 'explorer';
             const limit = TIER_LIMITS[tier] ?? 5;
             if ((safeUpdates.gallery as string[]).length > limit) {
                 throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
@@ -315,16 +319,21 @@ export const directoryService = {
         }
 
         if (locationIds !== undefined) {
-            const { error: delError } = await supabase.from('listing_locations').delete().eq('listing_id', id);
-            if (delError) console.error('Failed to clear listing locations on update:', delError);
             if (locationIds.length) {
-                const rows = locationIds.map((lid, i) => ({
-                    listing_id: id,
-                    location_id: lid,
-                    display_order: i,
-                }));
-                const { error: insError } = await supabase.from('listing_locations').insert(rows);
-                if (insError) console.error('Failed to link listing locations on update:', insError);
+                const rows = buildLocationRows(id, locationIds);
+                const { error: upsertError } = await supabase
+                    .from('listing_locations')
+                    .upsert(rows, { onConflict: 'listing_id,location_id' });
+                if (upsertError) throw new Error(`Location sync failed: ${upsertError.message}`);
+                const { error: delError } = await supabase
+                    .from('listing_locations')
+                    .delete()
+                    .eq('listing_id', id)
+                    .not('location_id', 'in', `(${locationIds.join(',')})`);
+                if (delError) throw new Error(`Location cleanup failed: ${delError.message}`);
+            } else {
+                const { error: delError } = await supabase.from('listing_locations').delete().eq('listing_id', id);
+                if (delError) throw new Error(`Failed to clear listing locations: ${delError.message}`);
             }
         }
 
