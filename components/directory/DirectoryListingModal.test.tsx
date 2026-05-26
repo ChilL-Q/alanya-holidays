@@ -8,11 +8,21 @@ import { LanguageProvider } from '../../context/LanguageContext';
 const { mockDb } = vi.hoisted(() => ({
     mockDb: {
         trackListingClick: vi.fn().mockResolvedValue(undefined),
+        getListingReviews: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+        getUserReviewForListing: vi.fn().mockResolvedValue(null),
     }
 }));
 
 vi.mock('../../api-services', () => ({
     db: mockDb
+}));
+
+vi.mock('../../context/AuthContext', () => ({
+    useAuth: vi.fn(() => ({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+    }))
 }));
 
 vi.mock('../../utils/videoEmbed', () => ({
@@ -37,6 +47,9 @@ const baseListing: DirectoryListingDB = {
     whatsapp: '+905551234567',
     website: 'https://example.com',
     google_map_url: 'https://maps.google.com',
+    status: 'approved',
+    owner_user_id: null,
+    rejection_reason: null,
 };
 
 const renderWithLanguage = (ui: React.ReactElement) =>

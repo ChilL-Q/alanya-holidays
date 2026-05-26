@@ -4,10 +4,11 @@ import { Store } from 'lucide-react';
 interface BasicDetailsFormProps {
     name: string;
     description: string;
+    slug: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-export const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ name, description, onChange }) => {
+export const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ name, description, slug, onChange }) => {
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
@@ -28,6 +29,22 @@ export const BasicDetailsForm: React.FC<BasicDetailsFormProps> = ({ name, descri
                             onChange={onChange}
                             className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
                             placeholder="e.g. Alanya Premium Dental"
+                        />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label htmlFor="directory-slug" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                            URL Slug
+                            <span className="text-xs text-slate-500 ml-2 font-normal">(auto-generated, editable)</span>
+                        </label>
+                        <input
+                            id="directory-slug"
+                            type="text"
+                            name="slug"
+                            value={slug}
+                            onChange={onChange}
+                            pattern="[a-z0-9-]+"
+                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white font-mono text-sm"
+                            placeholder="e.g. alanya-premium-dental"
                         />
                     </div>
                     <div className="md:col-span-2">

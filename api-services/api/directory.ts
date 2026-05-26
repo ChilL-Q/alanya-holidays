@@ -1,12 +1,14 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
+import { retry } from '../../utils/retry';
+import { sanitizeString } from '../../utils/sanitize';
 
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
 
 function sanitizeValue(value: unknown): unknown {
     if (typeof value === 'string') {
-        return value.replace(STRIP_CONTROL, '').trim();
+        return sanitizeString(value);
     }
     if (Array.isArray(value)) {
         return value.map(sanitizeValue);
@@ -85,6 +87,21 @@ export const directoryService = {
 
         if (error && error.code !== 'PGRST116') {
             console.error('Error fetching directory listing:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB | null;
+    },
+
+    async getDirectoryListingBySlug(slug: string): Promise<DirectoryListingDB | null> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('slug', slug)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching directory listing by slug:', error);
             throw error;
         }
 
@@ -225,7 +242,7 @@ export const directoryService = {
     },
 
     async createDirectoryListing(
-        listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>,
+        listing: DirectoryListingCreateInput,
         locationIds?: string[]
     ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
@@ -250,10 +267,17 @@ export const directoryService = {
             video_url: listing.video_url?.slice(0, 500) || null,
             is_featured: false,
             is_verified: false,
+            is_premium: false,
             tier,
             base_score: listing.base_score ?? 0,
             descriptions: listing.descriptions ?? {},
+            status: 'pending' as const,
+            owner_user_id: user.id,
+            ...(listing.slug ? { slug: listing.slug.slice(0, 200) } : {}),
             ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
+            ...(listing.certifications?.length ? { certifications: listing.certifications } : {}),
+            ...(listing.languages_spoken?.length ? { languages_spoken: listing.languages_spoken } : {}),
+            ...(listing.newsletter_featured !== undefined ? { newsletter_featured: listing.newsletter_featured } : {}),
         });
 
         const { data, error } = await supabase
@@ -294,6 +318,9 @@ export const directoryService = {
         delete safeUpdates.base_score;
         delete safeUpdates.subscription_id;
         delete safeUpdates.listing_locations;
+        delete safeUpdates.status;
+        delete safeUpdates.owner_user_id;
+        delete safeUpdates.rejection_reason;
 
         // Validate gallery length against tier limit
         if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
@@ -352,6 +379,75 @@ export const directoryService = {
         if (error) {
             console.error('Error deleting directory listing:', error);
             throw error;
+        }
+    },
+
+    async getDirectoryListingsByStatus(
+        status: 'approved' | 'rejected',
+        category?: string
+    ): Promise<DirectoryListingDB[]> {
+        let query = supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('status', status)
+            .order('base_score', { ascending: false });
+        if (category) query = query.eq('category_id', category);
+        const { data, error } = await query;
+        if (error) {
+            console.error(`Error fetching ${status} listings:`, error);
+            throw error;
+        }
+        return data as DirectoryListingDB[];
+    },
+
+    async getPendingDirectoryListings(): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: true });
+        if (error) {
+            console.error('Error fetching pending listings:', error);
+            throw error;
+        }
+        return data as DirectoryListingDB[];
+    },
+
+    async approveDirectoryListing(id: string): Promise<void> {
+        const { data: listing, error } = await supabase
+            .from('directory_listings')
+            .update({ status: 'approved' })
+            .eq('id', id)
+            .select('name, owner_user_id')
+            .single();
+        if (error) {
+            console.error('Error approving listing:', error);
+            throw error;
+        }
+        if (listing?.owner_user_id) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: { type: 'listing_approved', userId: listing.owner_user_id, data: { title: listing.name } },
+            })).catch(console.error);
+        }
+    },
+
+    async rejectDirectoryListing(id: string, reason: string): Promise<void> {
+        if (reason.length > 1000) throw new Error('Rejection reason must be 1000 characters or fewer');
+        const sanitizedReason = sanitizeString(reason);
+        const { data: listing, error } = await supabase
+            .from('directory_listings')
+            .update({ status: 'rejected', rejection_reason: sanitizedReason })
+            .eq('id', id)
+            .select('name, owner_user_id')
+            .single();
+        if (error) {
+            console.error('Error rejecting listing:', error);
+            throw error;
+        }
+        if (listing?.owner_user_id) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason: sanitizedReason } },
+            })).catch(console.error);
         }
     },
 

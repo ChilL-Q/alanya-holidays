@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
-import { HostLayout } from '../components/layouts/HostLayout';
+import { HostLayoutController } from '../components/layouts/HostLayoutController';
 import { AdminRoute } from '../components/auth/AdminRoute';
 import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
@@ -15,11 +15,14 @@ const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').the
 
 // Public Pages - Lazy Loaded
 const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => ({ default: module.AiPlanner })));
+const MyItinerariesPage = React.lazy(() => import('../pages/MyItinerariesPage').then(module => ({ default: module.MyItinerariesPage })));
+const SharedItineraryPage = React.lazy(() => import('../pages/SharedItineraryPage').then(module => ({ default: module.SharedItineraryPage })));
 const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
 const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
 const Contact = React.lazy(() => import('../pages/Contact').then(module => ({ default: module.Contact })));
 const FAQ = React.lazy(() => import('../pages/FAQ').then(module => ({ default: module.FAQ })));
+const CommunityPage = React.lazy(() => import('../pages/CommunityPage').then(module => ({ default: module.CommunityPage })));
 const Privacy = React.lazy(() => import('../pages/Privacy').then(module => ({ default: module.Privacy })));
 const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ default: module.Terms })));
 const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
@@ -51,6 +54,8 @@ const InboxPage = React.lazy(() => import('../pages/InboxPage').then(module => (
 const CreativeServices = React.lazy(() => import('../pages/CreativeServices').then(module => ({ default: module.CreativeServices })));
 const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').then(module => ({ default: module.ListingTiersPage })));
 const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
+const AddListingPage = React.lazy(() => import('../pages/AddListingPage').then(module => ({ default: module.AddListingPage })));
+const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingPage').then(module => ({ default: module.DirectoryListingPage })));
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
 const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
@@ -73,6 +78,7 @@ const AdminEditDirectoryPage = React.lazy(() => import('../pages/admin/AdminEdit
 const AdminBlogSubmissionsPage = React.lazy(() => import('../pages/admin/AdminBlogSubmissionsPage').then(module => ({ default: module.AdminBlogSubmissionsPage })));
 const AdminAddBlogPostPage = React.lazy(() => import('../pages/admin/AdminAddBlogPostPage').then(module => ({ default: module.AdminAddBlogPostPage })));
 const AdminTestimonialsPage = React.lazy(() => import('../pages/admin/AdminTestimonialsPage').then(module => ({ default: module.AdminTestimonialsPage })));
+const AdminListingReviewsPage = React.lazy(() => import('../pages/admin/AdminListingReviewsPage').then(module => ({ default: module.AdminListingReviewsPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -90,6 +96,8 @@ export const AppRoutes: React.FC = () => {
         <Routes>
             <Route path="/" element={<DirectoryHome />} />
                 <Route path="/ai-planner" element={<AuthRoute><AiPlanner /></AuthRoute>} />
+                <Route path="/my-itineraries" element={<AuthRoute><MyItinerariesPage /></AuthRoute>} />
+                <Route path="/itinerary/:id" element={<SharedItineraryPage />} />
 
                 {/* SEO-Optimized Directory Category Routes */}
                 <Route path="/medical-tourism-alanya" element={<DirectoryCategoryPage categoryId="medical" />} />
@@ -113,9 +121,29 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-spa-hamam" element={<DirectoryCategoryPage categoryId="spa-hamam" />} />
                 <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
 
+                {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
+                <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />
+                <Route path="/alanya-hotels/:slug" element={<DirectoryListingPage categoryId="accommodations" />} />
+                <Route path="/alanya-villas/:slug" element={<DirectoryListingPage categoryId="villas" />} />
+                <Route path="/alanya-apartments/:slug" element={<DirectoryListingPage categoryId="apartments" />} />
+                <Route path="/things-to-do-in-alanya/:slug" element={<DirectoryListingPage categoryId="tours" />} />
+                <Route path="/airport-transfer/:slug" element={<DirectoryListingPage categoryId="transport" />} />
+                <Route path="/car-rental/:slug" element={<DirectoryListingPage categoryId="transport" />} />
+                <Route path="/restaurants/:slug" element={<DirectoryListingPage categoryId="restaurants" />} />
+                <Route path="/cafes/:slug" element={<DirectoryListingPage categoryId="cafes" />} />
+                <Route path="/alanya-real-estate/:slug" element={<DirectoryListingPage categoryId="real-estate" />} />
+                <Route path="/alanya-residency-guide/:slug" element={<DirectoryListingPage categoryId="visa" />} />
+                <Route path="/alanya-shopping-guide/:slug" element={<DirectoryListingPage categoryId="shopping" />} />
+                <Route path="/alanya-nature-attractions/:slug" element={<DirectoryListingPage categoryId="nature" />} />
+                <Route path="/alanya-weather/:slug" element={<DirectoryListingPage categoryId="weather" />} />
+                <Route path="/nightlife/:slug" element={<DirectoryListingPage categoryId="nightlife" />} />
+                <Route path="/alanya-spa-hamam/:slug" element={<DirectoryListingPage categoryId="spa-hamam" />} />
+                <Route path="/alanya-hair-beauty/:slug" element={<DirectoryListingPage categoryId="hair-beauty" />} />
+
                 <Route path="/list-property" element={<ListProperty />} />
                 <Route path="/list-business" element={<ListingTiersPage />} />
                 <Route path="/subscribe" element={<AuthRoute><SubscribePage /></AuthRoute>} />
+                <Route path="/add-listing" element={<AuthRoute><AddListingPage /></AuthRoute>} />
 
                 <Route path="/search-results" element={<SearchResultsPage />} />
                 <Route path="/stays" element={<SearchResultsPage />} />
@@ -143,6 +171,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/experiences/:category" element={<ExperienceCategoryPage />} />
+                <Route path="/community" element={<CommunityPage />} />
                 <Route path="/help" element={<FAQ />} />
                 <Route path="/support" element={<Contact />} />
                 <Route path="/services/car-rental" element={<CarRental />} />
@@ -169,79 +198,79 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/booking/success" element={<AuthRoute><BookingSuccess /></AuthRoute>} />
                 <Route path="/host" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostDashboard />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/properties" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostPropertiesPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/fleet" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostServicesPage mode="fleet" />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/services" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostServicesPage mode="services" />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/edit-service/:id" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostEditServicePage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/edit-property/:id" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <AdminEditPropertyPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/bookings" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostBookingsPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/calendar" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostCalendarPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/dashboard" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostDashboard />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/messages" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <HostMessagesPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
                 <Route path="/host/directory-analytics" element={
                     <HostRoute>
-                        <HostLayout>
+                        <HostLayoutController>
                             <DirectoryAnalyticsPage />
-                        </HostLayout>
+                        </HostLayoutController>
                     </HostRoute>
                 } />
 
@@ -299,6 +328,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <ReviewsAdminPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/listing-reviews" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminListingReviewsPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

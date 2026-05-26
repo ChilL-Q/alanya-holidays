@@ -29,6 +29,9 @@ const baseListing: DirectoryListingDB = {
     whatsapp: '+905551234567',
     website: 'https://example.com',
     google_map_url: 'https://maps.google.com',
+    status: 'approved',
+    owner_user_id: null,
+    rejection_reason: null,
 };
 
 const renderWithLanguage = (ui: React.ReactElement) =>

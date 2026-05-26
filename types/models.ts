@@ -430,6 +430,7 @@ export interface DirectoryListingDB {
   id: string;
   category_id: string;
   name: string;
+  slug?: string;
   short_description: string;
   descriptions?: ListingDescriptions;
   is_featured?: boolean;
@@ -451,10 +452,18 @@ export interface DirectoryListingDB {
   price_level?: 1 | 2 | 3 | 4;
   newsletter_featured?: boolean;
   net_votes?: number;
+  status: 'pending' | 'approved' | 'rejected';
+  owner_user_id: string | null;
+  rejection_reason: string | null;
   created_at?: string;
   updated_at?: string;
   listing_locations?: ListingLocationJunction[];
 }
+
+export type DirectoryListingCreateInput = Omit<
+  DirectoryListingDB,
+  'id' | 'created_at' | 'updated_at' | 'status' | 'owner_user_id' | 'rejection_reason'
+>;
 
 // ============================================================
 // Locations (LST-001)
@@ -559,4 +568,56 @@ export interface CategoryAnalyticsAverage {
   avg_website_clicks: number;
   avg_map_clicks: number;
   listing_count: number;
+}
+
+// ============================================================
+// AI Itinerary (AI-001)
+// ============================================================
+
+export interface ItineraryItem {
+  time: string;
+  title: string;
+  description: string;
+  location?: string;
+  link?: string;
+  lat?: number;
+  lng?: number;
+}
+
+export interface ItineraryDay {
+  day: number;
+  title: string;
+  items: ItineraryItem[];
+}
+
+export interface TripParams {
+  duration: number;
+  companion: string;
+  interests: string[];
+  pace: string;
+  budget: string;
+}
+
+export interface SavedItinerary {
+  id: string;
+  user_id: string;
+  title: string;
+  params: TripParams;
+  itinerary: ItineraryDay[];
+  created_at: string;
+}
+
+// ============================================================
+// Listing Reviews (GAP-002)
+// ============================================================
+
+export interface ListingReview {
+  id: string;
+  listing_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  user?: { full_name: string | null; avatar_url: string | null };
 }

@@ -11,6 +11,7 @@ import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
+import { CATEGORY_PATHS } from '../constants/categoryPaths';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
@@ -205,7 +206,9 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             "item": {
                 "@type": categoryId === 'accommodations' ? "LodgingBusiness" : categoryId === 'restaurants' ? "Restaurant" : "LocalBusiness",
                 "name": item.name,
-                "url": item.website || window.location.href,
+                "url": item.slug
+                        ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
+                        : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
                 "image": item.gallery?.[0] || ''
             }
         }))

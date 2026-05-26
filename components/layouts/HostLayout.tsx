@@ -1,19 +1,17 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { User } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
-import { useChat } from '../../context/ChatContext';
-
 interface HostLayoutProps {
     children: React.ReactNode;
+    user: User | null;
+    unreadCount: number;
 }
 
-export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
-    const { user } = useAuth();
-    const { conversations } = useChat();
+export const HostLayout: React.FC<HostLayoutProps> = ({ children, user, unreadCount }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -29,13 +27,13 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
     }, [isMobileMenuOpen]);
 
     const navItems = [
-        { path: '/host', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-        { path: '/host/properties', label: 'My Properties', icon: Home },
-        { path: '/host/fleet', label: 'My Fleet', icon: Car },
-        { path: '/host/services', label: 'My Services', icon: MapIcon },
-        { path: '/host/directory-analytics', label: 'Directory Analytics', icon: BarChart3 },
-        { path: '/host/bookings', label: 'Reservations', icon: Calendar },
-        { path: '/host/messages', label: 'Inbox', icon: Inbox },
+        { id: 'dashboard', path: '/host', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+        { id: 'properties', path: '/host/properties', label: 'My Properties', icon: Home },
+        { id: 'fleet', path: '/host/fleet', label: 'My Fleet', icon: Car },
+        { id: 'services', path: '/host/services', label: 'My Services', icon: MapIcon },
+        { id: 'analytics', path: '/host/directory-analytics', label: 'Directory Analytics', icon: BarChart3 },
+        { id: 'bookings', path: '/host/bookings', label: 'Reservations', icon: Calendar },
+        { id: 'messages', path: '/host/messages', label: 'Inbox', icon: Inbox },
     ];
 
     return (
@@ -94,14 +92,11 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                             >
                                 <Icon size={20} className={isActive ? 'text-indigo-600 dark:text-slate-200' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} />
                                 <span className="flex-1">{item.label}</span>
-                                {item.label === 'Inbox' && (() => {
-                                    const unreadCount = conversations.reduce((acc, curr) => acc + (curr.unread_count || 0), 0);
-                                    return unreadCount > 0 ? (
-                                        <span className="bg-teal-600 dark:bg-cyan-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
-                                            {unreadCount}
-                                        </span>
-                                    ) : null;
-                                })()}
+                                {item.id === 'messages' && unreadCount > 0 && (
+                                    <span className="bg-teal-600 dark:bg-cyan-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-300">
+                                        {unreadCount}
+                                    </span>
+                                )}
                             </NavLink>
                         );
                     })}
@@ -130,7 +125,6 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children }) => {
                     </button>
                 </div>
 
-                {/* Spacer to fill height if needed or just leave empty space at bottom */}
                 <div className="flex-1"></div>
             </aside>
 
