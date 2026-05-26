@@ -437,6 +437,9 @@ export interface DirectoryListingDB {
   price_level?: 1 | 2 | 3 | 4;
   newsletter_featured?: boolean;
   net_votes?: number;
+  status?: 'pending' | 'approved' | 'rejected';
+  owner_user_id?: string;
+  rejection_reason?: string;
   created_at?: string;
   updated_at?: string;
 }

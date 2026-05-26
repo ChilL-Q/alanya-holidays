@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, MapPin, Globe, MessageCircle, Link as LinkIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -7,6 +7,7 @@ import { StepsIndicator } from '../components/ui/StepsIndicator';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import { db } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface FormData {
     name: string;
@@ -42,6 +43,7 @@ const TIER_LIMITS: Record<string, number> = {
 
 export const AddListingPage: React.FC = () => {
     const { t: _t } = useLanguage();
+    const { user } = useAuth();
     const [searchParams] = useSearchParams();
     const subscribed = searchParams.get('subscribed') === 'true';
 
@@ -137,6 +139,8 @@ export const AddListingPage: React.FC = () => {
             setIsSubmitting(false);
         }
     };
+
+    if (!user) return <Navigate to="/login" replace />;
 
     if (submitted) {
         return (
