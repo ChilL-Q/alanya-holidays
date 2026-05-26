@@ -16,6 +16,7 @@ export const ru = {
   'nav.list_property': 'Сдать объект',
   'nav.switch_to_rentals': 'Аренда и услуги',
   'nav.list_rental_or_service': 'Сдать жилье или услугу',
+  'nav.switch_to_directory': 'Справочник',
   'nav.community': 'Сообщество',
   'nav.login': 'Войти',
   'nav.signup': 'Зарегистрироваться',

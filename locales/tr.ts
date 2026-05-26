@@ -16,6 +16,7 @@ export const tr = {
     'nav.list_property': 'Evini Kirala',
     'nav.switch_to_rentals': 'Kiralama & Hizmetler',
     'nav.list_rental_or_service': 'Kiralama veya Hizmet Listele',
+    'nav.switch_to_directory': 'Rehber',
     'nav.community': 'Topluluk',
     'nav.login': 'Giriş yap',
     'nav.signup': 'Kaydol',

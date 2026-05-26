@@ -87,7 +87,18 @@ export const Navbar: React.FC = () => {
                 </Link>
               </div>
             ) : (
-              <ListPropertyAction />
+              <div className="flex items-center gap-3">
+                <div className="relative hidden md:block">
+                  <Link
+                    to="/"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 rounded-full text-sm font-medium transition-all duration-200 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
+                  >
+                    <ArrowRightLeft size={16} className="text-slate-500 dark:text-slate-400" />
+                    <span>{t('nav.switch_to_directory') || 'Switch to Directory'}</span>
+                  </Link>
+                </div>
+                <ListPropertyAction />
+              </div>
             )}
 
             {/* User Actions */}
