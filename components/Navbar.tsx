@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
+import { ShoppingBag, Menu, User, Heart, ArrowRightLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
+import { useLanguage } from '../context/LanguageContext';
 import { NotificationBell } from './ui/NotificationBell';
 import { MobileMenu } from './navbar/MobileMenu';
 import { UserDropdown } from './navbar/UserDropdown';
@@ -18,6 +19,7 @@ export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -50,7 +52,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center h-20">
 
           {/* Logo */}
-          <div className="flex items-center flex-shrink-0 z-10">
+          <div className="flex items-center flex-shrink-0 z-10 lg:-ml-6">
             <Link to="/" className="flex items-center gap-3 group relative">
               <div className="relative hidden sm:block">
                 <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
@@ -73,8 +75,20 @@ export const Navbar: React.FC = () => {
             {/* Utilities Group (Desktop) */}
             <NavbarActions mode={navMode} />
 
-            {/* List Property CTA — visible in rental mode only */}
-            {navMode === 'rental' && <ListPropertyAction />}
+            {/* List Property CTA / Switch to Rentals CTA */}
+            {navMode === 'directory' ? (
+              <div className="relative hidden md:block">
+                <Link
+                  to="/alanya-villas"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
+                >
+                  <ArrowRightLeft size={16} className="text-white" />
+                  <span>{t('nav.switch_to_rentals') || 'Switch to Rentals & Services'}</span>
+                </Link>
+              </div>
+            ) : (
+              <ListPropertyAction />
+            )}
 
             {/* User Actions */}
             <div className="flex items-center gap-1 sm:gap-2 pl-2">

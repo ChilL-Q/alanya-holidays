@@ -14,6 +14,8 @@ export const en = {
   'nav.profile': 'Profile',
   'nav.messages': 'Messages',
   'nav.list_property': 'List Property',
+  'nav.switch_to_rentals': 'Switch to Rentals & Services',
+  'nav.list_rental_or_service': 'List Rental or Service',
   'nav.community': 'Community',
   'nav.login': 'Log in',
   'nav.signup': 'Sign up',
