@@ -16,6 +16,7 @@ export const ar = {
     'nav.list_property': 'اعرض عقارك',
     'nav.switch_to_rentals': 'الانتقال إلى الإيجارات والخدمات',
     'nav.list_rental_or_service': 'إدراج إيجار أو خدمة',
+    'nav.switch_to_directory': 'الذهاب إلى الدليل',
     'nav.community': 'المجتمع',
     'nav.login': 'تسجيل الدخول',
     'nav.signup': 'تسجيل',
