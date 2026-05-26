@@ -437,12 +437,17 @@ export interface DirectoryListingDB {
   price_level?: 1 | 2 | 3 | 4;
   newsletter_featured?: boolean;
   net_votes?: number;
-  status?: 'pending' | 'approved' | 'rejected';
-  owner_user_id?: string;
-  rejection_reason?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  owner_user_id: string | null;
+  rejection_reason: string | null;
   created_at?: string;
   updated_at?: string;
 }
+
+export type DirectoryListingCreateInput = Omit<
+  DirectoryListingDB,
+  'id' | 'created_at' | 'updated_at' | 'status' | 'owner_user_id' | 'rejection_reason'
+>;
 
 // ============================================================
 // Locations (LST-001)

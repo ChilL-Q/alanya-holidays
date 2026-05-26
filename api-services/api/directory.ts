@@ -1,15 +1,13 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, ListingAnalyticsSummary } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary } from '../../types/models';
 import { retry } from '../../utils/retry';
-
-// eslint-disable-next-line no-control-regex
-const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+import { sanitizeString } from '../../utils/sanitize';
 
 const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
     const result: Record<string, unknown> = { ...obj };
     for (const [key, value] of Object.entries(result)) {
         if (typeof value === 'string') {
-            result[key] = value.replace(STRIP_CONTROL, '').trim();
+            result[key] = sanitizeString(value);
         }
     }
     return result as T;
@@ -219,7 +217,7 @@ export const directoryService = {
         return { netVotes: data[0].net_votes };
     },
 
-    async createDirectoryListing(listing: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'>): Promise<DirectoryListingDB> {
+    async createDirectoryListing(listing: DirectoryListingCreateInput): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
@@ -378,9 +376,11 @@ export const directoryService = {
     },
 
     async rejectDirectoryListing(id: string, reason: string): Promise<void> {
+        if (reason.length > 1000) throw new Error('Rejection reason must be 1000 characters or fewer');
+        const sanitizedReason = sanitizeString(reason);
         const { data: listing, error } = await supabase
             .from('directory_listings')
-            .update({ status: 'rejected', rejection_reason: reason })
+            .update({ status: 'rejected', rejection_reason: sanitizedReason })
             .eq('id', id)
             .select('name, owner_user_id')
             .single();
@@ -390,7 +390,7 @@ export const directoryService = {
         }
         if (listing?.owner_user_id) {
             await retry(() => supabase.functions.invoke('send-email', {
-                body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason } },
+                body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason: sanitizedReason } },
             })).catch(console.error);
         }
     },

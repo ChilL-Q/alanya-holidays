@@ -6,7 +6,7 @@ import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
-import { DirectoryListingDB } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput } from '../../types/models';
 import { slugify } from '../../utils/slugify';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
@@ -168,7 +168,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
 
             const finalImages = [...existingImages, ...uploadedUrls];
 
-            const listingData: Omit<DirectoryListingDB, 'id' | 'created_at' | 'updated_at'> = {
+            const listingData: DirectoryListingCreateInput = {
                 name: formData.name,
                 slug: formData.slug || undefined,
                 short_description: formData.short_description,
