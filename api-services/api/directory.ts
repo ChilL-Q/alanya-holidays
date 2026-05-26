@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { DirectoryListingDB, ListingAnalyticsSummary } from '../../types/models';
+import { retry } from '../../utils/retry';
 
 // eslint-disable-next-line no-control-regex
 const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
@@ -327,6 +328,24 @@ export const directoryService = {
         }
     },
 
+    async getDirectoryListingsByStatus(
+        status: 'approved' | 'rejected',
+        category?: string
+    ): Promise<DirectoryListingDB[]> {
+        let query = supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('status', status)
+            .order('base_score', { ascending: false });
+        if (category) query = query.eq('category_id', category);
+        const { data, error } = await query;
+        if (error) {
+            console.error(`Error fetching ${status} listings:`, error);
+            throw error;
+        }
+        return data as DirectoryListingDB[];
+    },
+
     async getPendingDirectoryListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
@@ -352,9 +371,9 @@ export const directoryService = {
             throw error;
         }
         if (listing?.owner_user_id) {
-            await supabase.functions.invoke('send-email', {
+            await retry(() => supabase.functions.invoke('send-email', {
                 body: { type: 'listing_approved', userId: listing.owner_user_id, data: { title: listing.name } },
-            }).catch(console.error);
+            })).catch(console.error);
         }
     },
 
@@ -370,9 +389,9 @@ export const directoryService = {
             throw error;
         }
         if (listing?.owner_user_id) {
-            await supabase.functions.invoke('send-email', {
+            await retry(() => supabase.functions.invoke('send-email', {
                 body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason } },
-            }).catch(console.error);
+            })).catch(console.error);
         }
     },
 

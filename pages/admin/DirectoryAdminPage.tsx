@@ -20,8 +20,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
     const [loading, setLoading] = useState(true);
     const [filterCategory, setFilterCategory] = useState<string>(defaultCategory || 'all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [rejectingId, setRejectingId] = useState<string | null>(null);
-    const [rejectReason, setRejectReason] = useState('');
+    const [rejectState, setRejectState] = useState<{ id: string; reason: string } | null>(null);
 
     const isCategoryLocked = !!defaultCategory;
 
@@ -43,12 +42,11 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         setLoading(true);
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
-            const [approvedResponse, pending] = await Promise.all([
-                db.getDirectoryListings(1, 100, category, 'base_score'),
+            const [approved, pending, rejected] = await Promise.all([
+                db.getDirectoryListingsByStatus('approved', category),
                 db.getPendingDirectoryListings(),
+                db.getDirectoryListingsByStatus('rejected', category),
             ]);
-            const approved = (approvedResponse.data || []).filter(l => l.status === 'approved' || !l.status);
-            const rejected = (approvedResponse.data || []).filter(l => l.status === 'rejected');
             setListings(approved);
             setPendingListings(pending);
             setRejectedListings(rejected);
@@ -67,23 +65,22 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         try {
             await db.approveDirectoryListing(id);
             toast.success('Listing approved and published');
-            loadListings();
+            await loadListings();
         } catch (e: any) {
             toast.error(`Failed to approve: ${e.message}`);
         }
     };
 
     const handleRejectSubmit = async (id: string) => {
-        if (!rejectReason.trim()) {
+        if (!rejectState?.reason.trim()) {
             toast.error('Please provide a rejection reason');
             return;
         }
         try {
-            await db.rejectDirectoryListing(id, rejectReason.trim());
+            await db.rejectDirectoryListing(id, rejectState.reason.trim());
             toast.success('Listing rejected');
-            setRejectingId(null);
-            setRejectReason('');
-            loadListings();
+            setRejectState(null);
+            await loadListings();
         } catch (e: any) {
             toast.error(`Failed to reject: ${e.message}`);
         }
@@ -107,11 +104,12 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             if (type === 'delete') {
                 await db.deleteDirectoryListing(itemId);
             }
-            loadListings();
-            setModalConfig({ ...modalConfig, isOpen: false });
+            await loadListings();
         } catch (e: any) {
             console.error(e);
             toast.error(`Failed to delete listing: ${e.message || 'Unknown error'}`);
+        } finally {
+            setModalConfig({ ...modalConfig, isOpen: false });
         }
     };
 
@@ -199,7 +197,6 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                 ))}
             </div>
 
-            {/* Pending moderation queue */}
             {activeTab === 'pending' && (
                 <div className="space-y-4">
                     {loading ? (
@@ -227,11 +224,11 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                                 )}
                             </div>
 
-                            {rejectingId === listing.id ? (
+                            {rejectState?.id === listing.id ? (
                                 <div className="mt-4 space-y-2">
                                     <textarea
-                                        value={rejectReason}
-                                        onChange={e => setRejectReason(e.target.value)}
+                                        value={rejectState.reason}
+                                        onChange={e => setRejectState({ id: listing.id, reason: e.target.value })}
                                         placeholder="Rejection reason (sent to the owner)..."
                                         rows={2}
                                         className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white resize-none focus:ring-2 focus:ring-red-400 outline-none"
@@ -244,7 +241,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                                             Confirm Reject
                                         </button>
                                         <button
-                                            onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                                            onClick={() => setRejectState(null)}
                                             className="px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                                         >
                                             Cancel
@@ -260,7 +257,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                                         <CheckCircle size={14} /> Approve
                                     </button>
                                     <button
-                                        onClick={() => setRejectingId(listing.id)}
+                                        onClick={() => setRejectState({ id: listing.id, reason: '' })}
                                         className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg transition-colors"
                                     >
                                         <XCircle size={14} /> Reject
@@ -278,7 +275,6 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                 </div>
             )}
 
-            {/* Approved / Rejected tabs use the existing table */}
             {activeTab === 'approved' && (
                 <>
                     <DirectoryToolbar
