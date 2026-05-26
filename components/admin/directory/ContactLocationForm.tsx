@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Link2, Phone } from 'lucide-react';
+import { LocationDB } from '../../../types/models';
 
 interface ContactLocationFormProps {
     location: string;
@@ -7,10 +8,15 @@ interface ContactLocationFormProps {
     website: string;
     whatsapp: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    availableLocations?: LocationDB[];
+    selectedLocationIds?: string[];
+    onLocationIdsChange?: (ids: string[]) => void;
+    tier?: string;
 }
 
 export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
-    location, googleMapUrl, website, whatsapp, onChange
+    location, googleMapUrl, website, whatsapp, onChange,
+    availableLocations, selectedLocationIds, onLocationIdsChange, tier
 }) => {
     return (
         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">
@@ -32,6 +38,36 @@ export const ContactLocationForm: React.FC<ContactLocationFormProps> = ({
                         />
                     </div>
                 </div>
+                {tier === 'signature' && availableLocations && availableLocations.length > 0 && (
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Coverage Areas</label>
+                        <div className="flex flex-wrap gap-2">
+                            {availableLocations.map(loc => {
+                                const selected = selectedLocationIds?.includes(loc.id) ?? false;
+                                return (
+                                    <button
+                                        key={loc.id}
+                                        type="button"
+                                        onClick={() => {
+                                            const next = selected
+                                                ? (selectedLocationIds ?? []).filter(id => id !== loc.id)
+                                                : [...(selectedLocationIds ?? []), loc.id];
+                                            onLocationIdsChange?.(next);
+                                        }}
+                                        className={[
+                                            'text-xs px-3 py-1.5 rounded-full border transition-colors',
+                                            selected
+                                                ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500'
+                                                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+                                        ].join(' ')}
+                                    >
+                                        {loc.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
                 <div>
                     <label htmlFor="directory-map" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Map URL (Optional)</label>
                     <input

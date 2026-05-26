@@ -1,17 +1,51 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
 import { retry } from '../../utils/retry';
 import { sanitizeString } from '../../utils/sanitize';
 
-const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
-    const result: Record<string, unknown> = { ...obj };
-    for (const [key, value] of Object.entries(result)) {
-        if (typeof value === 'string') {
-            result[key] = sanitizeString(value);
-        }
+// eslint-disable-next-line no-control-regex
+const STRIP_CONTROL = /[\r\n\x00-\x1f\x7f]/g;
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function validateUUIDs(ids: string[]) {
+    for (const id of ids) {
+        if (!UUID_RE.test(id)) throw new Error(`Invalid UUID: ${id}`);
     }
-    return result as T;
+}
+
+const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+
+function buildLocationRows(listingId: string, locationIds: string[]) {
+    return locationIds.map((lid, i) => ({
+        listing_id: listingId,
+        location_id: lid,
+        display_order: i,
+    }));
+}
+
+function sanitizeValue(value: unknown): unknown {
+    if (typeof value === 'string') {
+        return sanitizeString(value);
+    }
+    if (Array.isArray(value)) {
+        return value.map(sanitizeValue);
+    }
+    if (value !== null && typeof value === 'object') {
+        const result: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value)) {
+            result[k] = sanitizeValue(v);
+        }
+        return result;
+    }
+    return value;
+}
+
+const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
+    return sanitizeValue(obj) as T;
 };
+
+const LISTING_LOCATIONS_SELECT = '*, listing_locations(id, location_id, display_order, locations(id, name))';
 
 export const directoryService = {
     async getDirectoryListings(
@@ -57,7 +91,7 @@ export const directoryService = {
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('id', id)
             .single();
 
@@ -87,7 +121,7 @@ export const directoryService = {
     async getDirectoryListingsByCategory(categoryId: string): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('category_id', categoryId)
             .order('base_score', { ascending: false })
             .order('is_featured', { ascending: false })
@@ -112,7 +146,7 @@ export const directoryService = {
     async getFreeListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('is_premium', false)
             .order('net_votes', { ascending: false, nullsFirst: false })
             .limit(6);
@@ -131,7 +165,7 @@ export const directoryService = {
     async getPremiumListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('is_premium', true)
             .order('base_score', { ascending: false })
             .limit(6);
@@ -150,7 +184,7 @@ export const directoryService = {
     async getSignatureListings(): Promise<DirectoryListingDB[]> {
         const { data, error } = await supabase
             .from('directory_listings')
-            .select('*')
+            .select(LISTING_LOCATIONS_SELECT)
             .eq('tier', 'signature')
             .eq('is_premium', true)
             .order('base_score', { ascending: false })
@@ -217,11 +251,15 @@ export const directoryService = {
         return { netVotes: data[0].net_votes };
     },
 
-    async createDirectoryListing(listing: DirectoryListingCreateInput): Promise<DirectoryListingDB> {
+    async createDirectoryListing(
+        listing: DirectoryListingCreateInput,
+        locationIds?: string[]
+    ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+        if (locationIds?.length) validateUUIDs(locationIds);
+
         const tier = listing.tier || 'explorer';
         const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
         const limit = TIER_LIMITS[tier] ?? 5;
@@ -264,12 +302,24 @@ export const directoryService = {
             throw error;
         }
 
+        if (locationIds?.length) {
+            const rows = buildLocationRows(data.id, locationIds);
+            const { error: locError } = await supabase.from('listing_locations').insert(rows);
+            if (locError) throw new Error(`Listing created but location sync failed: ${locError.message}`);
+        }
+
         return data as DirectoryListingDB;
     },
 
-    async updateDirectoryListing(id: string, updates: Partial<DirectoryListingDB>): Promise<DirectoryListingDB> {
+    async updateDirectoryListing(
+        id: string,
+        updates: Partial<DirectoryListingDB>,
+        locationIds?: string[]
+    ): Promise<DirectoryListingDB> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
+
+        if (locationIds?.length) validateUUIDs(locationIds);
 
         // Strip fields that should not be updated directly
         const safeUpdates: Record<string, unknown> = { ...updates };
@@ -280,14 +330,14 @@ export const directoryService = {
         delete safeUpdates.is_featured;
         delete safeUpdates.base_score;
         delete safeUpdates.subscription_id;
+        delete safeUpdates.listing_locations;
         delete safeUpdates.status;
         delete safeUpdates.owner_user_id;
         delete safeUpdates.rejection_reason;
 
         // Validate gallery length against tier limit
         if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
-            const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
-            const tier = (safeUpdates.tier as string) || 'explorer';
+            const tier = (safeUpdates.tier as string) || (updates as DirectoryListingDB).tier || 'explorer';
             const limit = TIER_LIMITS[tier] ?? 5;
             if ((safeUpdates.gallery as string[]).length > limit) {
                 throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
@@ -306,6 +356,25 @@ export const directoryService = {
         if (error) {
             console.error('Error updating directory listing:', error);
             throw error;
+        }
+
+        if (locationIds !== undefined) {
+            if (locationIds.length) {
+                const rows = buildLocationRows(id, locationIds);
+                const { error: upsertError } = await supabase
+                    .from('listing_locations')
+                    .upsert(rows, { onConflict: 'listing_id,location_id' });
+                if (upsertError) throw new Error(`Location sync failed: ${upsertError.message}`);
+                const { error: delError } = await supabase
+                    .from('listing_locations')
+                    .delete()
+                    .eq('listing_id', id)
+                    .not('location_id', 'in', `(${locationIds.join(',')})`);
+                if (delError) throw new Error(`Location cleanup failed: ${delError.message}`);
+            } else {
+                const { error: delError } = await supabase.from('listing_locations').delete().eq('listing_id', id);
+                if (delError) throw new Error(`Failed to clear listing locations: ${delError.message}`);
+            }
         }
 
         return data as DirectoryListingDB;
@@ -419,5 +488,17 @@ export const directoryService = {
 
         if (error) throw error;
         return (data || []) as ListingAnalyticsSummary[];
+    },
+
+    async getCategoryAnalyticsAverage(
+        categoryId: string,
+        days: number = 30
+    ): Promise<CategoryAnalyticsAverage | null> {
+        const { data, error } = await supabase.rpc('get_category_analytics_average', {
+            p_category_id: categoryId,
+            p_days: days,
+        });
+        if (error) throw error;
+        return (data?.[0] ?? null) as CategoryAnalyticsAverage | null;
     }
 };

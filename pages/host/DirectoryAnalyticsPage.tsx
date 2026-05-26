@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Eye, MessageCircle, Globe, MapPin, ArrowRight } from 'lucide-react';
 import { db } from '../../api-services';
-import { ListingAnalyticsSummary } from '../../types/models';
+import { ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
 import toast from 'react-hot-toast';
 import {
     ResponsiveContainer,
@@ -18,6 +18,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
     const [analytics, setAnalytics] = useState<ListingAnalyticsSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [categoryAvg, setCategoryAvg] = useState<CategoryAnalyticsAverage | null>(null);
 
     useEffect(() => {
         db.getDirectoryAnalyticsForOwner(30)
@@ -33,6 +34,19 @@ export const DirectoryAnalyticsPage: React.FC = () => {
     }, []);
 
     const selected = analytics[selectedIndex];
+
+    useEffect(() => {
+        if (!selected?.listing_category_id) {
+            setCategoryAvg(null);
+            return;
+        }
+        db.getCategoryAnalyticsAverage(selected.listing_category_id)
+            .then(setCategoryAvg)
+            .catch(err => {
+                console.error('Failed to load category average:', err);
+                setCategoryAvg(null);
+            });
+    }, [selected]);
 
     const chartData = useMemo(() => {
         if (!selected) return [];
@@ -121,6 +135,41 @@ export const DirectoryAnalyticsPage: React.FC = () => {
                             );
                         })}
                     </div>
+
+                    {categoryAvg && categoryAvg.listing_count > 1 && (
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">vs. Category Average</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                    { label: 'Views', value: selected.total_views, avg: categoryAvg.avg_views },
+                                    { label: 'WhatsApp', value: selected.total_whatsapp_clicks, avg: categoryAvg.avg_whatsapp_clicks },
+                                    { label: 'Website', value: selected.total_website_clicks, avg: categoryAvg.avg_website_clicks },
+                                    { label: 'Map', value: selected.total_map_clicks, avg: categoryAvg.avg_map_clicks },
+                                ].map(card => {
+                                    const delta = card.avg === 0 ? 0 : Math.round(((card.value - card.avg) / card.avg) * 100);
+                                    const isPositive = card.value >= card.avg;
+                                    return (
+                                        <div key={card.label} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+                                            <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">{card.label}</div>
+                                            <div className="text-xl font-bold text-slate-900 dark:text-white">
+                                                {card.value.toLocaleString()}
+                                            </div>
+                                            <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                Avg: {Math.round(card.avg).toLocaleString()}
+                                            </div>
+                                            <div className={`mt-2 inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                                isPositive
+                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                                    : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                            }`}>
+                                                {card.avg === 0 ? '—' : `${isPositive ? '+' : ''}${delta}%`}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
                         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Daily Activity</h2>

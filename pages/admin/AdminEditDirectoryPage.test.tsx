@@ -30,7 +30,8 @@ vi.mock('../../api-services', () => ({
         getDirectoryListing: vi.fn(),
         createDirectoryListing: vi.fn(),
         updateDirectoryListing: vi.fn(),
-        uploadImage: vi.fn()
+        uploadImage: vi.fn(),
+        getLocations: vi.fn().mockResolvedValue([])
     }
 }));
 
@@ -57,7 +58,8 @@ const mockListing = {
     is_verified: true,
     price_level: 3,
     reviews_average: 4.9,
-    reviews_count: 120
+    reviews_count: 120,
+    tier: 'signature'
 };
 
 describe('AdminEditDirectoryPage', () => {
@@ -125,11 +127,14 @@ describe('AdminEditDirectoryPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.createDirectoryListing).toHaveBeenCalledWith(expect.objectContaining({
-            name: 'New Shop',
-            short_description: 'Great shop',
-            location: 'Oba'
-        }));
+        expect(db.createDirectoryListing).toHaveBeenCalledWith(
+            expect.objectContaining({
+                name: 'New Shop',
+                short_description: 'Great shop',
+                location: 'Oba'
+            }),
+            []
+        );
         expect(mockToast.success).toHaveBeenCalledWith('Listing created successfully');
         expect(mockNavigate).toHaveBeenCalledWith('/admin/directory');
     });
@@ -149,9 +154,13 @@ describe('AdminEditDirectoryPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.updateDirectoryListing).toHaveBeenCalledWith('1', expect.objectContaining({
-            name: 'Updated Clinic'
-        }));
+        expect(db.updateDirectoryListing).toHaveBeenCalledWith(
+            '1',
+            expect.objectContaining({
+                name: 'Updated Clinic'
+            }),
+            []
+        );
         expect(mockToast.success).toHaveBeenCalledWith('Listing updated successfully');
     });
 
@@ -199,9 +208,12 @@ describe('AdminEditDirectoryPage', () => {
         });
 
         expect(db.uploadImage).toHaveBeenCalledWith(file, 'directory');
-        expect(db.createDirectoryListing).toHaveBeenCalledWith(expect.objectContaining({
-            gallery: expect.arrayContaining(['http://example.com/new.jpg'])
-        }));
+        expect(db.createDirectoryListing).toHaveBeenCalledWith(
+            expect.objectContaining({
+                gallery: expect.arrayContaining(['http://example.com/new.jpg'])
+            }),
+            []
+        );
     });
 
     it('removes existing image', async () => {

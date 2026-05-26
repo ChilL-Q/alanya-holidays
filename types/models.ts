@@ -442,6 +442,12 @@ export interface DirectoryListingDB {
   rejection_reason: string | null;
   created_at?: string;
   updated_at?: string;
+  listing_locations?: {
+    id: string;
+    location_id: string;
+    display_order: number;
+    locations: { id: string; name: string };
+  }[];
 }
 
 export type DirectoryListingCreateInput = Omit<
@@ -538,6 +544,7 @@ export interface ListingAnalyticsDaily {
 export interface ListingAnalyticsSummary {
   listing_id: string;
   listing_name: string;
+  listing_category_id: string;
   total_views: number;
   total_whatsapp_clicks: number;
   total_website_clicks: number;
@@ -552,6 +559,7 @@ export interface CategoryAnalyticsAverage {
   avg_map_clicks: number;
   listing_count: number;
 }
+
 
 // ============================================================
 // AI Itinerary (AI-001)
