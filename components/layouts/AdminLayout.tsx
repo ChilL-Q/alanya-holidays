@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, ChefHat, Coffee, MessageSquare, PenLine } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, ChefHat, Coffee, MessageSquare, PenLine, MessagesSquare } from 'lucide-react';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AdminLayoutProps {
@@ -36,6 +36,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/listing-reviews', label: 'Listing Reviews', icon: MessageSquare },
         { path: '/admin/blog-submissions', label: 'Blog Submissions', icon: PenLine },
         { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+        { path: '/admin/forum', label: 'Forum', icon: MessagesSquare },
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
@@ -51,7 +52,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         },
         {
             label: 'Content',
-            items: navItems.filter(i => ['Reviews', 'Listing Reviews', 'Blog Submissions', 'Testimonials'].includes(i.label))
+            items: navItems.filter(i => ['Reviews', 'Listing Reviews', 'Blog Submissions', 'Testimonials', 'Forum'].includes(i.label))
         },
         {
             label: 'Users',

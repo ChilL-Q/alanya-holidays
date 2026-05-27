@@ -65,12 +65,12 @@ export const CommunityPage: React.FC = () => {
       description: t('community.card.blog.desc') || 'Discover insider tips, hidden gems, and travel stories from Alanya.',
     },
     {
-      comingSoon: true,
+      to: '/forum',
       icon: <MessageCircle size={28} strokeWidth={1.5} />,
       iconBg: 'bg-blue-50 dark:bg-blue-900/20',
       iconColor: 'text-blue-600 dark:text-blue-400',
       title: t('community.card.forum.title') || 'Community Forum',
-      description: t('community.card.forum.desc') || 'A dedicated Q&A space for Alanya travelers is on its way. Ask locals, share tips, get answers.',
+      description: t('community.card.forum.desc') || 'A dedicated Q&A space for Alanya travelers. Ask locals, share tips, get answers.',
     },
     {
       to: '/ai-planner',

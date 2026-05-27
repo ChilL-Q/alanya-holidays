@@ -622,3 +622,70 @@ export interface ListingReview {
   created_at: string;
   user?: { full_name: string | null; avatar_url: string | null };
 }
+
+// ============================================================
+// Forum
+// ============================================================
+
+export interface ForumCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sort_order: number;
+  created_at: string | null;
+}
+
+export interface ForumAuthor {
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface ForumPost {
+  id: string;
+  title: string;
+  slug: string;
+  body: string | null;
+  category_id: string | null;
+  author_id: string | null;
+  like_count: number;
+  comment_count: number;
+  is_pinned: boolean;
+  is_removed: boolean;
+  created_at: string | null;
+  updated_at: string | null;
+
+  // Virtual / joined
+  category?: ForumCategory | null;
+  author?: ForumAuthor | null;
+  liked_by_me?: boolean;
+}
+
+export interface ForumComment {
+  id: string;
+  post_id: string;
+  author_id: string | null;
+  body: string;
+  like_count: number;
+  is_removed: boolean;
+  created_at: string | null;
+
+  // Virtual / joined
+  author?: ForumAuthor | null;
+  liked_by_me?: boolean;
+}
+
+export type ForumReportTargetType = 'post' | 'comment';
+
+export interface ForumReport {
+  id: string;
+  target_type: ForumReportTargetType;
+  target_id: string;
+  reporter_id: string | null;
+  reason: string;
+  resolved: boolean;
+  created_at: string | null;
+
+  // Virtual / joined
+  reporter?: { full_name: string | null; email: string | null } | null;
+}

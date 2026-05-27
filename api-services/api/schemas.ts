@@ -95,3 +95,25 @@ export const blogSubmissionSchema = z.object({
         }),
     media_urls: z.array(z.string()).default([]),
 });
+
+export const forumPostSchema = z.object({
+    title: z.string().min(5, "Title must be at least 5 characters").max(200, "Title cannot exceed 200 characters"),
+    body: z.string().min(1, "Post body is required").max(20000, "Post is too long"),
+    category_id: z.string().uuid("Invalid category").optional().or(z.literal('')),
+});
+
+export const forumCommentSchema = z.object({
+    body: z.string().min(1, "Comment cannot be empty").max(5000, "Comment is too long"),
+});
+
+export const forumCategorySchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").max(60, "Name is too long"),
+    description: z.string().max(300).optional(),
+    sort_order: z.number().int().optional(),
+});
+
+export const forumReportSchema = z.object({
+    target_type: z.enum(['post', 'comment']),
+    target_id: z.string().uuid("Invalid target"),
+    reason: z.string().min(5, "Please describe the issue").max(500, "Reason is too long"),
+});

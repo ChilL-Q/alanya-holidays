@@ -59,6 +59,9 @@ const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingP
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
 const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
+const ForumHome = React.lazy(() => import('../pages/ForumHome').then(module => ({ default: module.ForumHome })));
+const ForumPostPage = React.lazy(() => import('../pages/ForumPostPage').then(module => ({ default: module.ForumPostPage })));
+const ForumSubmitPage = React.lazy(() => import('../pages/ForumSubmitPage').then(module => ({ default: module.ForumSubmitPage })));
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -79,6 +82,7 @@ const AdminBlogSubmissionsPage = React.lazy(() => import('../pages/admin/AdminBl
 const AdminAddBlogPostPage = React.lazy(() => import('../pages/admin/AdminAddBlogPostPage').then(module => ({ default: module.AdminAddBlogPostPage })));
 const AdminTestimonialsPage = React.lazy(() => import('../pages/admin/AdminTestimonialsPage').then(module => ({ default: module.AdminTestimonialsPage })));
 const AdminListingReviewsPage = React.lazy(() => import('../pages/admin/AdminListingReviewsPage').then(module => ({ default: module.AdminListingReviewsPage })));
+const AdminForumPage = React.lazy(() => import('../pages/admin/AdminForumPage').then(module => ({ default: module.AdminForumPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -156,6 +160,11 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/blog/category/:category" element={<BlogCategoryPage />} />
                 <Route path="/hidden-gems-alanya" element={<HiddenGemsPage />} />
                 <Route path="/best-beaches-alanya" element={<BestBeachesPage />} />
+
+                {/* Forum */}
+                <Route path="/forum" element={<ForumHome />} />
+                <Route path="/forum/new" element={<AuthRoute><ForumSubmitPage /></AuthRoute>} />
+                <Route path="/forum/:slug" element={<ForumPostPage />} />
 
                 {/* Auth Redirects */}
                 <Route path="/login" element={<LoginRedirect mode="login" />} />
@@ -384,6 +393,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <AdminTestimonialsPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/forum" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminForumPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />
