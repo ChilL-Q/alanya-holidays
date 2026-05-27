@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
     if (!userQuestion?.trim()) {
       return new Response(
         JSON.stringify({ error: 'Missing userQuestion' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
