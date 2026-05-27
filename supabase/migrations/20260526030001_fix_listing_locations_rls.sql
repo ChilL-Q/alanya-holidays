@@ -2,6 +2,8 @@
 -- Enables LST-003 self-service submissions where non-admin owners need write access
 -- Adds index on owner_user_id — used by every RLS EXISTS check on this table
 
+-- CONCURRENTLY is not used here because Supabase runs migrations inside a transaction,
+-- which is incompatible with CONCURRENTLY. Table lock is brief on this small table.
 CREATE INDEX IF NOT EXISTS idx_directory_listings_owner_user_id
     ON public.directory_listings (owner_user_id);
 
