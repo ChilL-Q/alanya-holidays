@@ -155,7 +155,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         return matchesCategory && matchesSearch;
     });
 
-    const categories = ['all', 'medical', 'accommodations', 'tours', 'transport', 'restaurants', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
+    const categories = ['all', 'medical', 'accommodations', 'villas', 'apartments', 'tours', 'transport', 'restaurants', 'cafes', 'real-estate', 'visa', 'shopping', 'nature', 'spa-hamam', 'hair-beauty'];
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

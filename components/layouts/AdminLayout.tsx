@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, ChefHat, Coffee, MessageSquare, PenLine, MessagesSquare } from 'lucide-react';
+import { LayoutDashboard, Home, Users, Calendar, Car, LogOut, Menu, X, Flag, ShoppingBag, Map as MapIcon, BookOpen, MessageSquare, PenLine, MessagesSquare } from 'lucide-react';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 interface AdminLayoutProps {
@@ -25,15 +25,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
         { path: '/admin/directory', label: 'Directory', icon: BookOpen },
-        { path: '/admin/restaurants', label: 'Restaurants', icon: ChefHat },
-        { path: '/admin/cafes', label: 'Cafes', icon: Coffee },
         { path: '/admin/products', label: 'Products', icon: ShoppingBag },
         { path: '/admin/properties', label: 'Properties', icon: Home },
         { path: '/admin/fleet', label: 'Fleet', icon: Car },
         { path: '/admin/services', label: 'Services', icon: MapIcon },
         { path: '/admin/bookings', label: 'Bookings', icon: Calendar },
-        { path: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
-        { path: '/admin/listing-reviews', label: 'Listing Reviews', icon: MessageSquare },
+        { path: '/admin/reviews', label: 'Property Reviews', icon: MessageSquare },
+        { path: '/admin/listing-reviews', label: 'Business Reviews', icon: MessageSquare },
         { path: '/admin/blog-submissions', label: 'Blog Submissions', icon: PenLine },
         { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
         { path: '/admin/forum', label: 'Forum', icon: MessagesSquare },
@@ -44,7 +42,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navGroups = [
         {
             label: 'Listings',
-            items: navItems.filter(i => ['Directory', 'Restaurants', 'Cafes', 'Products', 'Properties', 'Fleet', 'Services'].includes(i.label))
+            items: navItems.filter(i => ['Directory', 'Products', 'Properties', 'Fleet', 'Services'].includes(i.label))
         },
         {
             label: 'Commerce',
@@ -52,7 +50,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         },
         {
             label: 'Content',
-            items: navItems.filter(i => ['Reviews', 'Listing Reviews', 'Blog Submissions', 'Testimonials', 'Forum'].includes(i.label))
+            items: navItems.filter(i => ['Property Reviews', 'Business Reviews', 'Blog Submissions', 'Testimonials', 'Forum'].includes(i.label))
         },
         {
             label: 'Users',

@@ -3,6 +3,7 @@ import { getUserRole } from '../auth';
 import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../types/models';
 import { blogPostSchema, blogSubmissionSchema } from './schemas';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
+import { toArray } from '../../utils/supabaseHelpers';
 import { retry } from '../../utils/retry';
 import DOMPurify from 'dompurify';
 
@@ -92,7 +93,7 @@ async function resolveSlug(baseSlug: string): Promise<string> {
         .eq('slug', baseSlug)
         .or(`slug.like.${baseSlug}-%`);
 
-    const rows = Array.isArray(data) ? data : (data ? [data] : []);
+    const rows = toArray<{ slug: string }>(data);
     const existingSlugs = rows.map((row: { slug: string }) => row.slug);
     return generateUniqueSlug(baseSlug, existingSlugs);
 }
