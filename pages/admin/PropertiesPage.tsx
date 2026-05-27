@@ -12,6 +12,7 @@ export const PropertiesPage: React.FC = () => {
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState<string>('all');
+    const [filterType, setFilterType] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
     const [modalConfig, setModalConfig] = useState<{
@@ -96,10 +97,11 @@ export const PropertiesPage: React.FC = () => {
 
     const filteredProperties = properties.filter(p => {
         const matchesStatus = filterStatus === 'all' ? p.status !== 'rejected' : p.status === filterStatus;
+        const matchesType = filterType === 'all' || p.type === filterType;
         const matchesSearch =
             p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.location?.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesStatus && matchesSearch;
+        return matchesStatus && matchesType && matchesSearch;
     });
 
     return (
@@ -107,6 +109,8 @@ export const PropertiesPage: React.FC = () => {
             <PropertyToolbar
                 filterStatus={filterStatus}
                 onFilterStatus={setFilterStatus}
+                filterType={filterType}
+                onFilterType={setFilterType}
                 searchQuery={searchQuery}
                 onSearchQuery={setSearchQuery}
             />
