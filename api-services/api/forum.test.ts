@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ============================================================
 // Mocks
 // ============================================================
-const { mockSupabase, mockGetUserRole } = vi.hoisted(() => ({
+const { mockSupabase, mockGetUserRole, mockSanitize } = vi.hoisted(() => ({
     mockSupabase: {
         from: vi.fn(),
         rpc: vi.fn(),
@@ -12,6 +12,7 @@ const { mockSupabase, mockGetUserRole } = vi.hoisted(() => ({
         },
     },
     mockGetUserRole: vi.fn(),
+    mockSanitize: vi.fn((s: string) => s),
 }));
 
 vi.mock('../supabase', () => ({
@@ -33,7 +34,7 @@ vi.mock('../../utils/slugify', () => ({
 }));
 
 vi.mock('dompurify', () => ({
-    default: { sanitize: (s: string) => s },
+    default: { sanitize: mockSanitize },
 }));
 
 import { forumService } from './forum';
@@ -44,7 +45,7 @@ import { forumService } from './forum';
 const createChain = (data: any = null, error: any = null) => {
     const result = { data, error, count: Array.isArray(data) ? data.length : 0 };
     const chain: any = {};
-    const chainableMethods = ['select', 'insert', 'update', 'delete', 'eq', 'in', 'or', 'order', 'range', 'limit'];
+    const chainableMethods = ['select', 'insert', 'update', 'delete', 'eq', 'in', 'or', 'like', 'order', 'range', 'limit'];
     for (const method of chainableMethods) {
         chain[method] = vi.fn(() => chain);
     }
@@ -91,10 +92,15 @@ describe('forumService.createForumPost', () => {
 
     it('creates a post with a generated slug', async () => {
         asUser('author-1');
+        let callIndex = 0;
         mockSupabase.from.mockImplementation((table: string) => {
             if (table === 'forum_posts') {
-                // first call resolves slug (select/or → array), insert returns single
-                const chain = createChain([], null);
+                callIndex++;
+                if (callIndex <= 2) {
+                    // resolveSlug select queries (exact + like) — return empty
+                    return createChain([]);
+                }
+                const chain = createChain(null, null);
                 chain.single = vi.fn(() => Promise.resolve({
                     data: { id: 'p1', title: 'Hello world', slug: 'hello-world', author_id: 'author-1' },
                     error: null,
@@ -178,5 +184,73 @@ describe('admin-only guards', () => {
         mockGetUserRole.mockResolvedValue('admin');
         mockFromTable({ forum_posts: null });
         await expect(forumService.setRemoved('post', 'p1', true)).resolves.toBeUndefined();
+    });
+});
+
+describe('forumService.createForumPost (sanitize)', () => {
+    it('passes body through DOMPurify.sanitize', async () => {
+        asUser('author-1');
+        let callIndex = 0;
+        mockSupabase.from.mockImplementation((table: string) => {
+            if (table === 'forum_posts') {
+                callIndex++;
+                if (callIndex <= 2) return createChain([]);
+                const chain = createChain(null, null);
+                chain.single = vi.fn(() => Promise.resolve({
+                    data: { id: 'p1', title: 'Test title', slug: 'test-title', author_id: 'author-1', body: 'cleaned' },
+                    error: null,
+                }));
+                return chain;
+            }
+            return createChain(null);
+        });
+
+        mockSanitize.mockClear();
+        await forumService.createForumPost({ title: 'Test title', body: '<script>alert(1)</script>Hello' });
+        expect(mockSanitize).toHaveBeenCalledWith('<script>alert(1)</script>Hello');
+    });
+});
+
+describe('forumService.getForumPosts', () => {
+    it('applies is_removed filter by default', async () => {
+        asUser('user-1');
+        const chain = createChain([]);
+        chain.count = 0;
+        mockSupabase.from.mockImplementation(() => chain);
+
+        await forumService.getForumPosts();
+
+        const isRemovedCalls = chain.eq.mock.calls.filter(
+            (call: any[]) => call[0] === 'is_removed' && call[1] === false,
+        );
+        expect(isRemovedCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('skips is_removed filter when includeRemoved is true', async () => {
+        asUser('user-1');
+        const chain = createChain([]);
+        chain.count = 0;
+        mockSupabase.from.mockImplementation(() => chain);
+
+        await forumService.getForumPosts({ includeRemoved: true });
+
+        const isRemovedCalls = chain.eq.mock.calls.filter(
+            (call: any[]) => call[0] === 'is_removed',
+        );
+        expect(isRemovedCalls).toHaveLength(0);
+    });
+
+    it('filters for removed-only posts when removedOnly is true', async () => {
+        asUser('user-1');
+        const chain = createChain([]);
+        chain.count = 0;
+        mockSupabase.from.mockImplementation(() => chain);
+
+        await forumService.getForumPosts({ removedOnly: true });
+
+        const removedOnlyCalls = chain.eq.mock.calls.filter(
+            (call: any[]) => call[0] === 'is_removed' && call[1] === true,
+        );
+        expect(removedOnlyCalls.length).toBeGreaterThanOrEqual(1);
     });
 });

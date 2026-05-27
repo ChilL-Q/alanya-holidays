@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Loader2, Plus, Trash2, Flag, Check, EyeOff, GripVertical } from 'lucide-react';
+import { Loader2, Plus, Trash2, Flag, Check, EyeOff, Eye } from 'lucide-react';
 import { db } from '../../api-services';
-import { ForumCategory, ForumReport } from '../../types/models';
+import { ForumCategory, ForumPost, ForumReport } from '../../types/models';
 
 export const AdminForumPage: React.FC = () => {
     const [categories, setCategories] = useState<ForumCategory[]>([]);
@@ -12,6 +12,9 @@ export const AdminForumPage: React.FC = () => {
     const [newName, setNewName] = useState('');
     const [newDescription, setNewDescription] = useState('');
     const [creating, setCreating] = useState(false);
+    const [removedPosts, setRemovedPosts] = useState<ForumPost[]>([]);
+    const [loadingRemoved, setLoadingRemoved] = useState(false);
+    const [restoringId, setRestoringId] = useState<string | null>(null);
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
@@ -87,6 +90,31 @@ export const AdminForumPage: React.FC = () => {
         }
     };
 
+    const fetchRemovedPosts = useCallback(async () => {
+        setLoadingRemoved(true);
+        try {
+            const { data } = await db.getForumPosts({ removedOnly: true, limit: 50 });
+            setRemovedPosts(data);
+        } catch (e) {
+            toast.error((e as Error).message || 'Failed to load removed posts');
+        } finally {
+            setLoadingRemoved(false);
+        }
+    }, []);
+
+    const handleRestore = async (postId: string) => {
+        setRestoringId(postId);
+        try {
+            await db.setRemoved('post', postId, false);
+            toast.success('Post restored');
+            setRemovedPosts(prev => prev.filter(p => p.id !== postId));
+        } catch (e) {
+            toast.error((e as Error).message || 'Failed to restore post');
+        } finally {
+            setRestoringId(null);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center p-12">
@@ -140,7 +168,6 @@ export const AdminForumPage: React.FC = () => {
                     <div className="space-y-2 max-w-2xl">
                         {categories.map((c) => (
                             <div key={c.id} className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3">
-                                <GripVertical size={16} className="text-slate-300" />
                                 <div className="flex-grow">
                                     <p className="font-medium text-slate-900 dark:text-white">{c.name}</p>
                                     {c.description && <p className="text-xs text-slate-500 dark:text-slate-400">{c.description}</p>}
@@ -203,6 +230,49 @@ export const AdminForumPage: React.FC = () => {
                 <p className="mt-4 text-xs text-slate-400">
                     Tip: open the <Link to="/forum" className="text-teal-600">forum</Link> to view content in context.
                 </p>
+            </section>
+
+            {/* Removed Posts */}
+            <section>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <EyeOff size={18} className="text-slate-400" />
+                    Removed Posts
+                    {removedPosts.length > 0 && (
+                        <span className="text-xs bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">
+                            {removedPosts.length}
+                        </span>
+                    )}
+                </h2>
+
+                <button
+                    onClick={fetchRemovedPosts}
+                    disabled={loadingRemoved}
+                    className="mb-4 px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
+                >
+                    {loadingRemoved ? 'Loading...' : removedPosts.length > 0 ? 'Refresh' : 'Load removed posts'}
+                </button>
+
+                {removedPosts.length > 0 && (
+                    <div className="space-y-2 max-w-3xl">
+                        {removedPosts.map(p => (
+                            <div key={p.id} className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3">
+                                <div className="flex-grow min-w-0">
+                                    <p className="font-medium text-slate-900 dark:text-white truncate">{p.title}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                        by {p.author?.full_name || 'Anonymous'} &middot; {p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Unknown date'}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => handleRestore(p.id)}
+                                    disabled={restoringId === p.id}
+                                    className="inline-flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 font-medium whitespace-nowrap disabled:opacity-50"
+                                >
+                                    {restoringId === p.id ? <Loader2 size={15} className="animate-spin" /> : <Eye size={15} />} Restore
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );

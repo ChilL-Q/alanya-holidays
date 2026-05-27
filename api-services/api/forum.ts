@@ -9,6 +9,7 @@ import {
 } from '../../types/models';
 import { forumPostSchema, forumCommentSchema, forumCategorySchema, forumReportSchema } from './schemas';
 import { slugify, generateUniqueSlug } from '../../utils/slugify';
+import { toArray } from '../../utils/supabaseHelpers';
 import DOMPurify from 'dompurify';
 
 // ============================================================
@@ -17,11 +18,13 @@ import DOMPurify from 'dompurify';
 
 export type ForumSort = 'new' | 'top';
 
-interface ForumPostFilters {
+export interface ForumPostFilters {
     categorySlug?: string;
     sort?: ForumSort;
     limit?: number;
     offset?: number;
+    includeRemoved?: boolean;
+    removedOnly?: boolean;
 }
 
 const POST_SELECT = `
@@ -40,13 +43,15 @@ function sanitize(input: string): string {
 
 async function resolveSlug(baseSlug: string): Promise<string> {
     const seed = baseSlug || 'post';
-    const { data } = await supabase
-        .from('forum_posts')
-        .select('slug')
-        .or(`slug.eq.${seed},slug.like.${seed}-%`);
+    const [exact, suffixed] = await Promise.all([
+        supabase.from('forum_posts').select('slug').eq('slug', seed),
+        supabase.from('forum_posts').select('slug').like('slug', `${seed}-%`),
+    ]);
 
-    const rows = Array.isArray(data) ? data : (data ? [data] : []);
-    const existingSlugs = rows.map((row: { slug: string }) => row.slug);
+    const existingSlugs = [
+        ...toArray<{ slug: string }>(exact.data),
+        ...toArray<{ slug: string }>(suffixed.data),
+    ].map((row: { slug: string }) => row.slug);
     return generateUniqueSlug(seed, existingSlugs);
 }
 
@@ -162,8 +167,13 @@ export const forumService = {
 
         let query = supabase
             .from('forum_posts')
-            .select(POST_SELECT, { count: 'exact' })
-            .eq('is_removed', false);
+            .select(POST_SELECT, { count: 'exact' });
+
+        if (filters.removedOnly) {
+            query = query.eq('is_removed', true);
+        } else if (!filters.includeRemoved) {
+            query = query.eq('is_removed', false);
+        }
 
         if (filters.categorySlug) {
             // Resolve slug → id
@@ -292,19 +302,24 @@ export const forumService = {
 
     // ---------- Comments ----------
 
-    async getForumComments(postId: string): Promise<ForumComment[]> {
+    async getForumComments(postId: string, options?: { includeRemoved?: boolean }): Promise<ForumComment[]> {
         const { data: { user } } = await supabase.auth.getUser();
 
-        const { data, error } = await supabase
+        let query = supabase
             .from('forum_comments')
             .select(`
                 *,
                 author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)
             `)
-            .eq('post_id', postId)
-            .eq('is_removed', false)
-            .order('created_at', { ascending: true });
+            .eq('post_id', postId);
 
+        if (!options?.includeRemoved) {
+            query = query.eq('is_removed', false);
+        }
+
+        query = query.order('created_at', { ascending: true });
+
+        const { data, error } = await query;
         if (error) throw error;
 
         return annotateLikes(
