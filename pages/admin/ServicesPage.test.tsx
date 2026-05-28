@@ -145,17 +145,16 @@ describe('Admin ServicesPage', () => {
         (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
         (db.getPendingServiceEdits as any).mockResolvedValue([]);
         (db.approveService as any).mockResolvedValue({});
-        
+
         renderServicesPage();
 
         await waitFor(() => expect(screen.getByText('Car Rental')).toBeInTheDocument());
 
         fireEvent.click(screen.getByText('Select All'));
-        
+
         const bulkApproveBtn = screen.getByText('Approve Selected');
         fireEvent.click(bulkApproveBtn);
 
-        expect(window.confirm).toHaveBeenCalled();
         await waitFor(() => {
             expect(db.approveService).toHaveBeenCalledTimes(2);
         });
@@ -179,21 +178,28 @@ describe('Admin ServicesPage', () => {
         (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
         (db.getPendingServiceEdits as any).mockResolvedValue([]);
         (db.deleteService as any).mockResolvedValue({});
-        
+
         renderServicesPage();
 
         await waitFor(() => expect(screen.getByText('Car Rental')).toBeInTheDocument());
 
         fireEvent.click(screen.getByText('Select All'));
-        
-        // Use more specific selector for bulk action toolbar
+
         const deleteBtns = screen.getAllByText('Delete');
         const bulkDeleteBtn = deleteBtns.find(btn => btn.className.includes('bg-red-100')) || deleteBtns[0];
         fireEvent.click(bulkDeleteBtn);
 
-        expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('delete 2 services'));
+        // Bulk delete now opens ConfirmationModal instead of window.confirm
+        await waitFor(() => {
+            expect(screen.getByText(/Delete 2 Services/i)).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText('Confirm'));
+
         await waitFor(() => {
             expect(db.deleteService).toHaveBeenCalledTimes(2);
+            expect(db.deleteService).toHaveBeenCalledWith('1', 'Test Reason');
+            expect(db.deleteService).toHaveBeenCalledWith('2', 'Test Reason');
         });
     });
 
@@ -201,20 +207,27 @@ describe('Admin ServicesPage', () => {
         (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
         (db.getPendingServiceEdits as any).mockResolvedValue([]);
         (db.updateServiceStatus as any).mockResolvedValue({});
-        
+
         renderServicesPage();
 
         await waitFor(() => expect(screen.getByText('Car Rental')).toBeInTheDocument());
 
         fireEvent.click(screen.getByText('Select All'));
-        
+
         const bulkRejectBtn = screen.getByText('Reject Selected');
         fireEvent.click(bulkRejectBtn);
 
-        expect(window.confirm).toHaveBeenCalled();
+        // Bulk reject now opens ConfirmationModal instead of window.confirm
+        await waitFor(() => {
+            expect(screen.getByText(/Reject 2 Services/i)).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByText('Confirm'));
+
         await waitFor(() => {
             expect(db.updateServiceStatus).toHaveBeenCalledTimes(2);
-            expect(db.updateServiceStatus).toHaveBeenCalledWith(expect.any(String), 'rejected');
+            expect(db.updateServiceStatus).toHaveBeenCalledWith('1', 'rejected', 'Test Reason');
+            expect(db.updateServiceStatus).toHaveBeenCalledWith('2', 'rejected', 'Test Reason');
         });
     });
 

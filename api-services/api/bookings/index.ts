@@ -1,6 +1,6 @@
 import { Booking, UserProfile } from '../../../types/index';
 import { getBookings, getAdminBookings, getBookingsForHost } from './queries';
-import { createBooking, updateBookingStatus, cancelBooking, checkBookingConflict } from './mutations';
+import { createBooking, updateBookingStatus, updatePayoutStatus, cancelBooking, checkBookingConflict } from './mutations';
 
 export type { BookingCreateInput } from './mutations';
 export type { BookingConflictResult } from './mutations';
@@ -18,5 +18,6 @@ export const bookingsService = {
     getBookingsByStatus: (status: string) => getAdminBookings(status),
     getBookingsForHost,
     updateBookingStatus,
+    updatePayoutStatus,
     cancelBooking,
 };

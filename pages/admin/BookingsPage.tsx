@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../api-services';
-import { supabase } from '../../api-services/supabase';
 import { BookingToolbar } from '../../components/admin/bookings/BookingToolbar';
 import { BookingTable } from '../../components/admin/bookings/BookingTable';
 import { BookingDetailsModal } from '../../components/admin/bookings/BookingDetailsModal';
@@ -15,13 +14,14 @@ export const BookingsPage: React.FC = () => {
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
     useEffect(() => {
-        loadBookings();
-    }, []);
+        loadBookings(filterStatus);
+    }, [filterStatus]);
 
-    const loadBookings = async () => {
+    const loadBookings = async (status?: string) => {
         try {
             setLoading(true);
-            const data = await db.getAdminBookings();
+            const filter = status && status !== 'all' ? status : undefined;
+            const data = await db.getAdminBookings(filter);
             setBookings(data || []);
         } catch (e) {
             console.error(e);
@@ -47,20 +47,17 @@ export const BookingsPage: React.FC = () => {
     const handlePayoutStatusChange = async (id: string, newStatus: 'paid' | 'pending' | 'processing') => {
         if (!confirm(`Mark payout as ${newStatus}?`)) return;
         try {
-            const { error } = await supabase.from('bookings').update({ payout_status: newStatus }).eq('id', id);
-            if (error) throw error;
-
+            await db.updatePayoutStatus(id, newStatus);
             setBookings(prev => prev.map(b => b.id === id ? { ...b, payout_status: newStatus } : b));
             if (selectedBooking?.id === id) {
                 setSelectedBooking((prev: any) => ({ ...prev, payout_status: newStatus }));
             }
-             } catch {
-                 toast.error('Failed to update payout status');
-             }
+        } catch {
+            toast.error('Failed to update payout status');
+        }
     };
 
     const filteredBookings = bookings.filter(b => {
-        const matchesStatus = filterStatus === 'all' || b.status === filterStatus;
         const matchesSearch =
             b.user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             b.itemTitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,7 +71,7 @@ export const BookingsPage: React.FC = () => {
             matchesDate = matchesDate && new Date(b.check_in) <= new Date(dateRange.end);
         }
 
-        return matchesStatus && matchesSearch && matchesDate;
+        return matchesSearch && matchesDate;
     });
 
     return (

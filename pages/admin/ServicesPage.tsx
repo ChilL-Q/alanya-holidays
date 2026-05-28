@@ -10,6 +10,13 @@ interface AdminServicesPageProps {
     type?: 'fleet' | 'services';
 }
 
+const MODAL_META: Record<string, { label: string; placeholder: string }> = {
+    delete:      { label: 'Delete', placeholder: 'Why are you deleting this service?' },
+    bulk_delete: { label: 'Delete', placeholder: 'Why are you deleting these services?' },
+    reject:      { label: 'Reject', placeholder: 'Why are you rejecting this service?' },
+    bulk_reject: { label: 'Reject', placeholder: 'Why are you rejecting these services?' },
+};
+
 export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
     const [services, setServices] = useState<any[]>([]);
     const [pendingEdits, setPendingEdits] = useState<any[]>([]);
@@ -20,7 +27,7 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
-        type: 'approve' | 'reject' | 'delete' | 'bulk_delete' | null;
+        type: 'approve' | 'reject' | 'delete' | 'bulk_delete' | 'bulk_reject' | null;
         itemId: string | null;
         title: string;
         message: string;
@@ -59,38 +66,47 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
         setSelectedIds(newSelected);
     };
 
-    const handleBulkAction = async (action: 'approve' | 'reject' | 'delete') => {
+    const executeBulk = async (
+        fns: Array<() => Promise<unknown>>,
+        successMsg: string,
+        failLabel: string,
+    ) => {
+        const results = await Promise.allSettled(fns.map(fn => fn()));
+        const failed = results.filter(r => r.status === 'rejected').length;
+        if (failed > 0) {
+            toast.error(`Failed to ${failLabel} ${failed} service${failed > 1 ? 's' : ''}`);
+        } else {
+            toast.success(successMsg);
+        }
+        loadServices();
+        setSelectedIds(new Set());
+    };
+
+    const bulkApprove = () => {
+        const fns = Array.from(selectedIds).map(id => () => db.approveService(id));
+        executeBulk(fns, `${selectedIds.size} service${selectedIds.size > 1 ? 's' : ''} approved`, 'approve');
+    };
+
+    const handleBulkAction = (action: 'approve' | 'reject' | 'delete') => {
         if (selectedIds.size === 0) return;
 
-        if (action === 'delete') {
-            if (confirm(`Are you sure you want to delete ${selectedIds.size} services? This cannot be undone.`)) {
-                try {
-                     await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
-                     setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
-                     setSelectedIds(new Set());
-                 } catch (e) {
-                     console.error(e);
-                     toast.error('Failed to delete some services.');
-                 }
-            }
+        if (action === 'approve') {
+            bulkApprove();
             return;
         }
 
-        if (confirm(`Are you sure you want to ${action} ${selectedIds.size} services?`)) {
-            try {
-                const updates = Array.from(selectedIds).map(id => {
-                    if (action === 'approve') return db.approveService(id);
-                    if (action === 'reject') return db.updateServiceStatus(id, 'rejected');
-                    return Promise.resolve();
-                });
-                await Promise.all(updates);
-                loadServices();
-                setSelectedIds(new Set());
-            } catch (e) {
-             console.error(e);
-                 toast.error(`Failed to ${action} services.`);
-            }
-        }
+        const isBulkDelete = action === 'delete';
+        setModalConfig({
+            isOpen: true,
+            type: isBulkDelete ? 'bulk_delete' : 'bulk_reject',
+            itemId: null,
+            title: isBulkDelete ? `Delete ${selectedIds.size} Services` : `Reject ${selectedIds.size} Services`,
+            message: isBulkDelete
+                ? `Are you sure you want to delete ${selectedIds.size} services? This cannot be undone.`
+                : `Are you sure you want to reject ${selectedIds.size} services?`,
+            requireReason: true,
+            isDestructive: true,
+        });
     };
 
     const loadServices = async () => {
@@ -147,23 +163,28 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
 
     const handleConfirmAction = async (reason?: string) => {
         const { type, itemId } = modalConfig;
-        if (!type || !itemId) return;
+        if (!type) return;
 
         try {
-            if (type === 'approve') await db.approveService(itemId);
-            if (type === 'reject') {
-                await db.updateServiceStatus(itemId, 'rejected', reason);
-            }
-            if (type === 'delete') {
-                await db.deleteService(itemId, reason);
+            if (type === 'bulk_delete') {
+                const fns = Array.from(selectedIds).map(id => () => db.deleteService(id, reason));
+                await executeBulk(fns, 'Services deleted', 'delete');
+            } else if (type === 'bulk_reject') {
+                const fns = Array.from(selectedIds).map(id => () => db.updateServiceStatus(id, 'rejected', reason));
+                await executeBulk(fns, 'Services rejected', 'reject');
+            } else {
+                if (!itemId) return;
+                if (type === 'approve') await db.approveService(itemId);
+                if (type === 'reject') await db.updateServiceStatus(itemId, 'rejected', reason);
+                if (type === 'delete') await db.deleteService(itemId, reason);
+                loadServices();
             }
 
-            loadServices();
             setModalConfig({ ...modalConfig, isOpen: false });
-         } catch (e: any) {
-             console.error(e);
-             toast.error(`Failed to ${type} service: ${e.message || 'Unknown error'}`);
-         }
+        } catch (e: any) {
+            console.error(e);
+            toast.error(`Failed to ${type.replace('bulk_', '')} service: ${e.message || 'Unknown error'}`);
+        }
     };
 
     const filteredServices = services.filter(s => {
@@ -229,8 +250,8 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
                 message={modalConfig.message}
                 requireReason={modalConfig.requireReason}
                 isDestructive={modalConfig.isDestructive}
-                confirmLabel={modalConfig.type === 'delete' ? 'Delete' : modalConfig.type === 'reject' ? 'Reject' : 'Approve'}
-                reasonPlaceholder={modalConfig.type === 'delete' ? 'Why are you deleting this service?' : 'Why are you rejecting this service?'}
+                confirmLabel={MODAL_META[modalConfig.type ?? '']?.label ?? 'Approve'}
+                reasonPlaceholder={MODAL_META[modalConfig.type ?? '']?.placeholder}
             />
         </div>
     );

@@ -21,7 +21,8 @@ export async function createAuditLog(
         | 'PROPERTY_DELETED'
         | 'SERVICE_APPROVED'
         | 'SERVICE_REJECTED'
-        | 'EMAIL_DELIVERY_FAILED',
+        | 'EMAIL_DELIVERY_FAILED'
+        | 'PAYOUT_STATUS_UPDATED',
     details: object,
     userId?: string
 ): Promise<void> {

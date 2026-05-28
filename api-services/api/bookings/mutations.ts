@@ -316,3 +316,18 @@ export async function cancelBooking(id: string) {
 
     return updateBookingStatus(id, 'cancelled', reason);
 }
+
+export async function updatePayoutStatus(id: string, payoutStatus: 'paid' | 'pending' | 'processing') {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // DB trigger (check_payout_status_update) enforces admin-only at the server level.
+    const { error } = await supabase
+        .from('bookings')
+        .update({ payout_status: payoutStatus })
+        .eq('id', id);
+
+    if (error) throw error;
+
+    await createAuditLog('PAYOUT_STATUS_UPDATED', { bookingId: id, payoutStatus }, user.id);
+}
