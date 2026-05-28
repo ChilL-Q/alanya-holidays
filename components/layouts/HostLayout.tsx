@@ -2,8 +2,8 @@ import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3 } from 'lucide-react';
 import { User } from '../../context/AuthContext';
-import { Button } from '../../components/ui/Button';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { useClickOutside } from '../../hooks/useClickOutside';
 
 interface HostLayoutProps {
     children: React.ReactNode;
@@ -15,6 +15,9 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children, user, unreadCo
     const navigate = useNavigate();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const [isAddMenuOpen, setIsAddMenuOpen] = React.useState(false);
+    const addMenuRef = React.useRef<HTMLDivElement>(null);
+    useClickOutside(addMenuRef, () => setIsAddMenuOpen(false));
 
 
     // Handle Esc key to close mobile menu
@@ -63,14 +66,44 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children, user, unreadCo
                     </button>
                 </div>
 
-                <div className="p-4">
-                    <Button
-                        onClick={() => navigate('/list-property')}
-                        className="w-full justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/20"
+                <div className="p-4 relative" ref={addMenuRef}>
+                    <button
+                        onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium shadow-lg shadow-indigo-500/20 transition-all"
                     >
                         <Plus size={18} />
                         Add New Listing
-                    </Button>
+                    </button>
+                    {isAddMenuOpen && (
+                        <div className="absolute left-4 right-4 top-full mt-1 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                            <div className="p-1.5 space-y-0.5">
+                                <button
+                                    onClick={() => { navigate('/list-property'); setIsAddMenuOpen(false); }}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors text-left group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                        <Home size={16} />
+                                    </div>
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">List Property</span>
+                                        <span className="block text-xs text-slate-500">Villa or apartment</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => { navigate('/add-service'); setIsAddMenuOpen(false); }}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors text-left group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-slate-800 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                        <Car size={16} />
+                                    </div>
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">Add Service</span>
+                                        <span className="block text-xs text-slate-500">Fleet, tours, or other</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <nav className="p-4 space-y-1 overflow-y-auto">

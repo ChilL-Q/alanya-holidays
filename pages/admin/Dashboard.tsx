@@ -13,6 +13,7 @@ export const Dashboard: React.FC = () => {
         total_users: number;
         total_services: number;
         revenue: number;
+        revenueTrend: number | null;
         revenue_history: any[];
         booking_status_distribution: any[];
         recent_bookings: any[];
@@ -21,6 +22,7 @@ export const Dashboard: React.FC = () => {
         total_users: 0,
         total_services: 0,
         revenue: 0,
+        revenueTrend: null,
         revenue_history: [],
         booking_status_distribution: [],
         recent_bookings: []
@@ -75,12 +77,21 @@ export const Dashboard: React.FC = () => {
                 const recent = [...pendingBookings, ...allBookings, ...completedBookings, ...cancelledBookings]
                     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                     .slice(0, 5);
+
+                // Compute revenue trend (current month vs previous month)
+                const currentMonthRev = revenueHistory[revenueHistory.length - 1]?.value ?? 0;
+                const previousMonthRev = revenueHistory.length >= 2 ? revenueHistory[revenueHistory.length - 2].value : 0;
+                const revenueTrend = previousMonthRev > 0
+                    ? Math.round(((currentMonthRev - previousMonthRev) / previousMonthRev) * 1000) / 10
+                    : null;
+
                 if (isMountedRef.current) {
                     setStats({
                         total_properties: totalProperties || 0,
                         total_users: users?.length || 0,
                         total_services: totalServices || 0,
                         revenue: totalRevenue,
+                        revenueTrend,
                         revenue_history: revenueHistory,
                         booking_status_distribution: bookingStatusDistribution,
                         recent_bookings: recent
@@ -104,11 +115,12 @@ export const Dashboard: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            <StatCards 
-                revenue={stats.revenue} 
-                totalUsers={stats.total_users} 
-                totalProperties={stats.total_properties} 
-                totalServices={stats.total_services} 
+            <StatCards
+                revenue={stats.revenue}
+                revenueTrend={stats.revenueTrend}
+                totalUsers={stats.total_users}
+                totalProperties={stats.total_properties}
+                totalServices={stats.total_services}
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

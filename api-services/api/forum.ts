@@ -477,6 +477,19 @@ export const forumService = {
         if (error) throw error;
     },
 
+    /** Admin: list removed comments for moderation. */
+    async getRemovedComments(limit = 50): Promise<ForumComment[]> {
+        await requireAdmin();
+        const { data, error } = await supabase
+            .from('forum_comments')
+            .select('*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)')
+            .eq('is_removed', true)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+        return data as ForumComment[];
+    },
+
     /** Admin: pin/unpin a post. */
     async setPinned(postId: string, pinned: boolean): Promise<void> {
         await requireAdmin();

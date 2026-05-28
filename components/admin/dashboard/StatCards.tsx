@@ -3,12 +3,17 @@ import { TrendingUp } from 'lucide-react';
 
 interface StatCardsProps {
     revenue: number;
+    revenueTrend: number | null;
     totalUsers: number;
     totalProperties: number;
     totalServices: number;
 }
 
-export const StatCards: React.FC<StatCardsProps> = ({ revenue, totalUsers, totalProperties, totalServices }) => {
+export const StatCards: React.FC<StatCardsProps> = ({ revenue, revenueTrend, totalUsers, totalProperties, totalServices }) => {
+    const trendColor = revenueTrend !== null && revenueTrend >= 0
+        ? 'text-teal-600 dark:text-teal-400'
+        : 'text-red-500 dark:text-red-400';
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white dark:bg-slate-800/80 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/50 relative overflow-hidden group">
@@ -16,10 +21,16 @@ export const StatCards: React.FC<StatCardsProps> = ({ revenue, totalUsers, total
                 <div className="relative">
                     <p className="text-slate-500 font-medium mb-1">Total Revenue</p>
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-white">€{revenue.toLocaleString()}</h3>
-                    <div className="flex items-center gap-1 text-teal-600 dark:text-cyan-400 dark:text-slate-200 text-sm font-medium mt-2">
-                        <TrendingUp size={16} />
-                        <span>+12.5%</span>
-                        <span className="text-slate-400 font-normal">vs last month</span>
+                    <div className="flex items-center gap-1 text-sm font-medium mt-2">
+                        {revenueTrend !== null ? (
+                            <>
+                                <TrendingUp size={16} className={trendColor} />
+                                <span className={trendColor}>{revenueTrend >= 0 ? '+' : ''}{revenueTrend}%</span>
+                                <span className="text-slate-400 font-normal">vs last month</span>
+                            </>
+                        ) : (
+                            <span className="text-slate-400 font-normal">No prior data</span>
+                        )}
                     </div>
                 </div>
             </div>
