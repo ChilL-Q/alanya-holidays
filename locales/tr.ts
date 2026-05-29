@@ -230,7 +230,7 @@ export const tr = {
     'services.adventure.land': 'Kara Turları',
     'services.adventure.land_desc': 'Kanyonlar, mağaralar ve antik kalıntılar.',
 
-    'services.health.title': 'Sağlık & Güzellik',
+    'services.health.title': 'Tıp & Sağlık',
     'services.health.subtitle': 'Bedeninizi ve zihninizi yenileyin.',
     'services.health.spa': 'Hamam & Spa',
     'services.health.spa_desc': 'Geleneksel Türk hamamı deneyimleri.',
