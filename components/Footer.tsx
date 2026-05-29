@@ -89,7 +89,7 @@ export const Footer: React.FC = () => {
                         <ul className="space-y-3 mt-4 text-sm">
                             <li><Link to="/about" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.about')}</Link></li>
                             <li><Link to="/stays" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('nav.stays')}</Link></li>
-                            <li><Link to="/list-property" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.listYourRental')}</Link></li>
+                            <li><Link to="/list-property" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('nav.list_business')}</Link></li>
                             <li><Link to="/contact" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.contact')}</Link></li>
                         </ul>
                     </div>
@@ -101,8 +101,11 @@ export const Footer: React.FC = () => {
                             <li><Link to="/services" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.transport.title')}</Link></li>
                             <li><Link to="/services/experiences" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.experiences')}</Link></li>
                             <li><Link to="/services/health" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.health.title')}</Link></li>
+                            <li><Link to="/services/spa-wellness" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.spa.title')}</Link></li>
+                            <li><Link to="/services/hair-beauty" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.hair.title')}</Link></li>
                             <li><Link to="/services/visa" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.visa.title')}</Link></li>
                             <li><Link to="/services/connectivity" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.connectivity.title')}</Link></li>
+                            <li><Link to="/services/creative" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.creative.title')}</Link></li>
                         </ul>
                     </div>
 
