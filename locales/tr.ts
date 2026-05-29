@@ -14,6 +14,7 @@ export const tr = {
     'nav.profile': 'Profil',
     'nav.messages': 'Mesajlar',
     'nav.list_property': 'Evini Kirala',
+    'nav.list_business': 'İşletme Yayınla',
     'nav.switch_to_rentals': 'Kiralama & Hizmetler',
     'nav.list_rental_or_service': 'Kiralama veya Hizmet Listele',
     'nav.switch_to_directory': 'Rehber',
@@ -412,7 +413,7 @@ export const tr = {
     'profile.email_verify_subtitle': 'E-posta adresinizi güncelleyin',
     'profile.password_subtitle': 'Hesabınızı güvende tutmak için şifrenizi güncelleyin',
     'placeholder.search_items': 'Bir komut yazın veya arayın...',
-    'nav.list_desc': 'Ev sahibi olarak kazanın',
+    'nav.list_desc': 'Villalar, daireler ve daha fazlası',
     'nav.list_service': 'Hizmet Yayını Yap',
     'nav.service_desc': 'Arabalar, turlar ve daha fazlası',
 

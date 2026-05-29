@@ -14,6 +14,7 @@ export const ru = {
   'nav.profile': 'Профиль',
   'nav.messages': 'Сообщения',
   'nav.list_property': 'Сдать объект',
+  'nav.list_business': 'Разместить бизнес',
   'nav.switch_to_rentals': 'Аренда и услуги',
   'nav.list_rental_or_service': 'Сдать жилье или услугу',
   'nav.switch_to_directory': 'Справочник',
@@ -412,7 +413,7 @@ export const ru = {
   'profile.email_verify_subtitle': 'Обновите ваш email адрес',
   'profile.password_subtitle': 'Обновите пароль для безопасности вашего аккаунта',
   'placeholder.search_items': 'Введите команду или запрос...',
-  'nav.list_desc': 'Зарабатывайте как хозяин',
+  'nav.list_desc': 'Виллы, апартаменты и другое',
   'nav.list_service': 'Разместить услугу',
   'nav.service_desc': 'Авто, туры и другое',
 

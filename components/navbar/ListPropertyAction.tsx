@@ -67,7 +67,7 @@ export const ListPropertyAction: React.FC = () => {
                 className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-slate-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
             >
                 <Plus size={16} className="text-teal-400 dark:text-cyan-400 " />
-                <span>{t('nav.list_property')}</span>
+                <span>{t('nav.list_business') || 'List Business'}</span>
             </button>
             {/* List Dropdown */}
             {isListMenuOpen && (

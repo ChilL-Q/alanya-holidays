@@ -81,6 +81,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                     </>
                 ) : (
                     <>
+                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                            <ShoppingBag size={18} className="text-slate-400" />
+                            {t('nav.services') || 'Services'}
+                        </Link>
                         <Link to="/alanya-villas" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Home size={18} className="text-slate-400" />
                             {t('directory.villas') || 'Villas'}
@@ -88,14 +92,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                         <Link to="/alanya-apartments" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Building2 size={18} className="text-slate-400" />
                             {t('directory.apartments') || 'Apartments'}
-                        </Link>
-                        <Link to="/services/car-rental" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                            <Car size={18} className="text-slate-400" />
-                            {t('nav.vehicles') || 'Vehicles'}
-                        </Link>
-                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                            <ShoppingBag size={18} className="text-slate-400" />
-                            {t('nav.services') || 'Services'}
                         </Link>
                     </>
                 )}
