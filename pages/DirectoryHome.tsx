@@ -34,6 +34,7 @@ export const DirectoryHome: React.FC = () => {
     const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
     const [signatureListings, setSignatureListings] = useState<DirectoryListingDB[]>([]);
     const [testimonials, setTestimonials] = useState<any[]>([]);
+    const [dbLocations, setDbLocations] = useState<string[]>([]);
     const [listingsLoading, setListingsLoading] = useState(true);
 
     useEffect(() => {
@@ -41,17 +42,19 @@ export const DirectoryHome: React.FC = () => {
         async function loadListings() {
             setListingsLoading(true);
             try {
-                const [premium, free, signatures, tests] = await Promise.all([
+                const [premium, free, signatures, tests, locs] = await Promise.all([
                     db.getPremiumListings(),
                     db.getFreeListings(),
                     db.getSignatureListings(),
                     db.getPublicTestimonials(),
+                    db.getLocations(),
                 ]);
                 if (!cancelled) {
                     setPremiumListings(premium);
                     setFreeListings(free);
                     setSignatureListings(signatures);
                     setTestimonials(tests);
+                    setDbLocations(locs.map(l => l.name));
                 }
             } catch (err) {
                 console.error('Failed to load landing listings:', err);
@@ -157,14 +160,22 @@ export const DirectoryHome: React.FC = () => {
                                 <select
                                     value={location}
                                     onChange={(e) => setLocation(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 rounded-b-xl md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer"
+                                    className="w-full pl-12 pr-4 py-4 rounded-b-xl md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer truncate"
                                     title="Location"
                                 >
                                     <option value="">{t('dir.search.loc_all')}</option>
-                                    <option value="alanya_center">{t('dir.search.loc_center')}</option>
-                                    <option value="mahmutlar">{t('dir.search.loc_mahmutlar')}</option>
-                                    <option value="oba">{t('dir.search.loc_oba')}</option>
-                                    <option value="kestel">{t('dir.search.loc_kestel')}</option>
+                                    {dbLocations.length > 0 ? (
+                                        dbLocations.map(loc => (
+                                            <option key={loc} value={loc}>{loc}</option>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <option value="Alanya">Alanya</option>
+                                            <option value="Antalya">Antalya</option>
+                                            <option value="Mahmutlar">Mahmutlar</option>
+                                            <option value="Oba">Oba</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
 
