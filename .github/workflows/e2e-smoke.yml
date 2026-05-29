@@ -18,12 +18,15 @@ jobs:
   e2e-smoke:
     name: E2E Critical Flows
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.52.0-noble
 
     env:
       VITE_SUPABASE_URL: "https://mock-supabase-url.supabase.co"
       VITE_SUPABASE_ANON_KEY: "mock-supabase-anon-key"
       VITE_GOOGLE_MAPS_API_KEY: "mock-google-maps-api-key"
+      HOME: /root
 
     steps:
     - name: Checkout Code
@@ -37,20 +40,6 @@ jobs:
 
     - name: Install Dependencies
       run: npm ci
-
-    - name: Cache Playwright Browsers
-      uses: actions/cache@v4
-      id: playwright-cache
-      with:
-        path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-    - name: Install Playwright Browser Binary
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: npx playwright install chromium
-
-    - name: Install Playwright System Dependencies
-      run: npx playwright install-deps chromium
 
     - name: Run E2E Smoke Tests
       run: npx playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --project=chromium
