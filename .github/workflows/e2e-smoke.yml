@@ -45,12 +45,11 @@ jobs:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
-    - name: Install Playwright Browsers
+    - name: Install Playwright Browser Binary
       if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install chromium
 
     - name: Install Playwright System Dependencies
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
       run: npx playwright install-deps chromium
 
     - name: Run E2E Smoke Tests
