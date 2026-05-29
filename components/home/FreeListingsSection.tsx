@@ -32,7 +32,7 @@ export const FreeListingsSection: React.FC<FreeListingsSectionProps> = ({ listin
                         </p>
                     </div>
                     <button
-                        onClick={() => navigate('/search-results')}
+                        onClick={() => navigate('/search')}
                         className="flex items-center gap-1 text-sm font-semibold text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:hover:text-cyan-300 transition-colors self-start sm:self-auto"
                     >
                         Explore all <ArrowRight size={16} />

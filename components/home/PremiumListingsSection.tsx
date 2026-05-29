@@ -32,7 +32,7 @@ export const PremiumListingsSection: React.FC<PremiumListingsSectionProps> = ({ 
                         </p>
                     </div>
                     <button
-                        onClick={() => navigate('/search-results')}
+                        onClick={() => navigate('/search')}
                         className="flex items-center gap-1 text-sm font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors self-start sm:self-auto"
                     >
                         View all <ArrowRight size={16} />

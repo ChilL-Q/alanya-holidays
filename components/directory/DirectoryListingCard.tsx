@@ -14,10 +14,11 @@ interface DirectoryListingCardProps {
     onVote?: (listingId: string, vote: 1 | -1) => void;
     isAuthenticated?: boolean;
     isVoting?: boolean;
+    categoryName?: string;
 }
 
 export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
-    listing, onClick, userVote, onVote, isAuthenticated, isVoting
+    listing, onClick, userVote, onVote, isAuthenticated, isVoting, categoryName
 }) => {
     const { language } = useLanguage();
     const displayDescription = getListingDescription(listing, language);
@@ -80,6 +81,11 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
                     {listing.name}
                     {listing.is_verified && <BadgeCheck className="text-blue-500 w-5 h-5 flex-shrink-0" />}
+                    {categoryName && (
+                        <span className="text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                            {categoryName}
+                        </span>
+                    )}
                 </h3>
                 <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-3">
                     <MapPin size={14} /> {listing.location}

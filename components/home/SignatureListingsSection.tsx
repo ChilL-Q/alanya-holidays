@@ -32,7 +32,7 @@ export const SignatureListingsSection: React.FC<SignatureListingsSectionProps> =
                         </p>
                     </div>
                     <button
-                        onClick={() => navigate('/search-results')}
+                        onClick={() => navigate('/search')}
                         className="flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors self-start sm:self-auto"
                     >
                         View all <ArrowRight size={16} />

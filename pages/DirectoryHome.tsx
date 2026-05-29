@@ -17,6 +17,14 @@ export const DirectoryHome: React.FC = () => {
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
 
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (searchQuery.trim()) params.set('q', searchQuery.trim());
+        if (selectedCategory) params.set('category', selectedCategory);
+        if (location) params.set('location', location);
+        navigate(`/search?${params.toString()}`);
+    };
+
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
     const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
@@ -116,6 +124,9 @@ export const DirectoryHome: React.FC = () => {
                                     placeholder={t('dir.search.placeholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSearch();
+                                    }}
                                     className="w-full pl-12 pr-4 py-4 rounded-t-xl md:rounded-none md:rounded-l-xl border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                                 />
                             </div>
@@ -153,7 +164,10 @@ export const DirectoryHome: React.FC = () => {
                                 </select>
                             </div>
 
-                            <button className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm">
+                            <button
+                                onClick={handleSearch}
+                                className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm"
+                            >
                                 {t('dir.search.btn')}
                             </button>
                         </div>
@@ -161,14 +175,6 @@ export const DirectoryHome: React.FC = () => {
 
                     {/* CTA Buttons - Premium Unified Look */}
                     <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-2xl mx-auto px-2">
-                        <button
-                            onClick={() => navigate('/search-results')}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-xl sm:rounded-full font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
-                        >
-                            <MapPin className="w-5 h-5 text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
-                            {t('dir.cta.explore')}
-                        </button>
-
                         <button
                             onClick={() => {
                                 document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
