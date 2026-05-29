@@ -137,10 +137,10 @@ describe('MobileMenu', () => {
 
     it('renders main navigation links in rental mode', () => {
         renderMenu(true, 'rental');
+        expect(screen.getByText('nav.services')).toBeInTheDocument();
         expect(screen.getByText('directory.villas')).toBeInTheDocument();
         expect(screen.getByText('directory.apartments')).toBeInTheDocument();
-        expect(screen.getByText('nav.vehicles')).toBeInTheDocument();
-        expect(screen.getByText('nav.services')).toBeInTheDocument();
+        expect(screen.queryByText('nav.vehicles')).not.toBeInTheDocument();
     });
 
     it('renders user links when authenticated', () => {
