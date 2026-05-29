@@ -18,6 +18,7 @@ const AiPlanner = React.lazy(() => import('../pages/AiPlanner').then(module => (
 const MyItinerariesPage = React.lazy(() => import('../pages/MyItinerariesPage').then(module => ({ default: module.MyItinerariesPage })));
 const SharedItineraryPage = React.lazy(() => import('../pages/SharedItineraryPage').then(module => ({ default: module.SharedItineraryPage })));
 const SearchResultsPage = React.lazy(() => import('../pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
+const SearchPage = React.lazy(() => import('../pages/SearchPage').then(module => ({ default: module.SearchPage })));
 const ServicesPage = React.lazy(() => import('../pages/ServicesPage').then(module => ({ default: module.ServicesPage })));
 const About = React.lazy(() => import('../pages/About').then(module => ({ default: module.About })));
 const Contact = React.lazy(() => import('../pages/Contact').then(module => ({ default: module.Contact })));
@@ -150,6 +151,7 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/add-listing" element={<AuthRoute><AddListingPage /></AuthRoute>} />
 
                 <Route path="/search-results" element={<SearchResultsPage />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/stays" element={<SearchResultsPage />} />
                 <Route path="/favorites" element={<AuthRoute><FavoritesPage /></AuthRoute>} />
                 <Route path="/property/:id" element={<PropertyDetails />} />

@@ -79,7 +79,7 @@ export const Navbar: React.FC = () => {
             {navMode === 'directory' ? (
               <div className="relative hidden md:block">
                 <Link
-                  to="/alanya-villas"
+                  to="/services"
                   className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
                 >
                   <ArrowRightLeft size={16} className="text-white" />

@@ -14,6 +14,7 @@ export const ar = {
     'nav.profile': 'الملف الشخصي',
     'nav.messages': 'الرسائل',
     'nav.list_property': 'اعرض عقارك',
+    'nav.list_business': 'أضف نشاط تجاري',
     'nav.switch_to_rentals': 'الانتقال إلى الإيجارات والخدمات',
     'nav.list_rental_or_service': 'إدراج إيجار أو خدمة',
     'nav.switch_to_directory': 'الذهاب إلى الدليل',
@@ -360,7 +361,7 @@ export const ar = {
     'profile.email_verify_subtitle': 'تحديث عنوان بريدك الإلكتروني',
     'profile.password_subtitle': 'قم بتحديث كلمة المرور الخاصة بك للحفاظ على أمان حسابك',
     'placeholder.search_items': 'اكتب أمراً أو ابحث...',
-    'nav.list_desc': 'اربح المال كمضيف',
+    'nav.list_desc': 'فلل، شقق، والمزيد',
     'nav.list_service': 'أضف خدمة',
     'nav.service_desc': 'سيارات، جولات، وأكثر',
 

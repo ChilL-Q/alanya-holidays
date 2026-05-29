@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star, Home, Car } from 'lucide-react';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { useLanguage } from '../context/LanguageContext';
 import { SEOHead } from '../components/seo/SEOHead';
 import { db } from '../api-services';
@@ -16,6 +17,17 @@ export const DirectoryHome: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [showListMenu, setShowListMenu] = useState(false);
+    const listMenuRef = useRef<HTMLDivElement>(null);
+    useClickOutside(listMenuRef, () => setShowListMenu(false));
+
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (searchQuery.trim()) params.set('q', searchQuery.trim());
+        if (selectedCategory) params.set('category', selectedCategory);
+        if (location) params.set('location', location);
+        navigate(`/search?${params.toString()}`);
+    };
 
     // Landing page listings
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
@@ -116,6 +128,9 @@ export const DirectoryHome: React.FC = () => {
                                     placeholder={t('dir.search.placeholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSearch();
+                                    }}
                                     className="w-full pl-12 pr-4 py-4 rounded-t-xl md:rounded-none md:rounded-l-xl border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                                 />
                             </div>
@@ -153,7 +168,10 @@ export const DirectoryHome: React.FC = () => {
                                 </select>
                             </div>
 
-                            <button className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm">
+                            <button
+                                onClick={handleSearch}
+                                className="bg-slate-900 dark:bg-slate-800/50 hover:bg-black dark:hover:bg-teal-500 text-white px-8 py-4 md:rounded-r-xl rounded-xl font-semibold tracking-wide transition-all min-w-[140px] shadow-sm"
+                            >
                                 {t('dir.search.btn')}
                             </button>
                         </div>
@@ -161,14 +179,6 @@ export const DirectoryHome: React.FC = () => {
 
                     {/* CTA Buttons - Premium Unified Look */}
                     <div className="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-2xl mx-auto px-2">
-                        <button
-                            onClick={() => navigate('/search-results')}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-xl sm:rounded-full font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer"
-                        >
-                            <MapPin className="w-5 h-5 text-teal-600 dark:text-cyan-400 dark:text-slate-200" />
-                            {t('dir.cta.explore')}
-                        </button>
-
                         <button
                             onClick={() => {
                                 document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' });
@@ -179,13 +189,39 @@ export const DirectoryHome: React.FC = () => {
                             {t('dir.cta.categories')}
                         </button>
 
-                        <button
-                            onClick={() => navigate('/list-property')}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
-                        >
-                            <Briefcase className="w-5 h-5" />
-                            {t('dir.cta.list')}
-                        </button>
+                        <div className="relative flex-1" ref={listMenuRef}>
+                            <button
+                                onClick={() => setShowListMenu(prev => !prev)}
+                                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
+                            >
+                                <Briefcase className="w-5 h-5" />
+                                {t('dir.cta.list')}
+                            </button>
+                            {showListMenu && (
+                                <div className="absolute bottom-full mb-2 left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
+                                    <div className="p-2 space-y-1">
+                                        <Link to="/list-property" onClick={() => setShowListMenu(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
+                                            <div className="w-10 h-10 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-lg flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-slate-700/50 transition-colors flex-shrink-0">
+                                                <Home size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_property')}</span>
+                                                <span className="block text-xs text-slate-500 font-medium">{t('nav.list_desc')}</span>
+                                            </div>
+                                        </Link>
+                                        <Link to="/add-service" onClick={() => setShowListMenu(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
+                                            <div className="w-10 h-10 bg-purple-50 dark:bg-slate-800/50 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors flex-shrink-0">
+                                                <Car size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_service')}</span>
+                                                <span className="block text-xs text-slate-500 font-medium">{t('nav.service_desc')}</span>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* AI Planner Floating Entry Point */}

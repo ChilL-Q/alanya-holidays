@@ -14,6 +14,7 @@ export const en = {
   'nav.profile': 'Profile',
   'nav.messages': 'Messages',
   'nav.list_property': 'List Property',
+  'nav.list_business': 'List Business',
   'nav.switch_to_rentals': 'Switch to Rentals & Services',
   'nav.list_rental_or_service': 'List Rental or Service',
   'nav.switch_to_directory': 'Switch to Directory',
@@ -420,7 +421,7 @@ export const en = {
   'profile.email_verify_subtitle': 'Update your email address',
   'profile.password_subtitle': 'Update your password to keep your account secure',
   'placeholder.search_items': 'Type a command or search...',
-  'nav.list_desc': 'Earn money as a host',
+  'nav.list_desc': 'Villas, apartments & more',
   'nav.list_service': 'List a Service',
   'nav.service_desc': 'Cars, tours, and more',
 

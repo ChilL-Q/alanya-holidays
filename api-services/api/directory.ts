@@ -133,6 +133,52 @@ export const directoryService = {
         return data as DirectoryListingDB[];
     },
 
+    /**
+     * Search approved directory listings by text query, category, and/or location.
+     */
+    async searchDirectoryListings(
+        query: string,
+        categoryId?: string,
+        location?: string,
+        page = 1,
+        limit = 40,
+    ): Promise<{ data: DirectoryListingDB[]; total: number }> {
+        let q = supabase
+            .from('directory_listings')
+            .select(LISTING_LOCATIONS_SELECT, { count: 'exact' })
+            .eq('status', 'approved');
+
+        const trimmed = query.trim();
+        if (trimmed) {
+            // Escape ILIKE wildcards and PostgREST .or() separators in user input
+            const safe = trimmed.replace(/%/g, '\\%').replace(/_/g, '\\_').replace(/,/g, ' ');
+            q = q.or(`name.ilike.%${safe}%,short_description.ilike.%${safe}%`);
+        }
+        if (categoryId) {
+            q = q.eq('category_id', categoryId);
+        }
+        if (location) {
+            const safeLoc = location.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
+            if (safeLoc) {
+                q = q.ilike('location', `%${safeLoc}%`);
+            }
+        }
+
+        q = q.order('base_score', { ascending: false })
+             .order('is_featured', { ascending: false })
+             .order('net_votes', { ascending: false, nullsFirst: false })
+             .order('name', { ascending: true })
+             .range((page - 1) * limit, page * limit - 1);
+
+        const { data, error, count } = await q;
+        if (error) {
+            console.error('Error searching directory listings:', error);
+            throw error;
+        }
+
+        return { data: data as DirectoryListingDB[], total: count ?? 0 };
+    },
+
     // ============================================================
     // Landing Page Listings
     // ============================================================
