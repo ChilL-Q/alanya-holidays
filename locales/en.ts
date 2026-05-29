@@ -235,7 +235,7 @@ export const en = {
   'services.adventure.atv_desc': 'Off-road adrenaline through the Taurus Mountains.',
 
   'services.health.title': 'Medical & Health',
-  'services.health.subtitle': 'Rejuvenate your body and mind.',
+  'services.health.subtitle': 'Professional medical and cosmetic services by certified specialists.',
   'services.health.spa': 'Hamam & Spa',
   'services.health.spa_desc': 'Traditional Turkish bath experiences.',
   'services.health.dental': 'Dental Clinic',

@@ -230,7 +230,7 @@ export const ru = {
   'services.adventure.land_desc': 'Каньоны, пещеры и древние руины.',
 
   'services.health.title': 'Медицина и Здоровье',
-  'services.health.subtitle': 'Обновите тело и разум.',
+  'services.health.subtitle': 'Профессиональные медицинские и косметические услуги от сертифицированных специалистов.',
   'services.health.spa': 'Хамам и СПА',
   'services.health.spa_desc': 'Традиционные турецкие бани.',
   'services.health.dental': 'Стоматология',
