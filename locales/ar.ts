@@ -178,8 +178,8 @@ export const ar = {
     'services.adventure.land': 'جولات برية',
     'services.adventure.land_desc': 'الأودية والكهوف والآثار القديمة.',
 
-    'services.health.title': 'عافية وصحة',
-    'services.health.subtitle': 'جدد جسدك وعقلك.',
+    'services.health.title': 'طب وصحة',
+    'services.health.subtitle': 'خدمات طبية وتجميلية احترافية من متخصصين معتمدين.',
     'services.health.spa': 'حمام وسبا',
     'services.health.spa_desc': 'تجارب الحمام التركي التقليدي.',
     'services.health.dental': 'عيادة أسنان',
