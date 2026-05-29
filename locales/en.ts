@@ -339,7 +339,7 @@ export const en = {
   'footer.guide': 'Travel guide',
   'footer.cars': 'Car service',
   'footer.sim': 'Sim and card',
-  'footer.listYourRental': 'List Your Rental',
+
   'footer.help': 'Need help?',
   'footer.signin': 'Sign In',
   'footer.faqs': 'FAQs',

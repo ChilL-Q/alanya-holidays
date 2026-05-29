@@ -331,7 +331,7 @@ export const ru = {
   'footer.guide': 'Гид',
   'footer.cars': 'Авто прокат',
   'footer.sim': 'Сим-карты',
-  'footer.listYourRental': 'Разместить объект',
+
   'footer.help': 'Помощь',
   'footer.signin': 'Войти',
   'footer.faqs': 'FAQ',
