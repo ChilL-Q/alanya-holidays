@@ -3,6 +3,14 @@ import { useLanguage } from '../context/LanguageContext';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const FooterLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
+    <li>
+        <Link to={to} className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">
+            {label}
+        </Link>
+    </li>
+);
+
 export const Footer: React.FC = () => {
     const { t } = useLanguage();
 
@@ -14,19 +22,17 @@ export const Footer: React.FC = () => {
         if (email) {
             setSubscribed(true);
             setEmail('');
-            // In a real app, you would send this to an API
             setTimeout(() => setSubscribed(false), 3000);
         }
     };
 
     return (
         <footer className="bg-slate-950 text-slate-400 pt-20 pb-10 border-t border-slate-800/50 relative overflow-hidden">
-            {/* Subtle Top Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-px bg-gradient-to-r from-transparent via-teal-500/50 to-transparent"></div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-                    {/* 1. Brand & Socials & Newsletter */}
+                    {/* Brand & Newsletter & Socials */}
                     <div className="space-y-8">
                         <div>
                             <Link to="/" className="flex items-center gap-2 group mb-6">
@@ -40,7 +46,6 @@ export const Footer: React.FC = () => {
                             </p>
                         </div>
 
-                        {/* Newsletter */}
                         <div>
                             <h4 className="text-white font-medium mb-3 text-sm tracking-wide">{t('footer.subscribe_title')}</h4>
                             {subscribed ? (
@@ -68,64 +73,65 @@ export const Footer: React.FC = () => {
                         </div>
 
                         <div className="flex gap-4">
-                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
-                                <Instagram size={18} />
-                            </a>
-                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
-                                <Facebook size={18} />
-                            </a>
-                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
-                                <Twitter size={18} />
-                            </a>
-                            <a href="#" className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
-                                <Youtube size={18} />
-                            </a>
+                            {[
+                                { icon: <Instagram size={18} />, href: '#' },
+                                { icon: <Facebook size={18} />, href: '#' },
+                                { icon: <Twitter size={18} />, href: '#' },
+                                { icon: <Youtube size={18} />, href: '#' },
+                            ].map(({ icon, href }, i) => (
+                                <a key={i} href={href} className="w-11 h-11 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all duration-300 hover:-translate-y-1">
+                                    {icon}
+                                </a>
+                            ))}
                         </div>
                     </div>
 
-                    {/* 2. Company */}
+                    {/* Company */}
                     <div>
                         <h3 className="text-white font-semibold mb-6 tracking-wide">{t('footer.company')}</h3>
                         <ul className="space-y-3 mt-4 text-sm">
-                            <li><Link to="/about" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.about')}</Link></li>
-                            <li><Link to="/stays" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('nav.stays')}</Link></li>
-                            <li><Link to="/list-property" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.listYourRental')}</Link></li>
-                            <li><Link to="/contact" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.contact')}</Link></li>
+                            <FooterLink to="/about" label={t('footer.about')} />
+                            <FooterLink to="/stays" label={t('nav.stays')} />
+                            <FooterLink to="/list-property" label={t('nav.list_business')} />
+                            <FooterLink to="/contact" label={t('footer.contact')} />
                         </ul>
                     </div>
 
-                    {/* 3. Services */}
+                    {/* Services */}
                     <div>
                         <h3 className="text-white font-semibold mb-6 tracking-wide">{t('footer.services_title')}</h3>
                         <ul className="space-y-3 mt-4 text-sm">
-                            <li><Link to="/services" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.transport.title')}</Link></li>
-                            <li><Link to="/services/experiences" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.experiences')}</Link></li>
-                            <li><Link to="/services/health" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.health.title')}</Link></li>
-                            <li><Link to="/services/visa" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.visa.title')}</Link></li>
-                            <li><Link to="/services/connectivity" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('services.connectivity.title')}</Link></li>
+                            <FooterLink to="/services" label={t('services.transport.title')} />
+                            <FooterLink to="/services/experiences" label={t('footer.experiences')} />
+                            <FooterLink to="/services/health" label={t('services.health.title')} />
+                            <FooterLink to="/services/spa-wellness" label={t('services.spa.title')} />
+                            <FooterLink to="/services/hair-beauty" label={t('services.hair.title')} />
+                            <FooterLink to="/services/visa" label={t('services.visa.title')} />
+                            <FooterLink to="/services/connectivity" label={t('services.connectivity.title')} />
+                            <FooterLink to="/services/creative" label={t('services.creative.title')} />
                         </ul>
                     </div>
 
-                    {/* 4. Shop */}
+                    {/* Shop */}
                     <div>
                         <h3 className="text-white font-semibold mb-6 tracking-wide">{t('shop')}</h3>
                         <ul className="space-y-3 mt-4 text-sm">
-                            <li><Link to="/shop" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.view_all_products')}</Link></li>
-                            <li><Link to="/shop?category=souvenir" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.category.souvenir')}</Link></li>
-                            <li><Link to="/shop?category=textile" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.category.textile')}</Link></li>
-                            <li><Link to="/shop?category=food" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.category.food')}</Link></li>
-                            <li><Link to="/shop?category=jewelry" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.category.jewelry')}</Link></li>
-                            <li><Link to="/shop?category=art" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('shop.category.art')}</Link></li>
+                            <FooterLink to="/shop" label={t('shop.view_all_products')} />
+                            <FooterLink to="/shop?category=souvenir" label={t('shop.category.souvenir')} />
+                            <FooterLink to="/shop?category=textile" label={t('shop.category.textile')} />
+                            <FooterLink to="/shop?category=food" label={t('shop.category.food')} />
+                            <FooterLink to="/shop?category=jewelry" label={t('shop.category.jewelry')} />
+                            <FooterLink to="/shop?category=art" label={t('shop.category.art')} />
                         </ul>
                     </div>
 
-                    {/* 5. Support & Contact Info */}
+                    {/* Need help? */}
                     <div>
                         <h3 className="text-white font-semibold mb-6 tracking-wide">{t('footer.help')}</h3>
                         <ul className="space-y-3 mt-4 text-sm mb-8">
-                            <li><Link to="/help" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.faqs')}</Link></li>
-                            <li><Link to="/privacy" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.privacy')}</Link></li>
-                            <li><Link to="/terms" className="hover:text-teal-400 hover:translate-x-1 inline-block transition-all duration-300">{t('footer.terms')}</Link></li>
+                            <FooterLink to="/help" label={t('footer.faqs')} />
+                            <FooterLink to="/privacy" label={t('footer.privacy')} />
+                            <FooterLink to="/terms" label={t('footer.terms')} />
                         </ul>
 
                         <div className="space-y-4 pt-6 border-t border-slate-800/50">
@@ -150,11 +156,9 @@ export const Footer: React.FC = () => {
                 <p>{t('footer.copyright')}</p>
                 <div className="flex items-center gap-4 mt-4 md:mt-0">
                     <div className="flex gap-2 opacity-50 grayscale hover:grayscale-0 transition-all">
-                        {/* Simple CSS shapes or SVGs for payment methods could go here, or text */}
                         <span className="border border-slate-700 px-2 py-1 rounded text-xs">VISA</span>
                         <span className="border border-slate-700 px-2 py-1 rounded text-xs">Mastercard</span>
                     </div>
-
                 </div>
             </div>
         </footer>

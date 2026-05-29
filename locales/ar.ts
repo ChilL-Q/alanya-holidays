@@ -279,7 +279,7 @@ export const ar = {
     'footer.guide': 'دليل السفر',
     'footer.cars': 'خدمة السيارات',
     'footer.sim': 'شريحة وبطاقة',
-    'footer.listYourRental': 'أدرج إيجارك',
+
     'footer.help': 'هل تحتاج مساعدة؟',
     'footer.signin': 'تسجيل الدخول',
     'footer.faqs': 'الأسئلة الشائعة',

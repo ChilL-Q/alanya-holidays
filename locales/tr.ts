@@ -331,7 +331,7 @@ export const tr = {
     'footer.guide': 'Gezi Rehberi',
     'footer.cars': 'Araç Kiralama',
     'footer.sim': 'Sim Kart',
-    'footer.listYourRental': 'Mülkiyetinizi Listeleyin',
+
     'footer.help': 'Yardım mı lazım?',
     'footer.signin': 'Giriş Yap',
     'footer.faqs': 'SSS',
