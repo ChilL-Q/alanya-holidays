@@ -49,7 +49,7 @@ export const Navbar: React.FC = () => {
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/50 transition-colors supports-[backdrop-filter]:bg-white/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-20">
+        <div className="flex items-center h-20 relative">
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0 z-10 lg:-ml-6">
@@ -65,7 +65,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop Nav — centered */}
-          <div className="flex-1 flex justify-center">
+          <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 z-10">
             <DesktopNav mode={navMode} />
           </div>
 
@@ -154,7 +154,7 @@ export const Navbar: React.FC = () => {
                   </div>
                 </button>
 
-                <UserDropdown isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+                <UserDropdown isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} mode={navMode} />
               </div>
 
             </div>

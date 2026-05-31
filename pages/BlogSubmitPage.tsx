@@ -7,6 +7,34 @@ import { PenLine, X, ImagePlus, Video, ArrowLeft, Send, Info } from 'lucide-reac
 
 const MAX_IMAGES = 5;
 
+const formatBlogContent = (rawText: string, imageUrls: string[]): string => {
+    // Convert double newlines to paragraph tags, and single newlines to <br />
+    let htmlContent = rawText
+        .split(/\n\s*\n/)
+        .map(p => {
+            const trimmed = p.trim();
+            if (!trimmed) return '';
+            return `<p>${trimmed.replace(/\n/g, '<br />')}</p>`;
+        })
+        .filter(Boolean)
+        .join('\n');
+
+    // Replace placeholders like [image-1], [image-2]
+    imageUrls.forEach((url, index) => {
+        const placeholderRegex = new RegExp(`\\[image-${index + 1}\\]`, 'gi');
+        const imgTag = `<img src="${url}" alt="Blog Image ${index + 1}" class="rounded-xl shadow-lg my-6 max-h-[450px] w-auto mx-auto object-cover" />`;
+        
+        if (placeholderRegex.test(htmlContent)) {
+            htmlContent = htmlContent.replace(placeholderRegex, imgTag);
+        } else if (index > 0) {
+            // Append unused images (except cover image, which is index 0 and displayed at the top) at the end
+            htmlContent += `\n\n${imgTag}`;
+        }
+    });
+
+    return htmlContent;
+};
+
 export const BlogSubmitPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -19,6 +47,26 @@ export const BlogSubmitPage: React.FC = () => {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const insertPlaceholder = (index: number) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const placeholder = `[image-${index + 1}]`;
+
+        const newContent = text.substring(0, start) + placeholder + text.substring(end);
+        setContent(newContent);
+
+        // Focus back on textarea and position cursor after placeholder
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
+        }, 0);
+    };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -94,11 +142,14 @@ export const BlogSubmitPage: React.FC = () => {
                 }
             }
 
+            // Pre-process and format plain text content to HTML with placeholders replaced
+            const processedContent = formatBlogContent(content.trim(), uploadedUrls);
+
             // Create submission
             const toastId = toast.loading('Submitting article...');
             await db.createBlogSubmission({
                 title: title.trim(),
-                content: content.trim(),
+                content: processedContent,
                 video_url: videoUrl.trim() || undefined,
                 media_urls: uploadedUrls,
             });
@@ -175,15 +226,16 @@ export const BlogSubmitPage: React.FC = () => {
                             Article Content <span className="text-red-500">*</span>
                         </label>
                         <textarea
+                            ref={textareaRef}
                             value={content}
                             onChange={e => setContent(e.target.value)}
-                            placeholder="Write your article here. Share your experience, tips, or insider knowledge about Alanya. Minimum 100 characters."
+                            placeholder="Write your article here. Share your experience, tips, or insider knowledge about Alanya. Minimum 100 characters. Tip: Upload images and hover over them to insert placeholders where you want them in the text!"
                             rows={14}
                             required
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y font-sans text-sm leading-relaxed"
                         />
                         <div className="flex justify-between mt-1.5">
-                            <p className="text-xs text-slate-400">Minimum 100 characters</p>
+                            <p className="text-xs text-slate-400">Minimum 100 characters. Use [image-2] format to place images.</p>
                             <p className={`text-xs ${content.length < 100 ? 'text-amber-500' : 'text-teal-500'}`}>
                                 {content.length} characters
                             </p>
@@ -195,27 +247,35 @@ export const BlogSubmitPage: React.FC = () => {
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             Images <span className="text-slate-400 font-normal">(optional, up to {MAX_IMAGES})</span>
                         </label>
-                        <p className="text-xs text-slate-400 mb-4">JPG, PNG, WebP — max 5MB each. First image becomes the cover.</p>
+                        <p className="text-xs text-slate-400 mb-4">JPG, PNG, WebP — max 5MB each. First image becomes the cover. Hover on an image to insert it into your content!</p>
 
                         {/* Previews */}
                         {mediaPreviews.length > 0 && (
                             <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
                                 {mediaPreviews.map((src, i) => (
-                                    <div key={i} className="relative group aspect-square">
+                                    <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                                         <img
                                             src={src}
                                             alt={`Preview ${i + 1}`}
-                                            className="w-full h-full object-cover rounded-xl border border-slate-200 dark:border-slate-700"
+                                            className="w-full h-full object-cover"
                                         />
                                         {i === 0 && (
-                                            <span className="absolute bottom-1 left-1 text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded-md font-semibold">
+                                            <span className="absolute bottom-1 left-1 text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded-md font-semibold z-10">
                                                 Cover
                                             </span>
                                         )}
                                         <button
                                             type="button"
+                                            onClick={() => insertPlaceholder(i)}
+                                            className="absolute inset-0 bg-black/40 text-white font-semibold text-xs opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer z-10"
+                                        >
+                                            <ImagePlus size={16} />
+                                            <span>Insert to text</span>
+                                        </button>
+                                        <button
+                                            type="button"
                                             onClick={() => removeMedia(i)}
-                                            className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-1 right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 cursor-pointer"
                                         >
                                             <X size={10} />
                                         </button>

@@ -22,7 +22,11 @@ vi.mock('../../context/ModalContext', () => ({
 }));
 
 vi.mock('../../context/LanguageContext', () => ({
-    useLanguage: () => ({ t: (key: string) => key })
+    useLanguage: () => ({ t: (key: string) => key, language: 'en', setLanguage: vi.fn() })
+}));
+
+vi.mock('../../context/ThemeContext', () => ({
+    useTheme: () => ({ theme: 'light', toggleTheme: vi.fn() })
 }));
 
 // Mock lucide-react
@@ -30,7 +34,10 @@ vi.mock('lucide-react', () => ({
     User: () => <svg data-testid="user-icon" />,
     LayoutDashboard: () => <svg data-testid="dashboard-icon" />,
     LogOut: () => <svg data-testid="logout-icon" />,
-    PlusCircle: () => <svg data-testid="plus-circle-icon" />
+    PlusCircle: () => <svg data-testid="plus-circle-icon" />,
+    ArrowRightLeft: () => <svg data-testid="arrow-right-left-icon" />,
+    Sun: () => <svg data-testid="sun-icon" />,
+    Moon: () => <svg data-testid="moon-icon" />
 }));
 
 // Import component after mocks

@@ -99,7 +99,7 @@ describe('BlogSubmitPage', () => {
     await waitFor(() => {
       expect(db.createBlogSubmission).toHaveBeenCalledWith({
         title: 'A Valid Title',
-        content: LONG_CONTENT,
+        content: `<p>${LONG_CONTENT}</p>`,
         video_url: undefined,
         media_urls: [],
       });
