@@ -48,6 +48,9 @@ async function resolveSlug(baseSlug: string): Promise<string> {
         supabase.from('forum_posts').select('slug').like('slug', `${seed}-%`),
     ]);
 
+    if (exact.error) throw new Error(`Failed to check slug uniqueness: ${exact.error.message}`);
+    if (suffixed.error) throw new Error(`Failed to check slug uniqueness: ${suffixed.error.message}`);
+
     const existingSlugs = [
         ...toArray<{ slug: string }>(exact.data),
         ...toArray<{ slug: string }>(suffixed.data),
@@ -161,6 +164,10 @@ export const forumService = {
     // ---------- Posts ----------
 
     async getForumPosts(filters: ForumPostFilters = {}): Promise<{ data: ForumPost[]; total: number }> {
+        if (filters.removedOnly && filters.includeRemoved) {
+            throw new Error('Cannot specify both removedOnly and includeRemoved');
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         const limit = filters.limit ?? 20;
         const offset = filters.offset ?? 0;

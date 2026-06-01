@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star, Home, Car } from 'lucide-react';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { useLanguage } from '../context/LanguageContext';
+import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
@@ -58,6 +59,7 @@ export const DirectoryHome: React.FC = () => {
                 }
             } catch (err) {
                 console.error('Failed to load landing listings:', err);
+                toast.error('Failed to load data. Please try refreshing the page.');
             } finally {
                 if (!cancelled) setListingsLoading(false);
             }
