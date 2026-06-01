@@ -10,7 +10,6 @@ import { NotificationBell } from './ui/NotificationBell';
 import { MobileMenu } from './navbar/MobileMenu';
 import { UserDropdown } from './navbar/UserDropdown';
 import { DesktopNav } from './navbar/DesktopNav';
-import { NavbarActions } from './navbar/NavbarActions';
 import { ListPropertyAction } from './navbar/ListPropertyAction';
 
 export type NavMode = 'directory' | 'rental';
@@ -72,33 +71,9 @@ export const Navbar: React.FC = () => {
           {/* Right Section */}
           <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
 
-            {/* Utilities Group (Desktop) */}
-            <NavbarActions mode={navMode} />
-
-            {/* List Property CTA / Switch to Rentals CTA */}
-            {navMode === 'directory' ? (
-              <div className="relative hidden md:block">
-                <Link
-                  to="/services"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-teal-500/20 transition-all duration-300 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
-                >
-                  <ArrowRightLeft size={16} className="text-white" />
-                  <span>{t('nav.switch_to_rentals') || 'Switch to Rentals & Services'}</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <div className="relative hidden md:block">
-                  <Link
-                    to="/"
-                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 rounded-full text-sm font-medium transition-all duration-200 ease-out hover:scale-105 active:scale-95 whitespace-nowrap"
-                  >
-                    <ArrowRightLeft size={16} className="text-slate-500 dark:text-slate-400" />
-                    <span>{t('nav.switch_to_directory') || 'Switch to Directory'}</span>
-                  </Link>
-                </div>
-                <ListPropertyAction />
-              </div>
+            {/* List Property CTA (Rental Mode Only) */}
+            {navMode === 'rental' && (
+              <ListPropertyAction />
             )}
 
             {/* User Actions */}

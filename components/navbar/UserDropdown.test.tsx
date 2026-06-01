@@ -29,6 +29,10 @@ vi.mock('../../context/ThemeContext', () => ({
     useTheme: () => ({ theme: 'light', toggleTheme: vi.fn() })
 }));
 
+vi.mock('../../context/CurrencyContext', () => ({
+    useCurrency: () => ({ currency: 'USD', setCurrency: vi.fn() })
+}));
+
 // Mock lucide-react
 vi.mock('lucide-react', () => ({
     User: () => <svg data-testid="user-icon" />,

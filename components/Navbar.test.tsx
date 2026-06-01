@@ -147,6 +147,9 @@ describe('Navbar', () => {
             </BrowserRouter>
         );
 
+        // Open dropdown
+        fireEvent.click(screen.getByTestId('profile-button'));
+
         // Currency is hidden in directory mode (default)
         expect(screen.queryByText('EUR')).toBeNull();
     });
@@ -158,15 +161,13 @@ describe('Navbar', () => {
             </BrowserRouter>
         );
 
-        const langBtn = screen.getByText('en'); // uppercase in display span? 
-        // Code: <span className="uppercase">{language}</span>
-        // So 'en' displayed as 'en'? Or CSS uppercase. Text content is 'en'.
+        // Open dropdown
+        fireEvent.click(screen.getByTestId('profile-button'));
 
-        fireEvent.click(langBtn);
+        const ruBtn = screen.getByText('RU');
+        expect(ruBtn).toBeDefined();
 
-        expect(screen.getByText('Türkçe')).toBeDefined();
-
-        fireEvent.click(screen.getByText('Türkçe'));
-        expect(mockSetLanguage).toHaveBeenCalledWith('tr');
+        fireEvent.click(ruBtn);
+        expect(mockSetLanguage).toHaveBeenCalledWith('ru');
     });
 });

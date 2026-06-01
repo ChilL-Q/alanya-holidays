@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface UserDropdownProps {
     isOpen: boolean;
@@ -17,6 +18,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose, mod
     const { openLogin, openRegister } = useModal();
     const { t, language, setLanguage } = useLanguage();
     const { theme, toggleTheme } = useTheme();
+    const { currency, setCurrency } = useCurrency();
 
     if (!isOpen) return null;
 
@@ -139,6 +141,30 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose, mod
                             ))}
                         </div>
                     </div>
+
+                    {/* Currency Selector (Rental Mode Only) */}
+                    {mode === 'rental' && (
+                        <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800/50 pt-2">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                                {t('nav.currency') || 'Currency'}
+                            </span>
+                            <div className="flex gap-1">
+                                {(['USD', 'EUR', 'TRY'] as const).map((curr) => (
+                                    <button
+                                        key={curr}
+                                        onClick={() => setCurrency(curr)}
+                                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                            currency === curr
+                                                ? 'bg-teal-500 dark:bg-cyan-600 text-white shadow-sm'
+                                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        }`}
+                                    >
+                                        {curr}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Theme Toggle */}
                     <div className="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800/50 pt-2">
