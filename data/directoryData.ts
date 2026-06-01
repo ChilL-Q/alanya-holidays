@@ -24,12 +24,14 @@ export interface DirectoryCategoryIntro {
   description: string;
   longDescription?: string[];
   faqs?: { question: string; answer: string }[];
+  keywords?: string[];
 }
 
 export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'medical': {
     title: 'Medical Tourism in Alanya, Turkey | Dental, Hair Transplant & Cosmetic Surgery Guide 2026',
     description: 'Planning medical tourism in Alanya, Turkey? Compare costs for dental implants, hair transplants & cosmetic surgery. Save up to 70% vs UK & Europe prices. Verified clinics, local tips.',
+    keywords: ["dental clinic in Alanya Turkey", "dental implants Alanya", "hair transplant Alanya", "cosmetic surgery Turkey", "medical tourism Alanya"],
     longDescription: [
       'Alanya has quietly become one of Europe\'s most visited medical tourism destinations, and it\'s not hard to see why. World-class clinics, prices that are 50–70% lower than in the UK or Western Europe, and a sun-drenched Turkish Riviera holiday wrapped around your treatment. Thousands of British, German, Scandinavian, and Dutch patients make the trip every year.',
       'Alanya\'s medical tourism scene covers four main areas. Dental treatment is the most popular — Turkish clinics offer everything from routine fillings to complete smile makeovers at a fraction of European prices, and most have in-house labs so crowns, veneers, and bridges can often be completed in just a few days. Turkey is also the global leader in hair transplant tourism, with Alanya clinics offering FUE and DHI techniques — often with all-inclusive packages that cover transfers, accommodation, and aftercare. Cosmetic surgery (rhinoplasty, breast aesthetics, liposuction, eyelid surgery) is widely available from board-certified surgeons. And for those not seeking surgery, Alanya offers traditional Turkish Hamam & Spa and salt cave therapy at the famous Damlataş Cave.',
@@ -49,6 +51,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'accommodations': {
     title: 'Where to Stay in Alanya 2026 | Neighbourhood Guide for Every Type of Traveller',
     description: 'Not sure where to stay in Alanya? Compare Alanya Center, Mahmutlar, Oba, and Kestel. Direct rentals, no booking fees. Villas, apartments & hotels for every budget.',
+    keywords: ["furnished apartment Kestel Alanya", "rent apartment Mahmutlar Alanya", "villas for rent Alanya", "where to stay in Alanya"],
     longDescription: [
       'Where you stay in Alanya shapes your entire holiday. The city stretches along the coastline and climbs into the Taurus foothills, and each neighbourhood has a distinct character. Here is a practical breakdown to help you choose.',
       'Alanya Center and Cleopatra Beach is the heart of the action. You are walking distance from the best beach in the city, the bustling bazaar, rooftop bars, and the cable car up to Alanya Castle. It suits beach lovers, nightlife seekers, and first-time visitors who want everything within reach. Accommodation ranges from boutique hotels in the old town to modern apartments overlooking the sea.',
@@ -68,6 +71,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'tours': {
     title: 'Best Tours & Experiences in Alanya 2026 | Boat Trips, Jeep Safaris & Day Excursions',
     description: 'Browse the best tours in Alanya with real prices and honest reviews. Boat trips, jeep safaris, Sapadere Canyon, Dim Cave, and more. Book directly with local operators.',
+    keywords: ["Alanya things to do", "Sapadere Canyon tour Alanya", "boat trip Alanya", "jeep safari Alanya"],
     longDescription: [
       'Alanya punches well above its weight as an excursion base. Within an hour of the city you have dramatic mountain canyons, ancient caves, hidden rivers, and some of the best coastline in the Mediterranean. Here is what is genuinely worth doing.',
       'Boat trips are the most iconic Alanya experience. A full-day tour typically departs from Alanya harbour and visits Cleopatra Beach from the sea, Phosphorus Cave (which glows blue-green), Lovers\' Cave, Pirates\' Cave, and several swimming stops. Lunch is usually included. Prices range from €15–€30 per person — cheap enough to be one of the best-value days in Turkey.',
@@ -87,6 +91,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'transport': {
     title: 'Getting to Alanya from Antalya Airport: Transfers, Car Rental & Transport Guide 2026',
     description: 'Plan your journey to Alanya. Compare private transfers from Antalya Airport (AYT), Gazipaşa Airport (GZP), car rentals, shuttle buses, and local transport. Honest prices for 2026.',
+    keywords: ["airport transfer Alanya Mahmutlar", "Antalya airport to Alanya transfer", "car rental Alanya no credit card", "scooter rental Alanya"],
     longDescription: [
       'Alanya does not have its own airport. Your two main options are Antalya Airport (AYT), 115 km west of Alanya — the primary choice with direct flights from dozens of UK, German, Scandinavian, and Dutch airports — and Gazipaşa-Alanya Airport (GZP), just 33 km east of the city. GZP is much closer but operates seasonal routes from select European cities, so check availability for your dates.',
       'From Antalya Airport (AYT), a private transfer to Alanya takes 90–120 minutes depending on traffic. This is the most convenient option, especially with luggage or a family group. A private transfer for up to 4 passengers typically costs €35–€60 one way. Shared shuttle services exist but take longer due to multiple drop-offs and cost around €15–€25 per person.',
@@ -106,6 +111,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'restaurants': {
     title: 'Best Restaurants & Cafés in Alanya 2026 | Local Food Guide by Neighbourhood',
     description: 'Find the best places to eat in Alanya. From rooftop restaurants by the castle to halal dining in Mahmutlar and breakfast cafés in Kestel. Updated 2026 local food guide.',
+    keywords: ["best restaurants in Alanya", "local food Alanya", "halal dining Alanya", "breakfast cafe Alanya Kestel", "where to eat in Alanya"],
     longDescription: [
       'Eating well in Alanya is easy — the harder part is knowing where to look beyond the tourist strip. Here is a neighbourhood-by-neighbourhood breakdown of where the good food actually is.',
       'Alanya Old Town and Castle District: The hillside restaurants around the castle walls are where you find the most atmospheric dining in the city. Rooftop terraces with views over the Red Tower and out to sea are common, and the menus lean toward Turkish classics — mezze, fresh fish, grilled lamb, and baklava. Prices are a step higher than elsewhere, but the setting justifies it for a special evening.',
@@ -125,6 +131,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'cafes': {
     title: 'Best Cafés & Coffee Shops in Alanya 2026 | Local Guide',
     description: 'Find the best cafés and coffee shops in Alanya. From specialty coffee in the Old Town to beachside breakfast spots and neighbourhood patisseries. Updated 2026 local guide.',
+    keywords: ["best cafes in Alanya", "coffee shops Alanya", "turkish breakfast Alanya", "specialty coffee Alanya", "study cafe Alanya"],
     longDescription: [
       'Alanya\'s café scene has grown considerably over the last few years, moving well beyond the tourist strip into neighbourhood spots that rival anything you\'d find in Istanbul. Whether you\'re after a slow Turkish breakfast, specialty espresso, or a quiet spot to work, the city has more to offer than most visitors realise.',
       'Old Town & Castle District: The streets around the castle and the historic bazaar area have a cluster of atmospheric small cafés serving Turkish tea, Turkish coffee, and light breakfasts. Many have rooftop or terrace seating with views over the Red Tower and harbour. These are the best spots for a leisurely morning before the heat sets in.',
@@ -143,6 +150,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'real-estate': {
     title: 'Buy Property in Alanya, Turkey | Foreigner & Expat Guide to Real Estate 2026',
     description: 'Complete guide to buying property in Alanya as a foreigner. Neighbourhood breakdowns for Oba, Kestel, Mahmutlar and more. Trusted local agents, legal process explained.',
+    keywords: ["buy property in Alanya Turkey", "apartments for sale Alanya", "villas for sale Alanya", "real estate Alanya expat"],
     longDescription: [
       'Alanya has become one of the most active real estate markets in Turkey, driven by a steady influx of European, Russian, and Middle Eastern buyers. Foreign nationals can own freehold property in Turkey with full title deed (TAPU) rights, and the purchase process — while bureaucratic — is well-established and navigable with the right agent.',
       'The price differential with Western Europe remains significant. A modern one-bedroom apartment in Mahmutlar with a communal pool can be purchased from €45,000–€80,000. Two-bedroom apartments in Oba start around €70,000–€120,000. Larger villas with private pools in Kargicak and Tepe range from €200,000 to over €1,000,000 depending on size and view. Prices have risen sharply since 2021, but Alanya still represents strong value compared to comparable coastal properties in Spain or Greece.',
@@ -162,6 +170,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'visa': {
     title: 'Turkey Visa & Residency Permit Guide for Alanya | Ikamet, Digital Nomad & Investment 2026',
     description: 'Clear, practical guide to getting a Turkish residence permit (ikamet) in Alanya. Tourist visa extensions, property investment residency, digital nomad options. Updated 2026.',
+    keywords: ["visa residency Alanya expat", "Turkish residence permit Alanya", "ikamet application Alanya", "digital nomad visa Turkey"],
     longDescription: [
       'Navigating Turkish residency bureaucracy is one of the most common pain points for expats and long-stay visitors in Alanya. This guide covers the main pathways, what the process actually involves, and where to get trustworthy help locally.',
       'Tourist visa: Most European, UK, and North American citizens can enter Turkey visa-free for 90 days within any 180-day period. This is usually sufficient for a summer holiday. If you overstay, the fine is paid at the airport on departure and is typically manageable (a few hundred euros), but overstaying is not a recommended strategy if you plan to return regularly.',
@@ -182,6 +191,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'shopping': {
     title: 'Shopping in Alanya 2026 | Bazaars, Souvenirs & What to Buy Guide',
     description: 'What to buy in Alanya and where to buy it. From the Grand Bazaar and local markets to leather goods, Turkish textiles, spices, and authentic souvenirs. Honest local guide.',
+    keywords: ["shopping in Alanya", "Alanya grand bazaar", "turkish leather Alanya", "souvenirs Alanya", "local markets Alanya"],
     longDescription: [
       'Alanya is a genuinely good place to shop, especially if you know what to look for and where the tourist-trap items end and the real quality begins. Here is a practical guide to spending your money well.',
       'The Alanya Grand Bazaar (Çarşı) in the city center is the main traditional market and the starting point for most visitors. Stalls sell everything from leather jackets and handmade carpets to spices, dried fruits, Turkish delight (lokum), ceramic plates, and Evil Eye (Nazar) jewellery. Bargaining is expected and prices are generally negotiable — a reasonable starting point is 60–70% of the first asking price.',
@@ -201,6 +211,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'nature': {
     title: 'Natural Attractions in Alanya 2026 | Caves, Canyons, Beaches & Hiking Guide',
     description: 'Discover Alanya\'s best natural attractions: Sapadere Canyon, Dim Cave, Cleopatra Beach, Green Canyon boat tours, and Dim River. How to visit, costs, and practical tips.',
+    keywords: ["Sapadere Canyon tour Alanya", "Dim Cave Alanya", "Cleopatra Beach Alanya", "natural attractions Alanya", "things to do in Alanya nature"],
     longDescription: [
       'Alanya sits at the point where the Taurus Mountains meet the Mediterranean, which means the natural landscape is genuinely dramatic rather than just pretty. Within an hour of the city you have some of the best caves, canyons, and coastline in Turkey.',
       'Cleopatra Beach (İsmetpaşa Beach) is the most famous beach in Alanya and one of the finest sandy beaches on the Turkish Riviera. Legend holds that Mark Antony had sand brought from Egypt as a gift to Cleopatra, though historians are sceptical. What is not in doubt: the 2.5 km of fine golden sand, clear turquoise water, and backdrop of the Alanya Castle on its promontory make this one of the most photographed beaches in Turkey. It is a Blue Flag beach, public, and free to access (though sun lounger hire costs €5–€10).',
@@ -220,6 +231,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'spa-hamam': {
     title: 'Best Spa & Turkish Hamam in Alanya 2026 | Authentic Baths, Massage & Wellness',
     description: 'Find the best Turkish hamam and spa in Alanya. Traditional baths, deep tissue massage, and wellness treatments. What to expect, prices, and how to book.',
+    keywords: ["best turkish hamam Alanya", "spa and massage Alanya", "turkish bath Alanya", "wellness spa Alanya", "Damlataş Cave health"],
     longDescription: [
       'A traditional Turkish hamam (hammam) is one of the most genuinely distinctive experiences you can have in Alanya — not a tourist gimmick, but a centuries-old bathing ritual that is still part of everyday Turkish life. Here is what to expect and where to find the best.',
       'A classic hamam experience involves three phases: first, you sweat in a hot marble room (the hararet) to open your pores; then a tellak (bath attendant) gives you a vigorous kese scrub with a coarse mitten to remove dead skin; finally, a soap massage using a foamy lather. The full ritual takes 45–90 minutes and leaves your skin noticeably softer. A basic session costs €15–€30; a full package with massage typically runs €40–€70.',
@@ -238,6 +250,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'hair-beauty': {
     title: 'Hair Salons & Beauty in Alanya 2026 | Hairdressers, Nail Bars & Cosmetic Treatments',
     description: 'Find the best hair salons, nail bars, and beauty centres in Alanya. Local English-friendly salons for cuts, colour, extensions, lashes, and cosmetic treatments.',
+    keywords: ["hair salon Alanya", "hairdresser Alanya", "nail bar Alanya", "beauty salon Alanya", "eyelash extensions Alanya"],
     longDescription: [
       'Alanya has a well-developed hair and beauty sector shaped by its large European expat community and year-round tourist trade. Prices are significantly lower than in the UK or Western Europe, and the quality at established salons is consistently high.',
       'For haircuts and colour, a women\'s cut and blow-dry at a reputable Alanya salon costs €15–€30. Full colour with highlights typically runs €40–€80 depending on hair length and technique — roughly half what you would pay at a comparable salon in the UK or Germany. Many salons in Alanya use European professional brands (L\'Oréal, Wella, Schwarzkopf) and staff are accustomed to working with European clients.',
@@ -256,6 +269,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'villas': {
     title: 'Villas for Rent in Alanya | Private Pools & Sea Views',
     description: 'Find the perfect villa in Alanya. Explore private homes with pools in Kargicak, Tepe, and Bektas for a secluded holiday experience.',
+    keywords: ["villas for rent Alanya", "private villa Alanya pool", "luxury villas Alanya", "holiday villa Alanya Tepe"],
     longDescription: [
       'Alanya offers some of the most stunning villa rentals on the Turkish Riviera. For those wanting total seclusion, the hillside areas of Kargicak, Tepe, and Bektas offer private villas with infinity pools and panoramic sea views. These are best suited to groups, families, or couples who are happy to drive and want privacy above all else.',
       'Renting a villa provides a completely different experience compared to staying in a hotel or a central apartment. You get your own private space, cooking facilities, and often a private garden and pool. Most villas are located a short drive up the mountainside, offering cooler breezes and spectacular sunsets over the Mediterranean and Alanya Castle.'
@@ -268,6 +282,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'apartments': {
     title: 'Apartments for Rent in Alanya | Beachfront & City Center',
     description: 'Discover the best apartments for holiday rentals in Alanya. Compare Mahmutlar, Oba, and City Center for your perfect stay.',
+    keywords: ["apartments for rent Alanya", "rent apartment Mahmutlar Alanya", "beachfront apartment Alanya", "short term rental Alanya"],
     longDescription: [
       'Apartment rentals are the most popular accommodation choice for visitors staying in Alanya for more than a few days. From luxury penthouses overlooking Cleopatra Beach to family-friendly complexes in Oba with large communal pools, there is an apartment for every budget.',
       'Alanya Center is ideal for those who want to be walking distance from the bazaar, restaurants, and nightlife. Mahmutlar has become the go-to district for long-term stays and expats due to lower prices and excellent local amenities. Oba sits slightly inland and is favoured by families wanting a quieter base with easy access to the city.'
@@ -280,6 +295,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'weather': {
     title: 'Alanya Weather Guide 2026 | Best Time to Visit',
     description: 'Plan your trip to Alanya with our complete weather guide. Average temperatures, rainfall, and the best months for beach holidays and sightseeing.',
+    keywords: ["Alanya weather by month", "best time to visit Alanya", "Alanya temperature summer", "Alanya average weather", "Alanya sea temperature"],
     longDescription: [
       'Alanya enjoys a classic Mediterranean climate, characterised by long, hot, and dry summers, and mild, relatively rainy winters. The Taurus Mountains directly behind the city protect it from cold northern winds, creating a microclimate that makes Alanya one of the warmest destinations in Turkey year-round.',
       'Summer (June to September) is hot and humid, with daytime temperatures regularly exceeding 35°C (95°F) in July and August. This is the peak season for beachgoers. The sea temperature peaks around 28°C in August, feeling like a warm bath.',
@@ -295,6 +311,7 @@ export const directoryCategoryIntros: Record<string, DirectoryCategoryIntro> = {
   'nightlife': {
     title: 'Alanya Nightlife Guide 2026 | Best Bars & Clubs',
     description: 'Discover the best nightlife in Alanya. From the bustling Bar Street by the harbour to relaxed beach clubs and rooftop lounges.',
+    keywords: ["Alanya nightlife guide", "best bars in Alanya", "nightclubs Alanya harbour", "beach clubs Alanya", "Alanya bar street"],
     longDescription: [
       'Alanya has one of the most vibrant nightlife scenes on the Turkish Riviera. Whether you are looking for massive open-air nightclubs, cozy pubs, or elegant rooftop lounges, the city caters to all tastes.',
       'The epicentre of Alanya\'s nightlife is the harbour area, commonly referred to as "Bar Street" (Barlar Sokağı). Here, dozens of bars and large nightclubs are packed next to each other, pumping out music until the early hours. Venues like Havana Club, Robin Hood, and Summer Garden (located slightly out of town in Konaklı) are legendary among tourists and locals alike.',

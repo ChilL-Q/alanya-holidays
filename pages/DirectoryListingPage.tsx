@@ -116,6 +116,14 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
 
     const categoryTitle = categoryIntro?.title || 'Directory';
 
+    const listingKeywords = [
+        `${listing.name} Alanya`,
+        `${listing.name} ${listing.location}`,
+        `${listing.name} ${listing.location} Alanya`,
+        `${categoryTitle} Alanya`,
+        `${listing.name} Turkey`,
+    ];
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16">
             <SEOHead
@@ -123,6 +131,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                 description={listing.short_description}
                 image={listing.gallery?.[0]}
                 type="website"
+                keywords={listingKeywords}
                 jsonLd={localBusinessSchema}
             />
 

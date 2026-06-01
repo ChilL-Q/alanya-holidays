@@ -181,7 +181,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         return <Navigate to="/" replace />;
     }
 
-    const { title, description, longDescription, faqs } = intro;
+    const { title, description, longDescription, faqs, keywords } = intro;
 
     // Generate JSON-LD Schemas for SEO
     const faqSchema = faqs && faqs.length > 0 ? {
@@ -222,6 +222,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             <SEOHead
                 title={`${title} - Alanya Holidays`}
                 description={description}
+                keywords={keywords}
                 jsonLd={faqSchema ? [itemListSchema, faqSchema] : itemListSchema}
             />
 
