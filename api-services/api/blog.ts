@@ -86,12 +86,18 @@ function generateExcerpt(content: string | null, maxLength: number = 200): strin
 // ============================================================
 // Helper: resolve slug conflicts
 // ============================================================
+function escapePostgREST(value: string): string {
+    return value.replace(/%/g, '\\%').replace(/\./g, '\\.').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
 async function resolveSlug(baseSlug: string): Promise<string> {
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from('blog_posts')
         .select('slug')
         .eq('slug', baseSlug)
-        .or(`slug.like.${baseSlug}-%`);
+        .or(`slug.like.${escapePostgREST(baseSlug)}-%`);
+
+    if (error) throw new Error(`Failed to check slug uniqueness: ${error.message}`);
 
     const rows = toArray<{ slug: string }>(data);
     const existingSlugs = rows.map((row: { slug: string }) => row.slug);

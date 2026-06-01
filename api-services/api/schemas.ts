@@ -70,7 +70,7 @@ export const reviewSchema = z.object({
 
 export const blogPostSchema = z.object({
     title: z.string().min(3, "Title must be at least 3 characters"),
-    slug: z.string().min(3, "Slug must be at least 3 characters").optional(),
+    slug: z.string().min(3, "Slug must be at least 3 characters").regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase alphanumeric with hyphens").optional(),
     content: z.string().optional(),
     excerpt: z.string().max(500).optional(),
     video_url: z.string().url().optional().or(z.literal('')),

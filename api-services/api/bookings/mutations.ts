@@ -321,7 +321,16 @@ export async function updatePayoutStatus(id: string, payoutStatus: 'paid' | 'pen
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // DB trigger (check_payout_status_update) enforces admin-only at the server level.
+    // Client-side check for fast rejection. DB trigger (check_payout_status_update) is the authoritative guard.
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    if (!profile || profile.role !== 'admin') {
+        throw new Error('Forbidden: admin access required');
+    }
+
     const { error } = await supabase
         .from('bookings')
         .update({ payout_status: payoutStatus })
