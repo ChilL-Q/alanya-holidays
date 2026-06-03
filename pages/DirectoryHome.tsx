@@ -18,9 +18,7 @@ export const DirectoryHome: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [showListMenu, setShowListMenu] = useState(false);
-    const listMenuRef = useRef<HTMLDivElement>(null);
-    useClickOutside(listMenuRef, () => setShowListMenu(false));
+
 
     const handleSearch = () => {
         const params = new URLSearchParams();
@@ -202,48 +200,13 @@ export const DirectoryHome: React.FC = () => {
                             {t('dir.cta.categories')}
                         </button>
 
-                        <div className="relative flex-1" ref={listMenuRef}>
-                            <button
-                                onClick={() => setShowListMenu(prev => !prev)}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
-                            >
-                                <Briefcase className="w-5 h-5" />
-                                {t('dir.cta.list')}
-                            </button>
-                            {showListMenu && (
-                                <div className="absolute bottom-full mb-2 left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                                    <div className="p-2 space-y-1">
-                                        <Link to="/list-property" onClick={() => setShowListMenu(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
-                                            <div className="w-10 h-10 bg-teal-50 dark:bg-slate-800/50 text-teal-600 dark:text-cyan-400 rounded-lg flex items-center justify-center group-hover:bg-teal-100 dark:group-hover:bg-slate-700/50 transition-colors flex-shrink-0">
-                                                <Home size={20} />
-                                            </div>
-                                            <div>
-                                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_property')}</span>
-                                                <span className="block text-xs text-slate-500 font-medium">{t('nav.list_desc')}</span>
-                                            </div>
-                                        </Link>
-                                        <Link to="/add-service" onClick={() => setShowListMenu(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
-                                            <div className="w-10 h-10 bg-purple-50 dark:bg-slate-800/50 text-purple-600 rounded-lg flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors flex-shrink-0">
-                                                <Car size={20} />
-                                            </div>
-                                            <div>
-                                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_service')}</span>
-                                                <span className="block text-xs text-slate-500 font-medium">{t('nav.service_desc')}</span>
-                                            </div>
-                                        </Link>
-                                        <Link to="/add-listing" onClick={() => setShowListMenu(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
-                                            <div className="w-10 h-10 bg-indigo-50 dark:bg-slate-800/50 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors flex-shrink-0">
-                                                <Briefcase size={20} />
-                                            </div>
-                                            <div>
-                                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_directory')}</span>
-                                                <span className="block text-xs text-slate-500 font-medium">{t('nav.directory_desc')}</span>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <Link
+                            to="/add-listing"
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
+                        >
+                            <Briefcase className="w-5 h-5" />
+                            {t('dir.cta.list')}
+                        </Link>
                     </div>
 
                     {/* AI Planner Floating Entry Point */}
