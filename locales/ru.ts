@@ -416,6 +416,8 @@ export const ru = {
   'nav.list_desc': 'Виллы, апартаменты и другое',
   'nav.list_service': 'Разместить услугу',
   'nav.service_desc': 'Авто, туры и другое',
+  'nav.list_directory': 'Добавить Бизнес',
+  'nav.directory_desc': 'Клиники, рестораны, салоны и др.',
 
   // Car Rental Page
   'car.hero.title': 'Исследуй Аланью <span class="text-teal-600 dark:text-cyan-400 ">По Своим Правилам</span>',

@@ -364,6 +364,8 @@ export const ar = {
     'nav.list_desc': 'فلل، شقق، والمزيد',
     'nav.list_service': 'أضف خدمة',
     'nav.service_desc': 'سيارات، جولات، وأكثر',
+    'nav.list_directory': 'أضف نشاط تجاري',
+    'nav.directory_desc': 'العيادات، المطاعم، الصالونات والمزيد',
 
     // Car Rental Page
     'car.hero.title': 'استكشف ألانيا <span class="text-teal-600 dark:text-cyan-400 ">بشروطك الخاصة</span>',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle, Briefcase } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
@@ -130,26 +130,28 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                 )}
             </div>
 
-            {/* Listing CTA — visible in rental mode only */}
-            {mode === 'rental' && (
-                <>
-                    <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
-                    <div className="flex gap-2">
-                        <Link to="/list-property" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
-                            <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                                <Home size={18} />
-                            </div>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_property')}</span>
-                        </Link>
-                        <Link to="/add-service" onClick={onClose} className="flex-1 p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl flex flex-col items-center justify-center gap-2 text-center group active:scale-95 transition-transform">
-                            <div className="w-10 h-10 bg-white dark:bg-slate-800/50 rounded-full flex items-center justify-center text-purple-600 shadow-sm border border-slate-100 dark:border-slate-700/50">
-                                <Car size={18} />
-                            </div>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('nav.list_service')}</span>
-                        </Link>
+            {/* Listing CTAs */}
+            <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
+            <div className="flex gap-2 p-3 bg-slate-50/50 dark:bg-slate-950/20">
+                <Link to="/list-property" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                    <div className="w-9 h-9 bg-teal-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 shadow-sm">
+                        <Home size={16} />
                     </div>
-                </>
-            )}
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_property')}</span>
+                </Link>
+                <Link to="/add-service" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                    <div className="w-9 h-9 bg-purple-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-purple-600 shadow-sm">
+                        <Car size={16} />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_service')}</span>
+                </Link>
+                <Link to="/add-listing" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                    <div className="w-9 h-9 bg-indigo-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
+                        <Briefcase size={16} />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_directory')}</span>
+                </Link>
+            </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
 

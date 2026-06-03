@@ -424,6 +424,8 @@ export const en = {
   'nav.list_desc': 'Villas, apartments & more',
   'nav.list_service': 'List a Service',
   'nav.service_desc': 'Cars, tours, and more',
+  'nav.list_directory': 'List a Business',
+  'nav.directory_desc': 'Clinics, restaurants, salons & more',
 
   // Car Rental Page
   'car.hero.title': 'Explore Alanya on <span class="text-teal-600 dark:text-cyan-400 ">Your Own Terms</span>',

@@ -85,6 +85,10 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose, mod
                                     <PlusCircle size={16} className="text-teal-500 dark:text-cyan-400" />
                                     {t('nav.list_service')}
                                 </Link>
+                                <Link to="/add-listing" onClick={onClose} className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-lg transition-colors">
+                                    <PlusCircle size={16} className="text-teal-500 dark:text-cyan-400" />
+                                    {t('nav.list_directory')}
+                                </Link>
                             </>
                         )}
                         <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-2"></div>

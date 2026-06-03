@@ -416,6 +416,8 @@ export const tr = {
     'nav.list_desc': 'Villalar, daireler ve daha fazlası',
     'nav.list_service': 'Hizmet Yayını Yap',
     'nav.service_desc': 'Arabalar, turlar ve daha fazlası',
+    'nav.list_directory': 'İşletme Ekle',
+    'nav.directory_desc': 'Klinikler, restoranlar, güzellik salonları vb.',
 
     // Car Rental Page
     'car.hero.title': 'Alanya\'yı <span class="text-teal-600 dark:text-cyan-400 ">Kendi Tarzınla</span> Keşfet',

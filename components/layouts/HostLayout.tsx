@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3, Briefcase } from 'lucide-react';
 import { User } from '../../context/AuthContext';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -99,6 +99,18 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children, user, unreadCo
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Add Service</span>
                                         <span className="block text-xs text-slate-500">Fleet, tours, or other</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => { navigate('/add-listing'); setIsAddMenuOpen(false); }}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/90 transition-colors text-left group"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-slate-800 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                                        <Briefcase size={16} />
+                                    </div>
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">List Business</span>
+                                        <span className="block text-xs text-slate-500">Clinics, restaurants, salons & more</span>
                                     </div>
                                 </button>
                             </div>

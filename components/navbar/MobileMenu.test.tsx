@@ -62,6 +62,7 @@ vi.mock('lucide-react', () => ({
     ShoppingBag: () => <svg data-testid="shop-icon" />,
     BookOpen: () => <svg data-testid="book-open-icon" />,
     Building2: () => <svg data-testid="building-icon" />,
+    Briefcase: () => <svg data-testid="briefcase-icon" />,
     MapPin: () => <svg data-testid="mappin-icon" />,
     MessageCircle: () => <svg data-testid="message-circle-icon" />,
     Users: () => <svg data-testid="users-icon" />
@@ -217,12 +218,14 @@ describe('MobileMenu', () => {
         renderMenu(true, 'rental');
         expect(screen.getByText('nav.list_property')).toBeInTheDocument();
         expect(screen.getByText('nav.list_service')).toBeInTheDocument();
+        expect(screen.getByText('nav.list_directory')).toBeInTheDocument();
     });
 
-    it('hides listing CTA buttons in directory mode', () => {
+    it('renders listing CTA buttons in directory mode too', () => {
         renderMenu(true, 'directory');
-        expect(screen.queryByText('nav.list_property')).not.toBeInTheDocument();
-        expect(screen.queryByText('nav.list_service')).not.toBeInTheDocument();
+        expect(screen.getByText('nav.list_property')).toBeInTheDocument();
+        expect(screen.getByText('nav.list_service')).toBeInTheDocument();
+        expect(screen.getByText('nav.list_directory')).toBeInTheDocument();
     });
 
     it('calls onClose when listing CTA clicked in rental mode', () => {

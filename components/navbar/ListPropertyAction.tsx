@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Home, Plus, Car } from 'lucide-react';
+import { Home, Plus, Car, Briefcase } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -89,6 +89,15 @@ export const ListPropertyAction: React.FC = () => {
                             <div>
                                 <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_service')}</span>
                                 <span className="block text-xs text-slate-500 font-medium">{t('nav.service_desc')}</span>
+                            </div>
+                        </Link>
+                        <Link to="/add-listing" onClick={() => setIsListMenuOpen(false)} className="flex items-start gap-4 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/90 rounded-xl transition-all group">
+                            <div className="w-10 h-10 bg-indigo-50 dark:bg-slate-800/50 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
+                                <Briefcase size={20} />
+                            </div>
+                            <div>
+                                <span className="block text-sm font-bold text-slate-900 dark:text-white">{t('nav.list_directory')}</span>
+                                <span className="block text-xs text-slate-500 font-medium">{t('nav.directory_desc')}</span>
                             </div>
                         </Link>
                     </div>
