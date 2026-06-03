@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, Menu, User, Heart, ArrowRightLeft } from 'lucide-react';
+import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -11,6 +11,9 @@ import { MobileMenu } from './navbar/MobileMenu';
 import { UserDropdown } from './navbar/UserDropdown';
 import { DesktopNav } from './navbar/DesktopNav';
 import { ListPropertyAction } from './navbar/ListPropertyAction';
+import { cn } from '../utils/cn';
+import { useScroll } from '../hooks/useScroll';
+import { MenuToggleIcon } from './ui/MenuToggleIcon';
 
 export type NavMode = 'directory' | 'rental';
 
@@ -26,6 +29,7 @@ export const Navbar: React.FC = () => {
   const [navMode, setNavMode] = useState<NavMode>('directory');
   const profileRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const scrolled = useScroll(10);
 
   useEffect(() => {
     if (['/services', '/alanya-villas', '/alanya-apartments', '/services/car-rental', '/services/bike-rental', '/services/bicycle-rental'].includes(location.pathname) || location.pathname.startsWith('/services/')) {
@@ -45,10 +49,37 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/50 transition-colors supports-[backdrop-filter]:bg-white/60">
+    <header
+      className={cn(
+        'sticky top-0 z-50 mx-auto w-full border-b border-slate-200/60 dark:border-slate-800/50 md:transition-all md:duration-300 md:ease-out bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60',
+        {
+          'bg-white/95 dark:bg-slate-900/95 border-slate-200/60 dark:border-slate-800/50 shadow-md md:top-4 md:max-w-6xl md:rounded-2xl md:border':
+            scrolled && !isMobileMenuOpen,
+          'bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800': isMobileMenuOpen,
+        }
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-20 relative">
+        <div
+          className={cn(
+            'flex items-center h-20 relative transition-all duration-300 ease-out',
+            {
+              'h-16': scrolled && !isMobileMenuOpen,
+            }
+          )}
+        >
 
           {/* Logo */}
           <div className="flex items-center flex-shrink-0 z-10 lg:-ml-6">
@@ -116,16 +147,15 @@ export const Navbar: React.FC = () => {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-400">
                         <User size={20} />
-                        {/* Burger Menu Icon on Mobile for Guests/Auth? Maybe just User icon is enough or we can swap icon */}
                       </div>
                     )}
                   </div>
                   <div className="hidden lg:flex flex-col items-start">
                     <Menu size={14} className="text-slate-400" />
                   </div>
-                  {/* Show Menu icon on mobile to indicate it opens a menu */}
+                  {/* Show animated MenuToggleIcon on mobile to indicate it opens a menu */}
                   <div className="lg:hidden">
-                    <Menu size={16} className="text-slate-500" />
+                    <MenuToggleIcon open={isMobileMenuOpen} className="w-5 h-5 text-slate-500 dark:text-slate-400" duration={300} />
                   </div>
                 </button>
 
@@ -141,7 +171,6 @@ export const Navbar: React.FC = () => {
       <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} mode={navMode} setMode={setNavMode} />
 
       {/* Host Upgrade Modal */}
-      {/* Host Upgrade Modal - Now inside ListPropertyAction */}
-    </nav>
+    </header>
   );
 };
