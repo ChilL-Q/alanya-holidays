@@ -62,9 +62,9 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen font-sans overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen font-sans w-full">
       <Navbar />
-      <main className="flex-grow">
+      <main className="flex-grow overflow-x-hidden">
         <PageTransition>
           <ErrorBoundary>
             <React.Suspense fallback={<PageLoader />}>
