@@ -116,7 +116,7 @@ const ExcursionTypePage: React.FC = () => {
                         </div>
                         <button
                             onClick={() => setShowFullDescription(!showFullDescription)}
-                            className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
+                            className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:hover:text-cyan-300 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
                         >
                             {showFullDescription ? 'Read Less' : 'Read More'}
                             {showFullDescription ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -179,7 +179,7 @@ const ExcursionTypePage: React.FC = () => {
                                     {et.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                                    {et.metaDescription.length > 100 ? `${et.metaDescription.slice(0, 100)}...` : et.metaDescription}
+                                    {et.metaDescription}
                                 </p>
                             </Link>
                         ))}

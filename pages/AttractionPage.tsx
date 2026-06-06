@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -9,6 +9,41 @@ import { db } from '../api-services';
 import { getAttraction, type Attraction } from '../data/attractionPages';
 import { getExcursionType, type ExcursionType } from '../data/excursionTypes';
 import { MapPin, Clock, Ticket, Bus, Lightbulb, ChevronDown, ChevronUp, Info, Compass } from 'lucide-react';
+
+interface RelatedItem { slug: string; title: string; metaDescription: string }
+
+function RelatedItemsGrid({ heading, items, icon: Icon, topMargin }: {
+  heading: string;
+  items: RelatedItem[];
+  icon: React.ElementType;
+  topMargin?: boolean;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className={`${topMargin ? 'mt-16 ' : ''}mb-12 border-t border-slate-200 dark:border-slate-800/50 pt-16`}>
+      <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">{heading}</h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {items.map(item => (
+          <Link
+            key={item.slug}
+            to={`/${item.slug}`}
+            className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <Icon className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
+              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
+                {item.title}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+              {item.metaDescription}
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function buildAttractionJsonLd(attraction: Attraction) {
   const base = {
@@ -99,13 +134,19 @@ const AttractionPage: React.FC = () => {
 
   const jsonLd = buildAttractionJsonLd(attraction);
 
-  const relatedExcursions = attraction.relatedExcursionSlugs
-    .map(s => getExcursionType(s))
-    .filter((et): et is ExcursionType => et !== undefined);
+  const relatedExcursions = useMemo(
+    () => attraction.relatedExcursionSlugs
+      .map(s => getExcursionType(s))
+      .filter((et): et is ExcursionType => et !== undefined),
+    [attraction]
+  );
 
-  const relatedAttractions = attraction.relatedAttractionSlugs
-    .map(s => getAttraction(s))
-    .filter((a): a is Attraction => a !== undefined);
+  const relatedAttractions = useMemo(
+    () => attraction.relatedAttractionSlugs
+      .map(s => getAttraction(s))
+      .filter((a): a is Attraction => a !== undefined),
+    [attraction]
+  );
 
   const hasPracticalInfo =
     attraction.practicalInfo.hours ||
@@ -148,7 +189,7 @@ const AttractionPage: React.FC = () => {
             </div>
             <button
               onClick={() => setShowFullDescription(!showFullDescription)}
-              className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
+              className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:hover:text-cyan-300 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
             >
               {showFullDescription ? 'Read Less' : 'Read More'}
               {showFullDescription ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -242,61 +283,9 @@ const AttractionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Related Excursions */}
-        {relatedExcursions.length > 0 && (
-          <div className="mt-16 mb-12 border-t border-slate-200 dark:border-slate-800/50 pt-16">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">
-              Related Excursions
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {relatedExcursions.map(et => (
-                <Link
-                  key={et.slug}
-                  to={`/${et.slug}`}
-                  className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Compass className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
-                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
-                      {et.title}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {et.metaDescription.length > 100 ? `${et.metaDescription.slice(0, 100)}...` : et.metaDescription}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Related Attractions */}
-        {relatedAttractions.length > 0 && (
-          <div className="mb-12 border-t border-slate-200 dark:border-slate-800/50 pt-16">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">
-              Nearby Attractions
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {relatedAttractions.map(attr => (
-                <Link
-                  key={attr.slug}
-                  to={`/${attr.slug}`}
-                  className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
-                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
-                      {attr.title}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {attr.metaDescription.length > 100 ? `${attr.metaDescription.slice(0, 100)}...` : attr.metaDescription}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Related Excursions / Nearby Attractions */}
+        <RelatedItemsGrid heading="Related Excursions" items={relatedExcursions} icon={Compass} topMargin />
+        <RelatedItemsGrid heading="Nearby Attractions" items={relatedAttractions} icon={MapPin} />
       </div>
 
       <DirectoryListingModal
