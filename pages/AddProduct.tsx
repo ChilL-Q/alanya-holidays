@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { ShoppingBag, Tag, Box, DollarSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const AddProduct: React.FC = () => {
     const { user } = useAuth();
@@ -48,6 +49,8 @@ export const AddProduct: React.FC = () => {
     };
 
     return (
+        <>
+        <SEOHead title="Add Product | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-20 px-4">
             <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800/80 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800/50">
                 <div className="flex items-center gap-3 mb-2">
@@ -155,5 +158,6 @@ export const AddProduct: React.FC = () => {
                 </form>
             </div>
         </div>
+        </>
     );
 };

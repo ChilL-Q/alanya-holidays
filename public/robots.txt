@@ -20,6 +20,8 @@ Disallow: /edit-
 Disallow: /book-
 Disallow: /booking/
 Disallow: /checkout
+Disallow: /favorites
+Disallow: /bookmarks
 
 # Specific crawler handling
 User-agent: Googlebot

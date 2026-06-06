@@ -5,6 +5,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
+import { SEOHead } from '../components/seo/SEOHead';
 
 interface BikeGroup {
     id: string; // generated slug
@@ -77,6 +78,12 @@ export const BikeRental: React.FC = () => {
     }, []);
 
     return (
+        <>
+        <SEOHead
+            title="Motorbike Rental in Alanya | Alanya Holidays"
+            description="Rent a motorbike or scooter in Alanya. Explore the Turkish Riviera on two wheels with our affordable motorcycle rental service."
+            keywords={['motorbike rental alanya', 'scooter rental alanya', 'motorcycle rental alanya', 'alanya bike hire']}
+        />
         <VehicleRentalTemplate
             titleHtml={t('bike.hero.title')}
             subtitle={t('bike.hero.subtitle')}
@@ -137,5 +144,6 @@ export const BikeRental: React.FC = () => {
                 </div>
             ))}
         </VehicleRentalTemplate>
+        </>
     );
 };

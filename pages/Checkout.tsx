@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { ServiceType } from '../types/index';
 import { useNavigate } from 'react-router-dom';
+import { SEOHead } from '../components/seo/SEOHead';
 
 interface StripeCheckoutItem {
     bookingId: string;
@@ -165,6 +166,8 @@ export const Checkout: React.FC = () => {
     const isWelcomePackAdded = items.some(i => i.id === 'rec-2');
 
     return (
+        <>
+        <SEOHead title="Checkout | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-12 pb-24">
             <div className="max-w-4xl mx-auto px-4">
                 <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-8">{t('checkout.title')}</h1>
@@ -204,5 +207,6 @@ export const Checkout: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

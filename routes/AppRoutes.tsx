@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 import { AdminLayout } from '../components/layouts/AdminLayout';
 import { HostLayoutController } from '../components/layouts/HostLayoutController';
@@ -11,6 +11,7 @@ import { NotFound } from '../components/pages/NotFound';
 // Public Pages - Direct Imports (critical for immediate FCP)
 const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(module => ({ default: module.DirectoryHome })));
 const DirectoryCategoryPage = React.lazy(() => import('../pages/DirectoryCategoryPage').then(module => ({ default: module.DirectoryCategoryPage })));
+const ExcursionTypePage = React.lazy(() => import('../pages/ExcursionTypePage').then(module => ({ default: module.ExcursionTypePage })));
 const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
@@ -110,13 +111,10 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-villas" element={<DirectoryCategoryPage categoryId="villas" />} />
                 <Route path="/alanya-apartments" element={<DirectoryCategoryPage categoryId="apartments" />} />
                 <Route path="/things-to-do-in-alanya" element={<DirectoryCategoryPage categoryId="tours" />} />
-                <Route path="/tours" element={<Navigate to="/things-to-do-in-alanya" replace />} />
                 <Route path="/airport-transfer" element={<DirectoryCategoryPage categoryId="transport" />} />
                 <Route path="/car-rental" element={<DirectoryCategoryPage categoryId="transport" />} />
                 <Route path="/restaurants" element={<DirectoryCategoryPage categoryId="restaurants" />} />
-                <Route path="/alanya-restaurants" element={<Navigate to="/restaurants" replace />} />
                 <Route path="/cafes" element={<DirectoryCategoryPage categoryId="cafes" />} />
-                <Route path="/alanya-cafes" element={<Navigate to="/cafes" replace />} />
                 <Route path="/alanya-real-estate" element={<DirectoryCategoryPage categoryId="real-estate" />} />
                 <Route path="/alanya-residency-guide" element={<DirectoryCategoryPage categoryId="visa" />} />
                 <Route path="/alanya-shopping-guide" element={<DirectoryCategoryPage categoryId="shopping" />} />
@@ -125,6 +123,19 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/nightlife" element={<DirectoryCategoryPage categoryId="nightlife" />} />
                 <Route path="/alanya-spa-hamam" element={<DirectoryCategoryPage categoryId="spa-hamam" />} />
                 <Route path="/alanya-hair-beauty" element={<DirectoryCategoryPage categoryId="hair-beauty" />} />
+
+                {/* Excursion Type Pages */}
+                <Route path="/alanya-boat-tours" element={<ExcursionTypePage />} />
+                <Route path="/alanya-jeep-safari" element={<ExcursionTypePage />} />
+                <Route path="/alanya-buggy-safari" element={<ExcursionTypePage />} />
+                <Route path="/alanya-rafting" element={<ExcursionTypePage />} />
+                <Route path="/scuba-diving-alanya" element={<ExcursionTypePage />} />
+                <Route path="/sapadere-canyon-tour" element={<ExcursionTypePage />} />
+                <Route path="/green-canyon-tour" element={<ExcursionTypePage />} />
+                <Route path="/parasailing-alanya" element={<ExcursionTypePage />} />
+                <Route path="/alanya-fishing-trips" element={<ExcursionTypePage />} />
+                <Route path="/alanya-city-tour" element={<ExcursionTypePage />} />
+                <Route path="/alanya-yacht-charter" element={<ExcursionTypePage />} />
 
                 {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
                 <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />

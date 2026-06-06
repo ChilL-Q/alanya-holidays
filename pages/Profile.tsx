@@ -13,6 +13,7 @@ import { ProfileServicesTab } from '../components/user/profile/ProfileServicesTa
 import { ProfileSettingsTab } from '../components/user/profile/ProfileSettingsTab';
 import { ProfileSecurityTab } from '../components/user/profile/ProfileSecurityTab';
 import { ProfilePayoutTab } from '../components/user/profile/ProfilePayoutTab';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const Profile: React.FC = () => {
     const { user, logout, isAuthenticated, updateUser, updateEmail, updatePassword, refreshUser } = useAuth();
@@ -270,6 +271,8 @@ export const Profile: React.FC = () => {
     if (!user) return null;
 
     return (
+        <>
+        <SEOHead title="My Profile | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-12 transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -355,5 +358,6 @@ export const Profile: React.FC = () => {
                 isLoading={loading}
             />
         </div>
+        </>
     );
 };

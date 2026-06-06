@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
 import { Button } from '../components/ui/Button';
+import { SEOHead } from '../components/seo/SEOHead';
 
 // UI Components
 import { StepsIndicator } from '../components/ui/StepsIndicator';
@@ -189,6 +190,13 @@ export const ListProperty: React.FC = () => {
     };
 
     return (
+        <>
+        <SEOHead
+            title="List Your Property | Alanya Holidays"
+            description="List your property on Alanya Holidays and reach thousands of travelers. Easy setup, zero fees."
+            keywords={['list property alanya', 'rent property alanya', 'alanya property listing']}
+            noIndex
+        />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-10 px-4 transition-colors">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
@@ -239,5 +247,6 @@ export const ListProperty: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

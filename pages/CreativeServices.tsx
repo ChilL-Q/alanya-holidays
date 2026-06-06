@@ -4,6 +4,7 @@ import { Check, Camera, Video, Sparkles, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const CreativeServices: React.FC = () => {
     const { subcategory } = useParams<{ subcategory: string }>();
@@ -78,6 +79,12 @@ export const CreativeServices: React.FC = () => {
     }
 
     return (
+        <>
+        <SEOHead
+            title="Creative Professionals in Alanya | Alanya Holidays"
+            description="Find photographers, designers, and creative professionals in Alanya. Professional services for your holiday needs."
+            keywords={['creative professionals alanya', 'photographer alanya', 'alanya design services']}
+        />
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             {/* Hero Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
@@ -188,5 +195,6 @@ export const CreativeServices: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };

@@ -1,4 +1,21 @@
 {
+  "redirects": [
+    {
+      "source": "/tours",
+      "destination": "/things-to-do-in-alanya",
+      "permanent": true
+    },
+    {
+      "source": "/alanya-restaurants",
+      "destination": "/restaurants",
+      "permanent": true
+    },
+    {
+      "source": "/alanya-cafes",
+      "destination": "/cafes",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

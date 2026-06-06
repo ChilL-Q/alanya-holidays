@@ -1,11 +1,18 @@
 import React from 'react';
 import { CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const ZeroFeesPage: React.FC = () => {
     const { t } = useLanguage();
 
     return (
+        <>
+        <SEOHead
+            title="Zero Fees Booking | Alanya Holidays"
+            description="Book your Alanya holiday with zero booking fees. Direct booking, best prices guaranteed, no hidden charges."
+            keywords={['zero fees alanya', 'no booking fees', 'alanya direct booking', 'alanya best price guarantee']}
+        />
         <div className="pt-24 pb-20">
             {/* Hero */}
             <section className="bg-primary text-white py-20 px-4">
@@ -75,5 +82,6 @@ export const ZeroFeesPage: React.FC = () => {
                 </p>
             </section>
         </div>
+        </>
     );
 };

@@ -5,6 +5,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import { db } from '../api-services';
 import { PropertyCard } from '../components/ui/PropertyCard';
 import { Property, PropertyDB } from '../types/models';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const FavoritesPage: React.FC = () => {
     const { favorites } = useFavorites();
@@ -61,6 +62,8 @@ export const FavoritesPage: React.FC = () => {
     }, [favorites]);
 
     return (
+        <>
+        <SEOHead title="My Favorites | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-8 pb-16 transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-8">
@@ -100,5 +103,6 @@ export const FavoritesPage: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };

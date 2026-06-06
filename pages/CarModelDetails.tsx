@@ -5,6 +5,7 @@ import { db, ServiceData } from '../api-services';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { ArrowLeft } from 'lucide-react';
 import { getCarImage } from '../utils/carImages';
+import { SEOHead } from '../components/seo/SEOHead';
 
 // Modular Components
 import { CarModelHeader } from '../components/services/car/CarModelHeader';
@@ -87,9 +88,21 @@ export const CarModelDetails: React.FC = () => {
     };
 
     if (loading) return <div className="pt-32 text-center">Loading offers...</div>;
-    if (!groupInfo) return <div className="pt-32 text-center">Model not found</div>;
+    if (!groupInfo) return (
+        <>
+            <SEOHead title="Car Not Found | Alanya Holidays" noIndex />
+            <div className="pt-32 text-center">Model not found</div>
+        </>
+    );
 
     return (
+        <>
+        <SEOHead
+            title="Car Details | Alanya Holidays"
+            description="View car rental details, specifications, and pricing."
+            keywords={['car rental details', 'alanya car hire']}
+            noIndex
+        />
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-7xl mx-auto px-4">
                 <button onClick={() => navigate('/services/car-rental')} className="flex items-center gap-2 text-slate-500 hover:text-teal-600 dark:text-cyan-400 mb-8 transition-colors">
@@ -129,5 +142,6 @@ export const CarModelDetails: React.FC = () => {
                 />
             )}
         </div>
+        </>
     );
 };

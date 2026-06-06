@@ -8,6 +8,7 @@ import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { AddServiceCategoryStep, ServiceCategory } from '../components/host/services/AddServiceCategoryStep';
 import { AddServiceFormStep } from '../components/host/services/AddServiceFormStep';
 import { AddServiceSuccessStep } from '../components/host/services/AddServiceSuccessStep';
+import { SEOHead } from '../components/seo/SEOHead';
 
 type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness' | 'creative';
 
@@ -162,6 +163,8 @@ export const AddService: React.FC = () => {
     }
 
     return (
+        <>
+        <SEOHead title="Add Service | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
@@ -195,5 +198,6 @@ export const AddService: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };

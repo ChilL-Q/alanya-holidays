@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
 import { toast } from 'react-hot-toast';
 import { PenLine, X, ImagePlus, Video, ArrowLeft, Send, Info } from 'lucide-react';
+import { SEOHead } from '../components/seo/SEOHead';
 
 const MAX_IMAGES = 5;
 
@@ -166,6 +167,13 @@ export const BlogSubmitPage: React.FC = () => {
     const isSubmitting = submitting || uploading;
 
     return (
+        <>
+        <SEOHead
+            title="Submit Blog Post | Alanya Holidays"
+            description="Share your Alanya travel experience. Submit your blog post and help other travelers discover Alanya."
+            keywords={['alanya blog submit', 'travel blog alanya', 'write about alanya']}
+            noIndex
+        />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -352,5 +360,6 @@ export const BlogSubmitPage: React.FC = () => {
 
             </div>
         </div>
+        </>
     );
 };

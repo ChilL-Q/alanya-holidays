@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
+import { SEOHead } from '../components/seo/SEOHead';
 
 interface BikeGroup {
     id: string; // generated slug
@@ -59,6 +60,12 @@ export const BicycleRental: React.FC = () => {
     }, []);
 
     return (
+        <>
+        <SEOHead
+            title="Bicycle Rental in Alanya | Alanya Holidays"
+            description="Rent a bicycle in Alanya and explore the city on two wheels. Affordable bike rental with delivery to your hotel."
+            keywords={['bicycle rental alanya', 'bike rental alanya', 'alanya bicycle', 'rent bike alanya']}
+        />
         <VehicleRentalTemplate
             titleText="Explore on Two Wheels (Bicycles)"
             subtitle="Discover the city at your own pace with our premium selection of bicycles and e-bikes."
@@ -111,5 +118,6 @@ export const BicycleRental: React.FC = () => {
                 </div>
             ))}
         </VehicleRentalTemplate>
+        </>
     );
 };

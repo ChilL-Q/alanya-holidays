@@ -8,7 +8,7 @@ interface SEOHeadProps {
   image?: string;
   type?: 'website' | 'article' | 'product';
   keywords?: string[];
-  jsonLd?: object | null;
+  jsonLd?: object | object[] | null;
   noIndex?: boolean;
 }
 
@@ -70,11 +70,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="twitter:site" content="@alanyaholidays" />
 
       {/* Structured Data (JSON-LD) */}
-      {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
+      {jsonLd && (Array.isArray(jsonLd) ? jsonLd : [jsonLd]).map((schema, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(schema)}
         </script>
-      )}
+      ))}
     </Helmet>
   );
 };

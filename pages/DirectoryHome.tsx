@@ -87,7 +87,39 @@ export const DirectoryHome: React.FC = () => {
                 title={t('dir.hero.page_title')}
                 description={t('dir.hero.meta_desc')}
                 type="website"
-                keywords={['Alanya holidays', 'vacation rentals', ' Turkey', 'medical tourism', 'hotels', 'villas']}
+                keywords={['Alanya holidays', 'vacation rentals', 'Turkey', 'medical tourism', 'hotels', 'villas']}
+                jsonLd={[
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'TravelAgency',
+                        name: 'Alanya Holidays',
+                        url: 'https://alanya-holidays.com',
+                        logo: 'https://alanya-holidays.com/logo.png',
+                        description: 'Premium vacation rentals, tours, and services in Alanya, Turkey',
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressLocality: 'Alanya',
+                            addressRegion: 'Antalya',
+                            addressCountry: 'TR'
+                        },
+                        contactPoint: {
+                            '@type': 'ContactPoint',
+                            contactType: 'customer support',
+                            url: 'https://alanya-holidays.com/contact'
+                        }
+                    },
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'WebSite',
+                        name: 'Alanya Holidays',
+                        url: 'https://alanya-holidays.com',
+                        potentialAction: {
+                            '@type': 'SearchAction',
+                            target: 'https://alanya-holidays.com/search?q={search_term_string}',
+                            'query-input': 'required name=search_term_string'
+                        }
+                    }
+                ]}
             />
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">

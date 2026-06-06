@@ -3,11 +3,18 @@ import { FileCheck, Clock, Globe, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useLanguage } from '../context/LanguageContext';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const Visa: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
     return (
+        <>
+        <SEOHead
+            title="Turkish Visa & Residency Guide | Alanya Holidays"
+            description="Complete guide to Turkish visa requirements and residency permits for Alanya. Expert assistance with your immigration needs."
+            keywords={['turkish visa', 'alanya residency', 'turkey visa guide', 'alanya immigration']}
+        />
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
@@ -98,5 +105,6 @@ export const Visa: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

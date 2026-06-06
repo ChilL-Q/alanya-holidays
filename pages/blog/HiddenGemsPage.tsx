@@ -97,7 +97,7 @@ export const HiddenGemsPage: React.FC = () => {
               <ArrowRight size={14} />
             </Link>
             <Link
-              to="/tours"
+              to="/things-to-do-in-alanya"
               className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 rounded-lg font-medium hover:bg-teal-100 dark:hover:bg-teal-900/30 transition-colors"
             >
               <Camera size={16} />
@@ -305,7 +305,7 @@ export const HiddenGemsPage: React.FC = () => {
                 View Attractions
               </Link>
               <Link
-                to="/tours"
+                to="/things-to-do-in-alanya"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
               >
                 <Camera size={18} />

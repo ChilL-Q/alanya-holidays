@@ -4,6 +4,7 @@ import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car, Sparkles
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { db, ServiceData } from '../api-services';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const ExperienceCategoryPage: React.FC = () => {
     const { category } = useParams<{ category: string }>();
@@ -106,16 +107,25 @@ export const ExperienceCategoryPage: React.FC = () => {
 
     if (!config) {
         return (
-            <div className="pt-32 pb-16 min-h-screen text-center">
-                <h1 className="text-2xl font-bold">Category not found</h1>
-                <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 dark:text-cyan-400 hover:underline">
-                    Back to Services
-                </button>
-            </div>
+            <>
+                <SEOHead title="Category Not Found | Alanya Holidays" noIndex />
+                <div className="pt-32 pb-16 min-h-screen text-center">
+                    <h1 className="text-2xl font-bold">Category not found</h1>
+                    <button onClick={() => navigate('/services')} className="mt-4 text-teal-600 dark:text-cyan-400 hover:underline">
+                        Back to Services
+                    </button>
+                </div>
+            </>
         );
     }
 
     return (
+        <>
+        <SEOHead
+            title="Experiences in Alanya | Alanya Holidays"
+            description="Discover exciting experiences in Alanya. Water sports, adventure tours, and unique activities for every traveler."
+            keywords={['alanya experiences', 'alanya activities', 'things to do alanya', 'alanya tours']}
+        />
         <div className="pt-24 pb-16 min-h-screen bg-slate-50 dark:bg-slate-900">
             {/* Hero Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
@@ -234,5 +244,6 @@ export const ExperienceCategoryPage: React.FC = () => {
                 )}
             </div>
         </div >
+        </>
     );
 };
