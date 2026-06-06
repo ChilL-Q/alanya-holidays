@@ -92,16 +92,36 @@ function buildDistrictJsonLd(page: DistrictPageContent, districtName: string) {
     ];
   }
 
+  if (page.pageType === 'things-to-do') {
+    return [
+      districtSchema,
+      {
+        '@context': 'https://schema.org',
+        '@type': 'TouristAttraction',
+        name: `Things to Do in ${districtName}`,
+        description: page.metaDescription,
+        url,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: districtName,
+          addressRegion: 'Antalya',
+          addressCountry: 'TR',
+        },
+        touristType: 'Leisure travelers',
+      },
+    ];
+  }
+
   return districtSchema;
 }
 
 export const DistrictPage: React.FC = () => {
-  const slug = useLocation().pathname.slice(1);
+  const slug = useLocation().pathname.replace(/^\/|\/$/g, '');
   const page = getDistrictPage(slug);
   const district = page ? getDistrictBySlug(page.districtSlug) : undefined;
 
   const [listings, setListings] = useState<DirectoryListingDB[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedListing, setSelectedListing] = useState<DirectoryListingDB | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
@@ -111,7 +131,7 @@ export const DistrictPage: React.FC = () => {
     const fetchListings = async () => {
       setLoading(true);
       try {
-        const result = await db.searchDirectoryListings(district.name, page.categoryId);
+        const result = await db.searchDirectoryListings('', page.categoryId, district.name);
         setListings(result.data ?? []);
       } catch (e) {
         console.error('Failed to load district listings', e);
@@ -127,8 +147,9 @@ export const DistrictPage: React.FC = () => {
     setSelectedListing(listing);
     const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
     if (!sessionStorage.getItem(sessionKey)) {
-      sessionStorage.setItem(sessionKey, '1');
-      db.trackListingView(listing.id).catch(console.error);
+      db.trackListingView(listing.id)
+        .then(() => sessionStorage.setItem(sessionKey, '1'))
+        .catch(console.error);
     }
   }, []);
 
@@ -164,7 +185,7 @@ export const DistrictPage: React.FC = () => {
           items={[
             { label: 'Home', href: '/' },
             { label: parentCrumb.label, href: parentCrumb.href },
-            { label: `${district.name} ${PAGE_TYPE_SECTION_LABELS[page.pageType].replace(' in this Area', '')}` },
+            { label: `${district.name} ${parentCrumb.label}` },
           ]}
         />
       </div>
@@ -187,7 +208,7 @@ export const DistrictPage: React.FC = () => {
             </div>
             <button
               onClick={() => setShowFullDescription(!showFullDescription)}
-              className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:text-cyan-400 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
+              className="text-teal-600 dark:text-cyan-400 hover:text-teal-700 dark:hover:text-cyan-300 font-semibold text-base mt-2 flex items-center justify-center md:justify-start gap-1 w-full md:w-auto"
             >
               {showFullDescription ? 'Read Less' : 'Read More'}
               {showFullDescription ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

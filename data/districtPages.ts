@@ -135,7 +135,7 @@ export const DISTRICTS: DistrictConfig[] = [
 
 // ── Page content helpers ─────────────────────────────────────────────
 
-const PAGE_TYPE_LABELS: Record<DistrictPageType, string> = {
+export const PAGE_TYPE_LABELS: Record<DistrictPageType, string> = {
   'hotels': 'Hotels',
   'villas': 'Villas',
   'apartments': 'Apartments',

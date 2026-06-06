@@ -5,6 +5,7 @@ import {
   getDistrictPagesForDistrict,
   getDistrictPagesForType,
   getCategoryPathForType,
+  PAGE_TYPE_LABELS,
   type DistrictPageType,
 } from '../../data/districtPages';
 
@@ -12,14 +13,6 @@ interface DistrictCrossLinksProps {
   currentDistrictSlug: string;
   currentPageType: DistrictPageType;
 }
-
-const PAGE_TYPE_LABELS: Record<DistrictPageType, string> = {
-  'hotels': 'Hotels',
-  'villas': 'Villas',
-  'apartments': 'Apartments',
-  'things-to-do': 'Things to Do',
-  'airport-transfer': 'Airport Transfer',
-};
 
 export const DistrictCrossLinks: React.FC<DistrictCrossLinksProps> = ({
   currentDistrictSlug,
