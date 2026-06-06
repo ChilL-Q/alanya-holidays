@@ -11,7 +11,7 @@ import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
-import { CATEGORY_PATHS } from '../constants/categoryPaths';
+import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
@@ -204,7 +204,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             "@type": "ListItem",
             "position": index + 1,
             "item": {
-                "@type": categoryId === 'accommodations' ? "LodgingBusiness" : categoryId === 'restaurants' ? "Restaurant" : "LocalBusiness",
+                "@type": getSchemaType(categoryId),
                 "name": item.name,
                 "url": item.slug
                         ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
@@ -213,6 +213,28 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             }
         }))
     };
+
+    const transportSchema = categoryId === 'transport' ? {
+        '@context': 'https://schema.org',
+        '@type': 'TaxiService',
+        name: 'Alanya Airport Transfer & Taxi Service',
+        description,
+        url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Alanya',
+            addressRegion: 'Antalya',
+            addressCountry: 'TR',
+        },
+        areaServed: {
+            '@type': 'City',
+            name: 'Alanya',
+        },
+    } : null;
+
+    const schemas: object[] = [itemListSchema];
+    if (transportSchema) schemas.push(transportSchema);
+    if (faqSchema) schemas.push(faqSchema);
 
     const featuredListings = filteredData.filter(item => item.is_featured);
     const standardListings = filteredData.filter(item => !item.is_featured);
@@ -223,7 +245,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                 title={`${title} - Alanya Holidays`}
                 description={description}
                 keywords={keywords}
-                jsonLd={faqSchema ? [itemListSchema, faqSchema] : itemListSchema}
+                jsonLd={schemas}
             />
 
             {/* Breadcrumb */}

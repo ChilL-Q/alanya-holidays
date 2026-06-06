@@ -7,7 +7,8 @@ import { DirectoryListingModal } from '../components/directory/DirectoryListingM
 import { DirectoryListingDB } from '../types/models';
 import { db } from '../api-services';
 import { getExcursionType, EXCURSION_TYPES } from '../data/excursionTypes';
-import { Compass, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { getAttraction } from '../data/attractionPages';
+import { Compass, MapPin, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 const ExcursionTypePage: React.FC = () => {
     const slug = useLocation().pathname.slice(1); // pathname is "/alanya-boat-tours" → "alanya-boat-tours"
@@ -184,6 +185,38 @@ const ExcursionTypePage: React.FC = () => {
                         ))}
                     </div>
                 </div>
+
+                {/* Related Attractions */}
+                {excursionType.relatedAttractions.length > 0 && (
+                    <div className="mb-12 border-t border-slate-200 dark:border-slate-800/50 pt-16">
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">
+                            Nearby Attractions
+                        </h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {excursionType.relatedAttractions.map(attrSlug => {
+                                const attr = getAttraction(attrSlug);
+                                if (!attr) return null;
+                                return (
+                                    <Link
+                                        key={attr.slug}
+                                        to={`/${attr.slug}`}
+                                        className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
+                                    >
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <MapPin className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
+                                            <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
+                                                {attr.title}
+                                            </h3>
+                                        </div>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                                            {attr.metaDescription.slice(0, 100)}...
+                                        </p>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <DirectoryListingModal

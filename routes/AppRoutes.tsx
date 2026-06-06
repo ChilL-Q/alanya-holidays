@@ -12,6 +12,7 @@ import { NotFound } from '../components/pages/NotFound';
 const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(module => ({ default: module.DirectoryHome })));
 const DirectoryCategoryPage = React.lazy(() => import('../pages/DirectoryCategoryPage').then(module => ({ default: module.DirectoryCategoryPage })));
 const ExcursionTypePage = React.lazy(() => import('../pages/ExcursionTypePage').then(module => ({ default: module.ExcursionTypePage })));
+const AttractionPage = React.lazy(() => import('../pages/AttractionPage').then(module => ({ default: module.AttractionPage })));
 const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
@@ -136,6 +137,21 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-fishing-trips" element={<ExcursionTypePage />} />
                 <Route path="/alanya-city-tour" element={<ExcursionTypePage />} />
                 <Route path="/alanya-yacht-charter" element={<ExcursionTypePage />} />
+
+                {/* Attraction Pages */}
+                <Route path="/cleopatra-beach" element={<AttractionPage />} />
+                <Route path="/incekum-beach" element={<AttractionPage />} />
+                <Route path="/keykubat-beach" element={<AttractionPage />} />
+                <Route path="/dim-cave" element={<AttractionPage />} />
+                <Route path="/dim-river" element={<AttractionPage />} />
+                <Route path="/sapadere-canyon" element={<AttractionPage />} />
+                <Route path="/alanya-castle" element={<AttractionPage />} />
+                <Route path="/red-tower-alanya" element={<AttractionPage />} />
+                <Route path="/alanya-shipyard" element={<AttractionPage />} />
+                <Route path="/syedra-ancient-city" element={<AttractionPage />} />
+                <Route path="/manavgat-waterfall" element={<AttractionPage />} />
+                <Route path="/side-day-trip" element={<AttractionPage />} />
+                <Route path="/green-canyon" element={<AttractionPage />} />
 
                 {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
                 <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />
