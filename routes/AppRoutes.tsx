@@ -13,6 +13,7 @@ const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(mod
 const DirectoryCategoryPage = React.lazy(() => import('../pages/DirectoryCategoryPage').then(module => ({ default: module.DirectoryCategoryPage })));
 const ExcursionTypePage = React.lazy(() => import('../pages/ExcursionTypePage').then(module => ({ default: module.ExcursionTypePage })));
 const AttractionPage = React.lazy(() => import('../pages/AttractionPage').then(module => ({ default: module.AttractionPage })));
+const DistrictPage = React.lazy(() => import('../pages/DistrictPage').then(module => ({ default: module.DistrictPage })));
 const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
@@ -152,6 +153,53 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/manavgat-waterfall" element={<AttractionPage />} />
                 <Route path="/side-day-trip" element={<AttractionPage />} />
                 <Route path="/green-canyon" element={<AttractionPage />} />
+
+                {/* District Pages — 9 districts × 5 page types = 45 routes */}
+                <Route path="/hotels-in-mahmutlar" element={<DistrictPage />} />
+                <Route path="/hotels-in-kargicak" element={<DistrictPage />} />
+                <Route path="/hotels-in-oba" element={<DistrictPage />} />
+                <Route path="/hotels-in-tosmur" element={<DistrictPage />} />
+                <Route path="/hotels-in-konakli" element={<DistrictPage />} />
+                <Route path="/hotels-in-avsallar" element={<DistrictPage />} />
+                <Route path="/hotels-in-turkler" element={<DistrictPage />} />
+                <Route path="/hotels-in-okurcalar" element={<DistrictPage />} />
+                <Route path="/hotels-in-incekum" element={<DistrictPage />} />
+                <Route path="/villas-in-mahmutlar" element={<DistrictPage />} />
+                <Route path="/villas-in-kargicak" element={<DistrictPage />} />
+                <Route path="/villas-in-oba" element={<DistrictPage />} />
+                <Route path="/villas-in-tosmur" element={<DistrictPage />} />
+                <Route path="/villas-in-konakli" element={<DistrictPage />} />
+                <Route path="/villas-in-avsallar" element={<DistrictPage />} />
+                <Route path="/villas-in-turkler" element={<DistrictPage />} />
+                <Route path="/villas-in-okurcalar" element={<DistrictPage />} />
+                <Route path="/villas-in-incekum" element={<DistrictPage />} />
+                <Route path="/apartments-in-mahmutlar" element={<DistrictPage />} />
+                <Route path="/apartments-in-kargicak" element={<DistrictPage />} />
+                <Route path="/apartments-in-oba" element={<DistrictPage />} />
+                <Route path="/apartments-in-tosmur" element={<DistrictPage />} />
+                <Route path="/apartments-in-konakli" element={<DistrictPage />} />
+                <Route path="/apartments-in-avsallar" element={<DistrictPage />} />
+                <Route path="/apartments-in-turkler" element={<DistrictPage />} />
+                <Route path="/apartments-in-okurcalar" element={<DistrictPage />} />
+                <Route path="/apartments-in-incekum" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-mahmutlar" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-kargicak" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-oba" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-tosmur" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-konakli" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-avsallar" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-turkler" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-okurcalar" element={<DistrictPage />} />
+                <Route path="/things-to-do-in-incekum" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-mahmutlar" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-kargicak" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-oba" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-tosmur" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-konakli" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-avsallar" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-turkler" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-okurcalar" element={<DistrictPage />} />
+                <Route path="/airport-transfer-to-incekum" element={<DistrictPage />} />
 
                 {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
                 <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />
