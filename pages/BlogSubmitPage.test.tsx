@@ -22,6 +22,7 @@ vi.mock('../context/AuthContext', () => ({
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  useLocation: () => ({ pathname: '/blog/submit', search: '', hash: '', state: null }),
   Link: ({ children, to }: any) => <a href={to}>{children}</a>
 }));
 
