@@ -46,7 +46,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [locations, setLocations] = useState<string[]>([]);
-    const [_loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     // Auth & Voting State
     const { isAuthenticated, user } = useAuth();
@@ -412,6 +412,14 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
                 {viewMode === 'list' ? (
                     <>
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="animate-pulse bg-white dark:bg-slate-800/80 rounded-2xl h-80 border border-slate-200 dark:border-slate-800/50" />
+                                ))}
+                            </div>
+                        ) : (
+                        <>
                         {/* 3. Featured Listings (Monetization Zone) */}
                         {featuredListings.length > 0 && (
                             <div className="mb-12">
@@ -462,6 +470,8 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                 </div>
                             )}
                         </div>
+                        </>
+                        )}
                     </>
                 ) : (
                     <DirectoryMapView

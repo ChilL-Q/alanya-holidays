@@ -7,7 +7,7 @@ import { DirectoryListingModal } from '../components/directory/DirectoryListingM
 import { DirectoryListingDB } from '../types/models';
 import { db } from '../api-services';
 import { getExcursionType, EXCURSION_TYPES } from '../data/excursionTypes';
-import { getAttraction } from '../data/attractionPages';
+import { getAttraction, type Attraction } from '../data/attractionPages';
 import { Compass, MapPin, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 const ExcursionTypePage: React.FC = () => {
@@ -26,14 +26,14 @@ const ExcursionTypePage: React.FC = () => {
             try {
                 const primaryQuery = excursionType.searchKeywords[0] || excursionType.title;
                 const result = await db.searchDirectoryListings(primaryQuery, 'tours');
-                if (result.data.length > 0) {
+                if (result.data?.length > 0) {
                     setListings(result.data);
                 } else {
                     const fallbackQuery = excursionType.title
                         .replace(' in Alanya', '')
                         .replace(' from Alanya', '');
                     const broader = await db.searchDirectoryListings(fallbackQuery, 'tours');
-                    setListings(broader.data);
+                    setListings(broader.data ?? []);
                 }
             } catch (e) {
                 console.error('Failed to load excursion listings', e);
@@ -179,7 +179,7 @@ const ExcursionTypePage: React.FC = () => {
                                     {et.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                                    {et.metaDescription.slice(0, 100)}...
+                                    {et.metaDescription.length > 100 ? `${et.metaDescription.slice(0, 100)}...` : et.metaDescription}
                                 </p>
                             </Link>
                         ))}
@@ -193,10 +193,10 @@ const ExcursionTypePage: React.FC = () => {
                             Nearby Attractions
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {excursionType.relatedAttractions.map(attrSlug => {
-                                const attr = getAttraction(attrSlug);
-                                if (!attr) return null;
-                                return (
+                            {excursionType.relatedAttractions
+                                .map(attrSlug => getAttraction(attrSlug))
+                                .filter((attr): attr is Attraction => attr !== undefined)
+                                .map(attr => (
                                     <Link
                                         key={attr.slug}
                                         to={`/${attr.slug}`}
@@ -209,11 +209,10 @@ const ExcursionTypePage: React.FC = () => {
                                             </h3>
                                         </div>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                                            {attr.metaDescription.slice(0, 100)}...
+                                            {attr.metaDescription.length > 100 ? `${attr.metaDescription.slice(0, 100)}...` : attr.metaDescription}
                                         </p>
                                     </Link>
-                                );
-                            })}
+                                ))}
                         </div>
                     </div>
                 )}

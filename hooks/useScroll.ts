@@ -1,7 +1,9 @@
 import React from 'react';
 
 export function useScroll(threshold: number) {
-  const [scrolled, setScrolled] = React.useState(() => window.scrollY > threshold);
+  const [scrolled, setScrolled] = React.useState(
+    typeof window !== 'undefined' ? window.scrollY > threshold : false
+  );
 
   const onScroll = React.useCallback(() => {
     setScrolled(window.scrollY > threshold);

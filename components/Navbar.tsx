@@ -97,7 +97,7 @@ export const Navbar: React.FC = () => {
                 <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
               </div>
               <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate hidden md:block">
-                Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
+                Alanya<span className="text-teal-600 dark:text-cyan-400">Holidays</span>
               </span>
             </Link>
           </div>

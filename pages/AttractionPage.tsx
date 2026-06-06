@@ -6,11 +6,11 @@ import { DirectoryListingCard } from '../components/directory/DirectoryListingCa
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryListingDB } from '../types/models';
 import { db } from '../api-services';
-import { getAttraction } from '../data/attractionPages';
-import { getExcursionType } from '../data/excursionTypes';
+import { getAttraction, type Attraction } from '../data/attractionPages';
+import { getExcursionType, type ExcursionType } from '../data/excursionTypes';
 import { MapPin, Clock, Ticket, Bus, Lightbulb, ChevronDown, ChevronUp, Info, Compass } from 'lucide-react';
 
-function buildAttractionJsonLd(attraction: ReturnType<typeof getAttraction> & {}) {
+function buildAttractionJsonLd(attraction: Attraction) {
   const base = {
     '@context': 'https://schema.org',
     name: attraction.title,
@@ -55,7 +55,7 @@ const AttractionPage: React.FC = () => {
       try {
         const primaryQuery = attraction.searchKeywords[0] || attraction.title;
         const result = await db.searchDirectoryListings(primaryQuery, 'tours');
-        if (result.data.length > 0) {
+        if (result.data?.length > 0) {
           setListings(result.data);
         } else {
           const fallbackQuery = attraction.title
@@ -63,7 +63,7 @@ const AttractionPage: React.FC = () => {
             .replace(' from Alanya', '')
             .replace(' near Alanya', '');
           const broader = await db.searchDirectoryListings(fallbackQuery, 'tours');
-          setListings(broader.data);
+          setListings(broader.data ?? []);
         }
       } catch (e) {
         console.error('Failed to load attraction listings', e);
@@ -101,11 +101,11 @@ const AttractionPage: React.FC = () => {
 
   const relatedExcursions = attraction.relatedExcursionSlugs
     .map(s => getExcursionType(s))
-    .filter(Boolean);
+    .filter((et): et is ExcursionType => et !== undefined);
 
   const relatedAttractions = attraction.relatedAttractionSlugs
     .map(s => getAttraction(s))
-    .filter(Boolean);
+    .filter((a): a is Attraction => a !== undefined);
 
   const hasPracticalInfo =
     attraction.practicalInfo.hours ||
@@ -251,18 +251,18 @@ const AttractionPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {relatedExcursions.map(et => (
                 <Link
-                  key={et!.slug}
-                  to={`/${et!.slug}`}
+                  key={et.slug}
+                  to={`/${et.slug}`}
                   className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Compass className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
                     <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
-                      {et!.title}
+                      {et.title}
                     </h3>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {et!.metaDescription.slice(0, 100)}...
+                    {et.metaDescription.length > 100 ? `${et.metaDescription.slice(0, 100)}...` : et.metaDescription}
                   </p>
                 </Link>
               ))}
@@ -279,18 +279,18 @@ const AttractionPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {relatedAttractions.map(attr => (
                 <Link
-                  key={attr!.slug}
-                  to={`/${attr!.slug}`}
+                  key={attr.slug}
+                  to={`/${attr.slug}`}
                   className="group bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl p-4 hover:border-teal-500 dark:hover:border-cyan-400 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <MapPin className="w-4 h-4 text-teal-600 dark:text-cyan-400" />
                     <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors text-sm">
-                      {attr!.title}
+                      {attr.title}
                     </h3>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                    {attr!.metaDescription.slice(0, 100)}...
+                    {attr.metaDescription.length > 100 ? `${attr.metaDescription.slice(0, 100)}...` : attr.metaDescription}
                   </p>
                 </Link>
               ))}
