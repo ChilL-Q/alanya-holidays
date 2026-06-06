@@ -110,7 +110,8 @@ test.describe('Booking Flow', () => {
 
     // Navigate to checkout
     await page.goto('/checkout');
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    // domcontentloaded is enough — avoids networkidle hang from unmocked requests
+    await page.waitForLoadState('domcontentloaded');
 
     // Check body text contains our villa name
     const text = await page.locator('body').innerText();
