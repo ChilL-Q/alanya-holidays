@@ -53,7 +53,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-april',
     title: 'Alanya in April',
-    metaTitle: 'Alanya in April — Weather, Activities & Travel Guide 2026',
+    metaTitle: 'Alanya in April — Weather & Activities Guide 2026',
     metaDescription: 'Planning a trip to Alanya in April? Discover the weather (avg 20°C), best activities, beach conditions, and why April is one of the best months to visit.',
     keywords: ['alanya in april', 'alanya april weather', 'alanya april holiday', 'visit alanya april', 'alanya spring'],
     heroSubtitle: 'Spring blooms, warm days, and uncrowded beaches — April is one of the best times to discover Alanya.',
@@ -92,7 +92,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-may',
     title: 'Alanya in May',
-    metaTitle: 'Alanya in May — Weather, Things to Do & Holiday Guide 2026',
+    metaTitle: 'Alanya in May — Weather & Holiday Guide 2026',
     metaDescription: 'Alanya in May offers warm 25°C weather, a sea temperature of 22°C, and beautiful uncrowded beaches. Find out why May is perfect for a Turkish Riviera holiday.',
     keywords: ['alanya in may', 'alanya may weather', 'weather in alanya may', 'alanya may holiday', 'alanya spring may'],
     heroSubtitle: 'Warm sunshine, warm sea, and beaches that aren\'t yet packed — May is Alanya at its very best.',
@@ -131,7 +131,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-june',
     title: 'Alanya in June',
-    metaTitle: 'Alanya in June — Weather, Beaches & What to Do 2026',
+    metaTitle: 'Alanya in June — Weather, Beaches & Activities 2026',
     metaDescription: 'Alanya in June: 30°C days, sea temperature 25°C, and long sunny days make it peak beach season. Find the best activities, tips for the heat, and where to stay.',
     keywords: ['alanya in june', 'alanya june weather', 'alanya june holiday', 'alanya beach june', 'alanya june activities'],
     heroSubtitle: 'The Mediterranean heat arrives — June marks the beginning of Alanya\'s glorious beach season.',
@@ -170,7 +170,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-july',
     title: 'Alanya in July',
-    metaTitle: 'Alanya in July — Peak Season Guide: Weather, Beaches & Tips 2026',
+    metaTitle: 'Alanya in July — Peak Season Guide 2026',
     metaDescription: 'Alanya in July: the hottest and busiest month with 34°C highs and sea at 28°C. Everything you need to know about visiting Alanya in peak summer.',
     keywords: ['alanya in july', 'alanya july weather', 'alanya july holiday', 'alanya peak season', 'alanya july beach'],
     heroSubtitle: 'Peak summer in full swing — Alanya in July is hot, vibrant, and at maximum energy.',
@@ -209,7 +209,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-august',
     title: 'Alanya in August',
-    metaTitle: 'Alanya in August — Peak Summer Holiday Guide 2026',
+    metaTitle: 'Alanya in August — Peak Summer Guide 2026',
     metaDescription: 'Alanya in August: 34°C sunshine, sea at 28°C, and the resort at full capacity. Complete guide to visiting Alanya in the hottest peak season month.',
     keywords: ['alanya in august', 'alanya august weather', 'alanya august holiday', 'alanya august beach', 'alanya summer august'],
     heroSubtitle: 'The height of Mediterranean summer — Alanya in August is the ultimate sun and sea holiday.',
@@ -248,7 +248,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-september',
     title: 'Alanya in September',
-    metaTitle: 'Alanya in September — Perfect Late Summer Holiday Guide 2026',
+    metaTitle: 'Alanya in September — Late Summer Holiday Guide 2026',
     metaDescription: 'Alanya in September: 31°C days, warm 27°C sea, and noticeably fewer crowds than July-August. September is the perfect month for a late summer Alanya holiday.',
     keywords: ['alanya in september', 'alanya september weather', 'alanya september holiday', 'alanya late summer', 'alanya autumn september'],
     heroSubtitle: 'Late summer warmth without the peak season crowds — September is many visitors\' favourite month.',
@@ -287,7 +287,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-october',
     title: 'Alanya in October',
-    metaTitle: 'Alanya in October — Autumn Holiday Guide: Weather & Activities 2026',
+    metaTitle: 'Alanya in October — Autumn Holiday Guide 2026',
     metaDescription: 'Alanya in October offers 26°C days, a swimmable 24°C sea, and very few tourists. Discover why October is perfect for a peaceful, affordable Alanya break.',
     keywords: ['alanya in october', 'alanya october weather', 'alanya october holiday', 'alanya autumn holiday', 'alanya autumn october'],
     heroSubtitle: 'Autumn warmth and total tranquillity — October Alanya is a hidden gem for those in the know.',
@@ -326,7 +326,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-november',
     title: 'Alanya in November',
-    metaTitle: 'Alanya in November — Off-Season Guide: What to Expect 2026',
+    metaTitle: 'Alanya in November — Off-Season Travel Guide 2026',
     metaDescription: 'Visiting Alanya in November? Expect mild 20°C weather, very few tourists, and very low prices. Find out what\'s open and what to do in off-season Alanya.',
     keywords: ['alanya in november', 'alanya november weather', 'alanya november holiday', 'alanya off season', 'alanya winter november'],
     heroSubtitle: 'Quiet, affordable, and surprisingly mild — November Alanya is perfect for long-stay visitors.',
@@ -365,9 +365,9 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-december',
     title: 'Alanya in December',
-    metaTitle: 'Alanya in December — Winter Holiday Guide & What to Expect 2026',
+    metaTitle: 'Alanya in December — Winter Travel Guide 2026',
     metaDescription: 'Alanya in December: 16°C mild winter weather, very low prices, and a peaceful atmosphere. Discover winter Alanya — what\'s open, what to do, and who it\'s for.',
-    keywords: ['alanya in december', 'alanya december weather', 'alanya winter holiday', 'alanya christmas', 'alanya december visit'],
+    keywords: ['alanya in december', 'alanya december weather', 'alanya christmas', 'alanya december visit', 'alanya in winter december'],
     heroSubtitle: 'Peaceful winter Alanya — mild Mediterranean winter days and the whole city to yourself.',
     weather: { avgHigh: 16, avgLow: 9, seaTemp: 19, sunHours: 5, rainDays: 10 },
     longDescription: [
@@ -404,7 +404,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-in-january',
     title: 'Alanya in January',
-    metaTitle: 'Alanya in January — Winter Visit Guide: Weather & What to Do 2026',
+    metaTitle: 'Alanya in January — Winter Visit Guide 2026',
     metaDescription: 'Alanya in January: 15°C mild winters, very low prices, and a peaceful city. Find out what\'s open, who visits, and whether January Alanya is right for you.',
     keywords: ['alanya in january', 'alanya january weather', 'alanya winter january', 'alanya january holiday', 'alanya winter visit'],
     heroSubtitle: 'Deep winter Alanya — the quietest and most authentic season for those who seek it.',
@@ -443,7 +443,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-summer-holidays',
     title: 'Alanya Summer Holidays',
-    metaTitle: 'Alanya Summer Holidays 2026 — Beach, Sun & Activities Guide',
+    metaTitle: 'Alanya Summer Holidays — Beach, Sun & Activities Guide',
     metaDescription: 'Planning Alanya summer holidays? Get the complete guide to Alanya in summer — best beaches, top excursions, where to stay, and tips for the perfect Turkish Riviera holiday.',
     keywords: ['alanya summer holidays', 'alanya beach holiday', 'alanya summer', 'holiday in alanya', 'alanya summer 2026', 'turkish riviera summer'],
     heroSubtitle: 'Everything you need to plan the perfect Alanya summer holiday — beaches, excursions, and insider tips.',
@@ -481,7 +481,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'alanya-winter-holiday',
     title: 'Alanya Winter Holiday',
-    metaTitle: 'Alanya Winter Holiday 2026 — Guide to Off-Season Alanya',
+    metaTitle: 'Alanya Winter Holiday — Off-Season Guide',
     metaDescription: 'Planning an Alanya winter holiday? Discover mild 15-20°C winters, very low prices, and a peaceful city. The complete guide to Alanya in winter for long-stay visitors.',
     keywords: ['alanya winter holiday', 'alanya in winter', 'alanya winter', 'alanya winter visit', 'alanya off season holiday'],
     heroSubtitle: 'Escape northern winters for Alanya\'s mild Mediterranean climate — peaceful, affordable, and authentic.',
@@ -519,7 +519,7 @@ export const SEASONAL_PAGES: SeasonalPage[] = [
   {
     slug: 'best-time-to-visit-alanya',
     title: 'Best Time to Visit Alanya',
-    metaTitle: 'Best Time to Visit Alanya — Month-by-Month Guide 2026',
+    metaTitle: 'Best Time to Visit Alanya — Month-by-Month Guide',
     metaDescription: 'Find the best time to visit Alanya for your holiday. Month-by-month weather guide, crowd levels, prices, and expert recommendations for every type of traveler.',
     keywords: ['best time to visit alanya', 'when to visit alanya', 'alanya best month', 'alanya best season', 'alanya travel guide'],
     heroSubtitle: 'The honest, month-by-month guide to when you should visit Alanya — for every type of traveler.',

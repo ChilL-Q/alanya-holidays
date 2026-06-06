@@ -15,20 +15,48 @@ import {
 
 function buildSeasonalJsonLd(page: SeasonalPageData) {
   const baseUrl = 'https://alanya-holidays.com';
-  return {
+  const url = `${baseUrl}/${page.slug}`;
+
+  // Guide pages (no weather data) are editorial articles, not physical attractions
+  const primarySchema = page.weather
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'TouristAttraction',
+        name: page.title,
+        description: page.metaDescription,
+        url,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Alanya',
+          addressRegion: 'Antalya',
+          addressCountry: 'TR',
+        },
+        touristType: 'Leisure travelers',
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        name: page.title,
+        headline: page.title,
+        description: page.metaDescription,
+        url,
+        author: { '@type': 'Organization', name: 'Alanya Holidays' },
+        publisher: { '@type': 'Organization', name: 'Alanya Holidays' },
+      };
+
+  if (page.faqs.length === 0) return primarySchema;
+
+  const faqSchema = {
     '@context': 'https://schema.org',
-    '@type': 'TouristAttraction',
-    name: page.title,
-    description: page.metaDescription,
-    url: `${baseUrl}/${page.slug}`,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Alanya',
-      addressRegion: 'Antalya',
-      addressCountry: 'TR',
-    },
-    touristType: 'Leisure travelers',
+    '@type': 'FAQPage',
+    mainEntity: page.faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
   };
+
+  return [primarySchema, faqSchema];
 }
 
 function WeatherWidget({ weather }: { weather: NonNullable<SeasonalPageData['weather']> }) {
@@ -92,7 +120,9 @@ export const SeasonalPage: React.FC = () => {
         <Breadcrumb
           items={[
             { label: 'Home', href: '/' },
-            { label: 'Travel Guide', href: '/best-time-to-visit-alanya' },
+            ...(slug !== 'best-time-to-visit-alanya'
+              ? [{ label: 'Travel Guide', href: '/best-time-to-visit-alanya' }]
+              : []),
             { label: page.title },
           ]}
         />
