@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -134,19 +134,13 @@ const AttractionPage: React.FC = () => {
 
   const jsonLd = buildAttractionJsonLd(attraction);
 
-  const relatedExcursions = useMemo(
-    () => attraction.relatedExcursionSlugs
-      .map(s => getExcursionType(s))
-      .filter((et): et is ExcursionType => et !== undefined),
-    [attraction]
-  );
+  const relatedExcursions = attraction.relatedExcursionSlugs
+    .map(s => getExcursionType(s))
+    .filter((et): et is ExcursionType => et !== undefined);
 
-  const relatedAttractions = useMemo(
-    () => attraction.relatedAttractionSlugs
-      .map(s => getAttraction(s))
-      .filter((a): a is Attraction => a !== undefined),
-    [attraction]
-  );
+  const relatedAttractions = attraction.relatedAttractionSlugs
+    .map(s => getAttraction(s))
+    .filter((a): a is Attraction => a !== undefined);
 
   const hasPracticalInfo =
     attraction.practicalInfo.hours ||
