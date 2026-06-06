@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useClickOutside } from '../hooks/useClickOutside';
+import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
 
 const MD_BREAKPOINT = 768;
-import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  useLanguage();
   useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
