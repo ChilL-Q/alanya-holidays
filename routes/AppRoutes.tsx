@@ -14,6 +14,7 @@ const DirectoryCategoryPage = React.lazy(() => import('../pages/DirectoryCategor
 const ExcursionTypePage = React.lazy(() => import('../pages/ExcursionTypePage').then(module => ({ default: module.ExcursionTypePage })));
 const AttractionPage = React.lazy(() => import('../pages/AttractionPage').then(module => ({ default: module.AttractionPage })));
 const DistrictPage = React.lazy(() => import('../pages/DistrictPage').then(module => ({ default: module.DistrictPage })));
+const SeasonalPage = React.lazy(() => import('../pages/SeasonalPage').then(module => ({ default: module.SeasonalPage })));
 const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
@@ -200,6 +201,21 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/airport-transfer-to-turkler" element={<DistrictPage />} />
                 <Route path="/airport-transfer-to-okurcalar" element={<DistrictPage />} />
                 <Route path="/airport-transfer-to-incekum" element={<DistrictPage />} />
+
+                {/* Seasonal Pages — 13 routes */}
+                <Route path="/alanya-in-april" element={<SeasonalPage />} />
+                <Route path="/alanya-in-may" element={<SeasonalPage />} />
+                <Route path="/alanya-in-june" element={<SeasonalPage />} />
+                <Route path="/alanya-in-july" element={<SeasonalPage />} />
+                <Route path="/alanya-in-august" element={<SeasonalPage />} />
+                <Route path="/alanya-in-september" element={<SeasonalPage />} />
+                <Route path="/alanya-in-october" element={<SeasonalPage />} />
+                <Route path="/alanya-in-november" element={<SeasonalPage />} />
+                <Route path="/alanya-in-december" element={<SeasonalPage />} />
+                <Route path="/alanya-in-january" element={<SeasonalPage />} />
+                <Route path="/alanya-summer-holidays" element={<SeasonalPage />} />
+                <Route path="/alanya-winter-holiday" element={<SeasonalPage />} />
+                <Route path="/best-time-to-visit-alanya" element={<SeasonalPage />} />
 
                 {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
                 <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />
