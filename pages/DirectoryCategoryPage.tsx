@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useLocation, Navigate } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp, Map as MapIcon, List } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -16,6 +16,7 @@ import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
     const categoryId = propCategoryId || params.categoryId;
+    const { pathname } = useLocation();
 
     const intro = categoryId ? directoryCategoryIntros[categoryId] : null;
 
@@ -214,7 +215,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         }))
     };
 
-    const transportSchema = categoryId === 'transport' ? {
+    const transportSchema = pathname === '/airport-transfer' ? {
         '@context': 'https://schema.org',
         '@type': 'TaxiService',
         name: 'Alanya Airport Transfer & Taxi Service',

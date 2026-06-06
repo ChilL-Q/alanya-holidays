@@ -10,6 +10,7 @@ export function useScroll(threshold: number) {
   }, [threshold]);
 
   React.useEffect(() => {
+    onScroll(); // sync state immediately after mount (browser may restore scroll after first render)
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, [onScroll]);
