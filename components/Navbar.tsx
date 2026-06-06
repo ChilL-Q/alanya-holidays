@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useClickOutside } from '../hooks/useClickOutside';
+
+const MD_BREAKPOINT = 768;
 import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -39,15 +42,7 @@ export const Navbar: React.FC = () => {
     }
   }, [location.pathname]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(profileRef, () => setIsProfileOpen(false));
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -59,6 +54,19 @@ export const Navbar: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
+
+  // Reset mobile menu when viewport widens to desktop — prevents both menus open simultaneously
+  useEffect(() => {
+    const mql = window.matchMedia(`(min-width: ${MD_BREAKPOINT}px)`);
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    handleChange(mql);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
 
   return (
     <header
@@ -132,7 +140,7 @@ export const Navbar: React.FC = () => {
                     // Logic: Mobile -> Open MobileMenu. Desktop -> Open ProfileDropdown.
                     // If user is Auth on Desktop -> ProfileDropdown acting as user menu.
                     // If user is Guest on Desktop -> ProfileDropdown acting as Login/Register menu.
-                    if (window.innerWidth < 768) {
+                    if (window.innerWidth < MD_BREAKPOINT) {
                       setIsMobileMenuOpen(!isMobileMenuOpen);
                     } else {
                       setIsProfileOpen(!isProfileOpen);

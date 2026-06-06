@@ -99,14 +99,6 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({ isOpen, onClose, mod
                     </>
                 )}
 
-                {!isAuthenticated && (
-                    <div className="md:hidden">
-                        {/* Redundant if hidden md:block on container, but keeping structure */}
-                        <button onClick={() => { openLogin(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">{t('nav.login')}</button>
-                        <button onClick={() => { openRegister(); onClose(); }} className="w-full text-left px-3 py-2 text-sm font-bold text-teal-600 dark:text-cyan-400 ">{t('nav.signup')}</button>
-                    </div>
-                )}
-
                 {/* Mode switch, Language & Theme settings section */}
                 <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-2"></div>
                 <div className="px-3 py-2 space-y-3">

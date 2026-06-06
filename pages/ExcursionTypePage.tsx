@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
@@ -10,8 +10,8 @@ import { getExcursionType, EXCURSION_TYPES } from '../data/excursionTypes';
 import { Compass, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 const ExcursionTypePage: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
-    const excursionType = getExcursionType(slug || '');
+    const slug = useLocation().pathname.slice(1); // pathname is "/alanya-boat-tours" → "alanya-boat-tours"
+    const excursionType = getExcursionType(slug);
 
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [loading, setLoading] = useState(true);

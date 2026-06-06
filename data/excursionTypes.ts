@@ -149,7 +149,3 @@ export const EXCURSION_TYPES: ExcursionType[] = [
 export function getExcursionType(slug: string): ExcursionType | undefined {
   return EXCURSION_TYPES.find(et => et.slug === slug);
 }
-
-export function getAllExcursionTypeSlugs(): string[] {
-  return EXCURSION_TYPES.map(et => et.slug);
-}
