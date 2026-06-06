@@ -108,13 +108,8 @@ test.describe('Booking Flow', () => {
     });
     expect(cartLen).toBe(1);
 
-    // Navigate to checkout
+    // Navigate to checkout — use built-in Playwright retry so React has time to render
     await page.goto('/checkout');
-    // domcontentloaded is enough — avoids networkidle hang from unmocked requests
-    await page.waitForLoadState('domcontentloaded');
-
-    // Check body text contains our villa name
-    const text = await page.locator('body').innerText();
-    expect(text).toContain('Test Villa');
+    await expect(page.locator('body')).toContainText('Test Villa', { timeout: 15000 });
   });
 });
