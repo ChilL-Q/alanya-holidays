@@ -8,6 +8,7 @@ const SCHEMA_TYPE_MAP: Record<string, string> = {
     'spa-hamam':      'HealthAndBeautyBusiness',
     'hair-beauty':    'HealthAndBeautyBusiness',
     'tours':          'TouristAttraction',
+    'transport':      'TaxiService',
 };
 
 export function getSchemaType(categoryId: string): string {

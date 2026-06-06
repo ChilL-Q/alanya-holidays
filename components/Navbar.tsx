@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useClickOutside } from '../hooks/useClickOutside';
 import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
+
+const MD_BREAKPOINT = 768;
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -21,7 +24,7 @@ export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  useLanguage();
   useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,15 +42,7 @@ export const Navbar: React.FC = () => {
     }
   }, [location.pathname]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(profileRef, () => setIsProfileOpen(false));
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -59,6 +54,19 @@ export const Navbar: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
+
+  // Reset mobile menu when viewport widens to desktop — prevents both menus open simultaneously
+  useEffect(() => {
+    const mql = window.matchMedia(`(min-width: ${MD_BREAKPOINT}px)`);
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    handleChange(mql);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
 
   return (
     <header
@@ -89,7 +97,7 @@ export const Navbar: React.FC = () => {
                 <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
               </div>
               <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate hidden md:block">
-                Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
+                Alanya<span className="text-teal-600 dark:text-cyan-400">Holidays</span>
               </span>
             </Link>
           </div>
@@ -132,7 +140,7 @@ export const Navbar: React.FC = () => {
                     // Logic: Mobile -> Open MobileMenu. Desktop -> Open ProfileDropdown.
                     // If user is Auth on Desktop -> ProfileDropdown acting as user menu.
                     // If user is Guest on Desktop -> ProfileDropdown acting as Login/Register menu.
-                    if (window.innerWidth < 768) {
+                    if (window.innerWidth < MD_BREAKPOINT) {
                       setIsMobileMenuOpen(!isMobileMenuOpen);
                     } else {
                       setIsProfileOpen(!isProfileOpen);

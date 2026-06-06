@@ -5,6 +5,7 @@ import { Search, Home, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
+import { SEOHead } from '../components/seo/SEOHead';
 
 export const InboxPage: React.FC = () => {
     const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
@@ -50,6 +51,8 @@ export const InboxPage: React.FC = () => {
         });
 
     return (
+        <>
+        <SEOHead title="Messages | Alanya Holidays" noIndex />
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-6">Messages</h1>
 
@@ -158,5 +161,6 @@ export const InboxPage: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };

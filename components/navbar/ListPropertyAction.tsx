@@ -1,11 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { Home, Plus, Car, Briefcase } from 'lucide-react';
+import React, { useState } from 'react';
+import { Home, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { db } from '../../api-services';
-import { useClickOutside } from '../../hooks/useClickOutside';
 import { BecomeHostModal } from '../modals/BecomeHostModal';
 
 export const ListPropertyAction: React.FC = () => {

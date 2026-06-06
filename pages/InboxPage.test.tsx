@@ -20,6 +20,7 @@ vi.mock('react-router-dom', async () => {
     return {
         ...actual,
         useSearchParams: () => [mockSearchParams],
+        useLocation: () => ({ pathname: '/inbox', search: '', hash: '', state: null }),
         Navigate: () => <div>Redirected</div>
     };
 });

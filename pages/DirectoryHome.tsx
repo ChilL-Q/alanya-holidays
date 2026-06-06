@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star, Home, Car } from 'lucide-react';
-import { useClickOutside } from '../hooks/useClickOutside';
+import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -87,7 +86,39 @@ export const DirectoryHome: React.FC = () => {
                 title={t('dir.hero.page_title')}
                 description={t('dir.hero.meta_desc')}
                 type="website"
-                keywords={['Alanya holidays', 'vacation rentals', ' Turkey', 'medical tourism', 'hotels', 'villas']}
+                keywords={['Alanya holidays', 'vacation rentals', 'Turkey', 'medical tourism', 'hotels', 'villas']}
+                jsonLd={[
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'TravelAgency',
+                        name: 'Alanya Holidays',
+                        url: 'https://alanya-holidays.com',
+                        logo: 'https://alanya-holidays.com/logo.png',
+                        description: 'Premium vacation rentals, tours, and services in Alanya, Turkey',
+                        address: {
+                            '@type': 'PostalAddress',
+                            addressLocality: 'Alanya',
+                            addressRegion: 'Antalya',
+                            addressCountry: 'TR'
+                        },
+                        contactPoint: {
+                            '@type': 'ContactPoint',
+                            contactType: 'customer support',
+                            url: 'https://alanya-holidays.com/contact'
+                        }
+                    },
+                    {
+                        '@context': 'https://schema.org',
+                        '@type': 'WebSite',
+                        name: 'Alanya Holidays',
+                        url: 'https://alanya-holidays.com',
+                        potentialAction: {
+                            '@type': 'SearchAction',
+                            target: 'https://alanya-holidays.com/search?q={search_term_string}',
+                            'query-input': 'required name=search_term_string'
+                        }
+                    }
+                ]}
             />
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">
@@ -201,11 +232,17 @@ export const DirectoryHome: React.FC = () => {
                         </button>
 
                         <Link
-                            to="/add-listing"
+                            to="/list-property"
                             className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
                         >
                             <Briefcase className="w-5 h-5" />
                             {t('dir.cta.list')}
+                        </Link>
+                        <Link
+                            to="/add-listing"
+                            className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white/5 dark:bg-slate-800/50 hover:bg-white/15 dark:hover:bg-slate-700/60 backdrop-blur-md border border-white/20 dark:border-slate-700/40 text-white/80 rounded-xl sm:rounded-full text-sm font-medium transition-all cursor-pointer"
+                        >
+                            {t('nav.list_directory') || 'List Business'}
                         </Link>
                     </div>
 

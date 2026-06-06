@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useLocation, Navigate } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp, Map as MapIcon, List } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -11,11 +11,12 @@ import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
-import { CATEGORY_PATHS } from '../constants/categoryPaths';
+import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
     const categoryId = propCategoryId || params.categoryId;
+    const { pathname } = useLocation();
 
     const intro = categoryId ? directoryCategoryIntros[categoryId] : null;
 
@@ -46,7 +47,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     // Data State
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [locations, setLocations] = useState<string[]>([]);
-    const [_loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     // Auth & Voting State
     const { isAuthenticated, user } = useAuth();
@@ -204,7 +205,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             "@type": "ListItem",
             "position": index + 1,
             "item": {
-                "@type": categoryId === 'accommodations' ? "LodgingBusiness" : categoryId === 'restaurants' ? "Restaurant" : "LocalBusiness",
+                "@type": getSchemaType(categoryId),
                 "name": item.name,
                 "url": item.slug
                         ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
@@ -213,6 +214,28 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             }
         }))
     };
+
+    const transportSchema = pathname === '/airport-transfer' ? {
+        '@context': 'https://schema.org',
+        '@type': 'TaxiService',
+        name: 'Alanya Airport Transfer & Taxi Service',
+        description,
+        url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
+        address: {
+            '@type': 'PostalAddress',
+            addressLocality: 'Alanya',
+            addressRegion: 'Antalya',
+            addressCountry: 'TR',
+        },
+        areaServed: {
+            '@type': 'City',
+            name: 'Alanya',
+        },
+    } : null;
+
+    const schemas: object[] = [itemListSchema];
+    if (transportSchema) schemas.push(transportSchema);
+    if (faqSchema) schemas.push(faqSchema);
 
     const featuredListings = filteredData.filter(item => item.is_featured);
     const standardListings = filteredData.filter(item => !item.is_featured);
@@ -223,7 +246,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                 title={`${title} - Alanya Holidays`}
                 description={description}
                 keywords={keywords}
-                jsonLd={faqSchema ? [itemListSchema, faqSchema] : itemListSchema}
+                jsonLd={schemas}
             />
 
             {/* Breadcrumb */}
@@ -390,6 +413,14 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
 
                 {viewMode === 'list' ? (
                     <>
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="animate-pulse bg-white dark:bg-slate-800/80 rounded-2xl h-80 border border-slate-200 dark:border-slate-800/50" />
+                                ))}
+                            </div>
+                        ) : (
+                        <>
                         {/* 3. Featured Listings (Monetization Zone) */}
                         {featuredListings.length > 0 && (
                             <div className="mb-12">
@@ -440,6 +471,8 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                 </div>
                             )}
                         </div>
+                        </>
+                        )}
                     </>
                 ) : (
                     <DirectoryMapView
