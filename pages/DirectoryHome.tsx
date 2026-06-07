@@ -232,17 +232,11 @@ export const DirectoryHome: React.FC = () => {
                         </button>
 
                         <Link
-                            to="/list-property"
+                            to="/add-listing"
                             className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
                         >
                             <Briefcase className="w-5 h-5" />
                             {t('dir.cta.list')}
-                        </Link>
-                        <Link
-                            to="/add-listing"
-                            className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white/5 dark:bg-slate-800/50 hover:bg-white/15 dark:hover:bg-slate-700/60 backdrop-blur-md border border-white/20 dark:border-slate-700/40 text-white/80 rounded-xl sm:rounded-full text-sm font-medium transition-all cursor-pointer"
-                        >
-                            {t('nav.list_directory') || 'List Business'}
                         </Link>
                     </div>
 
