@@ -31,6 +31,7 @@ export const HostBookingToolbar: React.FC<HostBookingToolbarProps> = ({
             <div className="relative w-full md:w-96">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
+                    name="search"
                     type="text"
                     placeholder="Search guests, properties, or ID..."
                     value={searchTerm}

@@ -20,7 +20,7 @@ export const CreativeServices: React.FC = () => {
         subtitle: string;
         heroImage: string;
         features: string[];
-        icon: any;
+        icon: React.ElementType;
     }> = {
         photographer: {
             title: t('services.creative.photo'),

@@ -89,7 +89,7 @@ export const HostEditServicePage: React.FC = () => {
             }
             const finalImages = [...existingImages, ...uploadedUrls];
 
-            let features: any = {};
+            let features: Record<string, unknown> = {};
             if (category === 'transportation') {
                 features = {
                     vehicleType: formData.vehicleType, brand: formData.brand, model: formData.model,

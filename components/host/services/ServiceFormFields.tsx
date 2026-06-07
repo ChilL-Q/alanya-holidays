@@ -68,6 +68,7 @@ export const TransportationFields: React.FC<ComponentProps> = ({ formData, handl
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Brand</label>
                     {formData.modelSelection === 'popular' ? (
                         <select
+                            name="brand"
                             value={formData.brand}
                             onChange={handleBrandSelect}
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 focus:ring-2 focus:ring-teal-500 outline-none dark:text-white"
@@ -85,6 +86,7 @@ export const TransportationFields: React.FC<ComponentProps> = ({ formData, handl
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Model</label>
                     {formData.modelSelection === 'popular' ? (
                         <select
+                            name="model"
                             value={formData.model}
                             onChange={handleModelSelect}
                             disabled={!formData.brand}
@@ -243,6 +245,7 @@ export const AdventureFields: React.FC<ComponentProps> = ({ formData, handleChan
                         <div key={index} className="flex gap-3 items-start">
                             <div className="w-24">
                                 <input
+                                    name={`itinerary-time-${index}`}
                                     placeholder="09:00"
                                     value={item.time}
                                     onChange={(e) => updateItineraryItem(index, 'time', e.target.value)}
@@ -251,6 +254,7 @@ export const AdventureFields: React.FC<ComponentProps> = ({ formData, handleChan
                             </div>
                             <div className="flex-grow">
                                 <input
+                                    name={`itinerary-desc-${index}`}
                                     placeholder="Activity description (e.g. Hotel Pickup)"
                                     value={item.description}
                                     onChange={(e) => updateItineraryItem(index, 'description', e.target.value)}

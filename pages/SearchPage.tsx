@@ -113,9 +113,9 @@ export const SearchPage: React.FC = () => {
                     l.id === listingId ? { ...l, net_votes: result.netVotes } : l
                 ));
             }
-        } catch (e: any) {
-            console.error('Failed to vote:', e);
-            toast.error(e.message || 'Failed to vote');
+        } catch (error: unknown) {
+            console.error('Failed to vote:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to vote');
         } finally {
             setVotingId(null);
         }
@@ -232,6 +232,7 @@ export const SearchPage: React.FC = () => {
                     <div className="flex overflow-x-auto pb-2 md:pb-0 md:flex-wrap items-center gap-4 w-full xl:w-auto scrollbar-hide">
                         <div className="relative shrink-0">
                             <select
+                                name="filter-location"
                                 value={locationFilter}
                                 onChange={(e) => setLocationFilter(e.target.value)}
                                 className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -247,6 +248,7 @@ export const SearchPage: React.FC = () => {
                         {availableLanguages.length > 0 && (
                             <div className="relative shrink-0">
                                 <select
+                                    name="filter-language"
                                     value={languageFilter}
                                     onChange={(e) => setLanguageFilter(e.target.value)}
                                     className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -262,6 +264,7 @@ export const SearchPage: React.FC = () => {
 
                         <div className="relative shrink-0">
                             <select
+                                name="filter-min-rating"
                                 value={minRating}
                                 onChange={(e) => setMinRating(Number(e.target.value))}
                                 className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -275,6 +278,7 @@ export const SearchPage: React.FC = () => {
 
                         <div className="relative shrink-0">
                             <select
+                                name="filter-price-level"
                                 value={maxPriceLevel}
                                 onChange={(e) => setMaxPriceLevel(Number(e.target.value))}
                                 className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -289,6 +293,7 @@ export const SearchPage: React.FC = () => {
 
                         <div className="relative shrink-0">
                             <select
+                                name="filter-sort"
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
                                 className="pl-4 pr-10 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"

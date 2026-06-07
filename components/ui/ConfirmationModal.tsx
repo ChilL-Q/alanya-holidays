@@ -85,6 +85,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                                 Reason
                             </label>
                             <textarea
+                                name="reason"
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
                                 onKeyDown={(e) => {

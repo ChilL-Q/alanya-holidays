@@ -109,7 +109,6 @@ const ContactForm: React.FC = () => {
         e.preventDefault();
         setStatus('loading');
         try {
-            // @ts-ignore - sendMessage in misc.ts definitely takes 1 arg
             await messagesService.sendMessage(formData);
             setStatus('success');
             setFormData({ name: '', email: '', subject: '', message: '' });
@@ -143,6 +142,7 @@ const ContactForm: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
                     <input
+                        name="name"
                         required
                         readOnly={!!user}
                         className={`w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/50 outline-none transition-all ${user
@@ -157,6 +157,7 @@ const ContactForm: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email</label>
                     <input
+                        name="email"
                         required
                         type="email"
                         readOnly={!!user}
@@ -173,6 +174,7 @@ const ContactForm: React.FC = () => {
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject</label>
                 <input
+                    name="subject"
                     required
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                     value={formData.subject}
@@ -183,6 +185,7 @@ const ContactForm: React.FC = () => {
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Message</label>
                 <textarea
+                    name="message"
                     required
                     rows={4}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"

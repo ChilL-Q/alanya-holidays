@@ -101,6 +101,7 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                         <div className="p-3 border-r border-slate-200 dark:border-slate-800/50">
                             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkin')}</label>
                             <DatePickerWrapper
+                                name="check-in-date"
                                 selected={checkIn}
                                 onChange={setCheckIn}
                                 selectsStart
@@ -116,6 +117,7 @@ export const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
                         <div className="p-3">
                             <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">{t('prop.checkout')}</label>
                             <DatePickerWrapper
+                                name="check-out-date"
                                 selected={checkOut}
                                 onChange={setCheckOut}
                                 selectsEnd

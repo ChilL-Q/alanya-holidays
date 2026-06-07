@@ -132,6 +132,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                 <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                     <input
+                        name="search"
                         type="text"
                         placeholder="Search services..."
                         value={searchTerm}
@@ -142,6 +143,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
                 <div className="flex items-center gap-2">
                     <Filter className="text-slate-400" size={20} />
                     <select
+                        name="filter-type"
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
                         className="bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg py-2 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500 dark:text-white capitalize"

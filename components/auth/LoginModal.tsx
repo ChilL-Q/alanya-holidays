@@ -152,6 +152,8 @@ export const LoginModal: React.FC = () => {
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
                                     id="login-email"
+                                    name="email"
+                                    autoComplete="email"
                                     type="email"
                                     required
                                     value={email}
@@ -176,6 +178,8 @@ export const LoginModal: React.FC = () => {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
                                     id="login-password"
+                                    name="password"
+                                    autoComplete="current-password"
                                     type="password"
                                     required
                                     value={password}
@@ -220,6 +224,7 @@ export const LoginModal: React.FC = () => {
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
                                     id="recovery-email"
+                                    name="email"
                                     type="email"
                                     required
                                     value={email}
@@ -251,6 +256,7 @@ export const LoginModal: React.FC = () => {
                             <label htmlFor="otp-input" className="sr-only">One Time Password</label>
                             <input
                                 id="otp-input"
+                                name="otp"
                                 type="text"
                                 maxLength={8}
                                 required

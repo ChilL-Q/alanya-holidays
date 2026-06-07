@@ -103,6 +103,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
                 </div>
                 {analytics.length > 1 && (
                     <select
+                        name="filter-listing"
                         value={selectedIndex}
                         onChange={e => setSelectedIndex(Number(e.target.value))}
                         className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"

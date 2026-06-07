@@ -52,6 +52,7 @@ export const ForumSubmitPage: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title *</label>
                     <input
+                        name="forum-title"
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -66,6 +67,7 @@ export const ForumSubmitPage: React.FC = () => {
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
                         <select
+                            name="filter-category"
                             value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
@@ -80,6 +82,7 @@ export const ForumSubmitPage: React.FC = () => {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Body *</label>
                     <textarea
+                        name="forum-body"
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
                         required

@@ -42,12 +42,12 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
                 if (payload.eventType === 'INSERT') {
                     const newNotification = payload.new as Notification;
                     setNotifications(prev => {
-                        // Prevent duplicates
                         if (prev.some(n => n.id === newNotification.id)) return prev;
                         return [newNotification, ...prev];
                     });
                     setLastNotification(newNotification);
-                    // Optional: Play a sound or show a toast
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+                    audio.play().catch(e => console.error('Error playing notification sound:', e));
                 }
             });
 
@@ -71,22 +71,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
         if (!user) return;
         try {
-            const newNotification: Notification = {
-                ...notification,
-                id: Math.random().toString(36).substr(2, 9),
-                user_id: user.id, // For demo, assuming self-notification or logic handles user_id
-                read: false,
-                created_at: new Date().toISOString()
-            };
-
-            setNotifications(prev => [newNotification, ...prev]);
-            setLastNotification(newNotification);
-
-            // Play notification sound
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-            audio.play().catch(e => console.error('Error playing sound:', e));
-
-            await db.addNotification(newNotification);
+            await db.addNotification({ ...notification, user_id: user.id });
         } catch (error) {
             console.error('Failed to add notification:', error);
         }

@@ -176,6 +176,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ listingId, onSubmit }) =
                 </label>
                 <textarea
                     id="review-comment"
+                    name="review-comment"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder="Share your experience with this listing... (minimum 10 characters)"

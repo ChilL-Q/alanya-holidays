@@ -34,12 +34,15 @@ export const ProfileSettingsTab: React.FC<ProfileSettingsTabProps> = ({
             <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        <label htmlFor="profile-name" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                             {t('auth.name')}
                         </label>
                         <div className="relative">
                             <input
+                                id="profile-name"
+                                name="name"
                                 type="text"
+                                autoComplete="name"
                                 value={profileForm.name}
                                 onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all dark:text-white"
@@ -49,12 +52,15 @@ export const ProfileSettingsTab: React.FC<ProfileSettingsTabProps> = ({
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        <label htmlFor="profile-phone" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                             {t('profile.phone')}
                         </label>
                         <div className="relative">
                             <input
+                                id="profile-phone"
+                                name="phone"
                                 type="tel"
+                                autoComplete="tel"
                                 value={profileForm.phone}
                                 onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                                 placeholder="+90..."
@@ -67,12 +73,15 @@ export const ProfileSettingsTab: React.FC<ProfileSettingsTabProps> = ({
 
                 {isHostOrAdmin && (
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        <label htmlFor="profile-company" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                             {t('profile.company_name')}
                         </label>
                         <div className="relative">
                             <input
+                                id="profile-company"
+                                name="companyName"
                                 type="text"
+                                autoComplete="organization"
                                 value={profileForm.companyName}
                                 onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
                                 placeholder="Alanya Holidays Ltd."
@@ -89,12 +98,15 @@ export const ProfileSettingsTab: React.FC<ProfileSettingsTabProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {socialFields.map(({ key, label, placeholder, icon: Icon }) => (
                             <div key={key}>
-                                <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">
+                                <label htmlFor={`profile-social-${key}`} className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">
                                     {label}
                                 </label>
                                 <div className="relative">
                                     <input
+                                        id={`profile-social-${key}`}
+                                        name={key}
                                         type="url"
+                                        autoComplete="url"
                                         value={profileForm.socialLinks[key] || ''}
                                         onChange={(e) => setProfileForm({
                                             ...profileForm,

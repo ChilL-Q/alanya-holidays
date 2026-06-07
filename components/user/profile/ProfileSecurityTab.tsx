@@ -43,9 +43,12 @@ export const ProfileSecurityTab: React.FC<ProfileSecurityTabProps> = ({
 
                 <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_password')}</label>
+                        <label htmlFor="new-password" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_password')}</label>
                         <input
+                            id="new-password"
+                            name="new-password"
                             type="password"
+                            autoComplete="new-password"
                             value={passwordForm.newPassword}
                             onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
@@ -54,9 +57,12 @@ export const ProfileSecurityTab: React.FC<ProfileSecurityTabProps> = ({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.confirm_password')}</label>
+                        <label htmlFor="confirm-password" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.confirm_password')}</label>
                         <input
+                            id="confirm-password"
+                            name="confirm-password"
                             type="password"
+                            autoComplete="new-password"
                             value={passwordForm.confirmPassword}
                             onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
@@ -97,18 +103,24 @@ export const ProfileSecurityTab: React.FC<ProfileSecurityTabProps> = ({
 
                 <form onSubmit={handleChangeEmail} className="space-y-4 max-w-md">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.current_email')}</label>
+                        <label htmlFor="current-email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.current_email')}</label>
                         <input
+                            id="current-email"
+                            name="current-email"
                             type="email"
+                            autoComplete="email"
                             value={userEmail}
                             disabled
                             className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-500 cursor-not-allowed"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_email')}</label>
+                        <label htmlFor="new-email" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('profile.new_email')}</label>
                         <input
+                            id="new-email"
+                            name="new-email"
                             type="email"
+                            autoComplete="email"
                             value={emailForm.email}
                             onChange={(e) => setEmailForm({ ...emailForm, email: e.target.value })}
                             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"

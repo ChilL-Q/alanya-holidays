@@ -173,6 +173,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                                 // Inline edit mode
                                 <div className="flex-1 grid grid-cols-4 gap-2">
                                     <input
+                                        name="variant-size"
                                         type="text"
                                         value={editForm.size_label}
                                         onChange={e => setEditForm(prev => ({ ...prev, size_label: e.target.value }))}
@@ -180,6 +181,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                                         className="px-2 py-1.5 text-sm rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                                     />
                                     <input
+                                        name="variant-price"
                                         type="number"
                                         value={editForm.price}
                                         onChange={e => setEditForm(prev => ({ ...prev, price: e.target.value }))}
@@ -189,6 +191,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                                         className="px-2 py-1.5 text-sm rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                                     />
                                     <input
+                                        name="variant-stock"
                                         type="number"
                                         value={editForm.stock}
                                         onChange={e => setEditForm(prev => ({ ...prev, stock: e.target.value }))}
@@ -197,6 +200,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                                         className="px-2 py-1.5 text-sm rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                                     />
                                     <input
+                                        name="variant-sku"
                                         type="text"
                                         value={editForm.sku}
                                         onChange={e => setEditForm(prev => ({ ...prev, sku: e.target.value }))}
@@ -265,6 +269,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                 <div className="mb-4 p-4 rounded-lg border-2 border-dashed border-teal-200 dark:border-cyan-700/50 bg-teal-50/50 dark:bg-cyan-900/10">
                     <div className="grid grid-cols-4 gap-2 mb-3">
                         <input
+                            name="new-variant-size"
                             type="text"
                             value={newForm.size_label}
                             onChange={e => setNewForm(prev => ({ ...prev, size_label: e.target.value }))}
@@ -272,6 +277,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                             className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         />
                         <input
+                            name="new-variant-price"
                             type="number"
                             value={newForm.price}
                             onChange={e => setNewForm(prev => ({ ...prev, price: e.target.value }))}
@@ -281,6 +287,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                             className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         />
                         <input
+                            name="new-variant-stock"
                             type="number"
                             value={newForm.stock}
                             onChange={e => setNewForm(prev => ({ ...prev, stock: e.target.value }))}
@@ -289,6 +296,7 @@ export const ProductVariantsForm: React.FC<ProductVariantsFormProps> = ({ produc
                             className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         />
                         <input
+                            name="new-variant-sku"
                             type="text"
                             value={newForm.sku}
                             onChange={e => setNewForm(prev => ({ ...prev, sku: e.target.value }))}

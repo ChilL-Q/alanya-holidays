@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLanguage } from '../../../context/LanguageContext';
+import { ServiceData } from '../../../api-services';
 
 interface PropertyCrossSellProps {
-    services: any[];
+    services: ServiceData[];
     onNavigate: (id: string) => void;
     displayPrice: (amount: number) => string;
 }
@@ -47,7 +48,7 @@ export const PropertyCrossSell: React.FC<PropertyCrossSellProps> = ({ services, 
                                 </div>
 
                                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                                    <span className="flex-1 truncate">{service.duration || 'Flexible duration'}</span>
+                                    <span className="flex-1 truncate">{service.features?.duration || 'Flexible duration'}</span>
                                 </div>
 
                                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between mt-auto">

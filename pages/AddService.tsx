@@ -100,7 +100,7 @@ export const AddService: React.FC = () => {
             }
 
             // Construct features object based on category
-            let features: any = {};
+            let features: Record<string, unknown> = {};
 
             if (category === 'transportation') {
                 features = {

@@ -137,9 +137,9 @@ export const Profile: React.FC = () => {
             await db.updateUserProfile(user.id, { avatar_url: publicUrl });
             await updateUser({ avatar: publicUrl });
             toast.success(t('auth.avatar_success'), { id: toastId });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Avatar upload error:', error);
-            toast.error(error.message || t('auth.avatar_error'), { id: toastId });
+            toast.error(error instanceof Error ? error.message : t('auth.avatar_error'), { id: toastId });
         } finally {
             setUploading(false);
         }
@@ -162,8 +162,8 @@ export const Profile: React.FC = () => {
                 company_name: profileForm.companyName
             });
             toast.success(t('profile.save_success') || 'Profile updated successfully');
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update profile');
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to update profile');
         } finally {
             setSavingProfile(false);
         }
@@ -179,12 +179,11 @@ export const Profile: React.FC = () => {
                 iban: payoutForm.iban,
                 bank_name: payoutForm.bankName,
                 bank_account_holder_name: payoutForm.bankAccountHolderName,
-                // @ts-ignore - added to DB but maybe not all types yet
                 crypto_wallet: payoutForm.cryptoWallet
             });
             toast.success('Payout details updated successfully');
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update payout details');
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to update payout details');
         } finally {
             setSavingPayout(false);
         }
@@ -208,9 +207,9 @@ export const Profile: React.FC = () => {
             toast.success(t('profile.cancel_success'), { id: toastId });
             // Refresh bookings locally
             setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Cancellation error:', error);
-            toast.error(error.message || t('profile.cancel_error'), { id: toastId });
+            toast.error(error instanceof Error ? error.message : t('profile.cancel_error'), { id: toastId });
         }
     };
 
@@ -222,8 +221,8 @@ export const Profile: React.FC = () => {
         try {
             await updateEmail(emailForm.email);
             toast.success(t('profile.email_verify_sent'));
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update email');
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to update email');
         } finally {
             setChangingEmail(false);
         }
@@ -241,8 +240,8 @@ export const Profile: React.FC = () => {
             await updatePassword(passwordForm.newPassword);
             toast.success(t('auth.password_success'));
             setPasswordForm({ newPassword: '', confirmPassword: '' });
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update password');
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to update password');
         } finally {
             setChangingPassword(false);
         }
@@ -260,7 +259,7 @@ export const Profile: React.FC = () => {
             setIsHostModalOpen(false);
             // A5-M2: re-fetch profile from DB so role change is confirmed via server state
             await refreshUser();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error upgrading to host:', error);
             toast.error('Failed to update role');
         } finally {

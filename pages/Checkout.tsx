@@ -132,9 +132,9 @@ export const Checkout: React.FC = () => {
                 navigate('/profile');
             }, 3000);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Booking error:", error);
-            toast.error(error.message || "Payment failed. Please try again.");
+            toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
         } finally {
             setIsProcessing(false);
         }

@@ -158,6 +158,7 @@ export const DirectoryHome: React.FC = () => {
                             <div className="flex-[1.5] relative flex items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800/50">
                                 <Search className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
                                 <input
+                                    name="search"
                                     type="text"
                                     placeholder={t('dir.search.placeholder')}
                                     value={searchQuery}
@@ -172,6 +173,7 @@ export const DirectoryHome: React.FC = () => {
                             <div className="flex-1 relative flex items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800/50">
                                 <Grid className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
                                 <select
+                                    name="filter-category"
                                     value={selectedCategory}
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                     className="w-full pl-12 pr-4 py-4 md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer truncate"
@@ -189,6 +191,7 @@ export const DirectoryHome: React.FC = () => {
                             <div className="flex-1 relative flex items-center mb-2 md:mb-0">
                                 <MapPin className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
                                 <select
+                                    name="filter-location"
                                     value={location}
                                     onChange={(e) => setLocation(e.target.value)}
                                     className="w-full pl-12 pr-4 py-4 rounded-b-xl md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer truncate"

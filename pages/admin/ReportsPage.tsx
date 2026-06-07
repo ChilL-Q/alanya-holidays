@@ -44,8 +44,7 @@ export const ReportsPage: React.FC = () => {
             setReports(data || []);
         } catch (error) {
             console.error('Error fetching reports:', error);
-            // @ts-ignore
-            if (error?.message) console.error('Error details:', error.message);
+            if (error instanceof Error) console.error('Error details:', error.message);
             toast.error('Failed to load reports');
         } finally {
             setLoading(false);

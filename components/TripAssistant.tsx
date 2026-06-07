@@ -158,6 +158,7 @@ export const TripAssistant: React.FC = () => {
       {/* Input */}
       <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 flex gap-2 shrink-0">
         <input
+          name="query"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
