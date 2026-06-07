@@ -134,7 +134,10 @@ export const Checkout: React.FC = () => {
 
         } catch (error: unknown) {
             console.error("Booking error:", error);
-            toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
+            const message = error instanceof Error
+                ? error.message
+                : (error as { message?: string })?.message ?? "Payment failed. Please try again.";
+            toast.error(message);
         } finally {
             setIsProcessing(false);
         }
