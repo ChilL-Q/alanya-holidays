@@ -13,7 +13,10 @@ VALUES (
     10485760,
     ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 )
-ON CONFLICT (id) DO UPDATE SET public = true;
+ON CONFLICT (id) DO UPDATE SET
+    public = true,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 -- Drop the owner-only SELECT policy on properties — redundant now that the bucket
 -- is public (Supabase bypasses RLS for /object/public/ URLs on public buckets).
@@ -39,6 +42,28 @@ CREATE POLICY "avatars_delete_owner" ON storage.objects
 -- RLS for avatars bucket: admins can delete any avatar.
 CREATE POLICY "avatars_delete_admin" ON storage.objects
   FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = (SELECT auth.uid())
+        AND profiles.role = 'admin'
+    )
+  );
+
+-- RLS for avatars bucket: owners can select (list/download) their own files.
+-- Required for authenticated storage API calls (.list(), .download(), signed URLs).
+-- Public CDN URLs bypass RLS via /object/public/ — this covers the authenticated endpoint.
+CREATE POLICY "avatars_select_owner" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
+  );
+
+-- RLS for avatars bucket: admins can select any avatar.
+CREATE POLICY "avatars_select_admin" ON storage.objects
+  FOR SELECT TO authenticated
   USING (
     bucket_id = 'avatars'
     AND EXISTS (
