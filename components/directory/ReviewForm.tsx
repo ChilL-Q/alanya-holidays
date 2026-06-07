@@ -139,10 +139,10 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ listingId, onSubmit }) =
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            <fieldset className="border-0 p-0 m-0">
+                <legend className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Your Rating
-                </label>
+                </legend>
                 <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -168,7 +168,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ listingId, onSubmit }) =
                         {rating > 0 ? `${rating} out of 5` : 'Select a rating'}
                     </span>
                 </div>
-            </div>
+            </fieldset>
 
             <div>
                 <label htmlFor="review-comment" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">

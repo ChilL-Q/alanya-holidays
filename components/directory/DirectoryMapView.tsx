@@ -434,9 +434,10 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
 
                         {/* Min Rating */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Min Rating</label>
+                            <label htmlFor="filter-min-rating" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Min Rating</label>
                             <div className="relative">
                                 <select
+                                    id="filter-min-rating"
                                     name="filter-min-rating"
                                     value={filters.minRating}
                                     onChange={(e) => filterActions.setMinRating(Number(e.target.value))}
