@@ -181,9 +181,9 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
             }
 
             setModalConfig({ ...modalConfig, isOpen: false });
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            toast.error(`Failed to ${type.replace('bulk_', '')} service: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to ${type.replace('bulk_', '')} service: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 

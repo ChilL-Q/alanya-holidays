@@ -84,8 +84,8 @@ export const AdminAddBlogPostPage: React.FC = () => {
                 try {
                     uploadedUrls = await db.uploadBlogMediaBatch(mediaFiles);
                     toast.success('Images uploaded', { id: toastId });
-                } catch (err: any) {
-                    toast.error(err.message || 'Failed to upload images', { id: toastId });
+                } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'Failed to upload images', { id: toastId });
                     return;
                 } finally {
                     setUploading(false);
@@ -104,8 +104,8 @@ export const AdminAddBlogPostPage: React.FC = () => {
 
             toast.success('Blog post published successfully!', { id: toastId });
             navigate('/admin/blog-submissions');
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to publish post');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to publish post');
         } finally {
             setSubmitting(false);
         }
@@ -134,6 +134,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         Article Title <span className="text-red-500">*</span>
                     </label>
                     <input
+                        name="blog-title"
                         type="text"
                         value={title}
                         onChange={e => setTitle(e.target.value)}
@@ -149,6 +150,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         Article Content <span className="text-red-500">*</span>
                     </label>
                     <textarea
+                        name="blog-content"
                         value={content}
                         onChange={e => setContent(e.target.value)}
                         placeholder="Write the full content here..."
@@ -216,6 +218,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         <Video size={15} /> Video URL <span className="text-slate-400 font-normal">(optional)</span>
                     </label>
                     <input
+                        name="video-url"
                         type="url"
                         value={videoUrl}
                         onChange={e => setVideoUrl(e.target.value)}

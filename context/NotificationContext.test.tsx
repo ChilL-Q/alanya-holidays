@@ -323,7 +323,6 @@ describe('NotificationContext', () => {
     describe('addNotification', () => {
         it('should add notification successfully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockAudioPlay.mockResolvedValue(undefined);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -341,13 +340,20 @@ describe('NotificationContext', () => {
                 });
             });
 
+            expect(db.addNotification).toHaveBeenCalled();
+
+            // State updates via realtime INSERT, not optimistically
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', title: 'New Alert', type: 'warning', link: '/alerts' }) });
+            });
+
             await waitFor(() => {
                 expect(result.current.notifications).toHaveLength(1);
             });
-            
+
             expect(result.current.notifications[0].title).toBe('New Alert');
             expect(result.current.lastNotification?.title).toBe('New Alert');
-            expect(db.addNotification).toHaveBeenCalled();
         });
 
         it('should play notification sound when adding', async () => {
@@ -359,20 +365,19 @@ describe('NotificationContext', () => {
                 expect(db.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Sound plays via realtime INSERT, not directly in addNotification
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1' }) });
             });
 
             await waitFor(() => {
-                expect(window.Audio).toHaveBeenCalledWith(
-                    'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'
-                );
+                expect(result.current.notifications).toHaveLength(1);
             });
+
+            expect(window.Audio).toHaveBeenCalledWith(
+                'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'
+            );
             expect(mockAudioPlay).toHaveBeenCalled();
         });
 
@@ -386,21 +391,18 @@ describe('NotificationContext', () => {
                 expect(db.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Sound error happens via realtime INSERT handler
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1' }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications).toHaveLength(1);
             });
-            
+
             expect(console.error).toHaveBeenCalledWith(
-                'Error playing sound:',
+                'Error playing notification sound:',
                 expect.any(Error)
             );
         });
@@ -442,10 +444,8 @@ describe('NotificationContext', () => {
                 });
             });
 
-            await waitFor(() => {
-                expect(result.current.notifications).toHaveLength(1);
-            });
-            
+            // No optimistic update — state stays empty on error
+            expect(result.current.notifications).toHaveLength(0);
             expect(console.error).toHaveBeenCalledWith(
                 'Failed to add notification:',
                 expect.any(Error)
@@ -461,26 +461,23 @@ describe('NotificationContext', () => {
                 expect(db.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // ID is assigned by DB and arrives via realtime INSERT
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-assigned-uuid' }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications[0]).toBeDefined();
             });
-            
-            expect(result.current.notifications[0].id).toBeDefined();
+
+            expect(result.current.notifications[0].id).toBe('db-assigned-uuid');
             expect(typeof result.current.notifications[0].id).toBe('string');
         });
 
         it('should set correct timestamp for new notification', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            const beforeAdd = new Date().getTime();
+            const fixedTimestamp = '2026-06-07T12:00:00.000Z';
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -488,24 +485,17 @@ describe('NotificationContext', () => {
                 expect(db.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Timestamp is assigned by DB and arrives via realtime INSERT
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', created_at: fixedTimestamp }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications[0]).toBeDefined();
             });
-            
-            const afterAdd = new Date().getTime();
-            const notificationTime = new Date(result.current.notifications[0].created_at!).getTime();
 
-            expect(notificationTime).toBeGreaterThanOrEqual(beforeAdd);
-            expect(notificationTime).toBeLessThanOrEqual(afterAdd);
+            expect(result.current.notifications[0].created_at).toBe(fixedTimestamp);
         });
     });
 
@@ -634,13 +624,10 @@ describe('NotificationContext', () => {
 
             expect(result.current.unreadCount).toBe(0);
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Count updates via realtime INSERT, not directly from addNotification
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', read: false }) });
             });
 
             await waitFor(() => {

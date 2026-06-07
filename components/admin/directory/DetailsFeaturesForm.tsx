@@ -25,6 +25,7 @@ export const DetailsFeaturesForm: React.FC<DetailsFeaturesFormProps> = ({
                         {languages.map((lang, idx) => (
                             <div key={idx} className="flex gap-2">
                                 <input
+                                    name={`language-${idx}`}
                                     type="text"
                                     value={lang}
                                     onChange={(e) => onArrayChange(idx, e.target.value, 'language')}
@@ -49,6 +50,7 @@ export const DetailsFeaturesForm: React.FC<DetailsFeaturesFormProps> = ({
                         {certifications.map((cert, idx) => (
                             <div key={idx} className="flex gap-2">
                                 <input
+                                    name={`certification-${idx}`}
                                     type="text"
                                     value={cert}
                                     onChange={(e) => onArrayChange(idx, e.target.value, 'certification')}

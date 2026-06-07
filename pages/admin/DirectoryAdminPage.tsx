@@ -66,8 +66,8 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             await db.approveDirectoryListing(id);
             toast.success('Listing approved and published');
             await loadListings();
-        } catch (e: any) {
-            toast.error(`Failed to approve: ${e.message}`);
+        } catch (e: unknown) {
+            toast.error(`Failed to approve: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 
@@ -81,8 +81,8 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             toast.success('Listing rejected');
             setRejectState(null);
             await loadListings();
-        } catch (e: any) {
-            toast.error(`Failed to reject: ${e.message}`);
+        } catch (e: unknown) {
+            toast.error(`Failed to reject: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 
@@ -105,9 +105,9 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                 await db.deleteDirectoryListing(itemId);
             }
             await loadListings();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            toast.error(`Failed to delete listing: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to delete listing: ${e instanceof Error ? e.message : 'Unknown error'}`);
         } finally {
             setModalConfig({ ...modalConfig, isOpen: false });
         }
@@ -140,9 +140,9 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             }
             toast.success(`Successfully migrated ${count} listings to Supabase!`);
             loadListings();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            toast.error('Migration failed: ' + error.message);
+            toast.error('Migration failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -227,6 +227,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                             {rejectState?.id === listing.id ? (
                                 <div className="mt-4 space-y-2">
                                     <textarea
+                                        name="rejection-reason"
                                         value={rejectState.reason}
                                         onChange={e => setRejectState({ id: listing.id, reason: e.target.value })}
                                         placeholder="Rejection reason (sent to the owner)..."

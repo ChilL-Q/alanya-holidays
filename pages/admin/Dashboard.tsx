@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../api-services';
+import { Booking } from '../../types/models';
 import { StatCards } from '../../components/admin/dashboard/StatCards';
 import { RevenueChart } from '../../components/admin/dashboard/RevenueChart';
 import { BookingStatusChart } from '../../components/admin/dashboard/BookingStatusChart';
@@ -14,9 +15,9 @@ export const Dashboard: React.FC = () => {
         total_services: number;
         revenue: number;
         revenueTrend: number | null;
-        revenue_history: any[];
-        booking_status_distribution: any[];
-        recent_bookings: any[];
+        revenue_history: { name: string; value: number }[];
+        booking_status_distribution: { name: string; value: number; color: string }[];
+        recent_bookings: Booking[];
     }>({
         total_properties: 0,
         total_users: 0,
@@ -52,8 +53,8 @@ export const Dashboard: React.FC = () => {
                 const [{ count: totalProperties }, { count: totalServices }, { data: users }] = counts;
                 const [allBookings = [], pendingBookings = [], completedBookings = [], cancelledBookings = []] = bookings;
 
-                const confirmedRevenue = allBookings.reduce((sum: number, b: any) => sum + (Number(b.total_price) || 0), 0);
-                const completedRevenue = completedBookings.reduce((sum: number, b: any) => sum + (Number(b.total_price) || 0), 0);
+                const confirmedRevenue = allBookings.reduce((sum: number, b: Booking) => sum + (Number(b.total_price) || 0), 0);
+                const completedRevenue = completedBookings.reduce((sum: number, b: Booking) => sum + (Number(b.total_price) || 0), 0);
                 const totalRevenue = confirmedRevenue + completedRevenue;
                 const months = Array.from({ length: 6 }, (_, i) => {
                     const d = new Date();

@@ -98,9 +98,6 @@ export const NotificationBell: React.FC = () => {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-                                        audio.play().catch(err => console.error('Manual sound test failed', err));
-
                                         addNotification({
                                             type: 'info' as const,
                                             title: 'Sound Test',

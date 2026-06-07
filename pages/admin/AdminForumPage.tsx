@@ -138,21 +138,33 @@ export const AdminForumPage: React.FC = () => {
 
                 <form onSubmit={handleCreateCategory} className="bg-white dark:bg-slate-800 rounded-xl shadow p-5 max-w-2xl mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            required
-                            placeholder="Category name"
-                            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
-                        />
-                        <input
-                            type="text"
-                            value={newDescription}
-                            onChange={(e) => setNewDescription(e.target.value)}
-                            placeholder="Description (optional)"
-                            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
-                        />
+                        <div>
+                            <label htmlFor="category-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Category name
+                            </label>
+                            <input
+                                id="category-name"
+                                type="text"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                required
+                                placeholder="Category name"
+                                className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="category-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Description (optional)
+                            </label>
+                            <input
+                                id="category-description"
+                                type="text"
+                                value={newDescription}
+                                onChange={(e) => setNewDescription(e.target.value)}
+                                placeholder="Description (optional)"
+                                className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                            />
+                        </div>
                     </div>
                     <button
                         type="submit"

@@ -37,7 +37,7 @@ export const BookingsPage: React.FC = () => {
             await db.updateBookingStatus(id.toString(), newStatus as 'confirmed' | 'cancelled' | 'completed');
             setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
             if (selectedBooking?.id === id) {
-                setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
+                setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : prev);
             }
              } catch {
                  toast.error('Failed to update status');
@@ -50,7 +50,7 @@ export const BookingsPage: React.FC = () => {
             await db.updatePayoutStatus(id, newStatus);
             setBookings(prev => prev.map(b => b.id === id ? { ...b, payout_status: newStatus } : b));
             if (selectedBooking?.id === id) {
-                setSelectedBooking((prev: any) => ({ ...prev, payout_status: newStatus }));
+                setSelectedBooking(prev => prev ? { ...prev, payout_status: newStatus } : prev);
             }
         } catch {
             toast.error('Failed to update payout status');

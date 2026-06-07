@@ -21,7 +21,7 @@ export const ExperienceCategoryPage: React.FC = () => {
         subtitle: string;
         heroImage: string;
         features: string[];
-        icon: any;
+        icon: React.ElementType;
     }> = {
         water: {
             title: t('services.adventure.water'),

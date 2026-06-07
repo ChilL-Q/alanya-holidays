@@ -31,9 +31,12 @@ export const ProfilePayoutTab: React.FC<ProfilePayoutTabProps> = ({
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">IBAN</label>
+                                <label htmlFor="payout-iban" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">IBAN</label>
                                 <input
+                                    id="payout-iban"
+                                    name="iban"
                                     type="text"
+                                    autoComplete="off"
                                     value={payoutForm.iban}
                                     onChange={(e) => setPayoutForm({ ...payoutForm, iban: e.target.value })}
                                     placeholder="TR00 0000 0000 0000 0000 0000 00"
@@ -41,18 +44,24 @@ export const ProfilePayoutTab: React.FC<ProfilePayoutTabProps> = ({
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Bank Name</label>
+                                <label htmlFor="payout-bank-name" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Bank Name</label>
                                 <input
+                                    id="payout-bank-name"
+                                    name="bankName"
                                     type="text"
+                                    autoComplete="organization"
                                     value={payoutForm.bankName}
                                     onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Account Holder Name</label>
+                                <label htmlFor="payout-account-holder" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Account Holder Name</label>
                                 <input
+                                    id="payout-account-holder"
+                                    name="bankAccountHolderName"
                                     type="text"
+                                    autoComplete="name"
                                     value={payoutForm.bankAccountHolderName}
                                     onChange={(e) => setPayoutForm({ ...payoutForm, bankAccountHolderName: e.target.value })}
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl focus:ring-2 focus:ring-primary outline-none dark:text-white"
@@ -67,9 +76,12 @@ export const ProfilePayoutTab: React.FC<ProfilePayoutTabProps> = ({
                             Crypto Wallet (USDT/USDC)
                         </h3>
                         <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Wallet Address (TRC20 / ERC20 / BEP20)</label>
+                            <label htmlFor="payout-crypto-wallet" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Wallet Address (TRC20 / ERC20 / BEP20)</label>
                             <input
+                                id="payout-crypto-wallet"
+                                name="cryptoWallet"
                                 type="text"
+                                autoComplete="off"
                                 value={payoutForm.cryptoWallet}
                                 onChange={(e) => setPayoutForm({ ...payoutForm, cryptoWallet: e.target.value })}
                                 placeholder="0x... or T..."

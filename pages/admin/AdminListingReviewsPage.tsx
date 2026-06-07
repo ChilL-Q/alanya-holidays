@@ -51,8 +51,8 @@ export const AdminListingReviewsPage: React.FC = () => {
             await listingReviewsService.approveReview(reviewId);
             toast.success('Review approved');
             setReviews(prev => prev.filter(r => r.id !== reviewId));
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to approve review');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to approve review');
         }
     };
 
@@ -61,8 +61,8 @@ export const AdminListingReviewsPage: React.FC = () => {
             await listingReviewsService.rejectReview(reviewId);
             toast.success('Review rejected');
             setReviews(prev => prev.filter(r => r.id !== reviewId));
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to reject review');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to reject review');
         }
     };
 
@@ -81,8 +81,8 @@ export const AdminListingReviewsPage: React.FC = () => {
             await listingReviewsService.deleteReview(modalConfig.itemId);
             setReviews(prev => prev.filter(r => r.id !== modalConfig.itemId));
             toast.success('Review deleted');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to delete review');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete review');
         } finally {
             setModalConfig({ isOpen: false, itemId: null, title: '', message: '' });
         }
@@ -154,7 +154,11 @@ export const AdminListingReviewsPage: React.FC = () => {
 
                 <div className="relative w-full md:w-64">
                     <input
+                        id="admin-listing-reviews-search"
+                        name="admin-listing-reviews-search"
                         type="text"
+                        autoComplete="off"
+                        aria-label="Search listing reviews"
                         placeholder="Search reviews..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

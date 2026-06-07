@@ -399,6 +399,7 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
                             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Location</label>
                             <div className="relative">
                                 <select
+                                    name="filter-location"
                                     value={filters.locationFilter}
                                     onChange={(e) => filterActions.setLocationFilter(e.target.value)}
                                     className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -417,6 +418,7 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
                             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Price Level</label>
                             <div className="relative">
                                 <select
+                                    name="filter-price-level"
                                     value={filters.maxPriceLevel}
                                     onChange={(e) => filterActions.setMaxPriceLevel(Number(e.target.value))}
                                     className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -432,9 +434,11 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
 
                         {/* Min Rating */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Min Rating</label>
+                            <label htmlFor="filter-min-rating" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Min Rating</label>
                             <div className="relative">
                                 <select
+                                    id="filter-min-rating"
+                                    name="filter-min-rating"
                                     value={filters.minRating}
                                     onChange={(e) => filterActions.setMinRating(Number(e.target.value))}
                                     className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -452,6 +456,7 @@ export const DirectoryMapView: React.FC<DirectoryMapViewProps> = ({ listings, on
                             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Sort By</label>
                             <div className="relative">
                                 <select
+                                    name="filter-sort"
                                     value={filters.sortBy}
                                     onChange={(e) => filterActions.setSortBy(e.target.value)}
                                     className="w-full pl-3 pr-8 py-2 appearance-none rounded-lg border border-slate-300 dark:border-slate-700/50 bg-white dark:bg-slate-900 text-slate-700 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"

@@ -135,8 +135,8 @@ export const BlogSubmitPage: React.FC = () => {
                 try {
                     uploadedUrls = await db.uploadBlogMediaBatch(mediaFiles);
                     toast.success('Images uploaded', { id: toastId });
-                } catch (err: any) {
-                    toast.error(err.message || 'Failed to upload images', { id: toastId });
+                } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'Failed to upload images', { id: toastId });
                     return;
                 } finally {
                     setUploading(false);
@@ -157,8 +157,8 @@ export const BlogSubmitPage: React.FC = () => {
 
             toast.success('Article submitted successfully!', { id: toastId });
             navigate('/blog/submission-success');
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to submit article');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to submit article');
         } finally {
             setSubmitting(false);
         }
@@ -217,6 +217,7 @@ export const BlogSubmitPage: React.FC = () => {
                             Article Title <span className="text-red-500">*</span>
                         </label>
                         <input
+                            name="blog-title"
                             type="text"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
@@ -234,6 +235,7 @@ export const BlogSubmitPage: React.FC = () => {
                             Article Content <span className="text-red-500">*</span>
                         </label>
                         <textarea
+                            name="blog-content"
                             ref={textareaRef}
                             value={content}
                             onChange={e => setContent(e.target.value)}
@@ -322,6 +324,7 @@ export const BlogSubmitPage: React.FC = () => {
                             </span>
                         </label>
                         <input
+                            name="video-url"
                             type="url"
                             value={videoUrl}
                             onChange={e => setVideoUrl(e.target.value)}

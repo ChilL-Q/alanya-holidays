@@ -265,9 +265,9 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
             }
 
             navigate('/admin/directory');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Save Listing Error:', error);
-            const message = error.message || 'Failed to save listing';
+            const message = error instanceof Error ? error.message : 'Failed to save listing';
             toast.error(message);
         } finally {
             setSubmitting(false);
@@ -356,6 +356,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
                                 </div>
 
                                 <textarea
+                                    name="listing-description"
                                     rows={3}
                                     value={descriptions[activeDescLang]}
                                     onChange={(e) => setDescriptions(prev => ({ ...prev, [activeDescLang]: e.target.value }))}

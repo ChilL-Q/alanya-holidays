@@ -22,6 +22,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 </button>
 
                 <input
+                    name="message"
                     type="text"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}

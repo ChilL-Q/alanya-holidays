@@ -38,6 +38,7 @@ export const HostMessagesPage: React.FC = () => {
                     <div className="relative group">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 dark:text-cyan-400 transition-colors" />
                         <input
+                            name="search"
                             type="text"
                             placeholder="Search guests or properties..."
                             value={searchTerm}

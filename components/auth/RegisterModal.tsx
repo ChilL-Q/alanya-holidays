@@ -169,6 +169,7 @@ export const RegisterModal: React.FC = () => {
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    name="name"
                                     type="text"
                                     required
                                     value={name}
@@ -185,6 +186,7 @@ export const RegisterModal: React.FC = () => {
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                     <input
+                                        name="organization"
                                         type="text"
                                         value={companyName}
                                         onChange={(e) => setCompanyName(e.target.value)}
@@ -200,6 +202,7 @@ export const RegisterModal: React.FC = () => {
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    name="email"
                                     type="email"
                                     required
                                     value={email}
@@ -214,7 +217,9 @@ export const RegisterModal: React.FC = () => {
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                                 <input
+                                    name="new-password"
                                     type="password"
+                                    autoComplete="new-password"
                                     required
                                     minLength={6}
                                     value={password}
@@ -256,6 +261,7 @@ export const RegisterModal: React.FC = () => {
                         <div className="flex justify-center">
                             <input
                                 id="otp-input"
+                                name="otp"
                                 type="text"
                                 maxLength={8}
                                 required

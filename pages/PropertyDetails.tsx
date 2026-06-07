@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../api-services';
+import { db, ServiceData } from '../api-services';
 import "react-datepicker/dist/react-datepicker.css";
 import { ReviewsSection } from '../components/reviews/ReviewsSection';
 import toast from 'react-hot-toast';
@@ -26,7 +26,7 @@ import { PropertyAmenitiesList } from '../components/properties/details/Property
 import { PropertyHospitalityGuide } from '../components/properties/details/PropertyHospitalityGuide';
 import { PropertyBookingCard } from '../components/properties/details/PropertyBookingCard';
 import { PropertyCrossSell } from '../components/properties/details/PropertyCrossSell';
-import { Property, UserProfile } from '../types/models';
+import { Property, UserProfile, Booking } from '../types/models';
 import { SEOHead } from '../components/seo/SEOHead';
 import { PropertyStructuredData } from '../components/seo/PropertyStructuredData';
 
@@ -57,7 +57,7 @@ export const PropertyDetails: React.FC = () => {
     const [blockedDates, setBlockedDates] = useState<Date[]>([]);
     const [checkIn, setCheckIn] = useState<Date | null>(null);
     const [checkOut, setCheckOut] = useState<Date | null>(null);
-    const [crossSellServices, setCrossSellServices] = useState<any[]>([]);
+    const [crossSellServices, setCrossSellServices] = useState<ServiceData[]>([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -74,7 +74,7 @@ export const PropertyDetails: React.FC = () => {
                     description: data.description || '',
                     images: Array.isArray(data.images) ? data.images : [],
                     amenities: Array.isArray(data.amenities)
-                        ? data.amenities.map((a: any) => {
+                        ? data.amenities.map((a: string | Record<string, string>) => {
                             if (typeof a === 'object' && a !== null) {
                                 return a.label || a.name || a.title || JSON.stringify(a);
                             }
@@ -122,7 +122,7 @@ export const PropertyDetails: React.FC = () => {
                 }
 
                 if (bookings) {
-                    const activeBooking = bookings?.find((b: any) =>
+                    const activeBooking = bookings?.find((b: Booking) =>
                         b.item_id === normalizedData.id &&
                         (b.status === 'confirmed' || b.payment_status === 'paid')
                     );

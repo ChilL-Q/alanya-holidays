@@ -122,8 +122,8 @@ export const HostServiceFeaturesForm: React.FC<HostServiceFeaturesFormProps> = (
                     </div>
                     {itinerary.map((item, idx) => (
                         <div key={idx} className="flex gap-2 items-start mb-2">
-                            <input type="text" placeholder="Time" value={item.time || ''} onChange={e => updateItineraryItem(idx, 'time', e.target.value)} className="w-24 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-700/50 outline-none dark:text-white text-sm" />
-                            <input type="text" placeholder="Description" value={item.description || ''} onChange={e => updateItineraryItem(idx, 'description', e.target.value)} className="flex-1 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-700/50 outline-none dark:text-white text-sm" />
+                            <input name={`itinerary-time-${idx}`} type="text" placeholder="Time" value={item.time || ''} onChange={e => updateItineraryItem(idx, 'time', e.target.value)} className="w-24 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-700/50 outline-none dark:text-white text-sm" />
+                            <input name={`itinerary-desc-${idx}`} type="text" placeholder="Description" value={item.description || ''} onChange={e => updateItineraryItem(idx, 'description', e.target.value)} className="flex-1 p-2 rounded-lg border dark:bg-slate-800/80 dark:border-slate-700/50 outline-none dark:text-white text-sm" />
                             <button type="button" onClick={() => setItinerary(itinerary.filter((_, i) => i !== idx))} className="p-2 text-red-500 rounded-lg">
                                 <Trash2 size={16} />
                             </button>

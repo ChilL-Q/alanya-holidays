@@ -37,7 +37,7 @@ export const HostBookingsPage: React.FC = () => {
                 await db.updateBookingStatus(id, newStatus);
                 setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
                 if (selectedBooking?.id === id) {
-                    setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
+                    setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : prev);
                 }
             } catch (error) {
                 toast.error('Failed to update booking status');
