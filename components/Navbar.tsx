@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
             <Link to="/" className="flex items-center gap-3 group relative">
               <div className="relative hidden sm:block">
                 <div className="absolute inset-0 bg-teal-500 dark:bg-cyan-600 blur-lg opacity-20 group-hover:opacity-40 transition-opacity rounded-full"></div>
-                <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
+                <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" width="40" height="40" loading="eager" />
               </div>
               <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate hidden md:block">
                 Alanya<span className="text-teal-600 dark:text-cyan-400">Holidays</span>

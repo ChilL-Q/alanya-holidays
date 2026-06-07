@@ -1,8 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { en } from '../locales/en';
-import { ru } from '../locales/ru';
-import { tr } from '../locales/tr';
-import { ar } from '../locales/ar';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { en as enLocale } from '../locales/en';
 
 export type Language = 'en' | 'ru' | 'tr' | 'ar';
 
@@ -12,7 +9,12 @@ interface LanguageContextType {
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
-const translations = { en, ru, tr, ar };
+const localeLoaders: Record<Language, () => Promise<Record<string, string>>> = {
+  en: () => Promise.resolve(enLocale),
+  ru: () => import('../locales/ru').then(m => m.ru),
+  tr: () => import('../locales/tr').then(m => m.tr),
+  ar: () => import('../locales/ar').then(m => m.ar),
+};
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
@@ -22,11 +24,29 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (['en', 'ru', 'tr', 'ar'].includes(saved as string)) return saved as Language;
     return 'en';
   });
+  const [translations, setTranslations] = useState<Record<string, string>>(() => enLocale);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
-  };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    localeLoaders[language]()
+      .then((loaded) => {
+        if (!cancelled) setTranslations(loaded);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error('Failed to load locale:', language, error);
+          // Keep previous translations as fallback; if first load fails, use empty
+          // object so the app renders (raw keys instead of infinite spinner)
+          setTranslations(prev => prev ?? {});
+        }
+      });
+    return () => { cancelled = true; };
+  }, [language]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -38,18 +58,15 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [language]);
 
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    // @ts-ignore
-    let text = translations[language][key] || key;
-
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+    let text = translations[key] || key;
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
-        text = text.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));
+        text = text.replaceAll(`{${paramKey}}`, String(paramValue));
       });
     }
-
     return text;
-  };
+  }, [translations]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

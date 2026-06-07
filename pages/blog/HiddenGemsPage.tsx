@@ -24,7 +24,7 @@ const articleSchema = {
     name: 'Alanya Holidays',
     logo: {
       '@type': 'ImageObject',
-      url: 'https://alanya-holidays.com/og-default.jpg',
+      url: 'https://alanya-holidays.com/og-image.jpg',
     },
   },
   datePublished: '2026-05-24',

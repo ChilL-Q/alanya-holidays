@@ -124,16 +124,21 @@ export const DirectoryHome: React.FC = () => {
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
-                        <img
-                            src="/images/hero-bg.jpg"
-                            onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
-                            }}
-                            alt="Alanya Coastline"
-                            className="w-full h-full object-cover"
-                            fetchPriority="high"
-                            loading="eager"
-                        />
+                        <picture>
+                            <source srcSet="/images/hero-bg.webp" type="image/webp" />
+                            <img
+                                src="/images/hero-bg.jpg"
+                                onError={(e) => {
+                                    e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
+                                }}
+                                alt="Alanya Coastline"
+                                className="w-full h-full object-cover"
+                                fetchPriority="high"
+                                loading="eager"
+                                width="2000"
+                                height="1548"
+                            />
+                        </picture>
                         {/* A single, clean, uniform dark overlay. No gradients, no vignettes. */}
                         <div className="absolute inset-0 bg-black/30 backdrop-brightness-110"></div>
                     </div>

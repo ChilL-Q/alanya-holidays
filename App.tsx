@@ -7,8 +7,6 @@ import { CartProvider } from './context/CartContext';
 import { ModalProvider } from './context/ModalContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { LoginModal } from './components/auth/LoginModal';
-import { RegisterModal } from './components/auth/RegisterModal';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LightboxProvider } from './context/LightboxContext';
@@ -26,6 +24,8 @@ const CartDrawer = React.lazy(() => import('./components/ui/CartDrawer').then(m 
 const TripAssistant = React.lazy(() => import('./components/TripAssistant').then(m => ({ default: m.TripAssistant })));
 const CookieConsent = React.lazy(() => import('./components/ui/CookieConsent').then(m => ({ default: m.CookieConsent })));
 const CommandPalette = React.lazy(() => import('./components/ui/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const LoginModal = React.lazy(() => import('./components/auth/LoginModal').then(m => ({ default: m.LoginModal })));
+const RegisterModal = React.lazy(() => import('./components/auth/RegisterModal').then(m => ({ default: m.RegisterModal })));
 
 // Loading Component
 const PageLoader = () => (
@@ -95,8 +95,10 @@ const App: React.FC = () => {
                         <LightboxProvider>
                           <ChatProvider>
                             <AppContent />
-                            <LoginModal />
-                            <RegisterModal />
+                            <React.Suspense fallback={null}>
+                              <LoginModal />
+                              <RegisterModal />
+                            </React.Suspense>
                             <React.Suspense fallback={null}>
                               <Lightbox />
                               <CartDrawer />
