@@ -15,6 +15,7 @@ const ExcursionTypePage = React.lazy(() => import('../pages/ExcursionTypePage').
 const AttractionPage = React.lazy(() => import('../pages/AttractionPage').then(module => ({ default: module.AttractionPage })));
 const DistrictPage = React.lazy(() => import('../pages/DistrictPage').then(module => ({ default: module.DistrictPage })));
 const SeasonalPage = React.lazy(() => import('../pages/SeasonalPage').then(module => ({ default: module.SeasonalPage })));
+const NationalityLandingPage = React.lazy(() => import('../pages/NationalityLandingPage').then(module => ({ default: module.NationalityLandingPage })));
 const LoginRedirect = React.lazy(() => import('../pages/auth/LoginRedirect').then(module => ({ default: module.LoginRedirect })));
 
 // Public Pages - Lazy Loaded
@@ -216,6 +217,16 @@ export const AppRoutes: React.FC = () => {
                 <Route path="/alanya-summer-holidays" element={<SeasonalPage />} />
                 <Route path="/alanya-winter-holiday" element={<SeasonalPage />} />
                 <Route path="/best-time-to-visit-alanya" element={<SeasonalPage />} />
+
+                {/* Nationality Landing Pages — 8 routes */}
+                <Route path="/alanya-holidays-from-uk" element={<NationalityLandingPage />} />
+                <Route path="/alanya-holidays-from-london" element={<NationalityLandingPage />} />
+                <Route path="/alanya-package-holidays-uk" element={<NationalityLandingPage />} />
+                <Route path="/alanya-urlaub" element={<NationalityLandingPage />} />
+                <Route path="/alanya-reisen" element={<NationalityLandingPage />} />
+                <Route path="/alanya-vakantie" element={<NationalityLandingPage />} />
+                <Route path="/alanya-holidays-from-norway" element={<NationalityLandingPage />} />
+                <Route path="/alanya-holidays-from-sweden" element={<NationalityLandingPage />} />
 
                 {/* SEO-003: Listing Detail Routes (silo sub-pages) */}
                 <Route path="/medical-tourism-alanya/:slug" element={<DirectoryListingPage categoryId="medical" />} />

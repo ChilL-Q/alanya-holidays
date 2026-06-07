@@ -2,6 +2,11 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
+interface HreflangAlternate {
+  hreflang: string;
+  href: string;
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -10,11 +15,15 @@ interface SEOHeadProps {
   keywords?: string[];
   jsonLd?: object | object[] | null;
   noIndex?: boolean;
+  hreflang?: HreflangAlternate[];
+  lang?: string;
 }
 
 const SITE_NAME = 'Alanya Holidays';
 const DEFAULT_IMAGE = '/og-default.jpg';
 const BASE_URL = 'https://alanya-holidays.com';
+
+export type { HreflangAlternate };
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
   title,
@@ -23,7 +32,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   type = 'website',
   keywords = [],
   jsonLd = null,
-  noIndex = false
+  noIndex = false,
+  hreflang,
+  lang
 }) => {
   const location = useLocation();
   const canonicalUrl = BASE_URL + location.pathname;
@@ -36,7 +47,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   const ogImage = image || DEFAULT_IMAGE;
 
   return (
-    <Helmet>
+    <Helmet htmlAttributes={lang ? { lang } : undefined}>
       {/* Basic Meta */}
       <title>{fullTitle}</title>
       <meta name="description" content={metaDescription} />
@@ -74,6 +85,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         <script key={i} type="application/ld+json">
           {JSON.stringify(schema)}
         </script>
+      ))}
+
+      {/* Hreflang (multilingual alternate pages) */}
+      {hreflang && hreflang.map((alt, i) => (
+        <link key={`hl-${i}`} rel="alternate" hrefLang={alt.hreflang} href={alt.href} />
       ))}
     </Helmet>
   );
