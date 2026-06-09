@@ -4,6 +4,8 @@ import React from 'react';
 import { usePropertyFilters } from './usePropertyFilters';
 import { propertiesService } from '../api-services/api/properties';
 import { MemoryRouter } from 'react-router-dom';
+import { createTestQueryClient } from '../utils/test-utils';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('../api-services/api/properties', () => ({
     propertiesService: {
@@ -33,9 +35,14 @@ describe('usePropertyFilters', () => {
         (propertiesService.getAvailableProperties as any).mockResolvedValue([]);
     });
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <MemoryRouter>{children}</MemoryRouter>
-    );
+    const wrapper = ({ children }: { children: React.ReactNode }) => {
+        const qc = createTestQueryClient();
+        return (
+            <QueryClientProvider client={qc}>
+                <MemoryRouter>{children}</MemoryRouter>
+            </QueryClientProvider>
+        );
+    };
 
     it('filters by dates (availability)', async () => {
         (propertiesService.getAvailableProperties as any).mockResolvedValue([{ id: '1' }]);

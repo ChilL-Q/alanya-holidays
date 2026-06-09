@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { FavoritesProvider, useFavorites } from './FavoritesContext';
 import { useAuth } from './AuthContext';
 import { favoritesService } from '../api-services/api/misc';
@@ -39,12 +40,23 @@ Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,
 });
 
+let queryClient: QueryClient;
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <FavoritesProvider>{children}</FavoritesProvider>
+    <QueryClientProvider client={queryClient}>
+        <FavoritesProvider>{children}</FavoritesProvider>
+    </QueryClientProvider>
 );
 
 describe('FavoritesContext', () => {
     beforeEach(() => {
+        queryClient = new QueryClient({
+            defaultOptions: {
+                queries: { retry: false, gcTime: Infinity },
+                mutations: { retry: false }
+            }
+        });
+
         vi.clearAllMocks();
         localStorageStore = {};
         localStorageMock.getItem.mockImplementation((key: string) => localStorageStore[key] || null);
@@ -237,7 +249,8 @@ describe('FavoritesContext', () => {
             });
 
             // Rollback on DB error: item should be restored
-            expect(result.current.favorites).toEqual(['item-1', 'item-2']);
+            expect(result.current.favorites).toEqual(expect.arrayContaining(['item-1', 'item-2']));
+            expect(result.current.favorites).toHaveLength(2);
             consoleSpy.mockRestore();
         });
     });

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { Property } from '../types/models';
 import { propertiesService } from '../api-services/api/properties';
+import { qk } from '../lib/queryKeys';
 
 export interface FilterState {
     priceRange: [number, number];
@@ -23,18 +25,12 @@ interface UsePropertyFiltersProps {
 
 export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UsePropertyFiltersProps) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const isMountedRef = useRef(false);
     
     // Initialize state from URL params
     const initialPage = parseInt(searchParams.get('page') || '1');
     const initialSort = searchParams.get('sort') || 'recommended';
     
-    const [properties, setProperties] = useState<Property[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
     const [page, setPageState] = useState(initialPage);
-    const [hasMore, setHasMore] = useState(true);
-    const [totalCount, setTotalCount] = useState(0);
     const [sort, setSortState] = useState(initialSort);
     const LIMIT = 12;
 
@@ -101,87 +97,53 @@ export const usePropertyFilters = ({ checkIn, checkOut, location, guests }: UseP
         }
     }, [location, checkIn, checkOut, filters, sort, setSearchParams]);
 
-    // Fetch Properties
-    useEffect(() => {
-        isMountedRef.current = true;
-        const fetchProperties = async () => {
-            if (isMountedRef.current) setIsLoading(true);
-            if (isMountedRef.current) setError(null);
-            try {
-                // 1. Availability Filter (Base)
-                let availableIds: string[] | null = null;
-                if (checkIn && checkOut) {
-                    const available = await propertiesService.getAvailableProperties(checkIn, checkOut);
-                    availableIds = available.map(p => p.id);
-                }
-
-                // 2. Fetch Page with Filters & Sort
-                const result = await propertiesService.getProperties(
-                    page,
-                    LIMIT,
-                    filters,
-                    location || undefined,
-                    availableIds || undefined,
-                    sort
-                );
-                const fetchedProps = result.data || [];
-
-                // Update Total Count
-                if (result.count !== null && isMountedRef.current) {
-                    setTotalCount(result.count);
-                }
-
-                // 4. Map to UI Model (Property)
-                const mappedProps: Property[] = fetchedProps.map(p => ({
-                    id: p.id,
-                    title: p.title,
-                    location: p.location,
-                    pricePerNight: p.price_per_night,
-                    // Keep raw fields for Map component compatibility
-                    price_per_night: p.price_per_night,
-                    latitude: p.latitude,
-                    longitude: p.longitude,
-                    max_guests: p.max_guests,
-
-                    rating: p.rating || 0,
-                    // @ts-ignore - reviews joined dynamically
-                    reviewsCount: p.reviews?.[0]?.count ?? (p.reviews_count || 0),
-                    image: p.images?.[0] || '',
-                    images: p.images || [],
-                    guests: p.max_guests || 0,
-                    bedrooms: p.bedrooms || 0,
-                    beds: p.beds || 0,
-                    bathrooms: p.bathrooms || 0,
-                    description: p.description,
-                    amenities: p.amenities || [],
-                    hostName: p.host?.full_name || 'Host',
-                    ref_id: p.ref_id,
-                    type: p.type
-                }));
-
-                if (isMountedRef.current) setProperties(mappedProps);
-
-                // Check if we reached the end
-                if (result.data.length < LIMIT) {
-                    setHasMore(false);
-                } else {
-                     setHasMore(true);
-                }
-
-            } catch (err) {
-                console.error(err);
-                if (isMountedRef.current) setError(err as Error);
-            } finally {
-                if (isMountedRef.current) setIsLoading(false);
+    // Fetch Properties with useQuery
+    const propertiesQuery = useQuery({
+        queryKey: qk.properties.list(page, LIMIT, filters, location ?? undefined, sort, checkIn ?? undefined, checkOut ?? undefined),
+        queryFn: async () => {
+            let availableIds: string[] | null = null;
+            if (checkIn && checkOut) {
+                const available = await propertiesService.getAvailableProperties(checkIn, checkOut);
+                availableIds = available.map(p => p.id);
             }
-        };
+            return propertiesService.getProperties(page, LIMIT, filters, location || undefined, availableIds || undefined, sort);
+        },
+        staleTime: 2 * 60_000,
+        placeholderData: keepPreviousData,
+    });
 
-        fetchProperties();
-        return () => { isMountedRef.current = false; };
-    }, [page, location, checkIn, checkOut, filters, sort]);
+    // Derive state from query result
+    const rawResult = propertiesQuery.data;
+    const mappedProperties: Property[] = (rawResult?.data ?? []).map(p => ({
+        id: p.id,
+        title: p.title,
+        location: p.location,
+        pricePerNight: p.price_per_night,
+        price_per_night: p.price_per_night,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        max_guests: p.max_guests,
+        rating: p.rating || 0,
+        // @ts-ignore - reviews joined dynamically
+        reviewsCount: p.reviews?.[0]?.count ?? (p.reviews_count || 0),
+        image: p.images?.[0] || '',
+        images: p.images || [],
+        guests: p.max_guests || 0,
+        bedrooms: p.bedrooms || 0,
+        beds: p.beds || 0,
+        bathrooms: p.bathrooms || 0,
+        description: p.description,
+        amenities: p.amenities || [],
+        hostName: p.host?.full_name || 'Host',
+        ref_id: p.ref_id,
+        type: p.type
+    }));
 
-    // Client-side filtering removed - properties are now already filtered from backend
-    const filteredProperties = properties;
+    const filteredProperties = mappedProperties;
+    const totalCount = rawResult?.count ?? 0;
+    const isLoading = propertiesQuery.isLoading;
+    const error = propertiesQuery.error as Error | null;
+    const hasMore = (rawResult?.data?.length ?? 0) >= LIMIT;
 
     const activeFilterCount = (Object.keys(filters) as Array<keyof FilterState>).reduce((acc, key) => {
         const value = filters[key];

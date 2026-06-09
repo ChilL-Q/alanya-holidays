@@ -1,8 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import App from './App';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { initSentry, Sentry } from './utils/sentry';
+import { queryClient } from './lib/queryClient';
 import './index.css';
 
 // Initialize Sentry error tracking (no-op if VITE_SENTRY_DSN is not set)
@@ -34,9 +37,12 @@ if (import.meta.hot) {
 root.render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
     </Sentry.ErrorBoundary>
   </React.StrictMode>
 );

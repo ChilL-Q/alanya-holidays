@@ -1,29 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { db, ServiceData } from '../api-services';
 import { useCarAggregation } from './useCarAggregation';
+import { qk } from '../lib/queryKeys';
 
 export const useCars = () => {
-    const [loading, setLoading] = useState(true);
-    const [rawServices, setRawServices] = useState<ServiceData[]>([]);
-    const isMountedRef = useRef(true);
-
-    useEffect(() => {
-        isMountedRef.current = true;
-        const fetchCars = async () => {
-            try {
-                // @ts-ignore
-                const { data: services } = await db.getServices('car', 1, 100);
-                if (services && isMountedRef.current) setRawServices(services);
-            } catch (err) {
-                console.error('Failed to fetch cars', err);
-            } finally {
-                if (isMountedRef.current) setLoading(false);
-            }
-        };
-
-        fetchCars();
-        return () => { isMountedRef.current = false; };
-    }, []);
+    const { data: rawServices = [], isLoading: loading } = useQuery({
+        queryKey: qk.services.byType('car', 1, 100),
+        queryFn: async () => {
+            const { data } = await db.getServices('car', 1, 100) as { data: ServiceData[] | null };
+            return data ?? [];
+        },
+        staleTime: 15 * 60_000,
+    });
 
     const carGroups = useCarAggregation(rawServices);
 

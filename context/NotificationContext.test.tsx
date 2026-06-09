@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider, useNotifications } from './NotificationContext';
 import { useAuth } from './AuthContext';
 import { notificationsService } from '../api-services/api/notifications';
@@ -39,8 +40,12 @@ vi.mock('../api-services/api/notifications', () => ({
 // Mock Audio
 const mockAudioPlay = vi.fn().mockResolvedValue(undefined);
 
+let queryClient: QueryClient;
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <NotificationProvider>{children}</NotificationProvider>
+    <QueryClientProvider client={queryClient}>
+        <NotificationProvider>{children}</NotificationProvider>
+    </QueryClientProvider>
 );
 
 const createMockNotification = (overrides: Partial<Notification> = {}): Notification => ({
@@ -58,6 +63,14 @@ describe('NotificationContext', () => {
     let consoleSpy: any;
 
     beforeEach(() => {
+        // Initialize QueryClient with test defaults
+        queryClient = new QueryClient({
+            defaultOptions: {
+                queries: { retry: false, gcTime: Infinity },
+                mutations: { retry: false }
+            }
+        });
+
         // Clear mocks
         mockNotificationCallbacks.clear();
         mockUnsubscribe.mockClear();
@@ -291,8 +304,11 @@ describe('NotificationContext', () => {
                 await result.current.markAsRead('notif-1');
             });
 
+            await waitFor(() => {
+                expect(result.current.notifications.find(n => n.id === 'notif-1')?.read).toBe(true);
+            });
+
             expect(notificationsService.markNotificationAsRead).toHaveBeenCalledWith('notif-1');
-            expect(result.current.notifications.find(n => n.id === 'notif-1')?.read).toBe(true);
             expect(result.current.unreadCount).toBe(1);
         });
 
@@ -526,7 +542,10 @@ describe('NotificationContext', () => {
                 await result.current.refreshNotifications();
             });
 
-            expect(result.current.notifications).toHaveLength(2);
+            await waitFor(() => {
+                expect(result.current.notifications).toHaveLength(2);
+            });
+
             expect(result.current.notifications[0].id).toBe('notif-2');
         });
 
@@ -610,7 +629,9 @@ describe('NotificationContext', () => {
                 await result.current.markAsRead('notif-1');
             });
 
-            expect(result.current.unreadCount).toBe(1);
+            await waitFor(() => {
+                expect(result.current.unreadCount).toBe(1);
+            });
         });
 
         it('should update unread count when adding notification', async () => {

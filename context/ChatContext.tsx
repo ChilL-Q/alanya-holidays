@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
 import { NotificationType } from '../types/enums';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { qk } from '../lib/queryKeys';
 
 interface ChatContextType {
     conversations: ChatConversation[];
@@ -33,56 +35,49 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const { addNotification } = useNotifications(); // Use notification context
-    const [conversations, setConversations] = useState<ChatConversation[]>([]);
+    const { addNotification } = useNotifications();
+    const queryClient = useQueryClient();
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+
+    // Fetch conversations from DB
+    const { data: conversations = [], isLoading: loading, refetch } = useQuery({
+        queryKey: qk.conversations.list(),
+        queryFn: async () => {
+            try {
+                return await chatService.getConversations();
+            } catch (error) {
+                console.error('Failed to fetch conversations:', error);
+                throw error;
+            }
+        },
+        enabled: !!user,
+        staleTime: 30_000,
+        gcTime: 5 * 60_000,
+        retry: 1,
+    });
 
     const refreshConversations = useCallback(async () => {
-        if (!user) return;
-        try {
-            const data = await chatService.getConversations();
-            setConversations(data);
-        } catch (error) {
-            console.error('Failed to load conversations', error);
-        }
-    }, [user]);
+        await refetch();
+    }, [refetch]);
 
-    // ... (Initial load matches existing code)
-    // Initial load
+    // Track component mount status to prevent state updates on unmounted component
     const isMountedRef = useRef(true);
-
     useEffect(() => {
-        isMountedRef.current = true;
-        if (user) {
-            refreshConversations();
-        } else {
-            if (isMountedRef.current) setConversations([]);
-        }
         return () => { isMountedRef.current = false; };
-    }, [user, refreshConversations]);
+    }, []);
 
     // Realtime subscription
-    // Use a ref to always call the latest refreshConversations without re-subscribing
-    const refreshConversationsRef = useRef(refreshConversations);
-    useEffect(() => {
-        refreshConversationsRef.current = refreshConversations;
-    }, [refreshConversations]);
-
     useEffect(() => {
         if (!user) return;
 
-        // Subscribe to NEW messages to update unread counts or chat window
         const subscription = supabase
             .channel('public:chat_messages')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
                 const newMessage = payload.new as ChatMessage;
 
-                // Refresh conversations to update unread counts/latest message
-                refreshConversationsRef.current();
+                // Invalidate conversations query to refresh unread counts
+                queryClient.invalidateQueries({ queryKey: qk.conversations.list() });
 
-                // If message is NOT from current user AND (we are not in this conversation OR we are not in any conversation)
-                // Then trigger notification
                 const isSender = newMessage.sender_id === user.id;
                 const isActive = newMessage.conversation_id === activeConversationId;
 
@@ -101,71 +96,100 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             subscription.unsubscribe();
         };
-    }, [user, activeConversationId, addNotification]);
+    }, [user, activeConversationId, addNotification, queryClient]);
+
+    // Start conversation mutation
+    const startConversationMutation = useMutation({
+        mutationFn: (data: { propertyId: string; hostId: string }) =>
+            chatService.createConversation(data.propertyId, data.hostId),
+        onSuccess: (id) => {
+            setActiveConversationId(id);
+            queryClient.invalidateQueries({ queryKey: qk.conversations.list() });
+        },
+        onError: (error) => {
+            console.error('Failed to create conversation:', error);
+        },
+    });
 
     const startConversation = useCallback(async (propertyId: string, hostId: string) => {
-        setLoading(true);
-        try {
-            const id = await chatService.createConversation(propertyId, hostId);
-            try {
-                await refreshConversations();
-            } catch (e) {
-                console.error('Failed to refresh conversations list:', e);
-            }
-            setActiveConversationId(id);
-            return id;
-        } finally {
-            setLoading(false);
-        }
-    }, [refreshConversations]);
+        return await startConversationMutation.mutateAsync({ propertyId, hostId });
+    }, [startConversationMutation]);
+
+    // Send message mutation
+    const sendMessageMutation = useMutation({
+        mutationFn: (content: string) => {
+            if (!activeConversationId) throw new Error('No active conversation');
+            return chatService.sendMessage(activeConversationId, content);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: qk.conversations.list() });
+        },
+        onError: (error) => {
+            console.error('Failed to send message:', error);
+        },
+    });
 
     const sendMessage = useCallback(async (content: string) => {
         if (!activeConversationId) return;
-        try {
-            const msg = await chatService.sendMessage(activeConversationId, content);
-            await refreshConversations();
-            return msg;
-        } catch (error) {
-            console.error('Failed to send message', error);
-            throw error;
-        }
-    }, [activeConversationId, refreshConversations]);
+        return await sendMessageMutation.mutateAsync(content);
+    }, [activeConversationId, sendMessageMutation]);
 
-    const clearHistory = useCallback(async (conversationId: string) => {
-        try {
-            await chatService.clearHistory(conversationId);
-            if (activeConversationId === conversationId) {
+    // Clear history mutation
+    const clearHistoryMutation = useMutation({
+        mutationFn: (conversationId: string) => chatService.clearHistory(conversationId),
+        onSuccess: (_, conversationId) => {
+            // Use ref-based check to prevent state update on unmounted component
+            if (isMountedRef.current && activeConversationId === conversationId) {
                 setMessages([]);
             }
-            await refreshConversations();
-        } catch (error) {
-            console.error('Failed to clear history', error);
-            throw error;
-        }
-    }, [activeConversationId, refreshConversations]);
+            queryClient.invalidateQueries({ queryKey: qk.conversations.list() });
+        },
+        onError: (error) => {
+            console.error('Failed to clear history:', error);
+        },
+    });
+
+    const clearHistory = useCallback(async (conversationId: string) => {
+        return await clearHistoryMutation.mutateAsync(conversationId);
+    }, [clearHistoryMutation]);
+
+    // Submit report mutation
+    const submitReportMutation = useMutation({
+        mutationFn: (data: { reporter_id: string; reported_id?: string; conversation_id: string; reason: string; description: string }) =>
+            chatService.submitReport(data),
+    });
 
     const submitReport = useCallback(async (data: { reporter_id: string; reported_id?: string; conversation_id: string; reason: string; description: string }) => {
         try {
-            await chatService.submitReport(data);
+            return await submitReportMutation.mutateAsync(data);
         } catch (error) {
-            console.error('Failed to submit report', error);
+            console.error('Failed to submit report:', error);
             throw error;
         }
-    }, []);
+    }, [submitReportMutation]);
 
     // Mark as read when opening a conversation
     useEffect(() => {
         let isMounted = true;
         if (activeConversationId) {
-            chatService.markAsRead(activeConversationId).then(() => {
-                // Update local state to remove unread badge immediately
-                if (isMounted) setConversations(prev => prev.map(c =>
-                    c.id === activeConversationId ? { ...c, unread_count: 0 } : c
-                ));
-            });
+            chatService.markAsRead(activeConversationId)
+                .then(() => {
+                    if (isMounted) {
+                        queryClient.setQueryData<ChatConversation[]>(
+                            qk.conversations.list(),
+                            (prev = []) => prev.map(c =>
+                                c.id === activeConversationId ? { ...c, unread_count: 0 } : c
+                            )
+                        );
+                    }
+                })
+                .catch((error) => {
+                    console.error(`Failed to mark conversation ${activeConversationId} as read:`, error);
+                    // Do NOT update cache on failure — let next refetch correct it
+                });
         }
         return () => { isMounted = false; };
-    }, [activeConversationId]);
+    }, [activeConversationId, queryClient]);
 
     const totalUnreadCount = useMemo(() => conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0), [conversations]);
 
@@ -175,9 +199,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoading, setIsLoading] = useState(false);
     const [chatContext, setChatContext] = useState<{ propertyName?: string; location?: string } | null>(null);
 
-    // Update AI context based on location
     useEffect(() => {
-        // Simplified Logic: In a real app, this would use router location
         setChatContext({
             location: 'Alanya, Turkey'
         });

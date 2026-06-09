@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { favoritesService } from '../api-services/api/misc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { qk } from '../lib/queryKeys';
 
 interface FavoritesContextType {
     favorites: string[];
@@ -13,74 +15,119 @@ interface FavoritesContextType {
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, isAuthenticated } = useAuth(); // Assuming useAuth is available
-    const [favorites, setFavorites] = useState<string[]>(() => {
+    const { user, isAuthenticated } = useAuth();
+    const queryClient = useQueryClient();
+    const userId = user?.id;
+
+    // Load from localStorage as fallback
+    const [localFavorites, setLocalFavorites] = useState<string[]>(() => {
         const saved = localStorage.getItem('favorites');
         return saved ? JSON.parse(saved) : [];
     });
 
-    // Sync with DB on login
-    const isMountedRef = useRef(true);
+    // Fetch from DB
+    const { data: dbFavorites = [] } = useQuery({
+        queryKey: qk.favorites.byUser(userId),
+        queryFn: async () => {
+            try {
+                return await favoritesService.getFavorites();
+            } catch (error) {
+                console.error('Failed to fetch favorites:', error);
+                throw error;
+            }
+        },
+        enabled: isAuthenticated && !!userId,
+        staleTime: 5 * 60_000,
+        gcTime: 10 * 60_000,
+        retry: 1,
+    });
 
-     useEffect(() => {
-         isMountedRef.current = true;
-         if (isAuthenticated && user?.id) {
-             favoritesService.getFavorites().then(dbFavorites => {
-                 // Use functional update to avoid stale closure on favorites state
-                 if (isMountedRef.current) setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
-             }).catch(console.error);
-         }
-         return () => { isMountedRef.current = false; };
-     }, [isAuthenticated, user]);
+    // Merge DB + localStorage favorites
+    const favorites = useMemo(() => {
+        return Array.from(new Set([...localFavorites, ...dbFavorites]));
+    }, [localFavorites, dbFavorites]);
 
-    // Persist to LocalStorage
+    // Persist merged favorites to localStorage
     useEffect(() => {
         localStorage.setItem('favorites', JSON.stringify(favorites));
     }, [favorites]);
 
-    const addFavorite = async (id: string) => {
-        const previousFavorites = [...favorites];
-        setFavorites((prev) => {
+    // Add favorite mutation
+    const addMutation = useMutation({
+        mutationFn: (id: string) => favoritesService.addFavorite({ item_id: id }),
+        onError: (error) => {
+            console.error('Failed to add favorite:', error);
+        },
+        onSuccess: () => {
+            if (userId) {
+                queryClient.invalidateQueries({ queryKey: qk.favorites.byUser(userId) });
+            }
+        },
+    });
+
+    // Remove favorite mutation
+    const removeMutation = useMutation({
+        mutationFn: (id: string) => favoritesService.removeFavorite({ item_id: id }),
+        onError: (error) => {
+            console.error('Failed to remove favorite:', error);
+        },
+        onSuccess: () => {
+            if (userId) {
+                queryClient.invalidateQueries({ queryKey: qk.favorites.byUser(userId) });
+            }
+        },
+    });
+
+    const addFavorite = useCallback(async (id: string) => {
+        // Optimistic update: add to local state immediately
+        setLocalFavorites((prev) => {
             if (!prev.includes(id)) return [...prev, id];
             return prev;
         });
-        if (isAuthenticated && user?.id) {
-            try {
-                await favoritesService.addFavorite({ item_id: id });
-            } catch (error) {
-                console.error('Failed to add favorite:', error);
-                // Rollback on DB error
-                setFavorites(previousFavorites);
-            }
+
+        // For unauthenticated users, just update local state
+        if (!isAuthenticated || !userId) return;
+
+        // For authenticated users, sync with DB
+        try {
+            await addMutation.mutateAsync(id);
+        } catch (_error) {
+            // On error, rollback from local state
+            setLocalFavorites((prev) => prev.filter((favId) => favId !== id));
         }
-    };
+    }, [isAuthenticated, userId, addMutation]);
 
-    const removeFavorite = async (id: string) => {
-        const previousFavorites = [...favorites];
-        setFavorites((prev) => prev.filter((favId) => favId !== id));
-        if (isAuthenticated && user?.id) {
-            try {
-                await favoritesService.removeFavorite({ item_id: id });
-            } catch (error) {
-                console.error('Failed to remove favorite:', error);
-                // Rollback on DB error
-                setFavorites(previousFavorites);
-            }
+    const removeFavorite = useCallback(async (id: string) => {
+        // Optimistic update: remove from local state immediately
+        setLocalFavorites((prev) => prev.filter((favId) => favId !== id));
+
+        // For unauthenticated users, just update local state
+        if (!isAuthenticated || !userId) return;
+
+        // For authenticated users, sync with DB
+        try {
+            await removeMutation.mutateAsync(id);
+        } catch (_error) {
+            // On error, rollback to local state
+            setLocalFavorites((prev) => [...prev, id]);
         }
-    };
+    }, [isAuthenticated, userId, removeMutation]);
 
-    const isFavorite = (id: string) => favorites.includes(id);
-
-    const toggleFavorite = (id: string) => {
-        if (isFavorite(id)) {
+    const toggleFavorite = useCallback((id: string) => {
+        if (favorites.includes(id)) {
             removeFavorite(id);
         } else {
             addFavorite(id);
         }
-    };
+    }, [favorites, removeFavorite, addFavorite]);
+
+    const value = useMemo(() => {
+        const isFavorite = (id: string) => favorites.includes(id);
+        return { favorites, addFavorite, removeFavorite, isFavorite, toggleFavorite };
+    }, [favorites, addFavorite, removeFavorite, toggleFavorite]);
 
     return (
-        <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, isFavorite, toggleFavorite }}>
+        <FavoritesContext.Provider value={value}>
             {children}
         </FavoritesContext.Provider>
     );
