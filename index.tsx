@@ -36,14 +36,14 @@ if (import.meta.hot) {
 
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
-      </Sentry.ErrorBoundary>
-      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
 
