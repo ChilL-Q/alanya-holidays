@@ -3,16 +3,16 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { FavoritesProvider, useFavorites } from './FavoritesContext';
 import { useAuth } from './AuthContext';
-import { db } from '../api-services';
+import { favoritesService } from '../api-services/api/misc';
 
 // Mock AuthContext
 vi.mock('./AuthContext', () => ({
     useAuth: vi.fn()
 }));
 
-// Mock DB
-vi.mock('../api-services', () => ({
-    db: {
+// Mock Favorites Service
+vi.mock('../api-services/api/misc', () => ({
+    favoritesService: {
         getFavorites: vi.fn().mockResolvedValue([]),
         addFavorite: vi.fn().mockResolvedValue(undefined),
         removeFavorite: vi.fn().mockResolvedValue(undefined)
@@ -49,8 +49,8 @@ describe('FavoritesContext', () => {
         localStorageStore = {};
         localStorageMock.getItem.mockImplementation((key: string) => localStorageStore[key] || null);
         (useAuth as any).mockReturnValue({ user: null, isAuthenticated: false });
-        (db.getFavorites as any).mockResolvedValue([]);
-        (db.addFavorite as any).mockResolvedValue(undefined);
+        (favoritesService.getFavorites as any).mockResolvedValue([]);
+        (favoritesService.addFavorite as any).mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -125,7 +125,7 @@ describe('FavoritesContext', () => {
                 await result.current.addFavorite('item-1');
             });
 
-            expect(db.addFavorite).toHaveBeenCalledWith({
+            expect(favoritesService.addFavorite).toHaveBeenCalledWith({
                 item_id: 'item-1'
             });
         });
@@ -149,7 +149,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.addFavorite as any).mockRejectedValue(new Error('DB error'));
+            (favoritesService.addFavorite as any).mockRejectedValue(new Error('DB error'));
 
             const { result } = renderHook(() => useFavorites(), { wrapper });
 
@@ -200,7 +200,7 @@ describe('FavoritesContext', () => {
                 await result.current.removeFavorite('item-1');
             });
 
-            expect(db.removeFavorite).toHaveBeenCalledWith({
+            expect(favoritesService.removeFavorite).toHaveBeenCalledWith({
                 item_id: 'item-1'
             });
         });
@@ -226,7 +226,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.removeFavorite as any).mockRejectedValue(new Error('DB error'));
+            (favoritesService.removeFavorite as any).mockRejectedValue(new Error('DB error'));
 
             localStorageStore['favorites'] = JSON.stringify(['item-1', 'item-2']);
 
@@ -302,7 +302,7 @@ describe('FavoritesContext', () => {
                 await result.current.toggleFavorite('item-1');
             });
 
-            expect(db.addFavorite).toHaveBeenCalledWith({
+            expect(favoritesService.addFavorite).toHaveBeenCalledWith({
                 item_id: 'item-1'
             });
         });
@@ -315,7 +315,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.getFavorites as any).mockResolvedValue(dbFavorites);
+            (favoritesService.getFavorites as any).mockResolvedValue(dbFavorites);
 
             const { result } = renderHook(() => useFavorites(), { wrapper });
 
@@ -336,7 +336,7 @@ describe('FavoritesContext', () => {
                 user: { id: 'user-123' },
                 isAuthenticated: true
             });
-            (db.getFavorites as any).mockResolvedValue(dbFavorites);
+            (favoritesService.getFavorites as any).mockResolvedValue(dbFavorites);
 
             const { result } = renderHook(() => useFavorites(), { wrapper });
 
@@ -360,7 +360,7 @@ describe('FavoritesContext', () => {
             // Wait to ensure no DB call is made
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            expect(db.getFavorites).not.toHaveBeenCalled();
+            expect(favoritesService.getFavorites).not.toHaveBeenCalled();
         });
 
         it('should handle DB sync error gracefully', async () => {
@@ -371,7 +371,7 @@ describe('FavoritesContext', () => {
             });
             
             // Mock to reject - the context catches the error with .catch(console.error)
-            (db.getFavorites as any).mockRejectedValue(new Error('DB error'));
+            (favoritesService.getFavorites as any).mockRejectedValue(new Error('DB error'));
 
             // The context should initialize without crashing even if DB fails
             const { result } = renderHook(() => useFavorites(), { wrapper });
