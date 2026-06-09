@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { screen, cleanup, act } from '@testing-library/react';
 import { CurrencyProvider, useCurrency } from './CurrencyContext';
+import { renderWithQuery } from '../utils/test-utils';
 
 // Mock utils/currency to have predictable rates for testing
 vi.mock('../utils/currency', async () => {
@@ -48,7 +49,7 @@ describe('CurrencyContext', () => {
     });
 
     it('provides default currency EUR', () => {
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -58,7 +59,7 @@ describe('CurrencyContext', () => {
 
     it('loads currency from localStorage', () => {
         localStorage.setItem('currency', 'TRY');
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -67,7 +68,7 @@ describe('CurrencyContext', () => {
     });
 
     it('updates currency and saves to localStorage', () => {
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -83,7 +84,7 @@ describe('CurrencyContext', () => {
     });
 
     it('calls utils.convertPrice correctly', () => {
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -95,7 +96,7 @@ describe('CurrencyContext', () => {
     });
 
     it('uses current currency for conversion target', () => {
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -112,7 +113,7 @@ describe('CurrencyContext', () => {
     });
 
     it('calls utils.formatPrice correctly', () => {
-        render(
+        renderWithQuery(
             <CurrencyProvider>
                 <TestComponent />
             </CurrencyProvider>
@@ -125,7 +126,7 @@ describe('CurrencyContext', () => {
     it('throws error if used outside provider', () => {
         const spy = vi.spyOn(console, 'error');
         spy.mockImplementation(() => { });
-        expect(() => render(<TestComponent />)).toThrow('useCurrency must be used within a CurrencyProvider');
+        expect(() => renderWithQuery(<TestComponent />)).toThrow('useCurrency must be used within a CurrencyProvider');
         spy.mockRestore();
     });
 });
