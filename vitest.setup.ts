@@ -3,6 +3,7 @@ import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import React from 'react';
+import { queryClient } from './lib/queryClient';
 
 // react-helmet-async requires HelmetProvider in the tree.
 // In tests we just render children as-is.
@@ -20,5 +21,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  queryClient.clear();
   vi.restoreAllMocks();
 });
