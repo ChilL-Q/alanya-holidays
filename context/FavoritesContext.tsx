@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { db } from '../api-services';
+import { favoritesService } from '../api-services/api/misc';
 
 interface FavoritesContextType {
     favorites: string[];
@@ -25,7 +25,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
      useEffect(() => {
          isMountedRef.current = true;
          if (isAuthenticated && user?.id) {
-             db.getFavorites().then(dbFavorites => {
+             favoritesService.getFavorites().then(dbFavorites => {
                  // Use functional update to avoid stale closure on favorites state
                  if (isMountedRef.current) setFavorites(prev => Array.from(new Set([...prev, ...dbFavorites])));
              }).catch(console.error);
@@ -46,7 +46,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         });
         if (isAuthenticated && user?.id) {
             try {
-                await db.addFavorite({ item_id: id });
+                await favoritesService.addFavorite({ item_id: id });
             } catch (error) {
                 console.error('Failed to add favorite:', error);
                 // Rollback on DB error
@@ -60,7 +60,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         setFavorites((prev) => prev.filter((favId) => favId !== id));
         if (isAuthenticated && user?.id) {
             try {
-                await db.removeFavorite({ item_id: id });
+                await favoritesService.removeFavorite({ item_id: id });
             } catch (error) {
                 console.error('Failed to remove favorite:', error);
                 // Rollback on DB error

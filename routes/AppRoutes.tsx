@@ -1,12 +1,14 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import { AdminLayout } from '../components/layouts/AdminLayout';
-import { HostLayoutController } from '../components/layouts/HostLayoutController';
-import { AdminRoute } from '../components/auth/AdminRoute';
-import { HostRoute } from '../components/auth/HostRoute';
 import { AuthRoute } from '../components/auth/AuthRoute';
-import { NotFound } from '../components/pages/NotFound';
+
+// Lazy-loaded layout and guard components (only needed on admin/host/404 routes)
+const AdminLayout = React.lazy(() => import('../components/layouts/AdminLayout').then(m => ({ default: m.AdminLayout })));
+const HostLayoutController = React.lazy(() => import('../components/layouts/HostLayoutController').then(m => ({ default: m.HostLayoutController })));
+const AdminRoute = React.lazy(() => import('../components/auth/AdminRoute').then(m => ({ default: m.AdminRoute })));
+const HostRoute = React.lazy(() => import('../components/auth/HostRoute').then(m => ({ default: m.HostRoute })));
+const NotFound = React.lazy(() => import('../components/pages/NotFound').then(m => ({ default: m.NotFound })));
 
 // Public Pages - Direct Imports (critical for immediate FCP)
 const DirectoryHome = React.lazy(() => import('../pages/DirectoryHome').then(module => ({ default: module.DirectoryHome })));

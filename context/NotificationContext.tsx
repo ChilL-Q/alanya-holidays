@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { db, Notification } from '../api-services';
+import { notificationsService } from '../api-services/api/notifications';
+import type { Notification } from '../types/models';
 
 interface NotificationContextType {
     notifications: Notification[];
@@ -25,7 +26,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             return;
         }
         try {
-            const data = await db.getNotifications(user.id);
+            const data = await notificationsService.getNotifications(user.id);
             if (isMountedRef.current) setNotifications(data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -38,7 +39,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
         // Real-time subscription
         if (user) {
-            const subscription = db.subscribeToNotifications(user.id, (payload) => {
+            const subscription = notificationsService.subscribeToNotifications(user.id, (payload) => {
                 if (payload.eventType === 'INSERT') {
                     const newNotification = payload.new as Notification;
                     setNotifications(prev => {
@@ -61,7 +62,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const markAsRead = useCallback(async (id: string) => {
         try {
-            await db.markNotificationAsRead(id);
+            await notificationsService.markNotificationAsRead(id);
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
         } catch (error) {
             console.error('Failed to mark notification as read:', error);
@@ -71,7 +72,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
         if (!user) return;
         try {
-            await db.addNotification({ ...notification, user_id: user.id });
+            await notificationsService.addNotification({ ...notification, user_id: user.id });
         } catch (error) {
             console.error('Failed to add notification:', error);
         }

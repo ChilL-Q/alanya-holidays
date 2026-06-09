@@ -26,49 +26,49 @@ export const ExperienceCategoryPage: React.FC = () => {
         water: {
             title: t('services.adventure.water'),
             subtitle: t('services.adventure.water_desc'),
-            heroImage: '/images/experiences/water_sports_hero.png',
+            heroImage: '/images/experiences/water_sports_hero.webp',
             features: ['Professional Guides', 'Safety Gear Included', 'Hotel Pickup'],
             icon: Anchor
         },
         safari: {
             title: t('services.adventure.safari'),
             subtitle: t('services.adventure.safari_desc'),
-            heroImage: '/images/experiences/safari_expedition_hero.png',
+            heroImage: '/images/experiences/safari_expedition_hero.webp',
             features: ['Off-road Adventure', 'Lunch Included', 'Photo Stops'],
             icon: Map
         },
         air: {
             title: t('services.adventure.air'),
             subtitle: t('services.adventure.air_desc'),
-            heroImage: '/images/experiences/air_adventures_hero.png',
+            heroImage: '/images/experiences/air_adventures_hero.webp',
             features: ['Certified Pilots', 'HD Video Available', 'Insurance Included'],
             icon: Cloud
         },
         land: {
             title: t('services.adventure.land'),
             subtitle: t('services.adventure.land_desc'),
-            heroImage: '/images/experiences/land_tours_hero.png',
+            heroImage: '/images/experiences/land_tours_hero.webp',
             features: ['Cultural Sites', 'Expert Guide', 'Comfortable Transport'],
             icon: Mountain
         },
         wellness: {
             title: t('services.health.title'),
             subtitle: t('services.health.subtitle'),
-            heroImage: '/images/experiences/wellness_hero.png',
+            heroImage: '/images/experiences/wellness_hero.webp',
             features: ['Certified Specialists', 'Relaxing Atmosphere', 'Premium Products'],
             icon: Heart
         },
         atv: {
             title: "ATV & Buggy",
             subtitle: "Adrenaline-filled off-road adventures",
-            heroImage: '/images/experiences/atv_buggy_hero.png',
+            heroImage: '/images/experiences/atv_buggy_hero.webp',
             features: ['Hourly Rentals', 'Safety Briefing', 'Helmet Included'],
             icon: Car
         },
         'spa-wellness': {
             title: t('services.spa.title'),
             subtitle: t('services.spa.subtitle'),
-            heroImage: '/images/experiences/wellness_hero.png',
+            heroImage: '/images/experiences/wellness_hero.webp',
             features: ['Certified Therapists', 'Premium Products', 'Relaxing Ambiance'],
             icon: Sparkles
         },
@@ -157,11 +157,17 @@ export const ExperienceCategoryPage: React.FC = () => {
 
                     <div className="relative">
                         <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
-                        <img
-                            src={config.heroImage}
-                            alt={config.title}
-                            className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 w-full object-cover max-h-[500px]"
-                        />
+                        <picture>
+                            <source srcSet={config.heroImage} type="image/webp" />
+                            <img
+                                src={config.heroImage.replace('.webp', '.png')}
+                                alt={config.title}
+                                className="relative rounded-3xl shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500 w-full object-cover max-h-[500px]"
+                                loading="lazy"
+                                width="1024"
+                                height="1024"
+                            />
+                        </picture>
                     </div>
                 </div>
             </div>

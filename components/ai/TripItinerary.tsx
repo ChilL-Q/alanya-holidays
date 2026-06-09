@@ -55,7 +55,7 @@ export const TripItinerary: React.FC<Props> = ({ itinerary, savedId, onSave, sav
             {/* Print Header */}
             <div className="print-header">
                 <div className="flex items-center gap-3">
-                    <img src="/logo.png" alt="Alanya Holidays" className="h-12 w-auto" />
+                    <img src="/logo.png" alt="Alanya Holidays" className="h-12 w-auto" width="48" height="48" loading="lazy" />
                     <div>
                         <h4 className="font-black text-xl text-slate-900">ALANYA HOLIDAYS</h4>
                         <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Premium Rentals & Experiences</p>
