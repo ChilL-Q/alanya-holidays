@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
+import { renderHookWithQuery } from '../utils/test-utils';
 import { useCars } from './useCars';
 import { db } from '../api-services';
 
@@ -21,7 +22,7 @@ describe('useCars', () => {
         ];
         (db.getServices as any).mockResolvedValue({ data: mockCars });
 
-        const { result } = renderHook(() => useCars());
+        const { result } = renderHookWithQuery(() => useCars());
 
         expect(result.current.loading).toBe(true);
         expect(result.current.carGroups).toEqual([]);
@@ -38,7 +39,7 @@ describe('useCars', () => {
     it('handles fetch error', async () => {
         (db.getServices as any).mockRejectedValue(new Error('Fetch failed'));
 
-        const { result } = renderHook(() => useCars());
+        const { result } = renderHookWithQuery(() => useCars());
 
         await waitFor(() => {
             expect(result.current.loading).toBe(false);

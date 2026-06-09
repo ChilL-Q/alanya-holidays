@@ -1,7 +1,7 @@
 export const qk = {
   properties: {
-    list: (page: number, limit: number, filters?: unknown, location?: string, sort?: string) =>
-      ['properties', 'list', page, limit, filters, location, sort] as const,
+    list: (page: number, limit: number, filters?: unknown, location?: string, sort?: string, checkIn?: string, checkOut?: string) =>
+      ['properties', 'list', page, limit, filters || null, location || null, sort || null, checkIn || null, checkOut || null] as const,
     detail: (id: string) => ['properties', 'detail', id] as const,
     blockedDates: (id: string) => ['properties', 'blockedDates', id] as const,
     available: (checkIn: string, checkOut: string) => ['properties', 'available', checkIn, checkOut] as const,
@@ -49,7 +49,7 @@ export const qk = {
     listing: (id: string) => ['directory', 'listing', id] as const,
     analytics: (days: number) => ['directory', 'analytics', days] as const,
     categoryAvg: (categoryId: string) => ['directory', 'categoryAvg', categoryId] as const,
-    votes: (userId: string, ids: string[]) => ['directory', 'votes', userId, ids] as const,
+    votes: (userId: string, ids: string[]) => ['directory', 'votes', userId, ...ids.sort()] as const,
   },
 
   users: {

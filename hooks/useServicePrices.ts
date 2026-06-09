@@ -1,38 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
-import { db } from '../api-services';
+import { useQuery } from '@tanstack/react-query';
+import { db, ServiceData } from '../api-services';
+import { qk } from '../lib/queryKeys';
 
 export const useServicePrices = () => {
-    const [minPrices, setMinPrices] = useState<Record<string, number>>({});
-    const [isLoading, setIsLoading] = useState(true);
-    const isMountedRef = useRef(true);
+    const SUBCATEGORIES = ['water', 'safari', 'air', 'land', 'atv'];
 
-    useEffect(() => {
-        isMountedRef.current = true;
-        const fetchPrices = async () => {
-            try {
-                const { data } = await db.getServices('tour', 1, 100);
-                if (data && isMountedRef.current) {
-                    const prices: Record<string, number> = {};
-                    const subcategories = ['water', 'safari', 'air', 'land', 'atv'];
-
-                    subcategories.forEach(sub => {
-                        const servicesInSub = data.filter(s => s.features?.subcategory === sub && s.type === 'tour');
-                        if (servicesInSub.length > 0) {
-                            const minPrice = Math.min(...servicesInSub.map(s => s.price));
-                            prices[sub] = minPrice;
-                        }
-                    });
-                    setMinPrices(prices);
-                }
-            } catch (err) {
-                console.error('Failed to fetch prices', err);
-            } finally {
-                if (isMountedRef.current) setIsLoading(false);
-            }
-        };
-        fetchPrices();
-        return () => { isMountedRef.current = false; };
-    }, []);
+    const { data: minPrices = {}, isLoading } = useQuery({
+        queryKey: qk.services.byType('tour', 1, 100),
+        queryFn: async () => {
+            const { data } = await db.getServices('tour', 1, 100) as { data: ServiceData[] | null };
+            if (!data) return {} as Record<string, number>;
+            const prices: Record<string, number> = {};
+            SUBCATEGORIES.forEach(sub => {
+                const matches = data.filter(s => s.features?.subcategory === sub && s.type === 'tour');
+                if (matches.length > 0) prices[sub] = Math.min(...matches.map(s => s.price));
+            });
+            return prices;
+        },
+        staleTime: 15 * 60_000,
+    });
 
     return { minPrices, isLoading };
 };
