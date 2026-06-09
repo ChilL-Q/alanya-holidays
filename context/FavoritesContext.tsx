@@ -58,7 +58,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         onError: (error) => {
             console.error('Failed to add favorite:', error);
         },
-        onSettled: () => {
+        onSuccess: () => {
             if (userId) {
                 queryClient.invalidateQueries({ queryKey: qk.favorites.byUser(userId) });
             }
@@ -71,7 +71,7 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
         onError: (error) => {
             console.error('Failed to remove favorite:', error);
         },
-        onSettled: () => {
+        onSuccess: () => {
             if (userId) {
                 queryClient.invalidateQueries({ queryKey: qk.favorites.byUser(userId) });
             }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { chatService } from '../api-services/api/chat';
 import { supabase } from '../api-services/supabase';
 import { ChatConversation, ChatMessage } from '../types/models';
@@ -59,6 +59,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshConversations = useCallback(async () => {
         await refetch();
     }, [refetch]);
+
+    // Track component mount status to prevent state updates on unmounted component
+    const isMountedRef = useRef(true);
+    useEffect(() => {
+        return () => { isMountedRef.current = false; };
+    }, []);
 
     // Realtime subscription
     useEffect(() => {
@@ -132,7 +138,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const clearHistoryMutation = useMutation({
         mutationFn: (conversationId: string) => chatService.clearHistory(conversationId),
         onSuccess: (_, conversationId) => {
-            if (activeConversationId === conversationId) {
+            // Use ref-based check to prevent state update on unmounted component
+            if (isMountedRef.current && activeConversationId === conversationId) {
                 setMessages([]);
             }
             queryClient.invalidateQueries({ queryKey: qk.conversations.list() });
@@ -165,16 +172,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         let isMounted = true;
         if (activeConversationId) {
-            chatService.markAsRead(activeConversationId).then(() => {
-                if (isMounted) {
-                    queryClient.setQueryData<ChatConversation[]>(
-                        qk.conversations.list(),
-                        (prev = []) => prev.map(c =>
-                            c.id === activeConversationId ? { ...c, unread_count: 0 } : c
-                        )
-                    );
-                }
-            });
+            chatService.markAsRead(activeConversationId)
+                .then(() => {
+                    if (isMounted) {
+                        queryClient.setQueryData<ChatConversation[]>(
+                            qk.conversations.list(),
+                            (prev = []) => prev.map(c =>
+                                c.id === activeConversationId ? { ...c, unread_count: 0 } : c
+                            )
+                        );
+                    }
+                })
+                .catch((error) => {
+                    console.error(`Failed to mark conversation ${activeConversationId} as read:`, error);
+                    // Do NOT update cache on failure — let next refetch correct it
+                });
         }
         return () => { isMounted = false; };
     }, [activeConversationId, queryClient]);
