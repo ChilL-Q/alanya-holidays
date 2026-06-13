@@ -195,9 +195,9 @@ Remove all existing content from the 'List Business' page. Replace with a 3-tier
 | Tier | Monthly | Annual |
 |------|---------|--------|
 | Explorer | Free | Free |
-| Voyager | $59 | $499 |
+| Voyager | $49 | $449 |
 | Signature | $199 | $1,999 |
-| Destination Partner | Custom | $5,000+ |
+| Destination Partner | Offer Coming Soon | - |
 
 When a paid tier is selected, the user is automatically redirected to payment (credit card or IBAN). The free tier skips payment and goes directly to account creation (if not already signed in).
 

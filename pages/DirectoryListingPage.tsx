@@ -13,6 +13,8 @@ import { CATEGORY_PATHS, getListingUrl, getSchemaType } from '../constants/categ
 import { parseVideoEmbed } from '../utils/videoEmbed';
 import { ListingReviewSection } from '../components/directory/ListingReviewSection';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { useLanguage } from '../context/LanguageContext';
+import { ClaimListingModal } from '../components/directory/ClaimListingModal';
 
 interface DirectoryListingPageProps {
     categoryId: string;
@@ -21,10 +23,12 @@ interface DirectoryListingPageProps {
 export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ categoryId }) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const { t } = useLanguage();
 
     const [listing, setListing] = useState<DirectoryListingDB | null>(null);
     const [related, setRelated] = useState<DirectoryListingDB[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
     const categoryIntro = directoryCategoryIntros[categoryId];
     const categoryPath = CATEGORY_PATHS[categoryId] || '/';
@@ -354,6 +358,15 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                                 >
                                     <MapPin size={18} /> View on Map
                                 </button>
+
+                                {!listing.owner_user_id && (
+                                    <button
+                                        onClick={() => setIsClaimModalOpen(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-500 dark:hover:border-cyan-500 hover:text-teal-600 dark:hover:text-cyan-400 transition-all cursor-pointer"
+                                    >
+                                        <Award size={18} className="text-teal-600 dark:text-cyan-400" /> {t('directory.claim.button')}
+                                    </button>
+                                )}
                             </div>
 
                             <div className="flex items-start gap-3 mt-4 p-4 bg-teal-50 dark:bg-cyan-900/10 rounded-xl text-teal-800 dark:text-cyan-300">
@@ -402,6 +415,14 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                     </div>
                 )}
             </div>
+
+            {isClaimModalOpen && (
+                <ClaimListingModal
+                    isOpen={isClaimModalOpen}
+                    onClose={() => setIsClaimModalOpen(false)}
+                    listing={listing}
+                />
+            )}
         </div>
     );
 };

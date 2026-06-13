@@ -58,8 +58,8 @@ const tiers: Tier[] = [
         name: 'Voyager',
         badge: 'Most Popular',
         badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-        monthlyPrice: 59,
-        annualPrice: 499,
+        monthlyPrice: 49,
+        annualPrice: 449,
         description: 'Stand out from the crowd with featured placement and premium tools.',
         ctaLabel: 'Upgrade to Voyager',
         ctaTo: '/subscribe?tier=voyager',
@@ -245,8 +245,8 @@ export const ListingTiersPage: React.FC = () => {
 
                                         <div className="flex flex-col items-center">
                                             {isCustom ? (
-                                                <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                                                    Custom
+                                                <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                                                    Offer Coming Soon
                                                 </span>
                                             ) : (
                                                 <span className="text-3xl font-bold text-slate-900 dark:text-white">

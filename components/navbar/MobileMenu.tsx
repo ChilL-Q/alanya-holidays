@@ -7,6 +7,7 @@ import { useLanguage, Language } from '../../context/LanguageContext';
 import { useModal } from '../../context/ModalContext';
 import { useCurrency, Currency } from '../../context/CurrencyContext';
 import { NavModeToggle } from './NavModeToggle';
+import { toast } from 'react-hot-toast';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -139,13 +140,39 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                     </div>
                     <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_property')}</span>
                 </Link>
-                <Link to="/add-service" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                <Link
+                    to="/add-service"
+                    onClick={(e) => {
+                        if (!isAuthenticated) {
+                            e.preventDefault();
+                            onClose();
+                            toast.error(t('auth.required') || 'Please log in to add a service');
+                            openLogin();
+                        } else {
+                            onClose();
+                        }
+                    }}
+                    className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50"
+                >
                     <div className="w-9 h-9 bg-purple-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-purple-600 shadow-sm">
                         <Car size={16} />
                     </div>
                     <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_service')}</span>
                 </Link>
-                <Link to="/add-listing" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                <Link
+                    to="/add-listing"
+                    onClick={(e) => {
+                        if (!isAuthenticated) {
+                            e.preventDefault();
+                            onClose();
+                            toast.error(t('auth.required') || 'Please log in to add a listing');
+                            openLogin();
+                        } else {
+                            onClose();
+                        }
+                    }}
+                    className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50"
+                >
                     <div className="w-9 h-9 bg-indigo-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
                         <Briefcase size={16} />
                     </div>
