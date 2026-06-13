@@ -555,7 +555,7 @@ export const directoryService = {
             if (user) {
                 authUserId = user.id;
             }
-        } catch (e) {
+        } catch (_e) {
             // User is anonymous or not logged in, ignore auth error
         }
 

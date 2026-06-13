@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Grid, Briefcase, ChevronRight, ChevronDown, Sparkles, ShieldCheck, CheckCircle2, Building2, Star, Home, Car } from 'lucide-react';
-import { useClickOutside } from '../hooks/useClickOutside';
+import { Search, MapPin, Grid, Briefcase, ChevronRight, ChevronDown, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
