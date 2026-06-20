@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
-import { parseVideoEmbed } from '../../utils/videoEmbed';
+import { isValidVideoUrl } from '../../utils/videoEmbed';
+import { VideoEmbed } from '../ui/VideoEmbed';
 import { useLanguage } from '../../context/LanguageContext';
 import { getListingDescription } from '../../utils/getListingDescription';
 import { ListingReviewSection } from './ListingReviewSection';
@@ -23,7 +24,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
 
     const displayDescription = getListingDescription(listing, language);
     const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
-    const videoEmbed = listing.video_url ? parseVideoEmbed(listing.video_url) : null;
+    const hasVideo = listing.video_url ? isValidVideoUrl(listing.video_url) : false;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title={listing.name} lockBodyScroll={false}>
@@ -120,19 +121,10 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                             </p>
                         </div>
 
-                        {videoEmbed && (
+                        {hasVideo && (
                             <div className="space-y-2">
                                 <h4 className="font-semibold text-slate-900 dark:text-white text-sm">Video</h4>
-                                <div className="relative w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video">
-                                    <iframe
-                                        src={videoEmbed.embedUrl}
-                                        title="Listing video"
-                                        className="absolute inset-0 w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                        loading="lazy"
-                                    />
-                                </div>
+                                <VideoEmbed url={listing.video_url || ''} title="Listing video" />
                             </div>
                         )}
 
