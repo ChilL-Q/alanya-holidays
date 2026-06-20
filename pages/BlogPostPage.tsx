@@ -7,6 +7,8 @@ import DOMPurify from 'dompurify';
 import { db } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 import { BlogPostWithTags } from '../api-services/api/blog';
+import { isValidVideoUrl } from '../utils/videoEmbed';
+import { VideoEmbed } from '../components/ui/VideoEmbed';
 
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -47,6 +49,8 @@ export const BlogPostPage: React.FC = () => {
         post ? DOMPurify.sanitize(post.content || '') : '',
         [post]
     );
+
+    const hasVideo = useMemo(() => post ? isValidVideoUrl(post.video_url || '') : false, [post]);
 
     if (loading) {
         return (
@@ -159,7 +163,15 @@ export const BlogPostPage: React.FC = () => {
                         )}
                         {post.author?.full_name && (
                             <span className="inline-flex items-center gap-1.5">
-                                <User size={14} />
+                                {post.author.avatar_url ? (
+                                    <img
+                                        src={post.author.avatar_url}
+                                        alt=""
+                                        className="w-5 h-5 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <User size={14} />
+                                )}
                                 {post.author.full_name}
                             </span>
                         )}
@@ -206,6 +218,13 @@ export const BlogPostPage: React.FC = () => {
                             prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
                         dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                     />
+
+                    {hasVideo && (
+                        <div className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800/50">
+                            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
+                            <VideoEmbed url={post.video_url || ''} title="Blog video" />
+                        </div>
+                    )}
 
                     {/* Excerpt fallback if no content */}
                     {!post.content && post.excerpt && (

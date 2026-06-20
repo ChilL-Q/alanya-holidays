@@ -10,7 +10,8 @@ import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { CATEGORY_PATHS, getListingUrl, getSchemaType } from '../constants/categoryPaths';
-import { parseVideoEmbed } from '../utils/videoEmbed';
+import { isValidVideoUrl } from '../utils/videoEmbed';
+import { VideoEmbed } from '../components/ui/VideoEmbed';
 import { ListingReviewSection } from '../components/directory/ListingReviewSection';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 
@@ -88,7 +89,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
     }
 
     const isPaidTier = listing.tier && listing.tier !== 'explorer';
-    const videoEmbed = listing.video_url ? parseVideoEmbed(listing.video_url) : null;
+    const hasVideo = listing.video_url ? isValidVideoUrl(listing.video_url) : false;
 
     const localBusinessSchema = {
         '@context': 'https://schema.org',
@@ -273,19 +274,10 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                         </div>
 
                         {/* Video */}
-                        {videoEmbed && (
+                        {hasVideo && (
                             <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/50">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
-                                <div className="relative w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video">
-                                    <iframe
-                                        src={videoEmbed.embedUrl}
-                                        title="Listing video"
-                                        className="absolute inset-0 w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                        loading="lazy"
-                                    />
-                                </div>
+                                <VideoEmbed url={listing.video_url || ''} title="Listing video" />
                             </div>
                         )}
 
