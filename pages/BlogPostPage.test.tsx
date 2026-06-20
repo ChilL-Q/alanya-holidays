@@ -222,4 +222,52 @@ describe('BlogPostPage', () => {
       expect(db.getBlogPost).toHaveBeenCalled();
     });
   });
+
+  it('does not render TOC if there are less than 3 headings', async () => {
+    const postWithFewHeadings = {
+      ...mockPost,
+      content: '<h2>First Heading</h2><p>some text</p><h2>Second Heading</h2><p>some text</p>'
+    };
+    (db.getBlogPost as any).mockResolvedValue(postWithFewHeadings);
+
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Table of Contents')).not.toBeInTheDocument();
+      expect(screen.queryByText('On this page')).not.toBeInTheDocument();
+    });
+  });
+
+  it('renders TOC and assigns slugified IDs to headings when there are 3 or more headings', async () => {
+    const postWithHeadings = {
+      ...mockPost,
+      content: '<h2>First Heading</h2><p>text</p><h3>Second Heading!</h3><p>text</p><h2>Third Heading</h2>'
+    };
+    (db.getBlogPost as any).mockResolvedValue(postWithHeadings);
+
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      // TOC headers should be visible
+      expect(screen.getByText('Table of Contents')).toBeInTheDocument();
+      expect(screen.getByText('On this page')).toBeInTheDocument();
+      
+      // The links should exist in the TOC
+      const firstHeadingLinks = screen.getAllByRole('link', { name: 'First Heading' });
+      expect(firstHeadingLinks.length).toBeGreaterThan(0);
+      expect(firstHeadingLinks[0]).toHaveAttribute('href', '#first-heading');
+
+      const secondHeadingLinks = screen.getAllByRole('link', { name: 'Second Heading!' });
+      expect(secondHeadingLinks.length).toBeGreaterThan(0);
+      expect(secondHeadingLinks[0]).toHaveAttribute('href', '#second-heading');
+
+      const thirdHeadingLinks = screen.getAllByRole('link', { name: 'Third Heading' });
+      expect(thirdHeadingLinks.length).toBeGreaterThan(0);
+      expect(thirdHeadingLinks[0]).toHaveAttribute('href', '#third-heading');
+    });
+  });
 });

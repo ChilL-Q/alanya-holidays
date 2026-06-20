@@ -51,6 +51,67 @@ export const BlogPostPage: React.FC = () => {
         [post]
     );
 
+    interface HeadingItem {
+        id: string;
+        text: string;
+        level: 'h2' | 'h3';
+    }
+
+    const { processedContent, headings } = useMemo(() => {
+        if (!sanitizedContent) return { processedContent: '', headings: [] };
+
+        if (typeof window === 'undefined') {
+            return { processedContent: sanitizedContent, headings: [] };
+        }
+
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(sanitizedContent, 'text/html');
+            const headingElements = doc.querySelectorAll('h2, h3');
+            
+            const slugifyText = (text: string) => {
+                return text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-');
+            };
+
+            const headingIds = new Set<string>();
+            const extractedHeadings: HeadingItem[] = [];
+
+            headingElements.forEach((el, index) => {
+                const text = el.textContent || '';
+                const baseSlug = slugifyText(text) || `heading-${index + 1}`;
+                let uniqueId = baseSlug;
+                
+                let counter = 1;
+                while (headingIds.has(uniqueId)) {
+                    uniqueId = `${baseSlug}-${counter}`;
+                    counter++;
+                }
+                
+                headingIds.add(uniqueId);
+                el.setAttribute('id', uniqueId);
+                
+                extractedHeadings.push({
+                    id: uniqueId,
+                    text,
+                    level: el.tagName.toLowerCase() as 'h2' | 'h3',
+                });
+            });
+
+            return {
+                processedContent: doc.body.innerHTML,
+                headings: extractedHeadings,
+            };
+        } catch (err) {
+            console.error('Failed to parse headings for TOC:', err);
+            return { processedContent: sanitizedContent, headings: [] };
+        }
+    }, [sanitizedContent]);
+
     const hasVideo = useMemo(() => post ? isValidVideoUrl(post.video_url || '') : false, [post]);
 
     if (loading) {
@@ -137,7 +198,7 @@ export const BlogPostPage: React.FC = () => {
             <article className="min-h-screen bg-white dark:bg-slate-900">
                 {/* Breadcrumb */}
                 <div className="border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                         <Breadcrumb
                             items={[
                                 { label: 'Home', href: '/' },
@@ -150,7 +211,7 @@ export const BlogPostPage: React.FC = () => {
 
                 {/* Hero */}
                 {post.cover_image_url && (
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
                         <div className="aspect-[21/9] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                             <img
                                 src={post.cover_image_url}
@@ -162,99 +223,164 @@ export const BlogPostPage: React.FC = () => {
                 )}
 
                 {/* Content Container */}
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-                    {/* Meta Row */}
-                    <div className="mt-6 mb-8 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
-                        {post.category && (
-                            <span className="inline-block px-3 py-1 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 rounded-full font-medium text-xs uppercase tracking-wider">
-                                {post.category}
-                            </span>
-                        )}
-                        {publishedDate && (
-                            <span className="inline-flex items-center gap-1.5">
-                                <Calendar size={14} />
-                                {publishedDate}
-                            </span>
-                        )}
-                        {post.author?.full_name && (
-                            <span className="inline-flex items-center gap-1.5">
-                                {post.author.avatar_url ? (
-                                    <img
-                                        src={post.author.avatar_url}
-                                        alt=""
-                                        className="w-5 h-5 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <User size={14} />
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+                    <div className="lg:grid lg:grid-cols-12 lg:gap-8 mt-6">
+                        {/* Main column */}
+                        <div className={`${headings.length >= 3 ? 'lg:col-span-8 xl:col-span-9' : 'lg:col-span-12 max-w-3xl mx-auto w-full'}`}>
+                            {/* Meta Row */}
+                            <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                                {post.category && (
+                                    <span className="inline-block px-3 py-1 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 rounded-full font-medium text-xs uppercase tracking-wider">
+                                        {post.category}
+                                    </span>
                                 )}
-                                {post.author.full_name}
-                            </span>
-                        )}
-                        <span className="inline-flex items-center gap-1.5">
-                            <Clock size={14} />
-                            {readTime} min read
-                        </span>
-                        <span className="text-slate-400 dark:text-slate-600">
-                            {post.views.toLocaleString()} views
-                        </span>
-                        <button
-                            type="button"
-                            onClick={handleShare}
-                            className="inline-flex items-center gap-1.5 text-teal-600 dark:text-cyan-400 hover:underline"
-                        >
-                            <Share2 size={14} />
-                            Share
-                        </button>
-                    </div>
-
-                    {/* Title */}
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight mb-6">
-                        {post.title}
-                    </h1>
-
-                    {/* Tags */}
-                    {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-8 pb-8 border-b border-slate-100 dark:border-slate-800/50">
-                            {post.tags.map((tag) => (
-                                <span
-                                    key={tag.id}
-                                    className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-medium"
-                                >
-                                    <Tag size={12} />
-                                    {tag.name}
+                                {publishedDate && (
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Calendar size={14} />
+                                        {publishedDate}
+                                    </span>
+                                )}
+                                {post.author?.full_name && (
+                                    <span className="inline-flex items-center gap-1.5">
+                                        {post.author.avatar_url ? (
+                                            <img
+                                                src={post.author.avatar_url}
+                                                alt=""
+                                                className="w-5 h-5 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <User size={14} />
+                                        )}
+                                        {post.author.full_name}
+                                    </span>
+                                )}
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Clock size={14} />
+                                    {readTime} min read
                                 </span>
-                            ))}
-                        </div>
-                    )}
+                                <span className="text-slate-400 dark:text-slate-600">
+                                    {post.views.toLocaleString()} views
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleShare}
+                                    className="inline-flex items-center gap-1.5 text-teal-600 dark:text-cyan-400 hover:underline"
+                                >
+                                    <Share2 size={14} />
+                                    Share
+                                </button>
+                            </div>
 
-                    {/* Article Body */}
-                    <div
-                        className="prose prose-lg dark:prose-invert max-w-none
-                            prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white
-                            prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-                            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                            prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed
-                            prose-a:text-teal-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-                            prose-img:rounded-xl prose-img:shadow-lg
-                            prose-ul:text-slate-700 dark:prose-ul:text-slate-300
-                            prose-li:text-slate-700 dark:prose-li:text-slate-300
-                            prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
-                        dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-                    />
+                            {/* Title */}
+                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight mb-6">
+                                {post.title}
+                            </h1>
 
-                    {hasVideo && (
-                        <div className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800/50">
-                            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
-                            <VideoEmbed url={post.video_url || ''} title="Blog video" />
-                        </div>
-                    )}
+                            {/* Tags */}
+                            {post.tags && post.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-8 pb-8 border-b border-slate-100 dark:border-slate-800/50">
+                                    {post.tags.map((tag) => (
+                                        <span
+                                            key={tag.id}
+                                            className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-medium"
+                                        >
+                                            <Tag size={12} />
+                                            {tag.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
 
-                    {/* Excerpt fallback if no content */}
-                    {!post.content && post.excerpt && (
-                        <div className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                            {post.excerpt}
+                            {/* Mobile TOC - Accordion style */}
+                            {headings.length >= 3 && (
+                                <div className="lg:hidden mb-8 p-5 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+                                    <details className="group">
+                                        <summary className="flex items-center justify-between cursor-pointer list-none">
+                                            <span className="font-bold text-slate-900 dark:text-white text-base">
+                                                Table of Contents
+                                            </span>
+                                            <span className="transition-transform duration-300 group-open:rotate-180">
+                                                <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </span>
+                                        </summary>
+                                        <nav className="mt-4 pl-1 space-y-2.5 border-t border-slate-200/50 dark:border-slate-700/50 pt-4">
+                                            {headings.map((heading) => (
+                                                <a
+                                                    key={heading.id}
+                                                    href={`#${heading.id}`}
+                                                    className={`block text-sm transition-colors hover:text-teal-600 dark:hover:text-cyan-400 ${
+                                                        heading.level === 'h2'
+                                                            ? 'font-medium text-slate-700 dark:text-slate-300'
+                                                            : 'pl-4 text-slate-500 dark:text-slate-400'
+                                                    }`}
+                                                >
+                                                    {heading.text}
+                                                </a>
+                                            ))}
+                                        </nav>
+                                    </details>
+                                </div>
+                            )}
+
+                            {/* Article Body */}
+                            <div
+                                className="prose prose-lg dark:prose-invert max-w-none
+                                    prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white
+                                    prose-headings:scroll-mt-24
+                                    prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
+                                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+                                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed
+                                    prose-a:text-teal-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
+                                    prose-img:rounded-xl prose-img:shadow-lg
+                                    prose-ul:text-slate-700 dark:prose-ul:text-slate-300
+                                    prose-li:text-slate-700 dark:prose-li:text-slate-300
+                                    prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
+                                dangerouslySetInnerHTML={{ __html: processedContent }}
+                            />
+
+                            {hasVideo && (
+                                <div className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800/50">
+                                    <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
+                                    <VideoEmbed url={post.video_url || ''} title="Blog video" />
+                                </div>
+                            )}
+
+                            {/* Excerpt fallback if no content */}
+                            {!post.content && post.excerpt && (
+                                <div className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                    {post.excerpt}
+                                </div>
+                            )}
                         </div>
-                    )}
+
+                        {/* Sticky Desktop TOC Column */}
+                        {headings.length >= 3 && (
+                            <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
+                                <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pl-6 border-l border-slate-100 dark:border-slate-800/60">
+                                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
+                                        On this page
+                                    </h2>
+                                    <nav className="space-y-3">
+                                        {headings.map((heading) => (
+                                            <a
+                                                key={heading.id}
+                                                href={`#${heading.id}`}
+                                                className={`block text-sm transition-colors duration-200 hover:text-teal-600 dark:hover:text-cyan-400 ${
+                                                    heading.level === 'h2'
+                                                        ? 'font-semibold text-slate-800 dark:text-slate-200'
+                                                        : 'pl-3 text-xs text-slate-500 dark:text-slate-400 border-l border-transparent hover:border-teal-500 dark:hover:border-cyan-400'
+                                                }`}
+                                            >
+                                                {heading.text}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                </div>
+                            </aside>
+                        )}
+                    </div>
                 </div>
             </article>
         </>
