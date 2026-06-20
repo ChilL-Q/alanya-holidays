@@ -1,12 +1,18 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BlogPostPage } from './BlogPostPage';
 import { db } from '../api-services';
+import { toast } from 'react-hot-toast';
 
 vi.mock('../api-services', () => ({
   db: {
     getBlogPost: vi.fn(),
   }
+}));
+
+vi.mock('react-hot-toast', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+  default: { success: vi.fn(), error: vi.fn() }
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -187,6 +193,24 @@ describe('BlogPostPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Article Not Found')).toBeInTheDocument();
     });
+  });
+
+  it('copies link to clipboard and shows toast when Web Share API is unavailable', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(mockPost.title)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /share/i }));
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+    expect(toast.success).toHaveBeenCalledWith('Link copied to clipboard!');
   });
 
   it('renders SEO Head component', async () => {

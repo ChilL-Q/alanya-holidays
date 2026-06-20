@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, Tag, Share2 } from 'lucide-react';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
+import { toast } from 'react-hot-toast';
 import { db } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 import { BlogPostWithTags } from '../api-services/api/blog';
@@ -87,6 +88,20 @@ export const BlogPostPage: React.FC = () => {
     const readTime = post.content
         ? Math.max(1, Math.ceil(post.content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
         : 1;
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: post.title, url: shareUrl });
+            } catch (_error) {
+                // User cancelled share
+            }
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+            toast.success('Link copied to clipboard!');
+        }
+    };
 
     const articleJsonLd = {
         '@context': 'https://schema.org',
@@ -182,6 +197,14 @@ export const BlogPostPage: React.FC = () => {
                         <span className="text-slate-400 dark:text-slate-600">
                             {post.views.toLocaleString()} views
                         </span>
+                        <button
+                            type="button"
+                            onClick={handleShare}
+                            className="inline-flex items-center gap-1.5 text-teal-600 dark:text-cyan-400 hover:underline"
+                        >
+                            <Share2 size={14} />
+                            Share
+                        </button>
                     </div>
 
                     {/* Title */}
