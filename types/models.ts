@@ -465,6 +465,26 @@ export type DirectoryListingCreateInput = Omit<
   'id' | 'created_at' | 'updated_at' | 'status' | 'owner_user_id' | 'rejection_reason'
 >;
 
+export interface ListingClaimDB {
+  id: string;
+  listing_id: string;
+  user_id: string | null;
+  email: string;
+  phone: string;
+  role: 'owner' | 'manager' | 'marketing' | 'employee' | 'other' | string;
+  additional_notes?: string;
+  business_name: string;
+  contact_phone: string;
+  whatsapp?: string;
+  website?: string;
+  address?: string;
+  description?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at?: string;
+  updated_at?: string;
+}
+
+
 // ============================================================
 // Locations (LST-001)
 // ============================================================

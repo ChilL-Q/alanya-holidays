@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB } from '../../types/models';
 import { retry } from '../../utils/retry';
 import { sanitizeString } from '../../utils/sanitize';
 
@@ -544,5 +544,48 @@ export const directoryService = {
         });
         if (error) throw error;
         return (data?.[0] ?? null) as CategoryAnalyticsAverage | null;
+    },
+
+    async submitListingClaim(
+        claim: Omit<ListingClaimDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'user_id'>
+    ): Promise<ListingClaimDB> {
+        let authUserId: string | null = null;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                authUserId = user.id;
+            }
+        } catch (_e) {
+            // User is anonymous or not logged in, ignore auth error
+        }
+
+        const safeData = sanitize({
+            listing_id: claim.listing_id,
+            user_id: authUserId,
+            email: claim.email.trim(),
+            phone: claim.phone.trim(),
+            role: claim.role,
+            additional_notes: claim.additional_notes?.trim() || null,
+            business_name: claim.business_name.trim(),
+            contact_phone: claim.contact_phone.trim(),
+            whatsapp: claim.whatsapp?.trim() || null,
+            website: claim.website?.trim() || null,
+            address: claim.address?.trim() || null,
+            description: claim.description?.trim() || null,
+            status: 'pending' as const,
+        });
+
+        const { data, error } = await supabase
+            .from('listing_claims')
+            .insert(safeData as unknown as Record<string, unknown>)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error submitting listing claim:', error);
+            throw error;
+        }
+
+        return data as ListingClaimDB;
     }
 };
