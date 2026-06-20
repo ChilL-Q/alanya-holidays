@@ -86,6 +86,39 @@ export const DirectoryHome: React.FC = () => {
         { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
     ];
 
+    const travelAgencySchema = {
+        '@context': 'https://schema.org',
+        '@type': 'TravelAgency',
+        'name': 'Alanya Holidays',
+        'description': t('dir.hero.meta_desc') || 'Premium vacation rentals, tours, and transfers in Alanya, Turkey.',
+        'url': 'https://alanya-holidays.com',
+        'image': 'https://alanya-holidays.com/og-image.jpg',
+        'telephone': '+14389294208',
+        'email': 'contact@alanyaholidays.com',
+        'address': {
+            '@type': 'PostalAddress',
+            'streetAddress': 'Kesefli Mah.',
+            'addressLocality': 'Alanya',
+            'addressRegion': 'Antalya',
+            'addressCountry': 'TR',
+        },
+        'priceRange': '$$',
+        'openingHoursSpecification': {
+            '@type': 'OpeningHoursSpecification',
+            'dayOfWeek': [
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday'
+            ],
+            'opens': '09:00',
+            'closes': '22:00'
+        }
+    };
+
     return (
         <>
             <SEOHead
@@ -93,6 +126,7 @@ export const DirectoryHome: React.FC = () => {
                 description={t('dir.hero.meta_desc')}
                 type="website"
                 keywords={['Alanya holidays', 'vacation rentals', ' Turkey', 'medical tourism', 'hotels', 'villas']}
+                jsonLd={travelAgencySchema}
             />
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">
