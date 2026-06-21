@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
 import { formatBlogContent, MAX_BLOG_IMAGES } from '../../utils/formatBlogContent';
+import { useBlogMediaUpload } from '../../hooks/useBlogMediaUpload';
 
 export const AdminAddBlogPostPage: React.FC = () => {
     const { user } = useAuth();
@@ -14,71 +15,19 @@ export const AdminAddBlogPostPage: React.FC = () => {
     const [content, setContent] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [isFeatured, setIsFeatured] = useState(false);
-    const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-    const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
-    const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const insertPlaceholder = (index: number) => {
-        const textarea = textareaRef.current;
-        if (!textarea) return;
-
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const text = textarea.value;
-        const placeholder = `[image-${index + 1}]`;
-
-        const newContent = text.substring(0, start) + placeholder + text.substring(end);
-        setContent(newContent);
-
-        // Focus back on textarea and position cursor after placeholder
-        setTimeout(() => {
-            textarea.focus();
-            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
-        }, 0);
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (!files.length) return;
-
-        const remaining = MAX_BLOG_IMAGES - mediaFiles.length;
-        const toAdd = files.slice(0, remaining);
-
-        const valid: File[] = [];
-        for (const file of toAdd) {
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error(`${file.name} exceeds 5MB limit`);
-                continue;
-            }
-            const ext = file.name.split('.').pop()?.toLowerCase();
-            if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext || '')) {
-                toast.error(`${file.name} is not a supported format`);
-                continue;
-            }
-            valid.push(file);
-        }
-
-        if (!valid.length) return;
-
-        setMediaFiles(prev => [...prev, ...valid]);
-        valid.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                setMediaPreviews(prev => [...prev, ev.target?.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
-
-        e.target.value = '';
-    };
-
-    const removeMedia = (index: number) => {
-        setMediaFiles(prev => prev.filter((_, i) => i !== index));
-        setMediaPreviews(prev => prev.filter((_, i) => i !== index));
-    };
+    const {
+        mediaFiles,
+        mediaPreviews,
+        uploading,
+        fileInputRef,
+        textareaRef,
+        insertPlaceholder,
+        handleFileSelect,
+        removeMedia,
+        uploadImages,
+    } = useBlogMediaUpload({ content, setContent });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,17 +47,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
 
         try {
             if (mediaFiles.length > 0) {
-                setUploading(true);
-                const toastId = toast.loading('Uploading images...');
-                try {
-                    uploadedUrls = await db.uploadBlogMediaBatch(mediaFiles);
-                    toast.success('Images uploaded', { id: toastId });
-                } catch (err: unknown) {
-                    toast.error(err instanceof Error ? err.message : 'Failed to upload images', { id: toastId });
-                    return;
-                } finally {
-                    setUploading(false);
-                }
+                uploadedUrls = await uploadImages();
             }
 
             const formattedContent = formatBlogContent(content.trim(), uploadedUrls);

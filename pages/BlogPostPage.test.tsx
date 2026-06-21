@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 vi.mock('../api-services', () => ({
   db: {
     getBlogPost: vi.fn(),
+    getRelatedPosts: vi.fn().mockResolvedValue([]),
   }
 }));
 
@@ -56,6 +57,7 @@ describe('BlogPostPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (db.getBlogPost as any).mockResolvedValue(mockPost);
+    (db.getRelatedPosts as any).mockResolvedValue([]);
   });
 
   it('renders loading state initially', async () => {
@@ -268,6 +270,62 @@ describe('BlogPostPage', () => {
       const thirdHeadingLinks = screen.getAllByRole('link', { name: 'Third Heading' });
       expect(thirdHeadingLinks.length).toBeGreaterThan(0);
       expect(thirdHeadingLinks[0]).toHaveAttribute('href', '#third-heading');
+    });
+  });
+
+  it('calls getRelatedPosts with correct arguments when post is loaded', async () => {
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      expect(db.getRelatedPosts).toHaveBeenCalledWith('post-1', 'Travel', 3);
+    });
+  });
+
+  it('renders related posts section when related posts are returned', async () => {
+    const mockRelatedPosts = [
+      {
+        id: 'post-2',
+        title: 'Related Post Title A',
+        slug: 'related-post-a',
+        excerpt: 'Excerpt A',
+        cover_image_url: 'https://example.com/cover-a.jpg',
+        category: 'Travel',
+        published_at: '2024-01-14T10:00:00Z'
+      },
+      {
+        id: 'post-3',
+        title: 'Related Post Title B',
+        slug: 'related-post-b',
+        excerpt: 'Excerpt B',
+        cover_image_url: null,
+        category: 'Travel',
+        published_at: '2024-01-13T10:00:00Z'
+      }
+    ];
+    (db.getRelatedPosts as any).mockResolvedValue(mockRelatedPosts);
+
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('You Might Also Like')).toBeInTheDocument();
+      expect(screen.getByText('Related Post Title A')).toBeInTheDocument();
+      expect(screen.getByText('Related Post Title B')).toBeInTheDocument();
+    });
+  });
+
+  it('does not render related posts section when list is empty', async () => {
+    (db.getRelatedPosts as any).mockResolvedValue([]);
+
+    await act(async () => {
+      render(<BlogPostPage />);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('You Might Also Like')).not.toBeInTheDocument();
     });
   });
 });
