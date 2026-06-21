@@ -8,19 +8,19 @@ import { z } from 'npm:zod@3'
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   // L1: Allow override via env var for easy API version updates without code change
   apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
 })
 
 const supabase = createClient(
-  Deno.env.get('SUPABASE_URL'),
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
 Deno.serve(async (req: Request) => {
   const signature = req.headers.get('stripe-signature')
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
 
   if (!signature) {
     return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), { status: 400, headers: { 'Content-Type': 'application/json' } })

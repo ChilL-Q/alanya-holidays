@@ -4,7 +4,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts";
 
 const YESIM_API_URL = "https://partners-api.yesim.biz";
-const YESIM_API_TOKEN = Deno.env.get("YESIM_API_TOKEN");
+const YESIM_API_TOKEN = Deno.env.get("YESIM_API_TOKEN")!;
 const SITE_URL = Deno.env.get("SITE_URL") || "https://alanyaholidays.com";
 
 const ALLOWED_ORIGINS = new Set([
@@ -15,8 +15,8 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL"),
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 // Rate limits: createOrder is expensive (real money), so keep it strict

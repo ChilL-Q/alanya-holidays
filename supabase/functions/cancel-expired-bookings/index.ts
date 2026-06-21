@@ -3,8 +3,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 // Set this secret in Supabase Dashboard → Edge Functions → Secrets
 const SITE_URL = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 const ALLOWED_ORIGIN = SITE_URL
@@ -19,7 +19,7 @@ Deno.serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const cronSecret = Deno.env.get('CRON_SECRET');
+  const cronSecret = Deno.env.get('CRON_SECRET')!;
   const reqSecret = req.headers.get('x-cron-secret');
   if (!cronSecret || reqSecret !== cronSecret) {
     return new Response(
