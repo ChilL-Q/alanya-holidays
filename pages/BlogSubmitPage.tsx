@@ -7,6 +7,7 @@ import { PenLine, X, ImagePlus, Video, ArrowLeft, Send, Info } from 'lucide-reac
 import { SEOHead } from '../components/seo/SEOHead';
 import { formatBlogContent, MAX_BLOG_IMAGES } from '../utils/formatBlogContent';
 import { useBlogMediaUpload } from '../hooks/useBlogMediaUpload';
+import { BlogContentEditor } from '../components/blog/BlogContentEditor';
 
 export const BlogSubmitPage: React.FC = () => {
     const { user } = useAuth();
@@ -142,25 +143,16 @@ export const BlogSubmitPage: React.FC = () => {
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                             Article Content <span className="text-red-500">*</span>
                         </label>
-                        <textarea
-                            name="blog-content"
-                            ref={textareaRef}
-                            value={content}
-                            onChange={e => setContent(e.target.value)}
+                        <BlogContentEditor
+                            content={content}
+                            onChange={setContent}
+                            textareaRef={textareaRef}
                             placeholder="Write your article here. Share your experience, tips, or insider knowledge about Alanya. Minimum 100 characters. Tip: Upload images and hover over them to insert placeholders where you want them in the text!"
                             rows={14}
                             required
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y font-sans text-sm leading-relaxed"
+                            minLength={100}
+                            textareaClassName="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y font-sans text-sm leading-relaxed"
                         />
-                        <div className="flex justify-between mt-1.5">
-                            <p className="text-xs text-slate-400">Minimum 100 characters. Use [image-1] format to place images.</p>
-                            <p className={`text-xs ${content.length < 100 ? 'text-amber-500' : 'text-teal-500'}`}>
-                                {content.length} characters
-                            </p>
-                        </div>
-                        <p className="mt-1 text-xs text-slate-400">
-                            Supports markdown: <code>## Heading</code>, <code>- list item</code>, <code>**bold**</code>, <code>&gt; Don&apos;t Miss: important tip</code>.
-                        </p>
                     </div>
 
                     {/* Media Upload */}

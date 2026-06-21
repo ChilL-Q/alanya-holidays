@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
 import { formatBlogContent, MAX_BLOG_IMAGES } from '../../utils/formatBlogContent';
 import { useBlogMediaUpload } from '../../hooks/useBlogMediaUpload';
+import { BlogContentEditor } from '../../components/blog/BlogContentEditor';
 
 export const AdminAddBlogPostPage: React.FC = () => {
     const { user } = useAuth();
@@ -109,19 +110,16 @@ export const AdminAddBlogPostPage: React.FC = () => {
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                         Article Content <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                        name="blog-content"
-                        ref={textareaRef}
-                        value={content}
-                        onChange={e => setContent(e.target.value)}
+                    <BlogContentEditor
+                        content={content}
+                        onChange={setContent}
+                        textareaRef={textareaRef}
                         placeholder="Write the full content here..."
                         rows={14}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
+                    minLength={50}
+                    textareaClassName="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
                     />
-                    <p className="mt-1.5 text-xs text-slate-400">
-                        Supports markdown: <code>## Heading</code>, <code>- list item</code>, <code>**bold**</code>, <code>&gt; Don&apos;t Miss: important tip</code>.
-                    </p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6">

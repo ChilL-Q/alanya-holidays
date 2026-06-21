@@ -13,6 +13,7 @@ import { isValidVideoUrl } from '../utils/videoEmbed';
 import { VideoEmbed } from '../components/ui/VideoEmbed';
 import { extractHeadingsFromHTML } from '../utils/extractHeadings';
 import { useAsyncEffect } from '../hooks/useAsyncEffect';
+import { BLOG_PROSE_WITH_TOC } from '../utils/blogProseStyles';
 
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -276,17 +277,7 @@ export const BlogPostPage: React.FC = () => {
 
                             {/* Article Body */}
                             <div
-                                className="prose prose-lg dark:prose-invert max-w-none
-                                    prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white
-                                    prose-headings:scroll-mt-24
-                                    prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-                                    prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed
-                                    prose-a:text-teal-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-                                    prose-img:rounded-xl prose-img:shadow-lg
-                                    prose-ul:text-slate-700 dark:prose-ul:text-slate-300
-                                    prose-li:text-slate-700 dark:prose-li:text-slate-300
-                                    prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
+                                className={BLOG_PROSE_WITH_TOC}
                                 dangerouslySetInnerHTML={{ __html: processedContent }}
                             />
 
