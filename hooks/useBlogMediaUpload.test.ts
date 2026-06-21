@@ -129,7 +129,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('inserts [image-N] format placeholder into content', () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: 'Hello World', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
 
         // Mock textarea ref and selection
         const mockTextarea = {
