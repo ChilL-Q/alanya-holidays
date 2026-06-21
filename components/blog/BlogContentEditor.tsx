@@ -2,17 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Eye, Pencil } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { formatBlogContent } from '../../utils/formatBlogContent';
-
-const BLOG_PROSE_CLASSES = `prose prose-lg dark:prose-invert max-w-none
-  prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white
-  prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4
-  prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-  prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed
-  prose-a:text-teal-600 dark:prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-  prose-img:rounded-xl prose-img:shadow-lg
-  prose-ul:text-slate-700 dark:prose-ul:text-slate-300
-  prose-li:text-slate-700 dark:prose-li:text-slate-300
-  prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic`;
+import { BLOG_PROSE_CLASSES } from '../../utils/blogProseStyles';
 
 interface BlogContentEditorProps {
     content: string;
@@ -24,6 +14,26 @@ interface BlogContentEditorProps {
     required?: boolean;
     textareaClassName?: string;
 }
+
+const TabButton: React.FC<{
+    label: string;
+    icon: React.ComponentType<{ size: number }>;
+    isActive: boolean;
+    onClick: () => void;
+}> = ({ label, icon: Icon, isActive, onClick }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            isActive
+                ? 'border-teal-500 text-teal-700 dark:text-teal-400'
+                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+        }`}
+    >
+        <Icon size={14} />
+        {label}
+    </button>
+);
 
 export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
     content,
@@ -38,7 +48,7 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
     const [mode, setMode] = useState<'write' | 'preview'>('write');
 
     const previewHtml = useMemo(() => {
-        if (mode !== 'preview' || !content.trim()) return '';
+        if (!content.trim()) return '';
 
         // Render markdown, passing empty imageUrls — placeholders stay as [image-N]
         let html = formatBlogContent(content.trim(), []);
@@ -51,36 +61,24 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
         );
 
         return DOMPurify.sanitize(html);
-    }, [mode, content]);
+    }, [content]);
 
     return (
         <div>
             {/* Tabs */}
             <div className="flex items-center gap-1 mb-3 border-b border-slate-200 dark:border-slate-700">
-                <button
-                    type="button"
+                <TabButton
+                    label="Write"
+                    icon={Pencil}
+                    isActive={mode === 'write'}
                     onClick={() => setMode('write')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                        mode === 'write'
-                            ? 'border-teal-500 text-teal-700 dark:text-teal-400'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                    }`}
-                >
-                    <Pencil size={14} />
-                    Write
-                </button>
-                <button
-                    type="button"
+                />
+                <TabButton
+                    label="Preview"
+                    icon={Eye}
+                    isActive={mode === 'preview'}
                     onClick={() => setMode('preview')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                        mode === 'preview'
-                            ? 'border-teal-500 text-teal-700 dark:text-teal-400'
-                            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                    }`}
-                >
-                    <Eye size={14} />
-                    Preview
-                </button>
+                />
             </div>
 
             {/* Write mode */}
@@ -115,7 +113,7 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
             {/* Preview mode */}
             {mode === 'preview' && (
                 <div className="min-h-[200px]">
-                    {content.trim() ? (
+                    {previewHtml ? (
                         <div
                             className={BLOG_PROSE_CLASSES}
                             dangerouslySetInnerHTML={{ __html: previewHtml }}

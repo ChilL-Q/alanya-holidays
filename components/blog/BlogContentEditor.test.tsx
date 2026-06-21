@@ -15,7 +15,6 @@ vi.mock('../../utils/formatBlogContent', () => ({
             .join('\n');
         return html;
     },
-    MAX_BLOG_IMAGES: 5,
 }));
 
 describe('BlogContentEditor', () => {
