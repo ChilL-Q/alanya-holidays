@@ -240,59 +240,14 @@ export const blogService = {
      * Fills up to limit with other latest published posts if category has too few posts.
      */
     async getRelatedPosts(postId: string, category: string | null, limit: number = 3): Promise<BlogPostPreview[]> {
-        let relatedData: BlogPostPreview[] = [];
+        const { data, error } = await supabase.rpc('get_related_posts', {
+            p_post_id: postId,
+            p_category: category,
+            p_limit: limit,
+        });
 
-        if (category) {
-            const { data, error } = await supabase
-                .from('blog_posts')
-                .select(`
-                    id,
-                    title,
-                    slug,
-                    excerpt,
-                    cover_image_url,
-                    category,
-                    published_at,
-                    author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)
-                `)
-                .eq('status', 'published')
-                .eq('category', category)
-                .neq('id', postId)
-                .order('published_at', { ascending: false, nullsFirst: false })
-                .limit(limit);
-
-            if (error) throw error;
-            relatedData = (data || []) as unknown as BlogPostPreview[];
-        }
-
-        if (relatedData.length < limit) {
-            const excludedIds = [postId, ...relatedData.map((p) => p.id)];
-            const fillLimit = limit - relatedData.length;
-
-            const { data: fillData, error: fillError } = await supabase
-                .from('blog_posts')
-                .select(`
-                    id,
-                    title,
-                    slug,
-                    excerpt,
-                    cover_image_url,
-                    category,
-                    published_at,
-                    author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)
-                `)
-                .eq('status', 'published')
-                .not('id', 'in', `(${excludedIds.join(',')})`)
-                .order('published_at', { ascending: false, nullsFirst: false })
-                .limit(fillLimit);
-
-            if (fillError) throw fillError;
-            if (fillData) {
-                relatedData = [...relatedData, ...(fillData as unknown as BlogPostPreview[])];
-            }
-        }
-
-        return relatedData;
+        if (error) throw error;
+        return (data || []) as unknown as BlogPostPreview[];
     },
 
     /**

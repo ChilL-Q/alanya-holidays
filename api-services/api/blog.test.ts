@@ -494,4 +494,33 @@ describe('blogService', () => {
                 .rejects.toThrow('Only admins can reject submissions');
         });
     });
+
+    // ============================================================
+    // getRelatedPosts
+    // ============================================================
+    describe('getRelatedPosts', () => {
+        it('calls get_related_posts RPC with correct parameters', async () => {
+            const mockRelated = [
+                { id: 'p2', title: 'Related Post', slug: 'related-post', excerpt: 'Excerpt', cover_image_url: 'img.jpg', category: 'travel', published_at: '2026-04-14', author: { full_name: 'Author', avatar_url: null } },
+            ];
+            mockSupabase.rpc.mockResolvedValue({ data: mockRelated, error: null });
+
+            const result = await blogService.getRelatedPosts('p1', 'travel', 3);
+
+            expect(mockSupabase.rpc).toHaveBeenCalledWith('get_related_posts', {
+                p_post_id: 'p1',
+                p_category: 'travel',
+                p_limit: 3,
+            });
+            expect(result).toHaveLength(1);
+            expect(result[0].title).toBe('Related Post');
+        });
+
+        it('throws an error if RPC returns an error', async () => {
+            mockSupabase.rpc.mockResolvedValue({ data: null, error: new Error('Database error') });
+
+            await expect(blogService.getRelatedPosts('p1', 'travel', 3))
+                .rejects.toThrow('Database error');
+        });
+    });
 });

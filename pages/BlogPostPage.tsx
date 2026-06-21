@@ -15,6 +15,8 @@ import { extractHeadingsFromHTML } from '../utils/extractHeadings';
 import { useAsyncEffect } from '../hooks/useAsyncEffect';
 import { BLOG_PROSE_WITH_TOC } from '../utils/blogProseStyles';
 
+const TOC_HEADING_THRESHOLD = 3;
+
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [post, setPost] = useState<BlogPostWithTags | null>(null);
@@ -177,7 +179,7 @@ export const BlogPostPage: React.FC = () => {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
                     <div className="lg:grid lg:grid-cols-12 lg:gap-8 mt-6">
                         {/* Main column */}
-                        <div className={`${headings.length >= 3 ? 'lg:col-span-8 xl:col-span-9' : 'lg:col-span-12 max-w-3xl mx-auto w-full'}`}>
+                        <div className={`${headings.length >= TOC_HEADING_THRESHOLD ? 'lg:col-span-8 xl:col-span-9' : 'lg:col-span-12 max-w-3xl mx-auto w-full'}`}>
                             {/* Meta Row */}
                             <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                                 {post.category && (
@@ -297,7 +299,7 @@ export const BlogPostPage: React.FC = () => {
                         </div>
 
                         {/* Sticky Desktop TOC Column */}
-                        {headings.length >= 3 && (
+                        {headings.length >= TOC_HEADING_THRESHOLD && (
                             <aside className="hidden lg:block lg:col-span-4 xl:col-span-3">
                                 <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pl-6 border-l border-slate-100 dark:border-slate-800/60">
                                     <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">

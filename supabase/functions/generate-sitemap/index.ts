@@ -4,30 +4,20 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
+// Central URL configuration and static lists
+import { STATIC_SITEMAP_URLS, SITEMAP_MONTHS } from '../../../config/sitemapUrls.ts'
+import { EXCURSION_TYPES } from '../../../data/excursionTypes.ts'
+import { ATTRACTIONS } from '../../../data/attractionPages.ts'
+import { DISTRICT_PAGES } from '../../../data/districtPages.ts'
+import { SEASONAL_PAGES } from '../../../data/seasonalPages.ts'
+import { NATIONALITY_PAGES } from '../../../data/nationalityPages.ts'
+import { CATEGORY_PATHS } from '../../../constants/categoryPaths.ts'
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 
 const BASE_URL = Deno.env.get('SITE_URL') ?? 'https://alanya-holidays.com'
-
-const CATEGORY_PATHS: Record<string, string> = {
-  'medical':        '/medical-tourism-alanya',
-  'accommodations': '/alanya-hotels',
-  'villas':         '/alanya-villas',
-  'apartments':     '/alanya-apartments',
-  'tours':          '/things-to-do-in-alanya',
-  'transport':      '/airport-transfer',
-  'restaurants':    '/restaurants',
-  'cafes':          '/cafes',
-  'real-estate':    '/alanya-real-estate',
-  'visa':           '/alanya-residency-guide',
-  'shopping':       '/alanya-shopping-guide',
-  'nature':         '/alanya-nature-attractions',
-  'weather':        '/alanya-weather',
-  'nightlife':      '/nightlife',
-  'spa-hamam':      '/alanya-spa-hamam',
-  'hair-beauty':    '/alanya-hair-beauty',
-}
 
 interface SitemapUrl {
   loc: string
@@ -83,153 +73,76 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     const urls: SitemapUrl[] = []
 
-    // Static pages
-    const staticPages: SitemapUrl[] = [
-      { loc: `${BASE_URL}/`, changefreq: 'daily', priority: '1.0' },
-      { loc: `${BASE_URL}/properties`, changefreq: 'daily', priority: '0.9' },
-      { loc: `${BASE_URL}/about`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/contact`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/privacy`, changefreq: 'monthly', priority: '0.5' },
-      { loc: `${BASE_URL}/terms`, changefreq: 'monthly', priority: '0.5' },
-      { loc: `${BASE_URL}/services`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/ai-planner`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/zero-fees`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/experiences`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/shop`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/help`, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/community`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/blog`, changefreq: 'daily', priority: '0.8' },
-      { loc: `${BASE_URL}/forum`, changefreq: 'daily', priority: '0.7' },
-      { loc: `${BASE_URL}/faq`, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/support`, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/list-property`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/list-business`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/subscribe`, changefreq: 'monthly', priority: '0.5' },
-      { loc: `${BASE_URL}/visa-consult`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/hidden-gems-alanya`, changefreq: 'monthly', priority: '0.8' },
-      { loc: `${BASE_URL}/best-beaches-alanya`, changefreq: 'monthly', priority: '0.8' },
-      // Directory category pages
-      { loc: `${BASE_URL}/medical-tourism-alanya`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-hotels`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-villas`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-apartments`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/things-to-do-in-alanya`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/airport-transfer`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/car-rental`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/restaurants`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/cafes`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-real-estate`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-residency-guide`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-shopping-guide`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-nature-attractions`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-weather`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/nightlife`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-spa-hamam`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/alanya-hair-beauty`, changefreq: 'weekly', priority: '0.8' },
-      // Service category pages
-      { loc: `${BASE_URL}/services/car-rental`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/services/bike-rental`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/services/bicycle-rental`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/services/tourist-sim-card`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/services/visa-legal`, changefreq: 'weekly', priority: '0.7' },
-    ]
-    urls.push(...staticPages)
+    // Static and Category pages from config
+    for (const urlConfig of STATIC_SITEMAP_URLS) {
+      // Avoid leading/trailing slash double-up
+      const pathPart = urlConfig.path === '/' ? '' : urlConfig.path;
+      urls.push({
+        loc: `${BASE_URL}${pathPart}`,
+        changefreq: urlConfig.changefreq,
+        priority: urlConfig.priority,
+      });
+    }
 
     // Excursion Type Pages
-    const excursionTypes = [
-      { slug: 'alanya-boat-tours', priority: '0.9' },
-      { slug: 'alanya-jeep-safari', priority: '0.9' },
-      { slug: 'alanya-buggy-safari', priority: '0.8' },
-      { slug: 'alanya-rafting', priority: '0.9' },
-      { slug: 'scuba-diving-alanya', priority: '0.9' },
-      { slug: 'sapadere-canyon-tour', priority: '0.8' },
-      { slug: 'green-canyon-tour', priority: '0.8' },
-      { slug: 'parasailing-alanya', priority: '0.8' },
-      { slug: 'alanya-fishing-trips', priority: '0.7' },
-      { slug: 'alanya-city-tour', priority: '0.8' },
-      { slug: 'alanya-yacht-charter', priority: '0.8' }
-    ]
-    for (const exc of excursionTypes) {
+    for (const exc of EXCURSION_TYPES) {
+      let priority = '0.8';
+      if (['alanya-boat-tours', 'alanya-jeep-safari', 'alanya-rafting', 'scuba-diving-alanya'].includes(exc.slug)) {
+        priority = '0.9';
+      } else if (exc.slug === 'alanya-fishing-trips') {
+        priority = '0.7';
+      }
       urls.push({
         loc: `${BASE_URL}/${exc.slug}`,
         changefreq: 'weekly',
-        priority: exc.priority
-      })
+        priority,
+      });
     }
 
     // Attraction Pages
-    const attractions = [
-      { slug: 'cleopatra-beach', priority: '0.9' },
-      { slug: 'alanya-castle', priority: '0.9' },
-      { slug: 'dim-cave', priority: '0.9' },
-      { slug: 'incekum-beach', priority: '0.8' },
-      { slug: 'keykubat-beach', priority: '0.8' },
-      { slug: 'dim-river', priority: '0.8' },
-      { slug: 'sapadere-canyon', priority: '0.8' },
-      { slug: 'red-tower-alanya', priority: '0.8' },
-      { slug: 'alanya-shipyard', priority: '0.8' },
-      { slug: 'syedra-ancient-city', priority: '0.8' },
-      { slug: 'manavgat-waterfall', priority: '0.8' },
-      { slug: 'side-day-trip', priority: '0.8' },
-      { slug: 'green-canyon', priority: '0.8' }
-    ]
-    for (const attr of attractions) {
+    for (const attr of ATTRACTIONS) {
+      const priority = ['cleopatra-beach', 'alanya-castle', 'dim-cave'].includes(attr.slug) ? '0.9' : '0.8';
       urls.push({
         loc: `${BASE_URL}/${attr.slug}`,
         changefreq: 'weekly',
-        priority: attr.priority
-      })
+        priority,
+      });
     }
 
     // District Pages
-    const districts = ['mahmutlar', 'kargicak', 'oba', 'tosmur', 'konakli', 'avsallar', 'turkler', 'okurcalar', 'incekum']
-    for (const dist of districts) {
-      urls.push({ loc: `${BASE_URL}/hotels-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
-      urls.push({ loc: `${BASE_URL}/villas-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
-      urls.push({ loc: `${BASE_URL}/apartments-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
-      urls.push({ loc: `${BASE_URL}/things-to-do-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
-      urls.push({ loc: `${BASE_URL}/airport-transfer-to-${dist}`, changefreq: 'weekly', priority: '0.8' })
+    for (const page of DISTRICT_PAGES) {
+      urls.push({
+        loc: `${BASE_URL}/${page.url}`,
+        changefreq: 'weekly',
+        priority: '0.8',
+      });
     }
 
     // Seasonal Pages
-    const seasonalPages = [
-      { slug: 'best-time-to-visit-alanya', priority: '0.9' },
-      { slug: 'alanya-summer-holidays', priority: '0.8' },
-      { slug: 'alanya-winter-holiday', priority: '0.8' }
-    ]
-    for (const sp of seasonalPages) {
+    for (const sp of SEASONAL_PAGES) {
       urls.push({
         loc: `${BASE_URL}/${sp.slug}`,
         changefreq: 'monthly',
-        priority: sp.priority
-      })
+        priority: sp.slug === 'best-time-to-visit-alanya' ? '0.9' : '0.8',
+      });
     }
-    const months = ['april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'january']
-    for (const m of months) {
+
+    // Seasonal month sub-pages
+    for (const m of SITEMAP_MONTHS) {
       urls.push({
         loc: `${BASE_URL}/alanya-in-${m}`,
         changefreq: 'monthly',
-        priority: '0.7'
-      })
+        priority: '0.7',
+      });
     }
 
     // Nationality Landing Pages
-    const nationalPages = [
-      'alanya-holidays-from-uk',
-      'alanya-holidays-from-london',
-      'alanya-package-holidays-uk',
-      'alanya-urlaub',
-      'alanya-reisen',
-      'alanya-vakantie',
-      'alanya-holidays-from-norway',
-      'alanya-holidays-from-sweden'
-    ]
-    for (const p of nationalPages) {
+    for (const page of NATIONALITY_PAGES) {
       urls.push({
-        loc: `${BASE_URL}/${p}`,
+        loc: `${BASE_URL}/${page.slug}`,
         changefreq: 'monthly',
-        priority: '0.8'
-      })
+        priority: '0.8',
+      });
     }
 
     // Blog posts
@@ -262,7 +175,7 @@ Deno.serve(async (req: Request) => {
 
     if (blogCategories) {
       const uniqueCategories = new Set<string>(
-        blogCategories.map((c: { category: string | null }) => c.category).filter(Boolean)
+        blogCategories.map((c: { category: string | null }) => c.category).filter((c): c is string => !!c)
       )
       for (const category of uniqueCategories) {
         urls.push({

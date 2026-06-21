@@ -58,12 +58,22 @@ export function useBlogMediaUpload({ setContent }: UseBlogMediaUploadOptions) {
         if (!valid.length) return;
 
         setMediaFiles(prev => [...prev, ...valid]);
-        valid.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                setMediaPreviews(prev => [...prev, ev.target?.result as string]);
-            };
-            reader.readAsDataURL(file);
+
+        Promise.all(
+            valid.map(file => {
+                return new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => resolve(ev.target?.result as string);
+                    reader.onerror = () => reject(new Error(`Failed to read file ${file.name}`));
+                    reader.readAsDataURL(file);
+                });
+            })
+        )
+        .then(newPreviews => {
+            setMediaPreviews(prev => [...prev, ...newPreviews]);
+        })
+        .catch(err => {
+            toast.error(err instanceof Error ? err.message : 'Error reading files');
         });
 
         e.target.value = '';
