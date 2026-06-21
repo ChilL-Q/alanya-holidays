@@ -7,6 +7,8 @@ export const en = {
   'directory.apartments': 'Apartments',
   'nav.blog': 'Blog',
   'nav.forum': 'Forum',
+  'nav.events': 'Events',
+  'nav.members': 'Members',
   'nav.vehicles': 'Vehicles',
   'nav.rentals': 'Rentals',
   'shop': 'Shop',

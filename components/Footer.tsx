@@ -91,7 +91,9 @@ export const Footer: React.FC = () => {
                         <h3 className="text-white font-semibold mb-6 tracking-wide">{t('footer.company')}</h3>
                         <ul className="space-y-3 mt-4 text-sm">
                             <FooterLink to="/about" label={t('footer.about')} />
-                            <FooterLink to="/stays" label={t('nav.stays')} />
+                            <FooterLink to="/forum" label={t('nav.forum') || 'Forum'} />
+                            <FooterLink to="/events" label={t('nav.events') || 'Events'} />
+                            <FooterLink to="/members" label={t('nav.members') || 'Members'} />
                             <FooterLink to="/list-property" label={t('nav.list_business')} />
                             <FooterLink to="/contact" label={t('footer.contact')} />
                         </ul>

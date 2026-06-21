@@ -12,6 +12,7 @@ export const AdminForumPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [newName, setNewName] = useState('');
     const [newDescription, setNewDescription] = useState('');
+    const [newParentId, setNewParentId] = useState('');
     const [creating, setCreating] = useState(false);
     const {
         items: removedPosts,
@@ -38,7 +39,7 @@ export const AdminForumPage: React.FC = () => {
         setLoading(true);
         try {
             const [cats, reps] = await Promise.all([
-                db.getForumCategories(),
+                db.getForumCategoryTree(),
                 db.getForumReports(false),
             ]);
             setCategories(cats);
@@ -62,11 +63,13 @@ export const AdminForumPage: React.FC = () => {
             await db.createForumCategory({
                 name: newName.trim(),
                 description: newDescription.trim() || undefined,
+                parent_id: newParentId || null,
                 sort_order: categories.length,
             });
-            toast.success('Category added');
+            toast.success(newParentId ? 'Subcategory added' : 'Category added');
             setNewName('');
             setNewDescription('');
+            setNewParentId('');
             fetchAll();
         } catch (e) {
             toast.error((e as Error).message || 'Failed to add category');
@@ -76,13 +79,24 @@ export const AdminForumPage: React.FC = () => {
     };
 
     const handleDeleteCategory = async (id: string) => {
-        if (!window.confirm('Delete this category? Posts in it will become uncategorized.')) return;
+        if (!window.confirm('Delete this category? Posts and subcategories under it will become uncategorized.')) return;
         try {
             await db.deleteForumCategory(id);
             toast.success('Category deleted');
-            setCategories((prev) => prev.filter((c) => c.id !== id));
+            fetchAll();
         } catch (e) {
             toast.error((e as Error).message || 'Failed to delete category');
+        }
+    };
+
+    // "Categories switch" — move a subcategory under a different parent (or to top level).
+    const handleSwitchParent = async (id: string, parentId: string) => {
+        try {
+            await db.updateForumCategory(id, { parent_id: parentId || null });
+            toast.success('Category moved');
+            fetchAll();
+        } catch (e) {
+            toast.error((e as Error).message || 'Failed to move category');
         }
     };
 
@@ -137,13 +151,13 @@ export const AdminForumPage: React.FC = () => {
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Categories</h2>
 
                 <form onSubmit={handleCreateCategory} className="bg-white dark:bg-slate-800 rounded-xl shadow p-5 max-w-2xl mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <input
                             type="text"
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             required
-                            placeholder="Category name"
+                            placeholder="Category / subcategory name"
                             className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
                         />
                         <input
@@ -153,6 +167,16 @@ export const AdminForumPage: React.FC = () => {
                             placeholder="Description (optional)"
                             className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
                         />
+                        <select
+                            value={newParentId}
+                            onChange={(e) => setNewParentId(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value="">— Top-level category —</option>
+                            {categories.map((p) => (
+                                <option key={p.id} value={p.id}>Subcategory of: {p.name}</option>
+                            ))}
+                        </select>
                     </div>
                     <button
                         type="submit"
@@ -160,28 +184,58 @@ export const AdminForumPage: React.FC = () => {
                         className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
                         {creating ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-                        Add Category
+                        Add
                     </button>
                 </form>
 
                 {categories.length === 0 ? (
                     <p className="text-slate-500 dark:text-slate-400">No categories yet.</p>
                 ) : (
-                    <div className="space-y-2 max-w-2xl">
-                        {categories.map((c) => (
-                            <div key={c.id} className="flex items-center gap-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3">
-                                <div className="flex-grow">
-                                    <p className="font-medium text-slate-900 dark:text-white">{c.name}</p>
-                                    {c.description && <p className="text-xs text-slate-500 dark:text-slate-400">{c.description}</p>}
+                    <div className="space-y-5 max-w-3xl">
+                        {categories.map((parent) => (
+                            <div key={parent.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                                    <div className="flex-grow">
+                                        <p className="font-semibold text-slate-900 dark:text-white">{parent.name}</p>
+                                        {parent.description && <p className="text-xs text-slate-500 dark:text-slate-400">{parent.description}</p>}
+                                    </div>
+                                    <span className="text-xs text-slate-400">{parent.children?.length || 0} subcategories · /{parent.slug}</span>
+                                    <button
+                                        onClick={() => handleDeleteCategory(parent.id)}
+                                        title="Delete category"
+                                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
-                                <span className="text-xs text-slate-400">/{c.slug}</span>
-                                <button
-                                    onClick={() => handleDeleteCategory(c.id)}
-                                    title="Delete category"
-                                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                                {(parent.children?.length || 0) > 0 && (
+                                    <div className="divide-y divide-slate-100 dark:divide-slate-700/60">
+                                        {parent.children!.map((sub) => (
+                                            <div key={sub.id} className="flex items-center gap-3 px-4 py-2.5 pl-8">
+                                                <span className="flex-grow text-sm text-slate-700 dark:text-slate-200">{sub.name}</span>
+                                                <span className="text-xs text-slate-400">/{sub.slug}</span>
+                                                <select
+                                                    value={parent.id}
+                                                    onChange={(e) => handleSwitchParent(sub.id, e.target.value)}
+                                                    title="Move to another category"
+                                                    className="text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+                                                >
+                                                    {categories.map((p) => (
+                                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                                    ))}
+                                                    <option value="">Top-level</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => handleDeleteCategory(sub.id)}
+                                                    title="Delete subcategory"
+                                                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

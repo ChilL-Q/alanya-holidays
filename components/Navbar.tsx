@@ -9,6 +9,7 @@ import { useModal } from '../context/ModalContext';
 import { useCart } from '../context/CartContext';
 import { useFavorites } from '../context/FavoritesContext';
 import { useLanguage } from '../context/LanguageContext';
+import { db } from '../api-services';
 import { NotificationBell } from './ui/NotificationBell';
 import { MobileMenu } from './navbar/MobileMenu';
 import { UserDropdown } from './navbar/UserDropdown';
@@ -43,6 +44,14 @@ export const Navbar: React.FC = () => {
   }, [location.pathname]);
 
   useClickOutside(profileRef, () => setIsProfileOpen(false));
+
+  // Presence heartbeat — stamp last_seen for the "who's online" view
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    db.touchPresence();
+    const interval = window.setInterval(() => db.touchPresence(), 2 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {

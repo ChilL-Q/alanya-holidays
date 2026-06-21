@@ -110,6 +110,7 @@ export const forumCategorySchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters").max(60, "Name is too long"),
     description: z.string().max(300).optional(),
     sort_order: z.number().int().optional(),
+    parent_id: z.string().uuid("Invalid parent").nullable().optional(),
 });
 
 export const forumReportSchema = z.object({

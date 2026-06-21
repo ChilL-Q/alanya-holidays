@@ -7,6 +7,8 @@ export const ar = {
     'directory.apartments': 'شقق',
     'nav.blog': 'المدونة',
     'nav.forum': 'المنتدى',
+    'nav.events': 'الفعاليات',
+    'nav.members': 'الأعضاء',
     'nav.vehicles': 'المركبات',
     'nav.rentals': 'الإيجار',
     'shop': 'المتجر',

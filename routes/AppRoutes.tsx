@@ -66,8 +66,11 @@ const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').t
 const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
 const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
 const ForumHome = React.lazy(() => import('../pages/ForumHome').then(module => ({ default: module.ForumHome })));
+const ForumCategoryPage = React.lazy(() => import('../pages/ForumCategoryPage').then(module => ({ default: module.ForumCategoryPage })));
 const ForumPostPage = React.lazy(() => import('../pages/ForumPostPage').then(module => ({ default: module.ForumPostPage })));
 const ForumSubmitPage = React.lazy(() => import('../pages/ForumSubmitPage').then(module => ({ default: module.ForumSubmitPage })));
+const EventsPage = React.lazy(() => import('../pages/EventsPage').then(module => ({ default: module.EventsPage })));
+const MembersPage = React.lazy(() => import('../pages/MembersPage').then(module => ({ default: module.MembersPage })));
 
 // Lazy Load Admin Pages
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
@@ -89,6 +92,7 @@ const AdminAddBlogPostPage = React.lazy(() => import('../pages/admin/AdminAddBlo
 const AdminTestimonialsPage = React.lazy(() => import('../pages/admin/AdminTestimonialsPage').then(module => ({ default: module.AdminTestimonialsPage })));
 const AdminListingReviewsPage = React.lazy(() => import('../pages/admin/AdminListingReviewsPage').then(module => ({ default: module.AdminListingReviewsPage })));
 const AdminForumPage = React.lazy(() => import('../pages/admin/AdminForumPage').then(module => ({ default: module.AdminForumPage })));
+const AdminEventsPage = React.lazy(() => import('../pages/admin/AdminEventsPage').then(module => ({ default: module.AdminEventsPage })));
 
 // Lazy Load Host Pages
 const HostDashboard = React.lazy(() => import('../pages/host/HostDashboard').then(module => ({ default: module.HostDashboard })));
@@ -268,7 +272,10 @@ export const AppRoutes: React.FC = () => {
                 {/* Forum */}
                 <Route path="/forum" element={<ForumHome />} />
                 <Route path="/forum/new" element={<AuthRoute><ForumSubmitPage /></AuthRoute>} />
+                <Route path="/forum/category/:slug" element={<ForumCategoryPage />} />
                 <Route path="/forum/:slug" element={<ForumPostPage />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/members" element={<MembersPage />} />
 
                 {/* Auth Redirects */}
                 <Route path="/login" element={<LoginRedirect mode="login" />} />
@@ -504,6 +511,13 @@ export const AppRoutes: React.FC = () => {
                     <AdminRoute>
                         <AdminLayout>
                             <AdminForumPage />
+                        </AdminLayout>
+                    </AdminRoute>
+                } />
+                <Route path="/admin/events" element={
+                    <AdminRoute>
+                        <AdminLayout>
+                            <AdminEventsPage />
                         </AdminLayout>
                     </AdminRoute>
                 } />

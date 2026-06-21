@@ -29,9 +29,35 @@ export interface ForumPostFilters {
 
 const POST_SELECT = `
     *,
-    category:forum_categories(id, name, slug, description, sort_order, created_at),
+    category:forum_categories(
+        id, name, slug, description, sort_order, parent_id, icon, image_url, accent, created_at
+    ),
     author:profiles!forum_posts_author_id_fkey(full_name, avatar_url)
 `;
+
+/**
+ * Attach each post's parent category via a plain id lookup.
+ * Avoids a self-referential PostgREST embed, which isn't reliably resolvable
+ * across environments (the parent_id self-FK may be unnamed/absent in the catalog).
+ */
+async function attachCategoryParents(posts: ForumPost[]): Promise<void> {
+    const parentIds = Array.from(
+        new Set(posts.map((p) => p.category?.parent_id).filter((x): x is string => !!x)),
+    );
+    if (parentIds.length === 0) return;
+    const { data } = await supabase
+        .from('forum_categories')
+        .select('id, name, slug')
+        .in('id', parentIds);
+    const map = new Map(
+        toArray<{ id: string; name: string; slug: string }>(data).map((c) => [c.id, c]),
+    );
+    for (const p of posts) {
+        if (p.category?.parent_id) {
+            p.category.parent = map.get(p.category.parent_id) || null;
+        }
+    }
+}
 
 // ============================================================
 // Helpers
@@ -110,7 +136,158 @@ export const forumService = {
         return data as ForumCategory[];
     },
 
-    async createForumCategory(input: { name: string; description?: string; sort_order?: number }): Promise<ForumCategory> {
+    /** Map of category_id → non-removed post count. */
+    async _postCountsByCategory(): Promise<Map<string, number>> {
+        const { data, error } = await supabase
+            .from('forum_posts')
+            .select('category_id')
+            .eq('is_removed', false);
+        if (error) throw error;
+        const counts = new Map<string, number>();
+        for (const row of toArray<{ category_id: string | null }>(data)) {
+            if (row.category_id) counts.set(row.category_id, (counts.get(row.category_id) || 0) + 1);
+        }
+        return counts;
+    },
+
+    /** Top-level categories with their subcategories and discussion counts. */
+    async getForumCategoryTree(): Promise<ForumCategory[]> {
+        const [{ data, error }, counts] = await Promise.all([
+            supabase
+                .from('forum_categories')
+                .select('*')
+                .order('sort_order', { ascending: true })
+                .order('name', { ascending: true }),
+            this._postCountsByCategory(),
+        ]);
+        if (error) throw error;
+
+        const all = (data || []) as ForumCategory[];
+        const childrenByParent = new Map<string, ForumCategory[]>();
+        for (const c of all) {
+            if (c.parent_id) {
+                const arr = childrenByParent.get(c.parent_id) || [];
+                arr.push(c);
+                childrenByParent.set(c.parent_id, arr);
+            }
+        }
+
+        return all
+            .filter((c) => !c.parent_id)
+            .map((parent) => {
+                const children = (childrenByParent.get(parent.id) || []).map((ch) => ({
+                    ...ch,
+                    discussion_count: counts.get(ch.id) || 0,
+                }));
+                const discussion = children.reduce(
+                    (sum, ch) => sum + (ch.discussion_count || 0),
+                    counts.get(parent.id) || 0,
+                );
+                return {
+                    ...parent,
+                    children,
+                    topic_count: children.length,
+                    discussion_count: discussion,
+                };
+            });
+    },
+
+    /** A single category (top-level or sub) with parent + children + counts. */
+    async getForumCategory(slug: string): Promise<ForumCategory | null> {
+        const { data, error } = await supabase
+            .from('forum_categories')
+            .select('*')
+            .eq('slug', slug)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw error;
+        }
+
+        const category = data as ForumCategory;
+        const counts = await this._postCountsByCategory();
+
+        if (category.parent_id) {
+            const { data: parent } = await supabase
+                .from('forum_categories')
+                .select('id, name, slug')
+                .eq('id', category.parent_id)
+                .single();
+            category.parent = (parent as ForumCategory) || null;
+        }
+
+        if (!category.parent_id) {
+            const { data: kids, error: kidsErr } = await supabase
+                .from('forum_categories')
+                .select('*')
+                .eq('parent_id', category.id)
+                .order('sort_order', { ascending: true });
+            if (kidsErr) throw kidsErr;
+
+            const children = ((kids || []) as ForumCategory[]).map((ch) => ({
+                ...ch,
+                discussion_count: counts.get(ch.id) || 0,
+            }));
+            category.children = children;
+            category.topic_count = children.length;
+            category.discussion_count = children.reduce(
+                (sum, ch) => sum + (ch.discussion_count || 0),
+                counts.get(category.id) || 0,
+            );
+        } else {
+            category.discussion_count = counts.get(category.id) || 0;
+        }
+
+        return category;
+    },
+
+    /** Trending posts for the landing carousel (most liked, recent). */
+    async getHotPosts(limit = 8): Promise<ForumPost[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data, error } = await supabase
+            .from('forum_posts')
+            .select(POST_SELECT)
+            .eq('is_removed', false)
+            .order('like_count', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) throw error;
+
+        const hot = await annotateLikes(
+            (data || []) as unknown as ForumPost[],
+            'forum_post_likes',
+            'post_id',
+            user?.id ?? null,
+        );
+        await attachCategoryParents(hot);
+        return hot;
+    },
+
+    /** Aggregate counts for the hero stats bar. */
+    async getForumStats(): Promise<{ members: number; discussions: number; replies: number }> {
+        const [members, discussions, replies] = await Promise.all([
+            supabase.from('profiles').select('id', { count: 'exact', head: true }),
+            supabase.from('forum_posts').select('id', { count: 'exact', head: true }).eq('is_removed', false),
+            supabase.from('forum_comments').select('id', { count: 'exact', head: true }).eq('is_removed', false),
+        ]);
+        return {
+            members: members.count || 0,
+            discussions: discussions.count || 0,
+            replies: replies.count || 0,
+        };
+    },
+
+    /** Best-effort view counter bump; never throws to the caller. */
+    async incrementPostView(postId: string): Promise<void> {
+        try {
+            await supabase.rpc('increment_forum_post_view', { p_post_id: postId });
+        } catch (e) {
+            console.error('Failed to track post view:', e);
+        }
+    },
+
+    async createForumCategory(input: { name: string; description?: string; sort_order?: number; parent_id?: string | null }): Promise<ForumCategory> {
         await requireAdmin();
         const validated = forumCategorySchema.parse(input);
         const baseSlug = slugify(validated.name);
@@ -122,6 +299,7 @@ export const forumService = {
                 slug: baseSlug,
                 description: validated.description || null,
                 sort_order: validated.sort_order ?? 0,
+                parent_id: validated.parent_id || null,
             }])
             .select()
             .single();
@@ -130,7 +308,7 @@ export const forumService = {
         return data as ForumCategory;
     },
 
-    async updateForumCategory(id: string, updates: { name?: string; description?: string; sort_order?: number }): Promise<ForumCategory> {
+    async updateForumCategory(id: string, updates: { name?: string; description?: string; sort_order?: number; parent_id?: string | null }): Promise<ForumCategory> {
         await requireAdmin();
         const safe: Record<string, unknown> = {};
         if (updates.name !== undefined) {
@@ -139,6 +317,7 @@ export const forumService = {
         }
         if (updates.description !== undefined) safe.description = updates.description || null;
         if (updates.sort_order !== undefined) safe.sort_order = updates.sort_order;
+        if (updates.parent_id !== undefined) safe.parent_id = updates.parent_id || null;
 
         const { data, error } = await supabase
             .from('forum_categories')
@@ -183,13 +362,24 @@ export const forumService = {
         }
 
         if (filters.categorySlug) {
-            // Resolve slug → id
+            // Resolve slug → id (a top-level slug also matches its subcategories)
             const { data: cat } = await supabase
                 .from('forum_categories')
-                .select('id')
+                .select('id, parent_id')
                 .eq('slug', filters.categorySlug)
                 .single();
-            if (cat) query = query.eq('category_id', cat.id);
+            if (!cat) return { data: [], total: 0 };
+
+            if (cat.parent_id) {
+                query = query.eq('category_id', cat.id);
+            } else {
+                const { data: kids } = await supabase
+                    .from('forum_categories')
+                    .select('id')
+                    .eq('parent_id', cat.id);
+                const ids = [cat.id, ...toArray<{ id: string }>(kids).map((k) => k.id)];
+                query = query.in('category_id', ids);
+            }
         }
 
         if (filters.sort === 'top') {
@@ -212,6 +402,7 @@ export const forumService = {
             'post_id',
             user?.id ?? null,
         );
+        await attachCategoryParents(annotated);
 
         return { data: annotated, total: count || 0 };
     },
@@ -236,6 +427,7 @@ export const forumService = {
             'post_id',
             user?.id ?? null,
         );
+        await attachCategoryParents([annotated]);
         return annotated;
     },
 

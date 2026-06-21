@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle, Briefcase } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle, Briefcase, ArrowRightLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
 import { useModal } from '../../context/ModalContext';
 import { useCurrency, Currency } from '../../context/CurrencyContext';
-import { NavModeToggle } from './NavModeToggle';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -28,11 +27,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
 
     return (
         <div className="absolute top-20 right-0 left-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800/50 shadow-2xl p-4 flex flex-col gap-4 z-40 animate-in slide-in-from-top-10 duration-300 md:hidden max-h-[80vh] overflow-y-auto [-webkit-overflow-scrolling:touch]">
-
-            {/* Global Toggle for Mobile Menu */}
-            <div className="flex justify-center mb-2">
-                <NavModeToggle mode={mode} setMode={setMode} />
-            </div>
 
             {/* Auth Section */}
             {!isAuthenticated ? (
@@ -155,8 +149,22 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
 
-            {/* Settings (Theme, Lang, Currency) */}
+            {/* Settings (Mode switch, Theme, Lang, Currency) */}
             <div className="space-y-3">
+                {/* Directory / Rentals mode switch */}
+                <Link
+                    to={mode === 'directory' ? '/services' : '/'}
+                    onClick={() => { setMode(mode === 'directory' ? 'rental' : 'directory'); onClose(); }}
+                    className="flex items-center justify-between px-2 py-1"
+                >
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        {mode === 'directory'
+                            ? (t('nav.switch_to_rentals') || 'Rentals & Services')
+                            : (t('nav.switch_to_directory') || 'Directory')}
+                    </span>
+                    <ArrowRightLeft size={16} className="text-slate-400" />
+                </Link>
+
                 {/* Theme */}
                 <div className="flex items-center justify-between px-2">
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('nav.theme')}</span>
