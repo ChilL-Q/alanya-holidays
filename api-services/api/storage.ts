@@ -5,9 +5,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg']);
 
 // Blog-specific validation (stricter: 5MB, no gif/svg)
-const BLOG_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const BLOG_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const BLOG_ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp']);
+export const BLOG_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const BLOG_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const BLOG_ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp']);
 
 function validateFile(file: File) {
     // Check size

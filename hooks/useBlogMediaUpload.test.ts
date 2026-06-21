@@ -40,14 +40,14 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('initializes with empty files and previews', () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         expect(result.current.mediaFiles).toEqual([]);
         expect(result.current.mediaPreviews).toEqual([]);
         expect(result.current.uploading).toBe(false);
     });
 
     it('adds valid selected files', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const file = new File(['dummy content'], 'test.png', { type: 'image/png' });
 
         await act(async () => {
@@ -61,7 +61,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('validates file size limit', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const largeFile = new File(['x'.repeat(6 * 1024 * 1024)], 'large.jpg', { type: 'image/jpeg' });
 
         await act(async () => {
@@ -75,7 +75,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('validates file format extensions', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const invalidFile = new File(['text'], 'test.txt', { type: 'text/plain' });
 
         await act(async () => {
@@ -89,7 +89,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('removes a media file by index', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const file1 = new File(['1'], 'img1.png', { type: 'image/png' });
         const file2 = new File(['2'], 'img2.png', { type: 'image/png' });
 
@@ -109,7 +109,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('clears all media lists', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const file = new File(['1'], 'img1.png', { type: 'image/png' });
 
         await act(async () => {
@@ -149,7 +149,7 @@ describe('useBlogMediaUpload', () => {
     });
 
     it('uploads images successfully and returns URLs', async () => {
-        const { result } = renderHook(() => useBlogMediaUpload({ content: '', setContent: mockSetContent }));
+        const { result } = renderHook(() => useBlogMediaUpload({ setContent: mockSetContent }));
         const file = new File(['1'], 'img1.png', { type: 'image/png' });
 
         await act(async () => {

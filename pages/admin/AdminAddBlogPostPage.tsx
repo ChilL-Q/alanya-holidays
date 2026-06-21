@@ -27,7 +27,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
         handleFileSelect,
         removeMedia,
         uploadImages,
-    } = useBlogMediaUpload({ content, setContent });
+    } = useBlogMediaUpload({ setContent });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

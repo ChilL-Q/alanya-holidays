@@ -1,4 +1,4 @@
-import { useEffect, DependencyList, useCallback } from 'react';
+import { useEffect, DependencyList } from 'react';
 
 /**
  * Hook for executing async functions with automatic cleanup.
@@ -13,13 +13,10 @@ export function useAsyncEffect(
     asyncFn: (isCancelled: () => boolean) => Promise<void>,
     deps: DependencyList
 ) {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const memoizedFn = useCallback(asyncFn, deps);
-
     useEffect(() => {
         let cancelled = false;
 
-        memoizedFn(() => cancelled).catch((err) => {
+        asyncFn(() => cancelled).catch((err) => {
             if (!cancelled) {
                 console.error('Async effect error:', err);
             }
@@ -28,5 +25,6 @@ export function useAsyncEffect(
         return () => {
             cancelled = true;
         };
-    }, [memoizedFn]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, deps);
 }

@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { db } from '../api-services';
+import { BLOG_MAX_FILE_SIZE, BLOG_ALLOWED_EXTENSIONS } from '../api-services';
 import { MAX_BLOG_IMAGES } from '../utils/formatBlogContent';
 
 export interface UseBlogMediaUploadOptions {
-    content: string;
     setContent: (val: string) => void;
 }
 
-export function useBlogMediaUpload({ content, setContent }: UseBlogMediaUploadOptions) {
+export function useBlogMediaUpload({ setContent }: UseBlogMediaUploadOptions) {
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
@@ -43,12 +43,12 @@ export function useBlogMediaUpload({ content, setContent }: UseBlogMediaUploadOp
 
         const valid: File[] = [];
         for (const file of toAdd) {
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error(`${file.name} exceeds 5MB limit`);
+            if (file.size > BLOG_MAX_FILE_SIZE) {
+                toast.error(`${file.name} exceeds ${BLOG_MAX_FILE_SIZE / (1024 * 1024)}MB limit`);
                 continue;
             }
             const ext = file.name.split('.').pop()?.toLowerCase();
-            if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext || '')) {
+            if (!BLOG_ALLOWED_EXTENSIONS.has(ext || '')) {
                 toast.error(`${file.name} is not a supported format (jpg, png, webp)`);
                 continue;
             }
