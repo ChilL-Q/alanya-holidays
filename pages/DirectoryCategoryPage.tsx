@@ -183,7 +183,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         if (!intro) return [];
 
         const { faqs, description } = intro;
-        const faqSchema = faqs && faqs.length > 0 ? faqPageSchema(faqs) : null;
+        const faqSchema = faqPageSchema(faqs);
 
         const listSchema = itemListSchema(
             filteredData.map((item) => ({
