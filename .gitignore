@@ -74,3 +74,5 @@ playwright-report/
 test_sprite.txt
 .openclaude
 .openclaude-profile.json
+.serena
+dock

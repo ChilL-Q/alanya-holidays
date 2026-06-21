@@ -85,21 +85,26 @@ Deno.serve(async (req: Request) => {
     // Static pages
     const staticPages: SitemapUrl[] = [
       { loc: `${BASE_URL}/`, changefreq: 'daily', priority: '1.0' },
+      { loc: `${BASE_URL}/properties`, changefreq: 'daily', priority: '0.9' },
       { loc: `${BASE_URL}/about`, changefreq: 'monthly', priority: '0.7' },
       { loc: `${BASE_URL}/contact`, changefreq: 'monthly', priority: '0.7' },
-      { loc: `${BASE_URL}/blog`, changefreq: 'daily', priority: '0.9' },
+      { loc: `${BASE_URL}/privacy`, changefreq: 'monthly', priority: '0.5' },
+      { loc: `${BASE_URL}/terms`, changefreq: 'monthly', priority: '0.5' },
       { loc: `${BASE_URL}/services`, changefreq: 'weekly', priority: '0.8' },
-      { loc: `${BASE_URL}/faq`, changefreq: 'monthly', priority: '0.6' },
-      { loc: `${BASE_URL}/privacy`, changefreq: 'yearly', priority: '0.4' },
-      { loc: `${BASE_URL}/terms`, changefreq: 'yearly', priority: '0.4' },
+      { loc: `${BASE_URL}/ai-planner`, changefreq: 'weekly', priority: '0.8' },
+      { loc: `${BASE_URL}/zero-fees`, changefreq: 'monthly', priority: '0.7' },
+      { loc: `${BASE_URL}/experiences`, changefreq: 'weekly', priority: '0.8' },
+      { loc: `${BASE_URL}/shop`, changefreq: 'weekly', priority: '0.7' },
       { loc: `${BASE_URL}/help`, changefreq: 'monthly', priority: '0.6' },
+      { loc: `${BASE_URL}/community`, changefreq: 'weekly', priority: '0.7' },
+      { loc: `${BASE_URL}/blog`, changefreq: 'daily', priority: '0.8' },
+      { loc: `${BASE_URL}/forum`, changefreq: 'daily', priority: '0.7' },
+      { loc: `${BASE_URL}/faq`, changefreq: 'monthly', priority: '0.6' },
       { loc: `${BASE_URL}/support`, changefreq: 'monthly', priority: '0.6' },
       { loc: `${BASE_URL}/list-property`, changefreq: 'monthly', priority: '0.7' },
       { loc: `${BASE_URL}/list-business`, changefreq: 'monthly', priority: '0.7' },
       { loc: `${BASE_URL}/subscribe`, changefreq: 'monthly', priority: '0.5' },
-      { loc: `${BASE_URL}/zero-fees`, changefreq: 'monthly', priority: '0.6' },
       { loc: `${BASE_URL}/visa-consult`, changefreq: 'weekly', priority: '0.7' },
-      { loc: `${BASE_URL}/shop`, changefreq: 'weekly', priority: '0.7' },
       { loc: `${BASE_URL}/hidden-gems-alanya`, changefreq: 'monthly', priority: '0.8' },
       { loc: `${BASE_URL}/best-beaches-alanya`, changefreq: 'monthly', priority: '0.8' },
       // Directory category pages
@@ -128,6 +133,103 @@ Deno.serve(async (req: Request) => {
       { loc: `${BASE_URL}/services/visa-legal`, changefreq: 'weekly', priority: '0.7' },
     ]
     urls.push(...staticPages)
+
+    // Excursion Type Pages
+    const excursionTypes = [
+      { slug: 'alanya-boat-tours', priority: '0.9' },
+      { slug: 'alanya-jeep-safari', priority: '0.9' },
+      { slug: 'alanya-buggy-safari', priority: '0.8' },
+      { slug: 'alanya-rafting', priority: '0.9' },
+      { slug: 'scuba-diving-alanya', priority: '0.9' },
+      { slug: 'sapadere-canyon-tour', priority: '0.8' },
+      { slug: 'green-canyon-tour', priority: '0.8' },
+      { slug: 'parasailing-alanya', priority: '0.8' },
+      { slug: 'alanya-fishing-trips', priority: '0.7' },
+      { slug: 'alanya-city-tour', priority: '0.8' },
+      { slug: 'alanya-yacht-charter', priority: '0.8' }
+    ]
+    for (const exc of excursionTypes) {
+      urls.push({
+        loc: `${BASE_URL}/${exc.slug}`,
+        changefreq: 'weekly',
+        priority: exc.priority
+      })
+    }
+
+    // Attraction Pages
+    const attractions = [
+      { slug: 'cleopatra-beach', priority: '0.9' },
+      { slug: 'alanya-castle', priority: '0.9' },
+      { slug: 'dim-cave', priority: '0.9' },
+      { slug: 'incekum-beach', priority: '0.8' },
+      { slug: 'keykubat-beach', priority: '0.8' },
+      { slug: 'dim-river', priority: '0.8' },
+      { slug: 'sapadere-canyon', priority: '0.8' },
+      { slug: 'red-tower-alanya', priority: '0.8' },
+      { slug: 'alanya-shipyard', priority: '0.8' },
+      { slug: 'syedra-ancient-city', priority: '0.8' },
+      { slug: 'manavgat-waterfall', priority: '0.8' },
+      { slug: 'side-day-trip', priority: '0.8' },
+      { slug: 'green-canyon', priority: '0.8' }
+    ]
+    for (const attr of attractions) {
+      urls.push({
+        loc: `${BASE_URL}/${attr.slug}`,
+        changefreq: 'weekly',
+        priority: attr.priority
+      })
+    }
+
+    // District Pages
+    const districts = ['mahmutlar', 'kargicak', 'oba', 'tosmur', 'konakli', 'avsallar', 'turkler', 'okurcalar', 'incekum']
+    for (const dist of districts) {
+      urls.push({ loc: `${BASE_URL}/hotels-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
+      urls.push({ loc: `${BASE_URL}/villas-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
+      urls.push({ loc: `${BASE_URL}/apartments-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
+      urls.push({ loc: `${BASE_URL}/things-to-do-in-${dist}`, changefreq: 'weekly', priority: '0.8' })
+      urls.push({ loc: `${BASE_URL}/airport-transfer-to-${dist}`, changefreq: 'weekly', priority: '0.8' })
+    }
+
+    // Seasonal Pages
+    const seasonalPages = [
+      { slug: 'best-time-to-visit-alanya', priority: '0.9' },
+      { slug: 'alanya-summer-holidays', priority: '0.8' },
+      { slug: 'alanya-winter-holiday', priority: '0.8' }
+    ]
+    for (const sp of seasonalPages) {
+      urls.push({
+        loc: `${BASE_URL}/${sp.slug}`,
+        changefreq: 'monthly',
+        priority: sp.priority
+      })
+    }
+    const months = ['april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'january']
+    for (const m of months) {
+      urls.push({
+        loc: `${BASE_URL}/alanya-in-${m}`,
+        changefreq: 'monthly',
+        priority: '0.7'
+      })
+    }
+
+    // Nationality Landing Pages
+    const nationalPages = [
+      'alanya-holidays-from-uk',
+      'alanya-holidays-from-london',
+      'alanya-package-holidays-uk',
+      'alanya-urlaub',
+      'alanya-reisen',
+      'alanya-vakantie',
+      'alanya-holidays-from-norway',
+      'alanya-holidays-from-sweden'
+    ]
+    for (const p of nationalPages) {
+      urls.push({
+        loc: `${BASE_URL}/${p}`,
+        changefreq: 'monthly',
+        priority: '0.8'
+      })
+    }
 
     // Blog posts
     const { data: blogPosts, error: blogError } = await supabase
@@ -158,12 +260,12 @@ Deno.serve(async (req: Request) => {
       .not('category', 'is', null)
 
     if (blogCategories) {
-      const uniqueCategories = new Set(
-        blogCategories.map((c) => c.category).filter(Boolean)
+      const uniqueCategories = new Set<string>(
+        blogCategories.map((c: { category: string | null }) => c.category).filter(Boolean)
       )
       for (const category of uniqueCategories) {
         urls.push({
-          loc: `${BASE_URL}/blog/category/${encodeURIComponent(category as string)}`,
+          loc: `${BASE_URL}/blog/category/${encodeURIComponent(category)}`,
           changefreq: 'weekly',
           priority: '0.6',
         })
@@ -219,7 +321,7 @@ Deno.serve(async (req: Request) => {
     // Ping Google about the updated sitemap
     try {
       const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(`${BASE_URL}/sitemap.xml`)}`
-      await fetch(pingUrl)
+      await fetch(pingUrl, { method: 'GET' })
       console.warn('Sitemap ping sent to Google')
     } catch (e) {
       console.error('Failed to ping Google sitemap:', e)

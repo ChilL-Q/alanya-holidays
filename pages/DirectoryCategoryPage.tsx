@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useParams, useLocation, Navigate } from 'react-router-dom';
+import { useParams, useLocation, Navigate, Link } from 'react-router-dom';
 import { Filter, Star, Info, ChevronDown, ChevronUp, Map as MapIcon, List } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -12,6 +12,7 @@ import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
 import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
+import { EXCURSION_TYPES } from '../data/excursionTypes';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
@@ -176,6 +177,82 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         return data;
     }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter, sortBy]);
 
+    // Generate JSON-LD Schemas for SEO (must be before early return for React hooks rules)
+    const schemas = useMemo(() => {
+        if (!intro) return [];
+
+        const { faqs, description } = intro;
+        const faqSchema = faqs && faqs.length > 0 ? {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+                "@type": "Question",
+                "name": faq.question,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": faq.answer
+                }
+            }))
+        } : null;
+
+        const itemListSchema = {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": filteredData.map((item, index) => ({
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": {
+                    "@type": getSchemaType(categoryId),
+                    "name": item.name,
+                    "url": item.slug
+                            ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
+                            : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
+                    "image": item.gallery?.[0] || ''
+                }
+            }))
+        };
+
+        const transportSchema = pathname === '/airport-transfer' ? {
+            '@context': 'https://schema.org',
+            '@type': 'TaxiService',
+            name: 'Alanya Airport Transfer & Taxi Service',
+            description,
+            url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
+            address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Alanya',
+                addressRegion: 'Antalya',
+                addressCountry: 'TR',
+            },
+            areaServed: {
+                '@type': 'City',
+                name: 'Alanya',
+            },
+        } : null;
+
+        const lodgingSchema = pathname === '/alanya-hotels' ? {
+            '@context': 'https://schema.org',
+            '@type': 'LodgingBusiness',
+            name: 'Hotels in Alanya',
+            description,
+            url: `https://alanya-holidays.com${CATEGORY_PATHS['accommodations']}`,
+            address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Alanya',
+                addressRegion: 'Antalya',
+                addressCountry: 'TR',
+            },
+            telephone: '+14389294208',
+            priceRange: '$$',
+        } : null;
+
+        const result: object[] = [itemListSchema];
+        if (transportSchema) result.push(transportSchema);
+        if (lodgingSchema) result.push(lodgingSchema);
+        if (faqSchema) result.push(faqSchema);
+        return result;
+    }, [filteredData, intro, pathname, categoryId]);
+
     // Basic validation if category exists
     if (!categoryId || !intro) {
         // If invalid, bounce back home
@@ -183,59 +260,6 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     }
 
     const { title, description, longDescription, faqs, keywords } = intro;
-
-    // Generate JSON-LD Schemas for SEO
-    const faqSchema = faqs && faqs.length > 0 ? {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": faqs.map(faq => ({
-            "@type": "Question",
-            "name": faq.question,
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": faq.answer
-            }
-        }))
-    } : null;
-
-    const itemListSchema = {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        "itemListElement": filteredData.map((item, index) => ({
-            "@type": "ListItem",
-            "position": index + 1,
-            "item": {
-                "@type": getSchemaType(categoryId),
-                "name": item.name,
-                "url": item.slug
-                        ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
-                        : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
-                "image": item.gallery?.[0] || ''
-            }
-        }))
-    };
-
-    const transportSchema = pathname === '/airport-transfer' ? {
-        '@context': 'https://schema.org',
-        '@type': 'TaxiService',
-        name: 'Alanya Airport Transfer & Taxi Service',
-        description,
-        url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
-        address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Alanya',
-            addressRegion: 'Antalya',
-            addressCountry: 'TR',
-        },
-        areaServed: {
-            '@type': 'City',
-            name: 'Alanya',
-        },
-    } : null;
-
-    const schemas: object[] = [itemListSchema];
-    if (transportSchema) schemas.push(transportSchema);
-    if (faqSchema) schemas.push(faqSchema);
 
     const featuredListings = filteredData.filter(item => item.is_featured);
     const standardListings = filteredData.filter(item => !item.is_featured);
@@ -288,6 +312,36 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Excursion Categories Grid for Internal Linking & Navigation */}
+                {categoryId === 'tours' && (
+                    <div className="mb-10">
+                        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-6">
+                            Browse Excursion Categories
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {EXCURSION_TYPES.map((type) => (
+                                <Link
+                                    key={type.slug}
+                                    to={`/${type.slug}`}
+                                    className="flex flex-col justify-between p-5 bg-white dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl shadow-sm hover:shadow-lg hover:border-teal-500/50 dark:hover:border-cyan-500/50 transition-all duration-300 group cursor-pointer"
+                                >
+                                    <div>
+                                        <h3 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-cyan-400 transition-colors">
+                                            {type.title}
+                                        </h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                                            {type.metaDescription}
+                                        </p>
+                                    </div>
+                                    <div className="text-xs font-semibold text-teal-600 dark:text-cyan-400 mt-4 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                        Explore Tours
+                                        <span className="text-sm font-normal">→</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* 2. Filter System */}
                 <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4 bg-white dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 shadow-sm">
