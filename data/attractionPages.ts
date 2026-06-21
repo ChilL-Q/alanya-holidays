@@ -22,6 +22,7 @@ export interface Attraction {
   searchKeywords: string[];
   relatedExcursionSlugs: string[];
   relatedAttractionSlugs: string[];
+  priority?: string;
 }
 
 export const ATTRACTIONS: Attraction[] = [
@@ -43,6 +44,7 @@ export const ATTRACTIONS: Attraction[] = [
     searchKeywords: ['beach', 'swimming', 'cleopatra', 'sandy', 'water sports'],
     relatedExcursionSlugs: ['alanya-boat-tours', 'parasailing-alanya'],
     relatedAttractionSlugs: ['incekum-beach', 'keykubat-beach'],
+    priority: '0.9',
   },
   {
     slug: 'incekum-beach',
@@ -100,6 +102,7 @@ export const ATTRACTIONS: Attraction[] = [
     searchKeywords: ['cave', 'dim', 'stalactite', 'underground', 'nature'],
     relatedExcursionSlugs: ['alanya-jeep-safari'],
     relatedAttractionSlugs: ['dim-river'],
+    priority: '0.9',
   },
   {
     slug: 'dim-river',
@@ -157,6 +160,7 @@ export const ATTRACTIONS: Attraction[] = [
     searchKeywords: ['castle', 'fortress', 'seljuk', 'history', 'views', 'keykubat'],
     relatedExcursionSlugs: ['alanya-city-tour'],
     relatedAttractionSlugs: ['red-tower-alanya', 'alanya-shipyard'],
+    priority: '0.9',
   },
   {
     slug: 'red-tower-alanya',

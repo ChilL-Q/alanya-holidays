@@ -736,7 +736,7 @@ export const blogService = {
                         type: 'blog_submission_approved',
                         data: {
                             postTitle: submission.title,
-                            postUrl: `${window.location.origin}/blog/${uniqueSlug}`,
+                            postUrl: `${import.meta.env.VITE_SITE_URL ?? 'https://alanyaholidays.com'}/blog/${uniqueSlug}`,
                             authorName: authorProfile.full_name || 'Author',
                         },
                     },

@@ -86,26 +86,19 @@ Deno.serve(async (req: Request) => {
 
     // Excursion Type Pages
     for (const exc of EXCURSION_TYPES) {
-      let priority = '0.8';
-      if (['alanya-boat-tours', 'alanya-jeep-safari', 'alanya-rafting', 'scuba-diving-alanya'].includes(exc.slug)) {
-        priority = '0.9';
-      } else if (exc.slug === 'alanya-fishing-trips') {
-        priority = '0.7';
-      }
       urls.push({
         loc: `${BASE_URL}/${exc.slug}`,
         changefreq: 'weekly',
-        priority,
+        priority: exc.priority ?? '0.8',
       });
     }
 
     // Attraction Pages
     for (const attr of ATTRACTIONS) {
-      const priority = ['cleopatra-beach', 'alanya-castle', 'dim-cave'].includes(attr.slug) ? '0.9' : '0.8';
       urls.push({
         loc: `${BASE_URL}/${attr.slug}`,
         changefreq: 'weekly',
-        priority,
+        priority: attr.priority ?? '0.8',
       });
     }
 

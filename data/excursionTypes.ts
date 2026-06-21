@@ -9,6 +9,7 @@ export interface ExcursionType {
   relatedAttractions: string[];
   relatedExcursionSlugs: string[];
   jsonLdType: 'TouristTrip';
+  priority?: string;
 }
 
 export const EXCURSION_TYPES: ExcursionType[] = [
@@ -23,6 +24,7 @@ export const EXCURSION_TYPES: ExcursionType[] = [
     relatedAttractions: ['cleopatra-beach', 'alanya-castle'],
     relatedExcursionSlugs: ['parasailing-alanya', 'alanya-yacht-charter', 'scuba-diving-alanya'],
     jsonLdType: 'TouristTrip',
+    priority: '0.9',
   },
   {
     slug: 'alanya-jeep-safari',
@@ -35,6 +37,7 @@ export const EXCURSION_TYPES: ExcursionType[] = [
     relatedAttractions: ['dim-river', 'sapadere-canyon'],
     relatedExcursionSlugs: ['alanya-rafting', 'green-canyon-tour'],
     jsonLdType: 'TouristTrip',
+    priority: '0.9',
   },
   {
     slug: 'alanya-buggy-safari',
@@ -59,6 +62,7 @@ export const EXCURSION_TYPES: ExcursionType[] = [
     relatedAttractions: ['green-canyon'],
     relatedExcursionSlugs: ['alanya-jeep-safari', 'green-canyon-tour'],
     jsonLdType: 'TouristTrip',
+    priority: '0.9',
   },
   {
     slug: 'scuba-diving-alanya',
@@ -71,6 +75,7 @@ export const EXCURSION_TYPES: ExcursionType[] = [
     relatedAttractions: ['cleopatra-beach'],
     relatedExcursionSlugs: ['alanya-boat-tours', 'parasailing-alanya'],
     jsonLdType: 'TouristTrip',
+    priority: '0.9',
   },
   {
     slug: 'sapadere-canyon-tour',
@@ -119,6 +124,7 @@ export const EXCURSION_TYPES: ExcursionType[] = [
     relatedAttractions: ['dim-river', 'green-canyon'],
     relatedExcursionSlugs: ['alanya-boat-tours', 'alanya-yacht-charter'],
     jsonLdType: 'TouristTrip',
+    priority: '0.7',
   },
   {
     slug: 'alanya-city-tour',

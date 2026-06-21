@@ -74,6 +74,7 @@ export function useBlogMediaUpload({ setContent }: UseBlogMediaUploadOptions) {
         })
         .catch(err => {
             toast.error(err instanceof Error ? err.message : 'Error reading files');
+            setMediaFiles(prev => prev.filter(f => !valid.includes(f)));
         });
 
         e.target.value = '';
