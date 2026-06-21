@@ -18,6 +18,7 @@ import {
   Hotel, MapPin, Car,
   FileText, CalendarCheck, Coins, CloudSun, Bus, Users,
 } from 'lucide-react';
+import { faqPageSchema, alanyaAddress } from '../utils/schemaGenerators';
 
 const TIP_ICONS: Record<TravelTip['icon'], React.ElementType> = {
   visa: FileText,
@@ -41,26 +42,12 @@ function buildNationalityJsonLd(page: NationalityPageData) {
     itinerary: {
       '@type': 'Place',
       name: 'Alanya',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Alanya',
-        addressRegion: 'Antalya',
-        addressCountry: 'TR',
-      },
+      address: alanyaAddress(),
     },
   };
 
-  if (page.faqs.length === 0) return tripSchema;
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: page.faqs.map(faq => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-    })),
-  };
+  const faqSchema = faqPageSchema(page.faqs);
+  if (!faqSchema) return tripSchema;
 
   return [tripSchema, faqSchema];
 }

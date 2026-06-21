@@ -12,6 +12,7 @@ import {
   Sun, Thermometer, Droplets, Waves, ChevronDown, ChevronUp,
   CheckCircle2, XCircle, Hotel, MapPin, Car,
 } from 'lucide-react';
+import { faqPageSchema, touristAttractionSchema, alanyaAddress } from '../utils/schemaGenerators';
 
 function buildSeasonalJsonLd(page: SeasonalPageData) {
   const baseUrl = 'https://alanya-holidays.com';
@@ -19,20 +20,11 @@ function buildSeasonalJsonLd(page: SeasonalPageData) {
 
   // Guide pages (no weather data) are editorial articles, not physical attractions
   const primarySchema = page.weather
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'TouristAttraction',
+    ? touristAttractionSchema({
         name: page.title,
         description: page.metaDescription,
         url,
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Alanya',
-          addressRegion: 'Antalya',
-          addressCountry: 'TR',
-        },
-        touristType: 'Leisure travelers',
-      }
+      })
     : {
         '@context': 'https://schema.org',
         '@type': 'Article',
@@ -44,17 +36,8 @@ function buildSeasonalJsonLd(page: SeasonalPageData) {
         publisher: { '@type': 'Organization', name: 'Alanya Holidays' },
       };
 
-  if (page.faqs.length === 0) return primarySchema;
-
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: page.faqs.map(faq => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-    })),
-  };
+  const faqSchema = faqPageSchema(page.faqs);
+  if (!faqSchema) return primarySchema;
 
   return [primarySchema, faqSchema];
 }

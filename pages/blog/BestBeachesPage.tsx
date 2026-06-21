@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Sun, Umbrella, Waves, Clock, Star, ChevronRight, Info } from 'lucide-react';
 import { SEOHead } from '../../components/seo/SEOHead';
+import { faqPageSchema } from '../../utils/schemaGenerators';
 
 interface Beach {
   name: string;
@@ -130,44 +131,24 @@ const travelTips = [
   'Beach clubs typically charge for sunbeds, but many offer free entry if you purchase food or drinks.',
 ];
 
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'What are the best beaches in Alanya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'The best beaches in Alanya are Cleopatra Beach for its iconic golden sand and water sports, Damlataş Beach for its proximity to the famous cave and snorkeling, Keykubat Beach for its long promenade and family-friendly parks, Portakal Beach for a quieter, more natural escape, and İncekum Beach for its exceptionally fine sand and shallow, child-safe waters.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Which Alanya beach is best for families with children?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'İncekum Beach is the top choice for families with young children due to its extremely fine sand, very shallow water, and natural shade from pine forests. Cleopatra Beach is also excellent for families thanks to its lifeguards, gentle slope, and abundance of nearby amenities.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Are Alanya beaches free to enter?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes, all public beaches in Alanya are free to enter. However, sunbeds, umbrellas, and beach club amenities usually carry a rental fee. Many establishments offer free sunbeds if you purchase food or beverages.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'When is the best time to visit Alanya beaches?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'The best time to visit Alanya beaches is from late May to early October. July and August offer the warmest water but the most crowds. June and September provide a great balance of pleasant weather, warm seas, and fewer tourists.',
-      },
-    },
-  ],
-};
+const faqSchema = faqPageSchema([
+  {
+    question: 'What are the best beaches in Alanya?',
+    answer: 'The best beaches in Alanya are Cleopatra Beach for its iconic golden sand and water sports, Damlataş Beach for its proximity to the famous cave and snorkeling, Keykubat Beach for its long promenade and family-friendly parks, Portakal Beach for a quieter, more natural escape, and İncekum Beach for its exceptionally fine sand and shallow, child-safe waters.',
+  },
+  {
+    question: 'Which Alanya beach is best for families with children?',
+    answer: 'İncekum Beach is the top choice for families with young children due to its extremely fine sand, very shallow water, and natural shade from pine forests. Cleopatra Beach is also excellent for families thanks to its lifeguards, gentle slope, and abundance of nearby amenities.',
+  },
+  {
+    question: 'Are Alanya beaches free to enter?',
+    answer: 'Yes, all public beaches in Alanya are free to enter. However, sunbeds, umbrellas, and beach club amenities usually carry a rental fee. Many establishments offer free sunbeds if you purchase food or beverages.',
+  },
+  {
+    question: 'When is the best time to visit Alanya beaches?',
+    answer: 'The best time to visit Alanya beaches is from late May to early October. July and August offer the warmest water but the most crowds. June and September provide a great balance of pleasant weather, warm seas, and fewer tourists.',
+  },
+]);
 
 export const BestBeachesPage: React.FC = () => {
   return (

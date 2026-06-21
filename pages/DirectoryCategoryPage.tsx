@@ -13,6 +13,7 @@ import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
 import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
 import { EXCURSION_TYPES } from '../data/excursionTypes';
+import { faqPageSchema, itemListSchema, taxiServiceSchema, alanyaAddress } from '../utils/schemaGenerators';
 
 export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categoryId: propCategoryId }) => {
     const params = useParams<{ categoryId: string }>();
@@ -182,53 +183,24 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
         if (!intro) return [];
 
         const { faqs, description } = intro;
-        const faqSchema = faqs && faqs.length > 0 ? {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity": faqs.map(faq => ({
-                "@type": "Question",
-                "name": faq.question,
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": faq.answer
-                }
-            }))
-        } : null;
+        const faqSchema = faqs && faqs.length > 0 ? faqPageSchema(faqs) : null;
 
-        const itemListSchema = {
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "itemListElement": filteredData.map((item, index) => ({
-                "@type": "ListItem",
-                "position": index + 1,
-                "item": {
-                    "@type": getSchemaType(categoryId),
-                    "name": item.name,
-                    "url": item.slug
-                            ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
-                            : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
-                    "image": item.gallery?.[0] || ''
-                }
+        const listSchema = itemListSchema(
+            filteredData.map((item) => ({
+                type: getSchemaType(categoryId),
+                name: item.name,
+                url: item.slug
+                    ? `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || ''}/${item.slug}`
+                    : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
+                image: item.gallery?.[0] || '',
             }))
-        };
+        );
 
-        const transportSchema = pathname === '/airport-transfer' ? {
-            '@context': 'https://schema.org',
-            '@type': 'TaxiService',
+        const transportSchema = pathname === '/airport-transfer' ? taxiServiceSchema({
             name: 'Alanya Airport Transfer & Taxi Service',
             description,
             url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
-            address: {
-                '@type': 'PostalAddress',
-                addressLocality: 'Alanya',
-                addressRegion: 'Antalya',
-                addressCountry: 'TR',
-            },
-            areaServed: {
-                '@type': 'City',
-                name: 'Alanya',
-            },
-        } : null;
+        }) : null;
 
         const lodgingSchema = pathname === '/alanya-hotels' ? {
             '@context': 'https://schema.org',
@@ -236,17 +208,12 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
             name: 'Hotels in Alanya',
             description,
             url: `https://alanya-holidays.com${CATEGORY_PATHS['accommodations']}`,
-            address: {
-                '@type': 'PostalAddress',
-                addressLocality: 'Alanya',
-                addressRegion: 'Antalya',
-                addressCountry: 'TR',
-            },
+            address: alanyaAddress(),
             telephone: '+14389294208',
             priceRange: '$$',
         } : null;
 
-        const result: object[] = [itemListSchema];
+        const result: object[] = [listSchema];
         if (transportSchema) result.push(transportSchema);
         if (lodgingSchema) result.push(lodgingSchema);
         if (faqSchema) result.push(faqSchema);

@@ -15,6 +15,8 @@ import {
 } from '../data/districtPages';
 import { ChevronDown, ChevronUp, Info, Building2, Home, Building, Compass, Bus } from 'lucide-react';
 
+import { alanyaAddress, taxiServiceSchema, touristAttractionSchema } from '../utils/schemaGenerators';
+
 const PAGE_TYPE_ICONS: Record<DistrictPageType, React.ElementType> = {
   'hotels': Building2,
   'villas': Home,
@@ -57,12 +59,7 @@ function buildDistrictJsonLd(page: DistrictPageContent, districtName: string) {
     name: `${districtName}, Alanya`,
     description: page.metaDescription,
     url,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: districtName,
-      addressRegion: 'Antalya',
-      addressCountry: 'TR',
-    },
+    address: alanyaAddress({ addressLocality: districtName }),
     containedInPlace: {
       '@type': 'City',
       name: 'Alanya',
@@ -72,43 +69,26 @@ function buildDistrictJsonLd(page: DistrictPageContent, districtName: string) {
   if (page.pageType === 'airport-transfer') {
     return [
       districtSchema,
-      {
-        '@context': 'https://schema.org',
-        '@type': 'TaxiService',
+      taxiServiceSchema({
         name: `Airport Transfer to ${districtName}`,
         description: page.metaDescription,
         url,
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: districtName,
-          addressRegion: 'Antalya',
-          addressCountry: 'TR',
-        },
-        areaServed: {
-          '@type': 'City',
-          name: districtName,
-        },
-      },
+        addressLocality: districtName,
+        areaServed: districtName,
+      }),
     ];
   }
 
   if (page.pageType === 'things-to-do') {
     return [
       districtSchema,
-      {
-        '@context': 'https://schema.org',
-        '@type': 'TouristAttraction',
+      touristAttractionSchema({
         name: `Things to Do in ${districtName}`,
         description: page.metaDescription,
         url,
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: districtName,
-          addressRegion: 'Antalya',
-          addressCountry: 'TR',
-        },
+        addressLocality: districtName,
         touristType: 'Leisure travelers',
-      },
+      }),
     ];
   }
 
