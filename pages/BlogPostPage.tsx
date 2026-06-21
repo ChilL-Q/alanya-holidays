@@ -48,9 +48,9 @@ export const BlogPostPage: React.FC = () => {
             const data = await db.getRelatedPosts(post.id, post.category, 3);
             if (!isCancelled()) setRelatedPosts(data);
         } catch (err) {
-            console.error('Failed to load related posts:', err);
+            if (!isCancelled()) console.error('Failed to load related posts:', err);
         }
-    }, [post]);
+    }, [post?.id, post?.category]);
 
     const sanitizedContent = useMemo(() =>
         post ? DOMPurify.sanitize(post.content || '') : '',

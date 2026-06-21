@@ -1,4 +1,4 @@
-import { slugify } from './slugify';
+import { slugify, generateUniqueSlug } from './slugify';
 
 export interface HeadingItem {
     id: string;
@@ -22,21 +22,15 @@ export function extractHeadingsFromHTML(html: string): {
         const doc = parser.parseFromString(html, 'text/html');
         const headingElements = doc.querySelectorAll('h2, h3');
 
-        const headingIds = new Set<string>();
+        const usedIds: string[] = [];
         const extractedHeadings: HeadingItem[] = [];
 
         headingElements.forEach((el, index) => {
             const text = el.textContent || '';
             const baseSlug = slugify(text) || `heading-${index + 1}`;
+            const uniqueId = generateUniqueSlug(baseSlug, usedIds);
 
-            let uniqueId = baseSlug;
-            let counter = 1;
-            while (headingIds.has(uniqueId)) {
-                uniqueId = `${baseSlug}-${counter}`;
-                counter++;
-            }
-
-            headingIds.add(uniqueId);
+            usedIds.push(uniqueId);
             el.setAttribute('id', uniqueId);
 
             extractedHeadings.push({
