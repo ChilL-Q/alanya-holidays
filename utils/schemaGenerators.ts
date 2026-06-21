@@ -76,9 +76,7 @@ export function taxiServiceSchema(opts: TaxiServiceOptions): object {
         name: opts.name,
         description: opts.description,
         url: opts.url,
-        address: alanyaAddress(
-            opts.addressLocality ? { addressLocality: opts.addressLocality } : undefined
-        ),
+        address: alanyaAddress(opts.addressLocality && { addressLocality: opts.addressLocality }),
         areaServed: {
             '@type': 'City',
             name: opts.areaServed ?? 'Alanya',
@@ -105,9 +103,7 @@ export function touristAttractionSchema(opts: TouristAttractionOptions): object 
         name: opts.name,
         description: opts.description,
         url: opts.url,
-        address: alanyaAddress(
-            opts.addressLocality ? { addressLocality: opts.addressLocality } : undefined
-        ),
+        address: alanyaAddress(opts.addressLocality && { addressLocality: opts.addressLocality }),
         touristType: opts.touristType ?? 'Leisure travelers',
     };
 }
@@ -123,7 +119,9 @@ interface ItemListEntry {
     image?: string;
 }
 
-export function itemListSchema(items: ItemListEntry[]): object {
+export function itemListSchema(items: ItemListEntry[]): object | null {
+    if (items.length === 0) return null;
+
     return {
         '@context': SCHEMA_CONTEXT,
         '@type': 'ItemList',
@@ -134,7 +132,7 @@ export function itemListSchema(items: ItemListEntry[]): object {
                 '@type': item.type,
                 name: item.name,
                 url: item.url,
-                image: item.image ?? '',
+                ...(item.image && { image: item.image }),
             },
         })),
     };

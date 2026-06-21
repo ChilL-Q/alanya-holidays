@@ -142,13 +142,11 @@ describe('schemaGenerators', () => {
             expect(item1.image).toBe('img.jpg');
 
             const item2 = elements[1].item as Record<string, string>;
-            expect(item2.image).toBe('');
+            expect(item2).not.toHaveProperty('image');
         });
 
         it('handles empty items array', () => {
-            const schema = itemListSchema([]) as Record<string, unknown>;
-            const elements = schema.itemListElement as Array<unknown>;
-            expect(elements).toHaveLength(0);
+            expect(itemListSchema([])).toBeNull();
         });
     });
 });

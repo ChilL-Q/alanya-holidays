@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
@@ -12,7 +12,7 @@ import {
   Sun, Thermometer, Droplets, Waves, ChevronDown, ChevronUp,
   CheckCircle2, XCircle, Hotel, MapPin, Car,
 } from 'lucide-react';
-import { faqPageSchema, touristAttractionSchema, alanyaAddress } from '../utils/schemaGenerators';
+import { faqPageSchema, touristAttractionSchema } from '../utils/schemaGenerators';
 
 function buildSeasonalJsonLd(page: SeasonalPageData) {
   const baseUrl = 'https://alanya-holidays.com';
@@ -74,6 +74,9 @@ export const SeasonalPage: React.FC = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
+  // Call useMemo before any conditional returns (React hooks rules)
+  const jsonLd = useMemo(() => page ? buildSeasonalJsonLd(page) : null, [page]);
+
   if (!page) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
@@ -87,8 +90,6 @@ export const SeasonalPage: React.FC = () => {
       </div>
     );
   }
-
-  const jsonLd = buildSeasonalJsonLd(page);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pt-24 pb-16">

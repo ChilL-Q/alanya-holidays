@@ -179,13 +179,33 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     }, [listings, locationFilter, verifiedOnly, minRating, maxPriceLevel, languageFilter, sortBy]);
 
     // Generate JSON-LD Schemas for SEO (must be before early return for React hooks rules)
-    const schemas = useMemo(() => {
-        if (!intro) return [];
-
+    // Static schemas (pathname + intro only)
+    const staticSchemas = useMemo(() => {
+        if (!intro) return { transport: null, lodging: null, faq: null };
         const { faqs, description } = intro;
-        const faqSchema = faqPageSchema(faqs);
+        return {
+            transport: pathname === '/airport-transfer' ? taxiServiceSchema({
+                name: 'Alanya Airport Transfer & Taxi Service',
+                description,
+                url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
+            }) : null,
+            lodging: pathname === '/alanya-hotels' ? {
+                '@context': 'https://schema.org',
+                '@type': 'LodgingBusiness',
+                name: 'Hotels in Alanya',
+                description,
+                url: `https://alanya-holidays.com${CATEGORY_PATHS['accommodations']}`,
+                address: alanyaAddress(),
+                telephone: '+14389294208',
+                priceRange: '$$',
+            } : null,
+            faq: faqPageSchema(faqs),
+        };
+    }, [intro, pathname]);
 
-        const listSchema = itemListSchema(
+    // Dynamic schema (filteredData only)
+    const listSchema = useMemo(() =>
+        itemListSchema(
             filteredData.map((item) => ({
                 type: getSchemaType(categoryId),
                 name: item.name,
@@ -194,31 +214,19 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                     : item.website || `https://alanya-holidays.com${CATEGORY_PATHS[categoryId] || '/'}`,
                 image: item.gallery?.[0] || '',
             }))
-        );
+        ),
+        [filteredData, categoryId]
+    );
 
-        const transportSchema = pathname === '/airport-transfer' ? taxiServiceSchema({
-            name: 'Alanya Airport Transfer & Taxi Service',
-            description,
-            url: `https://alanya-holidays.com${CATEGORY_PATHS['transport']}`,
-        }) : null;
-
-        const lodgingSchema = pathname === '/alanya-hotels' ? {
-            '@context': 'https://schema.org',
-            '@type': 'LodgingBusiness',
-            name: 'Hotels in Alanya',
-            description,
-            url: `https://alanya-holidays.com${CATEGORY_PATHS['accommodations']}`,
-            address: alanyaAddress(),
-            telephone: '+14389294208',
-            priceRange: '$$',
-        } : null;
-
-        const result: object[] = [listSchema];
-        if (transportSchema) result.push(transportSchema);
-        if (lodgingSchema) result.push(lodgingSchema);
-        if (faqSchema) result.push(faqSchema);
+    // Assemble final array
+    const schemas = useMemo(() => {
+        const result: object[] = [];
+        if (listSchema) result.push(listSchema);
+        if (staticSchemas.transport) result.push(staticSchemas.transport);
+        if (staticSchemas.lodging) result.push(staticSchemas.lodging);
+        if (staticSchemas.faq) result.push(staticSchemas.faq);
         return result;
-    }, [filteredData, intro, pathname, categoryId]);
+    }, [listSchema, staticSchemas]);
 
     // Basic validation if category exists
     if (!categoryId || !intro) {
