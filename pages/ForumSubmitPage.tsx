@@ -15,10 +15,11 @@ export const ForumSubmitPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        db.getForumCategories()
-            .then((cats) => {
-                setCategories(cats);
-                if (cats.length > 0) setCategoryId(cats[0].id);
+        db.getForumCategoryTree()
+            .then((tree) => {
+                setCategories(tree);
+                const firstChild = tree.find((c) => (c.children?.length ?? 0) > 0)?.children?.[0];
+                if (firstChild) setCategoryId(firstChild.id);
             })
             .catch((e) => console.error('Failed to load categories:', e));
     }, []);
@@ -72,8 +73,12 @@ export const ForumSubmitPage: React.FC = () => {
                             onChange={(e) => setCategoryId(e.target.value)}
                             className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500"
                         >
-                            {categories.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
+                            {categories.map((parent) => (
+                                <optgroup key={parent.id} label={parent.name}>
+                                    {(parent.children ?? []).map((sub) => (
+                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </select>
                     </div>

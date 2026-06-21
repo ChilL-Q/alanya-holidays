@@ -257,7 +257,7 @@ describe('BlogPostPage', () => {
       // TOC headers should be visible
       expect(screen.getByText('Table of Contents')).toBeInTheDocument();
       expect(screen.getByText('On this page')).toBeInTheDocument();
-      
+
       // The links should exist in the TOC
       const firstHeadingLinks = screen.getAllByRole('link', { name: 'First Heading' });
       expect(firstHeadingLinks.length).toBeGreaterThan(0);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowBigUp, MessageSquare, Trash2, Flag, Loader2, ArrowLeft, Send } from 'lucide-react';
+import { ArrowBigUp, MessageSquare, Trash2, Flag, Loader2, ArrowLeft, Send, Eye } from 'lucide-react';
 import { db } from '../api-services';
 import { ForumPost, ForumComment, ForumReportTargetType } from '../types/models';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -38,6 +38,7 @@ export const ForumPostPage: React.FC = () => {
                 return;
             }
             setPost(p);
+            db.incrementPostView(p.id);
             const c = await db.getForumComments(p.id);
             setComments(c);
         } catch (e) {
@@ -184,10 +185,21 @@ export const ForumPostPage: React.FC = () => {
 
             <article className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    {post.category?.parent && (
+                        <Link
+                            to={`/forum/category/${post.category.parent.slug}`}
+                            className="px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-300 font-medium hover:bg-teal-100 dark:hover:bg-teal-900/50"
+                        >
+                            {post.category.parent.name}
+                        </Link>
+                    )}
                     {post.category && (
-                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-medium">
+                        <Link
+                            to={`/forum/category/${post.category.slug}`}
+                            className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 font-medium hover:bg-slate-200 dark:hover:bg-slate-600"
+                        >
                             {post.category.name}
-                        </span>
+                        </Link>
                     )}
                     <span>{post.author?.full_name || 'Anonymous'}</span>
                     <span>· {relTime(post.created_at)}</span>
@@ -211,6 +223,9 @@ export const ForumPostPage: React.FC = () => {
                     </button>
                     <span className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
                         <MessageSquare size={16} /> {post.comment_count}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+                        <Eye size={16} /> {post.view_count}
                     </span>
                     <button
                         onClick={() => handleReport('post', post.id)}

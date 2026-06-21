@@ -35,6 +35,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/blog-submissions', label: 'Blog Submissions', icon: PenLine },
         { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
         { path: '/admin/forum', label: 'Forum', icon: MessagesSquare },
+        { path: '/admin/events', label: 'Events', icon: Calendar },
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/reports', label: 'Reports', icon: Flag },
     ];
@@ -50,7 +51,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         },
         {
             label: 'Content',
-            items: navItems.filter(i => ['Property Reviews', 'Business Reviews', 'Blog Submissions', 'Testimonials', 'Forum'].includes(i.label))
+            items: navItems.filter(i => ['Property Reviews', 'Business Reviews', 'Blog Submissions', 'Testimonials', 'Forum', 'Events'].includes(i.label))
         },
         {
             label: 'Users',

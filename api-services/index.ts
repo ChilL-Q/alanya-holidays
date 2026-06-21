@@ -18,6 +18,8 @@ export * from './api/directory';
 export * from './api/subscriptions';
 export * from './api/blog';
 export * from './api/forum';
+export * from './api/forumEvents';
+export * from './api/members';
 export * from './api/testimonials';
 export * from './api/locations';
 export * from './api/itineraries';
@@ -40,6 +42,8 @@ import { directoryService } from './api/directory';
 import { subscriptionsService } from './api/subscriptions';
 import { blogService } from './api/blog';
 import { forumService } from './api/forum';
+import { forumEventsService } from './api/forumEvents';
+import { membersService } from './api/members';
 import { testimonialService } from './api/testimonials';
 import { locationsService } from './api/locations';
 import { itinerariesService } from './api/itineraries';
@@ -60,6 +64,8 @@ export const db = {
     ...subscriptionsService,
     ...blogService,
     ...forumService,
+    ...forumEventsService,
+    ...membersService,
     ...testimonialService,
     ...locationsService,
     ...itinerariesService,
