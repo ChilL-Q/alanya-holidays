@@ -7,9 +7,12 @@ import DOMPurify from 'dompurify';
 import { toast } from 'react-hot-toast';
 import { db } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
-import { BlogPostWithTags } from '../api-services/api/blog';
+import { BlogPostWithTags, BlogPostPreview } from '../api-services/api/blog';
+import { BlogPostCard } from '../components/home/BlogPostCard';
 import { isValidVideoUrl } from '../utils/videoEmbed';
 import { VideoEmbed } from '../components/ui/VideoEmbed';
+import { extractHeadingsFromHTML } from '../utils/extractHeadings';
+import { useAsyncEffect } from '../hooks/useAsyncEffect';
 
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -17,24 +20,15 @@ export const BlogPostPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const viewsIncremented = useRef(false);
 
-    useEffect(() => {
+    useAsyncEffect(async (isCancelled) => {
         if (!slug) return;
-        let cancelled = false;
-
-        async function loadPost() {
-            setLoading(true);
-            try {
-                const data = await db.getBlogPost(slug, true);
-                if (!cancelled) setPost(data);
-            } catch (err) {
-                console.error('Failed to load blog post:', err);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
+        setLoading(true);
+        try {
+            const data = await db.getBlogPost(slug, true);
+            if (!isCancelled()) setPost(data);
+        } finally {
+            if (!isCancelled()) setLoading(false);
         }
-
-        loadPost();
-        return () => { cancelled = true; };
     }, [slug]);
 
     // Increment views once per mount (prevents double-counting on strict mode re-renders)
@@ -46,71 +40,27 @@ export const BlogPostPage: React.FC = () => {
         // we'd do it here. Since we pass true above, this is a safety guard.
     }, [post]);
 
+    const [relatedPosts, setRelatedPosts] = useState<BlogPostPreview[]>([]);
+
+    useAsyncEffect(async (isCancelled) => {
+        if (!post) return;
+        try {
+            const data = await db.getRelatedPosts(post.id, post.category, 3);
+            if (!isCancelled()) setRelatedPosts(data);
+        } catch (err) {
+            console.error('Failed to load related posts:', err);
+        }
+    }, [post]);
+
     const sanitizedContent = useMemo(() =>
         post ? DOMPurify.sanitize(post.content || '') : '',
         [post]
     );
 
-    interface HeadingItem {
-        id: string;
-        text: string;
-        level: 'h2' | 'h3';
-    }
-
-    const { processedContent, headings } = useMemo(() => {
-        if (!sanitizedContent) return { processedContent: '', headings: [] };
-
-        if (typeof window === 'undefined') {
-            return { processedContent: sanitizedContent, headings: [] };
-        }
-
-        try {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(sanitizedContent, 'text/html');
-            const headingElements = doc.querySelectorAll('h2, h3');
-            
-            const slugifyText = (text: string) => {
-                return text
-                    .toLowerCase()
-                    .trim()
-                    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-');
-            };
-
-            const headingIds = new Set<string>();
-            const extractedHeadings: HeadingItem[] = [];
-
-            headingElements.forEach((el, index) => {
-                const text = el.textContent || '';
-                const baseSlug = slugifyText(text) || `heading-${index + 1}`;
-                let uniqueId = baseSlug;
-                
-                let counter = 1;
-                while (headingIds.has(uniqueId)) {
-                    uniqueId = `${baseSlug}-${counter}`;
-                    counter++;
-                }
-                
-                headingIds.add(uniqueId);
-                el.setAttribute('id', uniqueId);
-                
-                extractedHeadings.push({
-                    id: uniqueId,
-                    text,
-                    level: el.tagName.toLowerCase() as 'h2' | 'h3',
-                });
-            });
-
-            return {
-                processedContent: doc.body.innerHTML,
-                headings: extractedHeadings,
-            };
-        } catch (err) {
-            console.error('Failed to parse headings for TOC:', err);
-            return { processedContent: sanitizedContent, headings: [] };
-        }
-    }, [sanitizedContent]);
+    const { processedContent, headings } = useMemo(() =>
+        extractHeadingsFromHTML(sanitizedContent),
+        [sanitizedContent]
+    );
 
     const hasVideo = useMemo(() => post ? isValidVideoUrl(post.video_url || '') : false, [post]);
 
@@ -381,6 +331,20 @@ export const BlogPostPage: React.FC = () => {
                             </aside>
                         )}
                     </div>
+
+                    {/* Related Posts */}
+                    {relatedPosts.length > 0 && (
+                        <div className="mt-16 pt-12 border-t border-slate-100 dark:border-slate-800/50">
+                            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white mb-8">
+                                You Might Also Like
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {relatedPosts.map((relatedPost, index) => (
+                                    <BlogPostCard key={relatedPost.id} post={relatedPost} index={index} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </article>
         </>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, MapPin, Grid, Briefcase, ChevronRight, ChevronDown, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -86,7 +86,7 @@ export const DirectoryHome: React.FC = () => {
         { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
     ];
 
-    const travelAgencySchema = {
+    const travelAgencySchema = useMemo(() => ({
         '@context': 'https://schema.org',
         '@type': 'TravelAgency',
         'name': 'Alanya Holidays',
@@ -117,7 +117,7 @@ export const DirectoryHome: React.FC = () => {
             'opens': '09:00',
             'closes': '22:00'
         }
-    };
+    }), [t]);
 
     return (
         <>
