@@ -6,7 +6,9 @@ vi.mock('../../api-services', () => ({
     db: {
         createBlogPost: vi.fn(),
         uploadBlogMediaBatch: vi.fn(),
-    }
+    },
+    BLOG_MAX_FILE_SIZE: 5 * 1024 * 1024,
+    BLOG_ALLOWED_EXTENSIONS: new Set(['jpg', 'jpeg', 'png', 'webp']),
 }));
 
 vi.mock('../../context/AuthContext', () => ({

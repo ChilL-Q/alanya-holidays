@@ -74,7 +74,7 @@ export const EventCalendar: React.FC<EventCalendarProps> = ({ events, selectedKe
                     if (d === null) {
                         return <div key={i} className="rounded-lg bg-slate-50/60 dark:bg-slate-900/30 min-h-[52px] sm:min-h-[84px]" />;
                     }
-                    const k = `${view.year}-${String(view.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    const k = dateKey(new Date(view.year, view.month, d));
                     const dayEvents = eventsByDay.get(k) ?? [];
                     const has = dayEvents.length > 0;
                     const isSelected = k === selectedKey;

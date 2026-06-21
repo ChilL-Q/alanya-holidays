@@ -7,7 +7,9 @@ import { toast } from 'react-hot-toast';
 vi.mock('../api-services', () => ({
     db: {
         uploadBlogMediaBatch: vi.fn(),
-    }
+    },
+    BLOG_MAX_FILE_SIZE: 5 * 1024 * 1024,
+    BLOG_ALLOWED_EXTENSIONS: new Set(['jpg', 'jpeg', 'png', 'webp']),
 }));
 
 vi.mock('react-hot-toast', () => ({

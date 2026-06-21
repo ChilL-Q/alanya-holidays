@@ -4,24 +4,7 @@ import { ForumEvent } from '../../types/models';
 import { useEventRsvp } from '../../hooks/useEventRsvp';
 import { RsvpPromptModal } from './RsvpPromptModal';
 import { THREAD_FALLBACK_IMAGE } from '../../data/forumContent';
-
-const formatEventDate = (iso: string): string => {
-    try {
-        return new Date(iso).toLocaleDateString('en-US', {
-            month: 'long', day: 'numeric', year: 'numeric',
-        });
-    } catch {
-        return iso;
-    }
-};
-
-const formatEventTime = (iso: string): string => {
-    try {
-        return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } catch {
-        return '';
-    }
-};
+import { formatEventDate, formatEventTime } from '../../utils/formatEventDate';
 
 interface ForumEventCardProps {
     event: ForumEvent;

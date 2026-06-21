@@ -6,22 +6,7 @@ import { useEventRsvp } from '../../hooks/useEventRsvp';
 import { useAuth } from '../../context/AuthContext';
 import { RsvpPromptModal } from './RsvpPromptModal';
 import { THREAD_FALLBACK_IMAGE } from '../../data/forumContent';
-
-const formatDate = (iso: string): string => {
-    try {
-        return new Date(iso).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-    } catch {
-        return iso;
-    }
-};
-
-const formatTime = (iso: string): string => {
-    try {
-        return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    } catch {
-        return '';
-    }
-};
+import { formatDate, formatEventTime as formatTime } from '../../utils/formatEventDate';
 
 interface EventDetailsModalProps {
     event: ForumEvent | null;

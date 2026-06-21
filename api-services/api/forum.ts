@@ -45,10 +45,14 @@ async function attachCategoryParents(posts: ForumPost[]): Promise<void> {
         new Set(posts.map((p) => p.category?.parent_id).filter((x): x is string => !!x)),
     );
     if (parentIds.length === 0) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from('forum_categories')
         .select('id, name, slug')
         .in('id', parentIds);
+    if (error) {
+        console.error('attachCategoryParents:', error);
+        return;
+    }
     const map = new Map(
         toArray<{ id: string; name: string; slug: string }>(data).map((c) => [c.id, c]),
     );
@@ -266,17 +270,20 @@ export const forumService = {
 
     /** Aggregate counts for the hero stats bar. */
     async getForumStats(): Promise<{ members: number; discussions: number; replies: number }> {
-        const [members, discussions, replies] = await Promise.all([
-            supabase.from('profiles').select('id', { count: 'exact', head: true }),
-            supabase.from('forum_posts').select('id', { count: 'exact', head: true }).eq('is_removed', false),
-            supabase.from('forum_comments').select('id', { count: 'exact', head: true }).eq('is_removed', false),
-        ]);
-        return {
-            members: members.count || 0,
-            discussions: discussions.count || 0,
-            replies: replies.count || 0,
-        };
-    },
+    const [members, discussions, replies] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('forum_posts').select('id', { count: 'exact', head: true }).eq('is_removed', false),
+        supabase.from('forum_comments').select('id', { count: 'exact', head: true }).eq('is_removed', false),
+    ]);
+    if (members.error) console.error('getForumStats members:', members.error);
+    if (discussions.error) console.error('getForumStats discussions:', discussions.error);
+    if (replies.error) console.error('getForumStats replies:', replies.error);
+    return {
+        members: members.count ?? 0,
+        discussions: discussions.count ?? 0,
+        replies: replies.count ?? 0,
+    };
+},
 
     /** Best-effort view counter bump; never throws to the caller. */
     async incrementPostView(postId: string): Promise<void> {
