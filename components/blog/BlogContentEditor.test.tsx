@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { BlogContentEditor } from './BlogContentEditor';
 
 vi.mock('../../utils/formatBlogContent', () => ({
-    formatBlogContent: (text: string) => {
+    formatBlogContent: (text: string, _imageUrls: string[]) => {
         // Minimal mock: wrap in <p>, convert ## to <h2>, handle **bold**
         let html = text;
         html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');

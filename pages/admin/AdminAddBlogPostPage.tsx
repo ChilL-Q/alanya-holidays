@@ -117,7 +117,8 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         placeholder="Write the full content here..."
                         rows={14}
                         required
-                        textareaClassName="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
+                    minLength={50}
+                    textareaClassName="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
                     />
                 </div>
 

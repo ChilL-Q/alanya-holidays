@@ -48,7 +48,7 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
     const [mode, setMode] = useState<'write' | 'preview'>('write');
 
     const previewHtml = useMemo(() => {
-        if (!content.trim()) return '';
+        if (mode !== 'preview' || !content.trim()) return '';
 
         // Render markdown, passing empty imageUrls — placeholders stay as [image-N]
         let html = formatBlogContent(content.trim(), []);
@@ -57,11 +57,11 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
         html = html.replace(
             /\[image-(\d+)\]/gi,
             (_match, num) =>
-                `<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:24px 16px;margin:24px 0;background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:12px;color:#64748b;font-size:14px;font-weight:500;">📷 Image ${num}</div>`
+                `<span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:24px 16px;margin:24px 0;background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:12px;color:#64748b;font-size:14px;font-weight:500;">📷 Image ${num}</span>`
         );
 
         return DOMPurify.sanitize(html);
-    }, [content]);
+    }, [mode, content]);
 
     return (
         <div>
