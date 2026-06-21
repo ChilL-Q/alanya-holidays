@@ -3,10 +3,10 @@ import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 // @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')!
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 // 10 AI requests per minute per user
