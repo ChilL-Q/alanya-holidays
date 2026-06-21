@@ -89,9 +89,9 @@ export const PropertiesPage: React.FC = () => {
 
             loadProperties();
             setModalConfig({ ...modalConfig, isOpen: false });
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            toast.error(`Failed to ${type} property: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to ${type} property: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 

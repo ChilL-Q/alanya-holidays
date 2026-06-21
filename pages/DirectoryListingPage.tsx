@@ -10,9 +10,12 @@ import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { CATEGORY_PATHS, getListingUrl, getSchemaType } from '../constants/categoryPaths';
-import { parseVideoEmbed } from '../utils/videoEmbed';
+import { isValidVideoUrl } from '../utils/videoEmbed';
+import { VideoEmbed } from '../components/ui/VideoEmbed';
 import { ListingReviewSection } from '../components/directory/ListingReviewSection';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { useLanguage } from '../context/LanguageContext';
+import { ClaimListingModal } from '../components/directory/ClaimListingModal';
 
 interface DirectoryListingPageProps {
     categoryId: string;
@@ -21,10 +24,12 @@ interface DirectoryListingPageProps {
 export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ categoryId }) => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const { t } = useLanguage();
 
     const [listing, setListing] = useState<DirectoryListingDB | null>(null);
     const [related, setRelated] = useState<DirectoryListingDB[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
 
     const categoryIntro = directoryCategoryIntros[categoryId];
     const categoryPath = CATEGORY_PATHS[categoryId] || '/';
@@ -88,7 +93,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
     }
 
     const isPaidTier = listing.tier && listing.tier !== 'explorer';
-    const videoEmbed = listing.video_url ? parseVideoEmbed(listing.video_url) : null;
+    const hasVideo = listing.video_url ? isValidVideoUrl(listing.video_url) : false;
 
     const localBusinessSchema = {
         '@context': 'https://schema.org',
@@ -273,19 +278,10 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                         </div>
 
                         {/* Video */}
-                        {videoEmbed && (
+                        {hasVideo && (
                             <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/50">
                                 <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
-                                <div className="relative w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video">
-                                    <iframe
-                                        src={videoEmbed.embedUrl}
-                                        title="Listing video"
-                                        className="absolute inset-0 w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                        loading="lazy"
-                                    />
-                                </div>
+                                <VideoEmbed url={listing.video_url || ''} title="Listing video" />
                             </div>
                         )}
 
@@ -354,6 +350,15 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                                 >
                                     <MapPin size={18} /> View on Map
                                 </button>
+
+                                {!listing.owner_user_id && (
+                                    <button
+                                        onClick={() => setIsClaimModalOpen(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-500 dark:hover:border-cyan-500 hover:text-teal-600 dark:hover:text-cyan-400 transition-all cursor-pointer"
+                                    >
+                                        <Award size={18} className="text-teal-600 dark:text-cyan-400" /> {t('directory.claim.button')}
+                                    </button>
+                                )}
                             </div>
 
                             <div className="flex items-start gap-3 mt-4 p-4 bg-teal-50 dark:bg-cyan-900/10 rounded-xl text-teal-800 dark:text-cyan-300">
@@ -402,6 +407,14 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                     </div>
                 )}
             </div>
+
+            {isClaimModalOpen && (
+                <ClaimListingModal
+                    isOpen={isClaimModalOpen}
+                    onClose={() => setIsClaimModalOpen(false)}
+                    listing={listing}
+                />
+            )}
         </div>
     );
 };

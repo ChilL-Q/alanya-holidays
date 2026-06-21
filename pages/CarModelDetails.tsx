@@ -37,12 +37,13 @@ export const CarModelDetails: React.FC = () => {
     }, [selectedOffer]);
 
     useEffect(() => {
+        let cancelled = false;
         const fetchOffers = async () => {
             try {
                 const targetType = serviceType || 'car';
                 const { data: services } = await db.getServices(targetType, 1, 1000);
 
-                const filtered = services?.filter((s: any) => {
+                const filtered = services?.filter((s: ServiceData) => {
                     const sBrand = s.features?.brand || '';
                     const sModel = s.features?.model || '';
                     const slug = `${sBrand}-${sModel}`.toLowerCase();
@@ -53,6 +54,7 @@ export const CarModelDetails: React.FC = () => {
                     return false;
                 }) || [];
 
+                if (cancelled) return;
                 setOffers(filtered);
 
                 const constantService = filtered.length > 0 ? filtered[filtered.length - 1] : null;
@@ -76,11 +78,12 @@ export const CarModelDetails: React.FC = () => {
             } catch (error) {
                 console.error("Failed to fetch offers", error);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchOffers();
+        return () => { cancelled = true; };
     }, [modelId, brand, model, serviceType]);
 
     const handleBook = (offer: ServiceData) => {

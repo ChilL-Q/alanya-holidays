@@ -76,7 +76,11 @@ export const UsersPage: React.FC = () => {
                 <div className="relative w-full md:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
+                        id="admin-users-search"
+                        name="admin-users-search"
                         type="text"
+                        autoComplete="off"
+                        aria-label="Search users"
                         placeholder="Search users..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

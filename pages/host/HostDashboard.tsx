@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
+import { PropertyDB } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { Plus, ExternalLink, Star, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -18,7 +19,7 @@ export const HostDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { convertPrice, formatPrice } = useCurrency();
 
-    const [properties, setProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<PropertyDB[]>([]);
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -159,7 +160,7 @@ export const HostDashboard: React.FC = () => {
                     <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6">
                         <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('host.listings.title')}</h3>
                         <div className="space-y-4">
-                            {properties.slice(0, 3).map((prop: any) => (
+                            {properties.slice(0, 3).map((prop: PropertyDB) => (
                                 <div key={prop.id} className="flex items-center gap-3">
                                     <img src={prop.images?.[0]} alt={prop.title} className="w-12 h-12 rounded-lg object-cover" />
                                     <div className="flex-1 min-w-0">

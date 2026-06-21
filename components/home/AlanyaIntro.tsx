@@ -23,22 +23,22 @@ export const AlanyaIntro: React.FC = () => {
         {
             key: 'beach',
             icon: Sun,
-            image: '/images/home/cleopatra_beach.png'
+            image: '/images/home/cleopatra_beach.webp'
         },
         {
             key: 'castle',
             icon: History,
-            image: '/images/home/alanya_castle.png'
+            image: '/images/home/alanya_castle.webp'
         },
         {
             key: 'nature',
             icon: Mountain,
-            image: '/images/home/dim_river.png'
+            image: '/images/home/dim_river.webp'
         },
         {
             key: 'cuisine',
             icon: Utensils,
-            image: '/images/home/turkish_cuisine.png'
+            image: '/images/home/turkish_cuisine.webp'
         }
     ];
 
@@ -80,11 +80,17 @@ export const AlanyaIntro: React.FC = () => {
                                     style={{ animationDelay: `${(index + 1) * 100}ms` }}
                                 >
                                     {/* Background Image */}
-                                    <img
-                                        src={section.image}
-                                        alt={t(`intro.${section.key}.title`)}
-                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
+                                    <picture>
+                                        <source srcSet={section.image} type="image/webp" />
+                                        <img
+                                            src={section.image.replace('.webp', '.png')}
+                                            alt={t(`intro.${section.key}.title`)}
+                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            loading="lazy"
+                                            width="600"
+                                            height="400"
+                                        />
+                                    </picture>
 
                                     {/* Gradient Overlay */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>

@@ -52,8 +52,8 @@ export const ReviewsAdminPage: React.FC = () => {
                 next.delete(reviewId);
                 return next;
             });
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to unflag review');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to unflag review');
         }
     };
 
@@ -89,8 +89,8 @@ export const ReviewsAdminPage: React.FC = () => {
                 setSelectedIds(new Set());
             }
             toast.success('Reviews deleted successfully');
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to delete reviews');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete reviews');
         } finally {
             setModalConfig({ isOpen: false, type: null, itemId: null, title: '', message: '' });
         }
@@ -163,7 +163,11 @@ export const ReviewsAdminPage: React.FC = () => {
 
                 <div className="relative w-full md:w-64">
                     <input
+                        id="admin-reviews-search"
+                        name="admin-reviews-search"
                         type="text"
+                        autoComplete="off"
+                        aria-label="Search flagged reviews"
                         placeholder="Search reviews..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}

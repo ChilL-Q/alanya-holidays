@@ -215,12 +215,14 @@ export const AddListingPage: React.FC = () => {
                             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6 md:p-8 space-y-6">
                                 {/* Business Name */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-name" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Business Name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
+                                        id="listing-name"
                                         type="text"
                                         name="name"
+                                        autoComplete="organization"
                                         value={formData.name}
                                         onChange={handleChange}
                                         placeholder="e.g. Alanya Seaside Cafe"
@@ -232,12 +234,14 @@ export const AddListingPage: React.FC = () => {
 
                                 {/* Category */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-category" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Category <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <select
+                                            id="listing-category"
                                             name="category_id"
+                                            autoComplete="off"
                                             value={formData.category_id}
                                             onChange={handleChange}
                                             required
@@ -255,11 +259,13 @@ export const AddListingPage: React.FC = () => {
 
                                 {/* Short Description */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-description" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Short Description <span className="text-rose-500">*</span>
                                     </label>
                                     <textarea
+                                        id="listing-description"
                                         name="short_description"
+                                        autoComplete="off"
                                         value={formData.short_description}
                                         onChange={handleChange}
                                         placeholder="Describe what your business offers in a few sentences..."
@@ -275,7 +281,7 @@ export const AddListingPage: React.FC = () => {
 
                                 {/* Location */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-location" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Location <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -284,8 +290,10 @@ export const AddListingPage: React.FC = () => {
                                             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                                         />
                                         <input
+                                            id="listing-location"
                                             type="text"
                                             name="location"
+                                            autoComplete="address-level2"
                                             value={formData.location}
                                             onChange={handleChange}
                                             placeholder="e.g. Alanya City Center, Mahmutlar, Oba"
@@ -312,7 +320,7 @@ export const AddListingPage: React.FC = () => {
                             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm p-6 md:p-8 space-y-6">
                                 {/* Website */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-website" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Website
                                     </label>
                                     <div className="relative">
@@ -321,8 +329,10 @@ export const AddListingPage: React.FC = () => {
                                             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                                         />
                                         <input
+                                            id="listing-website"
                                             type="url"
                                             name="website"
+                                            autoComplete="url"
                                             value={formData.website}
                                             onChange={handleChange}
                                             placeholder="https://..."
@@ -334,7 +344,7 @@ export const AddListingPage: React.FC = () => {
 
                                 {/* WhatsApp */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-whatsapp" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         WhatsApp Number
                                     </label>
                                     <div className="relative">
@@ -343,8 +353,10 @@ export const AddListingPage: React.FC = () => {
                                             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                                         />
                                         <input
+                                            id="listing-whatsapp"
                                             type="text"
                                             name="whatsapp"
+                                            autoComplete="tel"
                                             value={formData.whatsapp}
                                             onChange={handleChange}
                                             placeholder="+90 555 123 4567"
@@ -356,7 +368,7 @@ export const AddListingPage: React.FC = () => {
 
                                 {/* Google Maps URL */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
+                                    <label htmlFor="listing-google-map" className="block text-sm font-semibold text-slate-900 dark:text-white mb-2">
                                         Google Maps URL
                                     </label>
                                     <div className="relative">
@@ -365,8 +377,10 @@ export const AddListingPage: React.FC = () => {
                                             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                                         />
                                         <input
+                                            id="listing-google-map"
                                             type="url"
                                             name="google_map_url"
+                                            autoComplete="off"
                                             value={formData.google_map_url}
                                             onChange={handleChange}
                                             placeholder="https://maps.google.com/..."

@@ -65,14 +65,19 @@ export const VehicleRentalTemplate: React.FC<VehicleRentalTemplateProps> = ({
 
                     <div className="relative">
                         <div className="absolute -inset-4 bg-teal-100 dark:bg-slate-800/50 rounded-full blur-3xl opacity-50"></div>
-                        <img
-                            src={heroImage}
-                            alt={heroAlt}
-                            loading="eager"
-                            fetchPriority="high"
-                            decoding="async"
-                            className={`relative rounded-3xl shadow-2xl transform ${heroImageRotate} hover:rotate-0 transition-transform duration-500 w-full object-cover`}
-                        />
+                        <picture>
+                            <source srcSet={heroImage.replace(/\.(jpg|jpeg|png)$/i, '.webp')} type="image/webp" />
+                            <img
+                                src={heroImage}
+                                alt={heroAlt}
+                                loading="eager"
+                                fetchPriority="high"
+                                decoding="async"
+                                className={`relative rounded-3xl shadow-2xl transform ${heroImageRotate} hover:rotate-0 transition-transform duration-500 w-full object-cover`}
+                                width="1200"
+                                height="800"
+                            />
+                        </picture>
                     </div>
                 </div>
             </div>

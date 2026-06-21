@@ -31,6 +31,9 @@ vi.mock('../../utils/videoEmbed', () => ({
             return { embedUrl: 'https://www.youtube.com/embed/abc123', provider: 'youtube' as const, videoId: 'abc123' };
         }
         return null;
+    }),
+    isValidVideoUrl: vi.fn((url: string) => {
+        return url.includes('youtube.com/watch?v=');
     })
 }));
 

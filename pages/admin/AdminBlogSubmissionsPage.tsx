@@ -43,8 +43,8 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
             await db.approveBlogSubmission(id);
             toast.success('Submission approved and published');
             fetchData();
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to approve submission');
         }
     };
 
@@ -55,8 +55,8 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
             await db.rejectBlogSubmission(id, reason.trim());
             toast.success('Submission rejected');
             fetchData();
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to reject submission');
         }
     };
 
@@ -64,8 +64,8 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
         try {
             const conversationId = await chatService.createDirectConversation(authorId);
             navigate(`/messages?conversation=${conversationId}`);
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to open chat');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to open chat');
         }
     };
 
@@ -76,19 +76,19 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
             await db.deleteBlogPost(id);
             toast.success('Post deleted');
             fetchData();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to delete post');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete post');
         }
     };
 
     const handleTogglePostVisibility = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === 'published' ? 'draft' : 'published';
         try {
-            await db.updateBlogPost(id, { status: newStatus as any });
+            await db.updateBlogPost(id, { status: newStatus as 'draft' | 'published' | 'archived' });
             toast.success(`Post marked as ${newStatus}`);
             fetchData();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to update post status');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to update post status');
         }
     };
 
@@ -97,8 +97,8 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
             await db.updateBlogPost(id, { is_featured: !isFeatured });
             toast.success(!isFeatured ? 'Post featured on homepage' : 'Post unfeatured');
             fetchData();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to update featured status');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to update featured status');
         }
     };
 

@@ -50,7 +50,11 @@ export const PropertyToolbar: React.FC<PropertyToolbarProps> = ({
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
+                    id="admin-properties-search"
+                    name="admin-properties-search"
                     type="text"
+                    autoComplete="off"
+                    aria-label="Search properties"
                     placeholder="Search properties..."
                     value={searchQuery}
                     onChange={(e) => onSearchQuery(e.target.value)}

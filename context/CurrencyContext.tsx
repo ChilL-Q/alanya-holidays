@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
     RATES as FALLBACK_RATES,
     convertPrice as convertPriceUtil,
     formatPrice as formatPriceUtil,
     type Currency
 } from '../utils/currency';
+import { qk } from '../lib/queryKeys';
 
 export type { Currency };
 
@@ -16,16 +18,24 @@ interface RatesCache {
     fetchedAt: number;
 }
 
-function loadCachedRates(): Record<Currency, number> | null {
+function readCacheObject(): RatesCache | null {
     try {
         const raw = localStorage.getItem(RATES_CACHE_KEY);
-        if (!raw) return null;
-        const cache: RatesCache = JSON.parse(raw);
-        if (Date.now() - cache.fetchedAt > RATES_CACHE_TTL_MS) return null;
-        return cache.rates;
+        return raw ? (JSON.parse(raw) as RatesCache) : null;
     } catch {
         return null;
     }
+}
+
+function loadCachedRates(): Record<Currency, number> | null {
+    const cache = readCacheObject();
+    if (!cache) return null;
+    if (Date.now() - cache.fetchedAt > RATES_CACHE_TTL_MS) return null;
+    return cache.rates;
+}
+
+function getCachedAt(): number {
+    return readCacheObject()?.fetchedAt ?? 0;
 }
 
 async function fetchLiveRates(): Promise<Record<Currency, number>> {
@@ -57,23 +67,19 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return (saved as Currency) || 'EUR';
     });
 
-    const [rates, setRates] = useState<Record<Currency, number>>(
-        () => loadCachedRates() ?? FALLBACK_RATES
-    );
+    const { data: rates = FALLBACK_RATES } = useQuery({
+        queryKey: qk.currency.rates(),
+        queryFn: fetchLiveRates,
+        initialData: () => loadCachedRates() ?? FALLBACK_RATES,
+        initialDataUpdatedAt: getCachedAt(),
+        staleTime: RATES_CACHE_TTL_MS,
+        gcTime: 48 * 60 * 60_000,
+        retry: 1,
+    });
 
     useEffect(() => {
         localStorage.setItem('currency', currency);
     }, [currency]);
-
-    // Fetch live rates on mount; use cache if still fresh
-    useEffect(() => {
-        if (loadCachedRates()) return; // cache is fresh, skip fetch
-        fetchLiveRates()
-            .then(setRates)
-            .catch(() => {
-                // Keep fallback rates silently — non-critical
-            });
-    }, []);
 
     const convertPrice = useCallback((amount: number, fromCurrency: Currency): number => {
         return convertPriceUtil(amount, fromCurrency, currency, rates);

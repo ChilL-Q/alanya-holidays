@@ -4,8 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { db } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
-
-const MAX_IMAGES = 5;
+import { formatBlogContent, MAX_BLOG_IMAGES } from '../../utils/formatBlogContent';
 
 export const AdminAddBlogPostPage: React.FC = () => {
     const { user } = useAuth();
@@ -20,12 +19,32 @@ export const AdminAddBlogPostPage: React.FC = () => {
     const [uploading, setUploading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const insertPlaceholder = (index: number) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const placeholder = `[image-${index + 1}]`;
+
+        const newContent = text.substring(0, start) + placeholder + text.substring(end);
+        setContent(newContent);
+
+        // Focus back on textarea and position cursor after placeholder
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
+        }, 0);
+    };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
 
-        const remaining = MAX_IMAGES - mediaFiles.length;
+        const remaining = MAX_BLOG_IMAGES - mediaFiles.length;
         const toAdd = files.slice(0, remaining);
 
         const valid: File[] = [];
@@ -84,18 +103,20 @@ export const AdminAddBlogPostPage: React.FC = () => {
                 try {
                     uploadedUrls = await db.uploadBlogMediaBatch(mediaFiles);
                     toast.success('Images uploaded', { id: toastId });
-                } catch (err: any) {
-                    toast.error(err.message || 'Failed to upload images', { id: toastId });
+                } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'Failed to upload images', { id: toastId });
                     return;
                 } finally {
                     setUploading(false);
                 }
             }
 
+            const formattedContent = formatBlogContent(content.trim(), uploadedUrls);
+
             const toastId = toast.loading('Publishing blog post...');
             await db.createBlogPost({
                 title: title.trim(),
-                content: content.trim(),
+                content: formattedContent,
                 video_url: videoUrl.trim() || undefined,
                 cover_image_url: uploadedUrls[0] || undefined,
                 status: 'published',
@@ -104,8 +125,8 @@ export const AdminAddBlogPostPage: React.FC = () => {
 
             toast.success('Blog post published successfully!', { id: toastId });
             navigate('/admin/blog-submissions');
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to publish post');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to publish post');
         } finally {
             setSubmitting(false);
         }
@@ -134,6 +155,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         Article Title <span className="text-red-500">*</span>
                     </label>
                     <input
+                        name="blog-title"
                         type="text"
                         value={title}
                         onChange={e => setTitle(e.target.value)}
@@ -149,6 +171,8 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         Article Content <span className="text-red-500">*</span>
                     </label>
                     <textarea
+                        name="blog-content"
+                        ref={textareaRef}
                         value={content}
                         onChange={e => setContent(e.target.value)}
                         placeholder="Write the full content here..."
@@ -156,13 +180,16 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         required
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y"
                     />
+                    <p className="mt-1.5 text-xs text-slate-400">
+                        Supports markdown: <code>## Heading</code>, <code>- list item</code>, <code>**bold**</code>, <code>&gt; Don&apos;t Miss: important tip</code>.
+                    </p>
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6">
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                         Cover Images (First is main cover)
                     </label>
-                    <p className="text-xs text-slate-400 mb-4">Max {MAX_IMAGES} images. JPG/PNG/WebP, up to 5MB.</p>
+                    <p className="text-xs text-slate-400 mb-4">Max {MAX_BLOG_IMAGES} images. JPG/PNG/WebP, up to 5MB.</p>
 
                     {mediaPreviews.length > 0 && (
                         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
@@ -174,14 +201,22 @@ export const AdminAddBlogPostPage: React.FC = () => {
                                         className="w-full h-full object-cover rounded-xl border border-slate-200"
                                     />
                                     {i === 0 && (
-                                        <span className="absolute bottom-1 left-1 text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded-md">
+                                        <span className="absolute bottom-1 left-1 text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded-md z-10">
                                             Cover
                                         </span>
                                     )}
                                     <button
                                         type="button"
+                                        onClick={() => insertPlaceholder(i)}
+                                        className="absolute inset-0 bg-black/40 text-white font-semibold text-xs opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 cursor-pointer z-10"
+                                    >
+                                        <ImagePlus size={16} />
+                                        <span>Insert to text</span>
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={() => removeMedia(i)}
-                                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20"
                                     >
                                         <X size={10} />
                                     </button>
@@ -190,7 +225,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         </div>
                     )}
 
-                    {mediaFiles.length < MAX_IMAGES && (
+                    {mediaFiles.length < MAX_BLOG_IMAGES && (
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -216,6 +251,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
                         <Video size={15} /> Video URL <span className="text-slate-400 font-normal">(optional)</span>
                     </label>
                     <input
+                        name="video-url"
                         type="url"
                         value={videoUrl}
                         onChange={e => setVideoUrl(e.target.value)}

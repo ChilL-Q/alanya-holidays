@@ -20,7 +20,7 @@ interface SEOHeadProps {
 }
 
 const SITE_NAME = 'Alanya Holidays';
-const DEFAULT_IMAGE = '/og-default.jpg';
+const DEFAULT_IMAGE = '/og-image.jpg';
 const BASE_URL = 'https://alanya-holidays.com';
 
 export type { HreflangAlternate };

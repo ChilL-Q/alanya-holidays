@@ -54,13 +54,11 @@ export default defineConfig(() => {
               if (id.includes('react-datepicker')) return 'vendor-datepicker';
               if (id.includes('date-fns')) return 'vendor-date-fns';
               if (id.includes('react-imask')) return 'vendor-imask';
-              if (id.includes('@google/generative-ai')) return 'vendor-ai';
-              // Additional heavy libraries
-              if (id.includes('react-hook-form')) return 'vendor-forms';
               if (id.includes('zod')) return 'vendor-validation';
-              if (id.includes('@tanstack/react-query')) return 'vendor-query';
-              if (id.includes('framer-motion')) return 'vendor-animation';
-              if (id.includes('zustand')) return 'vendor-state';
+              if (id.includes('react-router-dom')) return 'vendor-router';
+              if (id.includes('@headlessui/react')) return 'vendor-headlessui';
+              if (id.includes('react-hot-toast')) return 'vendor-toast';
+              if (id.includes('@sentry/react')) return 'vendor-sentry';
             }
             // Split large internal modules
             if (id.includes('pages/AiPlanner')) return 'pages-aiplanner';

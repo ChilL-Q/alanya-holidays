@@ -36,7 +36,11 @@ export const ProductToolbar: React.FC<ProductToolbarProps> = ({
                 <div className="relative w-full md:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
+                        id="admin-products-search"
+                        name="admin-products-search"
                         type="text"
+                        autoComplete="off"
+                        aria-label="Search products"
                         placeholder="Search products..."
                         value={searchQuery}
                         onChange={(e) => onSearchQuery(e.target.value)}

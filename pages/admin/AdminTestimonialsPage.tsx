@@ -21,8 +21,8 @@ export const AdminTestimonialsPage: React.FC = () => {
         try {
             const data = await db.getAllTestimonials();
             setTestimonials(data);
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to load testimonials');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to load testimonials');
         } finally {
             setIsLoading(false);
         }
@@ -53,8 +53,8 @@ export const AdminTestimonialsPage: React.FC = () => {
             setRating(5);
             setIsVisible(true);
             fetchTestimonials();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to add testimonial');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to add testimonial');
         } finally {
             setIsSubmitting(false);
         }
@@ -65,8 +65,8 @@ export const AdminTestimonialsPage: React.FC = () => {
             await db.toggleVisibility(id, !currentVisible);
             toast.success(`Testimonial ${!currentVisible ? 'visible' : 'hidden'}`);
             fetchTestimonials();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to toggle visibility');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to toggle visibility');
         }
     };
 
@@ -76,8 +76,8 @@ export const AdminTestimonialsPage: React.FC = () => {
             await db.deleteTestimonial(id);
             toast.success('Testimonial deleted');
             fetchTestimonials();
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to delete testimonial');
+        } catch (e: unknown) {
+            toast.error(e instanceof Error ? e.message : 'Failed to delete testimonial');
         }
     };
 
@@ -96,10 +96,11 @@ export const AdminTestimonialsPage: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label htmlFor="testimonial-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Name *
                         </label>
                         <input
+                            id="testimonial-name"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -109,10 +110,11 @@ export const AdminTestimonialsPage: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label htmlFor="testimonial-role" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                             Role / Location
                         </label>
                         <input
+                            id="testimonial-role"
                             type="text"
                             value={role}
                             onChange={(e) => setRole(e.target.value)}
@@ -123,10 +125,11 @@ export const AdminTestimonialsPage: React.FC = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label htmlFor="testimonial-content" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                         Content *
                     </label>
                     <textarea
+                        id="testimonial-content"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         required

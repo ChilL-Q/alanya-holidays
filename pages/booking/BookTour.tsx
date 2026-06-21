@@ -138,7 +138,7 @@ Total Price: ${formatPrice(convertPrice(service.price * guests, 'EUR'))}`;
                                     <div>
                                         <h3 className="font-bold text-slate-900 dark:text-white mb-3">Schedule</h3>
                                         <ul className="space-y-3">
-                                            {service.features.itinerary.map((item: any, idx: number) => (
+                                            {service.features.itinerary.map((item: { time?: string; activity?: string; description?: string }, idx: number) => (
                                                 <li key={idx} className="flex gap-3 text-sm">
                                                     <span className="font-bold text-teal-600 dark:text-cyan-400 dark:text-slate-200 min-w-[60px]">{item.time || `Stop ${idx + 1}`}</span>
                                                     <span className="text-slate-600 dark:text-slate-300">{item.activity || item.description}</span>

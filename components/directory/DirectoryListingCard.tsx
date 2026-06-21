@@ -204,13 +204,13 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                     </button>
                 </div>
 
-                {listing.slug && (
+                {listing.slug && !listing.owner_user_id && (
                     <Link
                         to={getListingUrl(listing.category_id, listing.slug)}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-teal-600 dark:text-cyan-400 hover:underline mt-2 block text-center"
+                        className="inline-flex items-center justify-center gap-1.5 w-full mt-3 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-400 hover:text-teal-600 dark:hover:text-cyan-400 dark:hover:border-cyan-500 transition-colors"
                     >
-                        View full page →
+                        <Award size={14} /> Claim Listing
                     </Link>
                 )}
             </div>

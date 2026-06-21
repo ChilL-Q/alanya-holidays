@@ -134,6 +134,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
                     {t('visa.consult.form.name')}
                 </label>
                 <input
+                    name="full-name"
                     required
                     type="text"
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
@@ -149,6 +150,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
                         {t('visa.consult.form.email')}
                     </label>
                     <input
+                        name="email"
                         required
                         type="email"
                         className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
@@ -162,6 +164,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
                         {t('visa.consult.form.phone')}
                     </label>
                     <input
+                        name="phone"
                         required
                         type="tel"
                         className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
@@ -177,6 +180,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
                     {t('visa.consult.form.visa_type')}
                 </label>
                 <select
+                    name="visa-type"
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                     value={formData.visa_type}
                     onChange={e => setFormData({ ...formData, visa_type: e.target.value })}
@@ -192,6 +196,7 @@ const VisaConsultForm: React.FC<VisaConsultFormProps> = ({ onSuccess }) => {
                     {t('visa.consult.form.message')}
                 </label>
                 <textarea
+                    name="message"
                     required
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"

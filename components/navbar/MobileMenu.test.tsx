@@ -65,7 +65,8 @@ vi.mock('lucide-react', () => ({
     Briefcase: () => <svg data-testid="briefcase-icon" />,
     MapPin: () => <svg data-testid="mappin-icon" />,
     MessageCircle: () => <svg data-testid="message-circle-icon" />,
-    Users: () => <svg data-testid="users-icon" />
+    Users: () => <svg data-testid="users-icon" />,
+    ArrowRightLeft: () => <svg data-testid="arrow-right-left-icon" />
 }));
 
 vi.mock('./NavModeToggle', () => ({

@@ -12,6 +12,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title</label>
                     <input
+                        name="title"
                         type="text"
                         value={service.title || ''}
                         onChange={e => setService({ ...service, title: e.target.value })}
@@ -21,6 +22,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Type</label>
                     <select
+                        name="filter-type"
                         value={service.type || 'car'}
                         onChange={e => setService({ ...service, type: e.target.value as 'car' | 'bike' | 'visa' | 'esim' | 'tour' | 'transfer' | 'wellness' | 'creative' })}
                         className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
@@ -36,6 +38,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Price (€)</label>
                     <input
+                        name="price"
                         type="number"
                         value={service.price || 0}
                         onChange={(e) => setService({ ...service, price: Number(e.target.value) })}
@@ -46,6 +49,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
                 <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Provider ID (UUID)</label>
                     <input
+                        name="provider-id"
                         type="text"
                         value={service.provider_id || ''}
                         onChange={e => setService({ ...service, provider_id: e.target.value })}
@@ -70,6 +74,7 @@ export const ServiceBasicDetailsForm: React.FC<ServiceBasicDetailsFormProps> = (
             <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Description</label>
                 <textarea
+                    name="description"
                     value={service.description || ''}
                     onChange={e => setService({ ...service, description: e.target.value })}
                     rows={4}

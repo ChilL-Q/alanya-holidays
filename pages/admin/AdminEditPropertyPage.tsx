@@ -73,7 +73,7 @@ export const AdminEditPropertyPage: React.FC = () => {
                     location: data.location,
                     address: data.address || '',
                     propertyType: data.type || 'apartment',
-                    amenities: (data.amenities || []).map((a: any) => typeof a === 'string' ? a : a.label),
+                    amenities: (data.amenities || []).map((a: string | Record<string, string>) => typeof a === 'string' ? a : a.label || a.name || String(a)),
                     name: data.host?.full_name || '',
                     email: '',
                     arrivalGuide: data.arrival_guide || '',

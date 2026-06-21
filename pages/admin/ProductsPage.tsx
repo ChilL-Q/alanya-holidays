@@ -61,9 +61,9 @@ export const ProductsPage: React.FC = () => {
 
             loadProducts();
             setModalConfig({ ...modalConfig, isOpen: false });
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            toast.error(`Failed to delete product: ${e.message || 'Unknown error'}`);
+            toast.error(`Failed to delete product: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 

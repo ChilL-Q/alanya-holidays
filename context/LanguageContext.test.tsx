@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, act } from '@testing-library/react';
+import { render, screen, cleanup, act, waitFor } from '@testing-library/react';
 import { LanguageProvider, useLanguage } from './LanguageContext';
 
 // Mock locale data
@@ -25,86 +25,108 @@ describe('LanguageContext', () => {
     afterEach(() => {
         cleanup();
         vi.restoreAllMocks();
-        // Reset document attributes
         document.documentElement.lang = 'en';
         document.dir = 'ltr';
         document.body.classList.remove('font-arabic');
-        // Reset localStorage to avoid language leaking between tests
         localStorage.removeItem('language');
     });
 
-    it('provides default language "en"', () => {
+    it('provides default language "en"', async () => {
         render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
-        expect(screen.getByTestId('lang').textContent).toBe('en');
+        await waitFor(() => {
+            expect(screen.getByTestId('lang').textContent).toBe('en');
+        });
         expect(document.documentElement.lang).toBe('en');
     });
 
-    it('updates language and document attributes', () => {
+    it('updates language and document attributes', async () => {
         render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
+
+        await waitFor(() => {
+            expect(screen.getByTestId('lang').textContent).toBe('en');
+        });
 
         const button = screen.getByText('Change to TR');
         act(() => {
             button.click();
         });
 
-        expect(screen.getByTestId('lang').textContent).toBe('tr');
+        await waitFor(() => {
+            expect(screen.getByTestId('lang').textContent).toBe('tr');
+        });
         expect(document.documentElement.lang).toBe('tr');
-        expect(document.dir).toBe('ltr'); // TR is LTR
+        expect(document.dir).toBe('ltr');
     });
 
-    it('handles RTL for Arabic', () => {
-        const { getByText: _getByText } = render(
+    it('handles RTL for Arabic', async () => {
+        const TestComponentAr = () => {
+            const { setLanguage } = useLanguage();
+            return <button onClick={() => setLanguage('ar')}>Arabic</button>;
+        };
+
+        render(
             <LanguageProvider>
-                <TestComponent />
+                <TestComponentAr />
             </LanguageProvider>
         );
 
-        // Use setLanguage directly via hook if button logic was complex, but button is simple.
-        // Or we can modify TestComponent to have buttons for all langs.
-        // Let's rely on t implementation being correct for now, or add a button just for this test purpose?
-        // Wait, TestComponent only has TR button.
-        // Let's modify TestComponent in replace_file if needed? No, let's keep it simple.
-        // We can create a specific TestComponent for this test suite or just modify the existing one inline if needed (but it's defined outside).
-        // Actually, we can just test the hook directly using `renderHook` or a custom component per test.
+        await waitFor(() => {
+            expect(screen.getByText('Arabic')).toBeInTheDocument();
+        });
+
+        act(() => {
+            screen.getByText('Arabic').click();
+        });
+
+        await waitFor(() => {
+            expect(document.dir).toBe('rtl');
+        });
+        expect(document.documentElement.lang).toBe('ar');
+        expect(document.body.classList.contains('font-arabic')).toBe(true);
     });
 
-    it('translates keys correctly', () => {
+    it('translates keys correctly', async () => {
         render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
-        expect(screen.getByTestId('trans').textContent).toBe('Test Value');
+        await waitFor(() => {
+            expect(screen.getByTestId('trans').textContent).toBe('Test Value');
+        });
     });
 
-    it('interpolates parameters', () => {
+    it('interpolates parameters', async () => {
         render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
-        expect(screen.getByTestId('interp').textContent).toBe('Hello World');
+        await waitFor(() => {
+            expect(screen.getByTestId('interp').textContent).toBe('Hello World');
+        });
     });
 
-    it('returns key if translation missing', () => {
+    it('returns key if translation missing', async () => {
         render(
             <LanguageProvider>
                 <TestComponent />
             </LanguageProvider>
         );
-        expect(screen.getByTestId('missing').textContent).toBe('missing.key');
+        await waitFor(() => {
+            expect(screen.getByTestId('missing').textContent).toBe('missing.key');
+        });
     });
 
     it('throws error if used outside provider', () => {
-        // Suppress console.error for this test (React logs error when boundary catches)
         const spy = vi.spyOn(console, 'error');
         spy.mockImplementation(() => {});
 

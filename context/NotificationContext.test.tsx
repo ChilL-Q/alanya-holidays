@@ -1,29 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider, useNotifications } from './NotificationContext';
 import { useAuth } from './AuthContext';
-import { db } from '../api-services';
+import { notificationsService } from '../api-services/api/notifications';
+import { Notification } from '../types/models';
 
-const mockedDb = db as unknown as {
+const mockedNotificationsService = notificationsService as unknown as {
     getNotifications: ReturnType<typeof vi.fn>;
     markNotificationAsRead: ReturnType<typeof vi.fn>;
     addNotification: ReturnType<typeof vi.fn>;
     subscribeToNotifications: ReturnType<typeof vi.fn>;
 };
-import { Notification } from '../types/models';
 
 // Mock AuthContext
 vi.mock('./AuthContext', () => ({
     useAuth: vi.fn()
 }));
 
-// Mock DB
+// Mock Notifications Service
 const mockUnsubscribe = vi.fn();
 const mockNotificationCallbacks = new Map<string, (payload: any) => void>();
 
-vi.mock('../api-services', () => ({
-    db: {
+vi.mock('../api-services/api/notifications', () => ({
+    notificationsService: {
         getNotifications: vi.fn().mockResolvedValue([]),
         markNotificationAsRead: vi.fn().mockResolvedValue(undefined),
         addNotification: vi.fn().mockResolvedValue(undefined),
@@ -39,8 +40,12 @@ vi.mock('../api-services', () => ({
 // Mock Audio
 const mockAudioPlay = vi.fn().mockResolvedValue(undefined);
 
+let queryClient: QueryClient;
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <NotificationProvider>{children}</NotificationProvider>
+    <QueryClientProvider client={queryClient}>
+        <NotificationProvider>{children}</NotificationProvider>
+    </QueryClientProvider>
 );
 
 const createMockNotification = (overrides: Partial<Notification> = {}): Notification => ({
@@ -58,22 +63,30 @@ describe('NotificationContext', () => {
     let consoleSpy: any;
 
     beforeEach(() => {
+        // Initialize QueryClient with test defaults
+        queryClient = new QueryClient({
+            defaultOptions: {
+                queries: { retry: false, gcTime: Infinity },
+                mutations: { retry: false }
+            }
+        });
+
         // Clear mocks
         mockNotificationCallbacks.clear();
         mockUnsubscribe.mockClear();
         mockAudioPlay.mockClear();
-        (db.getNotifications as any).mockClear();
-        (db.markNotificationAsRead as any).mockClear();
-        (db.addNotification as any).mockClear();
-        (db.subscribeToNotifications as any).mockClear();
+        (notificationsService.getNotifications as any).mockClear();
+        (notificationsService.markNotificationAsRead as any).mockClear();
+        (notificationsService.addNotification as any).mockClear();
+        (notificationsService.subscribeToNotifications as any).mockClear();
 
         // Reset user state
         (useAuth as any).mockReturnValue({ user: null, isAuthenticated: false });
 
         // Setup default mock implementations
-        (db.getNotifications as any).mockResolvedValue([]);
-        (db.markNotificationAsRead as any).mockResolvedValue(undefined);
-        (db.addNotification as any).mockResolvedValue(undefined);
+        (notificationsService.getNotifications as any).mockResolvedValue([]);
+        (notificationsService.markNotificationAsRead as any).mockResolvedValue(undefined);
+        (notificationsService.addNotification as any).mockResolvedValue(undefined);
 
         // Mock Audio globally
         (window as any).Audio = vi.fn().mockImplementation(function() {
@@ -114,7 +127,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-1', title: 'Notification 1' }),
                 createMockNotification({ id: 'notif-2', title: 'Notification 2', read: true })
             ];
-            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -122,13 +135,13 @@ describe('NotificationContext', () => {
                 expect(result.current.notifications).toHaveLength(2);
             });
 
-            expect(db.getNotifications).toHaveBeenCalledWith('user-123');
+            expect(notificationsService.getNotifications).toHaveBeenCalledWith('user-123');
             expect(result.current.unreadCount).toBe(1);
         });
 
         it('should handle fetch notifications error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockRejectedValue(new Error('Fetch failed'));
+            mockedNotificationsService.getNotifications.mockRejectedValue(new Error('Fetch failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -145,7 +158,7 @@ describe('NotificationContext', () => {
             const mockNotifications: Notification[] = [
                 createMockNotification({ id: 'notif-1' })
             ];
-            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result, rerender } = renderHook(() => useNotifications(), { wrapper });
 
@@ -170,7 +183,7 @@ describe('NotificationContext', () => {
             renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.subscribeToNotifications).toHaveBeenCalledWith(
+                expect(notificationsService.subscribeToNotifications).toHaveBeenCalledWith(
                     'user-123',
                     expect.any(Function)
                 );
@@ -184,7 +197,7 @@ describe('NotificationContext', () => {
 
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            expect(db.subscribeToNotifications).not.toHaveBeenCalled();
+            expect(notificationsService.subscribeToNotifications).not.toHaveBeenCalled();
         });
 
         it('should unsubscribe on unmount', async () => {
@@ -193,7 +206,7 @@ describe('NotificationContext', () => {
             const { unmount } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.subscribeToNotifications).toHaveBeenCalled();
+                expect(notificationsService.subscribeToNotifications).toHaveBeenCalled();
             });
 
             unmount();
@@ -207,7 +220,7 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.subscribeToNotifications).toHaveBeenCalled();
+                expect(notificationsService.subscribeToNotifications).toHaveBeenCalled();
             });
 
             // Simulate INSERT event
@@ -232,7 +245,7 @@ describe('NotificationContext', () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
 
             const existingNotification = createMockNotification({ id: 'existing' });
-            mockedDb.getNotifications.mockResolvedValue([existingNotification]);
+            mockedNotificationsService.getNotifications.mockResolvedValue([existingNotification]);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -257,7 +270,7 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.subscribeToNotifications).toHaveBeenCalled();
+                expect(notificationsService.subscribeToNotifications).toHaveBeenCalled();
             });
 
             // Simulate UPDATE event
@@ -279,7 +292,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -291,17 +304,20 @@ describe('NotificationContext', () => {
                 await result.current.markAsRead('notif-1');
             });
 
-            expect(db.markNotificationAsRead).toHaveBeenCalledWith('notif-1');
-            expect(result.current.notifications.find(n => n.id === 'notif-1')?.read).toBe(true);
+            await waitFor(() => {
+                expect(result.current.notifications.find(n => n.id === 'notif-1')?.read).toBe(true);
+            });
+
+            expect(notificationsService.markNotificationAsRead).toHaveBeenCalledWith('notif-1');
             expect(result.current.unreadCount).toBe(1);
         });
 
         it('should handle mark as read error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockResolvedValue([
+            mockedNotificationsService.getNotifications.mockResolvedValue([
                 createMockNotification({ id: 'notif-1', read: false })
             ]);
-            mockedDb.markNotificationAsRead.mockRejectedValue(new Error('Mark failed'));
+            mockedNotificationsService.markNotificationAsRead.mockRejectedValue(new Error('Mark failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -323,12 +339,11 @@ describe('NotificationContext', () => {
     describe('addNotification', () => {
         it('should add notification successfully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockAudioPlay.mockResolvedValue(undefined);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
             await act(async () => {
@@ -341,13 +356,20 @@ describe('NotificationContext', () => {
                 });
             });
 
+            expect(notificationsService.addNotification).toHaveBeenCalled();
+
+            // State updates via realtime INSERT, not optimistically
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', title: 'New Alert', type: 'warning', link: '/alerts' }) });
+            });
+
             await waitFor(() => {
                 expect(result.current.notifications).toHaveLength(1);
             });
-            
+
             expect(result.current.notifications[0].title).toBe('New Alert');
             expect(result.current.lastNotification?.title).toBe('New Alert');
-            expect(db.addNotification).toHaveBeenCalled();
         });
 
         it('should play notification sound when adding', async () => {
@@ -356,23 +378,22 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Sound plays via realtime INSERT, not directly in addNotification
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1' }) });
             });
 
             await waitFor(() => {
-                expect(window.Audio).toHaveBeenCalledWith(
-                    'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'
-                );
+                expect(result.current.notifications).toHaveLength(1);
             });
+
+            expect(window.Audio).toHaveBeenCalledWith(
+                'https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'
+            );
             expect(mockAudioPlay).toHaveBeenCalled();
         });
 
@@ -383,24 +404,21 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Sound error happens via realtime INSERT handler
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1' }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications).toHaveLength(1);
             });
-            
+
             expect(console.error).toHaveBeenCalledWith(
-                'Error playing sound:',
+                'Error playing notification sound:',
                 expect.any(Error)
             );
         });
@@ -420,17 +438,17 @@ describe('NotificationContext', () => {
             });
 
             expect(result.current.notifications).toEqual([]);
-            expect(db.addNotification).not.toHaveBeenCalled();
+            expect(notificationsService.addNotification).not.toHaveBeenCalled();
         });
 
         it('should handle add notification error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.addNotification.mockRejectedValue(new Error('Add failed'));
+            mockedNotificationsService.addNotification.mockRejectedValue(new Error('Add failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
             await act(async () => {
@@ -442,10 +460,8 @@ describe('NotificationContext', () => {
                 });
             });
 
-            await waitFor(() => {
-                expect(result.current.notifications).toHaveLength(1);
-            });
-            
+            // No optimistic update — state stays empty on error
+            expect(result.current.notifications).toHaveLength(0);
             expect(console.error).toHaveBeenCalledWith(
                 'Failed to add notification:',
                 expect.any(Error)
@@ -458,54 +474,44 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // ID is assigned by DB and arrives via realtime INSERT
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-assigned-uuid' }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications[0]).toBeDefined();
             });
-            
-            expect(result.current.notifications[0].id).toBeDefined();
+
+            expect(result.current.notifications[0].id).toBe('db-assigned-uuid');
             expect(typeof result.current.notifications[0].id).toBe('string');
         });
 
         it('should set correct timestamp for new notification', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            const beforeAdd = new Date().getTime();
+            const fixedTimestamp = '2026-06-07T12:00:00.000Z';
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Timestamp is assigned by DB and arrives via realtime INSERT
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', created_at: fixedTimestamp }) });
             });
 
             await waitFor(() => {
                 expect(result.current.notifications[0]).toBeDefined();
             });
-            
-            const afterAdd = new Date().getTime();
-            const notificationTime = new Date(result.current.notifications[0].created_at!).getTime();
 
-            expect(notificationTime).toBeGreaterThanOrEqual(beforeAdd);
-            expect(notificationTime).toBeLessThanOrEqual(afterAdd);
+            expect(result.current.notifications[0].created_at).toBe(fixedTimestamp);
         });
     });
 
@@ -516,7 +522,7 @@ describe('NotificationContext', () => {
             const initialNotifications: Notification[] = [
                 createMockNotification({ id: 'notif-1' })
             ];
-            mockedDb.getNotifications.mockResolvedValue(initialNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(initialNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -529,20 +535,23 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2' }),
                 createMockNotification({ id: 'notif-3' })
             ];
-            mockedDb.getNotifications.mockResolvedValue(updatedNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(updatedNotifications);
 
             // Call refresh
             await act(async () => {
                 await result.current.refreshNotifications();
             });
 
-            expect(result.current.notifications).toHaveLength(2);
+            await waitFor(() => {
+                expect(result.current.notifications).toHaveLength(2);
+            });
+
             expect(result.current.notifications[0].id).toBe('notif-2');
         });
 
         it('should clear notifications when refreshing without user', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockResolvedValue([
+            mockedNotificationsService.getNotifications.mockResolvedValue([
                 createMockNotification({ id: 'notif-1' })
             ]);
 
@@ -563,12 +572,12 @@ describe('NotificationContext', () => {
 
         it('should handle refresh error gracefully', async () => {
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockRejectedValue(new Error('Refresh failed'));
+            mockedNotificationsService.getNotifications.mockRejectedValue(new Error('Refresh failed'));
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
             await act(async () => {
@@ -593,7 +602,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-4', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -608,7 +617,7 @@ describe('NotificationContext', () => {
                 createMockNotification({ id: 'notif-2', read: false })
             ];
             (useAuth as any).mockReturnValue({ user: { id: 'user-123' }, isAuthenticated: true });
-            mockedDb.getNotifications.mockResolvedValue(mockNotifications);
+            mockedNotificationsService.getNotifications.mockResolvedValue(mockNotifications);
 
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
@@ -620,7 +629,9 @@ describe('NotificationContext', () => {
                 await result.current.markAsRead('notif-1');
             });
 
-            expect(result.current.unreadCount).toBe(1);
+            await waitFor(() => {
+                expect(result.current.unreadCount).toBe(1);
+            });
         });
 
         it('should update unread count when adding notification', async () => {
@@ -629,18 +640,15 @@ describe('NotificationContext', () => {
             const { result } = renderHook(() => useNotifications(), { wrapper });
 
             await waitFor(() => {
-                expect(db.getNotifications).toHaveBeenCalled();
+                expect(notificationsService.getNotifications).toHaveBeenCalled();
             });
 
             expect(result.current.unreadCount).toBe(0);
 
-            await act(async () => {
-                await result.current.addNotification({
-                    user_id: 'user-123',
-                    title: 'Test',
-                    message: 'Test message',
-                    type: 'info'
-                });
+            // Count updates via realtime INSERT, not directly from addNotification
+            const realtimeCallback = mockNotificationCallbacks.get('user-123');
+            act(() => {
+                realtimeCallback?.({ eventType: 'INSERT', new: createMockNotification({ id: 'db-id-1', read: false }) });
             });
 
             await waitFor(() => {

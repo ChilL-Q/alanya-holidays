@@ -83,7 +83,7 @@ export const AdminEditProductPage: React.FC = () => {
                 throw new Error('User not found');
             }
 
-            const productData: any = {
+            const productData = {
                 title: formData.title,
                 description: formData.description,
                 price: parseFloat(formData.price) || 0,
@@ -106,9 +106,9 @@ export const AdminEditProductPage: React.FC = () => {
             }
 
             navigate('/admin/products');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Save Product Error:', error);
-            const message = error.message || 'Failed to save product';
+            const message = error instanceof Error ? error.message : 'Failed to save product';
             toast.error(message);
         } finally {
             setSubmitting(false);

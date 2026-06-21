@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { db, Notification } from '../api-services';
+import { notificationsService } from '../api-services/api/notifications';
+import type { Notification } from '../types/models';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { qk } from '../lib/queryKeys';
 
 interface NotificationContextType {
     notifications: Notification[];
@@ -15,82 +18,92 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user } = useAuth();
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const queryClient = useQueryClient();
     const [lastNotification, setLastNotification] = useState<Notification | null>(null);
-    const isMountedRef = useRef(true);
 
-    const refreshNotifications = useCallback(async () => {
-        if (!user) {
-            if (isMountedRef.current) setNotifications([]);
-            return;
-        }
-        try {
-            const data = await db.getNotifications(user.id);
-            if (isMountedRef.current) setNotifications(data);
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
-        }
-    }, [user]);
+    const userId = user?.id;
+
+    const { data: notifications = [], refetch } = useQuery({
+        queryKey: qk.notifications.byUser(userId ?? ''),
+        queryFn: async () => {
+            try {
+                return await notificationsService.getNotifications(userId!);
+            } catch (error) {
+                console.error('Failed to fetch notifications:', error);
+                throw error;
+            }
+        },
+        enabled: !!userId,
+        staleTime: 30_000,
+        gcTime: 5 * 60_000,
+        retry: 1,
+    });
 
     useEffect(() => {
-        isMountedRef.current = true;
-        refreshNotifications();
+        if (!userId) return;
 
-        // Real-time subscription
-        if (user) {
-            const subscription = db.subscribeToNotifications(user.id, (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    const newNotification = payload.new as Notification;
-                    setNotifications(prev => {
-                        // Prevent duplicates
+        const subscription = notificationsService.subscribeToNotifications(userId, (payload) => {
+            if (payload.eventType === 'INSERT') {
+                const newNotification = payload.new as Notification;
+                queryClient.setQueryData<Notification[]>(
+                    qk.notifications.byUser(userId),
+                    (prev = []) => {
                         if (prev.some(n => n.id === newNotification.id)) return prev;
                         return [newNotification, ...prev];
-                    });
-                    setLastNotification(newNotification);
-                    // Optional: Play a sound or show a toast
-                }
-            });
+                    }
+                );
+                setLastNotification(newNotification);
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+                audio.play().catch(e => console.error('Error playing notification sound:', e));
+            }
+        });
 
-            return () => {
-                isMountedRef.current = false;
-                subscription.unsubscribe();
-            };
-        }
-        return () => { isMountedRef.current = false; };
-    }, [user, refreshNotifications]);
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [userId, queryClient]);
 
-    const markAsRead = useCallback(async (id: string) => {
-        try {
-            await db.markNotificationAsRead(id);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        } catch (error) {
+    const markAsReadMutation = useMutation({
+        mutationFn: (id: string) => notificationsService.markNotificationAsRead(id),
+        onSuccess: (_data, id) => {
+            queryClient.setQueryData<Notification[]>(
+                qk.notifications.byUser(userId ?? ''),
+                (prev = []) => prev.map(n => n.id === id ? { ...n, read: true } : n)
+            );
+        },
+        onError: (error) => {
             console.error('Failed to mark notification as read:', error);
-        }
-    }, []);
+        },
+    });
 
-    const addNotification = useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
-        if (!user) return;
+    const markAsRead = React.useCallback(async (id: string) => {
         try {
-            const newNotification: Notification = {
-                ...notification,
-                id: Math.random().toString(36).substr(2, 9),
-                user_id: user.id, // For demo, assuming self-notification or logic handles user_id
-                read: false,
-                created_at: new Date().toISOString()
-            };
-
-            setNotifications(prev => [newNotification, ...prev]);
-            setLastNotification(newNotification);
-
-            // Play notification sound
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-            audio.play().catch(e => console.error('Error playing sound:', e));
-
-            await db.addNotification(newNotification);
-        } catch (error) {
-            console.error('Failed to add notification:', error);
+            await markAsReadMutation.mutateAsync(id);
+        } catch {
+            // error already logged in onError
         }
-    }, [user]);
+    }, [markAsReadMutation]);
+
+    const addNotificationMutation = useMutation({
+        mutationFn: (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) =>
+            notificationsService.addNotification({ ...notification, user_id: userId! }),
+        onError: (error) => {
+            console.error('Failed to add notification:', error);
+        },
+    });
+
+    const addNotification = React.useCallback(async (notification: Omit<Notification, 'id' | 'created_at' | 'read'>) => {
+        if (!userId) return;
+        try {
+            await addNotificationMutation.mutateAsync(notification);
+        } catch {
+            // error already logged in onError
+        }
+    }, [userId, addNotificationMutation]);
+
+    const refreshNotifications = React.useCallback(async () => {
+        await refetch();
+    }, [refetch]);
 
     const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 

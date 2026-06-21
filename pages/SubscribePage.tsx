@@ -17,8 +17,8 @@ interface TierConfig {
 const TIER_CONFIG: Record<SubscriptionTier, TierConfig> = {
     voyager: {
         name: 'Voyager',
-        monthlyPrice: 59,
-        annualPrice: 499,
+        monthlyPrice: 49,
+        annualPrice: 449,
         badgeLabel: 'Most Popular',
         badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
         highlights: [

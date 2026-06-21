@@ -253,6 +253,7 @@ export const ForumPostPage: React.FC = () => {
                 {isAuthenticated ? (
                     <form onSubmit={handleSubmitComment} className="mb-6">
                         <textarea
+                            name="comment"
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             rows={3}

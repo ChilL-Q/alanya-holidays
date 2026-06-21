@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
+import { renderHookWithQuery } from '../utils/test-utils';
 import { useServicePrices } from './useServicePrices';
 import { db } from '../api-services';
 
@@ -23,7 +24,7 @@ describe('useServicePrices', () => {
             ]
         });
 
-        const { result } = renderHook(() => useServicePrices());
+        const { result } = renderHookWithQuery(() => useServicePrices());
 
         expect(result.current.isLoading).toBe(true);
         expect(result.current.minPrices).toEqual({});
@@ -41,7 +42,7 @@ describe('useServicePrices', () => {
     it('handles error gracefully', async () => {
         (db.getServices as any).mockRejectedValue(new Error('Failed'));
 
-        const { result } = renderHook(() => useServicePrices());
+        const { result } = renderHookWithQuery(() => useServicePrices());
 
         await waitFor(() => {
             expect(result.current.isLoading).toBe(false);

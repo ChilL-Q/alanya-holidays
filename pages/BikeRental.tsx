@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../api-services';
+import { db, ServiceData } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -37,7 +37,7 @@ export const BikeRental: React.FC = () => {
                 // Aggregation Logic (Same as Car)
                 const groups: Record<string, BikeGroup> = {};
 
-                services?.forEach((service: any) => {
+                services?.forEach((service: ServiceData) => {
                     const brand = service.features?.brand || 'Unknown';
                     const model = service.features?.model || 'Model';
                     const key = `${brand}-${model}`.toLowerCase();

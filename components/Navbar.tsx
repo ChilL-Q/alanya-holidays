@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useClickOutside } from '../hooks/useClickOutside';
-import { ShoppingBag, Menu, User, Heart } from 'lucide-react';
-
-const MD_BREAKPOINT = 768;
+import { ShoppingBag, Menu, User, Heart, ArrowRightLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -25,7 +22,7 @@ export const Navbar: React.FC = () => {
   const { items, setIsCartOpen } = useCart();
   const { favorites } = useFavorites();
   const { user, isAuthenticated } = useAuth();
-  useLanguage();
+  const { t } = useLanguage();
   useModal();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,7 +40,15 @@ export const Navbar: React.FC = () => {
     }
   }, [location.pathname]);
 
-  useClickOutside(profileRef, () => setIsProfileOpen(false));
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Presence heartbeat — stamp last_seen for the "who's online" view
   useEffect(() => {
@@ -63,19 +68,6 @@ export const Navbar: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
-
-  // Reset mobile menu when viewport widens to desktop — prevents both menus open simultaneously
-  useEffect(() => {
-    const mql = window.matchMedia(`(min-width: ${MD_BREAKPOINT}px)`);
-    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
-      if (e.matches) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-    handleChange(mql);
-    mql.addEventListener('change', handleChange);
-    return () => mql.removeEventListener('change', handleChange);
-  }, []);
 
   return (
     <header
@@ -106,23 +98,37 @@ export const Navbar: React.FC = () => {
                 <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain relative z-10 rounded-full" />
               </div>
               <span className="font-serif text-lg sm:text-xl md:text-2xl text-slate-900 dark:text-white tracking-tight font-medium truncate hidden md:block">
-                Alanya<span className="text-teal-600 dark:text-cyan-400">Holidays</span>
+                Alanya<span className="text-teal-600 dark:text-cyan-400 dark:text-slate-200">Holidays</span>
               </span>
             </Link>
           </div>
 
-          {/* Desktop Nav — centered */}
-          <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 z-10">
+          {/* Desktop Nav — centered inside available space */}
+          <div className="hidden md:flex justify-center flex-1 mx-4 z-10">
             <DesktopNav mode={navMode} />
           </div>
 
           {/* Right Section */}
-          <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 ml-auto">
+          <div className="flex-shrink-0 flex items-center gap-2 lg:gap-4 z-10">
 
             {/* List Property CTA (Rental Mode Only) */}
             {navMode === 'rental' && (
               <ListPropertyAction />
             )}
+
+            {/* Mode Switcher pill */}
+            <div className="hidden md:block">
+              <Link
+                to={navMode === 'directory' ? '/services' : '/'}
+                className="flex items-center gap-1.5 p-2 lg:px-3 lg:py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm"
+                title={navMode === 'directory' ? t('nav.rentals') : t('nav.directory')}
+              >
+                <ArrowRightLeft size={14} className="text-teal-500 dark:text-cyan-400 shrink-0" />
+                <span className="hidden lg:inline">
+                  {navMode === 'directory' ? t('nav.rentals') : t('nav.directory')}
+                </span>
+              </Link>
+            </div>
 
             {/* User Actions */}
             <div className="flex items-center gap-1 sm:gap-2 pl-2">
@@ -149,7 +155,7 @@ export const Navbar: React.FC = () => {
                     // Logic: Mobile -> Open MobileMenu. Desktop -> Open ProfileDropdown.
                     // If user is Auth on Desktop -> ProfileDropdown acting as user menu.
                     // If user is Guest on Desktop -> ProfileDropdown acting as Login/Register menu.
-                    if (window.innerWidth < MD_BREAKPOINT) {
+                    if (window.innerWidth < 768) {
                       setIsMobileMenuOpen(!isMobileMenuOpen);
                     } else {
                       setIsProfileOpen(!isProfileOpen);

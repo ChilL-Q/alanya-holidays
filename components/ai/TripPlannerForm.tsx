@@ -88,6 +88,7 @@ export const TripPlannerForm: React.FC<Props> = ({ onComplete }) => {
                         
                         <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl">
                             <input 
+                                name="duration"
                                 type="range" 
                                 min="1" 
                                 max="14" 

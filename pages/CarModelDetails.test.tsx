@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CarModelDetails } from './CarModelDetails';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from '../context/LanguageContext';
@@ -28,19 +29,27 @@ const mockOffers = [
 ];
 
 const renderWithProviders = (initialEntry = '/services/car/toyota-corolla') => {
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: { retry: false, gcTime: Infinity },
+            mutations: { retry: false }
+        }
+    });
     return render(
-        <MemoryRouter initialEntries={[initialEntry]}>
-            <LanguageProvider>
-                <CurrencyProvider>
-                    <AuthProvider>
-                        <Routes>
-                            <Route path="/services/car/:modelId" element={<CarModelDetails />} />
-                            <Route path="/services/car-rental" element={<div>Fleet Page</div>} />
-                        </Routes>
-                    </AuthProvider>
-                </CurrencyProvider>
-            </LanguageProvider>
-        </MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={[initialEntry]}>
+                <LanguageProvider>
+                    <CurrencyProvider>
+                        <AuthProvider>
+                            <Routes>
+                                <Route path="/services/car/:modelId" element={<CarModelDetails />} />
+                                <Route path="/services/car-rental" element={<div>Fleet Page</div>} />
+                            </Routes>
+                        </AuthProvider>
+                    </CurrencyProvider>
+                </LanguageProvider>
+            </MemoryRouter>
+        </QueryClientProvider>
     );
 };
 

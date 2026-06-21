@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BookingsPage } from './BookingsPage';
 import { CurrencyProvider } from '../../context/CurrencyContext';
 import { db } from '../../api-services';
@@ -38,14 +39,23 @@ const mockBookings = [
     },
 ];
 
-const renderPage = () =>
-    render(
-        <BrowserRouter>
-            <CurrencyProvider>
-                <BookingsPage />
-            </CurrencyProvider>
-        </BrowserRouter>
+const renderPage = () => {
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: { retry: false, gcTime: Infinity },
+            mutations: { retry: false }
+        }
+    });
+    return render(
+        <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+                <CurrencyProvider>
+                    <BookingsPage />
+                </CurrencyProvider>
+            </BrowserRouter>
+        </QueryClientProvider>
     );
+};
 
 describe('BookingsPage', () => {
     beforeEach(() => {

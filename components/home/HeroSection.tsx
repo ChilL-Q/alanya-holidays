@@ -15,16 +15,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ location, setLocation 
         <section className="relative min-h-[85vh] md:h-[600px] flex items-center justify-center pt-20 pb-10 md:py-0">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 animate-scale-in duration-[1.5s]">
-                    <img
-                        src="/images/hero-bg.jpg"
-                        onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
-                        }}
-                        alt="Alanya Coastline"
-                        className="w-full h-full object-cover"
-                        fetchPriority="high"
-                        loading="eager"
-                    />
+                    <picture>
+                        <source srcSet="/images/hero-bg.webp" type="image/webp" />
+                        <img
+                            src="/images/hero-bg.jpg"
+                            onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"; // Alanya specific image
+                            }}
+                            alt="Alanya Coastline"
+                            className="w-full h-full object-cover"
+                            fetchPriority="high"
+                            loading="eager"
+                            width="2000"
+                            height="1548"
+                        />
+                    </picture>
                     {/* Darker overlay for better text contrast */}
                     <div className="absolute inset-0 bg-black/40 md:bg-black/20"></div>
                     {/* Bottom gradient for smooth transition */}

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, MapPin, Grid, Briefcase, ChevronRight, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
+import { Search, MapPin, Grid, Briefcase, ChevronRight, ChevronDown, Sparkles, ShieldCheck, CheckCircle2, Building2, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
 import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
+import { cn } from '../utils/cn';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
 import { db } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
@@ -14,6 +18,8 @@ import { TravelGuideSection } from '../components/home/TravelGuideSection';
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
+    const { openLogin } = useModal();
     const [searchQuery, setSearchQuery] = useState('');
     const [location, setLocation] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
@@ -86,39 +92,7 @@ export const DirectoryHome: React.FC = () => {
                 title={t('dir.hero.page_title')}
                 description={t('dir.hero.meta_desc')}
                 type="website"
-                keywords={['Alanya holidays', 'vacation rentals', 'Turkey', 'medical tourism', 'hotels', 'villas']}
-                jsonLd={[
-                    {
-                        '@context': 'https://schema.org',
-                        '@type': 'TravelAgency',
-                        name: 'Alanya Holidays',
-                        url: 'https://alanya-holidays.com',
-                        logo: 'https://alanya-holidays.com/logo.png',
-                        description: 'Premium vacation rentals, tours, and services in Alanya, Turkey',
-                        address: {
-                            '@type': 'PostalAddress',
-                            addressLocality: 'Alanya',
-                            addressRegion: 'Antalya',
-                            addressCountry: 'TR'
-                        },
-                        contactPoint: {
-                            '@type': 'ContactPoint',
-                            contactType: 'customer support',
-                            url: 'https://alanya-holidays.com/contact'
-                        }
-                    },
-                    {
-                        '@context': 'https://schema.org',
-                        '@type': 'WebSite',
-                        name: 'Alanya Holidays',
-                        url: 'https://alanya-holidays.com',
-                        potentialAction: {
-                            '@type': 'SearchAction',
-                            target: 'https://alanya-holidays.com/search?q={search_term_string}',
-                            'query-input': 'required name=search_term_string'
-                        }
-                    }
-                ]}
+                keywords={['Alanya holidays', 'vacation rentals', ' Turkey', 'medical tourism', 'hotels', 'villas']}
             />
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
             <div className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden min-h-[600px] flex flex-col justify-center">
@@ -170,44 +144,101 @@ export const DirectoryHome: React.FC = () => {
                             </div>
 
                             <div className="flex-1 relative flex items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800/50">
-                                <Grid className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer truncate"
-                                    title="Category"
-                                >
-                                    <option value="">{t('dir.search.cat_all')}</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.title}</option>
-                                    ))}
-                                </select>
+                                <Grid className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="w-full pl-12 pr-10 py-4 md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white outline-none transition-all cursor-pointer truncate text-left flex items-center justify-between hover:bg-slate-100/70 dark:hover:bg-slate-900/80 data-[state=open]:bg-slate-100 dark:data-[state=open]:bg-slate-900 group"
+                                        >
+                                            <span className="truncate">
+                                                {selectedCategory ? categories.find(cat => cat.id === selectedCategory)?.title : t('dir.search.cat_all')}
+                                            </span>
+                                            <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] max-h-[300px] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50">
+                                        <DropdownMenuItem
+                                            className={cn(
+                                                "cursor-pointer",
+                                                !selectedCategory && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
+                                            )}
+                                            onClick={() => setSelectedCategory('')}
+                                        >
+                                            {t('dir.search.cat_all')}
+                                        </DropdownMenuItem>
+                                        {categories.map(cat => (
+                                            <DropdownMenuItem
+                                                key={cat.id}
+                                                className={cn(
+                                                    "cursor-pointer gap-2",
+                                                    selectedCategory === cat.id && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
+                                                )}
+                                                onClick={() => setSelectedCategory(cat.id)}
+                                            >
+                                                <span className="text-lg">{cat.icon}</span>
+                                                <span>{cat.title}</span>
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
 
                             <div className="w-px bg-slate-200 dark:bg-slate-800/50 hidden md:block" />
 
                             <div className="flex-1 relative flex items-center mb-2 md:mb-0">
-                                <MapPin className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
-                                <select
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 rounded-b-xl md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white appearance-none outline-none transition-all cursor-pointer truncate"
-                                    title="Location"
-                                >
-                                    <option value="">{t('dir.search.loc_all')}</option>
-                                    {dbLocations.length > 0 ? (
-                                        dbLocations.map(loc => (
-                                            <option key={loc} value={loc}>{loc}</option>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <option value="Alanya">Alanya</option>
-                                            <option value="Antalya">Antalya</option>
-                                            <option value="Mahmutlar">Mahmutlar</option>
-                                            <option value="Oba">Oba</option>
-                                        </>
-                                    )}
-                                </select>
+                                <MapPin className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="w-full pl-12 pr-10 py-4 rounded-b-xl md:rounded-none border-none focus:ring-2 focus:ring-teal-500 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white outline-none transition-all cursor-pointer truncate text-left flex items-center justify-between hover:bg-slate-100/70 dark:hover:bg-slate-900/80 data-[state=open]:bg-slate-100 dark:data-[state=open]:bg-slate-900 group"
+                                        >
+                                            <span className="truncate">
+                                                {location || t('dir.search.loc_all')}
+                                            </span>
+                                            <ChevronDown className="w-4 h-4 ml-2 flex-shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] max-h-[300px] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50">
+                                        <DropdownMenuItem
+                                            className={cn(
+                                                "cursor-pointer",
+                                                !location && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
+                                            )}
+                                            onClick={() => setLocation('')}
+                                        >
+                                            {t('dir.search.loc_all')}
+                                        </DropdownMenuItem>
+                                        {dbLocations.length > 0 ? (
+                                            dbLocations.map(loc => (
+                                                <DropdownMenuItem
+                                                    key={loc}
+                                                    className={cn(
+                                                        "cursor-pointer",
+                                                        location === loc && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
+                                                    )}
+                                                    onClick={() => setLocation(loc)}
+                                                >
+                                                    {loc}
+                                                </DropdownMenuItem>
+                                            ))
+                                        ) : (
+                                            ['Alanya', 'Antalya', 'Mahmutlar', 'Oba'].map(loc => (
+                                                <DropdownMenuItem
+                                                    key={loc}
+                                                    className={cn(
+                                                        "cursor-pointer",
+                                                        location === loc && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
+                                                    )}
+                                                    onClick={() => setLocation(loc)}
+                                                >
+                                                    {loc}
+                                                </DropdownMenuItem>
+                                            ))
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
 
                             <button
@@ -233,6 +264,13 @@ export const DirectoryHome: React.FC = () => {
 
                         <Link
                             to="/add-listing"
+                            onClick={(e) => {
+                                if (!isAuthenticated) {
+                                    e.preventDefault();
+                                    toast.error(t('auth.required') || 'Please log in to add a listing');
+                                    openLogin();
+                                }
+                            }}
                             className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 dark:bg-slate-800/80 hover:bg-white/20 dark:hover:bg-slate-700/80 backdrop-blur-md border border-white/30 dark:border-slate-700/50 text-white rounded-xl sm:rounded-full font-semibold transition-all cursor-pointer"
                         >
                             <Briefcase className="w-5 h-5" />

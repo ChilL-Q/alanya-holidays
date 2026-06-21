@@ -384,6 +384,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
                                                         </span>
                                                     </div>
                                                     <input
+                                                        name="nightly-price"
                                                         type="number"
                                                         value={price}
                                                         onChange={(e) => setPrice(e.target.value)}

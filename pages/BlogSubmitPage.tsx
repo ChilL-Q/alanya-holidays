@@ -5,36 +5,7 @@ import { db } from '../api-services';
 import { toast } from 'react-hot-toast';
 import { PenLine, X, ImagePlus, Video, ArrowLeft, Send, Info } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
-
-const MAX_IMAGES = 5;
-
-const formatBlogContent = (rawText: string, imageUrls: string[]): string => {
-    // Convert double newlines to paragraph tags, and single newlines to <br />
-    let htmlContent = rawText
-        .split(/\n\s*\n/)
-        .map(p => {
-            const trimmed = p.trim();
-            if (!trimmed) return '';
-            return `<p>${trimmed.replace(/\n/g, '<br />')}</p>`;
-        })
-        .filter(Boolean)
-        .join('\n');
-
-    // Replace placeholders like [image-1], [image-2]
-    imageUrls.forEach((url, index) => {
-        const placeholderRegex = new RegExp(`\\[image-${index + 1}\\]`, 'gi');
-        const imgTag = `<img src="${url}" alt="Blog Image ${index + 1}" class="rounded-xl shadow-lg my-6 max-h-[450px] w-auto mx-auto object-cover" />`;
-        
-        if (placeholderRegex.test(htmlContent)) {
-            htmlContent = htmlContent.replace(placeholderRegex, imgTag);
-        } else if (index > 0) {
-            // Append unused images (except cover image, which is index 0 and displayed at the top) at the end
-            htmlContent += `\n\n${imgTag}`;
-        }
-    });
-
-    return htmlContent;
-};
+import { formatBlogContent, MAX_BLOG_IMAGES } from '../utils/formatBlogContent';
 
 export const BlogSubmitPage: React.FC = () => {
     const { user } = useAuth();
@@ -73,7 +44,7 @@ export const BlogSubmitPage: React.FC = () => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
 
-        const remaining = MAX_IMAGES - mediaFiles.length;
+        const remaining = MAX_BLOG_IMAGES - mediaFiles.length;
         const toAdd = files.slice(0, remaining);
 
         // Validate each file
@@ -135,8 +106,8 @@ export const BlogSubmitPage: React.FC = () => {
                 try {
                     uploadedUrls = await db.uploadBlogMediaBatch(mediaFiles);
                     toast.success('Images uploaded', { id: toastId });
-                } catch (err: any) {
-                    toast.error(err.message || 'Failed to upload images', { id: toastId });
+                } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'Failed to upload images', { id: toastId });
                     return;
                 } finally {
                     setUploading(false);
@@ -157,8 +128,8 @@ export const BlogSubmitPage: React.FC = () => {
 
             toast.success('Article submitted successfully!', { id: toastId });
             navigate('/blog/submission-success');
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to submit article');
+        } catch (err: unknown) {
+            toast.error(err instanceof Error ? err.message : 'Failed to submit article');
         } finally {
             setSubmitting(false);
         }
@@ -217,6 +188,7 @@ export const BlogSubmitPage: React.FC = () => {
                             Article Title <span className="text-red-500">*</span>
                         </label>
                         <input
+                            name="blog-title"
                             type="text"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
@@ -234,6 +206,7 @@ export const BlogSubmitPage: React.FC = () => {
                             Article Content <span className="text-red-500">*</span>
                         </label>
                         <textarea
+                            name="blog-content"
                             ref={textareaRef}
                             value={content}
                             onChange={e => setContent(e.target.value)}
@@ -243,17 +216,20 @@ export const BlogSubmitPage: React.FC = () => {
                             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-y font-sans text-sm leading-relaxed"
                         />
                         <div className="flex justify-between mt-1.5">
-                            <p className="text-xs text-slate-400">Minimum 100 characters. Use [image-2] format to place images.</p>
+                            <p className="text-xs text-slate-400">Minimum 100 characters. Use [image-1] format to place images.</p>
                             <p className={`text-xs ${content.length < 100 ? 'text-amber-500' : 'text-teal-500'}`}>
                                 {content.length} characters
                             </p>
                         </div>
+                        <p className="mt-1 text-xs text-slate-400">
+                            Supports markdown: <code>## Heading</code>, <code>- list item</code>, <code>**bold**</code>, <code>&gt; Don&apos;t Miss: important tip</code>.
+                        </p>
                     </div>
 
                     {/* Media Upload */}
                     <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 p-6">
                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Images <span className="text-slate-400 font-normal">(optional, up to {MAX_IMAGES})</span>
+                            Images <span className="text-slate-400 font-normal">(optional, up to {MAX_BLOG_IMAGES})</span>
                         </label>
                         <p className="text-xs text-slate-400 mb-4">JPG, PNG, WebP — max 5MB each. First image becomes the cover. Hover on an image to insert it into your content!</p>
 
@@ -292,14 +268,14 @@ export const BlogSubmitPage: React.FC = () => {
                             </div>
                         )}
 
-                        {mediaFiles.length < MAX_IMAGES && (
+                        {mediaFiles.length < MAX_BLOG_IMAGES && (
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-sm text-slate-500 dark:text-slate-400 hover:border-teal-400 hover:text-teal-600 dark:hover:text-cyan-400 transition-colors"
                             >
                                 <ImagePlus size={16} />
-                                Add Images ({mediaFiles.length}/{MAX_IMAGES})
+                                Add Images ({mediaFiles.length}/{MAX_BLOG_IMAGES})
                             </button>
                         )}
 
@@ -322,6 +298,7 @@ export const BlogSubmitPage: React.FC = () => {
                             </span>
                         </label>
                         <input
+                            name="video-url"
                             type="url"
                             value={videoUrl}
                             onChange={e => setVideoUrl(e.target.value)}

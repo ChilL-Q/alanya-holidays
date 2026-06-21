@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
                     <div className="space-y-8">
                         <div>
                             <Link to="/" className="flex items-center gap-2 group mb-6">
-                                <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain rounded-full bg-white/10 p-0.5" />
+                                <img src="/logo.png" alt="Alanya Holidays" className="w-10 h-10 object-contain rounded-full bg-white/10 p-0.5" width="40" height="40" loading="lazy" />
                                 <span className="font-serif text-2xl text-white tracking-tight">
                                     Alanya<span className="text-teal-500 font-light transition-colors group-hover:text-teal-400">Holidays</span>
                                 </span>

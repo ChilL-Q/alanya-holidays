@@ -107,6 +107,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
                     <label htmlFor="review-comment" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('reviews.experience_label')}</label>
                     <textarea
                         id="review-comment"
+                        name="review-comment"
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                         onKeyDown={handleKeyDown}

@@ -48,14 +48,16 @@ export const AiPlanner: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
+        let cancelled = false;
         if (!user) {
             setPremiumLoading(false);
             return;
         }
         subscriptionsService.getPremiumStatus()
-            .then(s => setIsPremium(s.isPremium))
-            .catch(() => setIsPremium(false))
-            .finally(() => setPremiumLoading(false));
+            .then(s => { if (!cancelled) setIsPremium(s.isPremium); })
+            .catch(() => { if (!cancelled) setIsPremium(false); })
+            .finally(() => { if (!cancelled) setPremiumLoading(false); });
+        return () => { cancelled = true; };
     }, [user]);
 
     // A5-M3: re-check premium status when user returns to tab

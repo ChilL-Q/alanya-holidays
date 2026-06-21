@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Clock, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, Tag, Share2 } from 'lucide-react';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
+import { toast } from 'react-hot-toast';
 import { db } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 import { BlogPostWithTags } from '../api-services/api/blog';
+import { isValidVideoUrl } from '../utils/videoEmbed';
+import { VideoEmbed } from '../components/ui/VideoEmbed';
 
 export const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -48,6 +51,8 @@ export const BlogPostPage: React.FC = () => {
         [post]
     );
 
+    const hasVideo = useMemo(() => post ? isValidVideoUrl(post.video_url || '') : false, [post]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center">
@@ -83,6 +88,20 @@ export const BlogPostPage: React.FC = () => {
     const readTime = post.content
         ? Math.max(1, Math.ceil(post.content.replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
         : 1;
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: post.title, url: shareUrl });
+            } catch (_error) {
+                // User cancelled share
+            }
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+            toast.success('Link copied to clipboard!');
+        }
+    };
 
     const articleJsonLd = {
         '@context': 'https://schema.org',
@@ -159,7 +178,15 @@ export const BlogPostPage: React.FC = () => {
                         )}
                         {post.author?.full_name && (
                             <span className="inline-flex items-center gap-1.5">
-                                <User size={14} />
+                                {post.author.avatar_url ? (
+                                    <img
+                                        src={post.author.avatar_url}
+                                        alt=""
+                                        className="w-5 h-5 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <User size={14} />
+                                )}
                                 {post.author.full_name}
                             </span>
                         )}
@@ -170,6 +197,14 @@ export const BlogPostPage: React.FC = () => {
                         <span className="text-slate-400 dark:text-slate-600">
                             {post.views.toLocaleString()} views
                         </span>
+                        <button
+                            type="button"
+                            onClick={handleShare}
+                            className="inline-flex items-center gap-1.5 text-teal-600 dark:text-cyan-400 hover:underline"
+                        >
+                            <Share2 size={14} />
+                            Share
+                        </button>
                     </div>
 
                     {/* Title */}
@@ -206,6 +241,13 @@ export const BlogPostPage: React.FC = () => {
                             prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:bg-teal-50/50 dark:prose-blockquote:bg-teal-900/10 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:italic"
                         dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                     />
+
+                    {hasVideo && (
+                        <div className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800/50">
+                            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Video</h3>
+                            <VideoEmbed url={post.video_url || ''} title="Blog video" />
+                        </div>
+                    )}
 
                     {/* Excerpt fallback if no content */}
                     {!post.content && post.excerpt && (
