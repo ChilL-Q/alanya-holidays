@@ -1,7 +1,8 @@
 // Currency rates proxy — fetches from frankfurter.app server-side, caches for 1 hour
 // Browser → Edge Function → frankfurter.app (CORS controlled by us, no JWT required)
 
-declare const Deno: any;
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
 const SITE_URL = Deno.env.get("SITE_URL") || "https://alanyaholidays.com";
 const ALLOWED_ORIGINS = new Set([

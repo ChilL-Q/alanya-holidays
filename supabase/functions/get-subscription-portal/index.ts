@@ -1,9 +1,10 @@
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import Stripe from "npm:stripe@17"
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from "npm:@supabase/supabase-js@2"
 
-declare const Deno: any;
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')

@@ -1,11 +1,12 @@
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import Stripe from 'npm:stripe@17'
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from 'npm:@supabase/supabase-js@2'
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { z } from 'npm:zod@3'
 
-declare const Deno: any
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
   // L1: Allow override via env var for easy API version updates without code change

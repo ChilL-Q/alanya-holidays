@@ -1,9 +1,10 @@
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from "npm:@supabase/supabase-js@2"
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { z } from "npm:zod@3"
 
-declare const Deno: any;
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')

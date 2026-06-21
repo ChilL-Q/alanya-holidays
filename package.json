@@ -18,8 +18,8 @@
     "test:e2e:ui": "playwright test --ui",
     "supabase:start": "supabase start",
     "supabase:reset": "supabase db reset",
-    "supabase:lint": "supabase functions lint",
-    "supabase:type-check": "supabase functions type-check",
+    "supabase:lint": "deno lint --config=deno.json supabase/functions",
+    "supabase:type-check": "deno check --config=deno.json supabase/functions/**/*.ts",
     "sync-reviews": "tsx scripts/sync-google-reviews.ts"
   },
   "dependencies": {

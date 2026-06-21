@@ -1,7 +1,7 @@
-// @ts-ignore
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-declare const Deno: any;
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts";
 
 const YESIM_API_URL = "https://partners-api.yesim.biz";
 const YESIM_API_TOKEN = Deno.env.get("YESIM_API_TOKEN");
@@ -36,7 +36,7 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-const yesimHeaders = () => {
+const yesimHeaders = (): Record<string, string> => {
   if (!YESIM_API_TOKEN) return {};
   return { Authorization: `Bearer ${YESIM_API_TOKEN}` };
 };
@@ -254,10 +254,10 @@ Deno.serve(async (req: Request) => {
           },
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("yesim-proxy error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
       { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
@@ -284,10 +284,10 @@ async function handleGetPlans(cors: Record<string, string>): Promise<Response> {
     return new Response(JSON.stringify({ data }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to fetch Yesim plans:", error);
     return new Response(
-      JSON.stringify({ error: `Failed to fetch plans: ${error.message}` }),
+      JSON.stringify({ error: `Failed to fetch plans: ${error instanceof Error ? error.message : String(error)}` }),
       { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
@@ -380,10 +380,10 @@ async function handleCreateOrder(
     return new Response(JSON.stringify({ data: order }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Yesim Order Failed:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Order creation failed" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Order creation failed" }),
       { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }

@@ -1,9 +1,7 @@
-// @ts-ignore
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-// @ts-ignore
+// @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
+import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
 import { createClient } from "npm:@supabase/supabase-js@2"
-
-declare const Deno: any;
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
