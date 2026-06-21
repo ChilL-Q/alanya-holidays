@@ -15,6 +15,9 @@ interface BlogContentEditorProps {
     textareaClassName?: string;
 }
 
+const TAB_BUTTON_ACTIVE_CLASS = 'border-teal-500 text-teal-700 dark:text-teal-400';
+const TAB_BUTTON_INACTIVE_CLASS = 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300';
+
 const TabButton: React.FC<{
     label: string;
     icon: React.ComponentType<{ size: number }>;
@@ -25,9 +28,7 @@ const TabButton: React.FC<{
         type="button"
         onClick={onClick}
         className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-            isActive
-                ? 'border-teal-500 text-teal-700 dark:text-teal-400'
-                : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            isActive ? TAB_BUTTON_ACTIVE_CLASS : TAB_BUTTON_INACTIVE_CLASS
         }`}
     >
         <Icon size={14} />
@@ -54,13 +55,11 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
         let html = formatBlogContent(content.trim(), []);
 
         // Replace remaining [image-N] placeholders with visual stubs
-        html = html.replace(
-            /\[image-(\d+)\]/gi,
-            (_match, num) =>
-                `<span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:24px 16px;margin:24px 0;background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:12px;color:#64748b;font-size:14px;font-weight:500;">📷 Image ${num}</span>`
-        );
+        const createImagePlaceholder = (num: string) =>
+            `<span style="display:flex;align-items:center;justify-content:center;gap:6px;padding:24px 16px;margin:24px 0;background:#f1f5f9;border:2px dashed #cbd5e1;border-radius:12px;color:#64748b;font-size:14px;font-weight:500;">📷 Image ${num}</span>`;
+        html = html.replace(/\[image-(\d+)\]/gi, (_match, num) => createImagePlaceholder(num));
 
-        return DOMPurify.sanitize(html);
+        return typeof window !== 'undefined' ? DOMPurify.sanitize(html) : html;
     }, [mode, content]);
 
     return (
