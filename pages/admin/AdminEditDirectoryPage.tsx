@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
 import { supabase } from '../../api-services/supabase';
-import { ArrowLeft, Save, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, Save, Check, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
 import { DirectoryListingDB, DirectoryListingCreateInput, LocationDB } from '../../types/models';
 import { slugify } from '../../utils/slugify';
+import { RestoreDraftBanner } from '../../components/ui/RestoreDraftBanner';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -230,7 +231,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
 
             const validation = listingDescriptionsSchema.safeParse(parsed);
             if (!validation.success) {
-                console.error('AI response validation failed:', validation.error.flatten());
+                console.error('AI response validation failed:', validation.error);
                 throw new Error('AI response format was unexpected. Please try again.');
             }
 
@@ -280,7 +281,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
         setExistingImages(existingImages.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
         if (e) e.preventDefault();
         setSubmitting(true);
 
@@ -376,35 +377,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
 
             <main className="max-w-5xl mx-auto px-4 py-8">
                 {showRestoreBanner && (
-                    <div className="mb-8 bg-teal-50/80 dark:bg-teal-900/20 backdrop-blur-md border border-teal-200 dark:border-teal-800/50 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
-                        <div className="flex items-start gap-3 w-full sm:w-auto text-left">
-                            <div className="p-2 bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 rounded-xl">
-                                <Sparkles size={20} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Unsaved draft found</h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    We saved your progress from {savedDraft && savedDraft.updatedAt ? new Date(savedDraft.updatedAt).toLocaleString() : 'recently'}.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                            <button
-                                type="button"
-                                onClick={handleDiscardDraft}
-                                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-                            >
-                                Discard
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleRestoreDraft}
-                                className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all shadow-md shadow-teal-600/10 active:scale-95"
-                            >
-                                Restore Draft
-                            </button>
-                        </div>
-                    </div>
+                    <RestoreDraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
                 )}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column - Main Info */}
