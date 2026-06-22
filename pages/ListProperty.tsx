@@ -6,7 +6,7 @@ import { db } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { PropertyFormData, PropertyDB } from '../types/models';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
 import { Button } from '../components/ui/Button';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -80,7 +80,72 @@ export const ListProperty: React.FC = () => {
         promotionDescription: '',
         icalUrl: ''
     });
+    const [showRestoreBanner, setShowRestoreBanner] = useState(false);
+    const [savedDraft, setSavedDraft] = useState<PropertyFormData | null>(null);
 
+    // Load draft on mount
+    React.useEffect(() => {
+        const draftStr = localStorage.getItem('draft_property_listing');
+        if (draftStr) {
+            try {
+                const parsed = JSON.parse(draftStr);
+                if (parsed && typeof parsed === 'object') {
+                    const hasContent = Object.entries(parsed).some(
+                        ([key, val]) =>
+                            key !== 'updatedAt' &&
+                            ((typeof val === 'string' && val.trim().length > 0) ||
+                                (typeof val === 'number' && val > 0) ||
+                                (Array.isArray(val) && val.length > 0))
+                    );
+                    if (hasContent) {
+                        setSavedDraft(parsed);
+                        setShowRestoreBanner(true);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse draft:', e);
+            }
+        }
+    }, []);
+
+    // Save draft on formData change
+    React.useEffect(() => {
+        const hasContent = Object.entries(formData).some(
+            ([key, val]) =>
+                key !== 'maxGuests' &&
+                key !== 'bedrooms' &&
+                key !== 'beds' &&
+                key !== 'bathrooms' &&
+                key !== 'pricePerNight' &&
+                ((typeof val === 'string' && val.trim().length > 0) ||
+                    (typeof val === 'number' && val > 0) ||
+                    (Array.isArray(val) && val.length > 0))
+        );
+        if (hasContent) {
+            localStorage.setItem(
+                'draft_property_listing',
+                JSON.stringify({
+                    ...formData,
+                    updatedAt: new Date().toISOString(),
+                })
+            );
+        }
+    }, [formData]);
+
+    const handleRestoreDraft = () => {
+        if (savedDraft) {
+            const { updatedAt: _, ...rest } = savedDraft as any;
+            setFormData(rest);
+            toast.success('Unsaved progress restored!');
+        }
+        setShowRestoreBanner(false);
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem('draft_property_listing');
+        setShowRestoreBanner(false);
+        toast.success('Draft discarded');
+    };
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -150,6 +215,7 @@ export const ListProperty: React.FC = () => {
                 status: 'pending'
             });
 
+            localStorage.removeItem('draft_property_listing');
             setIsSuccess(true);
             window.scrollTo(0, 0);
         } catch (error) {
@@ -199,6 +265,37 @@ export const ListProperty: React.FC = () => {
         />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-10 px-4 transition-colors">
             <div className="max-w-3xl mx-auto">
+                {showRestoreBanner && (
+                    <div className="mb-8 bg-teal-50/80 dark:bg-teal-900/20 backdrop-blur-md border border-teal-200 dark:border-teal-800/50 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-start gap-3 w-full sm:w-auto text-left">
+                            <div className="p-2 bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 rounded-xl">
+                                <Sparkles size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Unsaved draft found</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    We saved your progress from {savedDraft && (savedDraft as any).updatedAt ? new Date((savedDraft as any).updatedAt).toLocaleString() : 'recently'}.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                            <button
+                                type="button"
+                                onClick={handleDiscardDraft}
+                                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+                            >
+                                Discard
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRestoreDraft}
+                                className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all shadow-md shadow-teal-600/10 active:scale-95"
+                            >
+                                Restore Draft
+                            </button>
+                        </div>
+                    </div>
+                )}
                 <div className="mb-8">
                     <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS.map(s => t(s))} />
                 </div>

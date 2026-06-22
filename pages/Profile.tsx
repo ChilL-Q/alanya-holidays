@@ -13,6 +13,7 @@ import { ProfileServicesTab } from '../components/user/profile/ProfileServicesTa
 import { ProfileSettingsTab } from '../components/user/profile/ProfileSettingsTab';
 import { ProfileSecurityTab } from '../components/user/profile/ProfileSecurityTab';
 import { ProfilePayoutTab } from '../components/user/profile/ProfilePayoutTab';
+import { ProfileDraftsTab } from '../components/user/profile/ProfileDraftsTab';
 import { SEOHead } from '../components/seo/SEOHead';
 
 export const Profile: React.FC = () => {
@@ -27,7 +28,7 @@ export const Profile: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     // UI State
-    const [activeTab, setActiveTab] = useState<'overview' | 'my_properties' | 'my_services' | 'payouts' | 'settings' | 'security'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'my_properties' | 'my_services' | 'payouts' | 'settings' | 'security' | 'drafts'>('overview');
     const [uploading, setUploading] = useState(false);
     const [isHostModalOpen, setIsHostModalOpen] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -345,6 +346,10 @@ export const Profile: React.FC = () => {
                                 savingPayout={savingPayout}
                                 handleUpdatePayout={handleUpdatePayout}
                             />
+                        )}
+
+                        {activeTab === 'drafts' && (
+                            <ProfileDraftsTab />
                         )}
                     </div>
                 </div>

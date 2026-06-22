@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../api-services';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { AddServiceCategoryStep, ServiceCategory } from '../components/host/services/AddServiceCategoryStep';
@@ -62,6 +62,88 @@ export const AddService: React.FC = () => {
 
     const [files, setFiles] = useState<File[]>([]);
     const [itinerary, setItinerary] = useState<ItineraryItem[]>([{ time: '09:00', description: 'Start' }]);
+
+    const [showRestoreBanner, setShowRestoreBanner] = useState(false);
+    const [savedDraft, setSavedDraft] = useState<any>(null);
+
+    // Load draft on mount
+    useEffect(() => {
+        const draftStr = localStorage.getItem('draft_service_listing');
+        if (draftStr) {
+            try {
+                const parsed = JSON.parse(draftStr);
+                if (parsed && typeof parsed === 'object') {
+                    const hasContent = Object.entries(parsed.formData || {}).some(
+                        ([key, val]) =>
+                            key !== 'type' &&
+                            key !== 'vehicleType' &&
+                            key !== 'transmission' &&
+                            key !== 'fuel' &&
+                            key !== 'seats' &&
+                            key !== 'modelSelection' &&
+                            key !== 'difficulty' &&
+                            key !== 'subcategory' &&
+                            key !== 'year' &&
+                            ((typeof val === 'string' && val.trim().length > 0) ||
+                                (typeof val === 'number' && val > 0) ||
+                                (typeof val === 'boolean' && val))
+                    );
+                    if (hasContent) {
+                        setSavedDraft(parsed);
+                        setShowRestoreBanner(true);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse draft:', e);
+            }
+        }
+    }, []);
+
+    // Save draft on formData/category/step change
+    useEffect(() => {
+        const hasContent = Object.entries(formData).some(
+            ([key, val]) =>
+                key !== 'type' &&
+                key !== 'vehicleType' &&
+                key !== 'transmission' &&
+                key !== 'fuel' &&
+                key !== 'seats' &&
+                key !== 'modelSelection' &&
+                key !== 'difficulty' &&
+                key !== 'subcategory' &&
+                key !== 'year' &&
+                ((typeof val === 'string' && val.trim().length > 0) ||
+                    (typeof val === 'number' && val > 0) ||
+                    (typeof val === 'boolean' && val))
+        );
+        if (hasContent) {
+            localStorage.setItem(
+                'draft_service_listing',
+                JSON.stringify({
+                    formData,
+                    category,
+                    step,
+                    updatedAt: new Date().toISOString(),
+                })
+            );
+        }
+    }, [formData, category, step]);
+
+    const handleRestoreDraft = () => {
+        if (savedDraft) {
+            if (savedDraft.formData) setFormData(savedDraft.formData);
+            if (savedDraft.category !== undefined) setCategory(savedDraft.category);
+            if (savedDraft.step !== undefined) setStep(savedDraft.step);
+            toast.success('Unsaved progress restored!');
+        }
+        setShowRestoreBanner(false);
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem('draft_service_listing');
+        setShowRestoreBanner(false);
+        toast.success('Draft discarded');
+    };
 
     // Auto-fill description when popular model changes
     useEffect(() => {
@@ -149,6 +231,7 @@ export const AddService: React.FC = () => {
                 promotion_price: formData.promotionPrice ? parseFloat(formData.promotionPrice) : undefined,
                 promotion_description: formData.promotionDescription
             });
+            localStorage.removeItem('draft_service_listing');
             setStep(2);
         } catch (error) {
             console.error(error);
@@ -167,6 +250,37 @@ export const AddService: React.FC = () => {
         <SEOHead title="Add Service | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4">
             <div className="max-w-3xl mx-auto">
+                {showRestoreBanner && (
+                    <div className="mb-8 bg-teal-50/80 dark:bg-teal-900/20 backdrop-blur-md border border-teal-200 dark:border-teal-800/50 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-start gap-3 w-full sm:w-auto text-left">
+                            <div className="p-2 bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 rounded-xl">
+                                <Sparkles size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Unsaved draft found</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    We saved your progress from {savedDraft && savedDraft.updatedAt ? new Date(savedDraft.updatedAt).toLocaleString() : 'recently'}.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                            <button
+                                type="button"
+                                onClick={handleDiscardDraft}
+                                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+                            >
+                                Discard
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleRestoreDraft}
+                                className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all shadow-md shadow-teal-600/10 active:scale-95"
+                            >
+                                Restore Draft
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     {step > 0 && (
