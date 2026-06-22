@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, MapPin, Globe, MessageCircle, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MapPin, Globe, MessageCircle, Link as LinkIcon, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
 import { StepsIndicator } from '../components/ui/StepsIndicator';
@@ -61,6 +61,60 @@ export const AddListingPage: React.FC = () => {
         google_map_url: '',
     });
     const [gallery, setGallery] = useState<File[]>([]);
+
+    const [showRestoreBanner, setShowRestoreBanner] = useState(false);
+    const [savedDraft, setSavedDraft] = useState<FormData | null>(null);
+
+    // Load draft on mount
+    useEffect(() => {
+        const draftStr = localStorage.getItem('draft_directory_listing');
+        if (draftStr) {
+            try {
+                const parsed = JSON.parse(draftStr);
+                if (parsed && typeof parsed === 'object') {
+                    const hasContent = Object.entries(parsed).some(
+                        ([key, val]) => key !== 'updatedAt' && typeof val === 'string' && val.trim().length > 0
+                    );
+                    if (hasContent) {
+                        setSavedDraft(parsed);
+                        setShowRestoreBanner(true);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse draft:', e);
+            }
+        }
+    }, []);
+
+    // Save draft on formData change
+    useEffect(() => {
+        const hasContent = Object.values(formData).some((val) => typeof val === 'string' && val.trim().length > 0);
+        if (hasContent) {
+            localStorage.setItem(
+                'draft_directory_listing',
+                JSON.stringify({
+                    ...formData,
+                    updatedAt: new Date().toISOString(),
+                })
+            );
+        }
+    }, [formData]);
+
+    const handleRestoreDraft = () => {
+        if (savedDraft) {
+            // Strip out updatedAt before setting form data
+            const { updatedAt: _, ...rest } = savedDraft as any;
+            setFormData(rest);
+            toast.success('Unsaved progress restored!');
+        }
+        setShowRestoreBanner(false);
+    };
+
+    const handleDiscardDraft = () => {
+        localStorage.removeItem('draft_directory_listing');
+        setShowRestoreBanner(false);
+        toast.success('Draft discarded');
+    };
 
     // Detect subscription tier on mount
     useEffect(() => {
@@ -128,6 +182,7 @@ export const AddListingPage: React.FC = () => {
                 base_score: 0,
             });
 
+            localStorage.removeItem('draft_directory_listing');
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (err) {
