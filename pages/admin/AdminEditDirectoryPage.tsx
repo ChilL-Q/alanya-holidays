@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../api-services';
 import { supabase } from '../../api-services/supabase';
-import { ArrowLeft, Save, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, Save, Check, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { parseVideoEmbed } from '../../utils/videoEmbed';
 import toast from 'react-hot-toast';
 import { DirectoryListingDB, DirectoryListingCreateInput, LocationDB } from '../../types/models';
 import { slugify } from '../../utils/slugify';
+import { RestoreDraftBanner } from '../../components/ui/RestoreDraftBanner';
+import { useDraftSave } from '../../hooks/useDraftSave';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -59,6 +61,27 @@ export const AdminEditDirectoryPage: React.FC = () => {
     const [generatingDescription, setGeneratingDescription] = useState(false);
     const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
     const [availableLocations, setAvailableLocations] = useState<LocationDB[]>([]);
+
+    const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';
+    const draftWrapper = { formData, descriptions, languages, certifications, selectedLocationIds };
+
+    const { showRestoreBanner, handleRestoreDraft: baseRestore, handleDiscardDraft } = useDraftSave({
+        storageKey: draftKey,
+        formData: draftWrapper,
+        onRestore: (data: any) => {
+            if (data.formData) setFormData(data.formData);
+            if (data.descriptions) setDescriptions(data.descriptions);
+            if (data.languages) setLanguages(data.languages);
+            if (data.certifications) setCertifications(data.certifications);
+            if (data.selectedLocationIds) setSelectedLocationIds(data.selectedLocationIds);
+        },
+        dependencies: [formData, descriptions, languages, certifications, selectedLocationIds, id, isEditing],
+    });
+
+    const handleRestoreDraft = () => {
+        baseRestore();
+        toast.success('Unsaved progress restored!');
+    };
 
     const loadListing = useCallback(async () => {
         try {
@@ -162,7 +185,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
 
             const validation = listingDescriptionsSchema.safeParse(parsed);
             if (!validation.success) {
-                console.error('AI response validation failed:', validation.error.flatten());
+                console.error('AI response validation failed:', validation.error);
                 throw new Error('AI response format was unexpected. Please try again.');
             }
 
@@ -212,7 +235,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
         setExistingImages(existingImages.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e?: React.FormEvent) => {
+    const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>) => {
         if (e) e.preventDefault();
         setSubmitting(true);
 
@@ -263,6 +286,8 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
                 await db.createDirectoryListing(listingData, effectiveLocationIds);
                 toast.success('Listing created successfully');
             }
+            const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';
+            localStorage.removeItem(draftKey);
 
             navigate('/admin/directory');
         } catch (error: unknown) {
@@ -305,6 +330,9 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
             </div>
 
             <main className="max-w-5xl mx-auto px-4 py-8">
+                {showRestoreBanner && (
+                    <RestoreDraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column - Main Info */}
                     <div className="lg:col-span-2 space-y-6">

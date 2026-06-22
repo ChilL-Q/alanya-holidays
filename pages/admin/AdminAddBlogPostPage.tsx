@@ -12,11 +12,12 @@ export const AdminAddBlogPostPage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    const [title, setTitle] = useState('');
+        const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [videoUrl, setVideoUrl] = useState('');
     const [isFeatured, setIsFeatured] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [targetStatus, setTargetStatus] = useState<'published' | 'draft'>('published');
 
     const {
         mediaFiles,
@@ -53,20 +54,20 @@ export const AdminAddBlogPostPage: React.FC = () => {
 
             const formattedContent = formatBlogContent(content.trim(), uploadedUrls);
 
-            const toastId = toast.loading('Publishing blog post...');
+            const toastId = toast.loading(targetStatus === 'published' ? 'Publishing blog post...' : 'Saving draft...');
             await db.createBlogPost({
                 title: title.trim(),
                 content: formattedContent,
                 video_url: videoUrl.trim() || undefined,
                 cover_image_url: uploadedUrls[0] || undefined,
-                status: 'published',
+                status: targetStatus,
                 is_featured: isFeatured,
             });
 
-            toast.success('Blog post published successfully!', { id: toastId });
+            toast.success(targetStatus === 'published' ? 'Blog post published successfully!' : 'Draft saved successfully!', { id: toastId });
             navigate('/admin/blog-submissions');
         } catch (err: unknown) {
-            toast.error(err instanceof Error ? err.message : 'Failed to publish post');
+            toast.error(err instanceof Error ? err.message : 'Failed to save post');
         } finally {
             setSubmitting(false);
         }
@@ -212,9 +213,18 @@ export const AdminAddBlogPostPage: React.FC = () => {
                     </label>
                 </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end gap-3 pt-4">
                     <button
                         type="submit"
+                        onClick={() => setTargetStatus('draft')}
+                        disabled={isSubmitting}
+                        className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-6 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                    >
+                        Save as Draft
+                    </button>
+                    <button
+                        type="submit"
+                        onClick={() => setTargetStatus('published')}
                         disabled={isSubmitting}
                         className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
                     >

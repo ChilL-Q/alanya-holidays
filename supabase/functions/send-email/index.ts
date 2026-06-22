@@ -52,6 +52,10 @@ const emailDataSchemas = {
   subscription_cancellation_scheduled: z.object({ name: sOpt, periodEnd: s, link: sOpt }),
   subscription_payment_failed: z.object({ name: sOpt, link: sOpt }),
   subscription_restored: z.object({ name: sOpt, link: sOpt }),
+  listing_claim_verification: z.object({ claimantEmail: s, businessName: s, verificationToken: s }),
+  admin_claim_notification: z.object({ businessName: s, claimantEmail: s, listingId: s }),
+  listing_claim_approved: z.object({ claimantEmail: s, businessName: s }),
+  listing_claim_rejected: z.object({ claimantEmail: s, businessName: s, rejectionReason: s }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -269,8 +273,76 @@ const getHtmlTemplate = (title: string, content: string, actionLink?: string, ac
 </html>
 `;
 
+// ponytail: data-driven claim email templates instead of 4 case statements
+const claimEmailTemplates = {
+  listing_claim_verification: {
+    subject: '✅ Verify Your Listing Claim',
+    title: 'Verify Your Listing',
+    body: (d: any) => `
+      <p style="font-size: 16px;">Hi,</p>
+      <p>Thank you for claiming <strong>${escapeHtml(d.businessName)}</strong> on Alanya Holidays!</p>
+      <p>To complete the verification, click the button below to confirm your email address:</p>
+      <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Once verified, our team will review your claim and contact you within 24 hours.</p>
+    `,
+    link: (d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/verify-claim?token=${escapeHtml(d.verificationToken)}`,
+    buttonText: 'Verify Email',
+  },
+  admin_claim_notification: {
+    subject: '🔔 New Listing Claim Pending Review',
+    title: 'New Claim for Review',
+    body: (d: any) => `
+      <p style="font-size: 16px;">A new listing claim requires your review:</p>
+      <div class="card">
+        <div class="info-row"><span class="label">Business Name</span><span class="value">${escapeHtml(d.businessName)}</span></div>
+        <div class="info-row"><span class="label">Claimant Email</span><span class="value">${escapeHtml(d.claimantEmail)}</span></div>
+        <div class="info-row"><span class="label">Listing ID</span><span class="value">${escapeHtml(d.listingId)}</span></div>
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to the admin panel to review and approve or reject this claim.</p>
+    `,
+    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/admin/directory`,
+    buttonText: 'Review Claim',
+  },
+  listing_claim_approved: {
+    subject: '🎉 Your Listing Claim Has Been Approved!',
+    title: 'Claim Approved',
+    body: (d: any) => `
+      <p style="font-size: 16px;">Congratulations!</p>
+      <p>Your claim for <strong>${escapeHtml(d.businessName)}</strong> has been approved by our team. You now own this listing and can manage all details.</p>
+      <div class="card">
+        <p style="text-align: center; margin: 0; color: #059669; font-weight: 600;">You are now the owner of this listing.</p>
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to your account to view and update your listing.</p>
+    `,
+    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/directory`,
+    buttonText: 'View Your Listing',
+  },
+  listing_claim_rejected: {
+    subject: '⛔ Your Listing Claim Could Not Be Approved',
+    title: 'Claim Rejected',
+    body: (d: any) => `
+      <p style="font-size: 16px;">Hi,</p>
+      <p>Unfortunately, your claim for <strong>${escapeHtml(d.businessName)}</strong> could not be approved.</p>
+      <div class="card">
+        <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(d.rejectionReason)}</span></div>
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 14px;">If you believe this is a mistake, please contact us for more information.</p>
+    `,
+    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/contact`,
+    buttonText: 'Contact Support',
+  },
+} as const;
+
 function generateEmailContent(type: string, data: any): { subject: string, html: string } {
     const itemLabel = data.itemTypeLabel || 'Property';
+
+    // Handle claim email templates
+    if (type in claimEmailTemplates) {
+      const config = claimEmailTemplates[type as keyof typeof claimEmailTemplates];
+      return {
+        subject: config.subject,
+        html: getHtmlTemplate(config.title, config.body(data), config.link(data), config.buttonText, true),
+      };
+    }
 
     switch (type) {
         // --- Host Notifications ---

@@ -14,6 +14,7 @@ import { PremiumListingsSection } from '../components/home/PremiumListingsSectio
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
 import { SignatureListingsSection } from '../components/home/SignatureListingsSection';
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
+import { RecentlyClaimedSection } from '../components/home/RecentlyClaimedSection';
 
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
@@ -37,6 +38,7 @@ export const DirectoryHome: React.FC = () => {
     const [premiumListings, setPremiumListings] = useState<DirectoryListingDB[]>([]);
     const [freeListings, setFreeListings] = useState<DirectoryListingDB[]>([]);
     const [signatureListings, setSignatureListings] = useState<DirectoryListingDB[]>([]);
+    const [recentlyClaimedListings, setRecentlyClaimedListings] = useState<DirectoryListingDB[]>([]);
     const [testimonials, setTestimonials] = useState<any[]>([]);
     const [dbLocations, setDbLocations] = useState<string[]>([]);
     const [listingsLoading, setListingsLoading] = useState(true);
@@ -46,10 +48,11 @@ export const DirectoryHome: React.FC = () => {
         async function loadListings() {
             setListingsLoading(true);
             try {
-                const [premium, free, signatures, tests, locs] = await Promise.all([
+                const [premium, free, signatures, recentlyClaimed, tests, locs] = await Promise.all([
                     db.getPremiumListings(),
                     db.getFreeListings(),
                     db.getSignatureListings(),
+                    db.getRecentlyClaimedListings(6),
                     db.getPublicTestimonials(),
                     db.getLocations(),
                 ]);
@@ -57,6 +60,7 @@ export const DirectoryHome: React.FC = () => {
                     setPremiumListings(premium);
                     setFreeListings(free);
                     setSignatureListings(signatures);
+                    setRecentlyClaimedListings(recentlyClaimed);
                     setTestimonials(tests);
                     setDbLocations(locs.map(l => l.name));
                 }
@@ -363,6 +367,8 @@ export const DirectoryHome: React.FC = () => {
             )}
 
             <PremiumListingsSection listings={premiumListings} loading={listingsLoading} />
+
+            <RecentlyClaimedSection listings={recentlyClaimedListings} loading={listingsLoading} />
 
             {/* Travel Guide / Featured Blog Posts */}
             <TravelGuideSection />

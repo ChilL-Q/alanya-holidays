@@ -10,6 +10,9 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useSubmitShortcut } from '../hooks/useSubmitShortcut';
 import { Button } from '../components/ui/Button';
 import { SEOHead } from '../components/seo/SEOHead';
+import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
+import { useDraftSave } from '../hooks/useDraftSave';
+import { DRAFT_KEYS, EXCLUDE_KEYS } from '../utils/drafts';
 
 // UI Components
 import { StepsIndicator } from '../components/ui/StepsIndicator';
@@ -80,7 +83,13 @@ export const ListProperty: React.FC = () => {
         promotionDescription: '',
         icalUrl: ''
     });
-
+    const { showRestoreBanner, handleRestoreDraft, handleDiscardDraft } = useDraftSave({
+        storageKey: DRAFT_KEYS.property_listing,
+        formData,
+        excludeKeys: EXCLUDE_KEYS.property,
+        onRestore: (data) => setFormData(data as PropertyFormData),
+        dependencies: [formData],
+    });
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -150,6 +159,7 @@ export const ListProperty: React.FC = () => {
                 status: 'pending'
             });
 
+            localStorage.removeItem('draft_property_listing');
             setIsSuccess(true);
             window.scrollTo(0, 0);
         } catch (error) {
@@ -199,6 +209,9 @@ export const ListProperty: React.FC = () => {
         />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-10 px-4 transition-colors">
             <div className="max-w-3xl mx-auto">
+                {showRestoreBanner && (
+                    <RestoreDraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+                )}
                 <div className="mb-8">
                     <StepsIndicator currentStep={step} totalSteps={STEPS.length} labels={STEPS.map(s => t(s))} />
                 </div>

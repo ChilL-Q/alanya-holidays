@@ -2,25 +2,27 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../../api-services';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
-import { DirectoryListingDB } from '../../types/models';
+import { DirectoryListingDB, ListingClaimDB } from '../../types/models';
 import { MOCK_DIRECTORY_DATA } from '../../data/directoryData';
 import { DirectoryToolbar } from '../../components/admin/directory/DirectoryToolbar';
 import { DirectoryTable } from '../../components/admin/directory/DirectoryTable';
 import { toast } from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
 
-type AdminTab = 'approved' | 'pending' | 'rejected';
+type AdminTab = 'approved' | 'pending' | 'rejected' | 'claims';
 
 export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ defaultCategory }) => {
     const navigate = useNavigate();
     const [listings, setListings] = useState<DirectoryListingDB[]>([]);
     const [pendingListings, setPendingListings] = useState<DirectoryListingDB[]>([]);
     const [rejectedListings, setRejectedListings] = useState<DirectoryListingDB[]>([]);
+    const [claims, setClaims] = useState<ListingClaimDB[]>([]);
     const [activeTab, setActiveTab] = useState<AdminTab>('approved');
     const [loading, setLoading] = useState(true);
     const [filterCategory, setFilterCategory] = useState<string>(defaultCategory || 'all');
     const [searchQuery, setSearchQuery] = useState('');
     const [rejectState, setRejectState] = useState<{ id: string; reason: string } | null>(null);
+    const [rejectClaimState, setRejectClaimState] = useState<{ id: string; reason: string } | null>(null);
 
     const isCategoryLocked = !!defaultCategory;
 
@@ -38,18 +40,29 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         message: ''
     });
 
+    const loadClaims = useCallback(async () => {
+        try {
+            const claimsList = await db.getListingClaims();
+            setClaims(claimsList);
+        } catch (e) {
+            console.error('Failed to load claims', e);
+        }
+    }, []);
+
     const loadListings = useCallback(async () => {
         setLoading(true);
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
-            const [approved, pending, rejected] = await Promise.all([
+            const [approved, pending, rejected, claimsList] = await Promise.all([
                 db.getDirectoryListingsByStatus('approved', category),
                 db.getPendingDirectoryListings(),
                 db.getDirectoryListingsByStatus('rejected', category),
+                db.getListingClaims(),
             ]);
             setListings(approved);
             setPendingListings(pending);
             setRejectedListings(rejected);
+            setClaims(claimsList);
         } catch (e) {
             console.error('Failed to load listings', e);
         } finally {
@@ -83,6 +96,31 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             await loadListings();
         } catch (e: unknown) {
             toast.error(`Failed to reject: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        }
+    };
+
+    const handleApproveClaim = async (claimId: string) => {
+        try {
+            await db.approveListingClaim(claimId);
+            toast.success('Claim approved');
+            await loadClaims();
+        } catch (e: unknown) {
+            toast.error(`Failed to approve claim: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        }
+    };
+
+    const handleRejectClaimSubmit = async (claimId: string) => {
+        if (!rejectClaimState?.reason.trim()) {
+            toast.error('Please provide a rejection reason');
+            return;
+        }
+        try {
+            await db.rejectListingClaim(claimId, rejectClaimState.reason.trim());
+            toast.success('Claim rejected');
+            setRejectClaimState(null);
+            await loadClaims();
+        } catch (e: unknown) {
+            toast.error(`Failed to reject claim: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
     };
 
@@ -172,6 +210,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                     { key: 'approved', label: 'Approved', icon: CheckCircle, count: listings.length },
                     { key: 'pending', label: 'Pending', icon: Clock, count: pendingListings.length },
                     { key: 'rejected', label: 'Rejected', icon: XCircle, count: rejectedListings.length },
+                    { key: 'claims', label: 'Claims', icon: CheckCircle, count: claims.length },
                 ] as const).map(({ key, label, icon: Icon, count }) => (
                     <button
                         key={key}
@@ -305,6 +344,98 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                     onEdit={(id) => navigate(`/admin/directory/${id}`)}
                     onDelete={(id, name) => openActionModal('delete', id, name)}
                 />
+            )}
+
+            {activeTab === 'claims' && (
+                <div className="space-y-4">
+                    {loading ? (
+                        <p className="text-slate-500 text-sm">Loading...</p>
+                    ) : claims.length === 0 ? (
+                        <div className="text-center py-12 text-slate-500">
+                            <CheckCircle size={40} className="mx-auto mb-3 opacity-30" />
+                            <p>No listing claims</p>
+                        </div>
+                    ) : claims.map(claim => (
+                        <div key={claim.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-slate-900 dark:text-white truncate">{claim.business_name}</p>
+                                    <p className="text-sm text-slate-500 mt-0.5">
+                                        Claimed by: <span className="font-mono text-xs">{claim.email}</span>
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        {claim.email_verified ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                                ✓ Email Verified
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                                ○ Pending Email
+                                            </span>
+                                        )}
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                                            {claim.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-2">
+                                        Submitted {claim.created_at ? new Date(claim.created_at).toLocaleDateString() : '—'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {rejectClaimState?.id === claim.id ? (
+                                <div className="mt-4 space-y-2">
+                                    <textarea
+                                        value={rejectClaimState.reason}
+                                        onChange={e => setRejectClaimState({ id: claim.id, reason: e.target.value })}
+                                        placeholder="Rejection reason (sent to the claimant)..."
+                                        rows={2}
+                                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white resize-none focus:ring-2 focus:ring-red-400 outline-none"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleRejectClaimSubmit(claim.id)}
+                                            className="px-4 py-1.5 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                        >
+                                            Confirm Reject
+                                        </button>
+                                        <button
+                                            onClick={() => setRejectClaimState(null)}
+                                            className="px-4 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2 mt-4">
+                                    {claim.status === 'pending' && claim.email_verified && (
+                                        <>
+                                            <button
+                                                onClick={() => handleApproveClaim(claim.id)}
+                                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                                            >
+                                                <CheckCircle size={14} /> Approve
+                                            </button>
+                                            <button
+                                                onClick={() => setRejectClaimState({ id: claim.id, reason: '' })}
+                                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-lg transition-colors"
+                                            >
+                                                <XCircle size={14} /> Reject
+                                            </button>
+                                        </>
+                                    )}
+                                    {claim.status === 'rejected' && claim.rejection_reason && (
+                                        <div className="text-sm text-slate-600 dark:text-slate-400 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                                            <p className="font-semibold text-red-600 dark:text-red-400">Rejection reason:</p>
+                                            <p>{claim.rejection_reason}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
             )}
 
             <ConfirmationModal

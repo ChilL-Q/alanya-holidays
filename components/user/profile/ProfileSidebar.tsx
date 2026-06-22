@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Grid, Home, Car, Banknote, Settings, Shield, LogOut, Globe, Instagram, Facebook, Video, Music } from 'lucide-react';
+import { Camera, Grid, Home, Car, Banknote, Settings, Shield, LogOut, Globe, Instagram, Facebook, Video, Music, FileText } from 'lucide-react';
 import { useLanguage } from '../../../context/LanguageContext';
 import { SocialLinks } from '../../../types/models';
 
@@ -133,6 +133,13 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                     </>
                 )}
 
+                <button
+                    onClick={() => setActiveTab('drafts')}
+                    className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'drafts' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}
+                >
+                    <FileText size={20} />
+                    <span className="font-medium">Drafts</span>
+                </button>
                 <button
                     onClick={() => setActiveTab('settings')}
                     className={`w-full flex items-center gap-3 px-6 py-4 text-left transition-colors ${activeTab === 'settings' ? 'bg-primary/5 text-primary border-l-4 border-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80'}`}

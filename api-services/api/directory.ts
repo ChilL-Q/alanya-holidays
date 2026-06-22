@@ -241,6 +241,26 @@ export const directoryService = {
         return data as DirectoryListingDB[];
     },
 
+    /**
+     * Get listings that were recently claimed (ordered by claimed_at DESC)
+     */
+    async getRecentlyClaimedListings(limit: number = 6): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select(LISTING_LOCATIONS_SELECT)
+            .not('claimed_at', 'is', null)
+            .eq('status', 'approved')
+            .order('claimed_at', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error('Error fetching recently claimed listings:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB[];
+    },
+
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
         const { data, error } = await supabase
             .rpc('vote_listing', {
@@ -547,21 +567,17 @@ export const directoryService = {
     },
 
     async submitListingClaim(
-        claim: Omit<ListingClaimDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'user_id'>
+        claim: Omit<ListingClaimDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'user_id' | 'email_verified' | 'verification_token' | 'verification_expires_at' | 'rejection_reason'>
     ): Promise<ListingClaimDB> {
-        let authUserId: string | null = null;
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                authUserId = user.id;
-            }
-        } catch (_e) {
-            // User is anonymous or not logged in, ignore auth error
+        // Auth is required — cannot submit claim anonymously
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+            throw new Error('Must be logged in to submit a claim');
         }
 
         const safeData = sanitize({
             listing_id: claim.listing_id,
-            user_id: authUserId,
+            user_id: user.id,
             email: claim.email.trim(),
             phone: claim.phone.trim(),
             role: claim.role,
@@ -586,6 +602,143 @@ export const directoryService = {
             throw error;
         }
 
-        return data as ListingClaimDB;
-    }
+        const claimRecord = data as ListingClaimDB;
+
+        // Send verification email
+        await retry(() => supabase.functions.invoke('send-email', {
+            body: {
+                type: 'listing_claim_verification',
+                data: {
+                    claimantEmail: claimRecord.email,
+                    businessName: claimRecord.business_name,
+                    verificationToken: claimRecord.verification_token,
+                },
+            },
+        })).catch(err => console.error('Error sending claim verification email:', err));
+
+        return claimRecord;
+    },
+
+    async verifyClaimEmail(token: string): Promise<ListingClaimDB | null> {
+        const { data, error } = await supabase.rpc('verify_claim_email', {
+            p_token: token,
+        });
+
+        if (error) {
+            console.error('Error verifying claim email:', error);
+            return null;
+        }
+
+        if (!data || data.length === 0) {
+            return null;
+        }
+
+        const claim = data[0];
+
+        // Send admin notification
+        await retry(() => supabase.functions.invoke('send-email', {
+            body: {
+                type: 'admin_claim_notification',
+                data: {
+                    businessName: claim.business_name,
+                    claimantEmail: claim.email,
+                    listingId: claim.listing_id,
+                },
+            },
+        })).catch(err => console.error('Error sending admin notification:', err));
+
+        return claim;
+    },
+
+    async getListingClaims(): Promise<ListingClaimDB[]> {
+        const { data, error } = await supabase
+            .from('listing_claims')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching claims:', error);
+            throw error;
+        }
+
+        return (data || []) as ListingClaimDB[];
+    },
+
+    async approveListingClaim(claimId: string): Promise<boolean> {
+        const { data, error } = await supabase.rpc('approve_listing_claim', {
+            p_claim_id: claimId,
+        });
+
+        if (error) {
+            console.error('Error approving claim:', error);
+            throw error;
+        }
+
+        if (!data || !data[0]?.success) {
+            const message = data?.[0]?.message || 'Failed to approve claim';
+            throw new Error(message);
+        }
+
+        // Fetch claim details for notification
+        const { data: claim } = await supabase
+            .from('listing_claims')
+            .select('email, business_name')
+            .eq('id', claimId)
+            .single();
+
+        // Send approval email to claimant
+        if (claim) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'listing_claim_approved',
+                    data: {
+                        claimantEmail: claim.email,
+                        businessName: claim.business_name,
+                    },
+                },
+            })).catch(err => console.error('Error sending approval email:', err));
+        }
+
+        return true;
+    },
+
+    async rejectListingClaim(claimId: string, reason: string): Promise<boolean> {
+        const { data, error } = await supabase.rpc('reject_listing_claim', {
+            p_claim_id: claimId,
+            p_reason: reason,
+        });
+
+        if (error) {
+            console.error('Error rejecting claim:', error);
+            throw error;
+        }
+
+        if (!data || !data[0]?.success) {
+            const message = data?.[0]?.message || 'Failed to reject claim';
+            throw new Error(message);
+        }
+
+        // Fetch claim details for notification
+        const { data: claim } = await supabase
+            .from('listing_claims')
+            .select('email, business_name')
+            .eq('id', claimId)
+            .single();
+
+        // Send rejection email to claimant
+        if (claim) {
+            await retry(() => supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'listing_claim_rejected',
+                    data: {
+                        claimantEmail: claim.email,
+                        businessName: claim.business_name,
+                        rejectionReason: reason,
+                    },
+                },
+            })).catch(err => console.error('Error sending rejection email:', err));
+        }
+
+        return true;
+    },
 };

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Info, ArrowRight, ArrowLeft, Loader2, Clock } from 'lucide-react';
+import { X, Check, Info, ArrowRight, ArrowLeft, Loader2, Clock, Award } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
 import { DirectoryListingDB } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
 interface ClaimListingModalProps {
@@ -14,12 +15,12 @@ interface ClaimListingModalProps {
 
 export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, onClose, listing }) => {
     const { t } = useLanguage();
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const { user } = useAuth();
+    const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
-        email: '',
         phone: '',
         role: '',
         additional_notes: '',
@@ -34,10 +35,9 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
     // Reset and initialize data on open/listing change
     useEffect(() => {
         if (isOpen && listing) {
-            setStep(1);
+            setStep(0);
             setError(null);
             setFormData({
-                email: '',
                 phone: '',
                 role: '',
                 additional_notes: '',
@@ -53,7 +53,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
 
     const handleStep1Submit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.email || !formData.phone || !formData.role) {
+        if (!formData.phone || !formData.role) {
             toast.error(t('auth.error.required') || 'Please fill in all required fields');
             return;
         }
@@ -68,13 +68,18 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
             return;
         }
 
+        if (!user?.email) {
+            toast.error('User email not found. Please log in again.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
         try {
             await db.submitListingClaim({
                 listing_id: listing.id,
-                email: formData.email,
+                email: user.email,
                 phone: formData.phone,
                 role: formData.role,
                 additional_notes: formData.additional_notes,
@@ -87,7 +92,10 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
             });
 
             setStep(3);
-            toast.success(t('reviews.success') || 'Claim submitted successfully!');
+            toast.success(t('directory.claim.submitted') || 'Claim submitted! Check your email to verify.');
+            setTimeout(() => {
+                onClose();
+            }, 2000);
         } catch (err: any) {
             console.error('Claim submission error:', err);
             setError(err.message || 'An error occurred while submitting your claim.');
@@ -129,6 +137,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                 </div>
 
                 {/* Step Progress Indicators */}
+                {step > 0 && (
                 <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800/30 overflow-x-auto gap-4">
                     {/* Step 1 */}
                     <div className={`flex items-center gap-2 text-xs font-semibold whitespace-nowrap ${step === 1 ? 'text-teal-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`}>
@@ -156,8 +165,86 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                         {t('directory.claim.modal.step3')}
                     </div>
                 </div>
+                )}
 
                 {/* Step Contents */}
+                {step === 0 && (
+                    <div className="p-6 space-y-6">
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Award size={20} className="text-teal-600 dark:text-cyan-400" />
+                                Why claim ownership?
+                            </h3>
+                            <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                                <li className="flex gap-3">
+                                    <Check size={16} className="text-green-500 flex-shrink-0 mt-0.5" />
+                                    <span>Verify that this is your business</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <Check size={16} className="text-green-500 flex-shrink-0 mt-0.5" />
+                                    <span>Get control over your business page</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <Check size={16} className="text-green-500 flex-shrink-0 mt-0.5" />
+                                    <span>Update information and photos</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <Check size={16} className="text-green-500 flex-shrink-0 mt-0.5" />
+                                    <span>Respond to customer reviews</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Clock size={20} className="text-teal-600 dark:text-cyan-400" />
+                                How it works
+                            </h3>
+                            <ol className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                                <li className="flex gap-3">
+                                    <span className="font-bold text-teal-600 dark:text-cyan-400 min-w-6">1.</span>
+                                    <span>Fill out your business information</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="font-bold text-teal-600 dark:text-cyan-400 min-w-6">2.</span>
+                                    <span>Verify your email (instant)</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="font-bold text-teal-600 dark:text-cyan-400 min-w-6">3.</span>
+                                    <span>Admin reviews your claim (1-2 days)</span>
+                                </li>
+                                <li className="flex gap-3">
+                                    <span className="font-bold text-teal-600 dark:text-cyan-400 min-w-6">4.</span>
+                                    <span>Get approved and start managing</span>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div className="bg-teal-50/50 dark:bg-cyan-950/10 border border-teal-100 dark:border-cyan-800/30 rounded-xl p-4 text-xs text-teal-800 dark:text-cyan-300 leading-relaxed flex items-start gap-2">
+                            <Info size={16} className="mt-0.5 flex-shrink-0" />
+                            <span>We'll verify your business details to ensure only real owners can claim listings.</span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="inline-flex items-center justify-center rounded-full font-semibold whitespace-nowrap cursor-pointer transition-all duration-200 bg-teal-600 hover:bg-teal-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 text-white px-6 py-3 text-sm gap-2"
+                            >
+                                Get Started
+                                <ArrowRight size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {step === 1 && (
                     <form onSubmit={handleStep1Submit} className="p-6 space-y-5">
                         <div className="bg-teal-50/50 dark:bg-cyan-950/10 border border-teal-100 dark:border-cyan-800/30 rounded-xl p-4 text-xs text-teal-800 dark:text-cyan-300 leading-relaxed flex items-start gap-2">
@@ -172,20 +259,6 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                         )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="claim-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                                    {t('directory.claim.modal.email')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    id="claim-email"
-                                    required
-                                    type="email"
-                                    placeholder="you@company.com"
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                            </div>
                             <div>
                                 <label htmlFor="claim-phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                     {t('directory.claim.modal.phone')} <span className="text-red-500">*</span>
@@ -397,7 +470,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto mb-6 leading-relaxed">
                             {t('directory.claim.modal.success.desc')
                                 ?.replace('{name}', listing.name)
-                                ?.replace('{email}', formData.email)}
+                                ?.replace('{email}', user?.email || 'your email')}
                         </p>
 
                         <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/40 rounded-xl p-4 max-w-sm mx-auto mb-6">

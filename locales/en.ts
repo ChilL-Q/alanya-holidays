@@ -933,4 +933,11 @@ export const en = {
   'directory.claim.modal.success.next.step3': 'You\'ll get access to edit your listing anytime',
   'directory.claim.modal.success.next.step4': 'Your changes will go live immediately after review',
   'directory.claim.modal.close': 'Close',
+
+  // Recently Claimed Section
+  'home.recently_claimed.title': 'Recently Claimed',
+  'home.recently_claimed.subtitle': 'Local businesses that recently verified their ownership and updated their listings',
+  'home.recently_claimed.badge': 'Community Verified',
+  'home.recently_claimed.view_all': 'View all',
+  'home.recently_claimed.empty': 'No claimed listings yet.',
 };

@@ -5,8 +5,11 @@ import toast from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
 import { StepsIndicator } from '../components/ui/StepsIndicator';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
+import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
 import { db } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
+import { useDraftSave } from '../hooks/useDraftSave';
+import { DRAFT_KEYS } from '../utils/drafts';
 
 interface FormData {
     name: string;
@@ -61,6 +64,13 @@ export const AddListingPage: React.FC = () => {
         google_map_url: '',
     });
     const [gallery, setGallery] = useState<File[]>([]);
+
+    const { showRestoreBanner, handleRestoreDraft, handleDiscardDraft } = useDraftSave({
+        storageKey: DRAFT_KEYS.directory_listing,
+        formData,
+        onRestore: (data) => setFormData(data as FormData),
+        dependencies: [formData],
+    });
 
     // Detect subscription tier on mount
     useEffect(() => {
@@ -128,6 +138,7 @@ export const AddListingPage: React.FC = () => {
                 base_score: 0,
             });
 
+            localStorage.removeItem('draft_directory_listing');
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (err) {
@@ -202,6 +213,10 @@ export const AddListingPage: React.FC = () => {
                                 </p>
                             </div>
                         </div>
+                    )}
+
+                    {showRestoreBanner && (
+                        <RestoreDraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
                     )}
 
                     <StepsIndicator

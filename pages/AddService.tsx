@@ -9,6 +9,9 @@ import { AddServiceCategoryStep, ServiceCategory } from '../components/host/serv
 import { AddServiceFormStep } from '../components/host/services/AddServiceFormStep';
 import { AddServiceSuccessStep } from '../components/host/services/AddServiceSuccessStep';
 import { SEOHead } from '../components/seo/SEOHead';
+import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
+import { useDraftSave } from '../hooks/useDraftSave';
+import { DRAFT_KEYS, EXCLUDE_KEYS } from '../utils/drafts';
 
 type ServiceType = 'car' | 'bike' | 'transfer' | 'tour' | 'visa' | 'esim' | 'wellness' | 'creative';
 
@@ -63,6 +66,19 @@ export const AddService: React.FC = () => {
     const [files, setFiles] = useState<File[]>([]);
     const [itinerary, setItinerary] = useState<ItineraryItem[]>([{ time: '09:00', description: 'Start' }]);
 
+    const draftWrapper = { formData, category, step };
+    const { showRestoreBanner, handleRestoreDraft, handleDiscardDraft } = useDraftSave({
+        storageKey: DRAFT_KEYS.service_listing,
+        formData: draftWrapper,
+        excludeKeys: EXCLUDE_KEYS.service,
+        onRestore: (data) => {
+            if (data.formData) setFormData(data.formData);
+            if (data.category !== undefined) setCategory(data.category);
+            if (data.step !== undefined) setStep(data.step);
+        },
+        dependencies: [formData, category, step],
+    });
+
     // Auto-fill description when popular model changes
     useEffect(() => {
         if (formData.modelSelection === 'popular' && formData.brand && formData.model) {
@@ -85,7 +101,7 @@ export const AddService: React.FC = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!user) return;
 
@@ -149,6 +165,7 @@ export const AddService: React.FC = () => {
                 promotion_price: formData.promotionPrice ? parseFloat(formData.promotionPrice) : undefined,
                 promotion_description: formData.promotionDescription
             });
+            localStorage.removeItem('draft_service_listing');
             setStep(2);
         } catch (error) {
             console.error(error);
@@ -167,6 +184,9 @@ export const AddService: React.FC = () => {
         <SEOHead title="Add Service | Alanya Holidays" noIndex />
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4">
             <div className="max-w-3xl mx-auto">
+                {showRestoreBanner && (
+                    <RestoreDraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+                )}
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
                     {step > 0 && (

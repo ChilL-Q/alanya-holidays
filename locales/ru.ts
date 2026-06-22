@@ -924,4 +924,11 @@ export const ru = {
   'directory.claim.modal.success.next.step3': 'Вы получите доступ к редактированию компании в любое время',
   'directory.claim.modal.success.next.step4': 'Ваши изменения будут опубликованы сразу после проверки',
   'directory.claim.modal.close': 'Закрыть',
+
+  // Recently Claimed Section
+  'home.recently_claimed.title': 'Недавно подтвержденные',
+  'home.recently_claimed.subtitle': 'Местные компании, которые недавно подтвердили право собственности и обновили информацию',
+  'home.recently_claimed.badge': 'Подтверждено сообществом',
+  'home.recently_claimed.view_all': 'Посмотреть все',
+  'home.recently_claimed.empty': 'Пока нет подтвержденных компаний',
 };

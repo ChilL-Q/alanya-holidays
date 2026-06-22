@@ -44,6 +44,7 @@ const makeChain = (overrides: any = {}) => {
         eq: vi.fn().mockReturnThis(),
         not: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
+        limit: vi.fn(),
         single: vi.fn(),
         ...overrides
     };
@@ -412,6 +413,31 @@ describe('directoryService', () => {
 
             await expect(directoryService.getCategoryAnalyticsAverage('medical'))
                 .rejects.toEqual({ message: 'RPC failed' });
+        });
+    });
+
+    describe('getRecentlyClaimedListings', () => {
+        it('fetches recently claimed listings successfully', async () => {
+            const chain = makeChain();
+            chain.limit.mockResolvedValue({ data: [mockListing], error: null });
+            mockSupabase.from.mockReturnValue(chain);
+
+            const result = await directoryService.getRecentlyClaimedListings(6);
+            expect(result).toEqual([mockListing]);
+            expect(mockSupabase.from).toHaveBeenCalledWith('directory_listings');
+            expect(chain.not).toHaveBeenCalledWith('claimed_at', 'is', null);
+            expect(chain.eq).toHaveBeenCalledWith('status', 'approved');
+            expect(chain.order).toHaveBeenCalledWith('claimed_at', { ascending: false });
+            expect(chain.limit).toHaveBeenCalledWith(6);
+        });
+
+        it('throws on database error', async () => {
+            const chain = makeChain();
+            chain.limit.mockResolvedValue({ data: null, error: { message: 'Database error' } });
+            mockSupabase.from.mockReturnValue(chain);
+
+            await expect(directoryService.getRecentlyClaimedListings())
+                .rejects.toEqual({ message: 'Database error' });
         });
     });
 });

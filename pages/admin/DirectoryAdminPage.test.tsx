@@ -26,6 +26,9 @@ vi.mock('../../api-services', () => ({
         createDirectoryListing: vi.fn(),
         approveDirectoryListing: vi.fn(),
         rejectDirectoryListing: vi.fn(),
+        getListingClaims: vi.fn(),
+        approveListingClaim: vi.fn(),
+        rejectListingClaim: vi.fn(),
     }
 }));
 
@@ -45,6 +48,9 @@ describe('DirectoryAdminPage', () => {
         vi.clearAllMocks();
         (db.getDirectoryListingsByStatus as any).mockResolvedValue(mockListings);
         (db.getPendingDirectoryListings as any).mockResolvedValue([]);
+        (db.getListingClaims as any).mockResolvedValue([]);
+        (db.approveListingClaim as any).mockResolvedValue({});
+        (db.rejectListingClaim as any).mockResolvedValue({});
         vi.stubGlobal('confirm', vi.fn(() => true));
     });
 
