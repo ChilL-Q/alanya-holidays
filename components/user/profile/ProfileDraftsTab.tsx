@@ -59,8 +59,9 @@ export const ProfileDraftsTab: React.FC = () => {
         });
 
         // Load admin directory edit drafts
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('draft_admin_directory_listing_')) {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('draft_admin_directory_listing_')) {
                 const data = localStorage.getItem(key);
                 if (data) {
                     try {
@@ -78,7 +79,7 @@ export const ProfileDraftsTab: React.FC = () => {
                     }
                 }
             }
-        });
+        }
 
         // Sort by updatedAt descending
         foundDrafts.sort((a, b) => {
