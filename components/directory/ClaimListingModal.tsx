@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal';
 import { db } from '../../api-services';
 import { DirectoryListingDB } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
 interface ClaimListingModalProps {
@@ -14,12 +15,12 @@ interface ClaimListingModalProps {
 
 export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, onClose, listing }) => {
     const { t } = useLanguage();
+    const { user } = useAuth();
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
-        email: '',
         phone: '',
         role: '',
         additional_notes: '',
@@ -37,7 +38,6 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
             setStep(1);
             setError(null);
             setFormData({
-                email: '',
                 phone: '',
                 role: '',
                 additional_notes: '',
@@ -53,7 +53,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
 
     const handleStep1Submit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.email || !formData.phone || !formData.role) {
+        if (!formData.phone || !formData.role) {
             toast.error(t('auth.error.required') || 'Please fill in all required fields');
             return;
         }
@@ -68,13 +68,18 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
             return;
         }
 
+        if (!user?.email) {
+            toast.error('User email not found. Please log in again.');
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
         try {
             await db.submitListingClaim({
                 listing_id: listing.id,
-                email: formData.email,
+                email: user.email,
                 phone: formData.phone,
                 role: formData.role,
                 additional_notes: formData.additional_notes,
@@ -87,7 +92,10 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
             });
 
             setStep(3);
-            toast.success(t('reviews.success') || 'Claim submitted successfully!');
+            toast.success(t('directory.claim.submitted') || 'Claim submitted! Check your email to verify.');
+            setTimeout(() => {
+                onClose();
+            }, 2000);
         } catch (err: any) {
             console.error('Claim submission error:', err);
             setError(err.message || 'An error occurred while submitting your claim.');
@@ -172,20 +180,6 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                         )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="claim-email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                                    {t('directory.claim.modal.email')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    id="claim-email"
-                                    required
-                                    type="email"
-                                    placeholder="you@company.com"
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                            </div>
                             <div>
                                 <label htmlFor="claim-phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                                     {t('directory.claim.modal.phone')} <span className="text-red-500">*</span>
@@ -397,7 +391,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
                         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto mb-6 leading-relaxed">
                             {t('directory.claim.modal.success.desc')
                                 ?.replace('{name}', listing.name)
-                                ?.replace('{email}', formData.email)}
+                                ?.replace('{email}', user?.email || 'your email')}
                         </p>
 
                         <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/40 rounded-xl p-4 max-w-sm mx-auto mb-6">

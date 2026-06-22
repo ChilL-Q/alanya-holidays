@@ -480,6 +480,10 @@ export interface ListingClaimDB {
   address?: string;
   description?: string;
   status: 'pending' | 'approved' | 'rejected';
+  email_verified: boolean;
+  verification_token: string;
+  verification_expires_at: string;
+  rejection_reason: string | null;
   created_at?: string;
   updated_at?: string;
 }

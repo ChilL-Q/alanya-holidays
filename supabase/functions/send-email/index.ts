@@ -52,6 +52,10 @@ const emailDataSchemas = {
   subscription_cancellation_scheduled: z.object({ name: sOpt, periodEnd: s, link: sOpt }),
   subscription_payment_failed: z.object({ name: sOpt, link: sOpt }),
   subscription_restored: z.object({ name: sOpt, link: sOpt }),
+  listing_claim_verification: z.object({ claimantEmail: s, businessName: s, verificationToken: s }),
+  admin_claim_notification: z.object({ businessName: s, claimantEmail: s, listingId: s }),
+  listing_claim_approved: z.object({ claimantEmail: s, businessName: s }),
+  listing_claim_rejected: z.object({ claimantEmail: s, businessName: s, rejectionReason: s }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -775,6 +779,79 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
                     `,
                     data.link,
                     'View Profile'
+                )
+            };
+
+        // --- Listing Claims ---
+        case 'listing_claim_verification':
+            return {
+                subject: '✅ Verify Your Listing Claim',
+                html: getHtmlTemplate(
+                    'Verify Your Listing',
+                    `
+                    <p style="font-size: 16px;">Hi,</p>
+                    <p>Thank you for claiming <strong>${escapeHtml(data.businessName)}</strong> on Alanya Holidays!</p>
+                    <p>To complete the verification, click the button below to confirm your email address:</p>
+                    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Once verified, our team will review your claim and contact you within 24 hours.</p>
+                    `,
+                    `${process.env.SITE_URL || 'https://alanyaholidays.com'}/verify-claim?token=${escapeHtml(data.verificationToken)}`,
+                    'Verify Email',
+                    true
+                )
+            };
+
+        case 'admin_claim_notification':
+            return {
+                subject: '🔔 New Listing Claim Pending Review',
+                html: getHtmlTemplate(
+                    'New Claim for Review',
+                    `
+                    <p style="font-size: 16px;">A new listing claim requires your review:</p>
+                    <div class="card">
+                        <div class="info-row"><span class="label">Business Name</span><span class="value">${escapeHtml(data.businessName)}</span></div>
+                        <div class="info-row"><span class="label">Claimant Email</span><span class="value">${escapeHtml(data.claimantEmail)}</span></div>
+                        <div class="info-row"><span class="label">Listing ID</span><span class="value">${escapeHtml(data.listingId)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to the admin panel to review and approve or reject this claim.</p>
+                    `,
+                    `${process.env.SITE_URL || 'https://alanyaholidays.com'}/admin/directory`,
+                    'Review Claim'
+                )
+            };
+
+        case 'listing_claim_approved':
+            return {
+                subject: '🎉 Your Listing Claim Has Been Approved!',
+                html: getHtmlTemplate(
+                    'Claim Approved',
+                    `
+                    <p style="font-size: 16px;">Congratulations!</p>
+                    <p>Your claim for <strong>${escapeHtml(data.businessName)}</strong> has been approved by our team. You now own this listing and can manage all details.</p>
+                    <div class="card">
+                        <p style="text-align: center; margin: 0; color: #059669; font-weight: 600;">You are now the owner of this listing.</p>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to your account to view and update your listing.</p>
+                    `,
+                    `${process.env.SITE_URL || 'https://alanyaholidays.com'}/directory`,
+                    'View Your Listing'
+                )
+            };
+
+        case 'listing_claim_rejected':
+            return {
+                subject: '⛔ Your Listing Claim Could Not Be Approved',
+                html: getHtmlTemplate(
+                    'Claim Rejected',
+                    `
+                    <p style="font-size: 16px;">Hi,</p>
+                    <p>Unfortunately, your claim for <strong>${escapeHtml(data.businessName)}</strong> could not be approved.</p>
+                    <div class="card">
+                        <div class="info-row"><span class="label">Reason</span><span class="value" style="color:#ef4444">${escapeHtml(data.rejectionReason)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px;">If you believe this is a mistake, please contact us for more information.</p>
+                    `,
+                    `${process.env.SITE_URL || 'https://alanyaholidays.com'}/contact`,
+                    'Contact Support'
                 )
             };
 

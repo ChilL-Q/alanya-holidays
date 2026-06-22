@@ -62,6 +62,7 @@ const InboxPage = React.lazy(() => import('../pages/InboxPage').then(module => (
 const CreativeServices = React.lazy(() => import('../pages/CreativeServices').then(module => ({ default: module.CreativeServices })));
 const ListingTiersPage = React.lazy(() => import('../pages/ListingTiersPage').then(module => ({ default: module.ListingTiersPage })));
 const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(module => ({ default: module.SubscribePage })));
+const VerifyClaimPage = React.lazy(() => import('../pages/VerifyClaimPage').then(module => ({ default: module.VerifyClaimPage })));
 const AddListingPage = React.lazy(() => import('../pages/AddListingPage').then(module => ({ default: module.AddListingPage })));
 const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingPage').then(module => ({ default: module.DirectoryListingPage })));
 const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
@@ -566,6 +567,8 @@ export const AppRoutes: React.FC = () => {
                         <AddProduct />
                     </HostRoute>
                 } />
+
+                <Route path="/verify-claim" element={<VerifyClaimPage />} />
 
                 <Route path="*" element={<NotFound />} />
             </Routes>
