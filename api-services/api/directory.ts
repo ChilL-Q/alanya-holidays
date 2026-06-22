@@ -241,6 +241,26 @@ export const directoryService = {
         return data as DirectoryListingDB[];
     },
 
+    /**
+     * Get listings that were recently claimed (ordered by claimed_at DESC)
+     */
+    async getRecentlyClaimedListings(limit: number = 6): Promise<DirectoryListingDB[]> {
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select(LISTING_LOCATIONS_SELECT)
+            .not('claimed_at', 'is', null)
+            .eq('status', 'approved')
+            .order('claimed_at', { ascending: false })
+            .limit(limit);
+
+        if (error) {
+            console.error('Error fetching recently claimed listings:', error);
+            throw error;
+        }
+
+        return data as DirectoryListingDB[];
+    },
+
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
         const { data, error } = await supabase
             .rpc('vote_listing', {

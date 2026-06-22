@@ -455,6 +455,7 @@ export interface DirectoryListingDB {
   status: 'pending' | 'approved' | 'rejected';
   owner_user_id: string | null;
   rejection_reason: string | null;
+  claimed_at?: string;
   created_at?: string;
   updated_at?: string;
   listing_locations?: ListingLocationJunction[];

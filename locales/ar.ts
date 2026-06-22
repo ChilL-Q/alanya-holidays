@@ -872,4 +872,11 @@ export const ar = {
     'directory.claim.modal.success.next.step3': 'ستحصل على صلاحية تعديل بيانات نشاطك في أي وقت',
     'directory.claim.modal.success.next.step4': 'ستنشر تعديلاتك مباشرة بعد المراجعة',
     'directory.claim.modal.close': 'إغلاق',
+
+    // Recently Claimed Section
+    'home.recently_claimed.title': 'المطالب بها مؤخراً',
+    'home.recently_claimed.subtitle': 'الشركات المحلية التي قامت مؤخراً بالتحقق من ملكيتها وتحديث معلوماتها',
+    'home.recently_claimed.badge': 'تم التحقق من المجتمع',
+    'home.recently_claimed.view_all': 'عرض الكل',
+    'home.recently_claimed.empty': 'لا توجد قوائم مطالب بها بعد',
 };

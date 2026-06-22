@@ -924,4 +924,11 @@ export const tr = {
     'directory.claim.modal.success.next.step3': 'İstediğiniz zaman işletme bilgilerinizi düzenleme yetkisi alacaksınız',
     'directory.claim.modal.success.next.step4': 'Değişiklikleriniz incelemeden hemen sonra yayına girecektir',
     'directory.claim.modal.close': 'Kapat',
+
+    // Recently Claimed Section
+    'home.recently_claimed.title': 'Yakın Zamanda Sahiplenilenler',
+    'home.recently_claimed.subtitle': 'Sahipliğini yakın zamanda doğrulayan ve bilgilerini güncelleyen yerel işletmeler',
+    'home.recently_claimed.badge': 'Topluluk Doğrulamalı',
+    'home.recently_claimed.view_all': 'Tümünü Gör',
+    'home.recently_claimed.empty': 'Henüz sahiplenilen işletme yok',
 };
