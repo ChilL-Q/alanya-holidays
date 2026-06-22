@@ -627,7 +627,7 @@ export const directoryService = {
             },
         })).catch(err => console.error('Error sending admin notification:', err));
 
-        return null; // Return null — RPC handled the update
+        return claim;
     },
 
     async getListingClaims(): Promise<ListingClaimDB[]> {
