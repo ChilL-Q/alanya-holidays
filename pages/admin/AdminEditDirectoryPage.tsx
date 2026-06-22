@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { DirectoryListingDB, DirectoryListingCreateInput, LocationDB } from '../../types/models';
 import { slugify } from '../../utils/slugify';
 import { RestoreDraftBanner } from '../../components/ui/RestoreDraftBanner';
+import { useDraftSave } from '../../hooks/useDraftSave';
 
 import { BasicDetailsForm } from '../../components/admin/directory/BasicDetailsForm';
 import { ContactLocationForm } from '../../components/admin/directory/ContactLocationForm';
@@ -61,8 +62,26 @@ export const AdminEditDirectoryPage: React.FC = () => {
     const [selectedLocationIds, setSelectedLocationIds] = useState<string[]>([]);
     const [availableLocations, setAvailableLocations] = useState<LocationDB[]>([]);
 
-    const [showRestoreBanner, setShowRestoreBanner] = useState(false);
-    const [savedDraft, setSavedDraft] = useState<any>(null);
+    const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';
+    const draftWrapper = { formData, descriptions, languages, certifications, selectedLocationIds };
+
+    const { showRestoreBanner, handleRestoreDraft: baseRestore, handleDiscardDraft } = useDraftSave({
+        storageKey: draftKey,
+        formData: draftWrapper,
+        onRestore: (data: any) => {
+            if (data.formData) setFormData(data.formData);
+            if (data.descriptions) setDescriptions(data.descriptions);
+            if (data.languages) setLanguages(data.languages);
+            if (data.certifications) setCertifications(data.certifications);
+            if (data.selectedLocationIds) setSelectedLocationIds(data.selectedLocationIds);
+        },
+        dependencies: [formData, descriptions, languages, certifications, selectedLocationIds, id, isEditing],
+    });
+
+    const handleRestoreDraft = () => {
+        baseRestore();
+        toast.success('Unsaved progress restored!');
+    };
 
     const loadListing = useCallback(async () => {
         try {
@@ -98,20 +117,6 @@ export const AdminEditDirectoryPage: React.FC = () => {
                 setSelectedLocationIds(
                     listing.listing_locations?.map(ll => ll.location_id) ?? []
                 );
-
-                // Check for draft edit listing
-                const draftStr = localStorage.getItem(`draft_admin_directory_listing_${id}`);
-                if (draftStr) {
-                    try {
-                        const parsed = JSON.parse(draftStr);
-                        if (parsed && typeof parsed === 'object') {
-                            setSavedDraft(parsed);
-                            setShowRestoreBanner(true);
-                        }
-                    } catch (e) {
-                        console.error('Failed to parse draft:', e);
-                    }
-                }
             }
         } catch (error) {
             console.error(error);
@@ -125,57 +130,6 @@ export const AdminEditDirectoryPage: React.FC = () => {
             loadListing();
         }
     }, [isEditing, loadListing]);
-
-    useEffect(() => {
-        if (!isEditing) {
-            const draftStr = localStorage.getItem('draft_admin_directory_listing_new');
-            if (draftStr) {
-                try {
-                    const parsed = JSON.parse(draftStr);
-                    if (parsed && typeof parsed === 'object') {
-                        setSavedDraft(parsed);
-                        setShowRestoreBanner(true);
-                    }
-                } catch (e) {
-                    console.error('Failed to parse draft:', e);
-                }
-            }
-        }
-    }, [isEditing]);
-
-    useEffect(() => {
-        const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';
-        const hasContent = formData.name.trim().length > 0 || formData.short_description.trim().length > 0;
-        if (hasContent) {
-            localStorage.setItem(draftKey, JSON.stringify({
-                formData,
-                descriptions,
-                languages,
-                certifications,
-                selectedLocationIds,
-                updatedAt: new Date().toISOString()
-            }));
-        }
-    }, [formData, descriptions, languages, certifications, selectedLocationIds, id, isEditing]);
-
-    const handleRestoreDraft = () => {
-        if (savedDraft) {
-            if (savedDraft.formData) setFormData(savedDraft.formData);
-            if (savedDraft.descriptions) setDescriptions(savedDraft.descriptions);
-            if (savedDraft.languages) setLanguages(savedDraft.languages);
-            if (savedDraft.certifications) setCertifications(savedDraft.certifications);
-            if (savedDraft.selectedLocationIds) setSelectedLocationIds(savedDraft.selectedLocationIds);
-            toast.success('Unsaved progress restored!');
-        }
-        setShowRestoreBanner(false);
-    };
-
-    const handleDiscardDraft = () => {
-        const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';
-        localStorage.removeItem(draftKey);
-        setShowRestoreBanner(false);
-        toast.success('Draft discarded');
-    };
 
     useEffect(() => {
         db.getLocations()

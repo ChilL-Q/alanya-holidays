@@ -21,7 +21,11 @@ export const VerifyClaimPage: React.FC = () => {
             }
 
             try {
-                await db.verifyClaimEmail(token);
+                const result = await db.verifyClaimEmail(token);
+                if (!result) {
+                    setStatus('error');
+                    return;
+                }
                 setStatus('success');
             } catch (err) {
                 console.error('Error verifying claim email:', err);

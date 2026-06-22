@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, MapPin, Car, Briefcase, FileText, Trash2, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useLanguage } from '../../../context/LanguageContext';
 
 interface DraftItem {
     key: string;
@@ -12,87 +11,74 @@ interface DraftItem {
     link: string;
 }
 
+const DRAFT_CONFIG = [
+    {
+        key: 'draft_directory_listing',
+        type: 'directory' as const,
+        titleField: (data: any) => data.name || 'Untitled Directory Listing',
+        link: '/add-listing',
+    },
+    {
+        key: 'draft_property_listing',
+        type: 'property' as const,
+        titleField: (data: any) => data.title || 'Untitled Property Listing',
+        link: '/list-property',
+    },
+    {
+        key: 'draft_service_listing',
+        type: 'service' as const,
+        titleField: (data: any) => data.formData?.title || 'Untitled Service Listing',
+        link: '/add-service',
+    },
+] as const;
+
 export const ProfileDraftsTab: React.FC = () => {
-    const { t } = useLanguage();
     const navigate = useNavigate();
     const [drafts, setDrafts] = useState<DraftItem[]>([]);
 
     const loadDrafts = () => {
         const foundDrafts: DraftItem[] = [];
 
-        // 1. Directory creation draft
-        const dir = localStorage.getItem('draft_directory_listing');
-        if (dir) {
-            try {
-                const parsed = JSON.parse(dir);
-                foundDrafts.push({
-                    key: 'draft_directory_listing',
-                    type: 'directory',
-                    title: parsed.name || 'Untitled Directory Listing',
-                    updatedAt: parsed.updatedAt,
-                    link: '/add-listing'
-                });
-            } catch (e) {
-                console.error(e);
+        // Load fixed-key drafts
+        DRAFT_CONFIG.forEach(config => {
+            const data = localStorage.getItem(config.key);
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    foundDrafts.push({
+                        key: config.key,
+                        type: config.type,
+                        title: config.titleField(parsed),
+                        updatedAt: parsed.updatedAt,
+                        link: config.link,
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
             }
-        }
+        });
 
-        // 2. Property creation draft
-        const prop = localStorage.getItem('draft_property_listing');
-        if (prop) {
-            try {
-                const parsed = JSON.parse(prop);
-                foundDrafts.push({
-                    key: 'draft_property_listing',
-                    type: 'property',
-                    title: parsed.title || 'Untitled Property Listing',
-                    updatedAt: parsed.updatedAt,
-                    link: '/list-property'
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // 3. Service creation draft
-        const serv = localStorage.getItem('draft_service_listing');
-        if (serv) {
-            try {
-                const parsed = JSON.parse(serv);
-                foundDrafts.push({
-                    key: 'draft_service_listing',
-                    type: 'service',
-                    title: parsed.formData?.title || 'Untitled Service Listing',
-                    updatedAt: parsed.updatedAt,
-                    link: '/add-service'
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // 4. Admin directory edit drafts
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('draft_admin_directory_listing_')) {
-                const listing = localStorage.getItem(key);
-                if (listing) {
+        // Load admin directory edit drafts
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('draft_admin_directory_listing_')) {
+                const data = localStorage.getItem(key);
+                if (data) {
                     try {
-                        const parsed = JSON.parse(listing);
+                        const parsed = JSON.parse(data);
                         const id = key.replace('draft_admin_directory_listing_', '');
                         foundDrafts.push({
                             key,
                             type: 'admin_directory_edit',
                             title: parsed.formData?.name || 'Untitled Edit Listing',
                             updatedAt: parsed.updatedAt,
-                            link: `/admin/directory/${id}`
+                            link: `/admin/directory/${id}`,
                         });
                     } catch (e) {
                         console.error(e);
                     }
                 }
             }
-        }
+        });
 
         // Sort by updatedAt descending
         foundDrafts.sort((a, b) => {

@@ -40,6 +40,15 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         message: ''
     });
 
+    const loadClaims = useCallback(async () => {
+        try {
+            const claimsList = await db.getListingClaims();
+            setClaims(claimsList);
+        } catch (e) {
+            console.error('Failed to load claims', e);
+        }
+    }, []);
+
     const loadListings = useCallback(async () => {
         setLoading(true);
         try {
@@ -94,7 +103,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         try {
             await db.approveListingClaim(claimId);
             toast.success('Claim approved');
-            await loadListings();
+            await loadClaims();
         } catch (e: unknown) {
             toast.error(`Failed to approve claim: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
@@ -109,7 +118,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             await db.rejectListingClaim(claimId, rejectClaimState.reason.trim());
             toast.success('Claim rejected');
             setRejectClaimState(null);
-            await loadListings();
+            await loadClaims();
         } catch (e: unknown) {
             toast.error(`Failed to reject claim: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }

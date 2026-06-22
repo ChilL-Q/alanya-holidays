@@ -63,6 +63,7 @@
     "npm:vite-plugin-eslint@^1.8.1": "1.8.1_eslint@9.39.4_vite@6.4.3__@types+node@22.20.0__tsx@4.22.4_@types+node@22.20.0_tsx@4.22.4",
     "npm:vite@^6.2.0": "6.4.3_@types+node@22.20.0_tsx@4.22.4",
     "npm:vitest@^4.0.17": "4.1.9_@types+node@22.20.0_@vitest+coverage-v8@4.1.9_jsdom@27.4.0_vite@6.4.3__@types+node@22.20.0__tsx@4.22.4_tsx@4.22.4",
+    "npm:zod@3": "3.25.76",
     "npm:zod@^4.3.6": "4.4.3"
   },
   "jsr": {

@@ -641,7 +641,7 @@ export const directoryService = {
                 type: 'admin_claim_notification',
                 data: {
                     businessName: claim.business_name,
-                    claimantEmail: claim.claimant_email,
+                    claimantEmail: claim.email,
                     listingId: claim.listing_id,
                 },
             },
