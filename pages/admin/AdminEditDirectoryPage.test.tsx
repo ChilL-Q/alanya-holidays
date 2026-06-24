@@ -32,7 +32,8 @@ vi.mock('../../api-services', () => ({
         updateDirectoryListing: vi.fn(),
         uploadImage: vi.fn(),
         getLocations: vi.fn().mockResolvedValue([])
-    }
+    },
+    TIER_LIMITS: { explorer: 5, voyager: 50, signature: 100, partner: 100 }
 }));
 
 vi.mock('react-hot-toast', () => ({
