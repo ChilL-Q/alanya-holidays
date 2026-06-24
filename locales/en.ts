@@ -837,7 +837,7 @@ export const en = {
   'dir.cta.ai': 'Try AI Trip Planner',
   'dir.cat.medical': 'Medical Tourism',
   'dir.cat.accommodations': 'Accommodations',
-  'dir.cat.tours': 'Tours & Experiences',
+  'dir.cat.tours': 'Things to Do',
   'dir.cat.transport': 'Transportation',
   'dir.cat.restaurants': 'Restaurants',
   'dir.cat.cafes': 'Cafés & Coffee Shops',

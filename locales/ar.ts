@@ -776,7 +776,7 @@ export const ar = {
     'dir.cta.ai': 'جرب مخطط الرحلات بالذكاء الاصطناعي',
     'dir.cat.medical': 'السياحة الطبية',
     'dir.cat.accommodations': 'أماكن الإقامة',
-    'dir.cat.tours': 'الجولات والتجارب',
+    'dir.cat.tours': 'ما يمكن فعله',
     'dir.cat.transport': 'مواصلات',
     'dir.cat.restaurants': 'المطاعم',
     'dir.cat.cafes': 'المقاهي ومحلات القهوة',

@@ -828,7 +828,7 @@ export const tr = {
     'dir.cta.ai': 'Yapay Zeka Tatil Planlayıcı',
     'dir.cat.medical': 'Sağlık Turizmi',
     'dir.cat.accommodations': 'Konaklama',
-    'dir.cat.tours': 'Turlar ve Deneyimler',
+    'dir.cat.tours': 'Yapılacak Şeyler',
     'dir.cat.transport': 'Ulaşım',
     'dir.cat.restaurants': 'Restoranlar',
     'dir.cat.cafes': 'Kafeler ve Kahveciler',

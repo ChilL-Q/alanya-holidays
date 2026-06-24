@@ -6,6 +6,7 @@ import { SEOHead } from '../components/seo/SEOHead';
 import { StepsIndicator } from '../components/ui/StepsIndicator';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
+import { TierSelectionModal } from '../components/ui/TierSelectionModal';
 import { db } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
 import { useDraftSave } from '../hooks/useDraftSave';
@@ -24,7 +25,7 @@ interface FormData {
 const CATEGORIES = [
     { id: 'medical', label: 'Medical Tourism' },
     { id: 'accommodations', label: 'Hotels & Accommodations' },
-    { id: 'tours', label: 'Tours & Activities' },
+    { id: 'tours', label: 'Things to Do' },
     { id: 'transport', label: 'Transport & Car Rental' },
     { id: 'restaurants', label: 'Restaurants' },
     { id: 'cafes', label: 'Cafes & Bars' },
@@ -53,6 +54,7 @@ export const AddListingPage: React.FC = () => {
     const [submitted, setSubmitted] = useState(false);
     const [tierLimit, setTierLimit] = useState(5);
     const [tier, setTier] = useState<'explorer' | 'voyager' | 'signature' | 'partner'>('explorer');
+    const [showTierModal, setShowTierModal] = useState(!subscribed);
 
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -150,6 +152,7 @@ export const AddListingPage: React.FC = () => {
     };
 
     if (submitted) {
+        const isPaidTier = tier !== 'explorer';
         return (
             <>
                 <SEOHead title="Listing Submitted" description="Your business listing has been submitted for review." />
@@ -159,9 +162,17 @@ export const AddListingPage: React.FC = () => {
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">
                             Listing Submitted!
                         </h2>
-                        <p className="text-slate-500 dark:text-slate-400 mb-8">
-                            Your listing is under review — we&apos;ll notify you when it&apos;s approved.
+                        <p className="text-slate-600 dark:text-slate-300 mb-4">
+                            Thank you for listing your business on AlanyaHolidays. Our team will review your submission and get back to you within 48 hours.
                         </p>
+                        {isPaidTier && (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-4 mb-8 text-left">
+                                <p className="text-sm text-amber-800 dark:text-amber-300">
+                                    Payment details will be sent to your email shortly. Your listing will go live once payment is confirmed.
+                                </p>
+                            </div>
+                        )}
+                        {!isPaidTier && <div className="mb-8" />}
                         <Link
                             to="/"
                             className="inline-flex items-center justify-center px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors"
@@ -179,6 +190,15 @@ export const AddListingPage: React.FC = () => {
             <SEOHead
                 title="Add Your Business Listing"
                 description="Create a free or premium directory listing on Alanya Holidays."
+            />
+            <TierSelectionModal
+                isOpen={showTierModal}
+                currentTier={tier}
+                onSelectTier={(selectedTier) => {
+                    setTier(selectedTier);
+                    setTierLimit(TIER_LIMITS[selectedTier] ?? 5);
+                    setShowTierModal(false);
+                }}
             />
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
                 <div className="max-w-3xl mx-auto">

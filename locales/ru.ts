@@ -828,7 +828,7 @@ export const ru = {
   'dir.cta.ai': 'AI Планировщик Поездки',
   'dir.cat.medical': 'Медицинский туризм',
   'dir.cat.accommodations': 'Проживание',
-  'dir.cat.tours': 'Туры и впечатления',
+  'dir.cat.tours': 'Чем заняться',
   'dir.cat.transport': 'Транспорт',
   'dir.cat.restaurants': 'Рестораны',
   'dir.cat.cafes': 'Кафе и кофейни',
