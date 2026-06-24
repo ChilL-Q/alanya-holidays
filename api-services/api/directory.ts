@@ -11,7 +11,7 @@ function validateUUIDs(ids: string[]) {
     }
 }
 
-const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
+export const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
 
 function buildLocationRows(listingId: string, locationIds: string[]) {
     return locationIds.map((lid, i) => ({

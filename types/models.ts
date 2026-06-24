@@ -1,5 +1,7 @@
 import { ApprovalStatus, PropertyType, NotificationType } from './enums';
 
+export type ListingTier = 'explorer' | 'voyager' | 'signature' | 'partner';
+
 export interface Amenity {
     icon: string;
     label: string;
@@ -436,7 +438,7 @@ export interface DirectoryListingDB {
   is_featured?: boolean;
   is_premium?: boolean;
   is_verified?: boolean;
-  tier?: 'explorer' | 'voyager' | 'signature' | 'partner';
+  tier?: ListingTier;
   base_score?: number;
   subscription_id?: string;
   website?: string;

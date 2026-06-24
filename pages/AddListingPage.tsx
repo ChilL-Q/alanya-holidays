@@ -3,11 +3,12 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, MapPin, Globe, MessageCircle, Link as LinkIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
+import { ListingTier } from '../types/models';
 import { StepsIndicator } from '../components/ui/StepsIndicator';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
 import { TierSelectionModal } from '../components/ui/TierSelectionModal';
-import { db } from '../api-services';
+import { db, TIER_LIMITS } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
 import { useDraftSave } from '../hooks/useDraftSave';
 import { DRAFT_KEYS } from '../utils/drafts';
@@ -37,13 +38,6 @@ const CATEGORIES = [
     { id: 'shopping', label: 'Shopping' },
 ];
 
-const TIER_LIMITS: Record<string, number> = {
-    explorer: 5,
-    voyager: 50,
-    signature: 100,
-    partner: 100,
-};
-
 export const AddListingPage: React.FC = () => {
     const { t: _t } = useLanguage();
     const [searchParams] = useSearchParams();
@@ -53,8 +47,8 @@ export const AddListingPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [tierLimit, setTierLimit] = useState(5);
-    const [tier, setTier] = useState<'explorer' | 'voyager' | 'signature' | 'partner'>('explorer');
-    const [showTierModal, setShowTierModal] = useState(!subscribed);
+    const [tier, setTier] = useState<ListingTier>('explorer');
+    const [showTierModal, setShowTierModal] = useState(false);
 
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -74,19 +68,22 @@ export const AddListingPage: React.FC = () => {
         dependencies: [formData],
     });
 
-    // Detect subscription tier on mount
+    // Detect subscription tier on mount and defer modal
     useEffect(() => {
+        if (subscribed) return; // User already confirmed payment, skip fetch
         db.getPremiumStatus()
             .then((status) => {
                 const detectedTier = status.tier ?? 'explorer';
                 setTier(detectedTier);
                 setTierLimit(TIER_LIMITS[detectedTier] ?? 5);
+                setShowTierModal(true); // Open modal only after tier is resolved
             })
             .catch(() => {
                 setTier('explorer');
                 setTierLimit(5);
+                setShowTierModal(true); // Still open on error, default to explorer
             });
-    }, []);
+    }, [subscribed]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

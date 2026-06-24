@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../../api-services';
+import { db, TIER_LIMITS } from '../../api-services';
+import { ListingTier } from '../../types/models';
 import { supabase } from '../../api-services/supabase';
 import { ArrowLeft, Save, Check, Sparkles } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
@@ -424,7 +425,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
                             onRemoveExisting={removeExistingImage}
                             files={files}
                             onFilesChange={setFiles}
-                            maxFiles={formData.tier === 'explorer' ? 5 : formData.tier === 'voyager' ? 50 : 100}
+                            maxFiles={TIER_LIMITS[formData.tier as ListingTier] || 100}
                         />
 
                         <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800/50">

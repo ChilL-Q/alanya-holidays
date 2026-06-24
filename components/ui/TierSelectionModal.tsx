@@ -1,18 +1,17 @@
 import React from 'react';
+import { ListingTier } from '../../types/models';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star, Sparkles, Building2, ArrowRight } from 'lucide-react';
 import { Modal } from './Modal';
 
-type Tier = 'explorer' | 'voyager' | 'signature' | 'partner';
-
 interface TierSelectionModalProps {
     isOpen: boolean;
-    currentTier: Tier;
-    onSelectTier: (tier: Tier) => void;
+    currentTier: ListingTier;
+    onSelectTier: (tier: ListingTier) => void;
 }
 
 interface TierOption {
-    id: Tier;
+    id: ListingTier;
     name: string;
     price: string;
     description: string;
@@ -63,13 +62,6 @@ const TIER_OPTIONS: TierOption[] = [
     },
 ];
 
-const BadgeIcon: React.FC<{ tierId: Tier }> = ({ tierId }) => {
-    if (tierId === 'voyager') return <Star size={11} />;
-    if (tierId === 'signature') return <Sparkles size={11} />;
-    if (tierId === 'partner') return <Building2 size={11} />;
-    return null;
-};
-
 export const TierSelectionModal: React.FC<TierSelectionModalProps> = ({
     isOpen,
     currentTier,
@@ -86,7 +78,7 @@ export const TierSelectionModal: React.FC<TierSelectionModalProps> = ({
             onSelectTier(tier.id);
             return;
         }
-        navigate(`/subscribe?tier=${tier.id}&returnTo=/add-listing?subscribed=true`);
+        navigate(`/subscribe?tier=${tier.id}`);
     };
 
     return (
@@ -113,7 +105,7 @@ export const TierSelectionModal: React.FC<TierSelectionModalProps> = ({
                                 {tier.badge && (
                                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${tier.badgeColor}`}>
-                                            <BadgeIcon tierId={tier.id} />
+                                            {tier.id === 'voyager' ? <Star size={11} /> : tier.id === 'signature' ? <Sparkles size={11} /> : tier.id === 'partner' ? <Building2 size={11} /> : null}
                                             {tier.badge}
                                         </span>
                                     </div>
