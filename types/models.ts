@@ -419,6 +419,7 @@ export interface ListingDescriptions {
   tr?: string;
   ru?: string;
   ar?: string;
+  de?: string;
 }
 
 export interface ListingLocationJunction {
@@ -587,6 +588,29 @@ export interface ListingAnalyticsSummary {
   total_website_clicks: number;
   total_map_clicks: number;
   daily_data: ListingAnalyticsDaily[];
+}
+
+export type AddonType =
+  | 'instant_booking'
+  | 'verified_badge'
+  | 'seasonal_placement'
+  | 'sponsored_article'
+  | 'ai_localization';
+
+export type AddonStatus = 'pending' | 'active' | 'expired' | 'cancelled';
+
+export interface ListingAddon {
+  id: string;
+  listing_id: string;
+  addon_type: AddonType;
+  status: AddonStatus;
+  stripe_payment_intent_id: string | null;
+  stripe_subscription_id: string | null;
+  starts_at: string;
+  expires_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CategoryAnalyticsAverage {

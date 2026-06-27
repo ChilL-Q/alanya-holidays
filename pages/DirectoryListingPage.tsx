@@ -14,6 +14,7 @@ import { isValidVideoUrl } from '../utils/videoEmbed';
 import { VideoEmbed } from '../components/ui/VideoEmbed';
 import { ListingReviewSection } from '../components/directory/ListingReviewSection';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { ListingDescription } from '../components/directory/ListingDescription';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { ClaimListingModal } from '../components/directory/ClaimListingModal';
@@ -238,12 +239,10 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                         </div>
 
                         {/* Description */}
-                        <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/50">
-                            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">About</h2>
-                            <p className="text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">
-                                {listing.short_description}
-                            </p>
-                        </div>
+                        <ListingDescription
+                            descriptions={listing.descriptions}
+                            shortDescription={listing.short_description}
+                        />
 
                         {/* Certifications & Languages */}
                         {(listing.certifications?.length || listing.languages_spoken?.length) ? (

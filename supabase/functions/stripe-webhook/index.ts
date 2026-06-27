@@ -403,6 +403,126 @@ Deno.serve(async (req: Request) => {
       ? session.payment_intent
       : (session.payment_intent as any)?.id ?? null
 
+    // --- Listing add-on purchase (Upgrades tab) ---
+    if (session.metadata?.type === 'listing_addon') {
+      if (session.payment_status !== 'paid') {
+        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+      }
+
+      const addonSchema = z.object({
+        userId: z.string().uuid(),
+        listingId: z.string().uuid(),
+        addonType: z.enum(['verified_badge', 'seasonal_placement', 'sponsored_article', 'ai_localization']),
+      })
+      const addonResult = addonSchema.safeParse(session.metadata)
+      if (!addonResult.success) {
+        console.error('listing_addon: invalid metadata', addonResult.error.issues)
+        return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+      }
+      const { userId: addonUserId, listingId, addonType } = addonResult.data
+
+      // Idempotency: skip if this payment was already recorded
+      if (paymentIntentId) {
+        const { data: existingAddon } = await supabase
+          .from('listing_addons')
+          .select('id')
+          .eq('stripe_payment_intent_id', paymentIntentId)
+          .limit(1)
+          .maybeSingle()
+        if (existingAddon) {
+          console.warn(`Skipping duplicate add-on webhook for payment_intent ${paymentIntentId}`)
+          return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+        }
+      }
+
+      // Seasonal placement is time-boxed; others do not expire
+      const expiresAt = addonType === 'seasonal_placement'
+        ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+        : null
+
+      const { error: addonInsertError } = await supabase
+        .from('listing_addons')
+        .insert({
+          listing_id: listingId,
+          addon_type: addonType,
+          status: 'active',
+          stripe_payment_intent_id: paymentIntentId,
+          expires_at: expiresAt,
+        })
+
+      if (addonInsertError) {
+        console.error('Failed to insert listing add-on:', addonInsertError)
+        return new Response(JSON.stringify({ error: 'DB insert failed' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+      }
+
+      // Apply the listing-level effect of the add-on
+      const listingPatch: Record<string, unknown> = {}
+      if (addonType === 'verified_badge') listingPatch.is_verified = true
+      if (addonType === 'seasonal_placement') listingPatch.is_featured = true
+      if (Object.keys(listingPatch).length > 0) {
+        const { error: patchError } = await supabase
+          .from('directory_listings')
+          .update(listingPatch)
+          .eq('id', listingId)
+        if (patchError) console.error('Failed to apply add-on effect to listing:', patchError)
+      }
+
+      // AI localization is fulfilled by a separate translation pass. Trigger it
+      // here; a failure must NOT fail the webhook — the purchase is already paid
+      // and recorded, so we only log and let it be retried/re-run later.
+      if (addonType === 'ai_localization') {
+        const cronSecret = Deno.env.get('CRON_SECRET')
+        if (!cronSecret) {
+          console.error('Skipping ai_localization translation: CRON_SECRET not configured')
+        } else {
+          const { error: localizeError } = await supabase.functions.invoke('localize-listing', {
+            body: { listingId },
+            headers: { 'x-cron-secret': cronSecret },
+          })
+          if (localizeError) console.error('localize-listing trigger failed:', localizeError)
+        }
+      }
+
+      // Sponsored article is fulfilled manually (an editor writes & publishes
+      // the piece), so alert admins that there's an order to action.
+      if (addonType === 'sponsored_article') {
+        const { data: addonListing } = await supabase
+          .from('directory_listings')
+          .select('name')
+          .eq('id', listingId)
+          .maybeSingle()
+        const listingName = addonListing?.name ?? listingId
+
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'admin')
+
+        if (admins && admins.length > 0) {
+          await supabase.from('notifications').insert(
+            admins.map((admin: { id: string }) => ({
+              user_id: admin.id,
+              title: 'Sponsored article purchased',
+              message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
+              type: 'info',
+              link: '/admin/directory',
+            }))
+          )
+        }
+      }
+
+      await supabase.from('notifications').insert({
+        user_id: addonUserId,
+        title: 'Upgrade activated',
+        message: `Your "${addonType.replace(/_/g, ' ')}" add-on is now active.`,
+        type: 'success',
+        link: '/host/upgrades',
+      })
+
+      console.warn(`Listing add-on activated: ${addonType} for listing ${listingId}`)
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
     // Idempotency: skip if already processed
     const bookingIds = session.metadata?.bookingIds?.split(',').filter(Boolean) ?? []
     if (bookingIds.length > 0) {

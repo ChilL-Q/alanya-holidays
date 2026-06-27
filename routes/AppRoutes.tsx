@@ -106,6 +106,7 @@ const HostBookingsPage = React.lazy(() => import('../pages/host/HostBookingsPage
 const HostCalendarPage = React.lazy(() => import('../pages/host/HostCalendarPage').then(module => ({ default: module.HostCalendarPage })));
 const HostMessagesPage = React.lazy(() => import('../pages/host/HostMessagesPage').then(module => ({ default: module.HostMessagesPage })));
 const DirectoryAnalyticsPage = React.lazy(() => import('../pages/host/DirectoryAnalyticsPage').then(module => ({ default: module.DirectoryAnalyticsPage })));
+const HostUpgradesPage = React.lazy(() => import('../pages/host/HostUpgradesPage').then(module => ({ default: module.HostUpgradesPage })));
 
 
 export const AppRoutes: React.FC = () => {
@@ -393,6 +394,13 @@ export const AppRoutes: React.FC = () => {
                     <HostRoute>
                         <HostLayoutController>
                             <DirectoryAnalyticsPage />
+                        </HostLayoutController>
+                    </HostRoute>
+                } />
+                <Route path="/host/upgrades" element={
+                    <HostRoute>
+                        <HostLayoutController>
+                            <HostUpgradesPage />
                         </HostLayoutController>
                     </HostRoute>
                 } />
