@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB } from '../../types/models';
+import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB, ListingAddon } from '../../types/models';
 import { retry } from '../../utils/retry';
 import { sanitizeString } from '../../utils/sanitize';
 
@@ -552,6 +552,32 @@ export const directoryService = {
 
         if (error) throw error;
         return (data || []) as ListingAnalyticsSummary[];
+    },
+
+    async getMyDirectoryListings(): Promise<DirectoryListingDB[]> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase
+            .from('directory_listings')
+            .select('*')
+            .eq('owner_user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as DirectoryListingDB[];
+    },
+
+    async getListingAddons(listingId: string): Promise<ListingAddon[]> {
+        validateUUIDs([listingId]);
+        const { data, error } = await supabase
+            .from('listing_addons')
+            .select('*')
+            .eq('listing_id', listingId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as ListingAddon[];
     },
 
     async getCategoryAnalyticsAverage(

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3, Briefcase } from 'lucide-react';
+import { LayoutDashboard, Home, Calendar, Inbox, LogOut, Menu, X, Plus, Car, Map as MapIcon, BarChart3, Briefcase, Sparkles } from 'lucide-react';
 import { User } from '../../context/AuthContext';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { useClickOutside } from '../../hooks/useClickOutside';
@@ -35,6 +35,7 @@ export const HostLayout: React.FC<HostLayoutProps> = ({ children, user, unreadCo
         { id: 'fleet', path: '/host/fleet', label: 'My Fleet', icon: Car },
         { id: 'services', path: '/host/services', label: 'My Services', icon: MapIcon },
         { id: 'analytics', path: '/host/directory-analytics', label: 'Directory Analytics', icon: BarChart3 },
+        { id: 'upgrades', path: '/host/upgrades', label: 'Upgrades', icon: Sparkles },
         { id: 'bookings', path: '/host/bookings', label: 'Reservations', icon: Calendar },
         { id: 'messages', path: '/host/messages', label: 'Inbox', icon: Inbox },
     ];
