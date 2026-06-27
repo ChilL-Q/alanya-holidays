@@ -440,6 +440,19 @@ Deno.serve(async (req: Request) => {
         ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
         : null
 
+      // For seasonal_placement, record whether the listing was ALREADY featured
+      // before this add-on. The expiry cron uses this to avoid clearing
+      // is_featured on listings that were featured by an admin/seed, not the add-on.
+      const addonMetadata: Record<string, unknown> = {}
+      if (addonType === 'seasonal_placement') {
+        const { data: preState } = await supabase
+          .from('directory_listings')
+          .select('is_featured')
+          .eq('id', listingId)
+          .maybeSingle()
+        addonMetadata.was_featured_before = preState?.is_featured === true
+      }
+
       const { error: addonInsertError } = await supabase
         .from('listing_addons')
         .insert({
@@ -448,6 +461,7 @@ Deno.serve(async (req: Request) => {
           status: 'active',
           stripe_payment_intent_id: paymentIntentId,
           expires_at: expiresAt,
+          metadata: addonMetadata,
         })
 
       if (addonInsertError) {

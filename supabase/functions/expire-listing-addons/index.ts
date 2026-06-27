@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
     // it null and are therefore never picked up here.
     const { data: lapsed, error: fetchError } = await supabase
       .from('listing_addons')
-      .select('id, listing_id, addon_type')
+      .select('id, listing_id, addon_type, metadata')
       .eq('status', 'active')
       .not('expires_at', 'is', null)
       .lt('expires_at', now)
@@ -55,12 +55,15 @@ Deno.serve(async (req: Request) => {
     if (updateError) throw updateError
 
     // Reverse the listing-level effect of each expiring add-on (mirror of the
-    // stripe-webhook activation branch). seasonal_placement sets is_featured.
+    // stripe-webhook activation branch). seasonal_placement sets is_featured —
+    // but only clear it if the add-on is what turned it on (was_featured_before
+    // === false), so we never un-feature an admin/seed-featured listing.
+    type LapsedAddon = { listing_id: string; addon_type: string; metadata: { was_featured_before?: boolean } | null }
     const unfeatureListingIds = [
       ...new Set(
-        lapsed
-          .filter((a: { addon_type: string }) => a.addon_type === 'seasonal_placement')
-          .map((a: { listing_id: string }) => a.listing_id),
+        (lapsed as LapsedAddon[])
+          .filter((a) => a.addon_type === 'seasonal_placement' && a.metadata?.was_featured_before !== true)
+          .map((a) => a.listing_id),
       ),
     ]
 
