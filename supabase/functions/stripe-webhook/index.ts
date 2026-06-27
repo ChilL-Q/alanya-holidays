@@ -483,6 +483,34 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      // Sponsored article is fulfilled manually (an editor writes & publishes
+      // the piece), so alert admins that there's an order to action.
+      if (addonType === 'sponsored_article') {
+        const { data: addonListing } = await supabase
+          .from('directory_listings')
+          .select('name')
+          .eq('id', listingId)
+          .maybeSingle()
+        const listingName = addonListing?.name ?? listingId
+
+        const { data: admins } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'admin')
+
+        if (admins && admins.length > 0) {
+          await supabase.from('notifications').insert(
+            admins.map((admin: { id: string }) => ({
+              user_id: admin.id,
+              title: 'Sponsored article purchased',
+              message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
+              type: 'info',
+              link: '/admin/directory',
+            }))
+          )
+        }
+      }
+
       await supabase.from('notifications').insert({
         user_id: addonUserId,
         title: 'Upgrade activated',
