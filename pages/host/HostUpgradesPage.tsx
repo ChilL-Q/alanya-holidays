@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { Sparkles, Check, Clock } from 'lucide-react';
 import { db } from '../../api-services';
 import { DirectoryListingDB, ListingAddon } from '../../types/models';
-import { ADDON_CATALOG } from '../../data/addonCatalog';
+import { ADDON_CATALOG, PurchasableAddonType } from '../../data/addonCatalog';
 
 const ACCENT: Record<string, { icon: string; ring: string }> = {
     amber: { icon: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400', ring: 'border-amber-200 dark:border-amber-900/30' },
@@ -17,6 +19,21 @@ export const HostUpgradesPage: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string>('');
     const [addons, setAddons] = useState<ListingAddon[]>([]);
     const [loading, setLoading] = useState(true);
+    const [buying, setBuying] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        const result = searchParams.get('addon');
+        if (result === 'success') {
+            toast.success('Payment received — your upgrade is being activated.');
+            searchParams.delete('addon');
+            setSearchParams(searchParams, { replace: true });
+        } else if (result === 'cancelled') {
+            toast('Checkout cancelled.');
+            searchParams.delete('addon');
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         let cancelled = false;
@@ -51,6 +68,19 @@ export const HostUpgradesPage: React.FC = () => {
 
     const statusFor = (type: string): ListingAddon | undefined =>
         addons.find(a => a.addon_type === type && (a.status === 'active' || a.status === 'pending'));
+
+    const handleBuy = async (addonType: PurchasableAddonType) => {
+        if (!selectedId) return;
+        setBuying(addonType);
+        try {
+            const { url } = await db.createAddonCheckout(selectedId, addonType);
+            window.location.href = url;
+        } catch (err) {
+            console.error('Add-on checkout failed:', err);
+            toast.error(err instanceof Error ? err.message : 'Could not start checkout.');
+            setBuying(null);
+        }
+    };
 
     if (loading) {
         return (
@@ -120,14 +150,29 @@ export const HostUpgradesPage: React.FC = () => {
                                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 flex-1">{entry.description}</p>
                                     <div className="mt-4 flex items-center justify-between">
                                         <span className="text-sm font-bold text-slate-900 dark:text-white">{entry.priceLabel}</span>
-                                        <button
-                                            type="button"
-                                            disabled
-                                            title="Checkout coming soon"
-                                            className="text-sm font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                                        >
-                                            {active?.status === 'active' ? 'Active' : 'Coming soon'}
-                                        </button>
+                                        {active?.status === 'active' ? (
+                                            <span className="text-sm font-semibold px-4 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+                                                Active
+                                            </span>
+                                        ) : !entry.purchasable ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                title="Coming soon"
+                                                className="text-sm font-semibold px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                                            >
+                                                Coming soon
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleBuy(entry.type as PurchasableAddonType)}
+                                                disabled={buying !== null}
+                                                className="text-sm font-semibold px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                            >
+                                                {buying === entry.type ? 'Redirecting…' : 'Get'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             );

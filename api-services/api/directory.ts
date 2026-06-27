@@ -580,6 +580,20 @@ export const directoryService = {
         return (data || []) as ListingAddon[];
     },
 
+    async createAddonCheckout(
+        listingId: string,
+        addonType: 'verified_badge' | 'seasonal_placement' | 'sponsored_article' | 'ai_localization'
+    ): Promise<{ url: string }> {
+        validateUUIDs([listingId]);
+        const { data, error } = await supabase.functions.invoke('create-addon-checkout', {
+            body: { listingId, addonType },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (!data?.url) throw new Error('No checkout URL returned');
+        return { url: data.url };
+    },
+
     async getCategoryAnalyticsAverage(
         categoryId: string,
         days: number = 30
