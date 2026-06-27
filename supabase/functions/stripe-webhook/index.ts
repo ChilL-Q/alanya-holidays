@@ -467,6 +467,22 @@ Deno.serve(async (req: Request) => {
         if (patchError) console.error('Failed to apply add-on effect to listing:', patchError)
       }
 
+      // AI localization is fulfilled by a separate translation pass. Trigger it
+      // here; a failure must NOT fail the webhook — the purchase is already paid
+      // and recorded, so we only log and let it be retried/re-run later.
+      if (addonType === 'ai_localization') {
+        const cronSecret = Deno.env.get('CRON_SECRET')
+        if (!cronSecret) {
+          console.error('Skipping ai_localization translation: CRON_SECRET not configured')
+        } else {
+          const { error: localizeError } = await supabase.functions.invoke('localize-listing', {
+            body: { listingId },
+            headers: { 'x-cron-secret': cronSecret },
+          })
+          if (localizeError) console.error('localize-listing trigger failed:', localizeError)
+        }
+      }
+
       await supabase.from('notifications').insert({
         user_id: addonUserId,
         title: 'Upgrade activated',

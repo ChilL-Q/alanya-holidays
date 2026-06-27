@@ -419,6 +419,7 @@ export interface ListingDescriptions {
   tr?: string;
   ru?: string;
   ar?: string;
+  de?: string;
 }
 
 export interface ListingLocationJunction {
