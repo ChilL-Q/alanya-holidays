@@ -844,7 +844,7 @@ export const en = {
   'dir.cat.realestate': 'Real Estate',
   'dir.cat.visa': 'Residency & Legal',
   'dir.cat.shopping': 'Shopping & Souvenirs',
-  'dir.cat.nature': 'Natural Attractions',
+  'dir.cat.nature': 'Beaches & Nature',
   'dir.cat.spa_hamam': 'Spa & Hammams',
   'dir.cat.hair_beauty': 'Hair & Beauty',
   'dir.cat.title': 'Explore by Category',

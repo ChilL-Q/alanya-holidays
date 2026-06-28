@@ -835,7 +835,7 @@ export const ru = {
   'dir.cat.realestate': 'Недвижимость',
   'dir.cat.visa': 'ВНЖ и Легализация',
   'dir.cat.shopping': 'Шопинг и сувениры',
-  'dir.cat.nature': 'Природные достопримечательности',
+  'dir.cat.nature': 'Пляжи и природа',
   'dir.cat.spa_hamam': 'Спа и хаммамы',
   'dir.cat.hair_beauty': 'Волосы и красота',
   'dir.cat.title': 'Выберите Категорию',
