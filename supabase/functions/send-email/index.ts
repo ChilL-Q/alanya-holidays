@@ -11,6 +11,15 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
+// Bank transfer details for paid listing fees (T17). Set these as Supabase
+// secrets; if LISTING_BANK_IBAN is unset, the email falls back to a generic
+// "we'll send details shortly" message instead of showing blanks.
+const BANK_BENEFICIARY = Deno.env.get('LISTING_BANK_BENEFICIARY') || ''
+const BANK_NAME = Deno.env.get('LISTING_BANK_NAME') || ''
+const BANK_IBAN = Deno.env.get('LISTING_BANK_IBAN') || ''
+const BANK_SWIFT = Deno.env.get('LISTING_BANK_SWIFT') || ''
+const BANK_CONFIGURED = Boolean(BANK_IBAN)
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -56,6 +65,7 @@ const emailDataSchemas = {
   admin_claim_notification: z.object({ businessName: s, claimantEmail: s, listingId: s }),
   listing_claim_approved: z.object({ claimantEmail: s, businessName: s }),
   listing_claim_rejected: z.object({ claimantEmail: s, businessName: s, rejectionReason: s }),
+  listing_payment_instructions: z.object({ businessName: s, tier: s, link: sOpt }),
 } as const
 
 type EmailType = keyof typeof emailDataSchemas
@@ -345,6 +355,35 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
     }
 
     switch (type) {
+        // --- Paid listing: bank transfer instructions (T17) ---
+        case 'listing_payment_instructions': {
+            const bankCard = BANK_CONFIGURED
+                ? `
+                    <div class="card">
+                        <div class="info-row"><span class="label">Beneficiary</span><span class="value">${escapeHtml(BANK_BENEFICIARY)}</span></div>
+                        <div class="info-row"><span class="label">Bank</span><span class="value">${escapeHtml(BANK_NAME)}</span></div>
+                        <div class="info-row"><span class="label">IBAN</span><span class="value">${escapeHtml(BANK_IBAN)}</span></div>
+                        <div class="info-row"><span class="label">SWIFT / BIC</span><span class="value">${escapeHtml(BANK_SWIFT)}</span></div>
+                        <div class="info-row"><span class="label">Payment reference</span><span class="value">${escapeHtml(data.businessName)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px;">Use your business name as the payment reference. Once we confirm your payment, your listing goes live (usually within 48 hours).</p>
+                  `
+                : `<p style="text-align: center; color: #64748b; font-size: 14px;">Our team will email you the bank transfer details shortly. Your listing will go live once payment is confirmed.</p>`;
+            return {
+                subject: `💳 Complete your listing payment: ${escapeHtml(data.businessName)}`,
+                html: getHtmlTemplate(
+                    'Complete Your Payment',
+                    `
+                    <p style="font-size: 16px;">Thank you for listing <strong>${escapeHtml(data.businessName)}</strong> on Alanya Holidays.</p>
+                    <p>Your <strong>${escapeHtml(data.tier)}</strong> listing will go live once payment is confirmed.${BANK_CONFIGURED ? ' Please complete the transfer using the details below:' : ''}</p>
+                    ${bankCard}
+                    `,
+                    data.link,
+                    'View My Listing'
+                )
+            };
+        }
+
         // --- Host Notifications ---
         case 'booking_request_host':
             return {

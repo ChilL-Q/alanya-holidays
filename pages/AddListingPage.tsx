@@ -137,6 +137,11 @@ export const AddListingPage: React.FC = () => {
                 base_score: 0,
             });
 
+            // Paid tiers: email bank-transfer instructions (best-effort, non-blocking).
+            if (tier !== 'explorer') {
+                await db.sendListingPaymentInstructions(formData.name.trim(), tier);
+            }
+
             localStorage.removeItem('draft_directory_listing');
             setSubmitted(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
