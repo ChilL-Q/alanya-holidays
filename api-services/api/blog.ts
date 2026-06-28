@@ -30,6 +30,7 @@ interface BlogPostFilters {
     status?: string;
     is_featured?: boolean;
     authorId?: string;
+    search?: string;
     limit?: number;
     offset?: number;
 }
@@ -149,6 +150,15 @@ export const blogService = {
         // Author filter
         if (filters.authorId) {
             query = query.eq('author_id', filters.authorId);
+        }
+
+        // Text search across title + content. Escape ILIKE wildcards and the
+        // comma that PostgREST uses to separate .or() conditions.
+        if (filters.search) {
+            const safe = filters.search.trim().replace(/%/g, '\\%').replace(/_/g, '\\_').replace(/,/g, ' ');
+            if (safe) {
+                query = query.or(`title.ilike.%${safe}%,content.ilike.%${safe}%`);
+            }
         }
 
         // Order by published_at descending
