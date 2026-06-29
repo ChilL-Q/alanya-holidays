@@ -8,6 +8,7 @@ import { ModalProvider } from './context/ModalContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { CardStyleProvider } from './context/CardStyleContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LightboxProvider } from './context/LightboxContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -94,18 +95,20 @@ const App: React.FC = () => {
                       <ModalProvider>
                         <LightboxProvider>
                           <ChatProvider>
-                            <AppContent />
-                            <React.Suspense fallback={null}>
-                              <LoginModal />
-                              <RegisterModal />
-                            </React.Suspense>
-                            <React.Suspense fallback={null}>
-                              <Lightbox />
-                              <CartDrawer />
-                              <TripAssistant />
-                              <CookieConsent />
-                              <CommandPalette />
-                            </React.Suspense>
+                            <CardStyleProvider>
+                              <AppContent />
+                              <React.Suspense fallback={null}>
+                                <LoginModal />
+                                <RegisterModal />
+                              </React.Suspense>
+                              <React.Suspense fallback={null}>
+                                <Lightbox />
+                                <CartDrawer />
+                                <TripAssistant />
+                                <CookieConsent />
+                                <CommandPalette />
+                              </React.Suspense>
+                            </CardStyleProvider>
                           </ChatProvider>
                         </LightboxProvider>
                       </ModalProvider>

@@ -5,7 +5,7 @@ export const ar = {
     'nav.directory': 'الدليل',
     'directory.villas': 'فيلات',
     'directory.apartments': 'شقق',
-    'nav.blog': 'المدونة',
+    'nav.blog': 'الأدلة',
     'nav.forum': 'المنتدى',
     'nav.events': 'الفعاليات',
     'nav.members': 'الأعضاء',

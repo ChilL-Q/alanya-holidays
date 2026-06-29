@@ -5,7 +5,7 @@ export const en = {
   'nav.directory': 'Directory',
   'directory.villas': 'Villas',
   'directory.apartments': 'Apartments',
-  'nav.blog': 'Blog',
+  'nav.blog': 'Guides',
   'nav.forum': 'Forum',
   'nav.events': 'Events',
   'nav.members': 'Members',

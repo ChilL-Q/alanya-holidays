@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle, Briefcase, ArrowRightLeft } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, Briefcase, ArrowRightLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
@@ -63,11 +63,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                         </Link>
                         <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <BookOpen size={18} className="text-slate-400" />
-                            {t('nav.blog') || 'Blog'}
-                        </Link>
-                        <Link to="/forum" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
-                            <MessageCircle size={18} className="text-slate-400" />
-                            {t('nav.forum') || 'Forum'}
+                            {t('nav.blog') || 'Guides'}
                         </Link>
                         <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <ShoppingBag size={18} className="text-slate-400" />

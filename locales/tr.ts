@@ -5,7 +5,7 @@ export const tr = {
     'nav.directory': 'Rehber',
     'directory.villas': 'Villalar',
     'directory.apartments': 'Daireler',
-    'nav.blog': 'Blog',
+    'nav.blog': 'Rehberler',
     'nav.forum': 'Forum',
     'nav.events': 'Etkinlikler',
     'nav.members': 'Üyeler',
