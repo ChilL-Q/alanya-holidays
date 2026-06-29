@@ -36,6 +36,7 @@ export const DesktopNav: React.FC<DesktopNavProps> = ({ mode = 'directory' }) =>
                 <>
                     <TabLink to="/" label={t('nav.directory') || 'Directory'} exact />
                     <TabLink to="/blog" label={t('nav.blog') || 'Guides'} />
+                    <TabLink to="/forum" label={t('nav.community') || 'Community'} />
                     <TabLink to="/shop" label={t('shop') || 'Shop'} />
                 </>
             ) : (
