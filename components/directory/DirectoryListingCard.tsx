@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { db } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCardStyle } from '../../context/CardStyleContext';
 import { getListingDescription } from '../../utils/getListingDescription';
 import { getListingUrl } from '../../constants/categoryPaths';
 
@@ -21,7 +22,10 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
     listing, onClick, userVote, onVote, isAuthenticated, isVoting, categoryName
 }) => {
     const { language } = useLanguage();
+    const { cardStyle } = useCardStyle();
     const displayDescription = getListingDescription(listing, language);
+    // "box" = soft rounded card; "rectangle" = squared corners (user toggle, T13)
+    const radiusClass = cardStyle === 'rectangle' ? 'rounded-none' : 'rounded-2xl';
     const netVotes = listing.net_votes || 0;
     const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
 
@@ -33,7 +37,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
 
     return (
         <div 
-            className={`group flex flex-col bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 h-full ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group flex flex-col bg-white dark:bg-slate-800 ${radiusClass} overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 h-full ${onClick ? 'cursor-pointer' : ''}`}
             onClick={() => onClick && onClick(listing)}
         >
             {/* Image */}

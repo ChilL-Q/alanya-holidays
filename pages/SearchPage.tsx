@@ -5,6 +5,7 @@ import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { useAuth } from '../context/AuthContext';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
+import { CardStyleToggle } from '../components/directory/CardStyleToggle';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
@@ -327,6 +328,8 @@ export const SearchPage: React.FC = () => {
                                 <MapIcon size={16} /> Map
                             </button>
                         </div>
+
+                        {viewMode === 'list' && <CardStyleToggle className="shrink-0" />}
 
                         <label className="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             <input
