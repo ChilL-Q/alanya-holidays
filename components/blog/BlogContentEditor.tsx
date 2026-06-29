@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Eye, Pencil } from 'lucide-react';
+import { Eye, Pencil, Link2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { formatBlogContent } from '../../utils/formatBlogContent';
 import { BLOG_PROSE_CLASSES } from '../../utils/blogProseStyles';
@@ -48,6 +48,24 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
 }) => {
     const [mode, setMode] = useState<'write' | 'preview'>('write');
 
+    // Insert a shortcut-button placeholder at the cursor for the author to edit.
+    const insertButtonPlaceholder = () => {
+        const template = '[button:Label|/path]';
+        const ta = textareaRef.current;
+        if (!ta) {
+            onChange(content ? `${content}\n${template}` : template);
+            return;
+        }
+        const start = ta.selectionStart ?? content.length;
+        const end = ta.selectionEnd ?? content.length;
+        onChange(content.slice(0, start) + template + content.slice(end));
+        requestAnimationFrame(() => {
+            ta.focus();
+            // Select the "Label" word so the author can type over it immediately.
+            ta.setSelectionRange(start + '[button:'.length, start + '[button:Label'.length);
+        });
+    };
+
     const previewHtml = useMemo(() => {
         if (mode !== 'preview' || !content.trim()) return '';
 
@@ -83,6 +101,16 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
             {/* Write mode */}
             {mode === 'write' && (
                 <>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <button
+                            type="button"
+                            onClick={insertButtonPlaceholder}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <Link2 size={14} />
+                            Insert button
+                        </button>
+                    </div>
                     <textarea
                         name="blog-content"
                         ref={textareaRef}
@@ -105,6 +133,7 @@ export const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
                     )}
                     <p className="mt-1.5 text-xs text-slate-400">
                         Supports markdown: <code>## Heading</code>, <code>- list item</code>, <code>**bold**</code>, <code>&gt; Don&apos;t Miss: important tip</code>.
+                        Add link buttons with <code>[button:Label|/path]</code>.
                     </p>
                 </>
             )}

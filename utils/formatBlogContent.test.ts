@@ -103,4 +103,39 @@ describe('formatBlogContent', () => {
         const result = formatBlogContent('  Paragraph with spaces  ', []);
         expect(result).toBe('<p>Paragraph with spaces</p>');
     });
+
+    it('renders an internal [button:Label|/path] as a styled link (no target)', () => {
+        const result = formatBlogContent('[button:Visit Cleopatra Beach|/cleopatra-beach]', []);
+        expect(result).toContain('href="/cleopatra-beach"');
+        expect(result).toContain('Visit Cleopatra Beach');
+        expect(result).toContain('class="inline-flex');
+        expect(result).not.toContain('target=');
+        expect(result).not.toContain('[button:');
+    });
+
+    it('adds target+rel for an external button URL', () => {
+        const result = formatBlogContent('[button:Book now|https://example.com/book]', []);
+        expect(result).toContain('href="https://example.com/book"');
+        expect(result).toContain('target="_blank"');
+        expect(result).toContain('rel="noopener noreferrer"');
+    });
+
+    it('keeps the embedded URL intact (no GFM autolink mangling)', () => {
+        const result = formatBlogContent('Check [button:Book|https://example.com] out', []);
+        // exactly one anchor — the URL was not separately autolinked
+        expect(result.match(/<a /g)?.length).toBe(1);
+    });
+
+    it('drops an unsafe button URL but keeps the label text', () => {
+        const result = formatBlogContent('[button:Click|javascript:alert(1)]', []);
+        expect(result).not.toContain('<a ');
+        expect(result).not.toContain('javascript:');
+        expect(result).toContain('Click');
+    });
+
+    it('escapes HTML in a button label', () => {
+        const result = formatBlogContent('[button:<b>x</b>|/safe]', []);
+        expect(result).toContain('&lt;b&gt;x&lt;/b&gt;');
+        expect(result).not.toContain('<b>x</b>');
+    });
 });

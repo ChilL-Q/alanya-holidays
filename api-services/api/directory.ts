@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB, ListingAddon } from '../../types/models';
 import { retry } from '../../utils/retry';
 import { sanitizeString } from '../../utils/sanitize';
+import { getAppUrl } from '../../utils/appUrl';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -373,6 +374,22 @@ export const directoryService = {
         }
 
         return data as DirectoryListingDB;
+    },
+
+    /**
+     * Email the current user bank-transfer instructions for a paid listing (T17).
+     * Best-effort — failures are logged, never thrown, so they don't block submission.
+     */
+    async sendListingPaymentInstructions(businessName: string, tier: string): Promise<void> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        await retry(() => supabase.functions.invoke('send-email', {
+            body: {
+                type: 'listing_payment_instructions',
+                userId: user.id,
+                data: { businessName, tier, link: getAppUrl('/profile') },
+            },
+        })).catch(err => console.error('Failed to send listing payment email:', err));
     },
 
     async updateDirectoryListing(

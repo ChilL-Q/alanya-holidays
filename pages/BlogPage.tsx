@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BookOpen, Search, PenLine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../api-services';
@@ -14,6 +14,7 @@ export const BlogPage: React.FC = () => {
     const [posts, setPosts] = useState<BlogPostPreview[]>([]);
     const [allCategories, setAllCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -65,18 +66,17 @@ export const BlogPage: React.FC = () => {
         };
     }, []);
 
-    // Category filter
-    const handleCategoryChange = useCallback(async (category: string) => {
-        setSelectedCategory(category);
+    // Fresh filtered query (resets pagination) — shared by category clicks and search.
+    const loadFiltered = useCallback(async (category: string, search: string) => {
         setOffset(0);
         setPosts([]);
         setHasMore(true);
-
         setLoading(true);
         try {
             const { data, total } = await db.getBlogPosts({
                 status: 'published',
                 category: category === 'all' ? undefined : category,
+                search: search.trim() || undefined,
                 limit: POSTS_PER_PAGE,
                 offset: 0,
             });
@@ -90,6 +90,26 @@ export const BlogPage: React.FC = () => {
         }
     }, []);
 
+    // Category filter — applies immediately, keeping any active search.
+    const handleCategoryChange = useCallback((category: string) => {
+        setSelectedCategory(category);
+        loadFiltered(category, searchQuery);
+    }, [loadFiltered, searchQuery]);
+
+    // Debounced text search — refetches with the current category. Skips the
+    // initial mount (handled by the load effect above).
+    const isFirstSearch = useRef(true);
+    useEffect(() => {
+        if (isFirstSearch.current) {
+            isFirstSearch.current = false;
+            return;
+        }
+        const t = setTimeout(() => loadFiltered(selectedCategory, searchQuery), 350);
+        return () => clearTimeout(t);
+        // selectedCategory intentionally omitted — category changes refetch via handleCategoryChange
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, loadFiltered]);
+
     // Load more
     const handleLoadMore = useCallback(async () => {
         if (loadingMore || !hasMore) return;
@@ -98,6 +118,7 @@ export const BlogPage: React.FC = () => {
             const { data, total } = await db.getBlogPosts({
                 status: 'published',
                 category: selectedCategory === 'all' ? undefined : selectedCategory,
+                search: searchQuery.trim() || undefined,
                 limit: POSTS_PER_PAGE,
                 offset,
             });
@@ -109,7 +130,7 @@ export const BlogPage: React.FC = () => {
         } finally {
             setLoadingMore(false);
         }
-    }, [loadingMore, hasMore, offset, selectedCategory, posts.length]);
+    }, [loadingMore, hasMore, offset, selectedCategory, searchQuery, posts.length]);
 
     return (
         <>
@@ -151,13 +172,25 @@ export const BlogPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Category Filter Bar */}
-            {allCategories.length > 0 && (
-                <div className="sticky top-16 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            {/* Search + Category Filter Bar */}
+            <div className="sticky top-16 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-100 dark:border-slate-800/50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-3">
+                    {/* Text search */}
+                    <div className="relative max-w-md">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                        <input
+                            type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search articles…"
+                            aria-label="Search articles"
+                            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        />
+                    </div>
+                    {/* Category pills */}
+                    {allCategories.length > 0 && (
                         <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest shrink-0 mr-1 flex items-center gap-1">
-                                <Search size={12} />
                                 Filter
                             </span>
                             <button
@@ -184,9 +217,9 @@ export const BlogPage: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Posts Grid */}
             <section className="py-12 md:py-16">

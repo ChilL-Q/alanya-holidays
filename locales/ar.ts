@@ -783,7 +783,7 @@ export const ar = {
     'dir.cat.realestate': 'العقارات',
     'dir.cat.visa': 'الإقامة والقانون',
     'dir.cat.shopping': 'التسوق والهدايا التذكارية',
-    'dir.cat.nature': 'المعالم الطبيعية',
+    'dir.cat.nature': 'الشواطئ والطبيعة',
     'dir.cat.spa_hamam': 'سبا والحمامات',
     'dir.cat.hair_beauty': 'الشعر والجمال',
     'dir.cat.title': 'تصفح حسب الفئة',

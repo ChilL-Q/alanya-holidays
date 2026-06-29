@@ -835,7 +835,7 @@ export const tr = {
     'dir.cat.realestate': 'Emlak',
     'dir.cat.visa': 'İkamet ve Hukuki',
     'dir.cat.shopping': 'Alışveriş ve Hediyelik',
-    'dir.cat.nature': 'Doğal Güzellikler',
+    'dir.cat.nature': 'Plajlar ve Doğa',
     'dir.cat.spa_hamam': 'Spa ve Hamamlar',
     'dir.cat.hair_beauty': 'Saç ve Güzellik',
     'dir.cat.title': 'Kategorileri Keşfedin',
