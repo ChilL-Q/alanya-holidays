@@ -5,7 +5,7 @@ export const ru = {
   'nav.directory': 'Каталог',
   'directory.villas': 'Виллы',
   'directory.apartments': 'Апартаменты',
-  'nav.blog': 'Блог',
+  'nav.blog': 'Гиды',
   'nav.forum': 'Форум',
   'nav.events': 'События',
   'nav.members': 'Участники',

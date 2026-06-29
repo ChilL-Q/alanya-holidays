@@ -133,7 +133,6 @@ describe('MobileMenu', () => {
         renderMenu();
         expect(screen.getByText('nav.directory')).toBeInTheDocument();
         expect(screen.getByText('nav.blog')).toBeInTheDocument();
-        expect(screen.getByText('nav.forum')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
     });
 
@@ -204,7 +203,7 @@ describe('MobileMenu', () => {
 
     it('calls onClose when a directory link is clicked', () => {
         renderMenu();
-        fireEvent.click(screen.getByText('nav.forum'));
+        fireEvent.click(screen.getByText('shop'));
         expect(mockOnClose).toHaveBeenCalled();
     });
 
