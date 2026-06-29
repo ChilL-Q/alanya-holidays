@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { CardStyleToggle } from '../components/directory/CardStyleToggle';
+import { useCardStyle } from '../context/CardStyleContext';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryMapView } from '../components/directory/DirectoryMapView';
 import { db } from '../api-services';
@@ -30,6 +31,11 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
     const [maxPriceLevel, setMaxPriceLevel] = useState<number>(4);
     const [languageFilter, setLanguageFilter] = useState('all');
     const [sortBy, setSortBy] = useState('recommended');
+    const { cardStyle } = useCardStyle();
+    // T13: rectangle = single-column list of horizontal cards; box = multi-column grid.
+    const listingsGridClass = cardStyle === 'rectangle'
+        ? 'grid grid-cols-1 gap-4'
+        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
 
     // UI State
     const [showFullIntro, setShowFullIntro] = useState(false);
@@ -465,7 +471,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                     <Star className="text-amber-500 fill-amber-500" size={24} />
                                     Featured Providers
                                 </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className={listingsGridClass}>
                                     {featuredListings.map(listing => (
                                         <DirectoryListingCard
                                             key={listing.id}
@@ -487,7 +493,7 @@ export const DirectoryCategoryPage: React.FC<{ categoryId?: string }> = ({ categ
                                 All Listings
                             </h2>
                             {standardListings.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className={listingsGridClass}>
                                     {standardListings.map(listing => (
                                         <DirectoryListingCard
                                             key={listing.id}

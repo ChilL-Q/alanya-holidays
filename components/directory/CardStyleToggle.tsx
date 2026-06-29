@@ -1,9 +1,9 @@
 import React from 'react';
-import { Square, RectangleHorizontal } from 'lucide-react';
+import { LayoutGrid, RectangleHorizontal } from 'lucide-react';
 import { useCardStyle, CardStyle } from '../../context/CardStyleContext';
 
 const OPTIONS: { value: CardStyle; label: string; Icon: React.ComponentType<{ size?: number }> }[] = [
-    { value: 'box', label: 'Box', Icon: Square },
+    { value: 'box', label: 'Box', Icon: LayoutGrid },
     { value: 'rectangle', label: 'Rectangle', Icon: RectangleHorizontal },
 ];
 

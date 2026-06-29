@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { db } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
-import { useCardStyle } from '../../context/CardStyleContext';
+import { useCardStyle, CardStyle } from '../../context/CardStyleContext';
 import { getListingDescription } from '../../utils/getListingDescription';
 import { getListingUrl } from '../../constants/categoryPaths';
 
@@ -16,16 +16,18 @@ interface DirectoryListingCardProps {
     isAuthenticated?: boolean;
     isVoting?: boolean;
     categoryName?: string;
+    /** Overrides the global card-style preference (e.g. home carousels force 'box'). */
+    variant?: CardStyle;
 }
 
 export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
-    listing, onClick, userVote, onVote, isAuthenticated, isVoting, categoryName
+    listing, onClick, userVote, onVote, isAuthenticated, isVoting, categoryName, variant
 }) => {
     const { language } = useLanguage();
     const { cardStyle } = useCardStyle();
     const displayDescription = getListingDescription(listing, language);
-    // "box" = soft rounded card; "rectangle" = squared corners (user toggle, T13)
-    const radiusClass = cardStyle === 'rectangle' ? 'rounded-none' : 'rounded-2xl';
+    // T13: "box" = vertical card (grid); "rectangle" = horizontal row (list).
+    const isList = (variant ?? cardStyle) === 'rectangle';
     const netVotes = listing.net_votes || 0;
     const isPaidTier = (tier?: string) => tier && tier !== 'explorer';
 
@@ -36,12 +38,12 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
     };
 
     return (
-        <div 
-            className={`group flex flex-col bg-white dark:bg-slate-800 ${radiusClass} overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 h-full ${onClick ? 'cursor-pointer' : ''}`}
+        <div
+            className={`group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 ${isList ? 'flex flex-col sm:flex-row' : 'flex flex-col h-full'} ${onClick ? 'cursor-pointer' : ''}`}
             onClick={() => onClick && onClick(listing)}
         >
             {/* Image */}
-            <div className="relative w-full h-56 flex-shrink-0">
+            <div className={`relative flex-shrink-0 ${isList ? 'w-full h-56 sm:w-72 sm:h-auto' : 'w-full h-56'}`}>
                 <img
                     src={listing.gallery?.[0] || 'https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb'}
                     alt={listing.name}
