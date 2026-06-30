@@ -133,6 +133,7 @@ describe('MobileMenu', () => {
         renderMenu();
         expect(screen.getByText('nav.directory')).toBeInTheDocument();
         expect(screen.getByText('nav.blog')).toBeInTheDocument();
+        expect(screen.getByText('nav.community')).toBeInTheDocument();
         expect(screen.getByText('shop')).toBeInTheDocument();
     });
 
