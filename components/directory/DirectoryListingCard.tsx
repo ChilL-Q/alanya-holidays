@@ -51,12 +51,12 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                 />
                 {listing.is_featured && (
                     <div className="absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                        <Star size={12} className="fill-white" /> Featured
+                        <Star size={12} className="fill-white" /> Trusted by Travellers
                     </div>
                 )}
                 {listing.tier === 'signature' && (
                     <div className="absolute top-4 right-4 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                        <BadgeCheck size={12} className="fill-white" /> Verified Premium
+                        <BadgeCheck size={12} className="fill-white" /> Verified Experience
                     </div>
                 )}
                 {(listing.tier === 'voyager' || listing.tier === 'partner') && (

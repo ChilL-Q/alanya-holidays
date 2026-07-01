@@ -21,11 +21,11 @@ export const FreeListingsSection: React.FC<FreeListingsSectionProps> = ({ listin
                         <div className="flex items-center gap-2 mb-2">
                             <ThumbsUp className="w-5 h-5 text-teal-600 dark:text-cyan-400" />
                             <span className="text-xs uppercase font-bold text-teal-600 dark:text-cyan-400 tracking-widest">
-                                Community Favorites
+                                Loved by Travellers
                             </span>
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                            Top Rated by the Community
+                            Local Favorites
                         </h2>
                         <p className="mt-2 text-slate-600 dark:text-slate-400">
                             The most upvoted listings from our community
