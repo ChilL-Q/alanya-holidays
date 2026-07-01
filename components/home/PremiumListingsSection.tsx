@@ -21,11 +21,11 @@ export const PremiumListingsSection: React.FC<PremiumListingsSectionProps> = ({ 
                         <div className="flex items-center gap-2 mb-2">
                             <Crown className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                             <span className="text-xs uppercase font-bold text-amber-600 dark:text-amber-400 tracking-widest">
-                                Premium Partners
+                                Trusted by Travellers
                             </span>
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                            Recommended for You
+                            Recommended by Travellers
                         </h2>
                         <p className="mt-2 text-slate-600 dark:text-slate-400">
                             Hand-picked, verified partners with outstanding service
@@ -52,7 +52,7 @@ export const PremiumListingsSection: React.FC<PremiumListingsSectionProps> = ({ 
                 {!loading && listings.length === 0 && (
                     <div className="text-center py-12 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                         <Crown className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-500 dark:text-slate-400">Premium listings coming soon!</p>
+                        <p className="text-slate-500 dark:text-slate-400">Recommended listings coming soon!</p>
                     </div>
                 )}
 

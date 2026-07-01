@@ -21,11 +21,11 @@ export const SignatureListingsSection: React.FC<SignatureListingsSectionProps> =
                         <div className="flex items-center gap-2 mb-2">
                             <Diamond className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
                             <span className="text-xs uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-widest">
-                                Signature Partners
+                                Curated Experience
                             </span>
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                            Verified Premium Partners
+                            Signature Collection
                         </h2>
                         <p className="mt-2 text-slate-600 dark:text-slate-400">
                             Top-tier verified businesses with premium service standards
@@ -52,7 +52,7 @@ export const SignatureListingsSection: React.FC<SignatureListingsSectionProps> =
                 {!loading && listings.length === 0 && (
                     <div className="text-center py-12 bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
                         <Diamond className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                        <p className="text-slate-500 dark:text-slate-400">Signature partners coming soon!</p>
+                        <p className="text-slate-500 dark:text-slate-400">Signature Collection coming soon!</p>
                     </div>
                 )}
 

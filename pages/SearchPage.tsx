@@ -385,7 +385,7 @@ export const SearchPage: React.FC = () => {
                             <div className="mb-12">
                                 <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-white mb-6 px-2">
                                     <Star className="text-amber-500 fill-amber-500" size={24} />
-                                    Featured Providers
+                                    Recommended by Travellers
                                 </h2>
                                 <div className={listingsGridClass}>
                                     {featuredListings.map(listing => (
