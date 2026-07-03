@@ -303,6 +303,56 @@ describe('directoryService', () => {
                 .rejects.toThrow('Invalid UUID: bad-uuid');
         });
 
+        it('rejects update if gallery exceeds explorer tier limit (5 photos)', async () => {
+            const chain = makeChain();
+            mockSupabase.from.mockReturnValue(chain);
+
+            // Create a gallery with 6 photos for explorer tier
+            const gallery = Array(6).fill('photo.jpg');
+            await expect(directoryService.updateDirectoryListing('dir-1', { gallery, tier: 'explorer' }))
+                .rejects.toThrow('Photo limit exceeded for explorer tier: max 5 photos');
+        });
+
+        it('rejects update if gallery exceeds voyager tier limit (50 photos)', async () => {
+            const chain = makeChain();
+            mockSupabase.from.mockReturnValue(chain);
+
+            const gallery = Array(51).fill('photo.jpg');
+            await expect(directoryService.updateDirectoryListing('dir-1', { gallery, tier: 'voyager' }))
+                .rejects.toThrow('Photo limit exceeded for voyager tier: max 50 photos');
+        });
+
+        it('rejects update if gallery exceeds signature tier limit (100 photos)', async () => {
+            const chain = makeChain();
+            mockSupabase.from.mockReturnValue(chain);
+
+            const gallery = Array(101).fill('photo.jpg');
+            await expect(directoryService.updateDirectoryListing('dir-1', { gallery, tier: 'signature' }))
+                .rejects.toThrow('Photo limit exceeded for signature tier: max 100 photos');
+        });
+
+        it('allows update if gallery is within explorer tier limit', async () => {
+            const chain = makeChain();
+            chain.single.mockResolvedValue({ data: mockListing, error: null });
+            mockSupabase.from.mockReturnValue(chain);
+
+            const gallery = Array(5).fill('photo.jpg');
+            const result = await directoryService.updateDirectoryListing('dir-1', { gallery, tier: 'explorer' });
+            expect(result).toEqual(mockListing);
+            expect(chain.update).toHaveBeenCalled();
+        });
+
+        it('allows update if gallery is within voyager tier limit', async () => {
+            const chain = makeChain();
+            chain.single.mockResolvedValue({ data: mockListing, error: null });
+            mockSupabase.from.mockReturnValue(chain);
+
+            const gallery = Array(50).fill('photo.jpg');
+            const result = await directoryService.updateDirectoryListing('dir-1', { gallery, tier: 'voyager' });
+            expect(result).toEqual(mockListing);
+            expect(chain.update).toHaveBeenCalled();
+        });
+
         it('throws on error', async () => {
             const chain = makeChain();
             chain.single.mockResolvedValue({ data: null, error: { message: 'update failed' } });
