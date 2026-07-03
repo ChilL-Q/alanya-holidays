@@ -70,18 +70,23 @@ export const AddListingPage: React.FC = () => {
 
     // Detect subscription tier on mount and defer modal
     useEffect(() => {
-        if (subscribed) return; // User already confirmed payment, skip fetch
         db.getPremiumStatus()
             .then((status) => {
                 const detectedTier = status.tier ?? 'explorer';
                 setTier(detectedTier);
                 setTierLimit(TIER_LIMITS[detectedTier] ?? 5);
-                setShowTierModal(true); // Open modal only after tier is resolved
+                // Only open modal if not returning from Stripe checkout
+                if (!subscribed) {
+                    setShowTierModal(true);
+                }
             })
             .catch(() => {
                 setTier('explorer');
                 setTierLimit(5);
-                setShowTierModal(true); // Still open on error, default to explorer
+                // Only open modal if not returning from Stripe checkout
+                if (!subscribed) {
+                    setShowTierModal(true);
+                }
             });
     }, [subscribed]);
 

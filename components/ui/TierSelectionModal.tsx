@@ -74,11 +74,14 @@ export const TierSelectionModal: React.FC<TierSelectionModalProps> = ({
             navigate('/contact');
             return;
         }
-        if (tier.id === 'explorer' || currentTier === tier.id) {
-            onSelectTier(tier.id);
-            return;
+
+        // Always call onSelectTier to close modal and update tier state
+        onSelectTier(tier.id);
+
+        // Navigate to Stripe for paid tiers (when not already on that tier)
+        if (tier.id !== 'explorer' && currentTier !== tier.id) {
+            navigate(`/subscribe?tier=${tier.id}`);
         }
-        navigate(`/subscribe?tier=${tier.id}`);
     };
 
     return (

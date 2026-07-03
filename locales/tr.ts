@@ -6,7 +6,7 @@ export const tr = {
     'directory.villas': 'Villalar',
     'directory.apartments': 'Daireler',
     'nav.blog': 'Rehberler',
-    'nav.forum': 'Forum',
+    'nav.forum': 'Topluluk',
     'nav.events': 'Etkinlikler',
     'nav.members': 'Üyeler',
     'nav.vehicles': 'Araçlar',

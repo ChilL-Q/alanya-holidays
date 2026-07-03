@@ -39,7 +39,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
 
     return (
         <div
-            className={`group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 ${isList ? 'flex flex-col sm:flex-row' : 'flex flex-col h-full'} ${onClick ? 'cursor-pointer' : ''}`}
+            className={`group bg-white dark:bg-slate-800 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 ${isList ? 'flex flex-col sm:flex-row' : 'flex flex-col h-full'} ${onClick ? 'cursor-pointer' : ''}`}
             onClick={() => onClick && onClick(listing)}
         >
             {/* Image */}

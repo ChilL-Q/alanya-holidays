@@ -128,7 +128,7 @@ export const planTrip = async (prefs: TripParams): Promise<string> => {
     Interests: ${prefs.interests.join(', ')}.
     Pace: ${prefs.pace}.
     Budget Level: ${prefs.budget}.
-    
+
     IMPORTANT GUIDELINES:
     - If budget is "economy": Suggest using "Dolmuş" (local buses) for transport. Recommend free public beaches (Damlataş, Kleopatra), local Pide/Lavaş restaurants, and hiking the Castle hills.
     - If budget is "standard": Suggest car/scooter rentals. Recommend a mix of local favorites and popular tourist spots like Dim Çayı or Sapadere Canyon.
@@ -137,7 +137,7 @@ export const planTrip = async (prefs: TripParams): Promise<string> => {
     - If pace is "intense": Include 3-4 distinct stops per day (e.g., Morning: Castle & Red Tower; Afternoon: Dim Cave; Evening: Harbor & Nightlife).
 
     YOUR ENTIRE RESPONSE MUST BE A SINGLE JSON OBJECT. DO NOT USE MARKDOWN BLOCKS (\`\`\`json). DO NOT ADD PREAMBLE OR POSTAMBLE.
-    
+
     Structure:
     {
       "itinerary": [
@@ -162,7 +162,7 @@ export const planTrip = async (prefs: TripParams): Promise<string> => {
       - Alanya Harbor: lat 36.5400, lng 32.0050
       - Dim Cayi: lat 36.4700, lng 32.1500
       - Sapadere Canyon: lat 36.4000, lng 32.2000
-    
+
     Link suggestions:
     - /services/car-rental
     - /things-to-do-in-alanya
@@ -171,4 +171,61 @@ export const planTrip = async (prefs: TripParams): Promise<string> => {
     - /alanya-hotels`;
 
     return askLocalGuide(null, "Alanya", prompt, [], 'structured');
+};
+
+/**
+ * Plans a trip using Claude API (via Edge Function).
+ * Uses the generate-itinerary Edge Function with Anthropic's Claude model.
+ *
+ * @param prefs - Trip preferences (duration, companion, interests, pace, budget)
+ * @returns A JSON string containing the itinerary
+ */
+export const planTripWithClaude = async (prefs: TripParams): Promise<string> => {
+    const invokeClaudeProxy = async () => {
+        const { data, error } = await supabase.functions.invoke('generate-itinerary', {
+            body: {
+                duration: prefs.duration,
+                companion: prefs.companion,
+                interests: prefs.interests,
+                pace: prefs.pace,
+                budget: prefs.budget,
+            },
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        if (data?.error) {
+            const errorMsg = String(data.error);
+            if (errorMsg.includes('429') || errorMsg.includes('rate')) {
+                throw new RateLimitError("RATE_LIMIT");
+            }
+            throw new Error(errorMsg);
+        }
+
+        if (!data?.answer) {
+            throw new Error("No answer generated");
+        }
+
+        return data.answer;
+    };
+
+    try {
+        return await retry(invokeClaudeProxy, {
+            attempts: 3,
+            delay: 500,
+            factor: 2
+        });
+    } catch (error: unknown) {
+        console.error("Claude AI Service Error after retries:", error);
+
+        // Handle rate limits gracefully with a specific message
+        if (error instanceof RateLimitError || (error as { isRateLimit?: boolean }).isRateLimit || String(error).includes("429") || String(error).includes("rate")) {
+            return "I'm currently receiving too many requests. Please wait 10-20 seconds and try again! ⏳";
+        }
+
+        // For other errors (network, 500s, etc.), return the curated fallback
+        return getFallbackResponse();
+    }
 };

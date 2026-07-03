@@ -50,7 +50,7 @@ export const directoryService = {
         page: number = 1,
         limit: number = 20,
         category?: string,
-        sortBy: 'created_at' | 'base_score' = 'created_at'
+        sortBy: 'created_at' | 'base_score' = 'base_score'
     ): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
         const from = (page - 1) * limit;
         const to = from + limit - 1;
