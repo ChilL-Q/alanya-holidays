@@ -4,10 +4,12 @@ import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowBigUp, MessageSquare, Trash2, Flag, Loader2, ArrowLeft, Send, Eye } from 'lucide-react';
 import { db } from '../api-services';
-import { ForumPost, ForumComment, ForumReportTargetType } from '../types/models';
+import { ForumPost, ForumComment, ForumReportTargetType, DirectoryListingDB } from '../types/models';
 import { SEOHead } from '../components/seo/SEOHead';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { getRelatedListings } from '../utils/communityLinks';
+import { RelatedListings } from '../components/community/RelatedListings';
 
 const relTime = (iso: string | null) =>
     iso ? formatDistanceToNow(new Date(iso), { addSuffix: true }) : '';
@@ -24,6 +26,8 @@ export const ForumPostPage: React.FC = () => {
     const [notFound, setNotFound] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [relatedListings, setRelatedListings] = useState<DirectoryListingDB[]>([]);
+    const [loadingListings, setLoadingListings] = useState(false);
 
     const isAdmin = user?.role === 'admin';
     const canModeratePost = post && (isAdmin || post.author_id === user?.id);
@@ -52,6 +56,15 @@ export const ForumPostPage: React.FC = () => {
     useEffect(() => {
         load();
     }, [load]);
+
+    useEffect(() => {
+        if (!post) return;
+        setLoadingListings(true);
+        getRelatedListings(post, 5)
+            .then(listings => setRelatedListings(listings))
+            .catch(err => console.error('Failed to load related listings:', err))
+            .finally(() => setLoadingListings(false));
+    }, [post]);
 
     const requireAuth = (): boolean => {
         if (!isAuthenticated) {
@@ -317,6 +330,15 @@ export const ForumPostPage: React.FC = () => {
                         </div>
                     ))}
                 </div>
+
+                {/* Related Listings */}
+                {(relatedListings.length > 0 || loadingListings) && (
+                    <RelatedListings
+                        listings={relatedListings}
+                        title="Related Listings"
+                        loading={loadingListings}
+                    />
+                )}
             </div>
         </div>
     );
