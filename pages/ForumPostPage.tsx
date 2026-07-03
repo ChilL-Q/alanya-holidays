@@ -8,6 +8,7 @@ import { ForumPost, ForumComment, ForumReportTargetType } from '../types/models'
 import { SEOHead } from '../components/seo/SEOHead';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { RelatedListings } from '../components/forum/RelatedListings';
 
 const relTime = (iso: string | null) =>
     iso ? formatDistanceToNow(new Date(iso), { addSuffix: true }) : '';
@@ -243,6 +244,11 @@ export const ForumPostPage: React.FC = () => {
                     )}
                 </div>
             </article>
+
+            {/* Related Directory Listings Sidebar */}
+            {post.category?.slug && (
+                <RelatedListings categorySlug={post.category.slug} limit={5} />
+            )}
 
             {/* Comment composer */}
             <div className="mt-8">
