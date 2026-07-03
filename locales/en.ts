@@ -6,7 +6,7 @@ export const en = {
   'directory.villas': 'Villas',
   'directory.apartments': 'Apartments',
   'nav.blog': 'Guides',
-  'nav.forum': 'Forum',
+  'nav.forum': 'Community',
   'nav.events': 'Events',
   'nav.members': 'Members',
   'nav.vehicles': 'Vehicles',
