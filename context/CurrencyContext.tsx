@@ -39,6 +39,11 @@ function getCachedAt(): number {
 }
 
 async function fetchLiveRates(): Promise<Record<Currency, number>> {
+    // Skip live fetch on localhost (dev) — Edge Function CORS issues during development
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        return FALLBACK_RATES;
+    }
+
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const res = await fetch(`${supabaseUrl}/functions/v1/currency-rates`, {
