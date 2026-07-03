@@ -31,17 +31,20 @@ const getFallbackMessage = (): string => {
 
 /**
  * Generates an AI-powered itinerary for a trip to Alanya based on user preferences.
- * Uses Claude API via the generate-itinerary Edge Function.
+ * Uses Claude API via the generate-itinerary Edge Function with streaming.
  *
  * @param prefs - User preferences (days, interests, budget, language)
+ * @param onChunk - Optional callback to handle streaming chunks as they arrive
  * @returns A JSON string containing the generated itinerary
  * @throws Error if the itinerary generation fails
  */
-export const generateItinerary = async (prefs: ItineraryPrefs): Promise<string> => {
+export const generateItinerary = async (
+  prefs: ItineraryPrefs,
+  onChunk?: (chunk: string) => void
+): Promise<string> => {
   const invokeItineraryFunction = async () => {
     // Map new interface to Edge Function parameters
-    // For now, we use sensible defaults for 'companion' and 'pace'
-    const { data, error } = await supabase.functions.invoke('generate-itinerary', {
+    const response = await supabase.functions.invoke('generate-itinerary', {
       body: {
         duration: prefs.days,
         companion: 'individual traveler',
@@ -51,12 +54,19 @@ export const generateItinerary = async (prefs: ItineraryPrefs): Promise<string> 
       },
     });
 
-    if (error) {
-      throw error;
+    // Check for top-level errors
+    if (response.error) {
+      throw response.error;
     }
 
-    if (data?.error) {
-      const errorMsg = String(data.error);
+    // Handle streaming response (ReadableStream)
+    if (response.data instanceof ReadableStream) {
+      return await parseStreamingResponse(response.data, onChunk);
+    }
+
+    // Fallback for non-streaming response (backward compatibility)
+    if (response.data?.error) {
+      const errorMsg = String(response.data.error);
       if (errorMsg.includes('429') || errorMsg.includes('rate')) {
         throw new RateLimitError('Rate limit exceeded');
       }
@@ -66,11 +76,11 @@ export const generateItinerary = async (prefs: ItineraryPrefs): Promise<string> 
       throw new Error(errorMsg);
     }
 
-    if (!data?.answer) {
+    if (!response.data?.answer) {
       throw new Error('No itinerary generated');
     }
 
-    return data.answer;
+    return response.data.answer;
   };
 
   try {
@@ -96,6 +106,57 @@ export const generateItinerary = async (prefs: ItineraryPrefs): Promise<string> 
     throw new Error(getFallbackMessage());
   }
 };
+
+/**
+ * Parses a streaming response from the generate-itinerary Edge Function.
+ * Reads newline-delimited JSON chunks and aggregates the complete response.
+ *
+ * @param stream - The ReadableStream from the Edge Function
+ * @param onChunk - Optional callback to handle each chunk as it arrives
+ * @returns The complete itinerary response as a string
+ */
+async function parseStreamingResponse(
+  stream: ReadableStream,
+  onChunk?: (chunk: string) => void
+): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+
+  try {
+    // Read stream chunks and parse newline-delimited JSON
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n').filter(line => line.trim());
+
+      for (const line of lines) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.chunk) {
+            fullText += parsed.chunk;
+            onChunk?.(parsed.chunk);
+          } else if (parsed.done) {
+            // Stream completed
+            break;
+          }
+        } catch (e) {
+          console.error('Failed to parse stream chunk:', line, e);
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  if (!fullText) {
+    throw new Error('Empty response from streaming');
+  }
+
+  return fullText;
+}
 
 /**
  * Maps the new budget terminology to the Edge Function's expected values
