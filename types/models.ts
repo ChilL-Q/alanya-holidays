@@ -711,6 +711,7 @@ export interface ForumPost {
   body: string | null;
   category_id: string | null;
   author_id: string | null;
+  post_type: 'discussion' | 'question';
   like_count: number;
   comment_count: number;
   view_count: number;

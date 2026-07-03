@@ -72,6 +72,7 @@ const ForumHome = React.lazy(() => import('../pages/ForumHome').then(module => (
 const ForumCategoryPage = React.lazy(() => import('../pages/ForumCategoryPage').then(module => ({ default: module.ForumCategoryPage })));
 const ForumPostPage = React.lazy(() => import('../pages/ForumPostPage').then(module => ({ default: module.ForumPostPage })));
 const ForumSubmitPage = React.lazy(() => import('../pages/ForumSubmitPage').then(module => ({ default: module.ForumSubmitPage })));
+const ForumAskPage = React.lazy(() => import('../pages/ForumAskPage').then(module => ({ default: module.ForumAskPage })));
 const EventsPage = React.lazy(() => import('../pages/EventsPage').then(module => ({ default: module.EventsPage })));
 const MembersPage = React.lazy(() => import('../pages/MembersPage').then(module => ({ default: module.MembersPage })));
 
@@ -276,6 +277,7 @@ export const AppRoutes: React.FC = () => {
                 {/* Forum */}
                 <Route path="/forum" element={<ForumHome />} />
                 <Route path="/forum/new" element={<AuthRoute><ForumSubmitPage /></AuthRoute>} />
+                <Route path="/forum/ask" element={<AuthRoute><ForumAskPage /></AuthRoute>} />
                 <Route path="/forum/category/:slug" element={<ForumCategoryPage />} />
                 <Route path="/forum/:slug" element={<ForumPostPage />} />
                 <Route path="/events" element={<EventsPage />} />

@@ -25,6 +25,7 @@ export interface ForumPostFilters {
     offset?: number;
     includeRemoved?: boolean;
     removedOnly?: boolean;
+    postType?: 'discussion' | 'question';
 }
 
 const POST_SELECT = `
@@ -368,6 +369,10 @@ export const forumService = {
             query = query.eq('is_removed', false);
         }
 
+        if (filters.postType) {
+            query = query.eq('post_type', filters.postType);
+        }
+
         if (filters.categorySlug) {
             // Resolve slug → id (a top-level slug also matches its subcategories)
             const { data: cat } = await supabase
@@ -452,6 +457,30 @@ export const forumService = {
                 body: sanitize(validated.body),
                 category_id: validated.category_id || null,
                 author_id: user.id,
+                post_type: 'discussion',
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as ForumPost;
+    },
+
+    async createQuestionPost(input: { title: string; body: string; category_id?: string }): Promise<ForumPost> {
+        const user = await requireUser();
+        const validated = forumPostSchema.parse(input);
+
+        const uniqueSlug = await resolveSlug(slugify(validated.title));
+
+        const { data, error } = await supabase
+            .from('forum_posts')
+            .insert([{
+                title: validated.title,
+                slug: uniqueSlug,
+                body: sanitize(validated.body),
+                category_id: validated.category_id || null,
+                author_id: user.id,
+                post_type: 'question',
             }])
             .select()
             .single();

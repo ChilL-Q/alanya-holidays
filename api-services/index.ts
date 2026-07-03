@@ -24,6 +24,7 @@ export * from './api/testimonials';
 export * from './api/locations';
 export * from './api/itineraries';
 export * from './api/listingReviews';
+export * from './api/ai';
 export * from './supabase';
 export * from './auth';
 export * from './aiService';

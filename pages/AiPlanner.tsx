@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { TripPlannerForm } from '../components/ai/TripPlannerForm';
 import { TripItinerary } from '../components/ai/TripItinerary';
 import { PremiumGate } from '../components/ui/PremiumGate';
-import { planTrip, planTripWithClaude } from '../api-services/aiService';
+import { planTrip } from '../api-services/aiService';
+import { generateItinerary } from '../api-services/api/ai';
 import { itinerariesService } from '../api-services/api/itineraries';
 import { subscriptionsService } from '../api-services/api/subscriptions';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -104,9 +105,18 @@ export const AiPlanner: React.FC = () => {
         setLastPrefs(prefs);
         setSavedId(null);
         try {
-            const response = aiProvider === 'claude'
-                ? await planTripWithClaude(prefs)
-                : await planTrip(prefs);
+            let response: string;
+            if (aiProvider === 'claude') {
+                // Use new streaming-enabled generateItinerary from api/ai.ts
+                response = await generateItinerary({
+                    days: prefs.duration,
+                    interests: prefs.interests,
+                    budget: prefs.budget as 'budget' | 'mid' | 'luxury',
+                    language: 'en',
+                });
+            } else {
+                response = await planTrip(prefs);
+            }
 
             try {
                 let cleanResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();

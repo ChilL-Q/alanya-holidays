@@ -169,7 +169,8 @@ Deno.serve(async (req: Request) => {
     try {
       const client = new Anthropic({ apiKey: CLAUDE_API_KEY })
 
-      const response = await client.messages.create({
+      // Use streaming to send chunks back to client progressively
+      const stream = await client.messages.stream({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 8192,
         messages: [
@@ -180,20 +181,44 @@ Deno.serve(async (req: Request) => {
         ]
       })
 
-      const text = response.content[0]?.type === 'text' ? response.content[0].text : ''
+      // Convert the event stream to a readable stream of JSON chunks
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          try {
+            let buffer = ''
 
-      if (!text) {
-        console.error('Empty response from Claude')
-        return new Response(
-          JSON.stringify({ error: 'AI service returned empty response' }),
-          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
+            for await (const event of stream) {
+              if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+                const text = event.delta.text
+                buffer += text
 
-      return new Response(
-        JSON.stringify({ answer: text }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+                // Send chunk as JSON-encoded event for client parsing
+                controller.enqueue(new TextEncoder().encode(JSON.stringify({ chunk: text }) + '\n'))
+              }
+            }
+
+            // Signal completion
+            if (buffer) {
+              controller.enqueue(new TextEncoder().encode(JSON.stringify({ done: true }) + '\n'))
+            } else {
+              controller.error(new Error('Empty response from Claude'))
+            }
+          } catch (err) {
+            controller.error(err)
+          } finally {
+            controller.close()
+          }
+        }
+      })
+
+      return new Response(readableStream, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/x-ndjson', // Newline-delimited JSON for streaming
+          'Transfer-Encoding': 'chunked'
+        }
+      })
     } catch (err) {
       const errorMsg = String(err)
       console.error('Claude API error:', errorMsg)

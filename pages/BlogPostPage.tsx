@@ -14,6 +14,9 @@ import { VideoEmbed } from '../components/ui/VideoEmbed';
 import { extractHeadingsFromHTML } from '../utils/extractHeadings';
 import { useAsyncEffect } from '../hooks/useAsyncEffect';
 import { BLOG_PROSE_WITH_TOC } from '../utils/blogProseStyles';
+import { getRelatedDiscussions } from '../utils/communityLinks';
+import { RelatedDiscussions } from '../components/community/RelatedDiscussions';
+import { ForumPost } from '../types/models';
 
 const TOC_HEADING_THRESHOLD = 3;
 
@@ -44,6 +47,8 @@ export const BlogPostPage: React.FC = () => {
     }, [post]);
 
     const [relatedPosts, setRelatedPosts] = useState<BlogPostPreview[]>([]);
+    const [relatedDiscussions, setRelatedDiscussions] = useState<ForumPost[]>([]);
+    const [loadingDiscussions, setLoadingDiscussions] = useState(false);
 
     useAsyncEffect(async (isCancelled) => {
         if (!post) return;
@@ -52,6 +57,19 @@ export const BlogPostPage: React.FC = () => {
             if (!isCancelled()) setRelatedPosts(data);
         } catch (err) {
             if (!isCancelled()) console.error('Failed to load related posts:', err);
+        }
+    }, [post?.id, post?.category]);
+
+    useAsyncEffect(async (isCancelled) => {
+        if (!post) return;
+        setLoadingDiscussions(true);
+        try {
+            const data = await getRelatedDiscussions(post, 5);
+            if (!isCancelled()) setRelatedDiscussions(data);
+        } catch (err) {
+            if (!isCancelled()) console.error('Failed to load related discussions:', err);
+        } finally {
+            if (!isCancelled()) setLoadingDiscussions(false);
         }
     }, [post?.id, post?.category]);
 
@@ -337,6 +355,15 @@ export const BlogPostPage: React.FC = () => {
                                 ))}
                             </div>
                         </div>
+                    )}
+
+                    {/* Related Community Discussions */}
+                    {(relatedDiscussions.length > 0 || loadingDiscussions) && (
+                        <RelatedDiscussions
+                            discussions={relatedDiscussions}
+                            title="Related Community Discussions"
+                            loading={loadingDiscussions}
+                        />
                     )}
                 </div>
             </article>

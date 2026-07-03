@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
     PlusCircle, Loader2, Flame, Compass, Users, MessagesSquare,
-    MessageCircle, Radio, ArrowRight, Calendar, Sparkles,
+    MessageCircle, Radio, ArrowRight, Calendar, Sparkles, HelpCircle,
 } from 'lucide-react';
 import { db } from '../api-services';
 import { ForumPost, ForumCategory, ForumEvent, ForumMember } from '../types/models';
@@ -38,6 +38,7 @@ export const ForumHome: React.FC = () => {
     const [members, setMembers] = useState<ForumMember[]>([]);
     const [stats, setStats] = useState({ members: 0, discussions: 0, replies: 0, online: 0 });
     const [loading, setLoading] = useState(true);
+    const [activePostType, setActivePostType] = useState<'discussion' | 'question'>('discussion');
 
     useEffect(() => {
         let active = true;
@@ -192,6 +193,64 @@ export const ForumHome: React.FC = () => {
                                     <ForumThreadCard post={post} />
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </section>
+
+                {/* ===== Discussions vs Questions Tabs ===== */}
+                <section>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setActivePostType('discussion')}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                    activePostType === 'discussion'
+                                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/30'
+                                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                                }`}
+                            >
+                                <MessagesSquare size={16} className="inline-block mr-1.5" /> All Discussions
+                            </button>
+                            <button
+                                onClick={() => setActivePostType('question')}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                    activePostType === 'question'
+                                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/30'
+                                        : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                                }`}
+                            >
+                                <HelpCircle size={16} className="inline-block mr-1.5" /> Ask Alanya
+                            </button>
+                        </div>
+                        {activePostType === 'question' ? (
+                            isAuthenticated ? (
+                                <Link
+                                    to="/forum/ask"
+                                    className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+                                >
+                                    <PlusCircle size={18} /> Ask a Question
+                                </Link>
+                            ) : (
+                                <button
+                                    onClick={openLogin}
+                                    className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+                                >
+                                    <PlusCircle size={18} /> Ask a Question
+                                </button>
+                            )
+                        ) : null}
+                    </div>
+
+                    {loading ? (
+                        <div className="flex justify-center p-12"><Loader2 size={32} className="animate-spin text-teal-500" /></div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {hotPosts
+                                .filter((p) => p.post_type === activePostType)
+                                .slice(0, 6)
+                                .map((post) => (
+                                    <ForumThreadCard key={post.id} post={post} />
+                                ))}
                         </div>
                     )}
                 </section>
