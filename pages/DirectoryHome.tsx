@@ -76,18 +76,18 @@ export const DirectoryHome: React.FC = () => {
     }, []);
 
     const categories = [
-        { id: 'medical', icon: '🏥', title: t('dir.cat.medical'), path: '/medical-tourism-alanya' },
-        { id: 'accommodations', icon: '🏨', title: t('dir.cat.accommodations'), path: '/alanya-hotels' },
-        { id: 'tours', icon: '⛵', title: t('dir.cat.tours'), path: '/things-to-do-in-alanya' },
-        { id: 'transport', icon: '🚗', title: t('dir.cat.transport'), path: '/airport-transfer' },
-        { id: 'restaurants', icon: '🍽️', title: t('dir.cat.restaurants'), path: '/restaurants' },
-        { id: 'cafes', icon: '☕', title: t('dir.cat.cafes'), path: '/cafes' },
-        { id: 'nature', icon: '🌿', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
-        { id: 'spa-hamam', icon: '🧖', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
-        { id: 'hair-beauty', icon: '💇', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
-        { id: 'real-estate', icon: '🏠', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
-        { id: 'visa', icon: '🛂', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
-        { id: 'shopping', icon: '🛍️', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
+        { id: 'medical', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.medical'), path: '/medical-tourism-alanya' },
+        { id: 'accommodations', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.accommodations'), path: '/alanya-hotels' },
+        { id: 'tours', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.tours'), path: '/things-to-do-in-alanya' },
+        { id: 'transport', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.transport'), path: '/airport-transfer' },
+        { id: 'restaurants', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.restaurants'), path: '/restaurants' },
+        { id: 'cafes', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.cafes'), path: '/cafes' },
+        { id: 'nature', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
+        { id: 'spa-hamam', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
+        { id: 'hair-beauty', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
+        { id: 'real-estate', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
+        { id: 'visa', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
+        { id: 'shopping', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
     ];
 
     const travelAgencySchema = useMemo(() => ({
@@ -209,13 +209,12 @@ export const DirectoryHome: React.FC = () => {
                                             <DropdownMenuItem
                                                 key={cat.id}
                                                 className={cn(
-                                                    "cursor-pointer gap-2",
+                                                    "cursor-pointer",
                                                     selectedCategory === cat.id && "bg-slate-100 dark:bg-slate-800 font-medium text-teal-600 dark:text-cyan-400"
                                                 )}
                                                 onClick={() => setSelectedCategory(cat.id)}
                                             >
-                                                <span className="text-lg">{cat.icon}</span>
-                                                <span>{cat.title}</span>
+                                                {cat.title}
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuContent>
@@ -344,9 +343,7 @@ export const DirectoryHome: React.FC = () => {
                             onClick={() => navigate(category.path)}
                             className="group flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800/50 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all duration-300 text-left sm:text-center text-slate-900 dark:text-white gap-4 sm:gap-0 cursor-pointer"
                         >
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl sm:mb-4 group-hover:bg-teal-50 dark:group-hover:bg-slate-700/50 group-hover:scale-110 transition-all duration-300 flex-shrink-0">
-                                {category.icon}
-                            </div>
+                            <img src={category.imagePath} alt={category.title} loading="lazy" width="200" height="150" className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover sm:mb-4 group-hover:scale-110 transition-all duration-300 flex-shrink-0" />
                             <div className="flex-1 flex flex-col justify-center">
                                 <h3 className="text-base sm:text-lg font-semibold sm:mb-2 text-slate-900 dark:text-white">
                                     {category.title}
