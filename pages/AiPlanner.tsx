@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TripPlannerForm } from '../components/ai/TripPlannerForm';
 import { TripItinerary } from '../components/ai/TripItinerary';
 import { PremiumGate } from '../components/ui/PremiumGate';
-import { planTrip } from '../api-services/aiService';
+import { planTrip, planTripWithClaude } from '../api-services/aiService';
 import { itinerariesService } from '../api-services/api/itineraries';
 import { subscriptionsService } from '../api-services/api/subscriptions';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -18,6 +18,7 @@ export const AiPlanner: React.FC = () => {
     const { user } = useAuth();
     const [isPremium, setIsPremium] = useState(false);
     const [premiumLoading, setPremiumLoading] = useState(true);
+    const [aiProvider, setAiProvider] = useState<'claude' | 'gemini'>('claude');
 
     const [lastPrefs, setLastPrefs] = useState<TripParams | null>(() => {
         try {
@@ -103,7 +104,9 @@ export const AiPlanner: React.FC = () => {
         setLastPrefs(prefs);
         setSavedId(null);
         try {
-            const response = await planTrip(prefs);
+            const response = aiProvider === 'claude'
+                ? await planTripWithClaude(prefs)
+                : await planTrip(prefs);
 
             try {
                 let cleanResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -177,6 +180,21 @@ export const AiPlanner: React.FC = () => {
                                 <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
                                     Tell us your preferences and our AI will craft a unique, minute-by-minute itinerary for your perfect Alanya holiday.
                                 </p>
+                                <div className="flex justify-center gap-4 mt-8">
+                                    {(['claude', 'gemini'] as const).map(provider => (
+                                        <button
+                                            key={provider}
+                                            onClick={() => setAiProvider(provider)}
+                                            className={`px-6 py-2 rounded-full font-semibold transition-all ${
+                                                aiProvider === provider
+                                                    ? 'bg-blue-600 text-white shadow-lg'
+                                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300'
+                                            }`}
+                                        >
+                                            {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                             <TripPlannerForm onComplete={handleGenerate} />
                         </div>
