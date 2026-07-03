@@ -104,7 +104,7 @@ export const BlogPage: React.FC = () => {
             isFirstSearch.current = false;
             return;
         }
-        const t = setTimeout(() => loadFiltered(selectedCategory, searchQuery), 350);
+        const t = setTimeout(() => loadFiltered(selectedCategory, searchQuery), 300);
         return () => clearTimeout(t);
         // selectedCategory intentionally omitted — category changes refetch via handleCategoryChange
         // eslint-disable-next-line react-hooks/exhaustive-deps
