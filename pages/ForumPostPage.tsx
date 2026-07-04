@@ -257,11 +257,6 @@ export const ForumPostPage: React.FC = () => {
                 </div>
             </article>
 
-            {/* Related Directory Listings Sidebar */}
-            {post.category?.slug && (
-                <RelatedListings categorySlug={post.category.slug} limit={5} />
-            )}
-
             {/* Comment composer */}
             <div className="mt-8">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
