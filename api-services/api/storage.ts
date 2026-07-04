@@ -229,4 +229,88 @@ export const storageService = {
             .remove(filePaths);
         if (error) throw error;
     },
+
+    // ============================================================
+    // Category Images (admin-managed directory category tile photos)
+    // ============================================================
+
+    /**
+     * Map of category id → public URL for admin-uploaded tile photos.
+     * Files live at the bucket root as {categoryId}.{ext}. The updated_at
+     * timestamp is appended as ?v= so overwrites bust the CDN cache.
+     * Returns {} if the bucket is missing or empty (callers fall back to
+     * the bundled /images/categories/ files).
+     */
+    async getCategoryImageOverrides(): Promise<Record<string, string>> {
+        const { data, error } = await supabase.storage
+            .from('category-images')
+            .list('', { limit: 100 });
+        if (error || !data) return {};
+
+        const map: Record<string, string> = {};
+        for (const file of data) {
+            const dot = file.name.lastIndexOf('.');
+            if (dot <= 0) continue;
+            const categoryId = file.name.slice(0, dot);
+            const { data: pub } = supabase.storage.from('category-images').getPublicUrl(file.name);
+            const version = file.updated_at ?? file.created_at ?? '';
+            map[categoryId] = version
+                ? `${pub.publicUrl}?v=${encodeURIComponent(version)}`
+                : pub.publicUrl;
+        }
+        return map;
+    },
+
+    /**
+     * Upload (or replace) the tile photo for a category. Admin-only via RLS.
+     * Returns the public URL with a cache-busting version param.
+     */
+    async uploadCategoryImage(categoryId: string, file: File): Promise<string> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        validateBlogMedia(file);
+
+        const ext = file.name.split('.').pop()!.toLowerCase();
+        const path = `${categoryId}.${ext}`;
+
+        // Drop a previous override with a different extension so list()
+        // never maps two files to the same category
+        const { data: existing } = await supabase.storage
+            .from('category-images')
+            .list('', { search: categoryId });
+        const stale = (existing ?? [])
+            .filter(f => f.name.replace(/\.[^.]+$/, '') === categoryId && f.name !== path)
+            .map(f => f.name);
+        if (stale.length > 0) {
+            await supabase.storage.from('category-images').remove(stale);
+        }
+
+        const { error } = await supabase.storage
+            .from('category-images')
+            .upload(path, file, { upsert: true, cacheControl: '300' });
+        if (error) throw error;
+
+        const { data } = supabase.storage.from('category-images').getPublicUrl(path);
+        return `${data.publicUrl}?v=${Date.now()}`;
+    },
+
+    /**
+     * Remove the admin override for a category, reverting the tile to the
+     * bundled default image.
+     */
+    async removeCategoryImage(categoryId: string): Promise<void> {
+        const { data: existing, error: listError } = await supabase.storage
+            .from('category-images')
+            .list('', { search: categoryId });
+        if (listError) throw listError;
+
+        const targets = (existing ?? [])
+            .filter(f => f.name.replace(/\.[^.]+$/, '') === categoryId)
+            .map(f => f.name);
+        if (targets.length === 0) return;
+
+        const { error } = await supabase.storage.from('category-images').remove(targets);
+        if (error) throw error;
+    },
 };

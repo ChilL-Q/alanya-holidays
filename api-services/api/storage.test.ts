@@ -274,4 +274,101 @@ describe('storageService', () => {
                 .rejects.toEqual({ message: 'Delete failed' });
         });
     });
+
+    describe('getCategoryImageOverrides', () => {
+        it('maps category ids to versioned public URLs', async () => {
+            const bucket = {
+                list: vi.fn().mockResolvedValue({
+                    data: [
+                        { name: 'nature.webp', updated_at: '2026-07-04T10:00:00Z' },
+                        { name: 'cafes.png', updated_at: '2026-07-04T11:00:00Z' },
+                    ],
+                    error: null
+                }),
+                getPublicUrl: vi.fn((path: string) => ({ data: { publicUrl: `https://test.supabase.co/category-images/${path}` } }))
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            const map = await storageService.getCategoryImageOverrides();
+
+            expect(mockSupabase.storage.from).toHaveBeenCalledWith('category-images');
+            expect(map['nature']).toContain('nature.webp');
+            expect(map['nature']).toContain('?v=');
+            expect(map['cafes']).toContain('cafes.png');
+        });
+
+        it('returns empty map when bucket is missing or list fails', async () => {
+            const bucket = {
+                list: vi.fn().mockResolvedValue({ data: null, error: { message: 'Bucket not found' } })
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            await expect(storageService.getCategoryImageOverrides()).resolves.toEqual({});
+        });
+    });
+
+    describe('uploadCategoryImage', () => {
+        it('upserts to a fixed per-category path and returns versioned URL', async () => {
+            const mockFile = new File(['content'], 'photo.webp', { type: 'image/webp' });
+            const bucket = {
+                list: vi.fn().mockResolvedValue({ data: [], error: null }),
+                remove: vi.fn().mockResolvedValue({ data: null, error: null }),
+                upload: vi.fn().mockResolvedValue({ data: {}, error: null }),
+                getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://test.supabase.co/category-images/nature.webp' } })
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            const url = await storageService.uploadCategoryImage('nature', mockFile);
+
+            expect(bucket.upload).toHaveBeenCalledWith('nature.webp', mockFile, { upsert: true, cacheControl: '300' });
+            expect(url).toContain('nature.webp?v=');
+        });
+
+        it('removes a previous override with a different extension', async () => {
+            const mockFile = new File(['content'], 'photo.png', { type: 'image/png' });
+            const bucket = {
+                list: vi.fn().mockResolvedValue({ data: [{ name: 'nature.webp' }], error: null }),
+                remove: vi.fn().mockResolvedValue({ data: null, error: null }),
+                upload: vi.fn().mockResolvedValue({ data: {}, error: null }),
+                getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://test.supabase.co/category-images/nature.png' } })
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            await storageService.uploadCategoryImage('nature', mockFile);
+
+            expect(bucket.remove).toHaveBeenCalledWith(['nature.webp']);
+            expect(bucket.upload).toHaveBeenCalledWith('nature.png', mockFile, { upsert: true, cacheControl: '300' });
+        });
+
+        it('rejects files that fail validation', async () => {
+            const badFile = new File(['content'], 'photo.gif', { type: 'image/gif' });
+            await expect(storageService.uploadCategoryImage('nature', badFile)).rejects.toThrow();
+        });
+    });
+
+    describe('removeCategoryImage', () => {
+        it('removes all files for the category id', async () => {
+            const bucket = {
+                list: vi.fn().mockResolvedValue({ data: [{ name: 'nature.webp' }, { name: 'cafes.png' }], error: null }),
+                remove: vi.fn().mockResolvedValue({ data: null, error: null })
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            await storageService.removeCategoryImage('nature');
+
+            expect(bucket.remove).toHaveBeenCalledWith(['nature.webp']);
+        });
+
+        it('is a no-op when no override exists', async () => {
+            const bucket = {
+                list: vi.fn().mockResolvedValue({ data: [], error: null }),
+                remove: vi.fn()
+            };
+            mockSupabase.storage.from.mockReturnValue(bucket as any);
+
+            await storageService.removeCategoryImage('nature');
+
+            expect(bucket.remove).not.toHaveBeenCalled();
+        });
+    });
 });
