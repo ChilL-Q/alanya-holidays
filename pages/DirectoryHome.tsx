@@ -16,6 +16,22 @@ import { SignatureListingsSection } from '../components/home/SignatureListingsSe
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
 import { RecentlyClaimedSection } from '../components/home/RecentlyClaimedSection';
 
+// Category tiles use real photos dropped into /public/images/categories/<id>.webp;
+// until a photo exists for a category, the emoji icon is shown instead.
+const CategoryTileIcon: React.FC<{ id: string; icon: string }> = ({ id, icon }) => {
+    const [imageFailed, setImageFailed] = useState(false);
+    if (imageFailed) return <>{icon}</>;
+    return (
+        <img
+            src={`/images/categories/${id}.webp`}
+            alt=""
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            className="w-full h-full object-cover rounded-2xl"
+        />
+    );
+};
+
 export const DirectoryHome: React.FC = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
@@ -344,8 +360,8 @@ export const DirectoryHome: React.FC = () => {
                             onClick={() => navigate(category.path)}
                             className="group flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800/50 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all duration-300 text-left sm:text-center text-slate-900 dark:text-white gap-4 sm:gap-0 cursor-pointer"
                         >
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl sm:mb-4 group-hover:bg-teal-50 dark:group-hover:bg-slate-700/50 group-hover:scale-110 transition-all duration-300 flex-shrink-0">
-                                {category.icon}
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl sm:mb-4 group-hover:bg-teal-50 dark:group-hover:bg-slate-700/50 group-hover:scale-110 transition-all duration-300 flex-shrink-0 overflow-hidden">
+                                <CategoryTileIcon id={category.id} icon={category.icon} />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
                                 <h3 className="text-base sm:text-lg font-semibold sm:mb-2 text-slate-900 dark:text-white">
