@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
 import { cn } from '../utils/cn';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
-import { db } from '../api-services';
+import { db, storageService } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
@@ -16,17 +16,23 @@ import { SignatureListingsSection } from '../components/home/SignatureListingsSe
 import { TravelGuideSection } from '../components/home/TravelGuideSection';
 import { RecentlyClaimedSection } from '../components/home/RecentlyClaimedSection';
 
-// Category tiles use real photos dropped into /public/images/categories/<id>.webp;
-// until a photo exists for a category, the emoji icon is shown instead.
-const CategoryTileIcon: React.FC<{ id: string; icon: string }> = ({ id, icon }) => {
-    const [imageFailed, setImageFailed] = useState(false);
-    if (imageFailed) return <>{icon}</>;
+// Category tile photo fallback chain: admin-uploaded override (Supabase
+// category-images bucket) → bundled /public/images/categories/<id>.webp →
+// emoji icon.
+const CategoryTileIcon: React.FC<{ id: string; icon: string; overrideSrc?: string }> = ({ id, icon, overrideSrc }) => {
+    const sources = useMemo(() => [
+        ...(overrideSrc ? [overrideSrc] : []),
+        `/images/categories/${id}.webp`,
+    ], [overrideSrc, id]);
+    const [srcIndex, setSrcIndex] = useState(0);
+    useEffect(() => { setSrcIndex(0); }, [sources]);
+    if (srcIndex >= sources.length) return <>{icon}</>;
     return (
         <img
-            src={`/images/categories/${id}.webp`}
+            src={sources[srcIndex]}
             alt=""
             loading="lazy"
-            onError={() => setImageFailed(true)}
+            onError={() => setSrcIndex(i => i + 1)}
             className="w-full h-full object-cover rounded-2xl"
         />
     );
@@ -58,6 +64,15 @@ export const DirectoryHome: React.FC = () => {
     const [testimonials, setTestimonials] = useState<any[]>([]);
     const [dbLocations, setDbLocations] = useState<string[]>([]);
     const [listingsLoading, setListingsLoading] = useState(true);
+    const [categoryImageOverrides, setCategoryImageOverrides] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        let cancelled = false;
+        storageService.getCategoryImageOverrides()
+            .then(map => { if (!cancelled) setCategoryImageOverrides(map); })
+            .catch(() => { /* bucket may not exist yet — bundled images are used */ });
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -361,7 +376,7 @@ export const DirectoryHome: React.FC = () => {
                             className="group flex flex-row sm:flex-col items-center sm:justify-center p-4 sm:p-8 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-800/50 rounded-2xl shadow-sm hover:shadow-xl dark:hover:shadow-slate-900/50 hover:-translate-y-1 transition-all duration-300 text-left sm:text-center text-slate-900 dark:text-white gap-4 sm:gap-0 cursor-pointer"
                         >
                             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl sm:mb-4 group-hover:bg-teal-50 dark:group-hover:bg-slate-700/50 group-hover:scale-110 transition-all duration-300 flex-shrink-0 overflow-hidden">
-                                <CategoryTileIcon id={category.id} icon={category.icon} />
+                                <CategoryTileIcon id={category.id} icon={category.icon} overrideSrc={categoryImageOverrides[category.id]} />
                             </div>
                             <div className="flex-1 flex flex-col justify-center">
                                 <h3 className="text-base sm:text-lg font-semibold sm:mb-2 text-slate-900 dark:text-white">

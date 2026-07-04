@@ -7,9 +7,10 @@ import { MOCK_DIRECTORY_DATA } from '../../data/directoryData';
 import { DirectoryToolbar } from '../../components/admin/directory/DirectoryToolbar';
 import { DirectoryTable } from '../../components/admin/directory/DirectoryTable';
 import { toast } from 'react-hot-toast';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Image as ImageIcon } from 'lucide-react';
+import { CategoryImagesPanel } from '../../components/admin/directory/CategoryImagesPanel';
 
-type AdminTab = 'approved' | 'pending' | 'rejected' | 'claims';
+type AdminTab = 'approved' | 'pending' | 'rejected' | 'claims' | 'images';
 
 export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ defaultCategory }) => {
     const navigate = useNavigate();
@@ -211,6 +212,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                     { key: 'pending', label: 'Pending', icon: Clock, count: pendingListings.length },
                     { key: 'rejected', label: 'Rejected', icon: XCircle, count: rejectedListings.length },
                     { key: 'claims', label: 'Claims', icon: CheckCircle, count: claims.length },
+                    { key: 'images', label: 'Category Images', icon: ImageIcon, count: 0 },
                 ] as const).map(({ key, label, icon: Icon, count }) => (
                     <button
                         key={key}
@@ -437,6 +439,8 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
                     ))}
                 </div>
             )}
+
+            {activeTab === 'images' && <CategoryImagesPanel />}
 
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
