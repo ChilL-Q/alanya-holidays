@@ -5,7 +5,7 @@ import { Checkout } from './Checkout';
 import { MemoryRouter } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
+import { bookingsService } from '../api-services';
 import { supabase } from '../api-services/supabase';
 
 // Mocks
@@ -40,7 +40,7 @@ vi.mock('../context/AuthContext', () => ({
 }));
 
 vi.mock('../api-services', () => ({
-    db: {
+    bookingsService: {
         createBooking: vi.fn(),
     },
 }));
@@ -88,7 +88,7 @@ describe('Checkout', () => {
         vi.useFakeTimers();
         (useCart as any).mockReturnValue(mockCartContext);
         (useAuth as any).mockReturnValue(mockAuthContext);
-        (db.createBooking as any).mockResolvedValue({ id: 'b1' });
+        (bookingsService.createBooking as any).mockResolvedValue({ id: 'b1' });
         (supabase.functions.invoke as any).mockResolvedValue({ data: { url: 'https://stripe.com/pay' }, error: null });
         mockLocation.href = '';
     });
@@ -149,7 +149,7 @@ describe('Checkout', () => {
             fireEvent.click(payBtn);
         });
 
-        expect(db.createBooking).toHaveBeenCalled();
+        expect(bookingsService.createBooking).toHaveBeenCalled();
         expect(supabase.functions.invoke).toHaveBeenCalledWith('create-checkout-session', expect.any(Object));
         expect(mockLocation.href).toBe('https://stripe.com/pay');
     });
@@ -168,7 +168,7 @@ describe('Checkout', () => {
             fireEvent.click(payBtn);
         });
 
-        expect(db.createBooking).toHaveBeenCalled();
+        expect(bookingsService.createBooking).toHaveBeenCalled();
         // Verify that the welcome pack was included in the Stripe items
         const invokeCall = (supabase.functions.invoke as any).mock.calls[0];
         const stripeItems = invokeCall[1].body.items;
@@ -185,7 +185,7 @@ describe('Checkout', () => {
             fireEvent.click(payBtn);
         });
 
-        expect(db.createBooking).toHaveBeenCalledWith(expect.objectContaining({
+        expect(bookingsService.createBooking).toHaveBeenCalledWith(expect.objectContaining({
             payment_method: 'cash'
         }));
         expect(supabase.functions.invoke).toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe('Checkout', () => {
             fireEvent.click(payBtn);
         });
 
-        expect(db.createBooking).toHaveBeenCalled();
+        expect(bookingsService.createBooking).toHaveBeenCalled();
         expect(supabase.functions.invoke).not.toHaveBeenCalled();
         expect(mockCartContext.clearCart).toHaveBeenCalled();
         expect(screen.getByText('checkout.success_title')).toBeInTheDocument();
@@ -226,14 +226,14 @@ describe('Checkout', () => {
             fireEvent.click(screen.getByTestId('pay-button'));
         });
 
-        expect(db.createBooking).toHaveBeenCalledWith(expect.objectContaining({
+        expect(bookingsService.createBooking).toHaveBeenCalledWith(expect.objectContaining({
             total_price: 130,
             message: expect.stringContaining('[EXTRAS]: Includes Welcome Pack')
         }));
     });
 
     it('handles checkout error gracefully', async () => {
-        (db.createBooking as any).mockRejectedValue(new Error('DB Error'));
+        (bookingsService.createBooking as any).mockRejectedValue(new Error('DB Error'));
         renderCheckout();
         
         await act(async () => {

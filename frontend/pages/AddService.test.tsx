@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { AddService } from './AddService';
 import { BrowserRouter } from 'react-router-dom';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 
 // Mock contexts
 vi.mock('../context/AuthContext', () => ({
@@ -20,7 +20,7 @@ vi.mock('../context/LanguageContext', () => ({
 
 // Mock API services
 vi.mock('../api-services', () => ({
-    db: {
+    servicesService: {
         createService: vi.fn().mockResolvedValue({}),
         uploadImage: vi.fn().mockResolvedValue('http://example.com/image.jpg')
     }
@@ -96,7 +96,7 @@ describe('AddService Component', () => {
     });
 
     it('calls createService on transportation form submit', async () => {
-        (db.createService as any).mockResolvedValue({});
+        (servicesService.createService as any).mockResolvedValue({});
         renderWithRouter(<AddService />);
         fireEvent.click(screen.getByText('add_service.cat.transportation'));
 
@@ -104,12 +104,12 @@ describe('AddService Component', () => {
         const form = document.querySelector('form');
         await act(async () => { fireEvent.submit(form!); });
         await waitFor(() => {
-            expect(db.createService).toHaveBeenCalled();
+            expect(servicesService.createService).toHaveBeenCalled();
         });
     });
 
     it('shows error on console when createService fails', async () => {
-        (db.createService as any).mockRejectedValue(new Error('Upload failed'));
+        (servicesService.createService as any).mockRejectedValue(new Error('Upload failed'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         renderWithRouter(<AddService />);
         fireEvent.click(screen.getByText('add_service.cat.transportation'));

@@ -1,7 +1,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReviewsSection } from './ReviewsSection';
-import { db } from '../../api-services';
+import { propertiesService, listingReviewsService } from '../../api-services';
 
 // Mock toast properly - use vi.hoisted
 const { mockToast } = vi.hoisted(() => ({
@@ -31,8 +31,10 @@ vi.mock('../../context/LightboxContext', () => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: {
-        getReviews: vi.fn(),
+    propertiesService: {
+        getReviews: vi.fn()
+    },
+    listingReviewsService: {
         deleteReview: vi.fn()
     }
 }));
@@ -75,7 +77,7 @@ describe('ReviewsSection', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getReviews as any).mockResolvedValue({ data: mockReviews, pagination: mockPagination });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: mockReviews, pagination: mockPagination });
     });
 
     const renderComponent = () => {
@@ -83,7 +85,7 @@ describe('ReviewsSection', () => {
     };
 
     it('renders loading state initially', () => {
-        (db.getReviews as any).mockImplementation(() => new Promise(() => { }));
+        (propertiesService.getReviews as any).mockImplementation(() => new Promise(() => { }));
         renderComponent();
         expect(screen.getByText('Loading reviews...')).toBeInTheDocument();
     });
@@ -92,7 +94,7 @@ describe('ReviewsSection', () => {
         renderComponent();
 
         await waitFor(() => {
-            expect(db.getReviews).toHaveBeenCalledWith('prop-1');
+            expect(propertiesService.getReviews).toHaveBeenCalledWith('prop-1');
         });
 
         expect(screen.getByText('Amazing property!')).toBeInTheDocument();
@@ -113,7 +115,7 @@ describe('ReviewsSection', () => {
     });
 
     it('shows "New" when there are no reviews', async () => {
-        (db.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
         renderComponent();
 
         await waitFor(() => {
@@ -205,7 +207,7 @@ describe('ReviewsSection', () => {
     it('deletes review when confirmed', async () => {
         const confirmSpy = vi.spyOn(window, 'confirm');
         confirmSpy.mockImplementation(() => true);
-        (db.deleteReview as any).mockResolvedValue(undefined);
+        (listingReviewsService.deleteReview as any).mockResolvedValue(undefined);
 
         renderComponent();
 
@@ -215,7 +217,7 @@ describe('ReviewsSection', () => {
         });
 
         await waitFor(() => {
-            expect(db.deleteReview).toHaveBeenCalledWith('review-1');
+            expect(listingReviewsService.deleteReview).toHaveBeenCalledWith('review-1');
             expect(mockToast.success).toHaveBeenCalledWith('Review deleted successfully');
         });
 
@@ -225,7 +227,7 @@ describe('ReviewsSection', () => {
     it('shows error toast when delete fails', async () => {
         const confirmSpy = vi.spyOn(window, 'confirm');
         confirmSpy.mockImplementation(() => true);
-        (db.deleteReview as any).mockRejectedValue(new Error('Delete failed'));
+        (listingReviewsService.deleteReview as any).mockRejectedValue(new Error('Delete failed'));
 
         renderComponent();
 
@@ -245,7 +247,7 @@ describe('ReviewsSection', () => {
     it('disables delete button while deleting', async () => {
         const confirmSpy = vi.spyOn(window, 'confirm');
         confirmSpy.mockImplementation(() => true);
-        (db.deleteReview as any).mockImplementation(() => new Promise(() => { }));
+        (listingReviewsService.deleteReview as any).mockImplementation(() => new Promise(() => { }));
 
         renderComponent();
 
@@ -261,7 +263,7 @@ describe('ReviewsSection', () => {
     });
 
     it('shows empty state when no reviews', async () => {
-        (db.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } });
         renderComponent();
 
         await waitFor(() => {
@@ -293,7 +295,7 @@ describe('ReviewsSection', () => {
         fireEvent.click(screen.getByText('Submit Review'));
 
         await waitFor(() => {
-            expect(db.getReviews).toHaveBeenCalledTimes(2);
+            expect(propertiesService.getReviews).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -311,7 +313,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue({ data: reviewsWithMultipleImages, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: reviewsWithMultipleImages, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {
@@ -334,7 +336,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue({ data: reviewsWithAnonymousUser, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: reviewsWithAnonymousUser, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {
@@ -357,7 +359,7 @@ describe('ReviewsSection', () => {
             }
         ];
 
-        (db.getReviews as any).mockResolvedValue({ data: reviewsWithoutDate, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
+        (propertiesService.getReviews as any).mockResolvedValue({ data: reviewsWithoutDate, pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
         renderComponent();
 
         await waitFor(() => {

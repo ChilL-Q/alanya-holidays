@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { testimonialService } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { PlatformTestimonial } from '../../api-services/api/testimonials';
 import { Loader2, Plus, Trash2, Eye, EyeOff, Star } from 'lucide-react';
@@ -19,7 +19,7 @@ export const AdminTestimonialsPage: React.FC = () => {
     const fetchTestimonials = async () => {
         setIsLoading(true);
         try {
-            const data = await db.getAllTestimonials();
+            const data = await testimonialService.getAllTestimonials();
             setTestimonials(data);
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : 'Failed to load testimonials');
@@ -38,7 +38,7 @@ export const AdminTestimonialsPage: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            await db.createTestimonial({
+            await testimonialService.createTestimonial({
                 name: name.trim(),
                 role: role.trim() || undefined,
                 content: content.trim(),
@@ -62,7 +62,7 @@ export const AdminTestimonialsPage: React.FC = () => {
 
     const handleToggleVisibility = async (id: string, currentVisible: boolean) => {
         try {
-            await db.toggleVisibility(id, !currentVisible);
+            await testimonialService.toggleVisibility(id, !currentVisible);
             toast.success(`Testimonial ${!currentVisible ? 'visible' : 'hidden'}`);
             fetchTestimonials();
         } catch (e: unknown) {
@@ -73,7 +73,7 @@ export const AdminTestimonialsPage: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this testimonial?')) return;
         try {
-            await db.deleteTestimonial(id);
+            await testimonialService.deleteTestimonial(id);
             toast.success('Testimonial deleted');
             fetchTestimonials();
         } catch (e: unknown) {

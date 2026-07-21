@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Eye, MessageCircle, Globe, MapPin, ArrowRight } from 'lucide-react';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { ListingAnalyticsSummary, CategoryAnalyticsAverage } from '../../types/models';
 import toast from 'react-hot-toast';
 import {
@@ -21,7 +21,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
     const [categoryAvg, setCategoryAvg] = useState<CategoryAnalyticsAverage | null>(null);
 
     useEffect(() => {
-        db.getDirectoryAnalyticsForOwner(30)
+        directoryService.getDirectoryAnalyticsForOwner(30)
             .then(data => {
                 setAnalytics(data);
                 setSelectedIndex(0);
@@ -40,7 +40,7 @@ export const DirectoryAnalyticsPage: React.FC = () => {
             setCategoryAvg(null);
             return;
         }
-        db.getCategoryAnalyticsAverage(selected.listing_category_id)
+        directoryService.getCategoryAnalyticsAverage(selected.listing_category_id)
             .then(setCategoryAvg)
             .catch(err => {
                 console.error('Failed to load category average:', err);

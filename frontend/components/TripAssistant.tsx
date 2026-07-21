@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Sparkles, Send, X, RefreshCw } from 'lucide-react';
 import { askLocalGuide } from '../api-services/aiService';
 import { useLanguage } from '../context/LanguageContext';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../modules/chat';
 
 export const TripAssistant: React.FC = () => {
   const {

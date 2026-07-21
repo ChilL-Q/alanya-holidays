@@ -5,7 +5,7 @@ import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryListingDB } from '../types/models';
-import { db } from '../api-services';
+import { directoryService } from '../api-services';
 import { getAttraction, type Attraction } from '../data/attractionPages';
 import { getExcursionType, type ExcursionType } from '../data/excursionTypes';
 import { MapPin, Clock, Ticket, Bus, Lightbulb, ChevronDown, ChevronUp, Info, Compass } from 'lucide-react';
@@ -89,7 +89,7 @@ const AttractionPage: React.FC = () => {
       setLoading(true);
       try {
         const primaryQuery = attraction.searchKeywords[0] || attraction.title;
-        const result = await db.searchDirectoryListings(primaryQuery, 'tours');
+        const result = await directoryService.searchDirectoryListings(primaryQuery, 'tours');
         if (result.data?.length > 0) {
           setListings(result.data);
         } else {
@@ -97,7 +97,7 @@ const AttractionPage: React.FC = () => {
             .replace(' in Alanya', '')
             .replace(' from Alanya', '')
             .replace(' near Alanya', '');
-          const broader = await db.searchDirectoryListings(fallbackQuery, 'tours');
+          const broader = await directoryService.searchDirectoryListings(fallbackQuery, 'tours');
           setListings(broader.data ?? []);
         }
       } catch (e) {
@@ -114,7 +114,7 @@ const AttractionPage: React.FC = () => {
     const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
     if (!sessionStorage.getItem(sessionKey)) {
       sessionStorage.setItem(sessionKey, '1');
-      db.trackListingView(listing.id).catch(console.error);
+      directoryService.trackListingView(listing.id).catch(console.error);
     }
   }, []);
 

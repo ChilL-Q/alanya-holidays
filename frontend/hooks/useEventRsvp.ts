@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../api-services';
+import { forumEventsService } from '../api-services';
 import { ForumEvent } from '../types/models';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -44,7 +44,7 @@ export function useEventRsvp(
         setGoing(next);
         setCount(optimisticCount);
         try {
-            const res = await db.toggleEventRsvp(event.id, contactPhone);
+            const res = await forumEventsService.toggleEventRsvp(event.id, contactPhone);
             setGoing(res.going);
             onChange?.(event.id, res.going, optimisticCount);
         } catch {

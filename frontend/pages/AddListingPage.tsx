@@ -8,7 +8,7 @@ import { StepsIndicator } from '../components/ui/StepsIndicator';
 import { PhotoUploader } from '../components/ui/PhotoUploader';
 import { RestoreDraftBanner } from '../components/ui/RestoreDraftBanner';
 import { TierSelectionModal } from '../components/ui/TierSelectionModal';
-import { db, TIER_LIMITS } from '../api-services';
+import { TIER_LIMITS, subscriptionsService, storageService, directoryService } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
 import { useDraftSave } from '../hooks/useDraftSave';
 import { DRAFT_KEYS } from '../utils/drafts';
@@ -70,7 +70,7 @@ export const AddListingPage: React.FC = () => {
 
     // Detect subscription tier on mount and defer modal
     useEffect(() => {
-        db.getPremiumStatus()
+        subscriptionsService.getPremiumStatus()
             .then((status) => {
                 const detectedTier = status.tier ?? 'explorer';
                 setTier(detectedTier);
@@ -124,10 +124,10 @@ export const AddListingPage: React.FC = () => {
         try {
             const uploadedUrls =
                 gallery.length > 0
-                    ? await Promise.all(gallery.map((file) => db.uploadImage(file, 'directory')))
+                    ? await Promise.all(gallery.map((file) => storageService.uploadImage(file, 'directory')))
                     : [];
 
-            await db.createDirectoryListing({
+            await directoryService.createDirectoryListing({
                 name: formData.name.trim(),
                 category_id: formData.category_id,
                 short_description: formData.short_description.trim(),
@@ -144,7 +144,7 @@ export const AddListingPage: React.FC = () => {
 
             // Paid tiers: email bank-transfer instructions (best-effort, non-blocking).
             if (tier !== 'explorer') {
-                await db.sendListingPaymentInstructions(formData.name.trim(), tier);
+                await directoryService.sendListingPaymentInstructions(formData.name.trim(), tier);
             }
 
             localStorage.removeItem('draft_directory_listing');

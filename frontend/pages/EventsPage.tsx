@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Loader2, CalendarDays } from 'lucide-react';
-import { db } from '../api-services';
+import { forumEventsService } from '../api-services';
 import { ForumEvent } from '../types/models';
-import { ForumEventCard } from '../components/forum/ForumEventCard';
-import { EventDetailsModal } from '../components/forum/EventDetailsModal';
-import { EventCalendar, dateKey } from '../components/forum/EventCalendar';
+import { ForumEventCard } from '../modules/forum';
+import { EventDetailsModal } from '../modules/forum';
+import { EventCalendar, dateKey } from '../modules/forum';
 import { SEOHead } from '../components/seo/SEOHead';
 import { FORUM_HERO_IMAGE } from '../data/forumContent';
 
@@ -29,7 +29,7 @@ export const EventsPage: React.FC = () => {
 
     useEffect(() => {
         let active = true;
-        db.getForumEvents({ upcomingOnly: false })
+        forumEventsService.getForumEvents({ upcomingOnly: false })
             .then((data) => {
                 if (!active) return;
                 setEvents(data);

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Profile } from './Profile';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { db } from '../api-services';
+import { bookingsService, usersService, storageService, propertiesService, servicesService } from '../api-services';
 import { toast } from 'react-hot-toast';
 
 // Rule 1: vi.hoisted for shared mocks
@@ -53,18 +53,26 @@ vi.mock('react-hot-toast', () => ({
 
 // Rule 3: API mocks
 vi.mock('../api-services', () => ({
-    db: {
+    bookingsService: {
         getBookings: vi.fn().mockResolvedValue([]),
+        cancelBooking: vi.fn().mockResolvedValue({}),
+    },
+    propertiesService: {
         getPropertiesByHost: vi.fn().mockResolvedValue([]),
+    },
+    servicesService: {
         getServicesByProvider: vi.fn().mockResolvedValue([]),
+    },
+    usersService: {
         getUserProfile: vi.fn().mockResolvedValue({
             full_name: 'Test User',
             email: 'test@example.com',
             role: 'host'
         }),
         updateUserProfile: vi.fn().mockResolvedValue({}),
+    },
+    storageService: {
         uploadAvatar: vi.fn().mockResolvedValue('https://example.com/new-avatar.jpg'),
-        cancelBooking: vi.fn().mockResolvedValue({}),
     }
 }));
 
@@ -184,8 +192,8 @@ describe('Profile Page', () => {
         renderProfile();
         
         await waitFor(() => {
-            expect(db.getBookings).toHaveBeenCalledWith('user-123');
-            expect(db.getUserProfile).toHaveBeenCalledWith('user-123');
+            expect(bookingsService.getBookings).toHaveBeenCalledWith('user-123');
+            expect(usersService.getUserProfile).toHaveBeenCalledWith('user-123');
         });
     });
 
@@ -199,8 +207,8 @@ describe('Profile Page', () => {
         fireEvent.change(input, { target: { files: [file] } });
 
         await waitFor(() => {
-            expect(db.uploadAvatar).toHaveBeenCalledWith(file);
-            expect(db.updateUserProfile).toHaveBeenCalled();
+            expect(storageService.uploadAvatar).toHaveBeenCalledWith(file);
+            expect(usersService.updateUserProfile).toHaveBeenCalled();
             expect(mockUpdateUser).toHaveBeenCalled();
             expect(toast.success).toHaveBeenCalled();
         });
@@ -218,7 +226,7 @@ describe('Profile Page', () => {
         fireEvent.submit(screen.getByTestId('settings-tab'));
 
         await waitFor(() => {
-            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
+            expect(usersService.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
                 full_name: 'New Name'
             }));
             expect(mockUpdateUser).toHaveBeenCalled();
@@ -238,7 +246,7 @@ describe('Profile Page', () => {
         fireEvent.submit(screen.getByTestId('payouts-tab'));
 
         await waitFor(() => {
-            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
+            expect(usersService.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
                 iban: 'TR123'
             }));
             expect(toast.success).toHaveBeenCalled();
@@ -247,7 +255,7 @@ describe('Profile Page', () => {
 
     it('handles booking cancellation', async () => {
         const mockBookings = [{ id: 'b1', created_at: new Date().toISOString() }];
-        (db.getBookings as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookings as any).mockResolvedValue(mockBookings);
         
         renderProfile();
         
@@ -257,7 +265,7 @@ describe('Profile Page', () => {
         expect(window.confirm).toHaveBeenCalled();
         
         await waitFor(() => {
-            expect(db.cancelBooking).toHaveBeenCalledWith('b1');
+            expect(bookingsService.cancelBooking).toHaveBeenCalledWith('b1');
             expect(toast.success).toHaveBeenCalled();
         });
     });
@@ -304,7 +312,7 @@ describe('Profile Page', () => {
         fireEvent.click(screen.getByText('Confirm Host'));
 
         await waitFor(() => {
-            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', { role: 'host' });
+            expect(usersService.updateUserProfile).toHaveBeenCalledWith('user-123', { role: 'host' });
             expect(mockUpdateUser).toHaveBeenCalledWith({ role: 'host' });
             expect(toast.success).toHaveBeenCalled();
         });

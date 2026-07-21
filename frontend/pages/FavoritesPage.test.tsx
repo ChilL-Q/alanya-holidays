@@ -8,6 +8,9 @@ vi.mock('../api-services', () => ({
     db: {
         getPropertiesByIds: vi.fn(),
         getFavorites: vi.fn()
+    },
+    propertiesService: {
+        getPropertiesByIds: vi.fn()
     }
 }));
 
@@ -61,7 +64,7 @@ vi.mock('../context/ThemeContext', () => ({
     })
 }));
 
-import { db } from '../api-services';
+import { propertiesService } from '../api-services';
 
 const mockProperties = [
     {
@@ -97,7 +100,7 @@ const mockProperties = [
 ];
 
 describe('FavoritesPage', () => {
-    const mockGetPropertiesByIds = db.getPropertiesByIds as any;
+    const mockGetPropertiesByIds = propertiesService.getPropertiesByIds as any;
 
     beforeEach(() => {
         vi.clearAllMocks();

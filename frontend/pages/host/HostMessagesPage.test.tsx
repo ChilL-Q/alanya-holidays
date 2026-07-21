@@ -1,7 +1,7 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HostMessagesPage } from './HostMessagesPage';
-import { useChat } from '../../context/ChatContext';
+import { useChat } from '../../modules/chat';
 import { BrowserRouter } from 'react-router-dom';
 
 const mockConversations = [
@@ -23,11 +23,8 @@ const mockConversations = [
     }
 ];
 
-vi.mock('../../context/ChatContext', () => ({
-    useChat: vi.fn()
-}));
-
-vi.mock('../../components/chat/ChatWindow', () => ({
+vi.mock('../../modules/chat', () => ({
+    useChat: vi.fn(),
     ChatWindow: ({ className }: any) => (
         <div data-testid="chat-window" className={className}>
             Chat Window Mock

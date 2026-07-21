@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminEditDirectoryPage } from './AdminEditDirectoryPage';
-import { db } from '../../api-services';
+import { directoryService, storageService } from '../../api-services';
 
 // Rule 1: vi.hoisted for shared mocks
 const { mockNavigate, mockToast, mockParams } = vi.hoisted(() => ({
@@ -26,12 +26,16 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 vi.mock('../../api-services', () => ({
-    db: {
+    directoryService: {
         getDirectoryListing: vi.fn(),
         createDirectoryListing: vi.fn(),
-        updateDirectoryListing: vi.fn(),
-        uploadImage: vi.fn(),
+        updateDirectoryListing: vi.fn()
+    },
+    locationsService: {
         getLocations: vi.fn().mockResolvedValue([])
+    },
+    storageService: {
+        uploadImage: vi.fn()
     },
     TIER_LIMITS: { explorer: 5, voyager: 50, signature: 100, partner: 100 }
 }));
@@ -102,12 +106,12 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('loads and renders existing listing', async () => {
-        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        (directoryService.getDirectoryListing as any).mockResolvedValue(mockListing);
         
         renderPage('1');
 
         await waitFor(() => {
-            expect(db.getDirectoryListing).toHaveBeenCalledWith('1');
+            expect(directoryService.getDirectoryListing).toHaveBeenCalledWith('1');
             expect(screen.getByDisplayValue('Existing Clinic')).toBeInTheDocument();
             expect(screen.getByDisplayValue('Top rated dental clinic')).toBeInTheDocument();
             expect(screen.getByDisplayValue('Alanya Center')).toBeInTheDocument();
@@ -116,7 +120,7 @@ describe('AdminEditDirectoryPage', () => {
 
     it('handles load failure', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getDirectoryListing as any).mockRejectedValue(new Error('Load error'));
+        (directoryService.getDirectoryListing as any).mockRejectedValue(new Error('Load error'));
         
         renderPage('1');
 
@@ -128,7 +132,7 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('submits new listing successfully', async () => {
-        (db.createDirectoryListing as any).mockResolvedValue({ id: 'new-1' });
+        (directoryService.createDirectoryListing as any).mockResolvedValue({ id: 'new-1' });
         
         renderPage();
 
@@ -141,7 +145,7 @@ describe('AdminEditDirectoryPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.createDirectoryListing).toHaveBeenCalledWith(
+        expect(directoryService.createDirectoryListing).toHaveBeenCalledWith(
             expect.objectContaining({
                 name: 'New Shop',
                 short_description: 'Great shop',
@@ -154,8 +158,8 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('updates existing listing successfully', async () => {
-        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
-        (db.updateDirectoryListing as any).mockResolvedValue({});
+        (directoryService.getDirectoryListing as any).mockResolvedValue(mockListing);
+        (directoryService.updateDirectoryListing as any).mockResolvedValue({});
         
         renderPage('1');
 
@@ -168,7 +172,7 @@ describe('AdminEditDirectoryPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.updateDirectoryListing).toHaveBeenCalledWith(
+        expect(directoryService.updateDirectoryListing).toHaveBeenCalledWith(
             '1',
             expect.objectContaining({
                 name: 'Updated Clinic'
@@ -180,7 +184,7 @@ describe('AdminEditDirectoryPage', () => {
 
     it('handles form submission error', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.createDirectoryListing as any).mockRejectedValue(new Error('Save failed'));
+        (directoryService.createDirectoryListing as any).mockRejectedValue(new Error('Save failed'));
         
         renderPage();
 
@@ -205,8 +209,8 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('handles photo upload during submit', async () => {
-        (db.createDirectoryListing as any).mockResolvedValue({});
-        (db.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
+        (directoryService.createDirectoryListing as any).mockResolvedValue({});
+        (storageService.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
         
         renderPage();
 
@@ -221,8 +225,8 @@ describe('AdminEditDirectoryPage', () => {
             fireEvent.click(screen.getByRole('button', { name: /Save/i }));
         });
 
-        expect(db.uploadImage).toHaveBeenCalledWith(file, 'directory');
-        expect(db.createDirectoryListing).toHaveBeenCalledWith(
+        expect(storageService.uploadImage).toHaveBeenCalledWith(file, 'directory');
+        expect(directoryService.createDirectoryListing).toHaveBeenCalledWith(
             expect.objectContaining({
                 gallery: expect.arrayContaining(['http://example.com/new.jpg'])
             }),
@@ -231,7 +235,7 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('removes existing image', async () => {
-        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        (directoryService.getDirectoryListing as any).mockResolvedValue(mockListing);
         renderPage('1');
 
         await waitFor(() => expect(screen.getByRole('img')).toBeInTheDocument());
@@ -243,7 +247,7 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('hydrates descriptions from existing listing', async () => {
-        (db.getDirectoryListing as any).mockResolvedValue({
+        (directoryService.getDirectoryListing as any).mockResolvedValue({
             ...mockListing,
             descriptions: { en: 'EN desc', tr: 'TR desc', ru: 'RU desc', ar: 'AR desc' }
         });
@@ -259,7 +263,7 @@ describe('AdminEditDirectoryPage', () => {
     });
 
     it('invokes AI generation with structured mode on Generate click', async () => {
-        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        (directoryService.getDirectoryListing as any).mockResolvedValue(mockListing);
         mockSupabaseFunctions.invoke.mockResolvedValue({
             data: { answer: '{"en":"Generated EN","tr":"Generated TR","ru":"Generated RU","ar":"Generated AR"}' },
             error: null
@@ -283,7 +287,7 @@ describe('AdminEditDirectoryPage', () => {
 
     it('shows error toast when AI returns invalid JSON', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getDirectoryListing as any).mockResolvedValue(mockListing);
+        (directoryService.getDirectoryListing as any).mockResolvedValue(mockListing);
         mockSupabaseFunctions.invoke.mockResolvedValue({
             data: { answer: 'not json' },
             error: null

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { PropertyCard } from '../ui/PropertyCard';
 import type { Property } from '../../types/models';
 
@@ -16,7 +16,7 @@ export const FeaturedProperties: React.FC = () => {
         const fetchProperties = async () => {
             setIsLoading(true);
             try {
-                const { data } = await db.getProperties(1, 6);
+                const { data } = await propertiesService.getProperties(1, 6);
 
                 if (!isMountedRef.current) return;
 

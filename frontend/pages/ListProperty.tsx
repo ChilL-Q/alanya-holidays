@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { db } from '../api-services';
+import { storageService, propertiesService } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { PropertyFormData, PropertyDB } from '../types/models';
 import toast from 'react-hot-toast';
@@ -124,11 +124,11 @@ export const ListProperty: React.FC = () => {
         try {
             const imageUrls: string[] = [];
             for (const file of files) {
-                const url = await db.uploadImage(file, 'properties');
+                const url = await storageService.uploadImage(file, 'properties');
                 if (url) imageUrls.push(url);
             }
 
-            await db.createProperty({
+            await propertiesService.createProperty({
                 title: formData.title,
                 description: formData.description,
                 price_per_night: parseFloat(String(formData.price || 0)),

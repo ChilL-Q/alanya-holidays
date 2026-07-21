@@ -1,7 +1,7 @@
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HostPropertiesPage } from './HostPropertiesPage';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { BrowserRouter } from 'react-router-dom';
 
 const mockUser = { id: 'host-1', full_name: 'Test Host', email: 'host@test.com', role: 'host' };
@@ -23,7 +23,7 @@ vi.mock('../../context/AuthContext', () => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: {
+    propertiesService: {
         getPropertiesByHost: vi.fn(),
         deleteProperty: vi.fn()
     }
@@ -78,7 +78,7 @@ describe('HostPropertiesPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockNavigate.mockClear();
-        (db.getPropertiesByHost as any).mockResolvedValue(mockProperties);
+        (propertiesService.getPropertiesByHost as any).mockResolvedValue(mockProperties);
     });
 
     it('renders properties page with heading', async () => {
@@ -104,7 +104,7 @@ describe('HostPropertiesPage', () => {
         });
 
         await waitFor(() => {
-            expect(db.getPropertiesByHost).toHaveBeenCalledWith('host-1');
+            expect(propertiesService.getPropertiesByHost).toHaveBeenCalledWith('host-1');
         });
 
         expect(screen.getByText('Beach Villa')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('HostPropertiesPage', () => {
     });
 
     it('shows loading state while fetching properties', async () => {
-        (db.getPropertiesByHost as any).mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
+        (propertiesService.getPropertiesByHost as any).mockImplementation(() => new Promise(resolve => setTimeout(() => resolve([]), 100)));
 
         await act(async () => {
             render(
@@ -363,7 +363,7 @@ describe('HostPropertiesPage', () => {
         });
 
         await waitFor(() => {
-            expect(db.deleteProperty).toHaveBeenCalledWith('prop-1');
+            expect(propertiesService.deleteProperty).toHaveBeenCalledWith('prop-1');
         });
 
         confirmSpy.mockRestore();
@@ -372,7 +372,7 @@ describe('HostPropertiesPage', () => {
     it('removes deleted property from the list', async () => {
         const confirmSpy = vi.spyOn(window, 'confirm');
         confirmSpy.mockImplementation(() => true);
-        (db.deleteProperty as any).mockResolvedValue(undefined);
+        (propertiesService.deleteProperty as any).mockResolvedValue(undefined);
 
         await act(async () => {
             render(
@@ -398,7 +398,7 @@ describe('HostPropertiesPage', () => {
         const { toast } = await import('react-hot-toast');
         const confirmSpy = vi.spyOn(window, 'confirm');
         confirmSpy.mockImplementation(() => true);
-        (db.deleteProperty as any).mockRejectedValue(new Error('Delete failed'));
+        (propertiesService.deleteProperty as any).mockRejectedValue(new Error('Delete failed'));
 
         await act(async () => {
             render(
@@ -421,7 +421,7 @@ describe('HostPropertiesPage', () => {
     });
 
     it('shows empty state when no properties', async () => {
-        (db.getPropertiesByHost as any).mockResolvedValue([]);
+        (propertiesService.getPropertiesByHost as any).mockResolvedValue([]);
 
         await act(async () => {
             render(
@@ -469,7 +469,7 @@ describe('HostPropertiesPage', () => {
             }
         ];
 
-        (db.getPropertiesByHost as any).mockResolvedValue(propertiesWithNoImages);
+        (propertiesService.getPropertiesByHost as any).mockResolvedValue(propertiesWithNoImages);
 
         await act(async () => {
             render(

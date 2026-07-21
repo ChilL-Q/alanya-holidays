@@ -8,6 +8,10 @@ vi.mock('../../api-services', () => ({
     db: {
         getService: vi.fn()
     },
+    servicesService: {
+        getService: vi.fn(),
+        getServiceModel: vi.fn()
+    },
     ServiceData: {}
 }));
 
@@ -71,7 +75,7 @@ vi.mock('react-imask', () => ({
     )
 }));
 
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 
 const mockService = {
     id: 'tour-123',
@@ -95,7 +99,7 @@ const mockService = {
 };
 
 describe('BookTour', () => {
-    const mockGetService = db.getService as any;
+    const mockGetService = servicesService.getService as any;
 
     beforeEach(() => {
         vi.clearAllMocks();

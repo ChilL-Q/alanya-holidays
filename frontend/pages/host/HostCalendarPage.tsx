@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 
 export const HostCalendarPage = () => {
@@ -17,7 +17,7 @@ export const HostCalendarPage = () => {
             const year = currentDate.getFullYear();
             const monthStart = new Date(year, month, 1).toISOString();
             const monthEnd = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-            const myBookings = await db.getBookingsForHost(user.id, monthStart, monthEnd);
+            const myBookings = await bookingsService.getBookingsForHost(user.id, monthStart, monthEnd);
             setBookings(myBookings || []);
         } catch (error) {
             console.error(error);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 
@@ -30,7 +30,7 @@ export const BicycleRental: React.FC = () => {
         const fetchBikes = async () => {
             try {
                 // Fetch specialized e-bike tours/rentals
-                const { data: tours } = await db.getServices('tour', 1, 100);
+                const { data: tours } = await servicesService.getServices('tour', 1, 100);
 
                 // Filter for e-bikes
                 const eBikes = tours?.filter(s => s.features?.subcategory === 'ebike' || s.features?.subcategory === 'bicycle') || [];

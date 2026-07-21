@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { propertiesService, storageService } from '../../api-services';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Calendar, Settings } from 'lucide-react';
@@ -62,7 +62,7 @@ export const AdminEditPropertyPage: React.FC = () => {
     const fetchProp = useCallback(async () => {
         if (!id) return;
         try {
-            const data = await db.getProperty(id);
+            const data = await propertiesService.getProperty(id);
             if (data) {
                 setFormData(prev => ({
                     ...prev,
@@ -139,7 +139,7 @@ export const AdminEditPropertyPage: React.FC = () => {
         try {
             const newUploadedUrls = [];
             for (const file of files) {
-                const url = await db.uploadPropertyImage(file);
+                const url = await storageService.uploadPropertyImage(file);
                 newUploadedUrls.push(url);
             }
 
@@ -174,7 +174,7 @@ export const AdminEditPropertyPage: React.FC = () => {
             };
 
             if (id) {
-                await db.updateProperty(id, propertyData);
+                await propertiesService.updateProperty(id, propertyData);
                 toast.success('Property updated successfully');
                 navigate('/admin');
             }

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DirectoryAdminPage } from './DirectoryAdminPage';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 
 // Rule 1: vi.hoisted for shared mocks
 const { mockNavigate } = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 vi.mock('../../api-services', () => ({
-    db: {
+    directoryService: {
         getDirectoryListingsByStatus: vi.fn(),
         getPendingDirectoryListings: vi.fn(),
         deleteDirectoryListing: vi.fn(),
@@ -46,11 +46,11 @@ const mockListings = [
 describe('DirectoryAdminPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getDirectoryListingsByStatus as any).mockResolvedValue(mockListings);
-        (db.getPendingDirectoryListings as any).mockResolvedValue([]);
-        (db.getListingClaims as any).mockResolvedValue([]);
-        (db.approveListingClaim as any).mockResolvedValue({});
-        (db.rejectListingClaim as any).mockResolvedValue({});
+        (directoryService.getDirectoryListingsByStatus as any).mockResolvedValue(mockListings);
+        (directoryService.getPendingDirectoryListings as any).mockResolvedValue([]);
+        (directoryService.getListingClaims as any).mockResolvedValue([]);
+        (directoryService.approveListingClaim as any).mockResolvedValue({});
+        (directoryService.rejectListingClaim as any).mockResolvedValue({});
         vi.stubGlobal('confirm', vi.fn(() => true));
     });
 
@@ -66,7 +66,7 @@ describe('DirectoryAdminPage', () => {
         );
 
         await waitFor(() => {
-            expect(db.getDirectoryListingsByStatus).toHaveBeenCalledWith('approved', undefined);
+            expect(directoryService.getDirectoryListingsByStatus).toHaveBeenCalledWith('approved', undefined);
             expect(screen.getByText('Test Medical')).toBeInTheDocument();
             expect(screen.getByText('Alanya Resort')).toBeInTheDocument();
         });
@@ -133,7 +133,7 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('handles delete action with confirmation', async () => {
-        (db.deleteDirectoryListing as any).mockResolvedValue({});
+        (directoryService.deleteDirectoryListing as any).mockResolvedValue({});
         
         render(
             <BrowserRouter>
@@ -153,15 +153,15 @@ describe('DirectoryAdminPage', () => {
         if (modalDeleteBtn) fireEvent.click(modalDeleteBtn);
 
         await waitFor(() => {
-            expect(db.deleteDirectoryListing).toHaveBeenCalledWith('1');
+            expect(directoryService.deleteDirectoryListing).toHaveBeenCalledWith('1');
             // loadListings calls getDirectoryListingsByStatus twice (approved + rejected) per invocation
-            expect(db.getDirectoryListingsByStatus).toHaveBeenCalledTimes(4);
+            expect(directoryService.getDirectoryListingsByStatus).toHaveBeenCalledTimes(4);
         });
     });
 
     it('handles delete failure', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.deleteDirectoryListing as any).mockRejectedValue(new Error('Delete failed'));
+        (directoryService.deleteDirectoryListing as any).mockRejectedValue(new Error('Delete failed'));
         
         render(
             <BrowserRouter>
@@ -185,9 +185,9 @@ describe('DirectoryAdminPage', () => {
     });
 
     it('handles mock data migration', async () => {
-        (db.getDirectoryListingsByStatus as any).mockResolvedValueOnce([]).mockResolvedValue(mockListings);
-        (db.getPendingDirectoryListings as any).mockResolvedValue([]);
-        (db.createDirectoryListing as any).mockResolvedValue({ id: 'new' });
+        (directoryService.getDirectoryListingsByStatus as any).mockResolvedValueOnce([]).mockResolvedValue(mockListings);
+        (directoryService.getPendingDirectoryListings as any).mockResolvedValue([]);
+        (directoryService.createDirectoryListing as any).mockResolvedValue({ id: 'new' });
 
         render(
             <BrowserRouter>
@@ -202,7 +202,7 @@ describe('DirectoryAdminPage', () => {
         expect(window.confirm).toHaveBeenCalled();
         
         await waitFor(() => {
-            expect(db.createDirectoryListing).toHaveBeenCalled();
+            expect(directoryService.createDirectoryListing).toHaveBeenCalled();
         });
         const { toast } = await import('react-hot-toast');
         expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Successfully migrated'));
@@ -210,7 +210,7 @@ describe('DirectoryAdminPage', () => {
 
     it('handles API error when loading listings', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getDirectoryListingsByStatus as any).mockRejectedValue(new Error('Fetch failed'));
+        (directoryService.getDirectoryListingsByStatus as any).mockRejectedValue(new Error('Fetch failed'));
         
         render(
             <BrowserRouter>

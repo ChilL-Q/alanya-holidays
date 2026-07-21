@@ -19,7 +19,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    usersService: {
         getAllUsers: vi.fn()
     }
 }));
@@ -40,7 +40,7 @@ vi.mock('lucide-react', () => ({
 
 // Import component after mocks
 import { UsersPage } from './UsersPage';
-import { db } from '../../api-services';
+import { usersService } from '../../api-services';
 
 describe('UsersPage', () => {
     const mockPagination = { page: 1, limit: 1000, total: 3, totalPages: 1 };
@@ -65,13 +65,13 @@ describe('UsersPage', () => {
     };
 
     it('shows loading state initially', () => {
-        (db.getAllUsers as any).mockReturnValue(new Promise(() => {})); // Never resolves
+        (usersService.getAllUsers as any).mockReturnValue(new Promise(() => {})); // Never resolves
         renderUsersPage();
         expect(screen.getByText('Loading users...')).toBeInTheDocument();
     });
 
     it('renders users table after fetch', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => {
@@ -82,7 +82,7 @@ describe('UsersPage', () => {
     });
 
     it('shows empty state when no users found', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 1000, total: 0, totalPages: 0 } });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: [], pagination: { page: 1, limit: 1000, total: 0, totalPages: 0 } });
         renderUsersPage();
 
         await waitFor(() => {
@@ -91,7 +91,7 @@ describe('UsersPage', () => {
     });
 
     it('filters users by role', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -104,7 +104,7 @@ describe('UsersPage', () => {
     });
 
     it('filters users by search query', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -117,7 +117,7 @@ describe('UsersPage', () => {
     });
 
     it('navigates to edit user page on edit click', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -129,7 +129,7 @@ describe('UsersPage', () => {
     });
 
     it('handles delete click with confirmation', async () => {
-        (db.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: mockUsers, pagination: mockPagination });
         renderUsersPage();
 
         await waitFor(() => expect(screen.getByText('Admin User')).toBeInTheDocument());
@@ -144,7 +144,7 @@ describe('UsersPage', () => {
 
     it('handles API error gracefully', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getAllUsers as any).mockRejectedValue(new Error('Fetch failed'));
+        (usersService.getAllUsers as any).mockRejectedValue(new Error('Fetch failed'));
         renderUsersPage();
 
         await waitFor(() => {

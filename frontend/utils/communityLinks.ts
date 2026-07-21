@@ -1,4 +1,4 @@
-import { db } from '../api-services';
+import { forumService, directoryService } from '../api-services';
 import { BlogPost, ForumPost, DirectoryListingDB } from '../types/models';
 
 /** Forum post with relevance score for sorting */
@@ -78,7 +78,7 @@ export async function getRelatedDiscussions(
         const sourceCategory = isBlogPost ? post.category : null;
 
         // Fetch all forum posts (limit reasonably to avoid N+1)
-        const { data: allPosts } = await db.getForumPosts({ limit: 100 });
+        const { data: allPosts } = await forumService.getForumPosts({ limit: 100 });
 
         // Score and filter posts
         const scoredPosts: ForumPostWithScore[] = allPosts
@@ -125,7 +125,7 @@ export async function getRelatedListings(
         const categoryId = post.category?.id;
 
         // Fetch directory listings
-        const { data: allListings } = await db.getDirectoryListings(1, 100, categoryId);
+        const { data: allListings } = await directoryService.getDirectoryListings(1, 100, categoryId);
 
         // Score and filter listings
         const scoredListings: DirectoryListingWithScore[] = allListings

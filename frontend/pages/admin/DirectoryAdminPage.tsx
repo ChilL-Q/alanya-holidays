@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { DirectoryListingDB, ListingClaimDB } from '../../types/models';
@@ -42,7 +42,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
 
     const loadClaims = useCallback(async () => {
         try {
-            const claimsList = await db.getListingClaims();
+            const claimsList = await directoryService.getListingClaims();
             setClaims(claimsList);
         } catch (e) {
             console.error('Failed to load claims', e);
@@ -54,10 +54,10 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
             const [approved, pending, rejected, claimsList] = await Promise.all([
-                db.getDirectoryListingsByStatus('approved', category),
-                db.getPendingDirectoryListings(),
-                db.getDirectoryListingsByStatus('rejected', category),
-                db.getListingClaims(),
+                directoryService.getDirectoryListingsByStatus('approved', category),
+                directoryService.getPendingDirectoryListings(),
+                directoryService.getDirectoryListingsByStatus('rejected', category),
+                directoryService.getListingClaims(),
             ]);
             setListings(approved);
             setPendingListings(pending);
@@ -76,7 +76,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
 
     const handleApprove = async (id: string) => {
         try {
-            await db.approveDirectoryListing(id);
+            await directoryService.approveDirectoryListing(id);
             toast.success('Listing approved and published');
             await loadListings();
         } catch (e: unknown) {
@@ -90,7 +90,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             return;
         }
         try {
-            await db.rejectDirectoryListing(id, rejectState.reason.trim());
+            await directoryService.rejectDirectoryListing(id, rejectState.reason.trim());
             toast.success('Listing rejected');
             setRejectState(null);
             await loadListings();
@@ -101,7 +101,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
 
     const handleApproveClaim = async (claimId: string) => {
         try {
-            await db.approveListingClaim(claimId);
+            await directoryService.approveListingClaim(claimId);
             toast.success('Claim approved');
             await loadClaims();
         } catch (e: unknown) {
@@ -115,7 +115,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
             return;
         }
         try {
-            await db.rejectListingClaim(claimId, rejectClaimState.reason.trim());
+            await directoryService.rejectListingClaim(claimId, rejectClaimState.reason.trim());
             toast.success('Claim rejected');
             setRejectClaimState(null);
             await loadClaims();
@@ -140,7 +140,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
 
         try {
             if (type === 'delete') {
-                await db.deleteDirectoryListing(itemId);
+                await directoryService.deleteDirectoryListing(itemId);
             }
             await loadListings();
         } catch (e: unknown) {
@@ -158,7 +158,7 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         try {
             let count = 0;
             for (const item of MOCK_DIRECTORY_DATA) {
-                await db.createDirectoryListing({
+                await directoryService.createDirectoryListing({
                     name: item.name,
                     category_id: item.categoryId,
                     short_description: item.shortDescription,

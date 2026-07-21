@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Loader2, Plus, Trash2, Flag, Check, EyeOff, Eye, Pin, MessageSquareOff } from 'lucide-react';
-import { db } from '../../api-services';
+import { forumService } from '../../api-services';
 import { ForumCategory, ForumPost, ForumComment, ForumReport } from '../../types/models';
 import { useRemovedItems } from '../../hooks/useRemovedItems';
 
@@ -21,7 +21,7 @@ export const AdminForumPage: React.FC = () => {
         fetchItems: fetchRemovedPosts,
         restoreItem: restorePost,
     } = useRemovedItems<ForumPost>('post', useCallback(async () => {
-        const { data } = await db.getForumPosts({ removedOnly: true, limit: 50 });
+        const { data } = await forumService.getForumPosts({ removedOnly: true, limit: 50 });
         return data;
     }, []));
 
@@ -32,15 +32,15 @@ export const AdminForumPage: React.FC = () => {
         fetchItems: fetchRemovedComments,
         restoreItem: restoreComment,
     } = useRemovedItems<ForumComment>('comment', useCallback(async () => {
-        return db.getRemovedComments(50);
+        return forumService.getRemovedComments(50);
     }, []));
 
     const fetchAll = useCallback(async () => {
         setLoading(true);
         try {
             const [cats, reps] = await Promise.all([
-                db.getForumCategoryTree(),
-                db.getForumReports(false),
+                forumService.getForumCategoryTree(),
+                forumService.getForumReports(false),
             ]);
             setCategories(cats);
             setReports(reps);
@@ -60,7 +60,7 @@ export const AdminForumPage: React.FC = () => {
         if (!newName.trim()) return;
         setCreating(true);
         try {
-            await db.createForumCategory({
+            await forumService.createForumCategory({
                 name: newName.trim(),
                 description: newDescription.trim() || undefined,
                 parent_id: newParentId || null,
@@ -81,7 +81,7 @@ export const AdminForumPage: React.FC = () => {
     const handleDeleteCategory = async (id: string) => {
         if (!window.confirm('Delete this category? Posts and subcategories under it will become uncategorized.')) return;
         try {
-            await db.deleteForumCategory(id);
+            await forumService.deleteForumCategory(id);
             toast.success('Category deleted');
             fetchAll();
         } catch (e) {
@@ -92,7 +92,7 @@ export const AdminForumPage: React.FC = () => {
     // "Categories switch" — move a subcategory under a different parent (or to top level).
     const handleSwitchParent = async (id: string, parentId: string) => {
         try {
-            await db.updateForumCategory(id, { parent_id: parentId || null });
+            await forumService.updateForumCategory(id, { parent_id: parentId || null });
             toast.success('Category moved');
             fetchAll();
         } catch (e) {
@@ -102,7 +102,7 @@ export const AdminForumPage: React.FC = () => {
 
     const handleResolve = async (report: ForumReport) => {
         try {
-            await db.resolveForumReport(report.id);
+            await forumService.resolveForumReport(report.id);
             toast.success('Report resolved');
             setReports((prev) => prev.filter((r) => r.id !== report.id));
         } catch (e) {
@@ -113,8 +113,8 @@ export const AdminForumPage: React.FC = () => {
     const handleRemoveContent = async (report: ForumReport) => {
         if (!window.confirm(`Hide this ${report.target_type} from public view?`)) return;
         try {
-            await db.setRemoved(report.target_type, report.target_id, true);
-            await db.resolveForumReport(report.id);
+            await forumService.setRemoved(report.target_type, report.target_id, true);
+            await forumService.resolveForumReport(report.id);
             toast.success('Content hidden and report resolved');
             setReports((prev) => prev.filter((r) => r.id !== report.id));
         } catch (e) {
@@ -124,7 +124,7 @@ export const AdminForumPage: React.FC = () => {
 
     const handlePin = async (postId: string) => {
         try {
-            await db.setPinned(postId, true);
+            await forumService.setPinned(postId, true);
             toast.success('Post pinned');
         } catch (e) {
             toast.error((e as Error).message || 'Failed to pin');

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, TIER_LIMITS } from '../../api-services';
+import { TIER_LIMITS, directoryService, locationsService, storageService } from '../../api-services';
 import { ListingTier } from '../../types/models';
 import { supabase } from '../../api-services/supabase';
 import { ArrowLeft, Save, Check, Sparkles } from 'lucide-react';
@@ -86,7 +86,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
 
     const loadListing = useCallback(async () => {
         try {
-            const listing = await db.getDirectoryListing(id!);
+            const listing = await directoryService.getDirectoryListing(id!);
             if (listing) {
                 setFormData({
                     name: listing.name,
@@ -133,7 +133,7 @@ export const AdminEditDirectoryPage: React.FC = () => {
     }, [isEditing, loadListing]);
 
     useEffect(() => {
-        db.getLocations()
+        locationsService.getLocations()
             .then(setAvailableLocations)
             .catch(err => console.error('Failed to load locations:', err));
     }, []);
@@ -244,7 +244,7 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
             let uploadedUrls: string[] = [];
             if (files.length > 0) {
                 uploadedUrls = await Promise.all(
-                    files.map(file => db.uploadImage(file, 'directory'))
+                    files.map(file => storageService.uploadImage(file, 'directory'))
                 );
             }
 
@@ -280,11 +280,11 @@ Example: {"en": "...", "tr": "...", "ru": "...", "ar": "..."}`;
 
             if (isEditing) {
                 const effectiveLocationIds = formData.tier === 'signature' ? selectedLocationIds : [];
-                await db.updateDirectoryListing(id!, listingData, effectiveLocationIds);
+                await directoryService.updateDirectoryListing(id!, listingData, effectiveLocationIds);
                 toast.success('Listing updated successfully');
             } else {
                 const effectiveLocationIds = formData.tier === 'signature' ? selectedLocationIds : [];
-                await db.createDirectoryListing(listingData, effectiveLocationIds);
+                await directoryService.createDirectoryListing(listingData, effectiveLocationIds);
                 toast.success('Listing created successfully');
             }
             const draftKey = isEditing ? `draft_admin_directory_listing_${id}` : 'draft_admin_directory_listing_new';

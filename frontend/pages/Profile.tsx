@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
+import { bookingsService, propertiesService, servicesService, usersService, storageService } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { SocialLinks } from '../types/models';
@@ -77,10 +77,10 @@ export const Profile: React.FC = () => {
             if (user?.id) {
                 try {
                     const [bookingsData, propertiesData, servicesData, profile] = await Promise.all([
-                        db.getBookings(user.id),
-                        db.getPropertiesByHost(user.id),
-                        db.getServicesByProvider(user.id),
-                        db.getUserProfile(user.id)
+                        bookingsService.getBookings(user.id),
+                        propertiesService.getPropertiesByHost(user.id),
+                        servicesService.getServicesByProvider(user.id),
+                        usersService.getUserProfile(user.id)
                     ]);
 
                     if (!isMountedRef.current) return;
@@ -134,8 +134,8 @@ export const Profile: React.FC = () => {
         setUploading(true);
         const toastId = toast.loading(t('auth.avatar_uploading'));
         try {
-            const publicUrl = await db.uploadAvatar(file);
-            await db.updateUserProfile(user.id, { avatar_url: publicUrl });
+            const publicUrl = await storageService.uploadAvatar(file);
+            await usersService.updateUserProfile(user.id, { avatar_url: publicUrl });
             await updateUser({ avatar: publicUrl });
             toast.success(t('auth.avatar_success'), { id: toastId });
         } catch (error: unknown) {
@@ -152,7 +152,7 @@ export const Profile: React.FC = () => {
 
         setSavingProfile(true);
         try {
-            await db.updateUserProfile(user.id, {
+            await usersService.updateUserProfile(user.id, {
                 full_name: profileForm.name,
                 phone: profileForm.phone,
                 company_name: profileForm.companyName,
@@ -176,7 +176,7 @@ export const Profile: React.FC = () => {
 
         setSavingPayout(true);
         try {
-            await db.updateUserProfile(user.id, {
+            await usersService.updateUserProfile(user.id, {
                 iban: payoutForm.iban,
                 bank_name: payoutForm.bankName,
                 bank_account_holder_name: payoutForm.bankAccountHolderName,
@@ -204,7 +204,7 @@ export const Profile: React.FC = () => {
 
         const toastId = toast.loading(t('booking.cancelling') || 'Cancelling booking...');
         try {
-            await db.cancelBooking(bookingId);
+            await bookingsService.cancelBooking(bookingId);
             toast.success(t('profile.cancel_success'), { id: toastId });
             // Refresh bookings locally
             setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
@@ -253,7 +253,7 @@ export const Profile: React.FC = () => {
         setLoading(true);
         try {
             // Update role in DB
-            await db.updateUserProfile(user.id, { role: 'host' });
+            await usersService.updateUserProfile(user.id, { role: 'host' });
             // Update role in Context
             await updateUser({ role: 'host' });
             toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');

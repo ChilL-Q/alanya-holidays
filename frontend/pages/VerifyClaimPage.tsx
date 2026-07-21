@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { db } from '../api-services';
+import { directoryService } from '../api-services';
 import { useLanguage } from '../context/LanguageContext';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
@@ -21,7 +21,7 @@ export const VerifyClaimPage: React.FC = () => {
             }
 
             try {
-                const result = await db.verifyClaimEmail(token);
+                const result = await directoryService.verifyClaimEmail(token);
                 if (!result) {
                     setStatus('error');
                     return;

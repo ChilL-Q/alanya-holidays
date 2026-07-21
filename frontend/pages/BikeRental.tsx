@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { VehicleRentalTemplate } from '../components/templates/VehicleRentalTemplate';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../api-services';
+import { ServiceData, servicesService } from '../api-services';
 import { useNavigate } from 'react-router-dom';
 import { getCarImage } from '../utils/carImages';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -32,7 +32,7 @@ export const BikeRental: React.FC = () => {
             try {
                 // Fetch both 'bike' and 'scooter' if you distinguish them, or just 'bike'
                 // Our AddService uses 'bike' type for both.
-                const { data: services } = await db.getServices('bike', 1, 100);
+                const { data: services } = await servicesService.getServices('bike', 1, 100);
 
                 // Aggregation Logic (Same as Car)
                 const groups: Record<string, BikeGroup> = {};

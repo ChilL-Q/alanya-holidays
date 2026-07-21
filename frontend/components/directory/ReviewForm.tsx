@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Star, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { listingReviewsService } from '../../api-services';
 import { ListingReview } from '../../types/models';
 import { toast } from 'react-hot-toast';
 
@@ -26,7 +26,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ listingId, onSubmit }) =
             return;
         }
         try {
-            const review = await db.getUserReviewForListing(listingId);
+            const review = await listingReviewsService.getUserReviewForListing(listingId);
             setExistingReview(review);
         } catch (error) {
             console.error('Failed to fetch user review:', error);
@@ -59,7 +59,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ listingId, onSubmit }) =
 
         setIsSubmitting(true);
         try {
-            await db.submitListingReview(listingId, rating, comment.trim());
+            await listingReviewsService.submitListingReview(listingId, rating, comment.trim());
             setIsSubmitted(true);
             onSubmit();
         } catch (error) {

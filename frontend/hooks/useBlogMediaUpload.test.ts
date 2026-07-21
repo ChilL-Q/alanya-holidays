@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useBlogMediaUpload } from './useBlogMediaUpload';
-import { db } from '../api-services';
+import { storageService } from '../api-services';
 import { toast } from 'react-hot-toast';
 
 vi.mock('../api-services', () => ({
-    db: {
+    storageService: {
         uploadBlogMediaBatch: vi.fn(),
     },
     BLOG_MAX_FILE_SIZE: 5 * 1024 * 1024,
@@ -161,14 +161,14 @@ describe('useBlogMediaUpload', () => {
         });
 
         const mockUrls = ['https://example.com/img1.png'];
-        (db.uploadBlogMediaBatch as any).mockResolvedValue(mockUrls);
+        (storageService.uploadBlogMediaBatch as any).mockResolvedValue(mockUrls);
 
         let urls: string[] = [];
         await act(async () => {
             urls = await result.current.uploadImages();
         });
 
-        expect(db.uploadBlogMediaBatch).toHaveBeenCalledWith([file]);
+        expect(storageService.uploadBlogMediaBatch).toHaveBeenCalledWith([file]);
         expect(urls).toEqual(mockUrls);
         expect(toast.success).toHaveBeenCalledWith('Images uploaded', { id: 'toast-id' });
     });

@@ -8,6 +8,10 @@ vi.mock('../../api-services', () => ({
     db: {
         getService: vi.fn()
     },
+    servicesService: {
+        getService: vi.fn(),
+        getServiceModel: vi.fn()
+    },
     ServiceData: {}
 }));
 
@@ -67,7 +71,7 @@ vi.mock('lucide-react', () => ({
     MessageCircle: ({ size, className }: any) => <svg data-testid="message-circle-icon" width={size} height={size} className={className} />
 }));
 
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 
 const mockService = {
     id: 'wellness-123',
@@ -85,7 +89,7 @@ const mockService = {
 };
 
 describe('BookWellness', () => {
-    const mockGetService = db.getService as any;
+    const mockGetService = servicesService.getService as any;
 
     beforeEach(() => {
         vi.clearAllMocks();

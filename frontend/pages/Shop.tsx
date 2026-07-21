@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../api-services';
+import { productsService } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 import { ShoppingBag } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -87,7 +87,7 @@ export const Shop: React.FC = () => {
         const fetchProducts = async () => {
             setLoading(true);
             try {
-                const data = await db.getProducts(filter === 'all' ? undefined : filter);
+                const data = await productsService.getProducts(filter === 'all' ? undefined : filter);
                 if ((!data || data.length === 0) && filter === 'all') {
                     setProducts(mockProducts);
                 } else if ((!data || data.length === 0) && filter !== 'all') {

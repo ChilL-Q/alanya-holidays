@@ -6,13 +6,17 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from '../context/LanguageContext';
 import { CurrencyProvider } from '../context/CurrencyContext';
 import { AuthProvider } from '../context/AuthContext';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 
 // Mock the API and other context dependencies
 vi.mock('../api-services', () => ({
     db: {
         getServices: vi.fn(),
         getServiceModel: vi.fn(),
+    },
+    servicesService: {
+        getServices: vi.fn(),
+        getServiceModel: vi.fn()
     }
 }));
 
@@ -56,8 +60,8 @@ const renderWithProviders = (initialEntry = '/services/car/toyota-corolla') => {
 describe('CarModelDetails', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getServices as any).mockResolvedValue({ data: mockOffers });
-        (db.getServiceModel as any).mockResolvedValue({ description: 'Test Description', image_url: 'test.jpg' });
+        (servicesService.getServices as any).mockResolvedValue({ data: mockOffers });
+        (servicesService.getServiceModel as any).mockResolvedValue({ description: 'Test Description', image_url: 'test.jpg' });
     });
 
     it('renders loading state initially', () => {

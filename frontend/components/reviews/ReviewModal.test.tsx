@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { ReviewModal } from './ReviewModal';
-import { db } from '../../api-services';
+import { storageService, propertiesService } from '../../api-services';
 
 // Rule 1: vi.hoisted for shared mocks
 const { mockToast } = vi.hoisted(() => ({
@@ -30,12 +30,28 @@ vi.mock('../../hooks/useSubmitShortcut', () => ({
 }));
 
 // Rule 3: API mocks
-vi.mock('../../api-services', () => ({
-    db: {
-        uploadImage: vi.fn(),
-        addReview: vi.fn()
-    }
-}));
+vi.mock('../../api-services', () => {
+    const mockDb = {
+        addReview: vi.fn(),
+        uploadImage: vi.fn()
+    };
+    return {
+        propertiesService: mockDb,
+        storageService: mockDb,
+        reviewsService: mockDb,
+        directoryService: mockDb,
+        adminService: mockDb,
+        blogService: mockDb,
+        servicesService: mockDb,
+        usersService: mockDb,
+        bookingsService: mockDb,
+        carsService: mockDb,
+        crudService: mockDb,
+        favoritesService: mockDb,
+        wellnessService: mockDb,
+        toursService: mockDb
+    };
+});
 
 // Mock Modal component
 vi.mock('../ui/Modal', () => ({
@@ -110,8 +126,8 @@ describe('ReviewModal', () => {
     });
 
     it('submits review successfully', async () => {
-        (db.uploadImage as any).mockResolvedValue('http://example.com/img.jpg');
-        (db.addReview as any).mockResolvedValue({});
+        (storageService.uploadImage as any).mockResolvedValue('http://example.com/img.jpg');
+        (propertiesService.addReview as any).mockResolvedValue({});
 
         render(<ReviewModal {...defaultProps} />);
         
@@ -125,7 +141,7 @@ describe('ReviewModal', () => {
             fireEvent.click(submitBtn);
         });
 
-        expect(db.addReview).toHaveBeenCalledWith(expect.objectContaining({
+        expect(propertiesService.addReview).toHaveBeenCalledWith(expect.objectContaining({
             property_id: 'prop-1',
             rating: 5,
             comment: 'Wonderful place!'
@@ -138,7 +154,7 @@ describe('ReviewModal', () => {
 
     it('handles submission error', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.addReview as any).mockRejectedValue(new Error('RLS Error'));
+        (propertiesService.addReview as any).mockRejectedValue(new Error('RLS Error'));
 
         render(<ReviewModal {...defaultProps} />);
         
@@ -157,7 +173,7 @@ describe('ReviewModal', () => {
     });
 
     it('submits on Cmd+Enter shortcut in textarea', async () => {
-        (db.addReview as any).mockResolvedValue({});
+        (propertiesService.addReview as any).mockResolvedValue({});
         render(<ReviewModal {...defaultProps} />);
         
         const textarea = screen.getByPlaceholderText('reviews.placeholder');
@@ -167,6 +183,6 @@ describe('ReviewModal', () => {
             fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true });
         });
 
-        expect(db.addReview).toHaveBeenCalled();
+        expect(propertiesService.addReview).toHaveBeenCalled();
     });
 });

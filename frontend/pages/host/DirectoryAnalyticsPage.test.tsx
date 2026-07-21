@@ -3,15 +3,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { DirectoryAnalyticsPage } from './DirectoryAnalyticsPage';
 import { ListingAnalyticsSummary } from '../../types/models';
 
-const { mockDb } = vi.hoisted(() => ({
-    mockDb: {
+const { mockDirectoryService } = vi.hoisted(() => ({
+    mockDirectoryService: {
         getDirectoryAnalyticsForOwner: vi.fn(),
         getCategoryAnalyticsAverage: vi.fn(),
     }
 }));
 
 vi.mock('../../api-services', () => ({
-    db: mockDb
+    directoryService: mockDirectoryService
 }));
 
 const mockAnalytics: ListingAnalyticsSummary[] = [
@@ -33,17 +33,17 @@ const mockAnalytics: ListingAnalyticsSummary[] = [
 describe('DirectoryAnalyticsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockDb.getCategoryAnalyticsAverage.mockResolvedValue(null);
+        mockDirectoryService.getCategoryAnalyticsAverage.mockResolvedValue(null);
     });
 
     it('shows loading state initially', () => {
-        mockDb.getDirectoryAnalyticsForOwner.mockReturnValue(new Promise(() => {}));
+        mockDirectoryService.getDirectoryAnalyticsForOwner.mockReturnValue(new Promise(() => {}));
         render(<DirectoryAnalyticsPage />);
         expect(screen.getByText('Loading analytics...')).toBeInTheDocument();
     });
 
     it('renders summary cards with correct totals', async () => {
-        mockDb.getDirectoryAnalyticsForOwner.mockResolvedValue(mockAnalytics);
+        mockDirectoryService.getDirectoryAnalyticsForOwner.mockResolvedValue(mockAnalytics);
         render(<DirectoryAnalyticsPage />);
 
         await waitFor(() => {
@@ -60,7 +60,7 @@ describe('DirectoryAnalyticsPage', () => {
     });
 
     it('renders chart section when daily data exists', async () => {
-        mockDb.getDirectoryAnalyticsForOwner.mockResolvedValue(mockAnalytics);
+        mockDirectoryService.getDirectoryAnalyticsForOwner.mockResolvedValue(mockAnalytics);
         render(<DirectoryAnalyticsPage />);
 
         await waitFor(() => {
@@ -73,7 +73,7 @@ describe('DirectoryAnalyticsPage', () => {
     });
 
     it('shows empty state when no listings', async () => {
-        mockDb.getDirectoryAnalyticsForOwner.mockResolvedValue([]);
+        mockDirectoryService.getDirectoryAnalyticsForOwner.mockResolvedValue([]);
         render(<DirectoryAnalyticsPage />);
 
         await waitFor(() => {
@@ -98,7 +98,7 @@ describe('DirectoryAnalyticsPage', () => {
                 daily_data: []
             }
         ];
-        mockDb.getDirectoryAnalyticsForOwner.mockResolvedValue(multi);
+        mockDirectoryService.getDirectoryAnalyticsForOwner.mockResolvedValue(multi);
         render(<DirectoryAnalyticsPage />);
 
         await waitFor(() => {

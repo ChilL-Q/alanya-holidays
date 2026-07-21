@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { InboxPage } from './InboxPage';
-import * as ChatContext from '../context/ChatContext';
+import { useChat } from '../modules/chat';
 
 // Mock Auth
 vi.mock('../context/AuthContext', () => ({
@@ -25,16 +25,14 @@ vi.mock('react-router-dom', async () => {
     };
 });
 
-// Mock ChatContext
-vi.mock('../context/ChatContext', () => ({
+// Mock ChatContext - note: useChat is in modules/chat, not context/ChatContext
+vi.mock('../modules/chat', () => ({
     useChat: vi.fn(),
-    ChatProvider: ({ children }: any) => <div>{children}</div>
-}));
-
-// Mock ChatWindow component locally to avoid complex renders
-vi.mock('../components/chat/ChatWindow', () => ({
     ChatWindow: () => <div data-testid="chat-window">Chat Window</div>
 }));
+
+const mockUseChat = useChat as any;
+
 
 describe('InboxPage', () => {
     const mockSetActiveConversationId = vi.fn();
@@ -64,8 +62,7 @@ describe('InboxPage', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        // @ts-ignore
-        vi.mocked(ChatContext.useChat).mockReturnValue(defaultChatContext);
+        mockUseChat.mockReturnValue(defaultChatContext);
     });
 
     it('renders conversation list', () => {
@@ -85,8 +82,7 @@ describe('InboxPage', () => {
     });
 
     it('renders chat window when conversation is active', () => {
-        // @ts-ignore
-        vi.mocked(ChatContext.useChat).mockReturnValue({
+        mockUseChat.mockReturnValue({
             ...defaultChatContext,
             activeConversationId: 'c1'
         });

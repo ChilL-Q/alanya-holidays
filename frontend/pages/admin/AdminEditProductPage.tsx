@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { productsService, storageService } from '../../api-services';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import toast from 'react-hot-toast';
@@ -31,7 +31,7 @@ export const AdminEditProductPage: React.FC = () => {
 
     const loadProduct = useCallback(async () => {
         try {
-            const product = await db.getProduct(id!);
+            const product = await productsService.getProduct(id!);
             if (product) {
                 setFormData({
                     title: product.title,
@@ -72,7 +72,7 @@ export const AdminEditProductPage: React.FC = () => {
             let uploadedUrls: string[] = [];
             if (files.length > 0) {
                 uploadedUrls = await Promise.all(
-                    files.map(file => db.uploadImage(file, 'products'))
+                    files.map(file => storageService.uploadImage(file, 'products'))
                 );
             }
 
@@ -98,10 +98,10 @@ export const AdminEditProductPage: React.FC = () => {
             }
 
             if (isEditing) {
-                await db.updateProduct(id!, productData);
+                await productsService.updateProduct(id!, productData);
                 toast.success('Product updated successfully');
             } else {
-                await db.createProduct(productData);
+                await productsService.createProduct(productData);
                 toast.success('Product created successfully');
             }
 

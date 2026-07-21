@@ -2,7 +2,7 @@ import React from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { messagesService } from '../api-services/api/misc';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 import { useAuth } from '../context/AuthContext';
 import { SEOHead } from '../components/seo/SEOHead';
 
@@ -89,7 +89,7 @@ const ContactForm: React.FC = () => {
         const prefillSubject = async () => {
             if (serviceId) {
                 try {
-                    const service = await db.getService(serviceId);
+                    const service = await servicesService.getService(serviceId);
                     if (service) {
                         setFormData(prev => ({ ...prev, subject: `Inquiry: ${service.title}` }));
                     }

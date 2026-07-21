@@ -31,7 +31,7 @@ vi.mock('react-hot-toast', () => ({
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    usersService: {
         getUserProfile: vi.fn(),
         updateUserProfile: vi.fn()
     }
@@ -51,7 +51,7 @@ vi.mock('lucide-react', () => ({
 // Import component after mocks
 import { AdminEditUserPage } from './AdminEditUserPage';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { usersService } from '../../api-services';
 
 describe('AdminEditUserPage', () => {
     beforeEach(() => {
@@ -75,7 +75,7 @@ describe('AdminEditUserPage', () => {
     };
 
     it('renders loading state while fetching user', () => {
-        (db.getUserProfile as any).mockReturnValue(new Promise(() => {}));
+        (usersService.getUserProfile as any).mockReturnValue(new Promise(() => {}));
         renderPage();
         expect(screen.getByTestId('loader')).toBeInTheDocument();
     });
@@ -88,7 +88,7 @@ describe('AdminEditUserPage', () => {
             phone: '+905551234567',
             role: 'host'
         };
-        (db.getUserProfile as any).mockResolvedValue(mockUser);
+        (usersService.getUserProfile as any).mockResolvedValue(mockUser);
 
         renderPage();
 
@@ -102,8 +102,8 @@ describe('AdminEditUserPage', () => {
 
     it('handles form submission successfully', async () => {
         const mockUser = { id: 'user-123', full_name: 'John Doe', email: 'john@example.com', role: 'host' };
-        (db.getUserProfile as any).mockResolvedValue(mockUser);
-        (db.updateUserProfile as any).mockResolvedValue({});
+        (usersService.getUserProfile as any).mockResolvedValue(mockUser);
+        (usersService.updateUserProfile as any).mockResolvedValue({});
 
         renderPage();
 
@@ -113,7 +113,7 @@ describe('AdminEditUserPage', () => {
         fireEvent.submit(screen.getByRole('button', { name: /Update Profile/i }));
 
         await waitFor(() => {
-            expect(db.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
+            expect(usersService.updateUserProfile).toHaveBeenCalledWith('user-123', expect.objectContaining({
                 full_name: 'John Smith'
             }));
             expect(mockToast.success).toHaveBeenCalledWith('User updated successfully');
@@ -123,7 +123,7 @@ describe('AdminEditUserPage', () => {
 
     it('handles API error when fetching user', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getUserProfile as any).mockRejectedValue(new Error('Fetch error'));
+        (usersService.getUserProfile as any).mockRejectedValue(new Error('Fetch error'));
 
         renderPage();
 
@@ -149,8 +149,8 @@ describe('AdminEditUserPage', () => {
     it('handles save error gracefully', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const mockUser = { id: 'user-123', full_name: 'John Doe', email: 'john@example.com', role: 'host' };
-        (db.getUserProfile as any).mockResolvedValue(mockUser);
-        (db.updateUserProfile as any).mockRejectedValue(new Error('Update failed'));
+        (usersService.getUserProfile as any).mockResolvedValue(mockUser);
+        (usersService.updateUserProfile as any).mockRejectedValue(new Error('Update failed'));
 
         renderPage();
 

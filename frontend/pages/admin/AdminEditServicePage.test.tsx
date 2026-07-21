@@ -3,10 +3,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminEditServicePage } from './AdminEditServicePage';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 
 vi.mock('../../api-services', () => ({
-    db: {
+    servicesService: {
         getService: vi.fn(),
         getServiceEdit: vi.fn(),
         uploadImage: vi.fn(),
@@ -53,7 +53,7 @@ describe('AdminEditServicePage', () => {
             user: { role: 'admin' },
             isLoading: false
         });
-        (db.getService as any).mockResolvedValue({
+        (servicesService.getService as any).mockResolvedValue({
             id: 'svc-1',
             title: 'Test Service',
             type: 'car',
@@ -119,7 +119,7 @@ describe('AdminEditServicePage', () => {
 
     it('shows loading spinner initially when admin', () => {
         // Delay resolution to observe loading state
-        (db.getService as any).mockReturnValue(new Promise(() => {}));
+        (servicesService.getService as any).mockReturnValue(new Promise(() => {}));
 
         render(
             <BrowserRouter>
@@ -131,7 +131,7 @@ describe('AdminEditServicePage', () => {
     });
 
     it('loads and displays service data when admin', async () => {
-        (db.getService as any).mockResolvedValue({
+        (servicesService.getService as any).mockResolvedValue({
             id: 'svc-1',
             title: 'Airport Transfer',
             type: 'transfer',
@@ -163,30 +163,30 @@ describe('AdminEditServicePage', () => {
     });
 
     it('calls updateService when save button clicked', async () => {
-        (db.updateService as any).mockResolvedValue({});
+        (servicesService.updateService as any).mockResolvedValue({});
         render(<BrowserRouter><AdminEditServicePage /></BrowserRouter>);
         await waitFor(() => { expect(screen.queryByText('Loading service data...')).not.toBeInTheDocument(); });
         const saveBtn = screen.getByRole('button', { name: /save/i });
         await act(async () => { fireEvent.click(saveBtn); });
         await waitFor(() => {
-            expect(db.updateService).toHaveBeenCalledWith('123', expect.any(Object));
+            expect(servicesService.updateService).toHaveBeenCalledWith('123', expect.any(Object));
         });
     });
 
     it('calls deleteService when delete confirmed', async () => {
         vi.spyOn(window, 'confirm').mockReturnValue(true);
-        (db.deleteService as any).mockResolvedValue({});
+        (servicesService.deleteService as any).mockResolvedValue({});
         render(<BrowserRouter><AdminEditServicePage /></BrowserRouter>);
         await waitFor(() => { expect(screen.queryByText('Loading service data...')).not.toBeInTheDocument(); });
         const deleteBtn = screen.queryByRole('button', { name: /delete/i });
         if (deleteBtn) {
             await act(async () => { fireEvent.click(deleteBtn); });
-            await waitFor(() => { expect(db.deleteService).toHaveBeenCalled(); });
+            await waitFor(() => { expect(servicesService.deleteService).toHaveBeenCalled(); });
         }
     });
 
     it('shows error toast when getService fails', async () => {
-        (db.getService as any).mockRejectedValue(new Error('Not found'));
+        (servicesService.getService as any).mockRejectedValue(new Error('Not found'));
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         render(<BrowserRouter><AdminEditServicePage /></BrowserRouter>);
         await waitFor(() => {

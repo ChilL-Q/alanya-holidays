@@ -36,10 +36,10 @@ const Terms = React.lazy(() => import('../pages/Terms').then(module => ({ defaul
 const Esim = React.lazy(() => import('../pages/Esim').then(module => ({ default: module.Esim })));
 const ListProperty = React.lazy(() => import('../pages/ListProperty').then(module => ({ default: module.ListProperty })));
 const PropertyDetails = React.lazy(() => import('../pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
-const BlogPostPage = React.lazy(() => import('../pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
-const BlogPage = React.lazy(() => import('../pages/BlogPage').then(module => ({ default: module.BlogPage })));
-const BlogSubmitPage = React.lazy(() => import('../pages/BlogSubmitPage').then(module => ({ default: module.BlogSubmitPage })));
-const BlogSubmissionSuccess = React.lazy(() => import('../pages/BlogSubmissionSuccess').then(module => ({ default: module.BlogSubmissionSuccess })));
+const BlogPostPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BlogPostPage })));
+const BlogPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BlogPage })));
+const BlogSubmitPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BlogSubmitPage })));
+const BlogSubmissionSuccess = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BlogSubmissionSuccess })));
 const VisaConsult = React.lazy(() => import('../pages/VisaConsult').then(module => ({ default: module.VisaConsult })));
 const CarRental = React.lazy(() => import('../pages/CarRental').then(module => ({ default: module.CarRental })));
 const CarModelDetails = React.lazy(() => import('../pages/CarModelDetails').then(module => ({ default: module.CarModelDetails })));
@@ -65,14 +65,14 @@ const SubscribePage = React.lazy(() => import('../pages/SubscribePage').then(mod
 const VerifyClaimPage = React.lazy(() => import('../pages/VerifyClaimPage').then(module => ({ default: module.VerifyClaimPage })));
 const AddListingPage = React.lazy(() => import('../pages/AddListingPage').then(module => ({ default: module.AddListingPage })));
 const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingPage').then(module => ({ default: module.DirectoryListingPage })));
-const HiddenGemsPage = React.lazy(() => import('../pages/blog/HiddenGemsPage').then(module => ({ default: module.HiddenGemsPage })));
-const BestBeachesPage = React.lazy(() => import('../pages/blog/BestBeachesPage').then(module => ({ default: module.BestBeachesPage })));
-const BlogCategoryPage = React.lazy(() => import('../pages/blog/BlogCategoryPage').then(module => ({ default: module.BlogCategoryPage })));
-const ForumHome = React.lazy(() => import('../pages/ForumHome').then(module => ({ default: module.ForumHome })));
-const ForumCategoryPage = React.lazy(() => import('../pages/ForumCategoryPage').then(module => ({ default: module.ForumCategoryPage })));
-const ForumPostPage = React.lazy(() => import('../pages/ForumPostPage').then(module => ({ default: module.ForumPostPage })));
-const ForumSubmitPage = React.lazy(() => import('../pages/ForumSubmitPage').then(module => ({ default: module.ForumSubmitPage })));
-const ForumAskPage = React.lazy(() => import('../pages/ForumAskPage').then(module => ({ default: module.ForumAskPage })));
+const HiddenGemsPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.HiddenGemsPage })));
+const BestBeachesPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BestBeachesPage })));
+const BlogCategoryPage = React.lazy(() => import('../modules/blog').then(module => ({ default: module.BlogCategoryPage })));
+const ForumHome = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumHome })));
+const ForumCategoryPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumCategoryPage })));
+const ForumPostPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumPostPage })));
+const ForumSubmitPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumSubmitPage })));
+const ForumAskPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumAskPage })));
 const EventsPage = React.lazy(() => import('../pages/EventsPage').then(module => ({ default: module.EventsPage })));
 const MembersPage = React.lazy(() => import('../pages/MembersPage').then(module => ({ default: module.MembersPage })));
 

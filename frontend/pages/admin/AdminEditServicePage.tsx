@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { db, ServiceData } from "../../api-services";
+import { ServiceData, servicesService, storageService } from "../../api-services";
 import { supabase } from "../../api-services/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Save, Trash2, X, Edit2 } from "lucide-react";
@@ -34,9 +34,9 @@ export const AdminEditServicePage: React.FC = () => {
     const fetchService = async () => {
       if (!id) return;
       try {
-        const data = await db.getService(id);
+        const data = await servicesService.getService(id);
         if (editId) {
-          const edit = await db.getServiceEdit(editId);
+          const edit = await servicesService.getServiceEdit(editId);
           if (edit) {
             const merged = { ...data, ...edit.changed_data };
             setService(merged);
@@ -66,10 +66,10 @@ export const AdminEditServicePage: React.FC = () => {
       const newImageUrls = [...(service.images || [])];
       for (const file of uploadFiles) {
         try {
-          const url = await db.uploadImage(file, "services");
+          const url = await storageService.uploadImage(file, "services");
           newImageUrls.push(url);
         } catch {
-          const url = await db.uploadImage(file, "properties"); // Fallback
+          const url = await storageService.uploadImage(file, "properties"); // Fallback
           newImageUrls.push(url);
         }
       }
@@ -86,8 +86,8 @@ export const AdminEditServicePage: React.FC = () => {
       };
 
       if (editId) {
-        await db.updateService(id, updates);
-        await db.deleteServiceEdit(editId);
+        await servicesService.updateService(id, updates);
+        await servicesService.deleteServiceEdit(editId);
         toast.success("Update approved and applied");
 
         supabase.functions
@@ -103,7 +103,7 @@ export const AdminEditServicePage: React.FC = () => {
           })
           .catch((e) => console.error("Failed to notify provider", e));
       } else {
-        await db.updateService(id, updates);
+        await servicesService.updateService(id, updates);
         toast.success("Service updated successfully");
 
         if (service.provider_id) {
@@ -140,7 +140,7 @@ export const AdminEditServicePage: React.FC = () => {
     if (reason === null) return;
 
     try {
-      await db.rejectServiceEdit(editId, user.id, reason);
+      await servicesService.rejectServiceEdit(editId, user.id, reason);
       toast.success("Update rejected");
       navigate("/admin");
     } catch (e) {
@@ -153,7 +153,7 @@ export const AdminEditServicePage: React.FC = () => {
     if (!id) return;
     if (confirm("Are you sure you want to DELETE this service permanently?")) {
       try {
-        await db.deleteService(id);
+        await servicesService.deleteService(id);
         navigate("/admin");
       } catch (error) {
         console.error("Failed to delete", error);

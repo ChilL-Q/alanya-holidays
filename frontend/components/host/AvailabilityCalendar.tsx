@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { PropertyAvailability } from '../../types/models';
 import { Calendar as CalendarIcon, RefreshCw, X } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -31,12 +31,12 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
             end.setFullYear(end.getFullYear() + 1); // 1 year ahead
 
             const [avData, feedsData] = await Promise.all([
-                db.getPropertyAvailability(
+                propertiesService.getPropertyAvailability(
                     propertyId,
                     start.toISOString().split('T')[0],
                     end.toISOString().split('T')[0]
                 ),
-                db.getICalFeeds(propertyId)
+                propertiesService.getICalFeeds(propertyId)
             ]);
 
             setAvailability(avData);
@@ -79,7 +79,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ prop
         if (selectedDates.length === 0) return;
 
         try {
-            await db.updatePropertyAvailability(
+            await propertiesService.updatePropertyAvailability(
                 propertyId,
                 selectedDates,
                 status === 'blocked' ? 'blocked' : 'available',

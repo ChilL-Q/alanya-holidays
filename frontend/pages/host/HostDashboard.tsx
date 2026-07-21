@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { propertiesService, bookingsService } from '../../api-services';
 import { PropertyDB } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { Plus, ExternalLink, Star, Calendar } from 'lucide-react';
@@ -29,8 +29,8 @@ export const HostDashboard: React.FC = () => {
             if (!user) return;
             try {
                 const [props, myBookings] = await Promise.all([
-                    db.getPropertiesByHost(user.id),
-                    db.getBookingsForHost(user.id)
+                    propertiesService.getPropertiesByHost(user.id),
+                    bookingsService.getBookingsForHost(user.id)
                 ]);
                 setProperties(props || []);
                 setBookings(myBookings || []);

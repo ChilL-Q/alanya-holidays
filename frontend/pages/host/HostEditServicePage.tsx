@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db, ServiceData } from '../../api-services';
+import { ServiceData, servicesService, storageService } from '../../api-services';
 import { ArrowLeft, CheckCircle2, Save, Trash2 } from 'lucide-react';
 import { useSaveShortcut } from '../../hooks/useSaveShortcut';
 import { PhotoUploader } from '../../components/ui/PhotoUploader';
@@ -40,7 +40,7 @@ export const HostEditServicePage: React.FC = () => {
         const fetchService = async () => {
             if (!id) return;
             try {
-                const data = await db.getService(id);
+                const data = await servicesService.getService(id);
                 setOriginalService(data);
 
                 const features = data.features || {};
@@ -85,7 +85,7 @@ export const HostEditServicePage: React.FC = () => {
         try {
             const uploadedUrls = [];
             for (const file of files) {
-                uploadedUrls.push(await db.uploadImage(file, 'services'));
+                uploadedUrls.push(await storageService.uploadImage(file, 'services'));
             }
             const finalImages = [...existingImages, ...uploadedUrls];
 
@@ -118,10 +118,10 @@ export const HostEditServicePage: React.FC = () => {
                 !finalImages.every((img, i) => img === originalService?.images?.[i]);
 
             if (needsApproval) {
-                await db.requestServiceUpdate(id, updates);
+                await servicesService.requestServiceUpdate(id, updates);
                 setSuccess(true);
             } else {
-                await db.updateService(id, updates);
+                await servicesService.updateService(id, updates);
                 toast.success('Service updated successfully');
                 navigate('/host/services');
             }

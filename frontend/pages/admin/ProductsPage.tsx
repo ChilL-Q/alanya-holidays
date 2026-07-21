@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { productsService } from '../../api-services';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 import { ProductToolbar } from '../../components/admin/products/ProductToolbar';
@@ -31,7 +31,7 @@ export const ProductsPage: React.FC = () => {
 
     const loadProducts = async () => {
         try {
-            const data = await db.getProducts();
+            const data = await productsService.getProducts();
             setProducts(data || []);
         } catch (e) {
             console.error(e);
@@ -56,7 +56,7 @@ export const ProductsPage: React.FC = () => {
 
         try {
             if (type === 'delete') {
-                await db.deleteProduct(itemId);
+                await productsService.deleteProduct(itemId);
             }
 
             loadProducts();

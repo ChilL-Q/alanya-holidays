@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Star, User, Trash2, Flag } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { db, Review } from '../../api-services';
+import { Review, propertiesService, listingReviewsService } from '../../api-services';
 import { ReviewModal } from './ReviewModal';
 import { useLightbox } from '../../context/LightboxContext';
 import { toast } from 'react-hot-toast';
@@ -21,7 +21,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
 
     const fetchReviews = useCallback(async () => {
         try {
-            const response = await db.getReviews(propertyId);
+            const response = await propertiesService.getReviews(propertyId);
             setReviews(response.data);
         } catch (error) {
             console.error('Failed to fetch reviews:', error);
@@ -51,7 +51,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
 
         setDeletingReviewId(reviewId);
         try {
-            await db.deleteReview(reviewId);
+            await listingReviewsService.deleteReview(reviewId);
             toast.success('Review deleted successfully');
             await fetchReviews();
         } catch (error) {
@@ -70,7 +70,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ propertyId }) =>
         }
 
         try {
-            await db.flagReview(reviewId);
+            await propertiesService.flagReview(reviewId);
             toast.success('Review flagged. An admin will review it.');
             await fetchReviews();
         } catch (error) {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useChat } from '../../context/ChatContext';
+import { useChat } from '../../modules/chat';
 import { HostLayout } from './HostLayout';
 
 export const HostLayoutController: React.FC<{ children: React.ReactNode }> = ({ children }) => {

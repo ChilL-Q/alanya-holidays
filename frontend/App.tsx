@@ -14,7 +14,6 @@ import { LightboxProvider } from './context/LightboxContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { PageTransition } from './components/PageTransition';
 import { CurrencyProvider } from './context/CurrencyContext';
-import { ChatProvider } from './context/ChatContext';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
@@ -94,8 +93,7 @@ const App: React.FC = () => {
                     <FavoritesProvider>
                       <ModalProvider>
                         <LightboxProvider>
-                          <ChatProvider>
-                            <CardStyleProvider>
+                          <CardStyleProvider>
                               <AppContent />
                               <React.Suspense fallback={null}>
                                 <LoginModal />
@@ -109,7 +107,6 @@ const App: React.FC = () => {
                                 <CommandPalette />
                               </React.Suspense>
                             </CardStyleProvider>
-                          </ChatProvider>
                         </LightboxProvider>
                       </ModalProvider>
                     </FavoritesProvider>

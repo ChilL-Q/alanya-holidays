@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { db } from '../api-services';
+import { forumService } from '../api-services';
 
 export function useRemovedItems<T extends { id: string }>(
     targetType: 'post' | 'comment',
@@ -25,7 +25,7 @@ export function useRemovedItems<T extends { id: string }>(
     const restoreItem = useCallback(async (id: string) => {
         setRestoringId(id);
         try {
-            await db.setRemoved(targetType, id, false);
+            await forumService.setRemoved(targetType, id, false);
             toast.success(`${targetType === 'post' ? 'Post' : 'Comment'} restored`);
             setItems(prev => prev.filter(item => item.id !== id));
         } catch (e) {

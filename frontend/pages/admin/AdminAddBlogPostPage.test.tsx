@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminAddBlogPostPage } from './AdminAddBlogPostPage';
 
 vi.mock('../../api-services', () => ({
-    db: {
+    blogService: {
         createBlogPost: vi.fn(),
         uploadBlogMediaBatch: vi.fn(),
     },

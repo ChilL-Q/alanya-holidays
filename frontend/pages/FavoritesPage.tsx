@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../context/FavoritesContext';
-import { db } from '../api-services';
+import { propertiesService } from '../api-services';
 import { PropertyCard } from '../components/ui/PropertyCard';
 import { Property, PropertyDB } from '../types/models';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -17,7 +17,7 @@ export const FavoritesPage: React.FC = () => {
             setLoading(true);
             try {
                 // Fetch only favorite properties directly using IDs
-                const data = await db.getPropertiesByIds(favorites);
+                const data = await propertiesService.getPropertiesByIds(favorites);
 
                 const formattedData: Property[] = data?.map((p: PropertyDB) => ({
                     id: p.id,

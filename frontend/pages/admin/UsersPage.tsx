@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { usersService } from '../../api-services';
 import { Search, Edit2, Trash2, Mail, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -17,7 +17,7 @@ export const UsersPage: React.FC = () => {
 
     const loadUsers = async () => {
         try {
-            const response = await db.getAllUsers();
+            const response = await usersService.getAllUsers();
             setUsers(response.data || []);
         } catch (e) {
             console.error(e);

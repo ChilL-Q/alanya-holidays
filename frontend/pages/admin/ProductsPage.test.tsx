@@ -19,7 +19,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    productsService: {
         getProducts: vi.fn(),
         deleteProduct: vi.fn()
     }
@@ -69,7 +69,7 @@ vi.mock('../../components/ui/ConfirmationModal', () => ({
 
 // Import component after mocks
 import { ProductsPage } from './ProductsPage';
-import { db } from '../../api-services';
+import { productsService } from '../../api-services';
 
 describe('ProductsPage', () => {
     beforeEach(() => {
@@ -91,13 +91,13 @@ describe('ProductsPage', () => {
     };
 
     it('shows loading state initially', () => {
-        (db.getProducts as any).mockReturnValue(new Promise(() => {})); 
+        (productsService.getProducts as any).mockReturnValue(new Promise(() => {})); 
         renderProductsPage();
         expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
     it('renders products table after fetch', async () => {
-        (db.getProducts as any).mockResolvedValue(mockProducts);
+        (productsService.getProducts as any).mockResolvedValue(mockProducts);
         renderProductsPage();
 
         await waitFor(() => {
@@ -108,7 +108,7 @@ describe('ProductsPage', () => {
     });
 
     it('filters products by category', async () => {
-        (db.getProducts as any).mockResolvedValue(mockProducts);
+        (productsService.getProducts as any).mockResolvedValue(mockProducts);
         renderProductsPage();
 
         await waitFor(() => expect(screen.getByText('Smartphone')).toBeInTheDocument());
@@ -120,7 +120,7 @@ describe('ProductsPage', () => {
     });
 
     it('filters products by search query', async () => {
-        (db.getProducts as any).mockResolvedValue(mockProducts);
+        (productsService.getProducts as any).mockResolvedValue(mockProducts);
         renderProductsPage();
 
         await waitFor(() => expect(screen.getByText('Smartphone')).toBeInTheDocument());
@@ -133,8 +133,8 @@ describe('ProductsPage', () => {
     });
 
     it('opens delete confirmation modal and handles confirmation', async () => {
-        (db.getProducts as any).mockResolvedValue(mockProducts);
-        (db.deleteProduct as any).mockResolvedValue(undefined);
+        (productsService.getProducts as any).mockResolvedValue(mockProducts);
+        (productsService.deleteProduct as any).mockResolvedValue(undefined);
         
         renderProductsPage();
 
@@ -149,15 +149,15 @@ describe('ProductsPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.deleteProduct).toHaveBeenCalledWith('1');
-            expect(db.getProducts).toHaveBeenCalledTimes(2); // Initial + after delete
+            expect(productsService.deleteProduct).toHaveBeenCalledWith('1');
+            expect(productsService.getProducts).toHaveBeenCalledTimes(2); // Initial + after delete
         });
     });
 
     it('handles delete error gracefully', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getProducts as any).mockResolvedValue(mockProducts);
-        (db.deleteProduct as any).mockRejectedValue(new Error('Delete failed'));
+        (productsService.getProducts as any).mockResolvedValue(mockProducts);
+        (productsService.deleteProduct as any).mockRejectedValue(new Error('Delete failed'));
         
         renderProductsPage();
 

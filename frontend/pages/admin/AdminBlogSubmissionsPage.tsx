@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../api-services';
-import { chatService } from '../../api-services/api/chat';
+import { blogService } from '../../api-services';
+import { chatService } from '../../modules/chat';
 import { toast } from 'react-hot-toast';
 import { Check, X, MessageSquare, Loader2, ChevronDown, ChevronUp, PenLine, Trash2, Eye, EyeOff, Star } from 'lucide-react';
 
@@ -22,10 +22,10 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
         setIsLoading(true);
         try {
             if (activeTab === 'submissions') {
-                const data = await db.getBlogSubmissions();
+                const data = await blogService.getBlogSubmissions();
                 setSubmissions(data);
             } else {
-                const { data } = await db.getBlogPosts({ limit: 100 });
+                const { data } = await blogService.getBlogPosts({ limit: 100 });
                 setPosts(data);
             }
         } catch {
@@ -40,7 +40,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
     // Submissions Actions
     const handleApprove = async (id: string) => {
         try {
-            await db.approveBlogSubmission(id);
+            await blogService.approveBlogSubmission(id);
             toast.success('Submission approved and published');
             fetchData();
         } catch (e: unknown) {
@@ -52,7 +52,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
         const reason = window.prompt('Rejection reason (will be sent to author):');
         if (reason === null) return;
         try {
-            await db.rejectBlogSubmission(id, reason.trim());
+            await blogService.rejectBlogSubmission(id, reason.trim());
             toast.success('Submission rejected');
             fetchData();
         } catch (e: unknown) {
@@ -73,7 +73,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
     const handleDeletePost = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this post? This cannot be undone.')) return;
         try {
-            await db.deleteBlogPost(id);
+            await blogService.deleteBlogPost(id);
             toast.success('Post deleted');
             fetchData();
         } catch (e: unknown) {
@@ -84,7 +84,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
     const handleTogglePostVisibility = async (id: string, currentStatus: string) => {
         const newStatus = currentStatus === 'published' ? 'draft' : 'published';
         try {
-            await db.updateBlogPost(id, { status: newStatus as 'draft' | 'published' | 'archived' });
+            await blogService.updateBlogPost(id, { status: newStatus as 'draft' | 'published' | 'archived' });
             toast.success(`Post marked as ${newStatus}`);
             fetchData();
         } catch (e: unknown) {
@@ -94,7 +94,7 @@ export const AdminBlogSubmissionsPage: React.FC = () => {
 
     const handleToggleFeatured = async (id: string, isFeatured: boolean) => {
         try {
-            await db.updateBlogPost(id, { is_featured: !isFeatured });
+            await blogService.updateBlogPost(id, { is_featured: !isFeatured });
             toast.success(!isFeatured ? 'Post featured on homepage' : 'Post unfeatured');
             fetchData();
         } catch (e: unknown) {

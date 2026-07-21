@@ -1,15 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Dashboard } from './Dashboard';
-import { db } from '../../api-services';
+import { propertiesService, servicesService, usersService, bookingsService } from '../../api-services';
 import { BrowserRouter } from 'react-router-dom';
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
-        getAdminProperties: vi.fn(),
-        getAdminServices: vi.fn(),
-        getAllUsers: vi.fn(),
+    propertiesService: {
+        getAdminProperties: vi.fn()
+    },
+    servicesService: {
+        getAdminServices: vi.fn()
+    },
+    usersService: {
+        getAllUsers: vi.fn()
+    },
+    bookingsService: {
         getBookingsByStatus: vi.fn()
     }
 }));
@@ -49,10 +55,10 @@ describe('Admin Dashboard', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Setup default mocks
-        (db.getAdminProperties as any).mockResolvedValue({ count: 10 });
-        (db.getAdminServices as any).mockResolvedValue({ count: 5 });
-        (db.getAllUsers as any).mockResolvedValue({ data: new Array(20).fill({}), pagination: { page: 1, limit: 1000, total: 20, totalPages: 1 } });
-        (db.getBookingsByStatus as any).mockImplementation((status: string) => {
+        (propertiesService.getAdminProperties as any).mockResolvedValue({ count: 10 });
+        (servicesService.getAdminServices as any).mockResolvedValue({ count: 5 });
+        (usersService.getAllUsers as any).mockResolvedValue({ data: new Array(20).fill({}), pagination: { page: 1, limit: 1000, total: 20, totalPages: 1 } });
+        (bookingsService.getBookingsByStatus as any).mockImplementation((status: string) => {
             const now = new Date().toISOString();
             if (status === 'confirmed') return [
                 { id: 'b1', total_price: 100, created_at: now, itemTitle: 'Villa' },
@@ -65,7 +71,7 @@ describe('Admin Dashboard', () => {
     });
 
     it('shows loading spinner initially', () => {
-        (db.getAllUsers as any).mockReturnValue(new Promise(() => {})); 
+        (usersService.getAllUsers as any).mockReturnValue(new Promise(() => {})); 
         render(<BrowserRouter><Dashboard /></BrowserRouter>);
         expect(document.querySelector('.animate-spin')).toBeInTheDocument();
     });
@@ -99,7 +105,7 @@ describe('Admin Dashboard', () => {
     });
 
     it('handles API errors gracefully', async () => {
-        (db.getAllUsers as any).mockRejectedValue(new Error('Fetch error'));
+        (usersService.getAllUsers as any).mockRejectedValue(new Error('Fetch error'));
 
         render(<BrowserRouter><Dashboard /></BrowserRouter>);
 

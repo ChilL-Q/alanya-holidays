@@ -4,7 +4,7 @@
  * Run: npx ts-node scripts/seed-forum.ts
  */
 
-import { forumService } from '../api-services/api/forum';
+import { forumService } from '../modules/forum/api';
 
 interface PostSeed {
     title: string;

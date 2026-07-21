@@ -15,7 +15,7 @@ interface StripeCheckoutItem {
 }
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
+import { bookingsService } from '../api-services';
 import { supabase } from '../api-services/supabase';
 import { getBaseUrl } from '../utils/appUrl';
 import { toast } from 'react-hot-toast';
@@ -70,7 +70,7 @@ export const Checkout: React.FC = () => {
                     wpHandled = true;
                 }
 
-                const result = await db.createBooking({
+                const result = await bookingsService.createBooking({
                     user_id: user!.id,
                     item_id: item.id,
                     type: (item.type === 'RENTAL' || item.type === 'property') ? 'property' : item.type === 'product' ? 'product' : 'service',

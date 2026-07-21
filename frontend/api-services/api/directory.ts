@@ -1,49 +1,12 @@
 import { supabase } from '../supabase';
 import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB, ListingAddon } from '../../types/models';
-import { retry } from '../../utils/retry';
-import { sanitizeString } from '../../utils/sanitize';
-import { getAppUrl } from '../../utils/appUrl';
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function validateUUIDs(ids: string[]) {
-    for (const id of ids) {
-        if (!UUID_RE.test(id)) throw new Error(`Invalid UUID: ${id}`);
-    }
-}
 
 export const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
 
-function buildLocationRows(listingId: string, locationIds: string[]) {
-    return locationIds.map((lid, i) => ({
-        listing_id: listingId,
-        location_id: lid,
-        display_order: i,
-    }));
+async function getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
 }
-
-function sanitizeValue(value: unknown): unknown {
-    if (typeof value === 'string') {
-        return sanitizeString(value);
-    }
-    if (Array.isArray(value)) {
-        return value.map(sanitizeValue);
-    }
-    if (value !== null && typeof value === 'object') {
-        const result: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(value)) {
-            result[k] = sanitizeValue(v);
-        }
-        return result;
-    }
-    return value;
-}
-
-const sanitize = <T extends Record<string, unknown>>(obj: T): T => {
-    return sanitizeValue(obj) as T;
-};
-
-const LISTING_LOCATIONS_SELECT = '*, listing_locations(id, location_id, display_order, locations(id, name))';
 
 export const directoryService = {
     async getDirectoryListings(
@@ -52,91 +15,43 @@ export const directoryService = {
         category?: string,
         sortBy: 'created_at' | 'base_score' = 'base_score'
     ): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
-
-        let query = supabase
-            .from('directory_listings')
-            .select('*', { count: 'exact' })
-            .order(sortBy, { ascending: false });
-
-        if (category) {
-            query = query.eq('category_id', category);
-        }
-
-        const { data, error, count } = await query.range(from, to);
-
-        if (error) {
-            console.error('Error fetching directory listings:', error);
-            throw error;
-        }
-
-        return {
-            data: data as DirectoryListingDB[],
-            pagination: {
-                page,
-                limit,
-                total: count || 0,
-                totalPages: Math.ceil((count || 0) / limit)
-            }
-        };
+        const query = new URLSearchParams({ page: page.toString(), limit: limit.toString(), sortBy });
+        if (category) query.set('category', category);
+        const res = await fetch(`/api/directory?${query.toString()}`);
+        if (!res.ok) throw new Error('Failed to fetch directory listings');
+        return res.json();
     },
 
     async getRestaurantsListings(page: number = 1, limit: number = 20) {
-        return this.getDirectoryListings(page, limit, 'restaurants');
+        const res = await fetch(`/api/directory/restaurants?page=${page}&limit=${limit}`);
+        if (!res.ok) throw new Error('Failed to fetch restaurants');
+        return res.json();
     },
 
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .eq('id', id)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching directory listing:', error);
-            throw error;
+        const res = await fetch(`/api/directory/${id}`);
+        if (!res.ok) {
+            if (res.status === 404) return null;
+            throw new Error('Failed to fetch directory listing');
         }
-
-        return data as DirectoryListingDB | null;
+        return res.json() as Promise<DirectoryListingDB>;
     },
 
     async getDirectoryListingBySlug(slug: string): Promise<DirectoryListingDB | null> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select('*')
-            .eq('slug', slug)
-            .single();
-
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching directory listing by slug:', error);
-            throw error;
+        const res = await fetch(`/api/directory/slug/${slug}`);
+        if (!res.ok) {
+            if (res.status === 404) return null;
+            throw new Error('Failed to fetch directory listing by slug');
         }
-
-        return data as DirectoryListingDB | null;
+        return res.json() as Promise<DirectoryListingDB>;
     },
 
     async getDirectoryListingsByCategory(categoryId: string): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .eq('category_id', categoryId)
-            .order('base_score', { ascending: false })
-            .order('is_featured', { ascending: false })
-            .order('net_votes', { ascending: false, nullsFirst: false })
-            .order('name', { ascending: true });
-
-        if (error) {
-            console.error(`Error fetching listings for category ${categoryId}:`, error);
-            throw error;
-        }
-
-        return data as DirectoryListingDB[];
+        const res = await fetch(`/api/directory/category/${categoryId}`);
+        if (!res.ok) throw new Error('Failed to fetch listings for category');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
-    /**
-     * Search approved directory listings by text query, category, and/or location.
-     */
     async searchDirectoryListings(
         query: string,
         categoryId?: string,
@@ -144,252 +59,97 @@ export const directoryService = {
         page = 1,
         limit = 40,
     ): Promise<{ data: DirectoryListingDB[]; total: number }> {
-        let q = supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT, { count: 'exact' })
-            .eq('status', 'approved');
-
-        const trimmed = query.trim();
-        if (trimmed) {
-            // Escape ILIKE wildcards and PostgREST .or() separators in user input
-            const safe = trimmed.replace(/%/g, '\\%').replace(/_/g, '\\_').replace(/,/g, ' ');
-            q = q.or(`name.ilike.%${safe}%,short_description.ilike.%${safe}%`);
-        }
-        if (categoryId) {
-            q = q.eq('category_id', categoryId);
-        }
-        if (location) {
-            const safeLoc = location.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
-            if (safeLoc) {
-                q = q.ilike('location', `%${safeLoc}%`);
-            }
-        }
-
-        q = q.order('base_score', { ascending: false })
-             .order('is_featured', { ascending: false })
-             .order('net_votes', { ascending: false, nullsFirst: false })
-             .order('name', { ascending: true })
-             .range((page - 1) * limit, page * limit - 1);
-
-        const { data, error, count } = await q;
-        if (error) {
-            console.error('Error searching directory listings:', error);
-            throw error;
-        }
-
-        return { data: data as DirectoryListingDB[], total: count ?? 0 };
+        const params = new URLSearchParams({ query, page: page.toString(), limit: limit.toString() });
+        if (categoryId) params.set('category', categoryId);
+        if (location) params.set('location', location);
+        
+        const res = await fetch(`/api/directory/search?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed to search directory listings');
+        return res.json();
     },
 
     // ============================================================
     // Landing Page Listings
     // ============================================================
 
-    /**
-     * Top community-voted free listings (limit 6, ordered by net_votes DESC)
-     */
     async getFreeListings(): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .eq('is_premium', false)
-            .order('net_votes', { ascending: false, nullsFirst: false })
-            .limit(6);
-
-        if (error) {
-            console.error('Error fetching free listings:', error);
-            throw error;
-        }
-
-        return data as DirectoryListingDB[];
+        const res = await fetch('/api/directory/landing/free');
+        if (!res.ok) throw new Error('Failed to fetch free listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
-    /**
-     * Premium / promoted listings (limit 6, is_premium = true)
-     */
     async getPremiumListings(): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .eq('is_premium', true)
-            .order('base_score', { ascending: false })
-            .limit(6);
-
-        if (error) {
-            console.error('Error fetching premium listings:', error);
-            throw error;
-        }
-
-        return data as DirectoryListingDB[];
+        const res = await fetch('/api/directory/landing/premium');
+        if (!res.ok) throw new Error('Failed to fetch premium listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
-    /**
-     * Signature tier listings (limit 4, is_premium = true, tier = signature)
-     */
     async getSignatureListings(): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .eq('tier', 'signature')
-            .eq('is_premium', true)
-            .order('base_score', { ascending: false })
-            .limit(4);
-
-        if (error) {
-            console.error('Error fetching signature listings:', error);
-            throw error;
-        }
-
-        return data as DirectoryListingDB[];
+        const res = await fetch('/api/directory/landing/signature');
+        if (!res.ok) throw new Error('Failed to fetch signature listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
-    /**
-     * Get listings that were recently claimed (ordered by claimed_at DESC)
-     */
     async getRecentlyClaimedListings(limit: number = 6): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select(LISTING_LOCATIONS_SELECT)
-            .not('claimed_at', 'is', null)
-            .eq('status', 'approved')
-            .order('claimed_at', { ascending: false })
-            .limit(limit);
-
-        if (error) {
-            console.error('Error fetching recently claimed listings:', error);
-            throw error;
-        }
-
-        return data as DirectoryListingDB[];
+        const res = await fetch(`/api/directory/landing/recent?limit=${limit}`);
+        if (!res.ok) throw new Error('Failed to fetch recently claimed listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {
-        const { data, error } = await supabase
-            .rpc('vote_listing', {
-                p_listing_id: listingId,
-                p_listing_type: 'directory',
-                p_vote: vote
-            });
-
-        if (error) {
-            console.error('Error voting for listing:', error);
-            throw error;
-        }
-
-        return {
-            netVotes: data[0].net_votes,
-            userVote: data[0].user_vote
-        };
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${listingId}/vote`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vote })
+        });
+        if (!res.ok) throw new Error('Failed to vote for listing');
+        return res.json() as Promise<{ netVotes: number; userVote: number }>;
     },
 
     async getUserVotesBatch(listingIds: string[]): Promise<Record<string, 1 | -1>> {
-        const { data, error } = await supabase
-            .rpc('get_user_votes_batch', {
-                p_listing_ids: listingIds,
-                p_listing_type: 'directory'
-            });
-
-        if (error) {
-            console.error('Error getting user votes batch:', error);
-            return {};
-        }
-
-        const votes: Record<string, 1 | -1> = {};
-        for (const row of (data as { listing_id: string; vote: 1 | -1 }[])) {
-            votes[row.listing_id] = row.vote;
-        }
-        return votes;
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/votes/batch`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listingIds })
+        });
+        if (!res.ok) return {};
+        return res.json() as Promise<Record<string, 1 | -1>>;
     },
 
     async removeListingVote(listingId: string): Promise<{ netVotes: number }> {
-        const { data, error } = await supabase
-            .rpc('remove_listing_vote', {
-                p_listing_id: listingId,
-                p_listing_type: 'directory'
-            });
-
-        if (error) {
-            console.error('Error removing vote:', error);
-            throw error;
-        }
-
-        return { netVotes: data[0].net_votes };
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${listingId}/vote`, {
+            method: 'DELETE',
+            headers
+        });
+        if (!res.ok) throw new Error('Failed to remove vote');
+        return res.json() as Promise<{ netVotes: number }>;
     },
 
     async createDirectoryListing(
         listing: DirectoryListingCreateInput,
         locationIds?: string[]
     ): Promise<DirectoryListingDB> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        if (locationIds?.length) validateUUIDs(locationIds);
-
-        const tier = listing.tier || 'explorer';
-        const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
-        const limit = TIER_LIMITS[tier] ?? 5;
-        if (gallery.length > limit) {
-            throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
-        }
-
-        const safeData = sanitize({
-            name: (listing.name ?? '').slice(0, 200),
-            short_description: (listing.short_description ?? '').slice(0, 500),
-            category_id: listing.category_id,
-            website: listing.website?.slice(0, 500),
-            whatsapp: listing.whatsapp?.slice(0, 50),
-            gallery,
-            location: (listing.location ?? '').slice(0, 200),
-            google_map_url: listing.google_map_url?.slice(0, 500),
-            video_url: listing.video_url?.slice(0, 500) || null,
-            is_featured: false,
-            is_verified: false,
-            is_premium: false,
-            tier,
-            base_score: listing.base_score ?? 0,
-            descriptions: listing.descriptions ?? {},
-            status: 'pending' as const,
-            owner_user_id: user.id,
-            ...(listing.slug ? { slug: listing.slug.slice(0, 200) } : {}),
-            ...(listing.price_level !== undefined ? { price_level: listing.price_level } : {}),
-            ...(listing.certifications?.length ? { certifications: listing.certifications } : {}),
-            ...(listing.languages_spoken?.length ? { languages_spoken: listing.languages_spoken } : {}),
-            ...(listing.newsletter_featured !== undefined ? { newsletter_featured: listing.newsletter_featured } : {}),
+        const headers = await getAuthHeaders();
+        const res = await fetch('/api/directory', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listing, locationIds: locationIds || [] })
         });
-
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .insert(safeData as unknown as Record<string, unknown>)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('Error creating directory listing:', error);
-            throw error;
-        }
-
-        if (locationIds?.length) {
-            const rows = buildLocationRows(data.id, locationIds);
-            const { error: locError } = await supabase.from('listing_locations').insert(rows);
-            if (locError) throw new Error(`Listing created but location sync failed: ${locError.message}`);
-        }
-
-        return data as DirectoryListingDB;
+        if (!res.ok) throw new Error('Failed to create directory listing');
+        return res.json() as Promise<DirectoryListingDB>;
     },
 
-    /**
-     * Email the current user bank-transfer instructions for a paid listing (T17).
-     * Best-effort — failures are logged, never thrown, so they don't block submission.
-     */
     async sendListingPaymentInstructions(businessName: string, tier: string): Promise<void> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        await retry(() => supabase.functions.invoke('send-email', {
-            body: {
-                type: 'listing_payment_instructions',
-                userId: user.id,
-                data: { businessName, tier, link: getAppUrl('/profile') },
-            },
-        })).catch(err => console.error('Failed to send listing payment email:', err));
+        const headers = await getAuthHeaders();
+        const res = await fetch('/api/directory/payment/instructions', {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessName, tier })
+        });
+        if (!res.ok) console.error('Failed to send listing payment email');
     },
 
     async updateDirectoryListing(
@@ -397,405 +157,163 @@ export const directoryService = {
         updates: Partial<DirectoryListingDB>,
         locationIds?: string[]
     ): Promise<DirectoryListingDB> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        if (locationIds?.length) validateUUIDs(locationIds);
-
-        // Strip fields that should not be updated directly
-        const safeUpdates: Record<string, unknown> = { ...updates };
-        delete safeUpdates.id;
-        delete safeUpdates.created_at;
-        delete safeUpdates.updated_at;
-        delete safeUpdates.is_verified;
-        delete safeUpdates.is_featured;
-        delete safeUpdates.base_score;
-        delete safeUpdates.subscription_id;
-        delete safeUpdates.listing_locations;
-        delete safeUpdates.status;
-        delete safeUpdates.owner_user_id;
-        delete safeUpdates.rejection_reason;
-
-        // Validate gallery length against tier limit
-        if (safeUpdates.gallery && Array.isArray(safeUpdates.gallery)) {
-            const tier = (safeUpdates.tier as string) || (updates as DirectoryListingDB).tier || 'explorer';
-            const limit = TIER_LIMITS[tier] ?? 5;
-            if ((safeUpdates.gallery as string[]).length > limit) {
-                throw new Error(`Photo limit exceeded for ${tier} tier: max ${limit} photos`);
-            }
-        }
-
-        const sanitized = sanitize(safeUpdates as Record<string, unknown>);
-
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .update({ ...sanitized, updated_at: new Date().toISOString() })
-            .eq('id', id)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('Error updating directory listing:', error);
-            throw error;
-        }
-
-        if (locationIds !== undefined) {
-            if (locationIds.length) {
-                const rows = buildLocationRows(id, locationIds);
-                const { error: upsertError } = await supabase
-                    .from('listing_locations')
-                    .upsert(rows, { onConflict: 'listing_id,location_id' });
-                if (upsertError) throw new Error(`Location sync failed: ${upsertError.message}`);
-                const { error: delError } = await supabase
-                    .from('listing_locations')
-                    .delete()
-                    .eq('listing_id', id)
-                    .not('location_id', 'in', `(${locationIds.join(',')})`);
-                if (delError) throw new Error(`Location cleanup failed: ${delError.message}`);
-            } else {
-                const { error: delError } = await supabase.from('listing_locations').delete().eq('listing_id', id);
-                if (delError) throw new Error(`Failed to clear listing locations: ${delError.message}`);
-            }
-        }
-
-        return data as DirectoryListingDB;
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${id}`, {
+            method: 'PUT',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates, locationIds: locationIds || [] })
+        });
+        if (!res.ok) throw new Error('Failed to update directory listing');
+        return res.json() as Promise<DirectoryListingDB>;
     },
 
     async deleteDirectoryListing(id: string): Promise<void> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const { error } = await supabase
-            .from('directory_listings')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error deleting directory listing:', error);
-            throw error;
-        }
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${id}`, {
+            method: 'DELETE',
+            headers
+        });
+        if (!res.ok) throw new Error('Failed to delete directory listing');
     },
 
     async getDirectoryListingsByStatus(
         status: 'approved' | 'rejected',
         category?: string
     ): Promise<DirectoryListingDB[]> {
-        let query = supabase
-            .from('directory_listings')
-            .select('*')
-            .eq('status', status)
-            .order('base_score', { ascending: false });
-        if (category) query = query.eq('category_id', category);
-        const { data, error } = await query;
-        if (error) {
-            console.error(`Error fetching ${status} listings:`, error);
-            throw error;
-        }
-        return data as DirectoryListingDB[];
+        const headers = await getAuthHeaders();
+        const query = category ? `?category=${category}` : '';
+        const res = await fetch(`/api/directory/admin/status/${status}${query}`, { headers });
+        if (!res.ok) throw new Error(`Error fetching ${status} listings`);
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
     async getPendingDirectoryListings(): Promise<DirectoryListingDB[]> {
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select('*')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: true });
-        if (error) {
-            console.error('Error fetching pending listings:', error);
-            throw error;
-        }
-        return data as DirectoryListingDB[];
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/admin/pending`, { headers });
+        if (!res.ok) throw new Error('Error fetching pending listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
     async approveDirectoryListing(id: string): Promise<void> {
-        const { data: listing, error } = await supabase
-            .from('directory_listings')
-            .update({ status: 'approved' })
-            .eq('id', id)
-            .select('name, owner_user_id')
-            .single();
-        if (error) {
-            console.error('Error approving listing:', error);
-            throw error;
-        }
-        if (listing?.owner_user_id) {
-            await retry(() => supabase.functions.invoke('send-email', {
-                body: { type: 'listing_approved', userId: listing.owner_user_id, data: { title: listing.name } },
-            })).catch(console.error);
-        }
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${id}/approve`, {
+            method: 'POST',
+            headers
+        });
+        if (!res.ok) throw new Error('Error approving listing');
     },
 
     async rejectDirectoryListing(id: string, reason: string): Promise<void> {
-        if (reason.length > 1000) throw new Error('Rejection reason must be 1000 characters or fewer');
-        const sanitizedReason = sanitizeString(reason);
-        const { data: listing, error } = await supabase
-            .from('directory_listings')
-            .update({ status: 'rejected', rejection_reason: sanitizedReason })
-            .eq('id', id)
-            .select('name, owner_user_id')
-            .single();
-        if (error) {
-            console.error('Error rejecting listing:', error);
-            throw error;
-        }
-        if (listing?.owner_user_id) {
-            await retry(() => supabase.functions.invoke('send-email', {
-                body: { type: 'listing_rejected', userId: listing.owner_user_id, data: { title: listing.name, reason: sanitizedReason } },
-            })).catch(console.error);
-        }
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${id}/reject`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        if (!res.ok) throw new Error('Error rejecting listing');
     },
 
     async trackListingView(listingId: string): Promise<void> {
-        const { error } = await supabase.rpc('track_listing_view', { p_listing_id: listingId });
-        if (error) console.error('Error tracking view:', error);
+        const res = await fetch(`/api/directory/${listingId}/track/view`, { method: 'POST' });
+        if (!res.ok) console.error('Error tracking view');
     },
 
     async trackListingClick(listingId: string, clickType: 'whatsapp' | 'website' | 'map'): Promise<void> {
-        const { error } = await supabase.rpc('track_listing_click', {
-            p_listing_id: listingId,
-            p_click_type: clickType
+        const res = await fetch(`/api/directory/${listingId}/track/click`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clickType })
         });
-        if (error) console.error('Error tracking click:', error);
+        if (!res.ok) console.error('Error tracking click');
     },
 
     async getDirectoryAnalyticsForOwner(days: number = 30): Promise<ListingAnalyticsSummary[]> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const { data, error } = await supabase.rpc('get_directory_analytics_for_owner', {
-            p_owner_id: user.id,
-            p_days: days
-        });
-
-        if (error) throw error;
-        return (data || []) as ListingAnalyticsSummary[];
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/analytics/owner?days=${days}`, { headers });
+        if (!res.ok) throw new Error('Error getting analytics');
+        return res.json() as Promise<ListingAnalyticsSummary[]>;
     },
 
     async getMyDirectoryListings(): Promise<DirectoryListingDB[]> {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const { data, error } = await supabase
-            .from('directory_listings')
-            .select('*')
-            .eq('owner_user_id', user.id)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        return (data || []) as DirectoryListingDB[];
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/me/listings`, { headers });
+        if (!res.ok) throw new Error('Error getting my listings');
+        return res.json() as Promise<DirectoryListingDB[]>;
     },
 
     async getListingAddons(listingId: string): Promise<ListingAddon[]> {
-        validateUUIDs([listingId]);
-        const { data, error } = await supabase
-            .from('listing_addons')
-            .select('*')
-            .eq('listing_id', listingId)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        return (data || []) as ListingAddon[];
+        const res = await fetch(`/api/directory/${listingId}/addons`);
+        if (!res.ok) throw new Error('Error getting addons');
+        return res.json() as Promise<ListingAddon[]>;
     },
 
     async createAddonCheckout(
         listingId: string,
         addonType: 'verified_badge' | 'seasonal_placement' | 'sponsored_article' | 'ai_localization'
     ): Promise<{ url: string }> {
-        validateUUIDs([listingId]);
-        const { data, error } = await supabase.functions.invoke('create-addon-checkout', {
-            body: { listingId, addonType },
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/${listingId}/addons/checkout`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ addonType })
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        if (!data?.url) throw new Error('No checkout URL returned');
-        return { url: data.url };
+        if (!res.ok) throw new Error('Error creating addon checkout');
+        return res.json() as Promise<{ url: string }>;
     },
 
     async getCategoryAnalyticsAverage(
         categoryId: string,
         days: number = 30
     ): Promise<CategoryAnalyticsAverage | null> {
-        const { data, error } = await supabase.rpc('get_category_analytics_average', {
-            p_category_id: categoryId,
-            p_days: days,
-        });
-        if (error) throw error;
-        return (data?.[0] ?? null) as CategoryAnalyticsAverage | null;
+        const res = await fetch(`/api/directory/analytics/category/${categoryId}?days=${days}`);
+        if (!res.ok) throw new Error('Error getting category analytics');
+        return res.json() as Promise<CategoryAnalyticsAverage | null>;
     },
 
     async submitListingClaim(
         claim: Omit<ListingClaimDB, 'id' | 'created_at' | 'updated_at' | 'status' | 'user_id' | 'email_verified' | 'verification_token' | 'verification_expires_at' | 'rejection_reason'>
     ): Promise<ListingClaimDB> {
-        // Auth is required — cannot submit claim anonymously
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) {
-            throw new Error('Must be logged in to submit a claim');
-        }
-
-        const safeData = sanitize({
-            listing_id: claim.listing_id,
-            user_id: user.id,
-            email: claim.email.trim(),
-            phone: claim.phone.trim(),
-            role: claim.role,
-            additional_notes: claim.additional_notes?.trim() || null,
-            business_name: claim.business_name.trim(),
-            contact_phone: claim.contact_phone.trim(),
-            whatsapp: claim.whatsapp?.trim() || null,
-            website: claim.website?.trim() || null,
-            address: claim.address?.trim() || null,
-            description: claim.description?.trim() || null,
-            status: 'pending' as const,
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/claims`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify(claim)
         });
-
-        const { data, error } = await supabase
-            .from('listing_claims')
-            .insert(safeData as unknown as Record<string, unknown>)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('Error submitting listing claim:', error);
-            throw error;
-        }
-
-        const claimRecord = data as ListingClaimDB;
-
-        // Send verification email
-        await retry(() => supabase.functions.invoke('send-email', {
-            body: {
-                type: 'listing_claim_verification',
-                data: {
-                    claimantEmail: claimRecord.email,
-                    businessName: claimRecord.business_name,
-                    verificationToken: claimRecord.verification_token,
-                },
-            },
-        })).catch(err => console.error('Error sending claim verification email:', err));
-
-        return claimRecord;
+        if (!res.ok) throw new Error('Error submitting claim');
+        return res.json() as Promise<ListingClaimDB>;
     },
 
     async verifyClaimEmail(token: string): Promise<ListingClaimDB | null> {
-        const { data, error } = await supabase.rpc('verify_claim_email', {
-            p_token: token,
-        });
-
-        if (error) {
-            console.error('Error verifying claim email:', error);
-            return null;
-        }
-
-        if (!data || data.length === 0) {
-            return null;
-        }
-
-        const claim = data[0];
-
-        // Send admin notification
-        await retry(() => supabase.functions.invoke('send-email', {
-            body: {
-                type: 'admin_claim_notification',
-                data: {
-                    businessName: claim.business_name,
-                    claimantEmail: claim.email,
-                    listingId: claim.listing_id,
-                },
-            },
-        })).catch(err => console.error('Error sending admin notification:', err));
-
-        return claim;
+        const res = await fetch(`/api/directory/claims/verify?token=${token}`);
+        if (!res.ok) return null;
+        return res.json() as Promise<ListingClaimDB>;
     },
 
     async getListingClaims(): Promise<ListingClaimDB[]> {
-        const { data, error } = await supabase
-            .from('listing_claims')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Error fetching claims:', error);
-            throw error;
-        }
-
-        return (data || []) as ListingClaimDB[];
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/claims`, { headers });
+        if (!res.ok) throw new Error('Error getting claims');
+        return res.json() as Promise<ListingClaimDB[]>;
     },
 
     async approveListingClaim(claimId: string): Promise<boolean> {
-        const { data, error } = await supabase.rpc('approve_listing_claim', {
-            p_claim_id: claimId,
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/claims/${claimId}/approve`, {
+            method: 'POST',
+            headers
         });
-
-        if (error) {
-            console.error('Error approving claim:', error);
-            throw error;
-        }
-
-        if (!data || !data[0]?.success) {
-            const message = data?.[0]?.message || 'Failed to approve claim';
-            throw new Error(message);
-        }
-
-        // Fetch claim details for notification
-        const { data: claim } = await supabase
-            .from('listing_claims')
-            .select('email, business_name')
-            .eq('id', claimId)
-            .single();
-
-        // Send approval email to claimant
-        if (claim) {
-            await retry(() => supabase.functions.invoke('send-email', {
-                body: {
-                    type: 'listing_claim_approved',
-                    data: {
-                        claimantEmail: claim.email,
-                        businessName: claim.business_name,
-                    },
-                },
-            })).catch(err => console.error('Error sending approval email:', err));
-        }
-
+        if (!res.ok) throw new Error('Error approving claim');
         return true;
     },
 
     async rejectListingClaim(claimId: string, reason: string): Promise<boolean> {
-        const { data, error } = await supabase.rpc('reject_listing_claim', {
-            p_claim_id: claimId,
-            p_reason: reason,
+        const headers = await getAuthHeaders();
+        const res = await fetch(`/api/directory/claims/${claimId}/reject`, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
         });
-
-        if (error) {
-            console.error('Error rejecting claim:', error);
-            throw error;
-        }
-
-        if (!data || !data[0]?.success) {
-            const message = data?.[0]?.message || 'Failed to reject claim';
-            throw new Error(message);
-        }
-
-        // Fetch claim details for notification
-        const { data: claim } = await supabase
-            .from('listing_claims')
-            .select('email, business_name')
-            .eq('id', claimId)
-            .single();
-
-        // Send rejection email to claimant
-        if (claim) {
-            await retry(() => supabase.functions.invoke('send-email', {
-                body: {
-                    type: 'listing_claim_rejected',
-                    data: {
-                        claimantEmail: claim.email,
-                        businessName: claim.business_name,
-                        rejectionReason: reason,
-                    },
-                },
-            })).catch(err => console.error('Error sending rejection email:', err));
-        }
-
+        if (!res.ok) throw new Error('Error rejecting claim');
         return true;
-    },
+    }
 };

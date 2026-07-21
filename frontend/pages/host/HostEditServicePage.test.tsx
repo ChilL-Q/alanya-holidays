@@ -2,7 +2,7 @@ import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { HostEditServicePage } from './HostEditServicePage';
-import { db } from '../../api-services';
+import { servicesService, storageService } from '../../api-services';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 // Rule 1: vi.hoisted for shared mocks
@@ -42,10 +42,12 @@ vi.mock('../../hooks/useSaveShortcut', () => ({
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    servicesService: {
         getService: vi.fn(),
         updateService: vi.fn(),
-        requestServiceUpdate: vi.fn(),
+        requestServiceUpdate: vi.fn()
+    },
+    storageService: {
         uploadImage: vi.fn()
     }
 }));
@@ -114,7 +116,7 @@ describe('HostEditServicePage', () => {
     };
 
     it('renders service details after loading', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
+        (servicesService.getService as any).mockResolvedValue(mockService);
         renderPage();
         expect(screen.getByText(/Loading/i)).toBeInTheDocument();
         await waitFor(() => {
@@ -123,7 +125,7 @@ describe('HostEditServicePage', () => {
     });
 
     it('handles load failure', async () => {
-        (db.getService as any).mockRejectedValue(new Error('Load failed'));
+        (servicesService.getService as any).mockRejectedValue(new Error('Load failed'));
         renderPage();
         await waitFor(() => {
             expect(mockToast.error).toHaveBeenCalledWith('Failed to load service');
@@ -132,8 +134,8 @@ describe('HostEditServicePage', () => {
     });
 
     it('submits changes that need approval', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
-        (db.requestServiceUpdate as any).mockResolvedValue({});
+        (servicesService.getService as any).mockResolvedValue(mockService);
+        (servicesService.requestServiceUpdate as any).mockResolvedValue({});
 
         renderPage();
         await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
@@ -145,13 +147,13 @@ describe('HostEditServicePage', () => {
             fireEvent.click(submitBtn);
         });
 
-        expect(db.requestServiceUpdate).toHaveBeenCalled();
+        expect(servicesService.requestServiceUpdate).toHaveBeenCalled();
         expect(screen.getByText('Changes Submitted')).toBeInTheDocument();
     });
 
     it('submits changes directly if no approval needed', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
-        (db.updateService as any).mockResolvedValue({});
+        (servicesService.getService as any).mockResolvedValue(mockService);
+        (servicesService.updateService as any).mockResolvedValue({});
 
         renderPage();
         await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
@@ -163,13 +165,13 @@ describe('HostEditServicePage', () => {
             fireEvent.click(submitBtn);
         });
 
-        expect(db.updateService).toHaveBeenCalled();
+        expect(servicesService.updateService).toHaveBeenCalled();
         expect(mockToast.success).toHaveBeenCalledWith('Service updated successfully');
     });
 
     it('handles submit error', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
-        (db.updateService as any).mockRejectedValue(new Error('Save failed'));
+        (servicesService.getService as any).mockResolvedValue(mockService);
+        (servicesService.updateService as any).mockRejectedValue(new Error('Save failed'));
 
         renderPage();
         await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
@@ -185,7 +187,7 @@ describe('HostEditServicePage', () => {
     });
 
     it('handles image removal', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
+        (servicesService.getService as any).mockResolvedValue(mockService);
         const { container } = renderPage();
         
         // Wait for images to load using container selector
@@ -206,9 +208,9 @@ describe('HostEditServicePage', () => {
     });
 
     it('handles new photo upload during submit', async () => {
-        (db.getService as any).mockResolvedValue(mockService);
-        (db.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
-        (db.requestServiceUpdate as any).mockResolvedValue({});
+        (servicesService.getService as any).mockResolvedValue(mockService);
+        (storageService.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
+        (servicesService.requestServiceUpdate as any).mockResolvedValue({});
 
         renderPage();
         await waitFor(() => expect(screen.getByDisplayValue('Original Car')).toBeInTheDocument());
@@ -223,7 +225,7 @@ describe('HostEditServicePage', () => {
             fireEvent.click(submitBtn);
         });
 
-        expect(db.uploadImage).toHaveBeenCalled();
-        expect(db.requestServiceUpdate).toHaveBeenCalled();
+        expect(storageService.uploadImage).toHaveBeenCalled();
+        expect(servicesService.requestServiceUpdate).toHaveBeenCalled();
     });
 });

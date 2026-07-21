@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import toast from 'react-hot-toast';
 
 // Mock DatePicker
@@ -36,6 +36,11 @@ vi.mock('../../api-services', () => ({
         getICalFeeds: vi.fn(),
         updatePropertyAvailability: vi.fn(),
     },
+    propertiesService: {
+        getPropertyAvailability: vi.fn(),
+        getICalFeeds: vi.fn(),
+        updatePropertyAvailability: vi.fn(),
+    }
 }));
 
 vi.mock('../../context/CurrencyContext', () => ({
@@ -58,22 +63,22 @@ describe('AvailabilityCalendar', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getPropertyAvailability as any).mockResolvedValue([]);
-        (db.getICalFeeds as any).mockResolvedValue([{ id: 'feed1', name: 'Airbnb' }]);
+        (propertiesService.getPropertyAvailability as any).mockResolvedValue([]);
+        (propertiesService.getICalFeeds as any).mockResolvedValue([{ id: 'feed1', name: 'Airbnb' }]);
     });
 
     it('loads data on mount', async () => {
         await act(async () => {
             render(<AvailabilityCalendar propertyId={propertyId} />);
         });
-        expect(db.getPropertyAvailability).toHaveBeenCalled();
-        expect(db.getICalFeeds).toHaveBeenCalled();
+        expect(propertiesService.getPropertyAvailability).toHaveBeenCalled();
+        expect(propertiesService.getICalFeeds).toHaveBeenCalled();
         // Summary instruction should be visible
         expect(screen.getByText('Select dates on the calendar to edit availability or pricing.')).toBeDefined();
     });
 
     it('shows error toast if loading fails', async () => {
-        (db.getPropertyAvailability as any).mockRejectedValue(new Error('Fetch error'));
+        (propertiesService.getPropertyAvailability as any).mockRejectedValue(new Error('Fetch error'));
         await act(async () => {
             render(<AvailabilityCalendar propertyId={propertyId} />);
         });
@@ -90,7 +95,7 @@ describe('AvailabilityCalendar', () => {
             fireEvent.click(refreshBtn);
         });
 
-        expect(db.getPropertyAvailability).toHaveBeenCalledTimes(2);
+        expect(propertiesService.getPropertyAvailability).toHaveBeenCalledTimes(2);
     });
 
     it('selects a date, opens panel, and saves availability', async () => {
@@ -117,7 +122,7 @@ describe('AvailabilityCalendar', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'blocked', undefined);
+        expect(propertiesService.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'blocked', undefined);
         expect(toast.success).toHaveBeenCalledWith('Updated 1 dates');
     });
 
@@ -145,7 +150,7 @@ describe('AvailabilityCalendar', () => {
             fireEvent.click(screen.getByText('Save Changes'));
         });
 
-        expect(db.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'available', 150);
+        expect(propertiesService.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'available', 150);
     });
 
     it('deselects a date when clicked twice', async () => {
@@ -179,7 +184,7 @@ describe('AvailabilityCalendar', () => {
     });
 
     it('shows error if saving fails', async () => {
-        (db.updatePropertyAvailability as any).mockRejectedValue(new Error('Update error'));
+        (propertiesService.updatePropertyAvailability as any).mockRejectedValue(new Error('Update error'));
         await act(async () => {
             render(<AvailabilityCalendar propertyId={propertyId} />);
         });
@@ -197,7 +202,7 @@ describe('AvailabilityCalendar', () => {
 
     describe('Panel Summaries & Render Classes based on Availability', () => {
         it('renders blocked manual date and shows correct panel', async () => {
-            (db.getPropertyAvailability as any).mockResolvedValue([
+            (propertiesService.getPropertyAvailability as any).mockResolvedValue([
                 { date: mockDateStr, status: 'blocked', source: 'manual' }
             ]);
 
@@ -221,11 +226,11 @@ describe('AvailabilityCalendar', () => {
                 fireEvent.click(screen.getByText('Unblock these dates'));
             });
 
-            expect(db.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'available', undefined);
+            expect(propertiesService.updatePropertyAvailability).toHaveBeenCalledWith(propertyId, [mockDateStr], 'available', undefined);
         });
 
         it('renders blocked external date and prevents editing', async () => {
-            (db.getPropertyAvailability as any).mockResolvedValue([
+            (propertiesService.getPropertyAvailability as any).mockResolvedValue([
                 { date: mockDateStr, status: 'blocked', source: 'ical', feed_id: 'feed1' }
             ]);
 
@@ -249,7 +254,7 @@ describe('AvailabilityCalendar', () => {
         it('renders custom price date and booked date', async () => {
             // Need a bit of a hack to test two different dates in our simple mock
             // Let's test custom price first
-            (db.getPropertyAvailability as any).mockResolvedValue([
+            (propertiesService.getPropertyAvailability as any).mockResolvedValue([
                 { date: mockDateStr, status: 'available', price: 999 }
             ]);
 
@@ -264,7 +269,7 @@ describe('AvailabilityCalendar', () => {
         });
 
         it('renders booked date', async () => {
-            (db.getPropertyAvailability as any).mockResolvedValue([
+            (propertiesService.getPropertyAvailability as any).mockResolvedValue([
                 { date: mockDateStr, status: 'booked' }
             ]);
 

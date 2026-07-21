@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminEditProductPage } from './AdminEditProductPage';
-import { db } from '../../api-services';
+import { productsService, storageService } from '../../api-services';
 
 // Rule 1: vi.hoisted for shared mocks
 const { mockNavigate, mockToast, mockParams } = vi.hoisted(() => ({
@@ -26,10 +26,12 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 vi.mock('../../api-services', () => ({
-    db: {
+    productsService: {
         getProduct: vi.fn(),
         createProduct: vi.fn(),
         updateProduct: vi.fn(),
+    },
+    storageService: {
         uploadImage: vi.fn().mockResolvedValue('http://example.com/img.jpg'),
     }
 }));
@@ -88,11 +90,11 @@ describe('AdminEditProductPage', () => {
     });
 
     it('loads and renders existing product', async () => {
-        (db.getProduct as any).mockResolvedValue(mockProduct);
+        (productsService.getProduct as any).mockResolvedValue(mockProduct);
         renderPage('prod-1');
 
         await waitFor(() => {
-            expect(db.getProduct).toHaveBeenCalledWith('prod-1');
+            expect(productsService.getProduct).toHaveBeenCalledWith('prod-1');
             expect(screen.getByDisplayValue('Test Product')).toBeInTheDocument();
             expect(screen.getByDisplayValue('50')).toBeInTheDocument();
         });
@@ -100,7 +102,7 @@ describe('AdminEditProductPage', () => {
 
     it('handles load failure', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getProduct as any).mockRejectedValue(new Error('Fetch failed'));
+        (productsService.getProduct as any).mockRejectedValue(new Error('Fetch failed'));
         
         renderPage('prod-1');
 
@@ -112,7 +114,7 @@ describe('AdminEditProductPage', () => {
     });
 
     it('submits new product successfully', async () => {
-        (db.createProduct as any).mockResolvedValue({});
+        (productsService.createProduct as any).mockResolvedValue({});
         
         renderPage();
 
@@ -124,7 +126,7 @@ describe('AdminEditProductPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.createProduct).toHaveBeenCalledWith(expect.objectContaining({
+        expect(productsService.createProduct).toHaveBeenCalledWith(expect.objectContaining({
             title: 'Cool Souvenir',
             price: 30
         }));
@@ -133,8 +135,8 @@ describe('AdminEditProductPage', () => {
     });
 
     it('updates existing product successfully', async () => {
-        (db.getProduct as any).mockResolvedValue(mockProduct);
-        (db.updateProduct as any).mockResolvedValue({});
+        (productsService.getProduct as any).mockResolvedValue(mockProduct);
+        (productsService.updateProduct as any).mockResolvedValue({});
         
         renderPage('prod-1');
 
@@ -147,7 +149,7 @@ describe('AdminEditProductPage', () => {
             fireEvent.click(saveBtn);
         });
 
-        expect(db.updateProduct).toHaveBeenCalledWith('prod-1', expect.objectContaining({
+        expect(productsService.updateProduct).toHaveBeenCalledWith('prod-1', expect.objectContaining({
             title: 'Updated Title'
         }));
         expect(mockToast.success).toHaveBeenCalledWith('Product updated successfully');
@@ -155,7 +157,7 @@ describe('AdminEditProductPage', () => {
 
     it('handles form submission error', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.createProduct as any).mockRejectedValue(new Error('Save failed'));
+        (productsService.createProduct as any).mockRejectedValue(new Error('Save failed'));
         
         renderPage();
 
@@ -170,8 +172,8 @@ describe('AdminEditProductPage', () => {
     });
 
     it('handles photo upload during submit', async () => {
-        (db.createProduct as any).mockResolvedValue({});
-        (db.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
+        (productsService.createProduct as any).mockResolvedValue({});
+        (storageService.uploadImage as any).mockResolvedValue('http://example.com/new.jpg');
         
         renderPage();
 
@@ -188,14 +190,14 @@ describe('AdminEditProductPage', () => {
             fireEvent.click(screen.getByRole('button', { name: /Save/i }));
         });
 
-        expect(db.uploadImage).toHaveBeenCalledWith(file, 'products');
-        expect(db.createProduct).toHaveBeenCalledWith(expect.objectContaining({
+        expect(storageService.uploadImage).toHaveBeenCalledWith(file, 'products');
+        expect(productsService.createProduct).toHaveBeenCalledWith(expect.objectContaining({
             images: expect.arrayContaining(['http://example.com/new.jpg'])
         }));
     });
 
     it('removes existing image', async () => {
-        (db.getProduct as any).mockResolvedValue(mockProduct);
+        (productsService.getProduct as any).mockResolvedValue(mockProduct);
         renderPage('prod-1');
 
         await waitFor(() => expect(screen.getByRole('img')).toBeInTheDocument());

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { usersService } from '../../api-services';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -37,7 +37,7 @@ export const AdminEditUserPage: React.FC = () => {
             const fetchUser = async () => {
                 setIsLoading(true);
                 try {
-                    const data = await db.getUserProfile(id);
+                    const data = await usersService.getUserProfile(id);
                     if (data) {
                         setFormData({
                             full_name: data.full_name || '',
@@ -69,7 +69,7 @@ export const AdminEditUserPage: React.FC = () => {
 
         setIsSaving(true);
         try {
-            await db.updateUserProfile(id, formData);
+            await usersService.updateUserProfile(id, formData);
             toast.success('User updated successfully');
             navigate('/admin');
         } catch (error) {

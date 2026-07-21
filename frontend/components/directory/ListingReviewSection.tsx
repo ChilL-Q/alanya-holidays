@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Star, MessageSquare, Loader2, User } from 'lucide-react';
-import { db } from '../../api-services';
+import { listingReviewsService } from '../../api-services';
 import { ListingReview } from '../../types/models';
 import { ReviewForm } from './ReviewForm';
 
@@ -17,7 +17,7 @@ export const ListingReviewSection: React.FC<ListingReviewSectionProps> = ({ list
         setLoading(true);
         setError(null);
         try {
-            const response = await db.getListingReviews(listingId);
+            const response = await listingReviewsService.getListingReviews(listingId);
             setReviews(response.data);
         } catch (err) {
             console.error('Failed to fetch listing reviews:', err);

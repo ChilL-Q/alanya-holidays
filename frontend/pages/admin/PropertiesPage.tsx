@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
@@ -39,7 +39,7 @@ export const PropertiesPage: React.FC = () => {
 
     const loadProperties = async () => {
         try {
-            const { data } = await db.getAdminProperties('all', 1, 100);
+            const { data } = await propertiesService.getAdminProperties('all', 1, 100);
             setProperties(data || []);
         } catch (e) {
             console.error(e);
@@ -83,9 +83,9 @@ export const PropertiesPage: React.FC = () => {
         if (!type || !itemId) return;
 
         try {
-            if (type === 'approve') await db.approveProperty(itemId.toString());
-            if (type === 'delete') await db.deleteProperty(itemId.toString(), reason);
-            if (type === 'reject') await db.updatePropertyStatus(itemId.toString(), 'rejected', reason);
+            if (type === 'approve') await propertiesService.approveProperty(itemId.toString());
+            if (type === 'delete') await propertiesService.deleteProperty(itemId.toString(), reason);
+            if (type === 'reject') await propertiesService.updatePropertyStatus(itemId.toString(), 'rejected', reason);
 
             loadProperties();
             setModalConfig({ ...modalConfig, isOpen: false });

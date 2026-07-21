@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { HostServicesPage } from './HostServicesPage';
 import { BrowserRouter } from 'react-router-dom';
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 
 // Mock dependencies
 vi.mock('../../api-services', () => ({
-    db: {
+    servicesService: {
         getServicesByProvider: vi.fn(),
         getMyPendingEdits: vi.fn(),
         deleteService: vi.fn()
@@ -35,8 +35,8 @@ describe('HostServicesPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         (useAuth as any).mockReturnValue({ user: mockUser });
-        (db.getServicesByProvider as any).mockResolvedValue(mockServices);
-        (db.getMyPendingEdits as any).mockResolvedValue([]);
+        (servicesService.getServicesByProvider as any).mockResolvedValue(mockServices);
+        (servicesService.getMyPendingEdits as any).mockResolvedValue([]);
     });
 
     it('renders services list', async () => {
@@ -82,9 +82,9 @@ describe('HostServicesPage', () => {
 
         expect(confirmSpy).toHaveBeenCalled();
         await waitFor(() => {
-            expect(db.deleteService).toHaveBeenCalledTimes(2);
-            expect(db.deleteService).toHaveBeenCalledWith('1');
-            expect(db.deleteService).toHaveBeenCalledWith('2');
+            expect(servicesService.deleteService).toHaveBeenCalledTimes(2);
+            expect(servicesService.deleteService).toHaveBeenCalledWith('1');
+            expect(servicesService.deleteService).toHaveBeenCalledWith('2');
         });
     });
 });

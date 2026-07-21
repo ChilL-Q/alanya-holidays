@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Check, Camera, Video, Sparkles, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../api-services';
+import { ServiceData, servicesService } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 
 export const CreativeServices: React.FC = () => {
@@ -51,7 +51,7 @@ export const CreativeServices: React.FC = () => {
         const fetchServices = async () => {
             if (!subcategory) return;
             try {
-                const { data } = await db.getServices('creative', 1, 100);
+                const { data } = await servicesService.getServices('creative', 1, 100);
                 if (data) {
                     const filtered = data.filter(s => s.features?.subcategory === subcategory);
                     setServices(filtered);

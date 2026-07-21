@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../api-services';
+import { ServiceData, servicesService } from '../api-services';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
 import { ArrowLeft } from 'lucide-react';
 import { getCarImage } from '../utils/carImages';
@@ -41,7 +41,7 @@ export const CarModelDetails: React.FC = () => {
         const fetchOffers = async () => {
             try {
                 const targetType = serviceType || 'car';
-                const { data: services } = await db.getServices(targetType, 1, 1000);
+                const { data: services } = await servicesService.getServices(targetType, 1, 1000);
 
                 const filtered = services?.filter((s: ServiceData) => {
                     const sBrand = s.features?.brand || '';
@@ -63,7 +63,7 @@ export const CarModelDetails: React.FC = () => {
                     const brand = constantService.features.brand;
                     const model = constantService.features.model;
 
-                    const serviceModel = await db.getServiceModel(targetType, brand, model);
+                    const serviceModel = await servicesService.getServiceModel(targetType, brand, model);
                     const staticDescription = serviceModel?.description || CAR_DESCRIPTIONS[`${brand} ${model}`];
                     const staticImage = serviceModel?.image_url;
 

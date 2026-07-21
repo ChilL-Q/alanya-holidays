@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Copy, RefreshCw, Check, Loader2, Plus, Trash2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { getAppUrl } from '../../utils/appUrl';
 
 interface ICalManagerProps {
@@ -34,7 +34,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
 
     const loadFeeds = useCallback(async () => {
         try {
-            const data = await db.getICalFeeds(propertyId);
+            const data = await propertiesService.getICalFeeds(propertyId);
             setFeeds(data);
         } catch (error) {
             console.error('Error loading feeds:', error);
@@ -45,7 +45,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
 
     const loadPropertyDetails = useCallback(async () => {
         try {
-            const property = await db.getProperty(propertyId);
+            const property = await propertiesService.getProperty(propertyId);
             setIcalToken(property.ical_token || property.id); // Fallback to ID if token missing
         } catch (error) {
             console.error('Error loading property:', error);
@@ -74,7 +74,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
 
         setIsAdding(true);
         try {
-            await db.addICalFeed(propertyId, newFeedName, newFeedUrl);
+            await propertiesService.addICalFeed(propertyId, newFeedName, newFeedUrl);
             setNewFeedName('');
             setNewFeedUrl('');
             await loadFeeds();
@@ -93,7 +93,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
         if (!confirm('Are you sure? This will remove imported dates from this calendar.')) return;
 
         try {
-            await db.removeICalFeed(id);
+            await propertiesService.removeICalFeed(id);
             setFeeds(feeds.filter(f => f.id !== id));
             toast.success('Calendar removed');
             onUpdate(); // Refresh calendar to remove blocked dates
@@ -106,7 +106,7 @@ export const ICalManager: React.FC<ICalManagerProps> = ({ propertyId, onUpdate }
     const handleSync = async () => {
         setIsSyncing(true);
         try {
-            await db.syncPropertyCalendar(propertyId);
+            await propertiesService.syncPropertyCalendar(propertyId);
             toast.success('All calendars synchronized');
             onUpdate();
             loadFeeds(); // Update last_synced_at if we displayed it

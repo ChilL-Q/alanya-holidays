@@ -5,15 +5,15 @@ import { DirectoryListingCard } from './DirectoryListingCard';
 import { DirectoryListingDB } from '../../types/models';
 import { LanguageProvider } from '../../context/LanguageContext';
 
-const { mockDb } = vi.hoisted(() => ({
-    mockDb: {
+const { mockDirectoryService } = vi.hoisted(() => ({
+    mockDirectoryService: {
         trackListingClick: vi.fn().mockResolvedValue(undefined),
         trackListingView: vi.fn().mockResolvedValue(undefined),
     }
 }));
 
 vi.mock('../../api-services', () => ({
-    db: mockDb
+    directoryService: mockDirectoryService
 }));
 
 const baseListing: DirectoryListingDB = {
@@ -96,7 +96,7 @@ describe('DirectoryListingCard', () => {
         );
         const websiteBtn = screen.getByText('Website');
         fireEvent.click(websiteBtn);
-        expect(mockDb.trackListingClick).toHaveBeenCalledWith('dir-1', 'website');
+        expect(mockDirectoryService.trackListingClick).toHaveBeenCalledWith('dir-1', 'website');
     });
 
     it('tracks map click', () => {
@@ -109,6 +109,6 @@ describe('DirectoryListingCard', () => {
         );
         const mapBtn = screen.getByText('Map');
         fireEvent.click(mapBtn);
-        expect(mockDb.trackListingClick).toHaveBeenCalledWith('dir-1', 'map');
+        expect(mockDirectoryService.trackListingClick).toHaveBeenCalledWith('dir-1', 'map');
     });
 });

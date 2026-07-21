@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, ServiceData } from '../../api-services';
+import { ServiceData, servicesService } from '../../api-services';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Calendar, ArrowLeft, Fuel, Gauge, Armchair } from 'lucide-react';
@@ -38,7 +38,7 @@ export const BookVehicle: React.FC = () => {
         const fetchService = async () => {
             if (!id) return;
             try {
-                const serviceData = await db.getService(id);
+                const serviceData = await servicesService.getService(id);
                 setService(serviceData);
             } catch (error) {
                 console.error("Failed to fetch service", error);

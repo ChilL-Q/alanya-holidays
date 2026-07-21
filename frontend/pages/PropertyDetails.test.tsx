@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Rule 1: vi.hoisted for shared mocks
 const { mockNavigate } = vi.hoisted(() => ({
@@ -14,6 +15,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
     return {
         ...actual,
         useNavigate: () => mockNavigate,
+        useParams: () => ({ id: 'prop-1' })
     };
 });
 
@@ -62,6 +64,12 @@ vi.mock('../context/ChatContext', () => ({
     })
 }));
 
+vi.mock('../context/NotificationContext', () => ({
+    useNotifications: () => ({
+        addNotification: vi.fn()
+    })
+}));
+
 // Rule 3: API mocks
 vi.mock('../api-services', () => ({
     db: {
@@ -70,6 +78,19 @@ vi.mock('../api-services', () => ({
         getReviewCount: vi.fn().mockResolvedValue(0),
         getReviews: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } }),
         getBookings: vi.fn().mockResolvedValue([]),
+        getServices: vi.fn().mockResolvedValue({ data: [] })
+    },
+    propertiesService: {
+        getProperty: vi.fn(),
+        getUnavailableDates: vi.fn().mockResolvedValue([]),
+        getReviewCount: vi.fn().mockResolvedValue(0),
+        getReviews: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } }),
+        getBookings: vi.fn().mockResolvedValue([])
+    },
+    bookingsService: {
+        getBookings: vi.fn().mockResolvedValue([])
+    },
+    servicesService: {
         getServices: vi.fn().mockResolvedValue({ data: [] })
     }
 }));
@@ -80,7 +101,7 @@ vi.mock('../components/chat/ChatWindow', () => ({
 }));
 
 import { PropertyDetails } from './PropertyDetails';
-import { db } from '../api-services';
+import { propertiesService } from '../api-services';
 
 describe('PropertyDetails Page', () => {
     beforeEach(() => {
@@ -89,17 +110,20 @@ describe('PropertyDetails Page', () => {
     });
 
     const renderPage = (id = 'prop-1') => {
+        const queryClient = new QueryClient();
         return render(
-            <MemoryRouter initialEntries={[`/property/${id}`]}>
-                <Routes>
-                    <Route path="/property/:id" element={<PropertyDetails />} />
-                </Routes>
-            </MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter initialEntries={[`/property/${id}`]}>
+                    <Routes>
+                        <Route path="/property/:id" element={<PropertyDetails />} />
+                    </Routes>
+                </MemoryRouter>
+            </QueryClientProvider>
         );
     };
 
     it('shows loading state initially', () => {
-        (db.getProperty as any).mockReturnValue(new Promise(() => {})); // Never resolves
+        (propertiesService.getProperty as any).mockReturnValue(new Promise(() => {})); // Never resolves
         renderPage();
         expect(screen.getByText('Loading property details...')).toBeInTheDocument();
     });
@@ -121,7 +145,7 @@ describe('PropertyDetails Page', () => {
             reviews_count: 10,
             cleaning_fee: 50
         };
-        (db.getProperty as any).mockResolvedValue(mockProperty);
+        (propertiesService.getProperty as any).mockResolvedValue(mockProperty);
 
         renderPage();
 
@@ -133,7 +157,7 @@ describe('PropertyDetails Page', () => {
     });
 
     it('shows error message when property is not found', async () => {
-        (db.getProperty as any).mockResolvedValue(null);
+        (propertiesService.getProperty as any).mockResolvedValue(null);
         
         renderPage();
 
@@ -145,7 +169,7 @@ describe('PropertyDetails Page', () => {
 
     it('shows error message on API failure', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getProperty as any).mockRejectedValue(new Error('Fetch failed'));
+        (propertiesService.getProperty as any).mockRejectedValue(new Error('Fetch failed'));
         
         renderPage();
 
@@ -169,9 +193,11 @@ describe('PropertyDetails Page', () => {
             beds: 1,
             bathrooms: 1,
             rating: 5,
-            reviewsCount: 0
+            reviews_count: 0,
+            host_id: 'host-1',
+            description: 'Test description'
         };
-        (db.getProperty as any).mockResolvedValue(mockProperty);
+        (propertiesService.getProperty as any).mockResolvedValue(mockProperty);
 
         renderPage();
 

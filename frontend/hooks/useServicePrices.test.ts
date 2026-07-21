@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { waitFor } from '@testing-library/react';
 import { renderHookWithQuery } from '../utils/test-utils';
 import { useServicePrices } from './useServicePrices';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 
 vi.mock('../api-services', () => ({
-    db: {
+    servicesService: {
         getServices: vi.fn()
     }
 }));
@@ -16,7 +16,7 @@ describe('useServicePrices', () => {
     });
 
     it('fetches and calculates min prices', async () => {
-        (db.getServices as any).mockResolvedValue({
+        (servicesService.getServices as any).mockResolvedValue({
             data: [
                 { id: '1', price: 50, type: 'tour', features: { subcategory: 'water' } },
                 { id: '2', price: 30, type: 'tour', features: { subcategory: 'water' } },
@@ -40,7 +40,7 @@ describe('useServicePrices', () => {
     });
 
     it('handles error gracefully', async () => {
-        (db.getServices as any).mockRejectedValue(new Error('Failed'));
+        (servicesService.getServices as any).mockRejectedValue(new Error('Failed'));
 
         const { result } = renderHookWithQuery(() => useServicePrices());
 

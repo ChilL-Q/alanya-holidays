@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { HostUpgradesPage } from './HostUpgradesPage';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 
 vi.mock('react-hot-toast', () => ({
     toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
@@ -11,7 +11,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: {
+    directoryService: {
         getMyDirectoryListings: vi.fn(),
         getListingAddons: vi.fn(),
         createAddonCheckout: vi.fn(),
@@ -25,8 +25,8 @@ const renderPage = () => render(<MemoryRouter><HostUpgradesPage /></MemoryRouter
 describe('HostUpgradesPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getMyDirectoryListings as any).mockResolvedValue([listing]);
-        (db.getListingAddons as any).mockResolvedValue([]);
+        (directoryService.getMyDirectoryListings as any).mockResolvedValue([listing]);
+        (directoryService.getListingAddons as any).mockResolvedValue([]);
     });
 
     it('renders the add-on catalog for the owner listing', async () => {
@@ -40,13 +40,13 @@ describe('HostUpgradesPage', () => {
     });
 
     it('shows an empty state when the host has no listings', async () => {
-        (db.getMyDirectoryListings as any).mockResolvedValue([]);
+        (directoryService.getMyDirectoryListings as any).mockResolvedValue([]);
         renderPage();
         expect(await screen.findByText(/don't have any directory listings/i)).toBeInTheDocument();
     });
 
     it('marks an add-on as Active when an active row exists', async () => {
-        (db.getListingAddons as any).mockResolvedValue([
+        (directoryService.getListingAddons as any).mockResolvedValue([
             { id: 'a1', listing_id: listing.id, addon_type: 'verified_badge', status: 'active' },
         ]);
         renderPage();

@@ -5,8 +5,8 @@ import { DirectoryListingModal } from './DirectoryListingModal';
 import { DirectoryListingDB } from '../../types/models';
 import { LanguageProvider } from '../../context/LanguageContext';
 
-const { mockDb } = vi.hoisted(() => ({
-    mockDb: {
+const { mockDirectoryService } = vi.hoisted(() => ({
+    mockDirectoryService: {
         trackListingClick: vi.fn().mockResolvedValue(undefined),
         getListingReviews: vi.fn().mockResolvedValue({ data: [], total: 0 }),
         getUserReviewForListing: vi.fn().mockResolvedValue(null),
@@ -14,7 +14,7 @@ const { mockDb } = vi.hoisted(() => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: mockDb
+    directoryService: mockDirectoryService
 }));
 
 vi.mock('../../context/AuthContext', () => ({
@@ -164,7 +164,7 @@ describe('DirectoryListingModal', () => {
         );
         const websiteBtn = screen.getByText('Visit Website');
         fireEvent.click(websiteBtn);
-        expect(mockDb.trackListingClick).toHaveBeenCalledWith('dir-1', 'website');
+        expect(mockDirectoryService.trackListingClick).toHaveBeenCalledWith('dir-1', 'website');
     });
 
     it('tracks map click', () => {
@@ -177,7 +177,7 @@ describe('DirectoryListingModal', () => {
         );
         const mapBtn = screen.getByText('View on Map');
         fireEvent.click(mapBtn);
-        expect(mockDb.trackListingClick).toHaveBeenCalledWith('dir-1', 'map');
+        expect(mockDirectoryService.trackListingClick).toHaveBeenCalledWith('dir-1', 'map');
     });
 
     it('tracks whatsapp click for paid tier', () => {
@@ -190,6 +190,6 @@ describe('DirectoryListingModal', () => {
         );
         const whatsappBtn = screen.getByText('Chat on WhatsApp');
         fireEvent.click(whatsappBtn);
-        expect(mockDb.trackListingClick).toHaveBeenCalledWith('dir-1', 'whatsapp');
+        expect(mockDirectoryService.trackListingClick).toHaveBeenCalledWith('dir-1', 'whatsapp');
     });
 });

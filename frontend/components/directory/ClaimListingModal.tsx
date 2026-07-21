@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Info, ArrowRight, ArrowLeft, Loader2, Clock, Award } from 'lucide-react';
 import { Modal } from '../ui/Modal';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { DirectoryListingDB } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -77,7 +77,7 @@ export const ClaimListingModal: React.FC<ClaimListingModalProps> = ({ isOpen, on
         setError(null);
 
         try {
-            await db.submitListingClaim({
+            await directoryService.submitListingClaim({
                 listing_id: listing.id,
                 email: user.email,
                 phone: formData.phone,

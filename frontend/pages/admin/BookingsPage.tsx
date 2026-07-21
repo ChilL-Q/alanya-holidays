@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 import { BookingToolbar } from '../../components/admin/bookings/BookingToolbar';
 import { BookingTable } from '../../components/admin/bookings/BookingTable';
 import { BookingDetailsModal } from '../../components/admin/bookings/BookingDetailsModal';
@@ -21,7 +21,7 @@ export const BookingsPage: React.FC = () => {
         try {
             setLoading(true);
             const filter = status && status !== 'all' ? status : undefined;
-            const data = await db.getAdminBookings(filter);
+            const data = await bookingsService.getAdminBookings(filter);
             setBookings(data || []);
         } catch (e) {
             console.error(e);
@@ -34,7 +34,7 @@ export const BookingsPage: React.FC = () => {
         if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
 
         try {
-            await db.updateBookingStatus(id.toString(), newStatus as 'confirmed' | 'cancelled' | 'completed');
+            await bookingsService.updateBookingStatus(id.toString(), newStatus as 'confirmed' | 'cancelled' | 'completed');
             setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
             if (selectedBooking?.id === id) {
                 setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : prev);
@@ -47,7 +47,7 @@ export const BookingsPage: React.FC = () => {
     const handlePayoutStatusChange = async (id: string, newStatus: 'paid' | 'pending' | 'processing') => {
         if (!confirm(`Mark payout as ${newStatus}?`)) return;
         try {
-            await db.updatePayoutStatus(id, newStatus);
+            await bookingsService.updatePayoutStatus(id, newStatus);
             setBookings(prev => prev.map(b => b.id === id ? { ...b, payout_status: newStatus } : b));
             if (selectedBooking?.id === id) {
                 setSelectedBooking(prev => prev ? { ...prev, payout_status: newStatus } : prev);

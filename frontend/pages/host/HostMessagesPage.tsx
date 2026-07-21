@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useChat } from '../../context/ChatContext';
-import { ChatWindow } from '../../components/chat/ChatWindow';
+import { useChat } from '../../modules/chat';
+import { ChatWindow } from '../../modules/chat';
 import { Search, User, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 

@@ -1,7 +1,7 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HostDashboard } from './HostDashboard';
-import { db } from '../../api-services';
+import { propertiesService, bookingsService } from '../../api-services';
 import { BrowserRouter } from 'react-router-dom';
 
 class ResizeObserverMock {
@@ -30,8 +30,10 @@ vi.mock('../../context/CurrencyContext', () => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: {
-        getPropertiesByHost: vi.fn(),
+    propertiesService: {
+        getPropertiesByHost: vi.fn()
+    },
+    bookingsService: {
         getBookingsForHost: vi.fn()
     }
 }));
@@ -42,11 +44,11 @@ describe('HostDashboard', () => {
     });
 
     it('renders and fetches stats', async () => {
-        (db.getPropertiesByHost as any).mockResolvedValue([
+        (propertiesService.getPropertiesByHost as any).mockResolvedValue([
             { id: 'prop-1', title: 'Test Villa', rating: 4.8 }
         ]);
 
-        (db.getBookingsForHost as any).mockResolvedValue([
+        (bookingsService.getBookingsForHost as any).mockResolvedValue([
             {
                 id: 'booking-1',
                 status: 'confirmed',
@@ -68,8 +70,8 @@ describe('HostDashboard', () => {
         });
 
         await waitFor(() => {
-            expect(db.getPropertiesByHost).toHaveBeenCalledWith('host-1');
-            expect(db.getBookingsForHost).toHaveBeenCalledWith('host-1');
+            expect(propertiesService.getPropertiesByHost).toHaveBeenCalledWith('host-1');
+            expect(bookingsService.getBookingsForHost).toHaveBeenCalledWith('host-1');
         });
 
         // Ensure stats rendered correctly

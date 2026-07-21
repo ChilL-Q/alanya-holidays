@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { Trash2 } from 'lucide-react';
 import { ServiceToolbar } from '../../components/admin/services/ServiceToolbar';
@@ -83,7 +83,7 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
     };
 
     const bulkApprove = () => {
-        const fns = Array.from(selectedIds).map(id => () => db.approveService(id));
+        const fns = Array.from(selectedIds).map(id => () => servicesService.approveService(id));
         executeBulk(fns, `${selectedIds.size} service${selectedIds.size > 1 ? 's' : ''} approved`, 'approve');
     };
 
@@ -119,8 +119,8 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
             if (type === 'services') typesToFilter = SERVICE_TYPES;
 
             const [{ data: servicesData }, editsData] = await Promise.all([
-                db.getAdminServices('all', typesToFilter, 1, 100),
-                db.getPendingServiceEdits()
+                servicesService.getAdminServices('all', typesToFilter, 1, 100),
+                servicesService.getPendingServiceEdits()
             ]);
             setServices(servicesData || []);
             setPendingEdits(editsData || []);
@@ -167,16 +167,16 @@ export const ServicesPage: React.FC<AdminServicesPageProps> = ({ type }) => {
 
         try {
             if (type === 'bulk_delete') {
-                const fns = Array.from(selectedIds).map(id => () => db.deleteService(id, reason));
+                const fns = Array.from(selectedIds).map(id => () => servicesService.deleteService(id, reason));
                 await executeBulk(fns, 'Services deleted', 'delete');
             } else if (type === 'bulk_reject') {
-                const fns = Array.from(selectedIds).map(id => () => db.updateServiceStatus(id, 'rejected', reason));
+                const fns = Array.from(selectedIds).map(id => () => servicesService.updateServiceStatus(id, 'rejected', reason));
                 await executeBulk(fns, 'Services rejected', 'reject');
             } else {
                 if (!itemId) return;
-                if (type === 'approve') await db.approveService(itemId);
-                if (type === 'reject') await db.updateServiceStatus(itemId, 'rejected', reason);
-                if (type === 'delete') await db.deleteService(itemId, reason);
+                if (type === 'approve') await servicesService.approveService(itemId);
+                if (type === 'reject') await servicesService.updateServiceStatus(itemId, 'rejected', reason);
+                if (type === 'delete') await servicesService.deleteService(itemId, reason);
                 loadServices();
             }
 

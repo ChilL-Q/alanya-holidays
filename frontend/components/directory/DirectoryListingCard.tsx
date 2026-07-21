@@ -2,7 +2,7 @@ import React from 'react';
 import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCardStyle, CardStyle } from '../../context/CardStyleContext';
 import { getListingDescription } from '../../utils/getListingDescription';
@@ -172,7 +172,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                db.trackListingClick(listing.id, 'whatsapp').catch(console.error);
+                                directoryService.trackListingClick(listing.id, 'whatsapp').catch(console.error);
                                 window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
                             }}
                             className="flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
@@ -184,7 +184,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         onClick={(e) => {
                             e.stopPropagation();
                             if (listing.website) {
-                                db.trackListingClick(listing.id, 'website').catch(console.error);
+                                directoryService.trackListingClick(listing.id, 'website').catch(console.error);
                                 window.open(listing.website, '_blank');
                             }
                         }}
@@ -197,7 +197,7 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
                         className="flex items-center justify-center gap-1.5 py-2 text-sm font-medium rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
-                            db.trackListingClick(listing.id, 'map').catch(console.error);
+                            directoryService.trackListingClick(listing.id, 'map').catch(console.error);
                             if (listing.google_map_url) {
                                 window.open(listing.google_map_url, '_blank');
                             } else {

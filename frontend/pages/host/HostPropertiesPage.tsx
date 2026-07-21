@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, MapPin, Star, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ export const HostPropertiesPage = () => {
         if (!user) return;
         try {
             setIsLoading(true);
-            const data = await db.getPropertiesByHost(user.id);
+            const data = await propertiesService.getPropertiesByHost(user.id);
             setProperties(data || []);
         } catch (error) {
             console.error('Failed to load properties:', error);
@@ -36,7 +36,7 @@ export const HostPropertiesPage = () => {
         if (confirm('Are you sure you want to delete this listing? This cannot be undone.')) {
             try {
                 // In a real app we might soft delete or check for active bookings
-                await db.deleteProperty(id);
+                await propertiesService.deleteProperty(id);
                 setProperties(prev => prev.filter(p => p.id !== id));
             } catch (error) {
                 toast.error('Failed to delete property');

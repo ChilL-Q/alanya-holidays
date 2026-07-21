@@ -39,6 +39,16 @@ vi.mock('../api-services/aiService', () => ({
     planTrip: vi.fn()
 }));
 
+vi.mock('../api-services/api/ai', () => ({
+    generateItinerary: vi.fn()
+}));
+
+vi.mock('../api-services/api/itineraries', () => ({
+    itinerariesService: {
+        saveItinerary: vi.fn()
+    }
+}));
+
 vi.mock('../api-services/api/subscriptions', () => ({
     subscriptionsService: {
         getPremiumStatus: vi.fn()

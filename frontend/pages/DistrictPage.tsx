@@ -6,7 +6,7 @@ import { DistrictCrossLinks } from '../components/seo/DistrictCrossLinks';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryListingDB } from '../types/models';
-import { db } from '../api-services';
+import { directoryService } from '../api-services';
 import {
   getDistrictPage,
   getDistrictBySlug,
@@ -111,7 +111,7 @@ export const DistrictPage: React.FC = () => {
     const fetchListings = async () => {
       setLoading(true);
       try {
-        const result = await db.searchDirectoryListings('', page.categoryId, district.name);
+        const result = await directoryService.searchDirectoryListings('', page.categoryId, district.name);
         setListings(result.data ?? []);
       } catch (e) {
         console.error('Failed to load district listings', e);
@@ -127,7 +127,7 @@ export const DistrictPage: React.FC = () => {
     setSelectedListing(listing);
     const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
     if (!sessionStorage.getItem(sessionKey)) {
-      db.trackListingView(listing.id)
+      directoryService.trackListingView(listing.id)
         .then(() => sessionStorage.setItem(sessionKey, '1'))
         .catch(console.error);
     }

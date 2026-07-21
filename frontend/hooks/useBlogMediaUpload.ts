@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import { db } from '../api-services';
+import { storageService } from '../api-services';
 import { BLOG_MAX_FILE_SIZE, BLOG_ALLOWED_EXTENSIONS } from '../api-services';
 import { MAX_BLOG_IMAGES } from '../utils/formatBlogContent';
 
@@ -90,7 +90,7 @@ export function useBlogMediaUpload({ setContent }: UseBlogMediaUploadOptions) {
         setUploading(true);
         const toastId = toast.loading('Uploading images...');
         try {
-            const urls = await db.uploadBlogMediaBatch(mediaFiles);
+            const urls = await storageService.uploadBlogMediaBatch(mediaFiles);
             toast.success('Images uploaded', { id: toastId });
             return urls;
         } catch (err: unknown) {

@@ -4,7 +4,7 @@ import { useLanguage } from '../../../../context/LanguageContext';
 import { LocationPicker } from '../../../ui/LocationPicker';
 import toast from 'react-hot-toast';
 import { PropertyFormData } from '../../../../types/models';
-import { db } from '../../../../api-services';
+import { locationsService } from '../../../../api-services';
 import { LocationDB } from '../../../../types/models';
 
 interface PropertyLocationProps {
@@ -18,7 +18,7 @@ export const PropertyLocation: React.FC<PropertyLocationProps> = ({ formData, ha
     const [dbLocations, setDbLocations] = useState<LocationDB[]>([]);
 
     useEffect(() => {
-        db.getLocations()
+        locationsService.getLocations()
             .then(setDbLocations)
             .catch(() => setDbLocations([]));
     }, []);

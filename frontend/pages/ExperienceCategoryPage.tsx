@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Check, Compass, Sun, Map, Cloud, Anchor, Mountain, Heart, Car, Sparkles, Scissors } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../api-services';
+import { ServiceData, servicesService } from '../api-services';
 import { SEOHead } from '../components/seo/SEOHead';
 
 export const ExperienceCategoryPage: React.FC = () => {
@@ -88,7 +88,7 @@ export const ExperienceCategoryPage: React.FC = () => {
         const fetchServices = async () => {
             if (!category) return;
             try {
-                const { data } = await db.getServices('tour', 1, 100);
+                const { data } = await servicesService.getServices('tour', 1, 100);
                 if (isMountedRef.current && data) {
                     const filtered = data.filter(s => s.features?.subcategory === category);
                     setServices(filtered);

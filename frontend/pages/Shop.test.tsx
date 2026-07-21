@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../api-services', () => ({
-    db: { getProducts: mocks.mockGetProducts }
+    productsService: { getProducts: mocks.mockGetProducts }
 }));
 
 vi.mock('../context/CartContext', () => ({

@@ -5,7 +5,7 @@ import { Breadcrumb } from '../components/seo/Breadcrumb';
 import { DirectoryListingCard } from '../components/directory/DirectoryListingCard';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryListingDB } from '../types/models';
-import { db } from '../api-services';
+import { directoryService } from '../api-services';
 import { getExcursionType, EXCURSION_TYPES } from '../data/excursionTypes';
 import { getAttraction, type Attraction } from '../data/attractionPages';
 import { Compass, MapPin, ChevronDown, ChevronUp, Info } from 'lucide-react';
@@ -25,14 +25,14 @@ const ExcursionTypePage: React.FC = () => {
             setLoading(true);
             try {
                 const primaryQuery = excursionType.searchKeywords[0] || excursionType.title;
-                const result = await db.searchDirectoryListings(primaryQuery, 'tours');
+                const result = await directoryService.searchDirectoryListings(primaryQuery, 'tours');
                 if (result.data?.length > 0) {
                     setListings(result.data);
                 } else {
                     const fallbackQuery = excursionType.title
                         .replace(' in Alanya', '')
                         .replace(' from Alanya', '');
-                    const broader = await db.searchDirectoryListings(fallbackQuery, 'tours');
+                    const broader = await directoryService.searchDirectoryListings(fallbackQuery, 'tours');
                     setListings(broader.data ?? []);
                 }
             } catch (e) {
@@ -49,7 +49,7 @@ const ExcursionTypePage: React.FC = () => {
         const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
         if (!sessionStorage.getItem(sessionKey)) {
             sessionStorage.setItem(sessionKey, '1');
-            db.trackListingView(listing.id).catch(console.error);
+            directoryService.trackListingView(listing.id).catch(console.error);
         }
     }, []);
 

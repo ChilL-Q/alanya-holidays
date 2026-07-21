@@ -2,7 +2,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { HostBookingsPage } from './HostBookingsPage';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 import { MemoryRouter } from 'react-router-dom';
 
 // Rule 1: vi.hoisted for shared mocks
@@ -33,7 +33,7 @@ vi.mock('../../context/AuthContext', () => ({
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    bookingsService: {
         getBookingsForHost: vi.fn(),
         updateBookingStatus: vi.fn()
     }
@@ -114,7 +114,7 @@ describe('HostBookingsPage', () => {
     };
 
     it('renders and loads bookings', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
         
         renderPage();
 
@@ -122,14 +122,14 @@ describe('HostBookingsPage', () => {
         expect(screen.getByText('Loading...')).toBeInTheDocument();
 
         await waitFor(() => {
-            expect(db.getBookingsForHost).toHaveBeenCalledWith('host-1');
+            expect(bookingsService.getBookingsForHost).toHaveBeenCalledWith('host-1');
             expect(screen.getByText('John Doe')).toBeInTheDocument();
             expect(screen.getByText('Jane Smith')).toBeInTheDocument();
         });
     });
 
     it('filters bookings by status', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
         renderPage();
 
         await waitFor(() => expect(screen.getByText('John Doe')).toBeInTheDocument());
@@ -143,7 +143,7 @@ describe('HostBookingsPage', () => {
     });
 
     it('filters bookings by search term', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
         renderPage();
 
         await waitFor(() => expect(screen.getByText('John Doe')).toBeInTheDocument());
@@ -158,8 +158,8 @@ describe('HostBookingsPage', () => {
     });
 
     it('handles status update with confirmation', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
-        (db.updateBookingStatus as any).mockResolvedValue({});
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.updateBookingStatus as any).mockResolvedValue({});
         
         renderPage();
 
@@ -169,13 +169,13 @@ describe('HostBookingsPage', () => {
         fireEvent.click(confirmBtn);
 
         expect(window.confirm).toHaveBeenCalled();
-        expect(db.updateBookingStatus).toHaveBeenCalledWith('b1', 'confirmed');
+        expect(bookingsService.updateBookingStatus).toHaveBeenCalledWith('b1', 'confirmed');
     });
 
     it('handles status update error', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
-        (db.updateBookingStatus as any).mockRejectedValue(new Error('Update failed'));
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.updateBookingStatus as any).mockRejectedValue(new Error('Update failed'));
         
         renderPage();
 
@@ -193,7 +193,7 @@ describe('HostBookingsPage', () => {
     });
 
     it('opens and closes details modal', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
         renderPage();
 
         await waitFor(() => expect(screen.getByText('John Doe')).toBeInTheDocument());
@@ -208,8 +208,8 @@ describe('HostBookingsPage', () => {
     });
 
     it('updates status from details modal', async () => {
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
-        (db.updateBookingStatus as any).mockResolvedValue({});
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.updateBookingStatus as any).mockResolvedValue({});
         
         renderPage();
 
@@ -218,7 +218,7 @@ describe('HostBookingsPage', () => {
         fireEvent.click(screen.getAllByText('View')[0]);
         fireEvent.click(screen.getByText('Cancel From Modal'));
 
-        expect(db.updateBookingStatus).toHaveBeenCalledWith('b1', 'cancelled');
+        expect(bookingsService.updateBookingStatus).toHaveBeenCalledWith('b1', 'cancelled');
         
         await waitFor(() => {
             expect(screen.getByText('cancelled')).toBeInTheDocument();

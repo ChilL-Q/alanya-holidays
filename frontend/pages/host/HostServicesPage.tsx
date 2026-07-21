@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Filter, Edit, Trash2, Car, Map, Smartphone, CreditCard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -43,7 +43,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
         if (!confirm(`Are you sure you want to delete ${selectedIds.size} services?`)) return;
 
         try {
-            await Promise.all(Array.from(selectedIds).map(id => db.deleteService(id)));
+            await Promise.all(Array.from(selectedIds).map(id => servicesService.deleteService(id)));
             setServices(prev => prev.filter(s => !selectedIds.has(s.id)));
             setSelectedIds(new Set());
         } catch (error) {
@@ -57,8 +57,8 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
         try {
             setIsLoading(true);
             const [data, edits] = await Promise.all([
-                db.getServicesByProvider(user.id),
-                db.getMyPendingEdits(user.id)
+                servicesService.getServicesByProvider(user.id),
+                servicesService.getMyPendingEdits(user.id)
             ]);
 
             const editSet = (edits || []).map((e: { service_id: string }) => e.service_id);
@@ -79,7 +79,7 @@ export const HostServicesPage: React.FC<HostServicesPageProps> = ({ mode = 'serv
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this service? This cannot be undone.')) {
             try {
-                await db.deleteService(id);
+                await servicesService.deleteService(id);
                 setServices(prev => prev.filter(s => s.id !== id));
             } catch (error) {
                 toast.error('Failed to delete service');

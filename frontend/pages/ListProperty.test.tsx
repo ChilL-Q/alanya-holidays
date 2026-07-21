@@ -56,9 +56,13 @@ vi.mock('react-hot-toast', () => ({
 
 // Rule 3: API mocks
 vi.mock('../api-services', () => ({
-    db: {
-        createProperty: vi.fn().mockResolvedValue({ id: 'new-prop-1' }),
-        uploadImage: vi.fn().mockResolvedValue('http://example.com/image.jpg'),
+    propertiesService: {
+        createProperty: vi.fn().mockResolvedValue({ id: 'new-prop-1' })
+    },
+    storageService: {
+        uploadImage: vi.fn().mockResolvedValue('http://example.com/image.jpg')
+    },
+    locationsService: {
         getLocations: vi.fn().mockResolvedValue([
             { id: 'loc-1', name: 'Alanya' },
             { id: 'loc-2', name: 'Antalya' }
@@ -504,9 +508,9 @@ describe('ListProperty Page', () => {
         }, { timeout: 3000 });
 
         // Verify API calls
-        const { db } = await import('../api-services');
-        expect(db.uploadImage).toHaveBeenCalled();
-        expect(db.createProperty).toHaveBeenCalledWith(expect.objectContaining({
+        const { storageService, propertiesService } = await import('../api-services');
+        expect(storageService.uploadImage).toHaveBeenCalled();
+        expect(propertiesService.createProperty).toHaveBeenCalledWith(expect.objectContaining({
             title: 'Beautiful Beach Villa',
             price_per_night: 200,
             status: 'pending'
@@ -514,8 +518,8 @@ describe('ListProperty Page', () => {
     });
 
     it('shows error when property submission fails', async () => {
-        const { db } = await import('../api-services');
-        (db.createProperty as any).mockRejectedValue(new Error('Submission failed'));
+        const { propertiesService } = await import('../api-services');
+        (propertiesService.createProperty as any).mockRejectedValue(new Error('Submission failed'));
 
         renderPage();
 

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { blogService } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { X, ImagePlus, Video, ArrowLeft, Send } from 'lucide-react';
 import { formatBlogContent, MAX_BLOG_IMAGES } from '../../utils/formatBlogContent';
 import { useBlogMediaUpload } from '../../hooks/useBlogMediaUpload';
-import { BlogContentEditor } from '../../components/blog/BlogContentEditor';
+import { BlogContentEditor } from '../../modules/blog';
 
 export const AdminAddBlogPostPage: React.FC = () => {
     const { user } = useAuth();
@@ -55,7 +55,7 @@ export const AdminAddBlogPostPage: React.FC = () => {
             const formattedContent = formatBlogContent(content.trim(), uploadedUrls);
 
             const toastId = toast.loading(targetStatus === 'published' ? 'Publishing blog post...' : 'Saving draft...');
-            await db.createBlogPost({
+            await blogService.createBlogPost({
                 title: title.trim(),
                 content: formattedContent,
                 video_url: videoUrl.trim() || undefined,

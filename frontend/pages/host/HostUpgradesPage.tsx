@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Sparkles, Check, Clock } from 'lucide-react';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { DirectoryListingDB, ListingAddon } from '../../types/models';
 import { ADDON_CATALOG, PurchasableAddonType } from '../../data/addonCatalog';
 
@@ -39,7 +39,7 @@ export const HostUpgradesPage: React.FC = () => {
         let cancelled = false;
         (async () => {
             try {
-                const mine = await db.getMyDirectoryListings();
+                const mine = await directoryService.getMyDirectoryListings();
                 if (cancelled) return;
                 setListings(mine);
                 if (mine.length > 0) setSelectedId(mine[0].id);
@@ -54,7 +54,7 @@ export const HostUpgradesPage: React.FC = () => {
 
     const loadAddons = useCallback(async (listingId: string) => {
         try {
-            const rows = await db.getListingAddons(listingId);
+            const rows = await directoryService.getListingAddons(listingId);
             setAddons(rows);
         } catch (err) {
             console.error('Failed to load add-ons:', err);
@@ -73,7 +73,7 @@ export const HostUpgradesPage: React.FC = () => {
         if (!selectedId) return;
         setBuying(addonType);
         try {
-            const { url } = await db.createAddonCheckout(selectedId, addonType);
+            const { url } = await directoryService.createAddonCheckout(selectedId, addonType);
             window.location.href = url;
         } catch (err) {
             console.error('Add-on checkout failed:', err);

@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useModal } from '../../context/ModalContext';
-import { db } from '../../api-services';
+import { usersService } from '../../api-services';
 import { BecomeHostModal } from '../modals/BecomeHostModal';
 
 export const ListPropertyAction: React.FC = () => {
@@ -21,7 +21,7 @@ export const ListPropertyAction: React.FC = () => {
         if (!user) return;
         setIsUpgrading(true);
         try {
-            await db.updateUserProfile(user.id, { role: 'host' });
+            await usersService.updateUserProfile(user.id, { role: 'host' });
             await updateUser({ role: 'host' });
             toast.success(t('profile.host_success') || 'Congratulations! You are now a host.');
             setIsHostModalOpen(false);

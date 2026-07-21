@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Star, Upload, X } from 'lucide-react';
 import { useSubmitShortcut } from '../../hooks/useSubmitShortcut';
 import { useLanguage } from '../../context/LanguageContext';
-import { db } from '../../api-services';
+import { storageService, propertiesService } from '../../api-services';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
 
@@ -39,11 +39,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, prope
         try {
             const uploadedUrls: string[] = [];
             for (const file of images) {
-                const url = await db.uploadImage(file, 'properties'); // Fallback bucket
+                const url = await storageService.uploadImage(file, 'properties'); // Fallback bucket
                 if (url) uploadedUrls.push(url);
             }
 
-            await db.addReview({
+            await propertiesService.addReview({
                 property_id: propertyId,
                 rating,
                 comment,

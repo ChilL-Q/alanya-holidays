@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Loader2, Globe, Instagram, Facebook, Youtube, MessageSquare, Circle } from 'lucide-react';
-import { db } from '../api-services';
+import { membersService } from '../api-services';
 import { ForumMember } from '../types/models';
 import { SEOHead } from '../components/seo/SEOHead';
 import { useAuth } from '../context/AuthContext';
@@ -60,7 +60,7 @@ export const MembersPage: React.FC = () => {
 
     useEffect(() => {
         let active = true;
-        db.getForumMembers({ limit: 120 })
+        membersService.getForumMembers({ limit: 120 })
             .then((data) => { if (active) setMembers(data); })
             .catch((e) => console.error('Failed to load members:', e))
             .finally(() => { if (active) setLoading(false); });

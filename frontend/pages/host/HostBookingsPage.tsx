@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 import { useAuth } from '../../context/AuthContext';
 import { HostBookingToolbar } from '../../components/host/bookings/HostBookingToolbar';
 import { HostBookingTable } from '../../components/host/bookings/HostBookingTable';
@@ -18,7 +18,7 @@ export const HostBookingsPage: React.FC = () => {
         if (!user) return;
         try {
             setIsLoading(true);
-            const myBookings = await db.getBookingsForHost(user.id);
+            const myBookings = await bookingsService.getBookingsForHost(user.id);
             setBookings(myBookings || []);
         } catch (error) {
             console.error('Failed to load bookings:', error);
@@ -34,7 +34,7 @@ export const HostBookingsPage: React.FC = () => {
     const handleStatusUpdate = async (id: string, newStatus: 'confirmed' | 'cancelled') => {
         if (confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) {
             try {
-                await db.updateBookingStatus(id, newStatus);
+                await bookingsService.updateBookingStatus(id, newStatus);
                 setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
                 if (selectedBooking?.id === id) {
                     setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : prev);

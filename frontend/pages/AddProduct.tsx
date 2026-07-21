@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
+import { productsService } from '../api-services';
 import { ShoppingBag, Tag, Box, DollarSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
@@ -25,7 +25,7 @@ export const AddProduct: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            await db.createProduct({
+            await productsService.createProduct({
                 title: formData.title,
                 description: formData.description,
                 price: Number(formData.price),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { db } from '../api-services';
+import { storageService, servicesService } from '../api-services';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CAR_DESCRIPTIONS, DEFAULT_DESCRIPTION } from '../data/cars';
@@ -111,7 +111,7 @@ export const AddService: React.FC = () => {
             let uploadedUrls: string[] = [];
             if (files.length > 0) {
                 uploadedUrls = await Promise.all(
-                    files.map(file => db.uploadImage(file, 'services'))
+                    files.map(file => storageService.uploadImage(file, 'services'))
                 );
             }
 
@@ -153,7 +153,7 @@ export const AddService: React.FC = () => {
             // Common features
             features.payOnArrival = formData.payOnArrival;
 
-            await db.createService({
+            await servicesService.createService({
                 title: formData.title,
                 description: formData.description || DEFAULT_DESCRIPTION,
                 price: Number(formData.price),

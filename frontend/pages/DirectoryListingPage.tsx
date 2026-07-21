@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { SEOHead } from '../components/seo/SEOHead';
 import { Breadcrumb } from '../components/seo/Breadcrumb';
-import { db } from '../api-services';
+import { directoryService } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { directoryCategoryIntros } from '../data/directoryData';
 import { CATEGORY_PATHS, getListingUrl, getSchemaType } from '../constants/categoryPaths';
@@ -54,13 +54,13 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
             setLoading(true);
             try {
                 const [found, allInCategory] = await Promise.all([
-                    db.getDirectoryListingBySlug(slug),
-                    db.getDirectoryListingsByCategory(categoryId),
+                    directoryService.getDirectoryListingBySlug(slug),
+                    directoryService.getDirectoryListingsByCategory(categoryId),
                 ]);
                 if (cancelled) return;
 
                 if (found) {
-                    db.trackListingView(found.id).catch(console.error);
+                    directoryService.trackListingView(found.id).catch(console.error);
                     setRelated(allInCategory.filter(l => l.id !== found.id).slice(0, 3));
                 }
                 setListing(found);
@@ -323,7 +323,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                                 {isPaidTier && listing.whatsapp && (
                                     <button
                                         onClick={() => {
-                                            db.trackListingClick(listing.id, 'whatsapp').catch(console.error);
+                                            directoryService.trackListingClick(listing.id, 'whatsapp').catch(console.error);
                                             window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
                                         }}
                                         className="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-semibold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm transition-all"
@@ -335,7 +335,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
                                 <button
                                     onClick={() => {
                                         if (listing.website) {
-                                            db.trackListingClick(listing.id, 'website').catch(console.error);
+                                            directoryService.trackListingClick(listing.id, 'website').catch(console.error);
                                             window.open(listing.website, '_blank');
                                         }
                                     }}
@@ -347,7 +347,7 @@ export const DirectoryListingPage: React.FC<DirectoryListingPageProps> = ({ cate
 
                                 <button
                                     onClick={() => {
-                                        db.trackListingClick(listing.id, 'map').catch(console.error);
+                                        directoryService.trackListingClick(listing.id, 'map').catch(console.error);
                                         if (listing.google_map_url) {
                                             window.open(listing.google_map_url, '_blank');
                                         } else {

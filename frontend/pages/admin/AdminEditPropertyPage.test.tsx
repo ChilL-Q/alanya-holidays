@@ -2,10 +2,10 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AdminEditPropertyPage } from './AdminEditPropertyPage';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 
 vi.mock('../../api-services', () => ({
-    db: {
+    propertiesService: {
         getProperty: vi.fn(),
         updateProperty: vi.fn(),
         createProperty: vi.fn(),
@@ -89,8 +89,8 @@ describe('AdminEditPropertyPage', () => {
     });
 
     it('submits form on save button click', async () => {
-        (db.createProperty as any).mockResolvedValue({ id: 'new-prop' });
-        (db.updateProperty as any).mockResolvedValue({});
+        (propertiesService.createProperty as any).mockResolvedValue({ id: 'new-prop' });
+        (propertiesService.updateProperty as any).mockResolvedValue({});
         render(<BrowserRouter><AdminEditPropertyPage /></BrowserRouter>);
         // Save button uses 'admin_prop.save' key
         const saveBtn = screen.queryByText('admin_prop.save');

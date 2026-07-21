@@ -18,7 +18,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
 // Rule 3: API mocks
 vi.mock('../../api-services', () => ({
-    db: {
+    servicesService: {
         getAdminServices: vi.fn(),
         getPendingServiceEdits: vi.fn(),
         approveService: vi.fn(),
@@ -75,7 +75,7 @@ vi.mock('../../components/ui/ConfirmationModal', () => ({
 
 // Import component after mocks
 import { ServicesPage } from './ServicesPage';
-import { db } from '../../api-services';
+import { servicesService } from '../../api-services';
 
 describe('Admin ServicesPage', () => {
     beforeEach(() => {
@@ -102,15 +102,15 @@ describe('Admin ServicesPage', () => {
     };
 
     it('shows loading state initially', () => {
-        (db.getAdminServices as any).mockReturnValue(new Promise(() => {}));
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.getAdminServices as any).mockReturnValue(new Promise(() => {}));
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
         renderServicesPage();
         expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
 
     it('renders services table after fetch', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
         renderServicesPage();
 
         await waitFor(() => {
@@ -120,9 +120,9 @@ describe('Admin ServicesPage', () => {
     });
 
     it('handles approve action', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.approveService as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.approveService as any).mockResolvedValue({});
         
         renderServicesPage();
 
@@ -137,14 +137,14 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.approveService).toHaveBeenCalledWith('1');
+            expect(servicesService.approveService).toHaveBeenCalledWith('1');
         });
     });
 
     it('handles bulk approve action', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.approveService as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.approveService as any).mockResolvedValue({});
 
         renderServicesPage();
 
@@ -156,13 +156,13 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(bulkApproveBtn);
 
         await waitFor(() => {
-            expect(db.approveService).toHaveBeenCalledTimes(2);
+            expect(servicesService.approveService).toHaveBeenCalledTimes(2);
         });
     });
 
     it('filters services by search query', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
         renderServicesPage();
 
         await waitFor(() => expect(screen.getByText('Car Rental')).toBeInTheDocument());
@@ -175,9 +175,9 @@ describe('Admin ServicesPage', () => {
     });
 
     it('handles bulk delete action', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.deleteService as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.deleteService as any).mockResolvedValue({});
 
         renderServicesPage();
 
@@ -197,16 +197,16 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.deleteService).toHaveBeenCalledTimes(2);
-            expect(db.deleteService).toHaveBeenCalledWith('1', 'Test Reason');
-            expect(db.deleteService).toHaveBeenCalledWith('2', 'Test Reason');
+            expect(servicesService.deleteService).toHaveBeenCalledTimes(2);
+            expect(servicesService.deleteService).toHaveBeenCalledWith('1', 'Test Reason');
+            expect(servicesService.deleteService).toHaveBeenCalledWith('2', 'Test Reason');
         });
     });
 
     it('handles bulk reject action', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.updateServiceStatus as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.updateServiceStatus as any).mockResolvedValue({});
 
         renderServicesPage();
 
@@ -225,20 +225,20 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.updateServiceStatus).toHaveBeenCalledTimes(2);
-            expect(db.updateServiceStatus).toHaveBeenCalledWith('1', 'rejected', 'Test Reason');
-            expect(db.updateServiceStatus).toHaveBeenCalledWith('2', 'rejected', 'Test Reason');
+            expect(servicesService.updateServiceStatus).toHaveBeenCalledTimes(2);
+            expect(servicesService.updateServiceStatus).toHaveBeenCalledWith('1', 'rejected', 'Test Reason');
+            expect(servicesService.updateServiceStatus).toHaveBeenCalledWith('2', 'rejected', 'Test Reason');
         });
     });
 
     it('renders with different type props (fleet)', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: [] });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: [] });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
         
         renderServicesPage({ type: 'fleet' });
 
         await waitFor(() => {
-            expect(db.getAdminServices).toHaveBeenCalledWith(
+            expect(servicesService.getAdminServices).toHaveBeenCalledWith(
                 'all', 
                 ['car', 'bike', 'transfer'], 
                 1, 
@@ -248,13 +248,13 @@ describe('Admin ServicesPage', () => {
     });
 
     it('renders with different type props (services)', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: [] });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: [] });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
         
         renderServicesPage({ type: 'services' });
 
         await waitFor(() => {
-            expect(db.getAdminServices).toHaveBeenCalledWith(
+            expect(servicesService.getAdminServices).toHaveBeenCalledWith(
                 'all', 
                 ['tour', 'wellness', 'creative', 'visa', 'esim'], 
                 1, 
@@ -264,9 +264,9 @@ describe('Admin ServicesPage', () => {
     });
 
     it('handles reject action from table', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.updateServiceStatus as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.updateServiceStatus as any).mockResolvedValue({});
         
         renderServicesPage();
 
@@ -282,14 +282,14 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.updateServiceStatus).toHaveBeenCalledWith('1', 'rejected', 'Test Reason');
+            expect(servicesService.updateServiceStatus).toHaveBeenCalledWith('1', 'rejected', 'Test Reason');
         });
     });
 
     it('handles delete action from table', async () => {
-        (db.getAdminServices as any).mockResolvedValue({ data: mockServices });
-        (db.getPendingServiceEdits as any).mockResolvedValue([]);
-        (db.deleteService as any).mockResolvedValue({});
+        (servicesService.getAdminServices as any).mockResolvedValue({ data: mockServices });
+        (servicesService.getPendingServiceEdits as any).mockResolvedValue([]);
+        (servicesService.deleteService as any).mockResolvedValue({});
         
         renderServicesPage();
 
@@ -305,7 +305,7 @@ describe('Admin ServicesPage', () => {
         fireEvent.click(screen.getByText('Confirm'));
 
         await waitFor(() => {
-            expect(db.deleteService).toHaveBeenCalledWith('1', 'Test Reason');
+            expect(servicesService.deleteService).toHaveBeenCalledWith('1', 'Test Reason');
         });
     });
 });

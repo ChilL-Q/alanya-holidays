@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db } from '../../api-services';
+import { propertiesService, servicesService, usersService, bookingsService } from '../../api-services';
 import { Booking } from '../../types/models';
 import { StatCards } from '../../components/admin/dashboard/StatCards';
 import { RevenueChart } from '../../components/admin/dashboard/RevenueChart';
@@ -36,17 +36,17 @@ export const Dashboard: React.FC = () => {
             try {
                 // Fire count requests in parallel
                 const countsPromise = Promise.all([
-                    db.getAdminProperties('all', 1, 1),
-                    db.getAdminServices('all', [], 1, 1),
-                    db.getAllUsers(1, 1000), // Get reasonable number of users for stats
+                    propertiesService.getAdminProperties('all', 1, 1),
+                    servicesService.getAdminServices('all', [], 1, 1),
+                    usersService.getAllUsers(1, 1000), // Get reasonable number of users for stats
                 ]);
 
                 // Fire all booking status requests in parallel
                 const bookingsPromise = Promise.all([
-                    db.getBookingsByStatus('confirmed'),
-                    db.getBookingsByStatus('pending'),
-                    db.getBookingsByStatus('completed'),
-                    db.getBookingsByStatus('cancelled'),
+                    bookingsService.getBookingsByStatus('confirmed'),
+                    bookingsService.getBookingsByStatus('pending'),
+                    bookingsService.getBookingsByStatus('completed'),
+                    bookingsService.getBookingsByStatus('cancelled'),
                 ]);
 
                 const [counts, bookings] = await Promise.all([countsPromise, bookingsPromise]);

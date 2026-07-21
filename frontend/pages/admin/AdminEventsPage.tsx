@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { Loader2, Plus, Trash2, Calendar, MapPin, Users, Mail, Phone, MessageCircle, ChevronDown } from 'lucide-react';
-import { db } from '../../api-services';
+import { forumEventsService, membersService } from '../../api-services';
 import { ForumEvent, ForumMember, EventAttendee } from '../../types/models';
 
 const waLink = (phone: string) => `https://wa.me/${phone.replace(/[^0-9]/g, '')}`;
@@ -38,7 +38,7 @@ export const AdminEventsPage: React.FC = () => {
         setAttendees([]);
         setAttLoading(true);
         try {
-            setAttendees(await db.getEventAttendees(ev.id));
+            setAttendees(await forumEventsService.getEventAttendees(ev.id));
         } catch (e) {
             toast.error((e as Error).message || 'Failed to load attendees');
             setOpenId(null);
@@ -51,8 +51,8 @@ export const AdminEventsPage: React.FC = () => {
         setLoading(true);
         try {
             const [evs, mem] = await Promise.all([
-                db.getForumEvents({ upcomingOnly: false, includeUnpublished: true }),
-                db.getForumMembers({ limit: 200 }),
+                forumEventsService.getForumEvents({ upcomingOnly: false, includeUnpublished: true }),
+                membersService.getForumMembers({ limit: 200 }),
             ]);
             setEvents(evs);
             setMembers(mem);
@@ -73,7 +73,7 @@ export const AdminEventsPage: React.FC = () => {
         }
         setCreating(true);
         try {
-            await db.createForumEvent({
+            await forumEventsService.createForumEvent({
                 title: form.title.trim(),
                 event_date: new Date(form.event_date).toISOString(),
                 location: form.location.trim() || undefined,
@@ -94,7 +94,7 @@ export const AdminEventsPage: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Delete this event? RSVPs will be removed.')) return;
         try {
-            await db.deleteForumEvent(id);
+            await forumEventsService.deleteForumEvent(id);
             toast.success('Event deleted');
             setEvents((prev) => prev.filter((e) => e.id !== id));
         } catch (e) {

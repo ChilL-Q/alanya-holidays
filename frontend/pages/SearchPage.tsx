@@ -9,7 +9,7 @@ import { CardStyleToggle } from '../components/directory/CardStyleToggle';
 import { useCardStyle } from '../context/CardStyleContext';
 import { DirectoryListingModal } from '../components/directory/DirectoryListingModal';
 import { DirectoryMapView } from '../components/directory/DirectoryMapView';
-import { db } from '../api-services';
+import { directoryService, locationsService } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '../context/LanguageContext';
@@ -73,8 +73,8 @@ export const SearchPage: React.FC = () => {
             setLoading(true);
             try {
                 const [result, locs] = await Promise.all([
-                    db.searchDirectoryListings(q, category || undefined, location || undefined),
-                    db.getLocations()
+                    directoryService.searchDirectoryListings(q, category || undefined, location || undefined),
+                    locationsService.getLocations()
                 ]);
                 setListings(result.data || []);
                 totalRef.current = result.total;
@@ -93,7 +93,7 @@ export const SearchPage: React.FC = () => {
     useEffect(() => {
         if (!isAuthenticated || !user || listings.length === 0) return;
         const ids = listings.map(l => l.id);
-        db.getUserVotesBatch(ids).then(setUserVotes).catch(e => console.error('Failed to load votes:', e));
+        directoryService.getUserVotesBatch(ids).then(setUserVotes).catch(e => console.error('Failed to load votes:', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, user?.id, listings.length]);
 
@@ -104,7 +104,7 @@ export const SearchPage: React.FC = () => {
         setVotingId(listingId);
         try {
             if (isToggleOff) {
-                const result = await db.removeListingVote(listingId);
+                const result = await directoryService.removeListingVote(listingId);
                 setUserVotes(prev => {
                     const next = { ...prev };
                     delete next[listingId];
@@ -114,7 +114,7 @@ export const SearchPage: React.FC = () => {
                     l.id === listingId ? { ...l, net_votes: result.netVotes } : l
                 ));
             } else {
-                const result = await db.voteForListing(listingId, vote);
+                const result = await directoryService.voteForListing(listingId, vote);
                 setUserVotes(prev => ({ ...prev, [listingId]: result.userVote as 1 | -1 }));
                 setListings(prev => prev.map(l =>
                     l.id === listingId ? { ...l, net_votes: result.netVotes } : l
@@ -133,7 +133,7 @@ export const SearchPage: React.FC = () => {
         const sessionKey = `listing_view_${listing.id}_${new Date().toISOString().slice(0, 10)}`;
         if (!sessionStorage.getItem(sessionKey)) {
             sessionStorage.setItem(sessionKey, '1');
-            db.trackListingView(listing.id).catch(console.error);
+            directoryService.trackListingView(listing.id).catch(console.error);
         }
     }, []);
 

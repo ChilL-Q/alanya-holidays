@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { SEOHead } from '../components/seo/SEOHead';
 import { cn } from '../utils/cn';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
-import { db } from '../api-services';
+import { directoryService, testimonialService, locationsService } from '../api-services';
 import { DirectoryListingDB } from '../types/models';
 import { PremiumListingsSection } from '../components/home/PremiumListingsSection';
 import { FreeListingsSection } from '../components/home/FreeListingsSection';
@@ -49,12 +49,12 @@ export const DirectoryHome: React.FC = () => {
             setListingsLoading(true);
             try {
                 const [premium, free, signatures, recentlyClaimed, tests, locs] = await Promise.all([
-                    db.getPremiumListings(),
-                    db.getFreeListings(),
-                    db.getSignatureListings(),
-                    db.getRecentlyClaimedListings(6),
-                    db.getPublicTestimonials(),
-                    db.getLocations(),
+                    directoryService.getPremiumListings(),
+                    directoryService.getFreeListings(),
+                    directoryService.getSignatureListings(),
+                    directoryService.getRecentlyClaimedListings(6),
+                    testimonialService.getPublicTestimonials(),
+                    locationsService.getLocations(),
                 ]);
                 if (!cancelled) {
                     setPremiumListings(premium);

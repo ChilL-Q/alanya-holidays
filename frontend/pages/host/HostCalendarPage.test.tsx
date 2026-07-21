@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import { HostCalendarPage } from './HostCalendarPage';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 
 // Mock Dependencies
 vi.mock('../../context/AuthContext', () => ({
@@ -11,7 +11,7 @@ vi.mock('../../context/AuthContext', () => ({
 }));
 
 vi.mock('../../api-services', () => ({
-    db: {
+    bookingsService: {
         getBookingsForHost: vi.fn()
     }
 }));
@@ -35,7 +35,7 @@ describe('HostCalendarPage', () => {
 
     it('renders the calendar for the current month', async () => {
         (useAuth as any).mockReturnValue({ user: { id: 'host-123' } });
-        (db.getBookingsForHost as any).mockResolvedValue([]);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue([]);
 
         await act(async () => {
             render(<HostCalendarPage />);
@@ -50,8 +50,8 @@ describe('HostCalendarPage', () => {
             await vi.runAllTimersAsync();
         });
 
-        expect(db.getBookingsForHost).toHaveBeenCalled();
-        const callArgs = (db.getBookingsForHost as any).mock.calls[0];
+        expect(bookingsService.getBookingsForHost).toHaveBeenCalled();
+        const callArgs = (bookingsService.getBookingsForHost as any).mock.calls[0];
         expect(callArgs[0]).toBe('host-123');
         expect(typeof callArgs[1]).toBe('string');
         expect(typeof callArgs[2]).toBe('string');
@@ -66,7 +66,7 @@ describe('HostCalendarPage', () => {
             }
         ];
         (useAuth as any).mockReturnValue({ user: { id: 'host-123' } });
-        (db.getBookingsForHost as any).mockResolvedValue(mockBookings);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue(mockBookings);
 
         await act(async () => {
             render(<HostCalendarPage />);
@@ -88,7 +88,7 @@ describe('HostCalendarPage', () => {
 
     it('changes month when clicking navigation arrows', async () => {
         (useAuth as any).mockReturnValue({ user: { id: 'host-123' } });
-        (db.getBookingsForHost as any).mockResolvedValue([]);
+        (bookingsService.getBookingsForHost as any).mockResolvedValue([]);
 
         await act(async () => {
             render(<HostCalendarPage />);
@@ -104,7 +104,7 @@ describe('HostCalendarPage', () => {
         expect(screen.getByText(/April/i)).toBeInTheDocument();
         expect(screen.getByText(/2026/i)).toBeInTheDocument();
         
-        expect(db.getBookingsForHost).toHaveBeenCalledTimes(2);
+        expect(bookingsService.getBookingsForHost).toHaveBeenCalledTimes(2);
 
         const prevButton = screen.getByTestId('chevron-left').closest('button');
         await act(async () => {
@@ -132,13 +132,13 @@ describe('HostCalendarPage', () => {
             await vi.runAllTimersAsync();
         });
 
-        expect(db.getBookingsForHost).not.toHaveBeenCalled();
+        expect(bookingsService.getBookingsForHost).not.toHaveBeenCalled();
     });
 
     it('handles API errors gracefully', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         (useAuth as any).mockReturnValue({ user: { id: 'host-123' } });
-        (db.getBookingsForHost as any).mockRejectedValue(new Error('API Failure'));
+        (bookingsService.getBookingsForHost as any).mockRejectedValue(new Error('API Failure'));
 
         await act(async () => {
             render(<HostCalendarPage />);

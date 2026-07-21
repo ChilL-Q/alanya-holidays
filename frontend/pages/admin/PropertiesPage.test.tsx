@@ -2,10 +2,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PropertiesPage } from './PropertiesPage';
-import { db } from '../../api-services';
+import { propertiesService } from '../../api-services';
 
 vi.mock('../../api-services', () => ({
-    db: {
+    propertiesService: {
         getAdminProperties: vi.fn(),
         approveProperty: vi.fn(),
         deleteProperty: vi.fn(),
@@ -37,7 +37,7 @@ const renderPage = () =>
 describe('PropertiesPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getAdminProperties as any).mockResolvedValue({ data: mockProperties });
+        (propertiesService.getAdminProperties as any).mockResolvedValue({ data: mockProperties });
     });
 
     it('renders properties and filters them by search query', async () => {
@@ -61,7 +61,7 @@ describe('PropertiesPage', () => {
     });
 
     it('renders loading state initially', () => {
-        (db.getAdminProperties as any).mockReturnValue(new Promise(() => {}));
+        (propertiesService.getAdminProperties as any).mockReturnValue(new Promise(() => {}));
 
         renderPage();
 
@@ -171,7 +171,7 @@ describe('PropertiesPage', () => {
     });
 
     it('handleConfirmAction: calls approveProperty when confirming approve', async () => {
-        (db.approveProperty as any).mockResolvedValue(undefined);
+        (propertiesService.approveProperty as any).mockResolvedValue(undefined);
 
         renderPage();
 
@@ -192,7 +192,7 @@ describe('PropertiesPage', () => {
         fireEvent.click(modalConfirmBtn);
 
         await waitFor(() => {
-            expect(db.approveProperty).toHaveBeenCalledWith('2');
+            expect(propertiesService.approveProperty).toHaveBeenCalledWith('2');
         });
     });
 });

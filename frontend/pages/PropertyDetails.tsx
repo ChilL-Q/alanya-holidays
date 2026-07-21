@@ -3,10 +3,10 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../modules/chat';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { db, ServiceData } from '../api-services';
+import { ServiceData, propertiesService, bookingsService, servicesService } from '../api-services';
 import "react-datepicker/dist/react-datepicker.css";
 import { ReviewsSection } from '../components/reviews/ReviewsSection';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ import { Modal } from '../components/ui/Modal';
 import { User, LogIn } from 'lucide-react';
 
 // Lazy load ChatWindow (heavy, only shown when user contacts host)
-const LazyChatWindow = React.lazy(() => import('../components/chat/ChatWindow').then(m => ({ default: m.ChatWindow })));
+const LazyChatWindow = React.lazy(() => import('../modules/chat').then(m => ({ default: m.ChatWindow })));
 
 // Modular Components
 import { PropertyGallery } from '../components/properties/details/PropertyGallery';
@@ -65,7 +65,7 @@ export const PropertyDetails: React.FC = () => {
         const fetchProperty = async () => {
             if (!id) return;
             try {
-                const data = await db.getProperty(id);
+                const data = await propertiesService.getProperty(id);
                 if (!data || typeof data !== 'object') return;
 
                 const normalizedData: PropertyDetailsData = {
@@ -95,10 +95,10 @@ export const PropertyDetails: React.FC = () => {
                 } as unknown as PropertyDetailsData;
 
                 // Fire remaining requests in parallel
-                const blockedPromise = db.getUnavailableDates(normalizedData.id);
-                const reviewPromise = db.getReviewCount(normalizedData.id);
+                const blockedPromise = propertiesService.getUnavailableDates(normalizedData.id);
+                const reviewPromise = propertiesService.getReviewCount(normalizedData.id);
                 const bookingPromise = isAuthenticated && user
-                    ? db.getBookings(user.id)
+                    ? bookingsService.getBookings(user.id)
                     : Promise.resolve([]);
 
                 const [unavailable, reviewCount, bookings] = await Promise.all([
@@ -148,11 +148,11 @@ export const PropertyDetails: React.FC = () => {
             try {
                 // Fire all 5 service fetches in parallel
                 const [cars, bikes, tours, visas, esims] = await Promise.all([
-                    db.getServices('car', 1, 10),
-                    db.getServices('bike', 1, 10),
-                    db.getServices('tour', 1, 10),
-                    db.getServices('visa', 1, 10),
-                    db.getServices('esim', 1, 10),
+                    servicesService.getServices('car', 1, 10),
+                    servicesService.getServices('bike', 1, 10),
+                    servicesService.getServices('tour', 1, 10),
+                    servicesService.getServices('visa', 1, 10),
+                    servicesService.getServices('esim', 1, 10),
                 ]);
 
                 if (cancelled) return;

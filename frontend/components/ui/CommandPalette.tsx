@@ -33,7 +33,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../context/CartContext';
-import { useChat } from '../../context/ChatContext';
+import { useChat } from '../../modules/chat';
 import { propertiesService } from '../../api-services/api/properties';
 import { PropertyDB } from '../../types/models';
 

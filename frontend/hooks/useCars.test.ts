@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { waitFor } from '@testing-library/react';
 import { renderHookWithQuery } from '../utils/test-utils';
 import { useCars } from './useCars';
-import { db } from '../api-services';
+import { servicesService } from '../api-services';
 
 vi.mock('../api-services', () => ({
-    db: {
+    servicesService: {
         getServices: vi.fn()
     }
 }));
@@ -20,7 +20,7 @@ describe('useCars', () => {
             { id: '1', title: 'Car A', type: 'RENTAL' },
             { id: '2', title: 'Car B', type: 'RENTAL' }
         ];
-        (db.getServices as any).mockResolvedValue({ data: mockCars });
+        (servicesService.getServices as any).mockResolvedValue({ data: mockCars });
 
         const { result } = renderHookWithQuery(() => useCars());
 
@@ -37,7 +37,7 @@ describe('useCars', () => {
     });
 
     it('handles fetch error', async () => {
-        (db.getServices as any).mockRejectedValue(new Error('Fetch failed'));
+        (servicesService.getServices as any).mockRejectedValue(new Error('Fetch failed'));
 
         const { result } = renderHookWithQuery(() => useCars());
 

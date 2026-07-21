@@ -4,10 +4,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BookingsPage } from './BookingsPage';
 import { CurrencyProvider } from '../../context/CurrencyContext';
-import { db } from '../../api-services';
+import { bookingsService } from '../../api-services';
 
 vi.mock('../../api-services', () => ({
-    db: {
+    bookingsService: {
         getAdminBookings: vi.fn(),
         updateBookingStatus: vi.fn(),
         updatePayoutStatus: vi.fn(),
@@ -60,7 +60,7 @@ const renderPage = () => {
 describe('BookingsPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        (db.getAdminBookings as any).mockResolvedValue(mockBookings);
+        (bookingsService.getAdminBookings as any).mockResolvedValue(mockBookings);
     });
 
     it('renders the admin bookings list with toolbar components', async () => {
@@ -82,11 +82,11 @@ describe('BookingsPage', () => {
 
         await waitFor(() => expect(screen.getByText('Alice')).toBeInTheDocument());
 
-        expect(db.getAdminBookings).toHaveBeenCalledWith(undefined);
+        expect(bookingsService.getAdminBookings).toHaveBeenCalledWith(undefined);
     });
 
     it('calls getAdminBookings with status filter when a status tab is clicked', async () => {
-        (db.getAdminBookings as any).mockResolvedValue([mockBookings[0]]);
+        (bookingsService.getAdminBookings as any).mockResolvedValue([mockBookings[0]]);
 
         renderPage();
 
@@ -95,7 +95,7 @@ describe('BookingsPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /^Pending$/i }));
 
         await waitFor(() => {
-            expect(db.getAdminBookings).toHaveBeenCalledWith('pending');
+            expect(bookingsService.getAdminBookings).toHaveBeenCalledWith('pending');
         });
     });
 
@@ -179,7 +179,7 @@ describe('BookingsPage', () => {
     // --- handleStatusChange ---
 
     it('handleStatusChange: when user confirms, calls updateBookingStatus and updates state', async () => {
-        (db.updateBookingStatus as any).mockResolvedValue(undefined);
+        (bookingsService.updateBookingStatus as any).mockResolvedValue(undefined);
         vi.spyOn(window, 'confirm').mockReturnValue(true);
 
         renderPage();
@@ -190,7 +190,7 @@ describe('BookingsPage', () => {
         fireEvent.click(confirmBtn);
 
         await waitFor(() => {
-            expect(db.updateBookingStatus).toHaveBeenCalledWith('1', 'confirmed');
+            expect(bookingsService.updateBookingStatus).toHaveBeenCalledWith('1', 'confirmed');
         });
 
         await waitFor(() => {
@@ -209,7 +209,7 @@ describe('BookingsPage', () => {
         fireEvent.click(confirmBtn);
 
         await waitFor(() => {
-            expect(db.updateBookingStatus).not.toHaveBeenCalled();
+            expect(bookingsService.updateBookingStatus).not.toHaveBeenCalled();
         });
 
         expect(screen.getByTitle('Confirm')).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe('BookingsPage', () => {
     // --- handlePayoutStatusChange ---
 
     it('handlePayoutStatusChange: calls db.updatePayoutStatus when user confirms', async () => {
-        (db.updatePayoutStatus as any).mockResolvedValue(undefined);
+        (bookingsService.updatePayoutStatus as any).mockResolvedValue(undefined);
         vi.spyOn(window, 'confirm').mockReturnValue(true);
 
         renderPage();
@@ -232,7 +232,7 @@ describe('BookingsPage', () => {
         fireEvent.click(markPaidBtn);
 
         await waitFor(() => {
-            expect(db.updatePayoutStatus).toHaveBeenCalledWith('1', 'paid');
+            expect(bookingsService.updatePayoutStatus).toHaveBeenCalledWith('1', 'paid');
         });
     });
 
@@ -250,7 +250,7 @@ describe('BookingsPage', () => {
         fireEvent.click(markPaidBtn);
 
         await waitFor(() => {
-            expect(db.updatePayoutStatus).not.toHaveBeenCalled();
+            expect(bookingsService.updatePayoutStatus).not.toHaveBeenCalled();
         });
     });
 });

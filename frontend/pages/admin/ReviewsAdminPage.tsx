@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from '../../api-services';
+import { propertiesService, listingReviewsService } from '../../api-services';
 import { Review } from '../../types/models';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
@@ -32,7 +32,7 @@ export const ReviewsAdminPage: React.FC = () => {
     const loadReviews = async () => {
         setLoading(true);
         try {
-            const response = await db.getFlaggedReviews(1, 100);
+            const response = await propertiesService.getFlaggedReviews(1, 100);
             setReviews(response.data || []);
         } catch (e) {
             console.error('Failed to load flagged reviews', e);
@@ -44,7 +44,7 @@ export const ReviewsAdminPage: React.FC = () => {
 
     const handleUnflag = async (reviewId: string) => {
         try {
-            await db.unflagReview(reviewId);
+            await propertiesService.unflagReview(reviewId);
             toast.success('Review unflagged and restored');
             setReviews(prev => prev.filter(r => r.id !== reviewId));
             setSelectedIds(prev => {
@@ -81,10 +81,10 @@ export const ReviewsAdminPage: React.FC = () => {
     const handleConfirmAction = async () => {
         try {
             if (modalConfig.type === 'delete' && modalConfig.itemId) {
-                await db.deleteReview(modalConfig.itemId);
+                await listingReviewsService.deleteReview(modalConfig.itemId);
                 setReviews(prev => prev.filter(r => r.id !== modalConfig.itemId));
             } else if (modalConfig.type === 'bulkDelete' && selectedIds.size > 0) {
-                await db.bulkDeleteReviews(Array.from(selectedIds));
+                await propertiesService.bulkDeleteReviews(Array.from(selectedIds));
                 setReviews(prev => prev.filter(r => !selectedIds.has(r.id)));
                 setSelectedIds(new Set());
             }

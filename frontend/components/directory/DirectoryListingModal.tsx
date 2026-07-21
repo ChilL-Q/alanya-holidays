@@ -3,7 +3,7 @@ import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, Info, Award, Ext
 import { Link } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { Modal } from '../ui/Modal';
-import { db } from '../../api-services';
+import { directoryService } from '../../api-services';
 import { isValidVideoUrl } from '../../utils/videoEmbed';
 import { VideoEmbed } from '../ui/VideoEmbed';
 import { useLanguage } from '../../context/LanguageContext';
@@ -179,7 +179,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                                 {isPaidTier(listing.tier) && listing.whatsapp ? (
                                     <button
                                         onClick={() => {
-                                            db.trackListingClick(listing.id, 'whatsapp').catch(console.error);
+                                            directoryService.trackListingClick(listing.id, 'whatsapp').catch(console.error);
                                             window.open(`https://wa.me/${listing.whatsapp?.replace(/\D/g, '')}`, '_blank');
                                         }}
                                         className="w-full flex items-center justify-center gap-2 py-3.5 px-4 font-semibold rounded-xl bg-green-500 hover:bg-green-600 text-white shadow-sm hover:shadow transition-all"
@@ -191,7 +191,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                                 <button
                                     onClick={() => {
                                         if (listing.website) {
-                                            db.trackListingClick(listing.id, 'website').catch(console.error);
+                                            directoryService.trackListingClick(listing.id, 'website').catch(console.error);
                                             window.open(listing.website, '_blank');
                                         }
                                     }}
@@ -204,7 +204,7 @@ export const DirectoryListingModal: React.FC<DirectoryListingModalProps> = ({ li
                                 <button
                                     className="w-full flex items-center justify-center gap-2 py-3 px-4 font-semibold rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                                     onClick={() => {
-                                        db.trackListingClick(listing.id, 'map').catch(console.error);
+                                        directoryService.trackListingClick(listing.id, 'map').catch(console.error);
                                         if (listing.google_map_url) {
                                             window.open(listing.google_map_url, '_blank');
                                         } else {

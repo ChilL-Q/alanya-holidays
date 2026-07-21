@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../api-services';
-import { BlogPostPreview } from '../../api-services/api/blog';
+import { blogService } from '../../api-services';
+import { BlogPostPreview } from '../../modules/blog';
 import { BlogPostCard } from './BlogPostCard';
 
 export const TravelGuideSection: React.FC = () => {
@@ -15,7 +15,7 @@ export const TravelGuideSection: React.FC = () => {
         async function loadPosts() {
             setLoading(true);
             try {
-                const data = await db.getFeaturedBlogPosts(3);
+                const data = await blogService.getFeaturedBlogPosts(3);
                 if (!cancelled && data.length > 0) {
                     setPosts(data);
                 }
