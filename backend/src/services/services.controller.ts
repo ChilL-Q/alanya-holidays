@@ -6,6 +6,97 @@ import { AuthGuard } from '../auth/auth.guard';
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
+  // ============================================
+  // Services Catalog
+  // ============================================
+
+  @Get('types')
+  getServiceTypes() {
+    return this.servicesService.getServiceTypes();
+  }
+
+  @Get('brands/:type')
+  async getServiceBrands(@Param('type') type: string) {
+    return this.servicesService.getServiceBrands(type);
+  }
+
+  @Get('models/:type/:brand')
+  async getServiceModels(@Param('type') type: string, @Param('brand') brand: string) {
+    return this.servicesService.getServiceModels(type, brand);
+  }
+
+  @Get('model/:type/:brand/:model')
+  async getServiceModel(@Param('type') type: string, @Param('brand') brand: string, @Param('model') model: string) {
+    return this.servicesService.getServiceModel(type, brand, model);
+  }
+
+  @Put('models/:id')
+  @UseGuards(AuthGuard)
+  async updateServiceModel(@Param('id') id: string, @Body() updates: any, @Req() req: any) {
+    return this.servicesService.updateServiceModel(id, updates, req.user.id);
+  }
+
+  @Get('by-model/:type/:brand/:model')
+  async getServicesByModel(@Param('type') type: string, @Param('brand') brand: string, @Param('model') model: string) {
+    return this.servicesService.getServicesByModel(type, brand, model);
+  }
+
+  // ============================================
+  // Services Edits
+  // ============================================
+
+  @Post('edits/:serviceId')
+  @UseGuards(AuthGuard)
+  async requestServiceUpdate(@Param('serviceId') serviceId: string, @Body() changes: any, @Req() req: any) {
+    return this.servicesService.requestServiceUpdate(serviceId, changes, req.user.id);
+  }
+
+  @Get('edits/admin/pending')
+  @UseGuards(AuthGuard)
+  async getPendingServiceEdits() {
+    return this.servicesService.getPendingServiceEdits();
+  }
+
+  @Get('edits/my-pending')
+  @UseGuards(AuthGuard)
+  async getMyPendingEdits(@Req() req: any) {
+    return this.servicesService.getMyPendingEdits(req.user.id);
+  }
+
+  @Get('edits/service/:serviceId')
+  @UseGuards(AuthGuard)
+  async getServiceEditsByService(@Param('serviceId') serviceId: string) {
+    return this.servicesService.getServiceEditsByService(serviceId);
+  }
+
+  @Get('edits/:editId')
+  @UseGuards(AuthGuard)
+  async getServiceEdit(@Param('editId') editId: string) {
+    return this.servicesService.getServiceEdit(editId);
+  }
+
+  @Delete('edits/:editId')
+  @UseGuards(AuthGuard)
+  async deleteServiceEdit(@Param('editId') editId: string, @Req() req: any) {
+    return this.servicesService.deleteServiceEdit(editId, req.user.id);
+  }
+
+  @Post('edits/:editId/approve')
+  @UseGuards(AuthGuard)
+  async approveServiceEdit(@Param('editId') editId: string, @Req() req: any) {
+    return this.servicesService.approveServiceEdit(editId, req.user.id);
+  }
+
+  @Post('edits/:editId/reject')
+  @UseGuards(AuthGuard)
+  async rejectServiceEdit(@Param('editId') editId: string, @Body('reason') reason: string, @Req() req: any) {
+    return this.servicesService.rejectServiceEdit(editId, reason, req.user.id);
+  }
+
+  // ============================================
+  // Services CRUD (Existing)
+  // ============================================
+
   @Post()
   @UseGuards(AuthGuard)
   async createService(@Body() data: any, @Req() request: any) {

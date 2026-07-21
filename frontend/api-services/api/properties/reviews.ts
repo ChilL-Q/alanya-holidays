@@ -1,188 +1,76 @@
 import { supabase } from '../../supabase';
 import { Review } from '../../../types/index';
-import { reviewSchema } from '../schemas';
-import { getAppUrl } from '../../../utils/appUrl';
-import { retry } from '../../../utils/retry';
-import { getUserRole } from '../../auth';
+
+async function getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+}
 
 export async function getReviews(propertyId: string, page: number = 1, limit: number = 10) {
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await supabase
-        .from('reviews')
-        .select('*, user:profiles(full_name, avatar_url)', { count: 'exact' })
-        .eq('property_id', propertyId)
-        .eq('is_hidden', false)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-    if (error) throw error;
-    return {
-        data: data as Review[],
-        pagination: {
-            page,
-            limit,
-            total: count || 0,
-            totalPages: Math.ceil((count || 0) / limit)
-        }
-    };
+    const res = await fetch(`/api/properties/${propertyId}/reviews?page=${page}&limit=${limit}`);
+    if (!res.ok) throw new Error('Failed to fetch reviews');
+    return res.json();
 }
 
 export async function getReviewCount(propertyId: string) {
-    const { count, error } = await supabase
-        .from('reviews')
-        .select('*', { count: 'exact', head: true })
-        .eq('property_id', propertyId)
-        .eq('is_hidden', false);
-    if (error) throw error;
-    return count || 0;
+    const res = await fetch(`/api/properties/${propertyId}/reviews/count`);
+    if (!res.ok) throw new Error('Failed to fetch review count');
+    return res.json() as Promise<number>;
 }
 
 export async function addReview(review: Omit<Review, 'id' | 'created_at' | 'user_id'>) {
-    const validatedData = reviewSchema.parse(review);
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) throw new Error('Not authenticated');
-
-    const { data: existing } = await supabase
-        .from('reviews')
-        .select('id')
-        .eq('property_id', validatedData.property_id)
-        .eq('user_id', user.id) // Use authenticated user's ID
-        .maybeSingle();
-
-    if (existing) throw new Error('You have already submitted a review for this property');
-
-    // Verify user has a confirmed or completed booking for this property
-    const { count: bookingCount, error: bookingError } = await supabase
-        .from('bookings')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id) // Use authenticated user's ID
-        .eq('item_id', validatedData.property_id)
-        .eq('item_type', 'property')
-        .in('status', ['confirmed', 'completed']);
-
-    if (bookingError) throw bookingError;
-    if (!bookingCount) { // Check for 0 or null
-        throw new Error('You can only review properties you have booked and completed your stay at.');
-    }
-
-    const { error } = await supabase.from('reviews').insert([{ ...validatedData, user_id: user.id }]).select().single();
-    if (error) throw error;
-
-    const { data: property } = await supabase
-        .from('properties')
-        .select('host_id, title')
-        .eq('id', review.property_id)
-        .single();
-
-    if (property) {
-        retry(() => supabase.functions.invoke('send-email', {
-            body: {
-                type: 'new_review',
-                userId: property.host_id,
-                data: {
-                    itemTitle: property.title,
-                    rating:    review.rating,
-                    comment:   review.comment,
-                    guestName: 'A Guest',
-                    link:      getAppUrl(`property/${review.property_id}`)
-                }
-            }
-        })).catch(err => console.error('Failed to send review email:', err));
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/properties/${review.property_id}/reviews`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(review)
+    });
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: 'Failed to add review' }));
+        throw new Error(error.message || 'Failed to add review');
     }
 }
 
 export async function deleteReview(reviewId: string) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: review, error: fetchError } = await supabase
-        .from('reviews')
-        .select('user_id')
-        .eq('id', reviewId)
-        .single();
-
-    if (fetchError) throw fetchError;
-    if (!review) throw new Error('Review not found');
-
-    const role = await getUserRole(user.id);
-    if (review.user_id !== user.id && role !== 'admin') {
-        throw new Error('Unauthorized: You can only delete your own reviews');
-    }
-
-    const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
-    if (error) throw error;
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/properties/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers
+    });
+    if (!res.ok) throw new Error('Failed to delete review');
 }
 
 export async function flagReview(reviewId: string) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { error } = await supabase
-        .from('reviews')
-        .update({ is_flagged: true, is_hidden: true })
-        .eq('id', reviewId)
-        .neq('user_id', user.id);
-
-    if (error) throw error;
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/properties/reviews/${reviewId}/flag`, {
+        method: 'POST',
+        headers
+    });
+    if (!res.ok) throw new Error('Failed to flag review');
 }
 
 export async function unflagReview(reviewId: string) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const role = await getUserRole(user.id);
-    if (role !== 'admin') throw new Error('Not authorized: only admins can unflag reviews');
-
-    const { error } = await supabase
-        .from('reviews')
-        .update({ is_flagged: false, is_hidden: false })
-        .eq('id', reviewId);
-
-    if (error) throw error;
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/properties/reviews/${reviewId}/unflag`, {
+        method: 'POST',
+        headers
+    });
+    if (!res.ok) throw new Error('Failed to unflag review');
 }
 
 export async function getFlaggedReviews(page: number = 1, limit: number = 20) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const role = await getUserRole(user.id);
-    if (role !== 'admin') throw new Error('Not authorized: only admins can view flagged reviews');
-
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    const { data, error, count } = await supabase
-        .from('reviews')
-        .select('*, user:profiles(full_name, avatar_url), properties(title)', { count: 'exact' })
-        .eq('is_flagged', true)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-    if (error) throw error;
-    return {
-        data: data as (Review & { properties?: { title: string } })[],
-        pagination: {
-            page,
-            limit,
-            total: count || 0,
-            totalPages: Math.ceil((count || 0) / limit)
-        }
-    };
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/properties/reviews/admin/flagged?page=${page}&limit=${limit}`, { headers });
+    if (!res.ok) throw new Error('Failed to fetch flagged reviews');
+    return res.json();
 }
 
 export async function bulkDeleteReviews(reviewIds: string[]) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const role = await getUserRole(user.id);
-    if (role !== 'admin') throw new Error('Not authorized: only admins can bulk delete reviews');
-
-    const { error } = await supabase
-        .from('reviews')
-        .delete()
-        .in('id', reviewIds);
-
-    if (error) throw error;
+    const headers = await getAuthHeaders();
+    const res = await fetch('/api/properties/reviews/admin/bulk-delete', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewIds })
+    });
+    if (!res.ok) throw new Error('Failed to bulk delete reviews');
 }

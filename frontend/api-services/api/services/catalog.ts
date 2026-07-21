@@ -1,59 +1,47 @@
 import { supabase } from '../../supabase';
-import { getUserRole } from '../../auth';
 import { ServiceDB, ServiceModel } from '../../../types/index';
 
+async function getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+}
+
 export async function getServiceTypes() {
-    return ['car', 'bike', 'tour', 'transfer', 'visa', 'esim'];
+    const res = await fetch('/api/services/types');
+    if (!res.ok) throw new Error('Failed to fetch service types');
+    return res.json() as Promise<string[]>;
 }
 
 export async function getServiceBrands(type: string) {
-    const { data, error } = await supabase
-        .from('service_models')
-        .select('brand')
-        .eq('type', type);
-    if (error) throw error;
-    return [...new Set(data.map((item) => item.brand))];
+    const res = await fetch(`/api/services/brands/${encodeURIComponent(type)}`);
+    if (!res.ok) throw new Error('Failed to fetch service brands');
+    return res.json() as Promise<string[]>;
 }
 
 export async function getServiceModels(type: string, brand: string) {
-    const { data, error } = await supabase
-        .from('service_models')
-        .select('*')
-        .eq('type', type)
-        .eq('brand', brand);
-    if (error) throw error;
-    return data as ServiceModel[];
+    const res = await fetch(`/api/services/models/${encodeURIComponent(type)}/${encodeURIComponent(brand)}`);
+    if (!res.ok) throw new Error('Failed to fetch service models');
+    return res.json() as Promise<ServiceModel[]>;
 }
 
 export async function getServiceModel(type: string, brand: string, model: string) {
-    const { data, error } = await supabase
-        .from('service_models')
-        .select('*')
-        .eq('type', type)
-        .eq('brand', brand)
-        .eq('model', model)
-        .single();
-    if (error) return null;
-    return data as ServiceModel;
+    const res = await fetch(`/api/services/model/${encodeURIComponent(type)}/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+    if (!res.ok) return null;
+    return res.json() as Promise<ServiceModel>;
 }
 
 export async function updateServiceModel(id: string, updates: Partial<ServiceModel>) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const role = await getUserRole(user.id);
-    if (role !== 'admin') throw new Error('Not authorized');
-
-    const { error } = await supabase.from('service_models').update(updates).eq('id', id);
-    if (error) throw error;
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/services/models/${id}`, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+    });
+    if (!res.ok) throw new Error('Failed to update service model');
 }
 
 export async function getServicesByModel(type: string, brand: string, model: string) {
-    const { data, error } = await supabase
-        .from('services')
-        .select('*, provider:profiles(full_name)')
-        .eq('type', type)
-        .contains('features', { brand, model });
-    if (error) throw error;
-    return data as ServiceDB[];
+    const res = await fetch(`/api/services/by-model/${encodeURIComponent(type)}/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+    if (!res.ok) throw new Error('Failed to fetch services by model');
+    return res.json() as Promise<ServiceDB[]>;
 }
