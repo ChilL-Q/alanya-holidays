@@ -35,37 +35,77 @@ jobs:
       with:
         node-version: '24'
         cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
 
     - name: Setup Deno
       uses: denoland/setup-deno@v2
 
     - name: Install Dependencies
+      working-directory: frontend
       run: npm ci
 
     - name: Security Audit
+      working-directory: frontend
       run: npm audit --audit-level=high
       continue-on-error: true
 
     - name: Lint Code
+      working-directory: frontend
       run: npm run lint
 
     - name: Type Check
+      working-directory: frontend
       run: npm run type-check
 
     - name: Run Tests
+      working-directory: frontend
       run: npm run test -- --run
 
     - name: Run Coverage
+      working-directory: frontend
       run: npm run test:coverage
 
     - name: Supabase Functions Lint
-      run: npm run supabase:lint
+      run: deno lint --config=deno.json supabase/functions
 
     - name: Supabase Functions Type Check
-      run: npm run supabase:type-check
+      run: deno check --config=deno.json supabase/functions/**/*.ts
       continue-on-error: true
 
     - name: Verify Build
+      working-directory: frontend
       run: npm run build
       env:
         CI: true
+
+  backend:
+    name: Backend Lint → Test → Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v6
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '24'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install Dependencies
+      working-directory: backend
+      run: npm ci
+
+    - name: Lint Code
+      working-directory: backend
+      run: npm run lint
+
+    - name: Run Tests
+      working-directory: backend
+      run: npm run test
+
+    - name: Verify Build
+      working-directory: backend
+      run: npm run build
