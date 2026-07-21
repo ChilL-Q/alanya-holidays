@@ -10,6 +10,7 @@ const ALLOWED_ORIGINS = new Set([
     "https://alanyaholidays.com",
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:3003",
 ]);
 
 // In-memory cache — lives as long as the function instance is warm
