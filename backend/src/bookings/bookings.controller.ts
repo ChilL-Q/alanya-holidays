@@ -16,7 +16,7 @@ export class BookingsController {
   }
 
   @Post()
-  async createBooking(@Body() createBookingDto: CreateBookingDto) {
+  async createBooking(@Body() createBookingDto: any) {
     return this.bookingsService.createBooking(createBookingDto);
   }
 }
