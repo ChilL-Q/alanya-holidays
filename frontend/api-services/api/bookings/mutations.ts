@@ -32,19 +32,19 @@ export async function checkBookingConflict(
     checkIn: string,
     checkOut: string
 ): Promise<BookingConflictResult> {
-    const { data, error } = await supabase.rpc('check_booking_conflict', {
-        p_item_id: itemId,
-        p_item_type: itemType,
-        p_check_in: checkIn,
-        p_check_out: checkOut
+    const params = new URLSearchParams({
+        itemId,
+        itemType,
+        checkIn,
+        checkOut
     });
-
-    if (error) {
-        console.error('Error checking booking conflicts:', error);
+    
+    const res = await fetch(`/api/bookings/conflict?${params.toString()}`);
+    if (!res.ok) {
         throw new Error('Failed to validate booking availability');
     }
-
-    return data as BookingConflictResult;
+    
+    return res.json() as Promise<BookingConflictResult>;
 }
 
 export async function createBooking(data: BookingCreateInput) {
@@ -55,122 +55,19 @@ export async function createBooking(data: BookingCreateInput) {
 
     const validatedData = bookingSchema.parse(input);
 
-    // Step 1: Check for booking conflicts BEFORE attempting to create
-    const { data: conflictResult, error: conflictError } = await supabase.rpc('check_booking_conflict', {
-        p_item_id:   validatedData.item_id,
-        p_item_type: input.item_type,
-        p_check_in:  validatedData.check_in,
-        p_check_out: validatedData.check_out
+    const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validatedData)
     });
 
-    if (conflictError) {
-        console.error('Error checking booking conflicts:', conflictError);
-        throw new Error('Failed to validate booking availability');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create booking');
     }
 
-    if (conflictResult?.has_conflict) {
-        throw new Error(conflictResult.message || 'Dates are not available');
-    }
-
-    // Step 2: Create the booking (RPC will also perform its own conflict checks as a safety net)
-    const rpcParams = {
-        p_item_id:        validatedData.item_id,
-        p_user_id:        validatedData.user_id,
-        p_check_in:       validatedData.check_in,
-        p_check_out:      validatedData.check_out,
-        p_total_price:    validatedData.total_price,
-        p_guests:         validatedData.guests,
-        p_message:        validatedData.message,
-        p_payment_method: validatedData.payment_method,
-        p_item_type:      input.item_type
-    };
-
-    const { data: result, error } = await supabase.rpc('create_booking', rpcParams);
-    if (error) throw error;
-    if (result.error) throw new Error(result.error);
-
-    const bookingId = result.data;
-    const itemTypeLabel = input.item_type === 'service' ? 'Service' : 'Property';
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', validatedData.user_id)
-        .single();
-
-    const guestName = profile?.full_name || 'Guest';
-
-    await createAuditLog('BOOKING_CREATED', {
-        bookingId,
-        userId:   validatedData.user_id,
-        itemId:   validatedData.item_id,
-        itemType: input.item_type
-    });
-
-    // Send booking confirmation email to user
-    try {
-        await retry(() => supabase.functions.invoke('send-email', {
-            body: {
-                type: 'booking_created',
-                userId: validatedData.user_id,
-                data: {
-                    userName:      guestName,
-                    itemTitle:     data.title || 'Item',
-                    itemTypeLabel,
-                    checkIn:       validatedData.check_in,
-                    checkOut:      validatedData.check_out,
-                    totalPrice:    validatedData.total_price,
-                    guests:        validatedData.guests,
-                    link:          getAppUrl('/profile')
-                }
-            }
-        }));
-    } catch (err) {
-        console.error('Failed to send booking confirmation email:', err);
-        await createAuditLog('EMAIL_DELIVERY_FAILED', { bookingId, reason: String(err) }, validatedData.user_id).catch(() => {});
-    }
-
-    // Send notification email to host/provider
-    try {
-        const table = input.item_type === 'service' ? 'services' : 'properties';
-        const ownerColumn = input.item_type === 'service' ? 'provider_id' : 'host_id';
-
-        const { data: itemOwner, error: ownerError } = await supabase
-            .from(table)
-            .select(`${ownerColumn}, title`)
-            .eq('id', validatedData.item_id)
-            .single();
-
-        if (ownerError) {
-            console.error('Failed to fetch item owner:', ownerError);
-        }
-
-        const hostId = itemOwner ? (itemOwner as Record<string, unknown>)[ownerColumn] as string | undefined : null;
-
-        if (hostId) {
-            await retry(() => supabase.functions.invoke('send-email', {
-                body: {
-                    type: 'booking_request_host',
-                    userId: hostId,
-                    data: {
-                        guestName,
-                        itemTitle:     itemOwner?.title,
-                        itemTypeLabel,
-                        checkIn:       validatedData.check_in,
-                        checkOut:      validatedData.check_out,
-                        totalPrice:    validatedData.total_price,
-                        guests:        validatedData.guests,
-                        message:       validatedData.message,
-                        link:          getAppUrl('/host/bookings')
-                    }
-                }
-            }));
-        }
-    } catch (err) {
-        console.error('Failed to send host notification email:', err);
-    }
-
-    return { id: bookingId as string };
+    const result = await res.json();
+    return { id: result.data };
 }
 
 export async function updateBookingStatus(
