@@ -145,31 +145,43 @@ export const ForumHome: React.FC = () => {
             </section>
 
             {/* ===== Upcoming Events (transparent band, top) ===== */}
-            {events.length > 0 && (
-                <section className="relative z-0 overflow-hidden pt-32 pb-16">
-                    <img src={FORUM_HERO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-teal-900/70 to-slate-900/85 backdrop-blur-sm" />
-                    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
-                            <div>
-                                <div className="inline-flex items-center gap-2 text-sm font-semibold text-teal-300 uppercase tracking-wider mb-2">
-                                    <Calendar size={16} /> This Week
-                                </div>
-                                <h2 className="text-3xl md:text-4xl font-serif text-white">Upcoming Events</h2>
-                                <p className="text-white/80 mt-2 max-w-xl">Join meetups, attend gatherings, and be part of the growing Alanya community.</p>
+            {/* Always rendered: gives the stats bar a backdrop to float over and a
+                permanent path to the /events page, even before any events exist. */}
+            <section className="relative z-0 overflow-hidden pt-32 pb-16">
+                <img src={FORUM_HERO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-teal-900/70 to-slate-900/85 backdrop-blur-sm" />
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+                        <div>
+                            <div className="inline-flex items-center gap-2 text-sm font-semibold text-teal-300 uppercase tracking-wider mb-2">
+                                <Calendar size={16} /> This Week
                             </div>
-                            <Link to="/events" className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
-                                View all events <ArrowRight size={18} />
-                            </Link>
+                            <h2 className="text-3xl md:text-4xl font-serif text-white">Upcoming Events</h2>
+                            <p className="text-white/80 mt-2 max-w-xl">Join meetups, attend gatherings, and be part of the growing Alanya community.</p>
                         </div>
+                        <Link to="/events" className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
+                            View all events <ArrowRight size={18} />
+                        </Link>
+                    </div>
+                    {events.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {events.map((ev) => <ForumEventCard key={ev.id} event={ev} glass />)}
                         </div>
-                    </div>
-                </section>
-            )}
+                    ) : loading ? (
+                        <div className="flex justify-center py-10"><Loader2 size={28} className="animate-spin text-white/70" /></div>
+                    ) : (
+                        <div className="rounded-2xl border border-white/15 bg-white/10 backdrop-blur-sm px-6 py-10 text-center">
+                            <Calendar size={32} className="mx-auto mb-3 text-teal-300" />
+                            <p className="text-white/90 mb-5">No upcoming events scheduled yet — check the calendar to see what's coming up.</p>
+                            <Link to="/events" className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white px-5 py-2.5 rounded-lg font-semibold border border-white/20 transition-colors">
+                                <Calendar size={18} /> View events calendar
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </section>
 
-            <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${events.length > 0 ? 'pt-20' : 'pt-28'} pb-20 space-y-24`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-20 space-y-24">
                 {/* ===== Hot Discussions ===== */}
                 <section>
                     <SectionHeader
