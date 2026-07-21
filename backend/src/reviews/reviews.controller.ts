@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Req, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Req,
+  Patch,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { AuthGuard } from '../auth/auth.guard';
 
@@ -7,14 +19,31 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Get('listing/:id')
-  async getListingReviews(@Param('id') id: string, @Query('page') page: string, @Query('limit') limit: string) {
-    return this.reviewsService.getListingReviews(id, page ? parseInt(page) : 1, limit ? parseInt(limit) : 20);
+  async getListingReviews(
+    @Param('id') id: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ) {
+    return this.reviewsService.getListingReviews(
+      id,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
   }
 
   @Post('listing/:id')
   @UseGuards(AuthGuard)
-  async submitListingReview(@Param('id') id: string, @Body() body: { rating: number; comment: string }, @Req() req: any) {
-    return this.reviewsService.submitListingReview(id, body.rating, body.comment, req.user.id);
+  async submitListingReview(
+    @Param('id') id: string,
+    @Body() body: { rating: number; comment: string },
+    @Req() req: any,
+  ) {
+    return this.reviewsService.submitListingReview(
+      id,
+      body.rating,
+      body.comment,
+      req.user.id,
+    );
   }
 
   @Get('user/listing/:id')
@@ -25,14 +54,32 @@ export class ReviewsController {
 
   @Get('admin/pending')
   @UseGuards(AuthGuard)
-  async getPendingReviews(@Query('page') page: string, @Query('limit') limit: string, @Req() req: any) {
-    return this.reviewsService.getPendingReviews(page ? parseInt(page) : 1, limit ? parseInt(limit) : 50, req.user.id);
+  async getPendingReviews(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Req() req: any,
+  ) {
+    return this.reviewsService.getPendingReviews(
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50,
+      req.user.id,
+    );
   }
 
   @Get('admin/status/:status')
   @UseGuards(AuthGuard)
-  async getReviewsByStatus(@Param('status') status: string, @Query('page') page: string, @Query('limit') limit: string, @Req() req: any) {
-    return this.reviewsService.getReviewsByStatus(status, page ? parseInt(page) : 1, limit ? parseInt(limit) : 50, req.user.id);
+  async getReviewsByStatus(
+    @Param('status') status: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Req() req: any,
+  ) {
+    return this.reviewsService.getReviewsByStatus(
+      status,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50,
+      req.user.id,
+    );
   }
 
   @Patch(':id/approve')

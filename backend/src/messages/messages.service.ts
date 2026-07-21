@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SupabaseService } from '../supabase/supabase.service';
+import { MessagesRepository } from './messages.repository';
 
 const sanitizeString = (str: string) => {
   if (!str) return '';
@@ -8,10 +8,9 @@ const sanitizeString = (str: string) => {
 
 @Injectable()
 export class MessagesService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly messagesRepository: MessagesRepository) {}
 
   async sendMessage(data: any) {
-    const supabase = this.supabaseService.getClient();
     const sanitized = {
       name: sanitizeString(data.name).slice(0, 200),
       email: sanitizeString(data.email).slice(0, 320),
@@ -19,22 +18,18 @@ export class MessagesService {
       message: sanitizeString(data.message).slice(0, 10000),
     };
 
-    const { error } = await supabase.from('messages').insert([sanitized]);
-    if (error) throw new Error(error.message);
+    await this.messagesRepository.insertMessage(sanitized);
 
-    // Notify Admin via edge function without waiting
-    supabase.functions.invoke('send-email', {
-      body: {
-        type: 'admin_contact_message',
-        to: 'contact@alanyaholidays.com',
-        data: {
-          name: sanitized.name,
-          email: sanitized.email,
-          subject: sanitized.subject,
-          message: sanitized.message
-        }
-      }
-    }).catch(err => console.error('Failed to send admin email:', err));
+    this.messagesRepository.invokeEmailFunction({
+      type: 'admin_contact_message',
+      to: 'contact@alanyaholidays.com',
+      data: {
+        name: sanitized.name,
+        email: sanitized.email,
+        subject: sanitized.subject,
+        message: sanitized.message,
+      },
+    });
 
     return { success: true };
   }

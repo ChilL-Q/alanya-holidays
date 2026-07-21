@@ -1,37 +1,39 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
-import { SupabaseService } from '../supabase/supabase.service';
+import {
+  Injectable,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async getAllUsers(page = 1, limit = 20, requestUserId: string) {
-    const supabase = this.supabaseService.getClient();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', requestUserId).single();
-    if (profile?.role !== 'admin') throw new UnauthorizedException('Not authorized');
+    const role = await this.usersRepository.getUserRole(requestUserId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const from = (page - 1) * limit;
-    const { data, error, count } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
-    
-    if (error) throw new Error(error.message);
-    return { data, pagination: { page, limit, total: count || 0, totalPages: Math.ceil((count || 0) / limit) } };
+    const { data, count } = await this.usersRepository.getAllUsers(page, limit);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
   }
 
   async getUserProfile(id: string) {
-    const supabase = this.supabaseService.getClient();
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
-    if (error) throw new NotFoundException('User not found');
+    const data = await this.usersRepository.getUserProfile(id);
+    if (!data) throw new NotFoundException('User not found');
     return data;
   }
 
   async updateUserProfile(id: string, updates: any, requestUserId: string) {
-    const supabase = this.supabaseService.getClient();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', requestUserId).single();
-    const role = profile?.role;
+    const role = await this.usersRepository.getUserRole(requestUserId);
 
     if (requestUserId !== id && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
@@ -42,25 +44,68 @@ export class UsersService {
       delete safeUpdates.role;
     }
 
-    const { error } = await supabase.from('profiles').update(safeUpdates).eq('id', id);
-    if (error) throw new Error(error.message);
+    await this.usersRepository.updateUserProfile(id, safeUpdates);
     return { success: true };
   }
 
-  async getUsersByRole(targetRole: string, page = 1, limit = 20, requestUserId: string) {
-    const supabase = this.supabaseService.getClient();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', requestUserId).single();
-    if (profile?.role !== 'admin') throw new UnauthorizedException('Not authorized');
+  async getUsersByRole(
+    targetRole: string,
+    page = 1,
+    limit = 20,
+    requestUserId: string,
+  ) {
+    const role = await this.usersRepository.getUserRole(requestUserId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const from = (page - 1) * limit;
-    const { data, error, count } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact' })
-      .eq('role', targetRole)
-      .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
-      
-    if (error) throw new Error(error.message);
-    return { data, pagination: { page, limit, total: count || 0, totalPages: Math.ceil((count || 0) / limit) } };
+    const { data, count } = await this.usersRepository.getUsersByRole(targetRole, page, limit);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
+  }
+
+  async getForumMembers(limit?: number, onlineOnly?: boolean) {
+    const [data, postData] = await Promise.all([
+      this.usersRepository.getForumMembers(limit),
+      this.usersRepository.getForumPostsAuthors()
+    ]);
+
+    const counts = new Map<string, number>();
+    for (const row of postData as { author_id: string | null }[]) {
+      if (row.author_id)
+        counts.set(row.author_id, (counts.get(row.author_id) || 0) + 1);
+    }
+
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const isOnline = (lastSeen: string | null) =>
+      lastSeen
+        ? Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS
+        : false;
+
+    let members = (data || []).map((m: any) => ({
+      ...m,
+      post_count: counts.get(m.id) || 0,
+      is_online: isOnline(m.last_seen_at),
+    }));
+
+    if (onlineOnly) members = members.filter((m: any) => m.is_online);
+    return members;
+  }
+
+  async getOnlineCount() {
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
+    return this.usersRepository.getOnlineCount(since);
+  }
+
+  async touchPresence(userId: string) {
+    await this.usersRepository.updatePresence(userId);
+    return { success: true };
   }
 }

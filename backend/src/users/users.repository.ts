@@ -1,0 +1,110 @@
+import { Injectable } from '@nestjs/common';
+import { SupabaseService } from '../supabase/supabase.service';
+
+@Injectable()
+export class UsersRepository {
+  constructor(private readonly supabaseService: SupabaseService) {}
+
+  get client() {
+    return this.supabaseService.getClient();
+  }
+
+  async getUserRole(userId: string) {
+    const { data } = await this.client
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    return data?.role;
+  }
+
+  async getAllUsers(page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const { data, error, count } = await this.client
+      .from('profiles')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) throw new Error(error.message);
+    return { data: data || [], count: count || 0 };
+  }
+
+  async getUserProfile(id: string) {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(error.message);
+    }
+    return data;
+  }
+
+  async updateUserProfile(id: string, updates: any) {
+    const { error } = await this.client
+      .from('profiles')
+      .update(updates)
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  async getUsersByRole(targetRole: string, page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const { data, error, count } = await this.client
+      .from('profiles')
+      .select('*', { count: 'exact' })
+      .eq('role', targetRole)
+      .order('created_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) throw new Error(error.message);
+    return { data: data || [], count: count || 0 };
+  }
+
+  async getForumMembers(limit?: number) {
+    let q = this.client
+      .from('profiles')
+      .select(
+        'id, full_name, avatar_url, role, created_at, last_seen_at, social_links',
+      )
+      .order('last_seen_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
+
+    if (limit) q = q.limit(limit);
+
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    return data || [];
+  }
+
+  async getForumPostsAuthors() {
+    const { data, error } = await this.client
+      .from('forum_posts')
+      .select('author_id')
+      .eq('is_removed', false);
+
+    if (error) throw new Error(error.message);
+    return data || [];
+  }
+
+  async getOnlineCount(since: string) {
+    const { count, error } = await this.client
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .gte('last_seen_at', since);
+
+    if (error) return 0;
+    return count || 0;
+  }
+
+  async updatePresence(userId: string) {
+    const { error } = await this.client
+      .from('profiles')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', userId);
+    if (error) console.error('Failed to update presence:', error);
+  }
+}

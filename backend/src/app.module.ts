@@ -11,9 +11,26 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { MessagesModule } from './messages/messages.module';
 import { BlogModule } from './blog/blog.module';
+import { DirectoryModule } from './directory/directory.module';
+import { ProductsModule } from './products/products.module';
+import { ForumModule } from './forum/forum.module';
 
 @Module({
-  imports: [SupabaseModule, BookingsModule, AuthModule, PropertiesModule, ServicesModule, UsersModule, ReviewsModule, FavoritesModule, MessagesModule, BlogModule],
+  imports: [
+    SupabaseModule,
+    BookingsModule,
+    AuthModule,
+    PropertiesModule,
+    ServicesModule,
+    UsersModule,
+    ReviewsModule,
+    FavoritesModule,
+    MessagesModule,
+    BlogModule,
+    DirectoryModule,
+    ProductsModule,
+    ForumModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
 
@@ -21,23 +33,38 @@ export class ServicesController {
   }
 
   @Get('models/:type/:brand')
-  async getServiceModels(@Param('type') type: string, @Param('brand') brand: string) {
+  async getServiceModels(
+    @Param('type') type: string,
+    @Param('brand') brand: string,
+  ) {
     return this.servicesService.getServiceModels(type, brand);
   }
 
   @Get('model/:type/:brand/:model')
-  async getServiceModel(@Param('type') type: string, @Param('brand') brand: string, @Param('model') model: string) {
+  async getServiceModel(
+    @Param('type') type: string,
+    @Param('brand') brand: string,
+    @Param('model') model: string,
+  ) {
     return this.servicesService.getServiceModel(type, brand, model);
   }
 
   @Put('models/:id')
   @UseGuards(AuthGuard)
-  async updateServiceModel(@Param('id') id: string, @Body() updates: any, @Req() req: any) {
+  async updateServiceModel(
+    @Param('id') id: string,
+    @Body() updates: any,
+    @Req() req: any,
+  ) {
     return this.servicesService.updateServiceModel(id, updates, req.user.id);
   }
 
   @Get('by-model/:type/:brand/:model')
-  async getServicesByModel(@Param('type') type: string, @Param('brand') brand: string, @Param('model') model: string) {
+  async getServicesByModel(
+    @Param('type') type: string,
+    @Param('brand') brand: string,
+    @Param('model') model: string,
+  ) {
     return this.servicesService.getServicesByModel(type, brand, model);
   }
 
@@ -47,8 +74,16 @@ export class ServicesController {
 
   @Post('edits/:serviceId')
   @UseGuards(AuthGuard)
-  async requestServiceUpdate(@Param('serviceId') serviceId: string, @Body() changes: any, @Req() req: any) {
-    return this.servicesService.requestServiceUpdate(serviceId, changes, req.user.id);
+  async requestServiceUpdate(
+    @Param('serviceId') serviceId: string,
+    @Body() changes: any,
+    @Req() req: any,
+  ) {
+    return this.servicesService.requestServiceUpdate(
+      serviceId,
+      changes,
+      req.user.id,
+    );
   }
 
   @Get('edits/admin/pending')
@@ -89,7 +124,11 @@ export class ServicesController {
 
   @Post('edits/:editId/reject')
   @UseGuards(AuthGuard)
-  async rejectServiceEdit(@Param('editId') editId: string, @Body('reason') reason: string, @Req() req: any) {
+  async rejectServiceEdit(
+    @Param('editId') editId: string,
+    @Body('reason') reason: string,
+    @Req() req: any,
+  ) {
     return this.servicesService.rejectServiceEdit(editId, reason, req.user.id);
   }
 
@@ -104,8 +143,16 @@ export class ServicesController {
   }
 
   @Get()
-  async getServices(@Query('type') type: string, @Query('page') page: string, @Query('limit') limit: string) {
-    return this.servicesService.getServices(type, page ? parseInt(page) : 1, limit ? parseInt(limit) : 20);
+  async getServices(
+    @Query('type') type: string,
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+  ) {
+    return this.servicesService.getServices(
+      type,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 20,
+    );
   }
 
   @Get('provider/:providerId')
@@ -116,16 +163,25 @@ export class ServicesController {
   @Get('admin')
   @UseGuards(AuthGuard)
   async getAdminServices(
-    @Query('statusFilter') statusFilter: string, 
+    @Query('statusFilter') statusFilter: string,
     @Query('typesFilter') typesFilter: string,
-    @Query('page') page: string, 
-    @Query('limit') limit: string
+    @Query('page') page: string,
+    @Query('limit') limit: string,
   ) {
     let parsedTypes;
     if (typesFilter) {
-      try { parsedTypes = JSON.parse(typesFilter); } catch (e) { parsedTypes = [typesFilter]; }
+      try {
+        parsedTypes = JSON.parse(typesFilter);
+      } catch (e) {
+        parsedTypes = [typesFilter];
+      }
     }
-    return this.servicesService.getAdminServices(statusFilter, parsedTypes, page ? parseInt(page) : 1, limit ? parseInt(limit) : 50);
+    return this.servicesService.getAdminServices(
+      statusFilter,
+      parsedTypes,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50,
+    );
   }
 
   @Get(':id')
@@ -135,19 +191,36 @@ export class ServicesController {
 
   @Put(':id')
   @UseGuards(AuthGuard)
-  async updateService(@Param('id') id: string, @Body() updates: any, @Req() request: any) {
+  async updateService(
+    @Param('id') id: string,
+    @Body() updates: any,
+    @Req() request: any,
+  ) {
     return this.servicesService.updateService(id, updates, request.user.id);
   }
 
   @Patch(':id/status')
   @UseGuards(AuthGuard)
-  async updateServiceStatus(@Param('id') id: string, @Body() data: { status: string, reason?: string }, @Req() request: any) {
-    return this.servicesService.updateServiceStatus(id, data.status, data.reason, request.user.id);
+  async updateServiceStatus(
+    @Param('id') id: string,
+    @Body() data: { status: string; reason?: string },
+    @Req() request: any,
+  ) {
+    return this.servicesService.updateServiceStatus(
+      id,
+      data.status,
+      data.reason,
+      request.user.id,
+    );
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async deleteService(@Param('id') id: string, @Query('reason') reason: string, @Req() request: any) {
+  async deleteService(
+    @Param('id') id: string,
+    @Query('reason') reason: string,
+    @Req() request: any,
+  ) {
     return this.servicesService.deleteService(id, reason, request.user.id);
   }
 }
