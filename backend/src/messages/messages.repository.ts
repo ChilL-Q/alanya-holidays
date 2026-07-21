@@ -14,7 +14,7 @@ export class MessagesRepository {
     if (error) throw new Error(error.message);
   }
 
-  async invokeEmailFunction(payload: any) {
+  invokeEmailFunction(payload: any) {
     this.client.functions
       .invoke('send-email', { body: payload })
       .catch((err) => console.error('Failed to send email:', err));

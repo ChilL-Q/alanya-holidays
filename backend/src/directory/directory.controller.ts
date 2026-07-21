@@ -240,7 +240,7 @@ export class DirectoryController {
   // Payment instructions
   @Post('payment/instructions')
   @UseGuards(AuthGuard)
-  async sendListingPaymentInstructions(
+  sendListingPaymentInstructions(
     @Body('businessName') businessName: string,
     @Body('tier') tier: string,
     @Req() req: any,

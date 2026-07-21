@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ReviewsRepository } from './reviews.repository';
 
 @Injectable()
@@ -12,7 +8,11 @@ export class ReviewsService {
   async getListingReviews(listingId: string, page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const result = await this.reviewsRepository.getListingReviews(listingId, from, to);
+    const result = await this.reviewsRepository.getListingReviews(
+      listingId,
+      from,
+      to,
+    );
     return { data: result.data, total: result.count };
   }
 
@@ -22,11 +22,19 @@ export class ReviewsService {
     comment: string,
     userId: string,
   ) {
-    return this.reviewsRepository.insertListingReview(listingId, rating, comment, userId);
+    return this.reviewsRepository.insertListingReview(
+      listingId,
+      rating,
+      comment,
+      userId,
+    );
   }
 
   async getUserReviewForListing(listingId: string, userId: string) {
-    const data = await this.reviewsRepository.getUserReviewForListing(listingId, userId);
+    const data = await this.reviewsRepository.getUserReviewForListing(
+      listingId,
+      userId,
+    );
     return data || null;
   }
 
@@ -39,7 +47,12 @@ export class ReviewsService {
     await this.checkAdmin(requestUserId);
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const result = await this.reviewsRepository.getReviewsByStatus('pending', from, to, true);
+    const result = await this.reviewsRepository.getReviewsByStatus(
+      'pending',
+      from,
+      to,
+      true,
+    );
     return { data: result.data, total: result.count };
   }
 
@@ -52,7 +65,12 @@ export class ReviewsService {
     await this.checkAdmin(requestUserId);
     const from = (page - 1) * limit;
     const to = from + limit - 1;
-    const result = await this.reviewsRepository.getReviewsByStatus(status, from, to, false);
+    const result = await this.reviewsRepository.getReviewsByStatus(
+      status,
+      from,
+      to,
+      false,
+    );
     return { data: result.data, total: result.count };
   }
 

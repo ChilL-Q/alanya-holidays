@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Profile } from './Profile';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { bookingsService, usersService, storageService, propertiesService, servicesService } from '../api-services';
+import { bookingsService, usersService, storageService } from '../api-services';
 import { toast } from 'react-hot-toast';
 
 // Rule 1: vi.hoisted for shared mocks

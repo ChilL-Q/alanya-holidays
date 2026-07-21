@@ -12,8 +12,8 @@ const slugify = (text: string) =>
     .toString()
     .toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/-+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
 
@@ -55,7 +55,13 @@ export class BlogService {
     const limit = filters.limit ? parseInt(filters.limit) : 10;
     const offset = filters.offset ? parseInt(filters.offset) : 0;
 
-    const { data, count } = await this.blogRepository.getBlogPosts(filters, limit, offset, role, requestUserId);
+    const { data, count } = await this.blogRepository.getBlogPosts(
+      filters,
+      limit,
+      offset,
+      role,
+      requestUserId,
+    );
 
     const flattened = (data || []).map((post: any) => ({
       ...post,
@@ -124,7 +130,7 @@ export class BlogService {
   async updateBlogPost(id: string, updates: any, userId: string) {
     const role = await this.blogRepository.getUserRole(userId);
     const existing = await this.blogRepository.getBlogPostById(id);
-    
+
     if (!existing) throw new NotFoundException('Blog post not found');
     if (existing.author_id !== userId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
@@ -192,19 +198,22 @@ export class BlogService {
     return { success: true };
   }
 
-  async addTagToPost(postId: string, tagId: string, userId: string) {
+  async addTagToPost(postId: string, tagId: string, _userId: string) {
     await this.blogRepository.insertSingleBlogPostTag(postId, tagId);
     return { success: true };
   }
 
-  async removeTagFromPost(postId: string, tagId: string, userId: string) {
+  async removeTagFromPost(postId: string, tagId: string, _userId: string) {
     await this.blogRepository.deleteSingleBlogPostTag(postId, tagId);
     return { success: true };
   }
 
   // Submissions
   async createBlogSubmission(data: any, userId: string) {
-    const withinLimit = await this.blogRepository.checkBlogSubmissionLimit(userId, 5);
+    const withinLimit = await this.blogRepository.checkBlogSubmissionLimit(
+      userId,
+      5,
+    );
     if (withinLimit === false)
       throw new BadRequestException('Daily submission limit reached');
 
@@ -234,11 +243,16 @@ export class BlogService {
 
   async approveBlogSubmission(submissionId: string, userId: string) {
     await this.checkAdmin(userId);
-    const submission = await this.blogRepository.getBlogSubmissionById(submissionId);
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
     if (!submission || submission.status !== 'pending_review')
       throw new BadRequestException('Invalid submission');
 
-    const updatedSubRows = await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'approved', 'pending_review');
+    const updatedSubRows = await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'approved',
+      'pending_review',
+    );
 
     if (!updatedSubRows || updatedSubRows.length === 0)
       throw new BadRequestException('Already processed');
@@ -262,12 +276,18 @@ export class BlogService {
         published_at: new Date().toISOString(),
       });
     } catch (err) {
-      await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'pending_review', 'approved');
+      await this.blogRepository.updateBlogSubmissionStatus(
+        submissionId,
+        'pending_review',
+        'approved',
+      );
       throw err;
     }
 
-    const authorProfile = await this.blogRepository.getProfileForNotification(submission.user_id);
-    
+    const authorProfile = await this.blogRepository.getProfileForNotification(
+      submission.user_id,
+    );
+
     await this.blogRepository.insertNotification({
       user_id: submission.user_id,
       title: 'Blog Post Published!',
@@ -300,14 +320,22 @@ export class BlogService {
     if (!reason || reason.trim().length < 10)
       throw new BadRequestException('Reason must be at least 10 chars');
 
-    const submission = await this.blogRepository.getBlogSubmissionById(submissionId);
+    const submission =
+      await this.blogRepository.getBlogSubmissionById(submissionId);
     if (!submission || submission.status !== 'pending_review')
       throw new BadRequestException('Invalid submission');
 
-    await this.blogRepository.updateBlogSubmissionStatus(submissionId, 'rejected', 'pending_review', { rejection_reason: reason });
+    await this.blogRepository.updateBlogSubmissionStatus(
+      submissionId,
+      'rejected',
+      'pending_review',
+      { rejection_reason: reason },
+    );
 
-    const authorProfile = await this.blogRepository.getProfileForNotification(submission.user_id);
-    
+    const authorProfile = await this.blogRepository.getProfileForNotification(
+      submission.user_id,
+    );
+
     await this.blogRepository.insertNotification({
       user_id: submission.user_id,
       title: 'Blog Post Rejected',

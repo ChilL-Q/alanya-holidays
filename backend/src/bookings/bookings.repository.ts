@@ -23,12 +23,16 @@ export class BookingsRepository {
       .not('status', 'in', '("cancelled","rejected")')
       .lt('check_in', checkOut)
       .gt('check_out', checkIn);
-    
+
     if (error) throw new Error('Failed to query bookings');
     return data || [];
   }
 
-  async checkPropertyAvailabilityBlocks(itemId: string, checkIn: string, checkOut: string) {
+  async checkPropertyAvailabilityBlocks(
+    itemId: string,
+    checkIn: string,
+    checkOut: string,
+  ) {
     const { data, error } = await this.client
       .from('property_availability')
       .select('id')
@@ -57,7 +61,8 @@ export class BookingsRepository {
       const { error } = await this.client
         .from('property_availability')
         .upsert(blocks, { onConflict: 'property_id, date' });
-      if (error) throw new Error('Failed to upsert property availability blocks');
+      if (error)
+        throw new Error('Failed to upsert property availability blocks');
     }
   }
 
@@ -67,7 +72,7 @@ export class BookingsRepository {
       .select('*')
       .eq('user_id', userId)
       .order('check_in', { ascending: true });
-    
+
     if (error) throw new Error(error.message);
     return data || [];
   }
@@ -85,7 +90,11 @@ export class BookingsRepository {
     return data || [];
   }
 
-  async getBookingsByPropertyIds(propertyIds: string[], dateFrom?: string, dateTo?: string) {
+  async getBookingsByPropertyIds(
+    propertyIds: string[],
+    dateFrom?: string,
+    dateTo?: string,
+  ) {
     let query = this.client
       .from('bookings')
       .select('*')
@@ -121,7 +130,7 @@ export class BookingsRepository {
       .select('created_at, status, user_id')
       .eq('id', id)
       .single();
-    
+
     if (error) return null;
     return data;
   }
@@ -220,7 +229,7 @@ export class BookingsRepository {
     return data || [];
   }
 
-  async invokeEmailFunction(payload: any) {
+  invokeEmailFunction(payload: any) {
     this.client.functions
       .invoke('send-email', { body: payload })
       .catch((err) => console.error(err));

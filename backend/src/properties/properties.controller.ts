@@ -245,7 +245,9 @@ export class PropertiesController {
     if (typeof filters === 'string') {
       try {
         filters = JSON.parse(filters);
-      } catch (e) {}
+      } catch (error) {
+        console.warn('Failed to parse filters query param as JSON:', error);
+      }
     }
     const queryOptions = {
       page: query.page ? parseInt(query.page) : 1,

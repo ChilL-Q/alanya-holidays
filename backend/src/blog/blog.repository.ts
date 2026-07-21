@@ -34,7 +34,13 @@ export class BlogRepository {
     return data.map((r) => r.slug);
   }
 
-  async getBlogPosts(filters: any, limit: number, offset: number, userRole: string, requestUserId?: string) {
+  async getBlogPosts(
+    filters: any,
+    limit: number,
+    offset: number,
+    userRole: string,
+    requestUserId?: string,
+  ) {
     let query = this.client
       .from('blog_posts')
       .select(
@@ -96,8 +102,8 @@ export class BlogRepository {
       .single();
 
     if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw new Error(error.message);
+      if (error.code === 'PGRST116') return null;
+      throw new Error(error.message);
     }
     return data;
   }
@@ -105,7 +111,9 @@ export class BlogRepository {
   async incrementBlogViews(postId: string) {
     try {
       await this.client.rpc('increment_blog_views', { p_post_id: postId });
-    } catch (e) {}
+    } catch (error) {
+      console.error('Failed to increment blog views:', postId, error);
+    }
   }
 
   async getRelatedPosts(postId: string, category: string, limit: number) {
@@ -160,7 +168,10 @@ export class BlogRepository {
   }
 
   async deleteBlogPost(id: string) {
-    const { error } = await this.client.from('blog_posts').delete().eq('id', id);
+    const { error } = await this.client
+      .from('blog_posts')
+      .delete()
+      .eq('id', id);
     if (error) throw new Error(error.message);
   }
 
@@ -227,7 +238,9 @@ export class BlogRepository {
   async getBlogSubmissions(filters: any) {
     let query = this.client
       .from('blog_submissions')
-      .select(`*, user:profiles!blog_submissions_user_id_fkey(full_name, email)`)
+      .select(
+        `*, user:profiles!blog_submissions_user_id_fkey(full_name, email)`,
+      )
       .order('created_at', { ascending: false });
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.userId) query = query.eq('user_id', filters.userId);
@@ -255,7 +268,12 @@ export class BlogRepository {
     return data;
   }
 
-  async updateBlogSubmissionStatus(id: string, status: string, currentStatus: string, extraUpdates: any = {}) {
+  async updateBlogSubmissionStatus(
+    id: string,
+    status: string,
+    currentStatus: string,
+    extraUpdates: any = {},
+  ) {
     const { data, error } = await this.client
       .from('blog_submissions')
       .update({ status, ...extraUpdates })
@@ -279,10 +297,14 @@ export class BlogRepository {
   async insertNotification(notificationData: any) {
     try {
       await this.client.from('notifications').insert(notificationData);
-    } catch (e) {}
+    } catch (error) {
+      console.error('Failed to insert notification:', error);
+    }
   }
 
   async invokeEmailFunction(payload: any) {
-    await this.client.functions.invoke('send-email', { body: payload }).catch(console.error);
+    await this.client.functions
+      .invoke('send-email', { body: payload })
+      .catch(console.error);
   }
 }

@@ -99,7 +99,7 @@ describe('ChatWindow', () => {
         ],
         clearHistory: mockClearHistory,
         submitReport: mockSubmitReport
-    };
+    } as unknown as ReturnType<typeof useChat>;
 
     beforeEach(() => {
         vi.clearAllMocks();

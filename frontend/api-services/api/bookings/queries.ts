@@ -6,7 +6,7 @@ async function getAuthHeaders() {
     return session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
 }
 
-export async function getBookings(userId: string): Promise<EnrichedBooking[]> {
+export async function getBookings(_userId: string): Promise<EnrichedBooking[]> {
     const headers = await getAuthHeaders();
     const res = await fetch('/api/bookings/my-bookings', { headers });
     if (!res.ok) throw new Error('Failed to fetch user bookings');

@@ -50,10 +50,10 @@ export class ProductsService {
 
   private async checkOwnership(productId: string, userId: string) {
     const role = await this.productsRepository.getUserRole(userId);
-    const existingProduct = await this.productsRepository.getProductOwnership(productId);
+    const existingProduct =
+      await this.productsRepository.getProductOwnership(productId);
 
-    if (!existingProduct)
-      throw new NotFoundException('Product not found');
+    if (!existingProduct) throw new NotFoundException('Product not found');
 
     if (
       existingProduct.seller_id !== userId &&
@@ -71,7 +71,7 @@ export class ProductsService {
     requestUserId: string,
   ) {
     await this.checkOwnership(id, requestUserId);
-    const { seller_id, ...safeUpdates } = updates;
+    const { seller_id: _seller_id, ...safeUpdates } = updates;
     await this.productsRepository.updateProduct(id, safeUpdates);
     return { success: true };
   }
@@ -94,7 +94,10 @@ export class ProductsService {
     requestUserId: string,
   ) {
     await this.checkOwnership(productId, requestUserId);
-    const variant = await this.productsRepository.insertProductVariant({ ...data, product_id: productId });
+    const variant = await this.productsRepository.insertProductVariant({
+      ...data,
+      product_id: productId,
+    });
     return variant as ProductVariant;
   }
 
@@ -103,18 +106,25 @@ export class ProductsService {
     updates: Partial<ProductVariant>,
     requestUserId: string,
   ) {
-    const productId = await this.productsRepository.getVariantProductId(variantId);
+    const productId =
+      await this.productsRepository.getVariantProductId(variantId);
     if (!productId) throw new NotFoundException('Variant not found');
 
     await this.checkOwnership(productId, requestUserId);
 
-    const { id, product_id, created_at, ...safeUpdates } = updates as any;
+    const {
+      id: _id,
+      product_id: _productId,
+      created_at: _createdAt,
+      ...safeUpdates
+    } = updates as any;
     await this.productsRepository.updateProductVariant(variantId, safeUpdates);
     return { success: true };
   }
 
   async deleteProductVariant(variantId: string, requestUserId: string) {
-    const productId = await this.productsRepository.getVariantProductId(variantId);
+    const productId =
+      await this.productsRepository.getVariantProductId(variantId);
     if (!productId) throw new NotFoundException('Variant not found');
 
     await this.checkOwnership(productId, requestUserId);

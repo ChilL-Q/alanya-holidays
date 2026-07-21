@@ -5,13 +5,12 @@ import {
   Get,
   Query,
   Param,
-  Put,
   Patch,
   Delete,
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { BookingsService, CreateBookingDto } from './bookings.service';
+import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('bookings')

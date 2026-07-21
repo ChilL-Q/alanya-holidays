@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DirectoryRepository } from './directory.repository';
 
 const UUID_RE =
@@ -30,7 +26,12 @@ export class DirectoryService {
     category?: string,
     sortBy = 'base_score',
   ) {
-    const result = await this.directoryRepository.getDirectoryListings(page, limit, category, sortBy);
+    const result = await this.directoryRepository.getDirectoryListings(
+      page,
+      limit,
+      category,
+      sortBy,
+    );
 
     return {
       data: result.data,
@@ -62,7 +63,13 @@ export class DirectoryService {
     page = 1,
     limit = 40,
   ) {
-    const result = await this.directoryRepository.searchDirectoryListings(query, categoryId, location, page, limit);
+    const result = await this.directoryRepository.searchDirectoryListings(
+      query,
+      categoryId,
+      location,
+      page,
+      limit,
+    );
     return { data: result.data, total: result.count };
   }
 
@@ -83,19 +90,21 @@ export class DirectoryService {
     return this.directoryRepository.getRecentlyClaimedListings(limit);
   }
 
-  async voteForListing(listingId: string, vote: 1 | -1, userId: string) {
+  // ponytail: _userId unused — vote_listing RPC resolves the caller via auth.uid(),
+  // which is NULL through our service-role client; see memory project_vote_rpc_auth_uid_bug
+  async voteForListing(listingId: string, vote: 1 | -1, _userId: string) {
     const data = await this.directoryRepository.voteForListing(listingId, vote);
     return { netVotes: data[0].net_votes, userVote: data[0].user_vote };
   }
 
-  async getUserVotesBatch(listingIds: string[], userId: string) {
+  async getUserVotesBatch(listingIds: string[], _userId: string) {
     const data = await this.directoryRepository.getUserVotesBatch(listingIds);
     const votes: Record<string, 1 | -1> = {};
     for (const row of data as any[]) votes[row.listing_id] = row.vote;
     return votes;
   }
 
-  async removeListingVote(listingId: string, userId: string) {
+  async removeListingVote(listingId: string, _userId: string) {
     const data = await this.directoryRepository.removeListingVote(listingId);
     return { netVotes: data[0].net_votes };
   }
@@ -153,7 +162,8 @@ export class DirectoryService {
         : {}),
     };
 
-    const data = await this.directoryRepository.insertDirectoryListing(safeData);
+    const data =
+      await this.directoryRepository.insertDirectoryListing(safeData);
 
     if (locationIds?.length) {
       const rows = locationIds.map((lid, i) => ({
@@ -176,10 +186,7 @@ export class DirectoryService {
     const role = await this.directoryRepository.getUserRole(userId);
     const listing = await this.directoryRepository.getDirectoryListingOwner(id);
 
-    if (
-      !listing ||
-      (listing.owner_user_id !== userId && role !== 'admin')
-    ) {
+    if (!listing || (listing.owner_user_id !== userId && role !== 'admin')) {
       throw new UnauthorizedException('Not authorized');
     }
 
@@ -198,7 +205,10 @@ export class DirectoryService {
     delete safeUpdates.owner_user_id;
     delete safeUpdates.rejection_reason;
 
-    const data = await this.directoryRepository.updateDirectoryListing(id, safeUpdates);
+    const data = await this.directoryRepository.updateDirectoryListing(
+      id,
+      safeUpdates,
+    );
 
     if (locationIds !== undefined) {
       if (locationIds.length) {
@@ -220,10 +230,7 @@ export class DirectoryService {
     const role = await this.directoryRepository.getUserRole(userId);
     const listing = await this.directoryRepository.getDirectoryListingOwner(id);
 
-    if (
-      !listing ||
-      (listing.owner_user_id !== userId && role !== 'admin')
-    ) {
+    if (!listing || (listing.owner_user_id !== userId && role !== 'admin')) {
       throw new UnauthorizedException('Not authorized');
     }
 
@@ -246,7 +253,10 @@ export class DirectoryService {
     status: 'approved' | 'rejected',
     category?: string,
   ) {
-    return this.directoryRepository.getDirectoryListingsByStatus(status, category);
+    return this.directoryRepository.getDirectoryListingsByStatus(
+      status,
+      category,
+    );
   }
 
   async getPendingDirectoryListings() {
@@ -255,10 +265,11 @@ export class DirectoryService {
 
   async approveDirectoryListing(id: string, userId: string) {
     const role = await this.directoryRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const listing = await this.directoryRepository.updateListingStatus(id, { status: 'approved' });
+    const listing = await this.directoryRepository.updateListingStatus(id, {
+      status: 'approved',
+    });
 
     if (listing?.owner_user_id) {
       this.directoryRepository.invokeFunction('send-email', {
@@ -274,13 +285,15 @@ export class DirectoryService {
 
   async rejectDirectoryListing(id: string, reason: string, userId: string) {
     const role = await this.directoryRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     if (reason.length > 1000)
       throw new Error('Rejection reason must be 1000 characters or fewer');
-      
-    const listing = await this.directoryRepository.updateListingStatus(id, { status: 'rejected', rejection_reason: reason });
+
+    const listing = await this.directoryRepository.updateListingStatus(id, {
+      status: 'rejected',
+      rejection_reason: reason,
+    });
 
     if (listing?.owner_user_id) {
       this.directoryRepository.invokeFunction('send-email', {
@@ -300,7 +313,10 @@ export class DirectoryService {
   }
 
   async getCategoryAnalyticsAverage(categoryId: string, days = 30) {
-    return this.directoryRepository.getCategoryAnalyticsAverage(categoryId, days);
+    return this.directoryRepository.getCategoryAnalyticsAverage(
+      categoryId,
+      days,
+    );
   }
 
   // Addons & Payments
@@ -315,17 +331,20 @@ export class DirectoryService {
     userId: string,
   ) {
     validateUUIDs([listingId]);
-    const { data, error } = await this.directoryRepository.invokeFunction('create-addon-checkout', {
-      body: { listingId, addonType },
-      headers: { 'x-user-id': userId },
-    });
+    const { data, error } = await this.directoryRepository.invokeFunction(
+      'create-addon-checkout',
+      {
+        body: { listingId, addonType },
+        headers: { 'x-user-id': userId },
+      },
+    );
     if (error) throw new Error(error.message);
     if (data?.error) throw new Error(data.error);
     if (!data?.url) throw new Error('No checkout URL returned');
     return { url: data.url };
   }
 
-  async sendListingPaymentInstructions(
+  sendListingPaymentInstructions(
     businessName: string,
     tier: string,
     userId: string,
@@ -361,7 +380,7 @@ export class DirectoryService {
       description: claim.description?.trim() || null,
       status: 'pending',
     };
-    
+
     const data = await this.directoryRepository.insertListingClaim(safeData);
 
     this.directoryRepository.invokeFunction('send-email', {
@@ -396,18 +415,17 @@ export class DirectoryService {
 
   async getListingClaims(userId: string) {
     const role = await this.directoryRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     return this.directoryRepository.getListingClaims();
   }
 
   async approveListingClaim(claimId: string, userId: string) {
     const role = await this.directoryRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const { data, error } = await this.directoryRepository.callApproveListingClaimRpc(claimId);
+    const { data, error } =
+      await this.directoryRepository.callApproveListingClaimRpc(claimId);
     if (error || !data || !data[0]?.success)
       throw new Error(data?.[0]?.message || 'Failed to approve claim');
 
@@ -428,10 +446,10 @@ export class DirectoryService {
 
   async rejectListingClaim(claimId: string, reason: string, userId: string) {
     const role = await this.directoryRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const { data, error } = await this.directoryRepository.callRejectListingClaimRpc(claimId, reason);
+    const { data, error } =
+      await this.directoryRepository.callRejectListingClaimRpc(claimId, reason);
     if (error || !data || !data[0]?.success)
       throw new Error(data?.[0]?.message || 'Failed to reject claim');
 

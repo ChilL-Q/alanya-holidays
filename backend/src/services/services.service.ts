@@ -28,7 +28,11 @@ export class ServicesService {
   }
 
   async getServices(type?: string, page = 1, limit = 20) {
-    const { data, count } = await this.servicesRepository.getServices(type, page, limit);
+    const { data, count } = await this.servicesRepository.getServices(
+      type,
+      page,
+      limit,
+    );
 
     const mappedData =
       data?.map((s) => ({
@@ -43,13 +47,15 @@ export class ServicesService {
   }
 
   async getService(id: string) {
-    const { data, error } = await this.servicesRepository.getServiceByIdOrRef(id);
+    const { data, error } =
+      await this.servicesRepository.getServiceByIdOrRef(id);
     if (error || !data) throw new NotFoundException('Service not found');
     return data;
   }
 
   async updateService(id: string, updates: any, userId: string) {
-    const existingService = await this.servicesRepository.getServiceOwnershipInfo(id);
+    const existingService =
+      await this.servicesRepository.getServiceOwnershipInfo(id);
     const role = await this.servicesRepository.getUserRole(userId);
 
     if (
@@ -60,13 +66,13 @@ export class ServicesService {
     }
 
     const {
-      status,
-      provider_id,
+      status: _status,
+      provider_id: _providerId,
       id: _id,
-      created_at,
+      created_at: _createdAt,
       ...safeUpdates
     } = updates;
-    
+
     await this.servicesRepository.updateService(id, safeUpdates);
     return { success: true };
   }
@@ -110,7 +116,12 @@ export class ServicesService {
     page = 1,
     limit = 50,
   ) {
-    return this.servicesRepository.getAdminServices(statusFilter, typesFilter, page, limit);
+    return this.servicesRepository.getAdminServices(
+      statusFilter,
+      typesFilter,
+      page,
+      limit,
+    );
   }
 
   // ============================================
@@ -131,7 +142,11 @@ export class ServicesService {
   }
 
   async getServiceModel(type: string, brand: string, model: string) {
-    const { data, error } = await this.servicesRepository.getServiceModel(type, brand, model);
+    const { data, error } = await this.servicesRepository.getServiceModel(
+      type,
+      brand,
+      model,
+    );
     if (error || !data) throw new NotFoundException('Service model not found');
     return data;
   }
@@ -152,7 +167,7 @@ export class ServicesService {
   // Services Edits
   // ============================================
 
-  async requestServiceUpdate(serviceId: string, changes: any, userId: string) {
+  async requestServiceUpdate(serviceId: string, changes: any, _userId: string) {
     await this.servicesRepository.insertServiceEdit({
       service_id: serviceId,
       changed_data: changes,
@@ -174,21 +189,24 @@ export class ServicesService {
   }
 
   async getServiceEdit(editId: string) {
-    const { data, error } = await this.servicesRepository.getServiceEditById(editId);
+    const { data, error } =
+      await this.servicesRepository.getServiceEditById(editId);
     if (error || !data) throw new NotFoundException('Service edit not found');
     return data;
   }
 
-  async deleteServiceEdit(editId: string, userId: string) {
+  async deleteServiceEdit(editId: string, _userId: string) {
     await this.servicesRepository.deleteServiceEdit(editId);
     return { success: true };
   }
 
   async approveServiceEdit(editId: string, userId: string) {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin') throw new UnauthorizedException('Admin access required');
+    if (role !== 'admin')
+      throw new UnauthorizedException('Admin access required');
 
-    const { data: edit, error: fetchError } = await this.servicesRepository.getServiceEditById(editId);
+    const { data: edit, error: fetchError } =
+      await this.servicesRepository.getServiceEditById(editId);
     if (fetchError || !edit) throw new NotFoundException('Edit not found');
 
     const safeChanges: Record<string, unknown> = {};
@@ -199,7 +217,9 @@ export class ServicesService {
     await this.servicesRepository.updateService(edit.service_id, safeChanges);
     await this.servicesRepository.deleteServiceEdit(editId);
 
-    const service = await this.servicesRepository.getServiceOwnershipInfo(edit.service_id);
+    const service = await this.servicesRepository.getServiceOwnershipInfo(
+      edit.service_id,
+    );
     if (service) {
       // In a real app we'd use a notifications service here. Skipping for backend simplicity.
     }
@@ -212,9 +232,13 @@ export class ServicesService {
     userId: string,
   ) {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin') throw new UnauthorizedException('Admin access required');
+    if (role !== 'admin')
+      throw new UnauthorizedException('Admin access required');
 
-    await this.servicesRepository.updateServiceEdit(editId, { status: 'rejected', rejection_reason: reason });
+    await this.servicesRepository.updateServiceEdit(editId, {
+      status: 'rejected',
+      rejection_reason: reason,
+    });
     return { success: true };
   }
 }

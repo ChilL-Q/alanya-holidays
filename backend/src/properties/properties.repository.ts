@@ -69,18 +69,29 @@ export class PropertiesRepository {
           'type',
           filters.types.map((t: string) => t.toLowerCase()),
         );
-      if (filters.minGuests > 1) query = query.gte('max_guests', filters.minGuests);
-      if (filters.minBedrooms > 0) query = query.gte('bedrooms', filters.minBedrooms);
+      if (filters.minGuests > 1)
+        query = query.gte('max_guests', filters.minGuests);
+      if (filters.minBedrooms > 0)
+        query = query.gte('bedrooms', filters.minBedrooms);
       if (filters.minBeds > 1) query = query.gte('beds', filters.minBeds);
-      if (filters.minBathrooms > 1) query = query.gte('bathrooms', filters.minBathrooms);
+      if (filters.minBathrooms > 1)
+        query = query.gte('bathrooms', filters.minBathrooms);
       if (filters.hasPhotos) query = query.not('images', 'is', null);
     }
 
     switch (sort) {
-      case 'price_asc': query = query.order('price_per_night', { ascending: true }); break;
-      case 'price_desc': query = query.order('price_per_night', { ascending: false }); break;
-      case 'rating': query = query.order('rating', { ascending: false }); break;
-      default: query = query.order('created_at', { ascending: false }); break;
+      case 'price_asc':
+        query = query.order('price_per_night', { ascending: true });
+        break;
+      case 'price_desc':
+        query = query.order('price_per_night', { ascending: false });
+        break;
+      case 'rating':
+        query = query.order('rating', { ascending: false });
+        break;
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
     }
     query = query.order('id', { ascending: true });
 
@@ -93,7 +104,9 @@ export class PropertiesRepository {
   async getPropertyByUUID(id: string) {
     const { data, error } = await this.client
       .from('properties')
-      .select('*, host:profiles(full_name, avatar_url, email, phone, company_name)')
+      .select(
+        '*, host:profiles(full_name, avatar_url, email, phone, company_name)',
+      )
       .eq('id', id)
       .single();
     if (error) return null;
@@ -159,11 +172,20 @@ export class PropertiesRepository {
 
   async deletePropertyCascading(id: string) {
     await this.client.from('reviews').delete().eq('property_id', id);
-    await this.client.from('property_availability').delete().eq('property_id', id);
-    await this.client.from('property_ical_feeds').delete().eq('property_id', id);
+    await this.client
+      .from('property_availability')
+      .delete()
+      .eq('property_id', id);
+    await this.client
+      .from('property_ical_feeds')
+      .delete()
+      .eq('property_id', id);
     await this.client.from('favorites').delete().eq('item_id', id);
 
-    const { error } = await this.client.from('properties').delete().eq('id', id);
+    const { error } = await this.client
+      .from('properties')
+      .delete()
+      .eq('id', id);
     if (error) throw error;
   }
 
@@ -182,7 +204,12 @@ export class PropertiesRepository {
     return [...new Set(data.map((p: any) => p.location))];
   }
 
-  async getPropertiesByLocation(type: string, location: string, page = 1, limit = 20) {
+  async getPropertiesByLocation(
+    type: string,
+    location: string,
+    page = 1,
+    limit = 20,
+  ) {
     const from = (page - 1) * limit;
     const { data, error, count } = await this.client
       .from('properties')
@@ -225,6 +252,15 @@ export class PropertiesRepository {
     return result;
   }
 
+  async getICalFeedPropertyId(id: string) {
+    const { data } = await this.client
+      .from('property_ical_feeds')
+      .select('property_id')
+      .eq('id', id)
+      .single();
+    return data?.property_id as string | undefined;
+  }
+
   async removeICalFeed(id: string) {
     const { error } = await this.client
       .from('property_ical_feeds')
@@ -233,7 +269,11 @@ export class PropertiesRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getPropertyAvailability(propertyId: string, startDate: string, endDate: string) {
+  async getPropertyAvailability(
+    propertyId: string,
+    startDate: string,
+    endDate: string,
+  ) {
     const { data, error } = await this.client
       .from('property_availability')
       .select('*, feed:property_ical_feeds(name)')
@@ -349,7 +389,12 @@ export class PropertiesRepository {
     if (error) throw new Error(error.message);
   }
 
-  async updateReviewFlag(reviewId: string, isFlagged: boolean, isHidden: boolean, excludeUserId?: string) {
+  async updateReviewFlag(
+    reviewId: string,
+    isFlagged: boolean,
+    isHidden: boolean,
+    excludeUserId?: string,
+  ) {
     let query = this.client
       .from('reviews')
       .update({ is_flagged: isFlagged, is_hidden: isHidden })
@@ -400,7 +445,7 @@ export class PropertiesRepository {
     return data?.role;
   }
 
-  async invokeEmailFunction(payload: any) {
+  invokeEmailFunction(payload: any) {
     this.client.functions
       .invoke('send-email', { body: payload })
       .catch((err) => console.error(err));

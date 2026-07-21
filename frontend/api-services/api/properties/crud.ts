@@ -36,7 +36,7 @@ export async function createProperty(data: Omit<PropertyDB, 'id' | 'created_at' 
 export async function getProperties(
     page = 1,
     limit = 20,
-    filters?: any,
+    filters?: unknown,
     location?: string,
     allowedIds?: string[],
     sort = 'newest'

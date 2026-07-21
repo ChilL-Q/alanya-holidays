@@ -1,5 +1,5 @@
 import { supabase } from '../../../../api-services/supabase';
-import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../../../types/models';
+import { BlogPost, BlogTag, BlogSubmission } from '../../../../types/models';
 
 async function getAuthHeaders() {
     const { data: { session } } = await supabase.auth.getSession();

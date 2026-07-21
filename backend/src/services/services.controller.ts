@@ -172,7 +172,7 @@ export class ServicesController {
     if (typesFilter) {
       try {
         parsedTypes = JSON.parse(typesFilter);
-      } catch (e) {
+      } catch {
         parsedTypes = [typesFilter];
       }
     }

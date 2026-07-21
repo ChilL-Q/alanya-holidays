@@ -35,7 +35,7 @@ export async function getServiceEditsByService(serviceId: string) {
     return res.json();
 }
 
-export async function getMyPendingEdits(userId: string) {
+export async function getMyPendingEdits(_userId: string) {
     const headers = await getAuthHeaders();
     const res = await fetch('/api/services/edits/my-pending', { headers });
     if (!res.ok) throw new Error('Failed to fetch my pending edits');
@@ -55,7 +55,7 @@ export async function deleteServiceEdit(editId: string) {
     if (!res.ok) throw new Error('Failed to delete service edit');
 }
 
-export async function approveServiceEdit(editId: string, userId: string) {
+export async function approveServiceEdit(editId: string, _userId: string) {
     const headers = await getAuthHeaders();
     const res = await fetch(`/api/services/edits/${editId}/approve`, { method: 'POST', headers });
     if (!res.ok) throw new Error('Failed to approve service edit');

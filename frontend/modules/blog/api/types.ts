@@ -2,7 +2,7 @@ import { BlogPost, BlogTag, BlogPostStatus, BlogSubmission } from '../../../type
 
 export interface BlogPostFilters {
     category?: string;
-    status?: string;
+    status?: BlogPostStatus;
     is_featured?: boolean;
     authorId?: string;
     search?: string;

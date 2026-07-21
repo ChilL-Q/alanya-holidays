@@ -1,4 +1,3 @@
-import { supabase } from '../../supabase';
 import { PropertyDB } from '../../../types/index';
 
 export async function getPropertyTypes() {

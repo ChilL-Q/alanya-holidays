@@ -10,7 +10,6 @@ import {
   UseGuards,
   Req,
   Patch,
-  Optional,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -21,18 +20,6 @@ export class BlogController {
 
   @Get()
   async getBlogPosts(@Query() query: any, @Req() req: any) {
-    // We try to get user id if token exists, but it's optional for read
-    const userId = undefined;
-    if (req.headers.authorization) {
-      // Very simple extraction just to pass the id if authenticated
-      const token = req.headers.authorization.split(' ')[1];
-      if (token) {
-        // AuthGuard sets req.user, but since we don't have UseGuards here, we rely on a manual check in service if needed,
-        // Actually, to make it simple, let's just make a custom extraction or require the frontend to pass it if needed.
-        // For now, we will pass undefined for anon users.
-        // Real implementation would decode JWT or use a custom OptionalAuthGuard.
-      }
-    }
     return this.blogService.getBlogPosts(query, req.user?.id);
   }
 
