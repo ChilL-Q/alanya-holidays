@@ -23,7 +23,7 @@ export class ForumReportsRepository {
       .order('created_at', { ascending: false });
 
     if (!includeResolved) {
-      q = q.eq('status', 'pending');
+      q = q.eq('resolved', false);
     }
 
     const { data } = await q;
@@ -33,7 +33,7 @@ export class ForumReportsRepository {
   async updateReportResolved(id: string) {
     const { error } = await this.client
       .from('forum_reports')
-      .update({ status: 'resolved' })
+      .update({ resolved: true })
       .eq('id', id);
     if (error) throw new Error(error.message);
   }

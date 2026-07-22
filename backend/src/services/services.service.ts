@@ -167,7 +167,14 @@ export class ServicesService {
   // Services Edits
   // ============================================
 
-  async requestServiceUpdate(serviceId: string, changes: any, _userId: string) {
+  async requestServiceUpdate(serviceId: string, changes: any, userId: string) {
+    const service =
+      await this.servicesRepository.getServiceOwnershipInfo(serviceId);
+    const role = await this.servicesRepository.getUserRole(userId);
+    if (!service || (service.provider_id !== userId && role !== 'admin')) {
+      throw new UnauthorizedException('Not authorized');
+    }
+
     await this.servicesRepository.insertServiceEdit({
       service_id: serviceId,
       changed_data: changes,
@@ -195,7 +202,11 @@ export class ServicesService {
     return data;
   }
 
-  async deleteServiceEdit(editId: string, _userId: string) {
+  async deleteServiceEdit(editId: string, userId: string) {
+    const role = await this.servicesRepository.getUserRole(userId);
+    if (role !== 'admin')
+      throw new UnauthorizedException('Admin access required');
+
     await this.servicesRepository.deleteServiceEdit(editId);
     return { success: true };
   }

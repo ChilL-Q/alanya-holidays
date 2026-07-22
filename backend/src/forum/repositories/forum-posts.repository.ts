@@ -114,7 +114,7 @@ export class ForumPostsRepository {
   }
 
   async incrementPostView(id: string) {
-    await this.client.rpc('increment_post_view', { p_id: id });
+    await this.client.rpc('increment_forum_post_view', { p_post_id: id });
   }
 
   async updatePostPinned(id: string, pinned: boolean) {

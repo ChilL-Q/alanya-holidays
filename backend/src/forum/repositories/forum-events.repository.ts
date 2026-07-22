@@ -10,11 +10,11 @@ export class ForumEventsRepository {
   }
 
   async getEvents(filters: any, eventSelect: string) {
-    let q = this.client
-      .from('forum_events')
-      .select(eventSelect)
-      .eq('is_published', true);
+    let q = this.client.from('forum_events').select(eventSelect);
 
+    if (!filters.includeUnpublished) q = q.eq('is_published', true);
+    if (filters.upcomingOnly)
+      q = q.gte('event_date', new Date().toISOString());
     if (filters.search) {
       q = q.ilike('title', `%${filters.search}%`);
     }

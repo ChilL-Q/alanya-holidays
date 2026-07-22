@@ -21,7 +21,12 @@ export class DirectoryRepository {
     return data?.role;
   }
 
-  async getDirectoryListings(page: number, limit: number, category?: string, sortBy = 'base_score') {
+  async getDirectoryListings(
+    page: number,
+    limit: number,
+    category?: string,
+    sortBy = 'base_score',
+  ) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -71,7 +76,13 @@ export class DirectoryRepository {
     return data || [];
   }
 
-  async searchDirectoryListings(query: string, categoryId?: string, location?: string, page = 1, limit = 40) {
+  async searchDirectoryListings(
+    query: string,
+    categoryId?: string,
+    location?: string,
+    page = 1,
+    limit = 40,
+  ) {
     let q = this.client
       .from('directory_listings')
       .select(LISTING_LOCATIONS_SELECT, { count: 'exact' })
@@ -149,29 +160,32 @@ export class DirectoryRepository {
     return data || [];
   }
 
-  async voteForListing(listingId: string, vote: 1 | -1) {
+  async voteForListing(listingId: string, vote: 1 | -1, userId: string) {
     const { data, error } = await this.client.rpc('vote_listing', {
       p_listing_id: listingId,
       p_listing_type: 'directory',
       p_vote: vote,
+      p_user_id: userId,
     });
     if (error) throw new Error(error.message);
     return data;
   }
 
-  async getUserVotesBatch(listingIds: string[]) {
+  async getUserVotesBatch(listingIds: string[], userId: string) {
     const { data, error } = await this.client.rpc('get_user_votes_batch', {
       p_listing_ids: listingIds,
       p_listing_type: 'directory',
+      p_user_id: userId,
     });
     if (error) return [];
     return data || [];
   }
 
-  async removeListingVote(listingId: string) {
+  async removeListingVote(listingId: string, userId: string) {
     const { data, error } = await this.client.rpc('remove_listing_vote', {
       p_listing_id: listingId,
       p_listing_type: 'directory',
+      p_user_id: userId,
     });
     if (error) throw new Error(error.message);
     return data;
@@ -229,16 +243,29 @@ export class DirectoryRepository {
     if (error) throw new Error(error.message);
   }
 
-  async deleteListingLocations(listingId: string, locationIdsToKeep?: string[]) {
-    let query = this.client.from('listing_locations').delete().eq('listing_id', listingId);
+  async deleteListingLocations(
+    listingId: string,
+    locationIdsToKeep?: string[],
+  ) {
+    let query = this.client
+      .from('listing_locations')
+      .delete()
+      .eq('listing_id', listingId);
     if (locationIdsToKeep && locationIdsToKeep.length > 0) {
-      query = query.not('location_id', 'in', `(${locationIdsToKeep.join(',')})`);
+      query = query.not(
+        'location_id',
+        'in',
+        `(${locationIdsToKeep.join(',')})`,
+      );
     }
     await query;
   }
 
   async deleteDirectoryListing(id: string) {
-    const { error } = await this.client.from('directory_listings').delete().eq('id', id);
+    const { error } = await this.client
+      .from('directory_listings')
+      .delete()
+      .eq('id', id);
     if (error) throw new Error(error.message);
   }
 
@@ -253,7 +280,10 @@ export class DirectoryRepository {
     });
   }
 
-  async getDirectoryListingsByStatus(status: 'approved' | 'rejected', category?: string) {
+  async getDirectoryListingsByStatus(
+    status: 'approved' | 'rejected',
+    category?: string,
+  ) {
     let query = this.client
       .from('directory_listings')
       .select('*')
@@ -287,19 +317,25 @@ export class DirectoryRepository {
   }
 
   async getDirectoryAnalyticsForOwner(userId: string, days: number) {
-    const { data, error } = await this.client.rpc('get_directory_analytics_for_owner', {
-      p_owner_id: userId,
-      p_days: days,
-    });
+    const { data, error } = await this.client.rpc(
+      'get_directory_analytics_for_owner',
+      {
+        p_owner_id: userId,
+        p_days: days,
+      },
+    );
     if (error) throw new Error(error.message);
     return data || [];
   }
 
   async getCategoryAnalyticsAverage(categoryId: string, days: number) {
-    const { data, error } = await this.client.rpc('get_category_analytics_average', {
-      p_category_id: categoryId,
-      p_days: days,
-    });
+    const { data, error } = await this.client.rpc(
+      'get_category_analytics_average',
+      {
+        p_category_id: categoryId,
+        p_days: days,
+      },
+    );
     if (error) throw new Error(error.message);
     return data?.[0] ?? null;
   }
@@ -325,7 +361,9 @@ export class DirectoryRepository {
   }
 
   async verifyClaimEmail(token: string) {
-    const { data, error } = await this.client.rpc('verify_claim_email', { p_token: token });
+    const { data, error } = await this.client.rpc('verify_claim_email', {
+      p_token: token,
+    });
     if (error || !data || data.length === 0) return null;
     return data[0];
   }
@@ -340,7 +378,9 @@ export class DirectoryRepository {
   }
 
   async callApproveListingClaimRpc(claimId: string) {
-    const { data, error } = await this.client.rpc('approve_listing_claim', { p_claim_id: claimId });
+    const { data, error } = await this.client.rpc('approve_listing_claim', {
+      p_claim_id: claimId,
+    });
     return { data, error };
   }
 
@@ -363,7 +403,10 @@ export class DirectoryRepository {
 
   async invokeFunction(functionName: string, payload: any) {
     try {
-      const { data, error } = await this.client.functions.invoke(functionName, payload);
+      const { data, error } = await this.client.functions.invoke(
+        functionName,
+        payload,
+      );
       return { data, error };
     } catch (e) {
       console.error(e);

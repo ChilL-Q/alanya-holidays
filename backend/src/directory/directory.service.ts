@@ -90,22 +90,30 @@ export class DirectoryService {
     return this.directoryRepository.getRecentlyClaimedListings(limit);
   }
 
-  // ponytail: _userId unused — vote_listing RPC resolves the caller via auth.uid(),
-  // which is NULL through our service-role client; see memory project_vote_rpc_auth_uid_bug
-  async voteForListing(listingId: string, vote: 1 | -1, _userId: string) {
-    const data = await this.directoryRepository.voteForListing(listingId, vote);
+  async voteForListing(listingId: string, vote: 1 | -1, userId: string) {
+    const data = await this.directoryRepository.voteForListing(
+      listingId,
+      vote,
+      userId,
+    );
     return { netVotes: data[0].net_votes, userVote: data[0].user_vote };
   }
 
-  async getUserVotesBatch(listingIds: string[], _userId: string) {
-    const data = await this.directoryRepository.getUserVotesBatch(listingIds);
+  async getUserVotesBatch(listingIds: string[], userId: string) {
+    const data = await this.directoryRepository.getUserVotesBatch(
+      listingIds,
+      userId,
+    );
     const votes: Record<string, 1 | -1> = {};
     for (const row of data as any[]) votes[row.listing_id] = row.vote;
     return votes;
   }
 
-  async removeListingVote(listingId: string, _userId: string) {
-    const data = await this.directoryRepository.removeListingVote(listingId);
+  async removeListingVote(listingId: string, userId: string) {
+    const data = await this.directoryRepository.removeListingVote(
+      listingId,
+      userId,
+    );
     return { netVotes: data[0].net_votes };
   }
 

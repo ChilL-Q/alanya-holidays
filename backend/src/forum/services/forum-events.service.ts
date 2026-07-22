@@ -34,6 +34,7 @@ export class ForumEventsService {
   `;
 
   async getForumEvents(filters: any, userId?: string) {
+    if (filters.includeUnpublished) await this.requireAdmin(userId as string);
     const data = await this.forumEventsRepository.getEvents(filters, this.EVENT_SELECT);
     return this.annotateRsvp(data || [], userId);
   }

@@ -128,12 +128,7 @@ export class BlogService {
   }
 
   async updateBlogPost(id: string, updates: any, userId: string) {
-    const role = await this.blogRepository.getUserRole(userId);
-    const existing = await this.blogRepository.getBlogPostById(id);
-
-    if (!existing) throw new NotFoundException('Blog post not found');
-    if (existing.author_id !== userId && role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    const { role, existing } = await this.checkPostOwnership(id, userId);
 
     const safe: any = {};
     if (updates.title !== undefined) {
@@ -198,14 +193,25 @@ export class BlogService {
     return { success: true };
   }
 
-  async addTagToPost(postId: string, tagId: string, _userId: string) {
+  async addTagToPost(postId: string, tagId: string, userId: string) {
+    await this.checkPostOwnership(postId, userId);
     await this.blogRepository.insertSingleBlogPostTag(postId, tagId);
     return { success: true };
   }
 
-  async removeTagFromPost(postId: string, tagId: string, _userId: string) {
+  async removeTagFromPost(postId: string, tagId: string, userId: string) {
+    await this.checkPostOwnership(postId, userId);
     await this.blogRepository.deleteSingleBlogPostTag(postId, tagId);
     return { success: true };
+  }
+
+  private async checkPostOwnership(postId: string, userId: string) {
+    const role = await this.blogRepository.getUserRole(userId);
+    const existing = await this.blogRepository.getBlogPostById(postId);
+    if (!existing) throw new NotFoundException('Blog post not found');
+    if (existing.author_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+    return { role, existing };
   }
 
   // Submissions
