@@ -170,8 +170,10 @@ export class ServicesService {
   async requestServiceUpdate(serviceId: string, changes: any, userId: string) {
     const service =
       await this.servicesRepository.getServiceOwnershipInfo(serviceId);
+    if (!service) throw new NotFoundException('Service not found');
+
     const role = await this.servicesRepository.getUserRole(userId);
-    if (!service || (service.provider_id !== userId && role !== 'admin')) {
+    if (service.provider_id !== userId && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
     }
 
