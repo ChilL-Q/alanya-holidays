@@ -14,7 +14,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useModal } from '../../../context/ModalContext';
 import { FORUM_HERO_IMAGE } from '../../../data/forumContent';
 
-const fmt = (n: number): string => n.toLocaleString('en-US');
+const fmt = (n?: number | null): string => (n ?? 0).toLocaleString('en-US');
 
 const SectionHeader: React.FC<{ eyebrow: string; icon: React.ReactNode; title: string; subtitle?: string }> = ({
     eyebrow, icon, title, subtitle,
@@ -51,16 +51,19 @@ export const ForumHome: React.FC = () => {
             membersService.getOnlineCount(),
         ]).then(([cats, hot, st, evs, mem, online]) => {
             if (!active) return;
-            if (cats.status === 'fulfilled') setCategories(cats.value);
-            if (hot.status === 'fulfilled') setHotPosts(hot.value);
+            if (cats.status === 'fulfilled') setCategories(cats.value ?? []);
+            if (hot.status === 'fulfilled') setHotPosts(hot.value ?? []);
             if (st.status === 'fulfilled' || online.status === 'fulfilled') {
+                const stValue = st.status === 'fulfilled' ? st.value : null;
                 setStats({
-                    ...(st.status === 'fulfilled' ? st.value : { members: 0, discussions: 0, replies: 0 }),
-                    online: online.status === 'fulfilled' ? online.value : 0,
+                    members: stValue?.members ?? 0,
+                    discussions: stValue?.discussions ?? 0,
+                    replies: stValue?.replies ?? 0,
+                    online: online.status === 'fulfilled' ? (online.value ?? 0) : 0,
                 });
             }
-            if (evs.status === 'fulfilled') setEvents(evs.value);
-            if (mem.status === 'fulfilled') setMembers(mem.value);
+            if (evs.status === 'fulfilled') setEvents(evs.value ?? []);
+            if (mem.status === 'fulfilled') setMembers(mem.value ?? []);
             setLoading(false);
         });
         return () => { active = false; };

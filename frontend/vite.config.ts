@@ -22,6 +22,10 @@ export default defineConfig(() => {
             const id = idMatch ? idMatch[1] : '';
             return `?id=${id}`;
           }
+        },
+        '^/api/': {
+          target: 'http://localhost:4000',
+          changeOrigin: true,
         }
       }
     },

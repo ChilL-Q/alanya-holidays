@@ -8,8 +8,7 @@ export class ForumPostsService {
 
   private async requireAdmin(userId: string) {
     const role = await this.forumPostsRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
   }
 
   private async resolveSlug(baseSlug: string): Promise<string> {
@@ -23,8 +22,10 @@ export class ForumPostsService {
       new Set(posts.map((p) => p.category?.parent_id).filter((x) => !!x)),
     );
     if (parentIds.length === 0) return;
-    
-    const data = await this.forumPostsRepository.getCategoriesByIds(parentIds as string[]);
+
+    const data = await this.forumPostsRepository.getCategoriesByIds(
+      parentIds as string[],
+    );
     const map = new Map((data || []).map((c) => [c.id, c]));
     for (const p of posts) {
       if (p.category?.parent_id)
@@ -41,9 +42,10 @@ export class ForumPostsService {
     if (!userId || rows.length === 0)
       return rows.map((r) => ({ ...r, liked_by_me: false }));
     const ids = rows.map((r) => r.id);
-    const data = table === 'forum_post_likes' 
-      ? await this.forumPostsRepository.getPostLikes(userId, ids)
-      : await this.forumPostsRepository.getCommentLikes(userId, ids);
+    const data =
+      table === 'forum_post_likes'
+        ? await this.forumPostsRepository.getPostLikes(userId, ids)
+        : await this.forumPostsRepository.getCommentLikes(userId, ids);
     const liked = new Set((data || []).map((row: any) => row[fkColumn]));
     return rows.map((r) => ({ ...r, liked_by_me: liked.has(r.id) }));
   }
@@ -60,14 +62,16 @@ export class ForumPostsService {
   async getForumPosts(filters: any, userId?: string) {
     if (filters.removedOnly && filters.includeRemoved)
       throw new Error('Cannot specify both removedOnly and includeRemoved');
-    
+
     const limit = filters.limit ?? 20;
     const offset = filters.offset ?? 0;
 
     let categoryIds: string[] | undefined = undefined;
 
     if (filters.categorySlug) {
-      const cat = await this.forumPostsRepository.getCategoryBySlug(filters.categorySlug);
+      const cat = await this.forumPostsRepository.getCategoryBySlug(
+        filters.categorySlug,
+      );
       if (!cat) return { data: [], total: 0 };
       if (cat.parent_id) {
         categoryIds = [cat.id];
@@ -78,7 +82,12 @@ export class ForumPostsService {
     }
 
     const filtersForRepo = { ...filters, categoryIds };
-    const { data, total } = await this.forumPostsRepository.getPosts(filtersForRepo, limit, offset, this.POST_SELECT);
+    const { data, total } = await this.forumPostsRepository.getPosts(
+      filtersForRepo,
+      limit,
+      offset,
+      this.POST_SELECT,
+    );
 
     const annotated = await this.annotateLikes(
       data || [],
@@ -91,7 +100,10 @@ export class ForumPostsService {
   }
 
   async getHotPosts(limit = 8, userId?: string) {
-    const data = await this.forumPostsRepository.getHotPosts(limit, this.POST_SELECT);
+    const data = await this.forumPostsRepository.getHotPosts(
+      limit,
+      this.POST_SELECT,
+    );
     const hot = await this.annotateLikes(
       data || [],
       'forum_post_likes',
@@ -103,9 +115,12 @@ export class ForumPostsService {
   }
 
   async getForumPost(slug: string, userId?: string) {
-    const data = await this.forumPostsRepository.getPostBySlug(slug, this.POST_SELECT);
+    const data = await this.forumPostsRepository.getPostBySlug(
+      slug,
+      this.POST_SELECT,
+    );
     if (!data) return null;
-    
+
     const [annotated] = await this.annotateLikes(
       [data],
       'forum_post_likes',
@@ -125,7 +140,7 @@ export class ForumPostsService {
     return this.forumPostsRepository.insertPost({
       title: input.title,
       slug: uniqueSlug,
-      body: input.body, 
+      body: input.body,
       category_id: input.category_id || null,
       author_id: userId,
       post_type: postType,
@@ -135,7 +150,7 @@ export class ForumPostsService {
   async updateForumPost(id: string, updates: any, userId: string) {
     const role = await this.forumPostsRepository.getUserRole(userId);
     const existing = await this.forumPostsRepository.getPostById(id);
-    
+
     if (!existing) throw new Error('Post not found');
     if (existing.author_id !== userId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
@@ -195,7 +210,10 @@ export class ForumPostsService {
     options: { includeRemoved?: boolean },
     userId?: string,
   ) {
-    const data = await this.forumPostsRepository.getComments(postId, !!options?.includeRemoved);
+    const data = await this.forumPostsRepository.getComments(
+      postId,
+      !!options?.includeRemoved,
+    );
     return this.annotateLikes(
       data || [],
       'forum_comment_likes',
@@ -205,7 +223,11 @@ export class ForumPostsService {
   }
 
   async createForumComment(postId: string, body: string, userId: string) {
-    return this.forumPostsRepository.insertComment({ post_id: postId, author_id: userId, body });
+    return this.forumPostsRepository.insertComment({
+      post_id: postId,
+      author_id: userId,
+      body,
+    });
   }
 
   async deleteForumComment(id: string, userId: string) {
@@ -228,7 +250,10 @@ export class ForumPostsService {
   // Likes
   // ============================================================
   async togglePostLike(postId: string, userId: string) {
-    const existing = await this.forumPostsRepository.checkPostLike(postId, userId);
+    const existing = await this.forumPostsRepository.checkPostLike(
+      postId,
+      userId,
+    );
     if (existing) {
       await this.forumPostsRepository.deletePostLike(postId, userId);
       return { liked: false };
@@ -238,7 +263,10 @@ export class ForumPostsService {
   }
 
   async toggleCommentLike(commentId: string, userId: string) {
-    const existing = await this.forumPostsRepository.checkCommentLike(commentId, userId);
+    const existing = await this.forumPostsRepository.checkCommentLike(
+      commentId,
+      userId,
+    );
     if (existing) {
       await this.forumPostsRepository.deleteCommentLike(commentId, userId);
       return { liked: false };

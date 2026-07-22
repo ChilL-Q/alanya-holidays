@@ -47,10 +47,17 @@ describe('ServicesService', () => {
 
   describe('createService', () => {
     it('should set provider_id to userId and insert service', async () => {
-      const mockCreated = { id: 'srv-1', title: 'Car Rental', provider_id: 'user-1' };
+      const mockCreated = {
+        id: 'srv-1',
+        title: 'Car Rental',
+        provider_id: 'user-1',
+      };
       mockRepository.insertService.mockResolvedValueOnce(mockCreated);
 
-      const result = await service.createService({ title: 'Car Rental' }, 'user-1');
+      const result = await service.createService(
+        { title: 'Car Rental' },
+        'user-1',
+      );
 
       expect(result).toEqual(mockCreated);
       expect(mockRepository.insertService).toHaveBeenCalledWith({
@@ -63,7 +70,9 @@ describe('ServicesService', () => {
   describe('getServices', () => {
     it('should return mapped services with ref', async () => {
       mockRepository.getServices.mockResolvedValueOnce({
-        data: [{ id: '12345678-abcd-1234-5678-123456789abc', title: 'Service A' }],
+        data: [
+          { id: '12345678-abcd-1234-5678-123456789abc', title: 'Service A' },
+        ],
         count: 1,
       });
 

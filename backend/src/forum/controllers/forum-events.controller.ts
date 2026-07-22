@@ -67,6 +67,10 @@ export class ForumEventsController {
     @Body('contactPhone') contactPhone: string,
     @Req() req: any,
   ) {
-    return this.forumEventsService.toggleEventRsvp(id, contactPhone, req.user.id);
+    return this.forumEventsService.toggleEventRsvp(
+      id,
+      contactPhone,
+      req.user.id,
+    );
   }
 }

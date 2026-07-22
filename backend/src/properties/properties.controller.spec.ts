@@ -11,13 +11,17 @@ describe('PropertiesController', () => {
     mockService = {
       getPropertyTypes: jest.fn().mockResolvedValue(['villa', 'apartment']),
       getPropertyLocations: jest.fn().mockResolvedValue(['Mahmutlar']),
-      getPropertiesByLocation: jest.fn().mockResolvedValue({ data: [], total: 0 }),
+      getPropertiesByLocation: jest
+        .fn()
+        .mockResolvedValue({ data: [], total: 0 }),
       getICalFeeds: jest.fn().mockResolvedValue([]),
       addICalFeed: jest.fn().mockResolvedValue({ success: true }),
       syncPropertyICal: jest.fn().mockResolvedValue({ success: true }),
       removeICalFeed: jest.fn().mockResolvedValue({ success: true }),
       getPropertyAvailability: jest.fn().mockResolvedValue([]),
-      updatePropertyAvailability: jest.fn().mockResolvedValue({ success: true }),
+      updatePropertyAvailability: jest
+        .fn()
+        .mockResolvedValue({ success: true }),
       syncPropertyCalendar: jest.fn().mockResolvedValue({ success: true }),
       getUnavailableDates: jest.fn().mockResolvedValue([]),
       getReviews: jest.fn().mockResolvedValue([]),

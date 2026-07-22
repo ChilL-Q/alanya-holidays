@@ -48,12 +48,14 @@ export class ServicesRepository {
 
   async getServiceByIdOrRef(id: string) {
     const isUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      );
     let query = this.client.from('services').select('*');
     query = isUUID ? query.eq('id', id) : query.eq('service_ref', parseInt(id));
 
     const { data, error } = await query.single();
-    
+
     if ((error || !data) && !isUUID) {
       const { data: found } = await this.client
         .from('services')
@@ -96,7 +98,12 @@ export class ServicesRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getAdminServices(statusFilter?: string, typesFilter?: string[], page = 1, limit = 50) {
+  async getAdminServices(
+    statusFilter?: string,
+    typesFilter?: string[],
+    page = 1,
+    limit = 50,
+  ) {
     let query = this.client
       .from('services')
       .select('*, provider:profiles(full_name)', { count: 'exact' });
@@ -217,7 +224,10 @@ export class ServicesRepository {
   }
 
   async deleteServiceEdit(editId: string) {
-    const { error } = await this.client.from('service_edits').delete().eq('id', editId);
+    const { error } = await this.client
+      .from('service_edits')
+      .delete()
+      .eq('id', editId);
     if (error) throw new Error(error.message);
   }
 

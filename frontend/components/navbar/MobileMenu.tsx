@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PreloadLink } from '../ui/PreloadLink';
 import { Sun, Moon, Globe, ChevronDown, Home, LogOut, User, LayoutDashboard, Heart, ShoppingBag, Car, Building2, MapPin, BookOpen, MessageCircle, Briefcase, ArrowRightLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -57,37 +58,37 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                 {/* Main Nav Conditionally Rendered by Mode */}
                 {mode === 'directory' ? (
                     <>
-                        <Link to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <PreloadLink to="/" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <MapPin size={18} className="text-slate-400" />
                             {t('nav.directory')}
-                        </Link>
-                        <Link to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        </PreloadLink>
+                        <PreloadLink to="/blog" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <BookOpen size={18} className="text-slate-400" />
                             {t('nav.blog') || 'Guides'}
-                        </Link>
-                        <Link to="/forum" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        </PreloadLink>
+                        <PreloadLink to="/forum" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <MessageCircle size={18} className="text-slate-400" />
                             {t('nav.community') || 'Community'}
-                        </Link>
-                        <Link to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        </PreloadLink>
+                        <PreloadLink to="/shop" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <ShoppingBag size={18} className="text-slate-400" />
                             {t('shop')}
-                        </Link>
+                        </PreloadLink>
                     </>
                 ) : (
                     <>
-                        <Link to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        <PreloadLink to="/services" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <ShoppingBag size={18} className="text-slate-400" />
                             {t('nav.services') || 'Services'}
-                        </Link>
-                        <Link to="/alanya-villas" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        </PreloadLink>
+                        <PreloadLink to="/alanya-villas" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Home size={18} className="text-slate-400" />
                             {t('directory.villas') || 'Villas'}
-                        </Link>
-                        <Link to="/alanya-apartments" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
+                        </PreloadLink>
+                        <PreloadLink to="/alanya-apartments" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200 min-h-[44px]">
                             <Building2 size={18} className="text-slate-400" />
                             {t('directory.apartments') || 'Apartments'}
-                        </Link>
+                        </PreloadLink>
                     </>
                 )}
 

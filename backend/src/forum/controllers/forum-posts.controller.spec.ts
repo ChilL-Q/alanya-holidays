@@ -82,6 +82,10 @@ describe('ForumPostsController', () => {
     const req = { user: { id: 'admin-1' } };
     await controller.setPinned('post-1', true, req);
 
-    expect(mockService.setPinned).toHaveBeenCalledWith('post-1', true, 'admin-1');
+    expect(mockService.setPinned).toHaveBeenCalledWith(
+      'post-1',
+      true,
+      'admin-1',
+    );
   });
 });

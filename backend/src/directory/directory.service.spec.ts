@@ -10,7 +10,9 @@ describe('DirectoryService', () => {
   beforeEach(async () => {
     mockRepository = {
       getDirectoryListings: jest.fn().mockResolvedValue({ data: [], count: 0 }),
-      searchDirectoryListings: jest.fn().mockResolvedValue({ data: [], total: 0 }),
+      searchDirectoryListings: jest
+        .fn()
+        .mockResolvedValue({ data: [], total: 0 }),
       getFreeListings: jest.fn().mockResolvedValue([]),
       getPremiumListings: jest.fn().mockResolvedValue([]),
       getSignatureListings: jest.fn().mockResolvedValue([]),
@@ -77,7 +79,10 @@ describe('DirectoryService', () => {
       expect(mockRepository.updateListingStatus).toHaveBeenCalledWith('dir-1', {
         status: 'approved',
       });
-      expect(mockRepository.invokeFunction).toHaveBeenCalledWith('send-email', expect.any(Object));
+      expect(mockRepository.invokeFunction).toHaveBeenCalledWith(
+        'send-email',
+        expect.any(Object),
+      );
     });
   });
 

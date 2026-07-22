@@ -10,10 +10,9 @@ describe('FavoritesService', () => {
     mockRepository = {
       upsertFavorite: jest.fn().mockResolvedValue({}),
       deleteFavorite: jest.fn().mockResolvedValue({}),
-      getFavorites: jest.fn().mockResolvedValue([
-        { item_id: 'item-1' },
-        { item_id: 'item-2' },
-      ]),
+      getFavorites: jest
+        .fn()
+        .mockResolvedValue([{ item_id: 'item-1' }, { item_id: 'item-2' }]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -32,13 +31,19 @@ describe('FavoritesService', () => {
   it('should call repository to add favorite and return success', async () => {
     const res = await service.addFavorite('item-1', 'user-1');
     expect(res).toEqual({ success: true });
-    expect(mockRepository.upsertFavorite).toHaveBeenCalledWith('item-1', 'user-1');
+    expect(mockRepository.upsertFavorite).toHaveBeenCalledWith(
+      'item-1',
+      'user-1',
+    );
   });
 
   it('should call repository to remove favorite and return success', async () => {
     const res = await service.removeFavorite('item-1', 'user-1');
     expect(res).toEqual({ success: true });
-    expect(mockRepository.deleteFavorite).toHaveBeenCalledWith('item-1', 'user-1');
+    expect(mockRepository.deleteFavorite).toHaveBeenCalledWith(
+      'item-1',
+      'user-1',
+    );
   });
 
   it('should return array of item_ids from getFavorites', async () => {

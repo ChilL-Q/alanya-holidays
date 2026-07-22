@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                             name: profile.full_name || 'User',
                             email: profile.email || sessionUser.email || '',
                             avatar: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || 'U')}&background=0D9488&color=fff`,
-                            role: profile.role || 'guest',
+                            role: (profile.role === 'host' || profile.role === 'admin') ? profile.role : 'guest',
                             company_name: profile.company_name,
                             joinedDate: profile.created_at || sessionUser.created_at,
                         });

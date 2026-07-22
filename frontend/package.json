@@ -20,6 +20,7 @@
     "supabase:reset": "supabase db reset",
     "supabase:lint": "deno lint --config=deno.json supabase/functions",
     "supabase:type-check": "deno check --config=deno.json supabase/functions/**/*.ts",
+    "types:generate": "supabase gen types typescript --schema public > ../shared/types/database.types.ts",
     "sync-reviews": "tsx scripts/sync-google-reviews.ts"
   },
   "dependencies": {

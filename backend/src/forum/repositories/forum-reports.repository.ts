@@ -10,16 +10,16 @@ export class ForumReportsRepository {
   }
 
   async insertReport(data: any) {
-    const { error } = await this.client
-      .from('forum_reports')
-      .insert([data]);
+    const { error } = await this.client.from('forum_reports').insert([data]);
     if (error) throw new Error(error.message);
   }
 
   async getReports(includeResolved: boolean) {
     let q = this.client
       .from('forum_reports')
-      .select('*, reporter:profiles!forum_reports_reporter_id_fkey(full_name, avatar_url)')
+      .select(
+        '*, reporter:profiles!forum_reports_reporter_id_fkey(full_name, avatar_url)',
+      )
       .order('created_at', { ascending: false });
 
     if (!includeResolved) {

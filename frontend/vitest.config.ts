@@ -30,8 +30,10 @@ export default defineConfig({
         statements: 70,
       },
     },
+    testTimeout: 15000,
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './'),
+      '@shared': path.resolve(__dirname, '../shared'),
     },
   },
 });

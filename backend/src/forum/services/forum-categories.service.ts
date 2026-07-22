@@ -4,12 +4,13 @@ import { ForumCategoriesRepository } from '../repositories/forum-categories.repo
 
 @Injectable()
 export class ForumCategoriesService {
-  constructor(private readonly forumCategoriesRepository: ForumCategoriesRepository) {}
+  constructor(
+    private readonly forumCategoriesRepository: ForumCategoriesRepository,
+  ) {}
 
   private async requireAdmin(userId: string) {
     const role = await this.forumCategoriesRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
   }
 
   private async _postCountsByCategory() {
@@ -62,16 +63,21 @@ export class ForumCategoriesService {
   }
 
   async getForumCategory(slug: string) {
-    const category = await this.forumCategoriesRepository.getCategoryBySlug(slug);
+    const category =
+      await this.forumCategoriesRepository.getCategoryBySlug(slug);
     if (!category) return null;
 
     const counts = await this._postCountsByCategory();
 
     if (category.parent_id) {
-      const parent = await this.forumCategoriesRepository.getCategoryById(category.parent_id);
+      const parent = await this.forumCategoriesRepository.getCategoryById(
+        category.parent_id,
+      );
       category.parent = parent || null;
     } else {
-      const kids = await this.forumCategoriesRepository.getChildCategories(category.id);
+      const kids = await this.forumCategoriesRepository.getChildCategories(
+        category.id,
+      );
       const children = (kids || []).map((ch) => ({
         ...ch,
         discussion_count: counts.get(ch.id) || 0,
@@ -113,7 +119,7 @@ export class ForumCategoriesService {
     if (updates.sort_order !== undefined) safe.sort_order = updates.sort_order;
     if (updates.parent_id !== undefined)
       safe.parent_id = updates.parent_id || null;
-      
+
     return this.forumCategoriesRepository.updateCategory(id, safe);
   }
 

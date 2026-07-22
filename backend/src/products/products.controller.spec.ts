@@ -43,7 +43,14 @@ describe('ProductsController', () => {
 
   it('should pass req.user.id to createProduct', async () => {
     const req = { user: { id: 'seller-1' } };
-    const dto = { title: 'Product 1', description: '', price: 20, stock: 10, category: 'food', images: [] };
+    const dto = {
+      title: 'Product 1',
+      description: '',
+      price: 20,
+      stock: 10,
+      category: 'food',
+      images: [],
+    };
     await controller.createProduct(dto, req);
 
     expect(mockService.createProduct).toHaveBeenCalledWith(dto, 'seller-1');
@@ -53,6 +60,9 @@ describe('ProductsController', () => {
     const req = { user: { id: 'seller-1' } };
     await controller.deleteProductVariant('var-99', req);
 
-    expect(mockService.deleteProductVariant).toHaveBeenCalledWith('var-99', 'seller-1');
+    expect(mockService.deleteProductVariant).toHaveBeenCalledWith(
+      'var-99',
+      'seller-1',
+    );
   });
 });

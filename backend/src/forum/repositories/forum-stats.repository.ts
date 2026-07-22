@@ -10,14 +10,22 @@ export class ForumStatsRepository {
   }
 
   async getStats() {
-    const [{ count: topicsCount }, { count: repliesCount }] = await Promise.all([
-      this.client.from('forum_posts').select('*', { count: 'exact', head: true }).eq('is_removed', false),
-      this.client.from('forum_comments').select('*', { count: 'exact', head: true }).eq('is_removed', false),
-    ]);
+    const [{ count: topicsCount }, { count: repliesCount }] = await Promise.all(
+      [
+        this.client
+          .from('forum_posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_removed', false),
+        this.client
+          .from('forum_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_removed', false),
+      ],
+    );
 
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
-    
+
     const { count: onlineCount } = await this.client
       .from('profiles')
       .select('id', { count: 'exact', head: true })

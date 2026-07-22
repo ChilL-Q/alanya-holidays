@@ -57,7 +57,11 @@ export class UsersService {
     const role = await this.usersRepository.getUserRole(requestUserId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const { data, count } = await this.usersRepository.getUsersByRole(targetRole, page, limit);
+    const { data, count } = await this.usersRepository.getUsersByRole(
+      targetRole,
+      page,
+      limit,
+    );
 
     return {
       data,
@@ -73,7 +77,7 @@ export class UsersService {
   async getForumMembers(limit?: number, onlineOnly?: boolean) {
     const [data, postData] = await Promise.all([
       this.usersRepository.getForumMembers(limit),
-      this.usersRepository.getForumPostsAuthors()
+      this.usersRepository.getForumPostsAuthors(),
     ]);
 
     const counts = new Map<string, number>();

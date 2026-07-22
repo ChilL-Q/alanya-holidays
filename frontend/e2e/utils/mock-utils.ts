@@ -33,9 +33,9 @@ export const mockSessionResponse = {
 // Supabase project ref extracted from VITE_SUPABASE_URL
 // Must match the key the Supabase client constructs: `sb-{project_ref}-auth-token`
 function getSupabaseStorageKey(): string {
-  const url = process.env.VITE_SUPABASE_URL || '';
+  const url = process.env.VITE_SUPABASE_URL || 'https://mdmizeyiyebvhkujjyjg.supabase.co';
   const match = url.match(/https:\/\/([^.]+)\.supabase/);
-  const projectRef = match ? match[1] : 'mock-supabase-url';
+  const projectRef = match ? match[1] : 'mdmizeyiyebvhkujjyjg';
   return `sb-${projectRef}-auth-token`;
 }
 const SUPABASE_STORAGE_KEY = getSupabaseStorageKey();
@@ -51,14 +51,16 @@ export async function seedAuthSession(page: Page, options?: { role?: string }) {
       ...session.user,
       user_metadata: { ...session.user.user_metadata, role: userRole },
     };
-    localStorage.setItem(storageKey, JSON.stringify({
+    const sessionData = JSON.stringify({
       access_token: session.access_token,
       token_type: session.token_type,
       expires_in: session.expires_in,
       refresh_token: session.refresh_token,
       user,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
-    }));
+    });
+    localStorage.setItem(storageKey, sessionData);
+    localStorage.setItem('sb-mdmizeyiyebvhkujjyjg-auth-token', sessionData);
   }, { storageKey: SUPABASE_STORAGE_KEY, session: mockSessionResponse, userRole: role });
 }
 

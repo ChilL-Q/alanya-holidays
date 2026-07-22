@@ -42,7 +42,14 @@ describe('ProductsService', () => {
       mockRepository.insertProduct.mockResolvedValueOnce(mockCreated);
 
       const res = await service.createProduct(
-        { title: 'Gift Box', description: '', price: 10, stock: 5, category: 'souvenirs', images: [] },
+        {
+          title: 'Gift Box',
+          description: '',
+          price: 10,
+          stock: 5,
+          category: 'souvenirs',
+          images: [],
+        },
         'user-1',
       );
 

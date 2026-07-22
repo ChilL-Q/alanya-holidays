@@ -25,7 +25,11 @@ describe('MessagesController', () => {
   });
 
   it('should delegate sendMessage call to MessagesService', async () => {
-    const payload = { name: 'Alice', email: 'alice@example.com', message: 'Hi' };
+    const payload = {
+      name: 'Alice',
+      email: 'alice@example.com',
+      message: 'Hi',
+    };
     const res = await controller.sendMessage(payload);
 
     expect(res).toEqual({ success: true });

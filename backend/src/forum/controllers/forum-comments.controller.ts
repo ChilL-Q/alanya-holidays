@@ -58,6 +58,11 @@ export class ForumCommentsController {
     @Body('removed') removed: boolean,
     @Req() req: any,
   ) {
-    return this.forumPostsService.setRemoved('comment', id, removed, req.user.id);
+    return this.forumPostsService.setRemoved(
+      'comment',
+      id,
+      removed,
+      req.user.id,
+    );
   }
 }

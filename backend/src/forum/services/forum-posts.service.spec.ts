@@ -88,9 +88,9 @@ describe('ForumPostsService', () => {
     it('should throw UnauthorizedException if requester is not admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
-      await expect(
-        service.setPinned('post-1', true, 'user-1'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.setPinned('post-1', true, 'user-1')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should call updatePostPinned on repository when requester is admin', async () => {
@@ -99,7 +99,10 @@ describe('ForumPostsService', () => {
 
       const res = await service.setPinned('post-1', true, 'admin-1');
       expect(res).toEqual({ success: true });
-      expect(mockRepository.updatePostPinned).toHaveBeenCalledWith('post-1', true);
+      expect(mockRepository.updatePostPinned).toHaveBeenCalledWith(
+        'post-1',
+        true,
+      );
     });
   });
 });

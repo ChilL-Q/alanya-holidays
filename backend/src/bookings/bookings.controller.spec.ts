@@ -9,7 +9,9 @@ describe('BookingsController', () => {
 
   beforeEach(async () => {
     mockService = {
-      checkConflict: jest.fn().mockResolvedValue({ has_conflict: false, message: 'Available' }),
+      checkConflict: jest
+        .fn()
+        .mockResolvedValue({ has_conflict: false, message: 'Available' }),
       createBooking: jest.fn().mockResolvedValue('booking-id-123'),
       getUserBookings: jest.fn().mockResolvedValue([]),
       getAdminBookings: jest.fn().mockResolvedValue([]),
@@ -36,7 +38,12 @@ describe('BookingsController', () => {
   });
 
   it('should delegate checkConflict call to service', async () => {
-    await controller.checkConflict('p1', 'property', '2026-08-01', '2026-08-05');
+    await controller.checkConflict(
+      'p1',
+      'property',
+      '2026-08-01',
+      '2026-08-05',
+    );
     expect(mockService.checkConflict).toHaveBeenCalledWith(
       'p1',
       'property',

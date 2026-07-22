@@ -63,8 +63,9 @@ export const notificationsService = {
     },
 
     subscribeToNotifications(userId: string, callback: (payload: { eventType: string; new: Notification }) => void) {
+        const instanceId = Math.random().toString(36).substring(2, 9);
         return supabase
-            .channel(`notifications:${userId}`)
+            .channel(`notifications:${userId}:${instanceId}`)
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },

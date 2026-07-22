@@ -34,6 +34,7 @@ export const membersService = {
     async touchPresence(): Promise<void> {
         try {
             const headers = await getAuthHeaders();
+            if (!headers.Authorization) return;
             await fetch('/api/users/presence/touch', {
                 method: 'PUT',
                 headers,

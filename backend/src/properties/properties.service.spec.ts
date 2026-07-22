@@ -24,7 +24,9 @@ describe('PropertiesService', () => {
       deleteProperty: jest.fn().mockResolvedValue({}),
       getPropertyTypes: jest.fn().mockResolvedValue(['apartment', 'villa']),
       getPropertyLocations: jest.fn().mockResolvedValue(['Cleopatra Beach']),
-      getPropertiesByLocation: jest.fn().mockResolvedValue({ data: [], count: 0 }),
+      getPropertiesByLocation: jest
+        .fn()
+        .mockResolvedValue({ data: [], count: 0 }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -55,7 +57,9 @@ describe('PropertiesService', () => {
         host_id: 'host-100',
         title: 'Seaview Apartment',
       });
-      mockRepository.getProfile.mockResolvedValueOnce({ full_name: 'Jane Host' });
+      mockRepository.getProfile.mockResolvedValueOnce({
+        full_name: 'Jane Host',
+      });
 
       const res = await service.getProperty('1001');
 
@@ -66,7 +70,9 @@ describe('PropertiesService', () => {
 
   describe('updateProperty', () => {
     it('should throw UnauthorizedException if caller is not host and not admin', async () => {
-      mockRepository.getPropertyHostId.mockResolvedValueOnce({ host_id: 'owner-host' });
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'owner-host',
+      });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
       await expect(
@@ -75,7 +81,9 @@ describe('PropertiesService', () => {
     });
 
     it('should strip status and sensitive ical fields when updating', async () => {
-      mockRepository.getPropertyHostId.mockResolvedValueOnce({ host_id: 'owner-host' });
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'owner-host',
+      });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
       const res = await service.updateProperty(

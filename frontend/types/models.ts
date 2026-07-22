@@ -1,4 +1,5 @@
 import { ApprovalStatus, PropertyType, NotificationType } from './enums';
+import type { ProfileRow } from '../../shared/types';
 
 export type ListingTier = 'explorer' | 'voyager' | 'signature' | 'partner';
 
@@ -15,7 +16,7 @@ export interface SocialLinks {
     youtube?: string;
 }
 
-export interface UserProfile {
+export interface UserProfile extends Omit<Partial<ProfileRow>, 'id' | 'full_name' | 'social_links'> {
   id: string;
   full_name: string;
   avatar_url?: string;

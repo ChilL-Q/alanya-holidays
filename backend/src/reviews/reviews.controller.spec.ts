@@ -42,8 +42,17 @@ describe('ReviewsController', () => {
 
   it('should pass req.user.id to submitListingReview', async () => {
     const req = { user: { id: 'u100' } };
-    await controller.submitListingReview('list-1', { rating: 5, comment: 'Great!' }, req);
-    expect(mockService.submitListingReview).toHaveBeenCalledWith('list-1', 5, 'Great!', 'u100');
+    await controller.submitListingReview(
+      'list-1',
+      { rating: 5, comment: 'Great!' },
+      req,
+    );
+    expect(mockService.submitListingReview).toHaveBeenCalledWith(
+      'list-1',
+      5,
+      'Great!',
+      'u100',
+    );
   });
 
   it('should pass req.user.id to approveReview', async () => {

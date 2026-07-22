@@ -12,7 +12,9 @@ describe('ServicesController', () => {
       getServiceTypes: jest.fn().mockReturnValue(['car', 'bike']),
       getServiceBrands: jest.fn().mockResolvedValue(['BMW', 'Audi']),
       getServiceModels: jest.fn().mockResolvedValue(['X5', 'A4']),
-      getServiceModel: jest.fn().mockResolvedValue({ brand: 'BMW', model: 'X5' }),
+      getServiceModel: jest
+        .fn()
+        .mockResolvedValue({ brand: 'BMW', model: 'X5' }),
       updateServiceModel: jest.fn().mockResolvedValue({ success: true }),
       getServicesByModel: jest.fn().mockResolvedValue([]),
       requestServiceUpdate: jest.fn().mockResolvedValue({ success: true }),

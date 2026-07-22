@@ -9,7 +9,12 @@ export class ForumPostsRepository {
     return this.supabaseService.getClient();
   }
 
-  async getPosts(filters: any, limit: number, offset: number, postSelect: string) {
+  async getPosts(
+    filters: any,
+    limit: number,
+    offset: number,
+    postSelect: string,
+  ) {
     let q = this.client
       .from('forum_posts')
       .select(postSelect, { count: 'exact' });
@@ -125,7 +130,11 @@ export class ForumPostsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async setRemoved(table: 'forum_posts' | 'forum_comments', id: string, removed: boolean) {
+  async setRemoved(
+    table: 'forum_posts' | 'forum_comments',
+    id: string,
+    removed: boolean,
+  ) {
     const { error } = await this.client
       .from(table)
       .update({ is_removed: removed })
@@ -141,7 +150,7 @@ export class ForumPostsRepository {
       )
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    
+
     if (!includeRemoved) {
       q = q.eq('is_removed', false);
     }
@@ -153,7 +162,9 @@ export class ForumPostsRepository {
     const { data: comment, error } = await this.client
       .from('forum_comments')
       .insert([data])
-      .select('*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)')
+      .select(
+        '*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)',
+      )
       .single();
     if (error) throw new Error(error.message);
     return comment;

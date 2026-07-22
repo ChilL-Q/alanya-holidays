@@ -47,13 +47,21 @@ export class ForumPostsController {
   @Post()
   @UseGuards(AuthGuard)
   async createForumPost(@Body() body: any, @Req() req: any) {
-    return this.forumPostsService.createForumPost(body, 'discussion', req.user.id);
+    return this.forumPostsService.createForumPost(
+      body,
+      'discussion',
+      req.user.id,
+    );
   }
 
   @Post('question')
   @UseGuards(AuthGuard)
   async createQuestionPost(@Body() body: any, @Req() req: any) {
-    return this.forumPostsService.createForumPost(body, 'question', req.user.id);
+    return this.forumPostsService.createForumPost(
+      body,
+      'question',
+      req.user.id,
+    );
   }
 
   @Put(':id')

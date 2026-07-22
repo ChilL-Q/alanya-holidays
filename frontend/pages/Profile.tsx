@@ -17,7 +17,7 @@ import { ProfileDraftsTab } from '../components/user/profile/ProfileDraftsTab';
 import { SEOHead } from '../components/seo/SEOHead';
 
 export const Profile: React.FC = () => {
-    const { user, logout, isAuthenticated, updateUser, updateEmail, updatePassword, refreshUser } = useAuth();
+    const { user, logout, isAuthenticated, isLoading, updateUser, updateEmail, updatePassword, refreshUser } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
 
@@ -66,6 +66,7 @@ export const Profile: React.FC = () => {
 
     // Initial Data Fetch
     useEffect(() => {
+        if (isLoading) return;
         if (!isAuthenticated) {
             navigate('/');
             return;

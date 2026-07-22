@@ -10,7 +10,9 @@ describe('slugify utils', () => {
 
     it('should convert text to lowercase and replace spaces with hyphens', () => {
       expect(slugify('Hello World')).toBe('hello-world');
-      expect(slugify('Alanya Holidays Web App')).toBe('alanya-holidays-web-app');
+      expect(slugify('Alanya Holidays Web App')).toBe(
+        'alanya-holidays-web-app',
+      );
     });
 
     it('should correctly transform Turkish characters into ASCII approximations', () => {

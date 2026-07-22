@@ -69,15 +69,15 @@ export const supabaseChatService: IChatRepository = {
                     id: null, // Not needed for snippet
                     conversation_id: conv.id,
                     sender_id: info.last_message_sender_id,
-                    text: info.last_message_text,
+                    content: info.last_message_text,
                     is_read: true, // Not needed for snippet
                     created_at: info.last_message_created_at,
-                } : null,
+                } : undefined,
                 unread_count: info?.unread_count || 0
             };
         });
 
-        return conversations as ChatConversation[];
+        return conversations as unknown as ChatConversation[];
     },
 
     // Get messages for a specific conversation
@@ -298,8 +298,9 @@ export const supabaseChatService: IChatRepository = {
 
     // Subscribe to messages (Realtime) — verifies access before subscribing
     subscribeToMessages(conversationId: string, callback: (message: ChatMessage) => void) {
+        const instanceId = Math.random().toString(36).substring(2, 9);
         const channel = supabase
-            .channel(`conversation:${conversationId}`);
+            .channel(`conversation:${conversationId}:${instanceId}`);
 
         // Verify user has access to this conversation before allowing subscription
         const subscription = channel

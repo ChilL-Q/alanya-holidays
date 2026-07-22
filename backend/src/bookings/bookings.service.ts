@@ -20,9 +20,7 @@ export interface CreateBookingDto {
 
 @Injectable()
 export class BookingsService {
-  constructor(
-    private readonly bookingsRepository: BookingsRepository,
-  ) {}
+  constructor(private readonly bookingsRepository: BookingsRepository) {}
 
   async checkConflict(
     itemId: string,
@@ -30,22 +28,24 @@ export class BookingsService {
     checkIn: string,
     checkOut: string,
   ) {
-    const overlappingBookings = await this.bookingsRepository.findOverlappingBookings(
-      itemId,
-      itemType,
-      checkIn,
-      checkOut,
-    );
+    const overlappingBookings =
+      await this.bookingsRepository.findOverlappingBookings(
+        itemId,
+        itemType,
+        checkIn,
+        checkOut,
+      );
 
     if (overlappingBookings.length > 0)
       return { has_conflict: true, message: 'Dates are already booked' };
 
     if (itemType === 'property') {
-      const blocks = await this.bookingsRepository.checkPropertyAvailabilityBlocks(
-        itemId,
-        checkIn,
-        checkOut,
-      );
+      const blocks =
+        await this.bookingsRepository.checkPropertyAvailabilityBlocks(
+          itemId,
+          checkIn,
+          checkOut,
+        );
 
       if (blocks.length > 0)
         return { has_conflict: true, message: 'Dates are unavailable' };
@@ -61,8 +61,7 @@ export class BookingsService {
 
     if (itemType === 'property') {
       const property = await this.bookingsRepository.getProperty(dto.item_id);
-      if (!property)
-        throw new BadRequestException('Property not found');
+      if (!property) throw new BadRequestException('Property not found');
       if (property.status !== 'approved')
         throw new BadRequestException('Property is not available');
       if (property.host_id === dto.user_id)
@@ -71,8 +70,7 @@ export class BookingsService {
       propertyTitle = property.title;
     } else if (itemType === 'service') {
       const service = await this.bookingsRepository.getService(dto.item_id);
-      if (!service)
-        throw new BadRequestException('Service not found');
+      if (!service) throw new BadRequestException('Service not found');
       if (service.status !== 'approved')
         throw new BadRequestException('Service is not available');
       if (service.provider_id === dto.user_id)
@@ -195,7 +193,8 @@ export class BookingsService {
     if (role !== 'admin')
       throw new UnauthorizedException('Admin access required');
 
-    const bookings = await this.bookingsRepository.getAdminBookings(statusFilter);
+    const bookings =
+      await this.bookingsRepository.getAdminBookings(statusFilter);
     if (!bookings || bookings.length === 0) return [];
 
     return this.enrichBookings(bookings, true);
@@ -211,13 +210,18 @@ export class BookingsService {
     if (requestUserId !== hostId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
 
-    const properties = await this.bookingsRepository.getPropertiesByHost(hostId);
+    const properties =
+      await this.bookingsRepository.getPropertiesByHost(hostId);
     if (!properties || properties.length === 0) return [];
 
     const propertyIds = properties.map((p: any) => p.id);
     const propertyMap = new Map(properties.map((p: any) => [p.id, p]));
 
-    const bookings = await this.bookingsRepository.getBookingsByPropertyIds(propertyIds, dateFrom, dateTo);
+    const bookings = await this.bookingsRepository.getBookingsByPropertyIds(
+      propertyIds,
+      dateFrom,
+      dateTo,
+    );
     if (!bookings || bookings.length === 0) return [];
 
     const guestIds = Array.from(
@@ -275,9 +279,7 @@ export class BookingsService {
     const propertyMap = new Map(
       (propertiesData || []).map((p: any) => [p.id, p]),
     );
-    const serviceMap = new Map(
-      (servicesData || []).map((s: any) => [s.id, s]),
-    );
+    const serviceMap = new Map((servicesData || []).map((s: any) => [s.id, s]));
 
     return bookings.map((booking) => {
       let itemDetails: any = {};
@@ -308,8 +310,7 @@ export class BookingsService {
   ) {
     const currentBooking = await this.bookingsRepository.getBookingById(id);
 
-    if (!currentBooking)
-      throw new NotFoundException('Booking not found');
+    if (!currentBooking) throw new NotFoundException('Booking not found');
 
     const isBookingOwner = currentBooking.user_id === userId;
     const propertyObj = Array.isArray(currentBooking.property)
@@ -388,8 +389,7 @@ export class BookingsService {
 
   async cancelBooking(id: string, userId: string) {
     const booking = await this.bookingsRepository.getBookingForCancellation(id);
-    if (!booking)
-      throw new NotFoundException('Booking not found');
+    if (!booking) throw new NotFoundException('Booking not found');
 
     // Authorization is handled inside updateBookingStatus, but we ensure it's either user or admin
     return this.updateBookingStatus(

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 
 jest.mock('sanitize-html', () => {
   return jest.fn((dirty: string) =>
@@ -120,7 +124,9 @@ describe('BlogService', () => {
 
     it('should sanitize content and insert submission', async () => {
       mockRepository.checkBlogSubmissionLimit.mockResolvedValueOnce(true);
-      mockRepository.insertBlogSubmission.mockResolvedValueOnce({ id: 'sub-1' });
+      mockRepository.insertBlogSubmission.mockResolvedValueOnce({
+        id: 'sub-1',
+      });
 
       const result = await service.createBlogSubmission(
         { title: 'Story', content: '<script>alert(1)</script><p>Text</p>' },
@@ -154,7 +160,9 @@ describe('BlogService', () => {
         content: 'Submitted Content',
         status: 'pending_review',
       });
-      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([{ id: 'sub-1' }]);
+      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([
+        { id: 'sub-1' },
+      ]);
       mockRepository.insertBlogPost.mockResolvedValueOnce({
         id: 'post-1',
         title: 'Submitted Title',

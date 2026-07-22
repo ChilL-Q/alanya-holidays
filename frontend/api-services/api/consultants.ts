@@ -46,7 +46,7 @@ export const consultantsService = {
 
         const { data, error } = await query;
         if (error) throw error;
-        return (data ?? []) as ConsultantProfile[];
+        return (data ?? []) as unknown as ConsultantProfile[];
     },
 
     async bookConsultant(

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import { PreloadLink } from '../ui/PreloadLink';
 
 interface DesktopNavProps {
     mode?: 'directory' | 'rental';
@@ -11,7 +12,7 @@ const TabLink: React.FC<{ to: string; label: string; exact?: boolean }> = ({ to,
     const isActive = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
 
     return (
-        <Link
+        <PreloadLink
             to={to}
             className={`relative px-1 py-1 text-sm font-medium transition-colors whitespace-nowrap group ${
                 isActive
@@ -23,7 +24,7 @@ const TabLink: React.FC<{ to: string; label: string; exact?: boolean }> = ({ to,
             <span className={`absolute -bottom-[1px] left-0 right-0 h-0.5 rounded-full bg-slate-900 dark:bg-white transition-opacity ${
                 isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-20'
             }`} />
-        </Link>
+        </PreloadLink>
     );
 };
 

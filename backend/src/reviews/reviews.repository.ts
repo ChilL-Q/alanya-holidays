@@ -31,7 +31,12 @@ export class ReviewsRepository {
     return { data: data || [], count: count || 0 };
   }
 
-  async insertListingReview(listingId: string, rating: number, comment: string, userId: string) {
+  async insertListingReview(
+    listingId: string,
+    rating: number,
+    comment: string,
+    userId: string,
+  ) {
     const { data, error } = await this.client
       .from('listing_reviews')
       .insert({ listing_id: listingId, user_id: userId, rating, comment })
@@ -53,7 +58,12 @@ export class ReviewsRepository {
     return data;
   }
 
-  async getReviewsByStatus(status: string, from: number, to: number, ascending: boolean) {
+  async getReviewsByStatus(
+    status: string,
+    from: number,
+    to: number,
+    ascending: boolean,
+  ) {
     const { data, error, count } = await this.client
       .from('listing_reviews')
       .select(

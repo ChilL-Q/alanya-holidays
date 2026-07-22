@@ -40,7 +40,11 @@ describe('ReviewsService', () => {
 
       const res = await service.getListingReviews('list-1', 2, 10);
       expect(res).toEqual({ data: [{ id: 'r1', rating: 5 }], total: 1 });
-      expect(mockRepository.getListingReviews).toHaveBeenCalledWith('list-1', 10, 19);
+      expect(mockRepository.getListingReviews).toHaveBeenCalledWith(
+        'list-1',
+        10,
+        19,
+      );
     });
   });
 
@@ -58,7 +62,10 @@ describe('ReviewsService', () => {
 
       const res = await service.approveReview('r1', 'admin-1');
       expect(res).toEqual({ success: true });
-      expect(mockRepository.updateReviewStatus).toHaveBeenCalledWith('r1', 'approved');
+      expect(mockRepository.updateReviewStatus).toHaveBeenCalledWith(
+        'r1',
+        'approved',
+      );
     });
   });
 });

@@ -41,7 +41,7 @@ export const ReportsPage: React.FC = () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setReports(data || []);
+            setReports((data || []) as unknown as Report[]);
         } catch (error) {
             console.error('Error fetching reports:', error);
             if (error instanceof Error) console.error('Error details:', error.message);

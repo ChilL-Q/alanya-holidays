@@ -49,15 +49,13 @@ export const useChat = () => {
     // or rely on a wrapper component to mount this hook once.
     // However, TanStack query can deduplicate requests. For websocket, we can track active subscriptions.
     
-    const subscriptionMounted = useRef(false);
-
     useEffect(() => {
         if (!user) return;
-        if (subscriptionMounted.current) return;
-        subscriptionMounted.current = true;
 
-        const subscription = supabase
-            .channel('public:chat_messages')
+        // Unique channel ID per hook instance to prevent Supabase Realtime channel collisions
+        const instanceId = Math.random().toString(36).substring(2, 9);
+        const channel = supabase
+            .channel(`chat_messages:${user.id}:${instanceId}`)
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
                 const newMessage = payload.new as ChatMessage;
 
@@ -78,12 +76,17 @@ export const useChat = () => {
                         user_id: user.id
                     });
                 }
-            })
-            .subscribe();
+            });
+
+        const subscription = channel.subscribe();
 
         return () => {
-            subscriptionMounted.current = false;
-            subscription.unsubscribe();
+            if (subscription && typeof subscription.unsubscribe === 'function') {
+                subscription.unsubscribe();
+            }
+            if (typeof supabase.removeChannel === 'function') {
+                supabase.removeChannel(channel);
+            }
         };
     }, [user, addNotification, queryClient]);
 

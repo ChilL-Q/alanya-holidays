@@ -3,12 +3,13 @@ import { ForumReportsRepository } from '../repositories/forum-reports.repository
 
 @Injectable()
 export class ForumReportsService {
-  constructor(private readonly forumReportsRepository: ForumReportsRepository) {}
+  constructor(
+    private readonly forumReportsRepository: ForumReportsRepository,
+  ) {}
 
   private async requireAdmin(userId: string) {
     const role = await this.forumReportsRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
   }
 
   async reportContent(input: any, userId: string) {

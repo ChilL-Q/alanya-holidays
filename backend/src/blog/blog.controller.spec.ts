@@ -21,7 +21,9 @@ describe('BlogController', () => {
       deleteBlogTag: jest.fn().mockResolvedValue({ success: true }),
       getBlogSubmissions: jest.fn().mockResolvedValue([]),
       getUserBlogSubmissions: jest.fn().mockResolvedValue([]),
-      createBlogSubmission: jest.fn().mockResolvedValue({ submissionId: 'sub-1' }),
+      createBlogSubmission: jest
+        .fn()
+        .mockResolvedValue({ submissionId: 'sub-1' }),
       approveBlogSubmission: jest.fn().mockResolvedValue({ id: 'post-1' }),
       rejectBlogSubmission: jest.fn().mockResolvedValue({ success: true }),
       getBlogPost: jest.fn().mockResolvedValue({ id: 'post-1', title: 'Post' }),

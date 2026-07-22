@@ -14,7 +14,9 @@ import { AuthGuard } from '../../auth/auth.guard';
 
 @Controller('forum/categories')
 export class ForumCategoriesController {
-  constructor(private readonly forumCategoriesService: ForumCategoriesService) {}
+  constructor(
+    private readonly forumCategoriesService: ForumCategoriesService,
+  ) {}
 
   @Get()
   async getForumCategories() {
@@ -44,7 +46,11 @@ export class ForumCategoriesController {
     @Body() body: any,
     @Req() req: any,
   ) {
-    return this.forumCategoriesService.updateForumCategory(id, body, req.user.id);
+    return this.forumCategoriesService.updateForumCategory(
+      id,
+      body,
+      req.user.id,
+    );
   }
 
   @Delete(':id')

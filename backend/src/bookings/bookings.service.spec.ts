@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingsRepository } from './bookings.repository';
 
@@ -47,9 +51,16 @@ describe('BookingsService', () => {
 
   describe('checkConflict', () => {
     it('should return conflict true if overlapping bookings exist', async () => {
-      mockRepository.findOverlappingBookings.mockResolvedValueOnce([{ id: 'b1' }]);
+      mockRepository.findOverlappingBookings.mockResolvedValueOnce([
+        { id: 'b1' },
+      ]);
 
-      const result = await service.checkConflict('p1', 'property', '2026-08-01', '2026-08-05');
+      const result = await service.checkConflict(
+        'p1',
+        'property',
+        '2026-08-01',
+        '2026-08-05',
+      );
       expect(result.has_conflict).toBe(true);
       expect(result.message).toBe('Dates are already booked');
     });
@@ -58,7 +69,12 @@ describe('BookingsService', () => {
       mockRepository.findOverlappingBookings.mockResolvedValueOnce([]);
       mockRepository.checkPropertyAvailabilityBlocks.mockResolvedValueOnce([]);
 
-      const result = await service.checkConflict('p1', 'property', '2026-08-01', '2026-08-05');
+      const result = await service.checkConflict(
+        'p1',
+        'property',
+        '2026-08-01',
+        '2026-08-05',
+      );
       expect(result.has_conflict).toBe(false);
     });
   });
@@ -167,7 +183,10 @@ describe('BookingsService', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockRepository.unblockDatesForBooking).toHaveBeenCalledWith('b1');
-      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith('b1', 'cancelled');
+      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith(
+        'b1',
+        'cancelled',
+      );
     });
   });
 });

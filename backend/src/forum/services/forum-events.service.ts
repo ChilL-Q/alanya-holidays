@@ -8,8 +8,7 @@ export class ForumEventsService {
 
   private async requireAdmin(userId: string) {
     const role = await this.forumEventsRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Not authorized');
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
   }
 
   private async resolveEventSlug(baseSlug: string): Promise<string> {
@@ -35,12 +34,18 @@ export class ForumEventsService {
 
   async getForumEvents(filters: any, userId?: string) {
     if (filters.includeUnpublished) await this.requireAdmin(userId as string);
-    const data = await this.forumEventsRepository.getEvents(filters, this.EVENT_SELECT);
+    const data = await this.forumEventsRepository.getEvents(
+      filters,
+      this.EVENT_SELECT,
+    );
     return this.annotateRsvp(data || [], userId);
   }
 
   async getForumEvent(slug: string, userId?: string) {
-    const data = await this.forumEventsRepository.getEventBySlug(slug, this.EVENT_SELECT);
+    const data = await this.forumEventsRepository.getEventBySlug(
+      slug,
+      this.EVENT_SELECT,
+    );
     if (!data) return null;
     const [annotated] = await this.annotateRsvp([data], userId);
     return annotated;
@@ -79,7 +84,7 @@ export class ForumEventsService {
       safe.category_id = updates.category_id || null;
     if (updates.is_published !== undefined)
       safe.is_published = updates.is_published;
-      
+
     return this.forumEventsRepository.updateEvent(id, safe);
   }
 
@@ -91,20 +96,24 @@ export class ForumEventsService {
 
   async getEventAttendees(eventId: string, userId: string) {
     await this.requireAdmin(userId);
-    const rsvpRows = await this.forumEventsRepository.getEventRsvpAttendees(eventId);
+    const rsvpRows =
+      await this.forumEventsRepository.getEventRsvpAttendees(eventId);
     if (!rsvpRows || rsvpRows.length === 0) return [];
-    
+
     const rsvpInfo = new Map(rsvpRows.map((r: any) => [r.user_id, r]));
     const userIds = rsvpRows.map((r: any) => r.user_id);
-    const profileRows = await this.forumEventsRepository.getProfilesByIds(userIds);
-    
+    const profileRows =
+      await this.forumEventsRepository.getProfilesByIds(userIds);
+
     return (profileRows || [])
       .map((p: any) => ({
         ...p,
         rsvp_at: rsvpInfo.get(p.id)?.created_at || null,
         contact_phone: rsvpInfo.get(p.id)?.contact_phone || null,
       }))
-      .sort((a: any, b: any) => (a.rsvp_at || '').localeCompare(b.rsvp_at || ''));
+      .sort((a: any, b: any) =>
+        (a.rsvp_at || '').localeCompare(b.rsvp_at || ''),
+      );
   }
 
   async toggleEventRsvp(
@@ -112,7 +121,10 @@ export class ForumEventsService {
     contactPhone: string | null,
     userId: string,
   ) {
-    const existing = await this.forumEventsRepository.checkEventRsvp(eventId, userId);
+    const existing = await this.forumEventsRepository.checkEventRsvp(
+      eventId,
+      userId,
+    );
     if (existing) {
       await this.forumEventsRepository.deleteEventRsvp(eventId, userId);
       return { going: false };
