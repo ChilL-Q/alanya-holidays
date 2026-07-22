@@ -68,6 +68,7 @@ conductor/
 .claude
 .qwen
 .geminiignore
+.mcp.json
 
 .playwright-mcp
 playwright-report/
