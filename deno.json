@@ -1,5 +1,15 @@
 {
   "nodeModulesDir": "auto",
+  "exclude": [
+    "backend/",
+    "frontend/",
+    "shared/",
+    "dist/",
+    "node_modules/",
+    ".next/",
+    "dock/",
+    "db_scripts/"
+  ],
   "tasks": {
     "lint": "deno lint",
     "check": "deno check"
@@ -12,10 +22,10 @@
         "no-explicit-any"
       ]
     },
-    "exclude": ["dist/", "node_modules/", ".next/"]
+    "exclude": ["backend/", "frontend/", "shared/", "dist/", "node_modules/", ".next/"]
   },
   "fmt": {
-    "exclude": ["dist/", "node_modules/", ".next/"],
+    "exclude": ["backend/", "frontend/", "shared/", "dist/", "node_modules/", ".next/"],
     "lineWidth": 100,
     "indentWidth": 2,
     "semiColons": true,

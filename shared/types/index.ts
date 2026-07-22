@@ -1,4 +1,4 @@
-import type { Database } from './database.types.ts';
+import type { Database } from './database.types';
 
 export type { Database };
 
@@ -16,4 +16,5 @@ export type Enums<T extends keyof Database['public']['Enums']> =
   Database['public']['Enums'][T];
 
 // Re-export common DTOs
-export * from './dto.ts';
+export * from './dto';
+
