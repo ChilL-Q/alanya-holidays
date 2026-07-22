@@ -7,13 +7,20 @@ export class SupabaseService {
 
   constructor() {
     const supabaseUrl =
-      process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+      process.env.VITE_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      'https://placeholder.supabase.co';
     const supabaseKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.VITE_SUPABASE_ANON_KEY ||
-      '';
+      'placeholder-key';
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (
+      !process.env.VITE_SUPABASE_URL &&
+      !process.env.SUPABASE_URL &&
+      !process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      !process.env.VITE_SUPABASE_ANON_KEY
+    ) {
       console.warn(
         'Supabase credentials not found. Booking functionality will fail.',
       );

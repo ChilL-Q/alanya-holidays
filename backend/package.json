@@ -69,6 +69,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(htmlparser2|sanitize-html|domhandler|dom-serializer|entities)/)"
+    ]
   }
 }

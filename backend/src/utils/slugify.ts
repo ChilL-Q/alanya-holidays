@@ -19,12 +19,14 @@ export function slugify(input: string): string {
         'ü': 'u', 'Ü': 'U',
     };
 
-    let result = input.toLowerCase();
+    let result = input;
 
     // Replace Turkish characters
     for (const [from, to] of Object.entries(turkishMap)) {
         result = result.replace(new RegExp(from, 'g'), to);
     }
+
+    result = result.toLowerCase();
 
     // Replace apostrophes and quotes (remove them)
     result = result.replace(/['"""]/g, '');
