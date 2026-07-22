@@ -21,8 +21,8 @@ dist-ssr
 .env.production
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
+scratch/
 .idea
 .DS_Store
 *.suo
@@ -78,3 +78,9 @@ test_sprite.txt
 dock
 .superpowers
 .qwen
+
+# Root debug screenshots
+/*.png
+
+.agent-shared-context.md
+
