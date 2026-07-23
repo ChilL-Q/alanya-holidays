@@ -85,3 +85,13 @@ dock
 
 .agent-shared-context.md
 
+# Archives
+*.zip
+
+# Build artifacts
+*.tsbuildinfo
+.turbo/
+.vite/
+shared/types/*.js
+shared/types/*.js.map
+shared/types/*.d.ts

@@ -7,6 +7,7 @@ import { z } from "npm:zod@3"
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -26,13 +27,8 @@ const PRICE_IDS: Record<string, Record<string, string | undefined>> = {
 }
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as any,
 })
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': SITE_URL,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 const bodySchema = z.object({
   plan: z.enum(['monthly', 'annual']),
@@ -41,6 +37,8 @@ const bodySchema = z.object({
 })
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -86,16 +84,38 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    // --- Select Price ID ---
+    // --- Select Price ID or Fallback Inline Price ---
     const STRIPE_PREMIUM_MONTHLY_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_MONTHLY_PRICE_ID')
     const STRIPE_PREMIUM_ANNUAL_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_ANNUAL_PRICE_ID')
     const genericPriceId = plan === 'monthly' ? STRIPE_PREMIUM_MONTHLY_PRICE_ID : STRIPE_PREMIUM_ANNUAL_PRICE_ID
     const priceId = tier ? (PRICE_IDS[tier]?.[plan] ?? genericPriceId) : genericPriceId
-    if (!priceId) {
-      return new Response(JSON.stringify({ error: `Stripe Price ID not configured for ${tier ?? 'generic'}/${plan}` }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+
+    const getFallbackAmount = (t?: string, p?: string): number => {
+      if (t === 'voyager') return p === 'annual' ? 44900 : 4900
+      if (t === 'signature') return p === 'annual' ? 199900 : 19900
+      return p === 'annual' ? 7999 : 999
     }
+
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: tier
+                ? `Alanya Holidays ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`
+                : 'Alanya Holidays Premium Plan',
+              description: tier
+                ? `Subscription for ${tier} tier (${plan})`
+                : 'AI Travel Planner & Premium Access',
+            },
+            unit_amount: getFallbackAmount(tier, plan),
+            recurring: {
+              interval: plan === 'monthly' ? 'month' : 'year',
+            },
+          },
+          quantity: 1,
+        }
 
     // --- Reuse Stripe Customer if exists (from previous cancelled subscription) ---
     const customerId: string | null = existingSub?.stripe_customer_id ?? null
@@ -103,8 +123,8 @@ Deno.serve(async (req: Request) => {
     // --- Create Checkout Session ---
     const sessionParams: any = {
       mode: 'subscription',
-      payment_method_types: ['card', 'sepa_debit'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      payment_method_types: ['card'],
+      line_items: [lineItem],
       metadata: {
         userId: userId,
         plan: plan,
@@ -137,9 +157,9 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create Subscription Checkout Error:', error)
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    return new Response(JSON.stringify({ error: error?.message || 'Internal Server Error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }

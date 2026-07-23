@@ -7,6 +7,7 @@ import { z } from "npm:zod@3"
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -23,23 +24,20 @@ const ADDON_PRICE_IDS: Record<string, string | undefined> = {
 }
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as any,
 })
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': SITE_URL,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 const bodySchema = z.object({
   listingId: z.string().uuid(),
   addonType: z.enum(['verified_badge', 'seasonal_placement', 'sponsored_article', 'ai_localization']),
 })
 
-const json = (payload: unknown, status = 200) =>
-  new Response(JSON.stringify(payload), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
+  const json = (payload: unknown, status = 200) =>
+    new Response(JSON.stringify(payload), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -83,12 +81,36 @@ Deno.serve(async (req: Request) => {
     if (activeAddon) return json({ error: 'This add-on is already active for the listing' }, 400)
 
     const priceId = ADDON_PRICE_IDS[addonType]
-    if (!priceId) return json({ error: `Stripe Price ID not configured for add-on "${addonType}"` }, 500)
+
+    const getAddonDetails = (type: string): { name: string; amount: number } => {
+      switch (type) {
+        case 'verified_badge': return { name: 'Verified Badge', amount: 4900 }
+        case 'seasonal_placement': return { name: 'Seasonal Placement (90 days)', amount: 9900 }
+        case 'sponsored_article': return { name: 'Sponsored Article', amount: 14900 }
+        case 'ai_localization': return { name: 'AI Translation & Localization', amount: 2900 }
+        default: return { name: 'Listing Add-on', amount: 4900 }
+      }
+    }
+
+    const addonDetails = getAddonDetails(addonType)
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `Add-on: ${addonDetails.name}`,
+              description: `Add-on for listing ${listing.name || listingId}`,
+            },
+            unit_amount: addonDetails.amount,
+          },
+          quantity: 1,
+        }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [lineItem],
       metadata: {
         type: 'listing_addon',
         userId: user.id,

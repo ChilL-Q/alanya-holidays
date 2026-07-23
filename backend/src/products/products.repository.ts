@@ -9,6 +9,10 @@ export class ProductsRepository {
     return this.supabaseService.getClient();
   }
 
+  private isValidUuid(id: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+
   async insertProduct(productData: any) {
     const { data, error } = await this.client
       .from('products')
@@ -46,6 +50,8 @@ export class ProductsRepository {
   }
 
   async getProductById(id: string) {
+    if (!this.isValidUuid(id)) return null;
+
     const { data, error } = await this.client
       .from('products')
       .select(
@@ -66,13 +72,15 @@ export class ProductsRepository {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null;
+      if (error.code === 'PGRST116' || error.code === '22P02') return null;
       throw new Error(error.message);
     }
     return data;
   }
 
   async getUserRole(userId: string) {
+    if (!this.isValidUuid(userId)) return null;
+
     const { data } = await this.client
       .from('profiles')
       .select('role')
@@ -82,6 +90,8 @@ export class ProductsRepository {
   }
 
   async getProductOwnership(productId: string) {
+    if (!this.isValidUuid(productId)) return null;
+
     const { data, error } = await this.client
       .from('products')
       .select('seller_id, artisan_id')
@@ -89,13 +99,15 @@ export class ProductsRepository {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return null;
+      if (error.code === 'PGRST116' || error.code === '22P02') return null;
       throw new Error(error.message);
     }
     return data;
   }
 
   async updateProduct(id: string, updates: any) {
+    if (!this.isValidUuid(id)) return;
+
     const { error } = await this.client
       .from('products')
       .update(updates)
@@ -105,19 +117,26 @@ export class ProductsRepository {
   }
 
   async deleteProduct(id: string) {
+    if (!this.isValidUuid(id)) return;
+
     const { error } = await this.client.from('products').delete().eq('id', id);
     if (error) throw new Error(error.message);
   }
 
   async getProductVariants(productId: string) {
+    if (!this.isValidUuid(productId)) return [];
+
     const { data, error } = await this.client
       .from('product_variants')
       .select('*')
       .eq('product_id', productId)
       .order('created_at', { ascending: true });
 
-    if (error) throw new Error(error.message);
-    return data;
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') return [];
+      throw new Error(error.message);
+    }
+    return data ?? [];
   }
 
   async insertProductVariant(variantData: any) {
@@ -132,6 +151,8 @@ export class ProductsRepository {
   }
 
   async getVariantProductId(variantId: string) {
+    if (!this.isValidUuid(variantId)) return null;
+
     const { data } = await this.client
       .from('product_variants')
       .select('product_id')
@@ -141,6 +162,8 @@ export class ProductsRepository {
   }
 
   async updateProductVariant(variantId: string, updates: any) {
+    if (!this.isValidUuid(variantId)) return;
+
     const { error } = await this.client
       .from('product_variants')
       .update(updates)
@@ -149,6 +172,8 @@ export class ProductsRepository {
   }
 
   async deleteProductVariant(variantId: string) {
+    if (!this.isValidUuid(variantId)) return;
+
     const { error } = await this.client
       .from('product_variants')
       .delete()

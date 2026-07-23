@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingsRepository } from './bookings.repository';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('BookingsService', () => {
   let service: BookingsService;
@@ -42,6 +43,13 @@ describe('BookingsService', () => {
         {
           provide: BookingsRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            notifyUser: jest.fn(),
+            getUserNotifications: jest.fn().mockReturnValue([]),
+          },
         },
       ],
     }).compile();

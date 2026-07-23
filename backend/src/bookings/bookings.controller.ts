@@ -34,7 +34,9 @@ export class BookingsController {
 
   @Post()
   async createBooking(@Body() createBookingDto: any) {
-    return this.bookingsService.createBooking(createBookingDto);
+    const bookingId =
+      await this.bookingsService.createBooking(createBookingDto);
+    return { id: bookingId, data: bookingId };
   }
 
   // ============================================

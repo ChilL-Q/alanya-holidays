@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star, MapPin, Globe, MessageCircle, BadgeCheck, Check, ThumbsUp, ThumbsDown, Award } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DirectoryListingDB } from '../../types/models';
 import { directoryService } from '../../api-services';
 import { useLanguage } from '../../context/LanguageContext';
@@ -23,6 +23,7 @@ interface DirectoryListingCardProps {
 export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
     listing, onClick, userVote, onVote, isAuthenticated, isVoting, categoryName, variant
 }) => {
+    const navigate = useNavigate();
     const { language } = useLanguage();
     const { cardStyle } = useCardStyle();
     const displayDescription = getListingDescription(listing, language);
@@ -37,16 +38,29 @@ export const DirectoryListingCard: React.FC<DirectoryListingCardProps> = ({
         onVote?.(listing.id, vote);
     };
 
+    const handleCardClick = () => {
+        if (onClick) {
+            onClick(listing);
+        } else if (listing.slug) {
+            const url = getListingUrl(listing.category_id, listing.slug);
+            if (url && url !== '/') {
+                navigate(url);
+            }
+        }
+    };
+
     return (
         <div
-            className={`group bg-white dark:bg-slate-800 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 ${isList ? 'flex flex-col sm:flex-row' : 'flex flex-col h-full'} ${onClick ? 'cursor-pointer' : ''}`}
-            onClick={() => onClick && onClick(listing)}
+            className={`group bg-white dark:bg-slate-800 rounded-md overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 dark:border-slate-700 ${isList ? 'flex flex-col sm:flex-row' : 'flex flex-col h-full'} cursor-pointer`}
+            onClick={handleCardClick}
         >
             {/* Image */}
             <div className={`relative flex-shrink-0 ${isList ? 'w-full h-56 sm:w-72 sm:h-auto' : 'w-full h-56'}`}>
                 <img
                     src={listing.gallery?.[0] || 'https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb'}
                     alt={listing.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 />
                 {listing.is_featured && (

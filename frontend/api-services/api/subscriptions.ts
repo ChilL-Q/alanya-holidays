@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { apiClient } from '../core/apiClient';
 
 export type SubscriptionTier = 'voyager' | 'signature';
 
@@ -15,42 +16,65 @@ export const subscriptionsService = {
    * Get user's current premium subscription status.
    * Uses RLS to fetch only the user's own record.
    */
-  async getPremiumStatus(): Promise<PremiumStatus> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { isPremium: false, tier: null, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
-
-    // Use direct client with RLS
-    const { data, error } = await supabase
-      .from('premium_subscriptions')
-      .select('tier, plan, status, current_period_end, cancel_at_period_end')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (error || !data) {
-      return { isPremium: false, tier: null, plan: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
-    }
-
-    return {
-      isPremium: data.status === 'active' || data.status === 'trialing',
-      tier: (data.tier as SubscriptionTier | null) ?? null,
-      plan: data.plan as 'monthly' | 'annual' | null,
-      currentPeriodEnd: data.current_period_end,
-      cancelAtPeriodEnd: data.cancel_at_period_end,
+  async getPremiumStatus(userId?: string): Promise<PremiumStatus> {
+    const defaultStatus: PremiumStatus = {
+      isPremium: false,
+      tier: null,
+      plan: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
     };
+
+    const fetchStatus = async (): Promise<PremiumStatus> => {
+      let targetUserId = userId;
+      if (!targetUserId) {
+        // First try fast local session lookup
+        const { data: { session } } = await supabase.auth.getSession();
+        targetUserId = session?.user?.id;
+
+        // Fallback to getUser() if no local session found
+        if (!targetUserId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          targetUserId = user?.id;
+        }
+      }
+
+      if (!targetUserId) return defaultStatus;
+
+      // Use direct client with RLS
+      const { data, error } = await supabase
+        .from('premium_subscriptions')
+        .select('tier, plan, status, current_period_end, cancel_at_period_end')
+        .eq('user_id', targetUserId)
+        .maybeSingle();
+
+      if (error || !data) {
+        return defaultStatus;
+      }
+
+      return {
+        isPremium: data.status === 'active' || data.status === 'trialing',
+        tier: (data.tier as SubscriptionTier | null) ?? null,
+        plan: data.plan as 'monthly' | 'annual' | null,
+        currentPeriodEnd: data.current_period_end,
+        cancelAtPeriodEnd: data.cancel_at_period_end,
+      };
+    };
+
+    // Timeout safety wrapper (max 3000ms)
+    return Promise.race([
+      fetchStatus(),
+      new Promise<PremiumStatus>((resolve) =>
+        setTimeout(() => resolve(defaultStatus), 3000)
+      ),
+    ]);
   },
 
   /**
    * Create a Stripe Checkout Session for a tier subscription.
    */
   async createSubscriptionCheckout(plan: 'monthly' | 'annual', tier?: SubscriptionTier): Promise<{ url: string }> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-      body: tier ? { plan, tier } : { plan },
-    });
-
-    if (error) throw error;
+    const data = await apiClient.invokeFunction<{ url?: string; error?: string }>('create-subscription-checkout', tier ? { plan, tier } : { plan });
     if (data?.error) throw new Error(data.error);
     if (!data?.url) throw new Error('No checkout URL returned');
 
@@ -61,11 +85,7 @@ export const subscriptionsService = {
    * Cancel subscription at end of billing period.
    */
   async cancelSubscription(): Promise<{ success: boolean }> {
-    const { data, error } = await supabase.functions.invoke('cancel-subscription', {
-      body: {},
-    });
-
-    if (error) throw error;
+    const data = await apiClient.invokeFunction<{ error?: string }>('cancel-subscription', {});
     if (data?.error) throw new Error(data.error);
 
     return { success: true };
@@ -75,11 +95,7 @@ export const subscriptionsService = {
    * Get Stripe Customer Portal URL for managing subscription.
    */
   async getSubscriptionPortalUrl(): Promise<{ url: string }> {
-    const { data, error } = await supabase.functions.invoke('get-subscription-portal', {
-      body: {},
-    });
-
-    if (error) throw error;
+    const data = await apiClient.invokeFunction<{ url?: string; error?: string }>('get-subscription-portal', {});
     if (data?.error) throw new Error(data.error);
     if (!data?.url) throw new Error('No portal URL returned');
 

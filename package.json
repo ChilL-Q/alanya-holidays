@@ -1,0 +1,16 @@
+{
+  "name": "alanya-holidays-monorepo",
+  "private": true,
+  "packageManager": "pnpm@11.16.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "test": "turbo test",
+    "types:generate": "pnpm --filter @alanya-holidays/frontend types:generate"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0"
+  }
+}

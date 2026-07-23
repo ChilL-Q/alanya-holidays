@@ -51,8 +51,24 @@ export async function createBooking(data: BookingCreateInput) {
         throw new Error(errorData.message || 'Failed to create booking');
     }
 
-    const result = await res.json();
-    return { id: result.data || result };
+    const text = await res.text();
+    let result: unknown;
+    try {
+        result = JSON.parse(text);
+    } catch {
+        result = text;
+    }
+
+    let bookingId: unknown;
+    if (typeof result === 'string') {
+        bookingId = result;
+    } else if (typeof result === 'object' && result !== null) {
+        const obj = result as Record<string, unknown>;
+        bookingId = obj.id ?? obj.data ?? result;
+    } else {
+        bookingId = result;
+    }
+    return { id: bookingId as string };
 }
 
 export async function updateBookingStatus(

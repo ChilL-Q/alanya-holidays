@@ -369,12 +369,20 @@ export class DirectoryRepository {
   }
 
   async getListingClaims() {
-    const { data, error } = await this.client
-      .from('listing_claims')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    try {
+      const { data, error } = await this.client
+        .from('listing_claims')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching listing claims:', error.message);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error('Exception fetching listing claims:', err);
+      return [];
+    }
   }
 
   async callApproveListingClaimRpc(claimId: string) {

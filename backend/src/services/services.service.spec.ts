@@ -71,7 +71,7 @@ describe('ServicesService', () => {
     it('should return mapped services with ref', async () => {
       mockRepository.getServices.mockResolvedValueOnce({
         data: [
-          { id: '12345678-abcd-1234-5678-123456789abc', title: 'Service A' },
+          { id: '12345678-abcd-1234-5678-123456789abc', title: 'Service A' } as any,
         ],
         count: 1,
       });
@@ -79,8 +79,8 @@ describe('ServicesService', () => {
       const result = await service.getServices('car', 1, 20);
 
       expect(result.count).toBe(1);
-      expect(result.data[0].title).toBe('Service A');
-      expect(result.data[0].service_ref).toBeDefined();
+      expect((result.data[0] as any).title).toBe('Service A');
+      expect((result.data[0] as any).service_ref).toBeDefined();
       expect(mockRepository.getServices).toHaveBeenCalledWith('car', 1, 20);
     });
   });

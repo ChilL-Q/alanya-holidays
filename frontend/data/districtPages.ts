@@ -1,4 +1,4 @@
-import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths';
+import { CATEGORY_PATHS, getSchemaType } from '../constants/categoryPaths.ts';
 
 // ── Types ────────────────────────────────────────────────────────────
 

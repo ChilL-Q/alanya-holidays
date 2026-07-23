@@ -25,6 +25,12 @@
       ],
       "@shared/*": [
         "../shared/*"
+      ],
+      "@alanya-holidays/shared": [
+        "../shared/types/index.ts"
+      ],
+      "@alanya-holidays/shared/*": [
+        "../shared/*"
       ]
     },
     "allowImportingTsExtensions": true,

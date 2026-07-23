@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import { ForumPostsService } from '../services/forum-posts.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { OptionalAuthGuard } from '../../auth/optional-auth.guard';
 
 @Controller('forum/posts')
 export class ForumPostsController {
   constructor(private readonly forumPostsService: ForumPostsService) {}
 
   @Get()
+  @UseGuards(OptionalAuthGuard)
   async getForumPosts(@Query() query: any, @Req() req: any) {
     const filters = {
       categorySlug: query.categorySlug,
@@ -32,6 +34,7 @@ export class ForumPostsController {
   }
 
   @Get('hot')
+  @UseGuards(OptionalAuthGuard)
   async getHotPosts(@Query('limit') limit?: string, @Req() req?: any) {
     return this.forumPostsService.getHotPosts(
       limit ? parseInt(limit) : 8,
@@ -40,6 +43,7 @@ export class ForumPostsController {
   }
 
   @Get('slug/:slug')
+  @UseGuards(OptionalAuthGuard)
   async getForumPost(@Param('slug') slug: string, @Req() req: any) {
     return this.forumPostsService.getForumPost(slug, req.user?.id);
   }

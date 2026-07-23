@@ -25,6 +25,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 <img
                     src={property.image || undefined}
                     alt={property.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
                         e.currentTarget.src = 'https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?w=800&auto=format&fit=crop&q=60'; // Alanya fallback

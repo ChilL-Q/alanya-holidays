@@ -1,4 +1,5 @@
 import { supabase } from '../supabase';
+import { compressImage } from '../../utils/imageCompression';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -43,11 +44,12 @@ function validateBlogMedia(file: File) {
 }
 
 export const storageService = {
-    async uploadPropertyImage(file: File) {
+    async uploadPropertyImage(rawFile: File) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        validateFile(file);
+        validateFile(rawFile);
+        const file = await compressImage(rawFile);
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
@@ -63,11 +65,12 @@ export const storageService = {
         return data.publicUrl;
     },
 
-    async uploadAvatar(file: File) {
+    async uploadAvatar(rawFile: File) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        validateFile(file);
+        validateFile(rawFile);
+        const file = await compressImage(rawFile, 800, 800);
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
@@ -93,11 +96,12 @@ export const storageService = {
         return data.publicUrl;
     },
 
-    async uploadImage(file: File, bucket: 'properties' | 'services' | 'products' | 'directory' = 'properties') {
+    async uploadImage(rawFile: File, bucket: 'properties' | 'services' | 'products' | 'directory' = 'properties') {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        validateFile(file);
+        validateFile(rawFile);
+        const file = await compressImage(rawFile);
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
@@ -158,11 +162,12 @@ export const storageService = {
      * Path: {userId}/{nanoid-like-uuid}.{ext}
      * Returns the public URL.
      */
-    async uploadBlogMedia(file: File): Promise<string> {
+    async uploadBlogMedia(rawFile: File): Promise<string> {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
-        validateBlogMedia(file);
+        validateBlogMedia(rawFile);
+        const file = await compressImage(rawFile);
 
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;

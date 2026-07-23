@@ -1,4 +1,4 @@
-import type { Database } from './database.types.ts';
+import type { Database } from './database.types.js';
 
 // Alias raw database rows
 export type PropertyRow = Database['public']['Tables']['properties']['Row'];

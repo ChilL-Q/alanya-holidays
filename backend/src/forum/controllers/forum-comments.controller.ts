@@ -11,12 +11,14 @@ import {
 } from '@nestjs/common';
 import { ForumPostsService } from '../services/forum-posts.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { OptionalAuthGuard } from '../../auth/optional-auth.guard';
 
 @Controller('forum/comments')
 export class ForumCommentsController {
   constructor(private readonly forumPostsService: ForumPostsService) {}
 
   @Get('post/:postId')
+  @UseGuards(OptionalAuthGuard)
   async getForumComments(
     @Param('postId') postId: string,
     @Query('includeRemoved') includeRemoved?: string,

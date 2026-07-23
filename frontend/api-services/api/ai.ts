@@ -43,8 +43,7 @@ export const generateItinerary = async (
   onChunk?: (chunk: string) => void
 ): Promise<string> => {
   const invokeItineraryFunction = async () => {
-    // Map new interface to Edge Function parameters
-    const response = await supabase.functions.invoke('generate-itinerary', {
+    const invokePromise = supabase.functions.invoke('generate-itinerary', {
       body: {
         duration: prefs.days,
         companion: 'individual traveler',
@@ -53,6 +52,12 @@ export const generateItinerary = async (
         budget: mapBudgetLevel(prefs.budget),
       },
     });
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('REQUEST_TIMEOUT')), 15000)
+    );
+
+    const response = await Promise.race([invokePromise, timeoutPromise]);
 
     // Check for top-level errors
     if (response.error) {

@@ -19,4 +19,13 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });
+
+  describe('health', () => {
+    it('should return status ok with timestamp and uptime', () => {
+      const health = appController.getHealth();
+      expect(health.status).toBe('ok');
+      expect(typeof health.timestamp).toBe('string');
+      expect(typeof health.uptime).toBe('number');
+    });
+  });
 });

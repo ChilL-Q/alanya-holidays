@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ForumPostsController } from './forum-posts.controller';
 import { ForumPostsService } from '../services/forum-posts.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { OptionalAuthGuard } from '../../auth/optional-auth.guard';
 
 describe('ForumPostsController', () => {
   let controller: ForumPostsController;
@@ -31,6 +32,8 @@ describe('ForumPostsController', () => {
       ],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(OptionalAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

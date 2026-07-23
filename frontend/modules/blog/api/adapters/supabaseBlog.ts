@@ -18,34 +18,31 @@ async function buildQueryParams(params: any) {
 
 import { IBlogRepository, BlogPostFilters, BlogPostWithTags, BlogPostPreview } from '../types';
 
+import { fetchJson } from '../../../../api-services/api/fetchHelper';
+
 export const supabaseBlogService: IBlogRepository = {
     async getBlogPosts(filters: BlogPostFilters = {}): Promise<{ data: BlogPostWithTags[]; total: number }> {
         const headers = await getAuthHeaders();
         const qs = await buildQueryParams(filters);
-        const res = await fetch(`/api/blog?${qs}`, { headers });
-        if (!res.ok) throw new Error('Failed to fetch blog posts');
-        return res.json();
+        return fetchJson(`/api/blog?${qs}`, { headers });
     },
 
     async getFeaturedBlogPosts(limit: number = 3): Promise<BlogPostPreview[]> {
-        const res = await fetch(`/api/blog/featured?limit=${limit}`);
-        if (!res.ok) throw new Error('Failed to fetch featured posts');
-        return res.json();
+        return fetchJson<BlogPostPreview[]>(`/api/blog/featured?limit=${limit}`).catch(() => []);
     },
 
     async getBlogPost(slug: string, incrementViews: boolean = true): Promise<BlogPostWithTags | null> {
-        const res = await fetch(`/api/blog/post/${slug}?incrementViews=${incrementViews}`);
-        if (!res.ok) {
-            if (res.status === 404) return null;
-            throw new Error('Failed to fetch blog post');
+        try {
+            return await fetchJson<BlogPostWithTags>(`/api/blog/post/${slug}?incrementViews=${incrementViews}`);
+        } catch (err) {
+            if (err instanceof Error && err.message.includes('404')) return null;
+            throw err;
         }
-        return res.json();
     },
 
     async getRelatedPosts(postId: string, category: string | null, limit: number = 3): Promise<BlogPostPreview[]> {
-        const res = await fetch(`/api/blog/related/${postId}?category=${category || ''}&limit=${limit}`);
-        if (!res.ok) throw new Error('Failed to fetch related posts');
-        return res.json();
+        const cleanCat = category ? encodeURIComponent(category.trim()) : '';
+        return fetchJson<BlogPostPreview[]>(`/api/blog/related/${postId}?category=${cleanCat}&limit=${limit}`).catch(() => []);
     },
 
     async createBlogPost(data: any): Promise<BlogPost> {

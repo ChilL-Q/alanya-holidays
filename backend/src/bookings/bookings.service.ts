@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { BookingsRepository } from './bookings.repository';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface CreateBookingDto {
   item_id: string;
@@ -20,7 +21,10 @@ export interface CreateBookingDto {
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly bookingsRepository: BookingsRepository) {}
+  constructor(
+    private readonly bookingsRepository: BookingsRepository,
+    private readonly notificationsService?: NotificationsService,
+  ) {}
 
   async checkConflict(
     itemId: string,
@@ -123,6 +127,22 @@ export class BookingsService {
     }
 
     this.sendEmails(booking, dto.user_id, hostId, propertyTitle, itemType);
+
+    if (hostId && this.notificationsService) {
+      this.notificationsService.notifyUser(hostId, {
+        type: 'NEW_BOOKING',
+        title: 'Новое бронирование!',
+        message: `Новая заявка на "${propertyTitle}" с ${dto.check_in} по ${dto.check_out}`,
+        data: {
+          bookingId: booking.id,
+          itemId: dto.item_id,
+          totalPrice: dto.total_price,
+          checkIn: dto.check_in,
+          checkOut: dto.check_out,
+        },
+      });
+    }
+
     return booking.id;
   }
 
@@ -407,5 +427,47 @@ export class BookingsService {
 
     await this.bookingsRepository.updatePayoutStatus(id, payoutStatus);
     return { success: true };
+  }
+
+  async confirmBookingPayment(
+    bookingIds: string[],
+    userId: string,
+    sessionId: string,
+    paymentIntentId?: string | null,
+  ) {
+    const updatedRows = await this.bookingsRepository.confirmBookingsFromStripe(
+      bookingIds,
+      userId,
+      sessionId,
+      paymentIntentId,
+    );
+
+    if (updatedRows.length === 0) {
+      return { confirmedCount: 0 };
+    }
+
+    const confirmedIds = updatedRows.map((r: { id: string }) => r.id);
+    const bookings = await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
+
+    for (const booking of bookings) {
+      const itemTitle =
+        (booking.property as any)?.title ?? (booking.service as any)?.title ?? 'Booking';
+      const guestEmail = (booking.profile as any)?.email;
+      if (guestEmail) {
+        this.bookingsRepository.invokeEmailFunction({
+          to: guestEmail,
+          type: 'booking_confirmed',
+          data: {
+            itemTitle,
+            checkIn: booking.check_in,
+            checkOut: booking.check_out,
+            guests: String(booking.guests ?? 1),
+            link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/profile`,
+          },
+        });
+      }
+    }
+
+    return { confirmedCount: confirmedIds.length };
   }
 }

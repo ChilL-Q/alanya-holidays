@@ -1,5 +1,9 @@
 {
   "nodeModulesDir": "auto",
+  "imports": {
+    "@shared/": "./shared/types/",
+    "@alanya-holidays/shared": "./shared/types/index.ts"
+  },
   "exclude": [
     "backend/",
     "frontend/",

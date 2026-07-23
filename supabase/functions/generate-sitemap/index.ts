@@ -3,15 +3,16 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 // Central URL configuration and static lists
-import { STATIC_SITEMAP_URLS, SITEMAP_MONTHS } from '../../../config/sitemapUrls.ts'
-import { EXCURSION_TYPES } from '../../../data/excursionTypes.ts'
-import { ATTRACTIONS } from '../../../data/attractionPages.ts'
-import { DISTRICT_PAGES } from '../../../data/districtPages.ts'
-import { SEASONAL_PAGES } from '../../../data/seasonalPages.ts'
-import { NATIONALITY_PAGES } from '../../../data/nationalityPages.ts'
-import { CATEGORY_PATHS } from '../../../constants/categoryPaths.ts'
+import { STATIC_SITEMAP_URLS, SITEMAP_MONTHS } from '../../../frontend/config/sitemapUrls.ts'
+import { EXCURSION_TYPES } from '../../../frontend/data/excursionTypes.ts'
+import { ATTRACTIONS } from '../../../frontend/data/attractionPages.ts'
+import { DISTRICT_PAGES } from '../../../frontend/data/districtPages.ts'
+import { SEASONAL_PAGES } from '../../../frontend/data/seasonalPages.ts'
+import { NATIONALITY_PAGES } from '../../../frontend/data/nationalityPages.ts'
+import { CATEGORY_PATHS } from '../../../frontend/constants/categoryPaths.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -47,12 +48,11 @@ function buildSitemap(urls: SitemapUrl[]): string {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
-      headers: {
-        'Access-Control-Allow-Origin': BASE_URL,
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
+      headers: corsHeaders,
     })
   }
 

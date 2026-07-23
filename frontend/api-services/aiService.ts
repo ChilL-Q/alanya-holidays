@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { apiClient } from './core/apiClient';
 import { retry } from '../utils/retry';
 import { TripParams } from '../types/models';
 
@@ -76,33 +76,42 @@ export const askLocalGuide = async (
     mode: 'chat' | 'structured' = 'chat'
 ): Promise<string> => {
     const invokeAiProxy = async () => {
-        const { data, error } = await supabase.functions.invoke('ai-proxy', {
-            body: {
+        try {
+            const data = await apiClient.post<{ answer?: string; cached?: boolean }>('/api/ai/guide', {
                 propertyName,
                 location,
                 userQuestion,
                 history: history.slice(-15),
                 mode,
-            },
-        });
-
-        if (error) {
-            throw error;
+            });
+            if (data?.answer) {
+                return data.answer;
+            }
+        } catch {
+            // Fall back to Edge Function if NestJS API is unreachable
         }
 
-        if (data?.error) {
-            const errorMsg = String(data.error);
+        const edgeData = await apiClient.invokeFunction<{ answer?: string; error?: unknown }>('ai-proxy', {
+            propertyName,
+            location,
+            userQuestion,
+            history: history.slice(-15),
+            mode,
+        });
+
+        if (edgeData?.error) {
+            const errorMsg = String(edgeData.error);
             if (errorMsg.includes('429') || errorMsg.includes('rate')) {
                 throw new RateLimitError("RATE_LIMIT");
             }
             throw new Error(errorMsg);
         }
 
-        if (!data?.answer) {
+        if (!edgeData?.answer) {
             throw new Error("No answer generated");
         }
 
-        return data.answer;
+        return edgeData.answer;
     };
 
     try {
@@ -182,19 +191,13 @@ export const planTrip = async (prefs: TripParams): Promise<string> => {
  */
 export const planTripWithClaude = async (prefs: TripParams): Promise<string> => {
     const invokeClaudeProxy = async () => {
-        const { data, error } = await supabase.functions.invoke('generate-itinerary', {
-            body: {
-                duration: prefs.duration,
-                companion: prefs.companion,
-                interests: prefs.interests,
-                pace: prefs.pace,
-                budget: prefs.budget,
-            },
+        const data = await apiClient.invokeFunction<{ answer?: string; error?: unknown }>('generate-itinerary', {
+            duration: prefs.duration,
+            companion: prefs.companion,
+            interests: prefs.interests,
+            pace: prefs.pace,
+            budget: prefs.budget,
         });
-
-        if (error) {
-            throw error;
-        }
 
         if (data?.error) {
             const errorMsg = String(data.error);

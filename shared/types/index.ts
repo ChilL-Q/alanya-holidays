@@ -1,4 +1,4 @@
-import type { Database } from './database.types';
+import type { Database } from './database.types.js';
 
 export type { Database };
 
@@ -16,5 +16,5 @@ export type Enums<T extends keyof Database['public']['Enums']> =
   Database['public']['Enums'][T];
 
 // Re-export common DTOs
-export * from './dto';
+export * from './dto.js';
 

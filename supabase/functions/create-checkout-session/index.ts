@@ -5,22 +5,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
+
+const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
-  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as any,
 })
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
-
-const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') || 'https://alanyaholidays.com'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
 
 // Must match Stripe session expires_at (30 min) to prevent cron cancelling booking while session is still valid
 const PAYMENT_WINDOW_MINUTES = 30
@@ -41,6 +37,8 @@ interface SupabaseEmptyResponse {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }

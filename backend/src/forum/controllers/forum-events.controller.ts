@@ -12,12 +12,14 @@ import {
 } from '@nestjs/common';
 import { ForumEventsService } from '../services/forum-events.service';
 import { AuthGuard } from '../../auth/auth.guard';
+import { OptionalAuthGuard } from '../../auth/optional-auth.guard';
 
 @Controller('forum/events')
 export class ForumEventsController {
   constructor(private readonly forumEventsService: ForumEventsService) {}
 
   @Get()
+  @UseGuards(OptionalAuthGuard)
   async getForumEvents(@Query() query: any, @Req() req: any) {
     const filters = {
       upcomingOnly: query.upcomingOnly === 'true',
@@ -28,6 +30,7 @@ export class ForumEventsController {
   }
 
   @Get('slug/:slug')
+  @UseGuards(OptionalAuthGuard)
   async getForumEvent(@Param('slug') slug: string, @Req() req: any) {
     return this.forumEventsService.getForumEvent(slug, req.user?.id);
   }

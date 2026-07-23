@@ -39,21 +39,31 @@ function getCachedAt(): number {
 }
 
 async function fetchLiveRates(): Promise<Record<Currency, number>> {
-    // Skip live fetch on localhost (dev) — Edge Function CORS issues during development
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // Skip live fetch on local dev environments (localhost, 127.0.0.1)
+    if (typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.endsWith('.local')
+    )) {
         return FALLBACK_RATES;
     }
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const res = await fetch(`${supabaseUrl}/functions/v1/currency-rates`, {
-        headers: { apikey: supabaseKey },
-    });
-    if (!res.ok) throw new Error('Failed to fetch rates');
-    const rates: Record<Currency, number> = await res.json();
-    const cache: RatesCache = { rates, fetchedAt: Date.now() };
-    localStorage.setItem(RATES_CACHE_KEY, JSON.stringify(cache));
-    return rates;
+    try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) return FALLBACK_RATES;
+
+        const res = await fetch(`${supabaseUrl}/functions/v1/currency-rates`, {
+            headers: { apikey: supabaseKey },
+        });
+        if (!res.ok) return loadCachedRates() ?? FALLBACK_RATES;
+        const rates: Record<Currency, number> = await res.json();
+        const cache: RatesCache = { rates, fetchedAt: Date.now() };
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify(cache));
+        return rates;
+    } catch {
+        return loadCachedRates() ?? FALLBACK_RATES;
+    }
 }
 
 interface CurrencyContextType {

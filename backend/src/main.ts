@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -22,10 +23,12 @@ for (const envPath of envPaths) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.setGlobalPrefix('api');
+  app.useGlobalFilters(new GlobalHttpExceptionFilter());
   app.enableCors();
   await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();
+
 

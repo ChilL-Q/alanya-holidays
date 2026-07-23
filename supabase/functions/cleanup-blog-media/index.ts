@@ -3,20 +3,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 // @ts-ignore: jsr: specifiers are resolved by Deno, not tsc
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
+import { getCorsHeaders } from "../_shared/cors.ts"
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': Deno.env.get('SITE_URL') || 'https://alanyaholidays.com',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
-}
-
 const ORPHANED_DAYS = 7
 const BLOG_MEDIA_BUCKET = 'blog-media'
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req)
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -67,7 +65,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // List files inside each userId folder
-    type StorageObject = { name: string; created_at: string; [key: string]: any }
+    type StorageObject = { name: string; created_at: string | null; [key: string]: any }
     const objects: (StorageObject & { folderName: string })[] = []
 
     for (const folder of allFolders) {
@@ -174,7 +172,7 @@ Deno.serve(async (req: Request) => {
       }
 
       // 3. Delete if general orphan older than cutoff (7 days)
-      const fileCreatedAt = new Date(obj.created_at)
+      const fileCreatedAt = new Date(obj.created_at || 0)
       if (fileCreatedAt < cutoffDate) {
         orphanedFiles.push(filePath)
       }

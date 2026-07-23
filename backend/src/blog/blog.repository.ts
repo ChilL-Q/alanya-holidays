@@ -117,13 +117,50 @@ export class BlogRepository {
   }
 
   async getRelatedPosts(postId: string, category: string, limit: number) {
-    const { data, error } = await this.client.rpc('get_related_posts', {
-      p_post_id: postId,
-      p_category: category,
-      p_limit: limit,
-    });
-    if (error) throw new Error(error.message);
-    return data;
+    const cleanCategory =
+      category && category.trim() !== '' ? category.trim() : null;
+    const isUuid =
+      typeof postId === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        postId,
+      );
+
+    if (isUuid) {
+      try {
+        const { data, error } = await this.client.rpc('get_related_posts', {
+          p_post_id: postId,
+          p_category: cleanCategory,
+          p_limit: limit,
+        });
+
+        if (!error && data) return data;
+        if (error) {
+          console.warn('get_related_posts RPC warning:', error.message);
+        }
+      } catch (err) {
+        console.warn('get_related_posts RPC failed, using fallback query:', err);
+      }
+    }
+
+    let query = this.client
+      .from('blog_posts')
+      .select(
+        'id, title, slug, excerpt, cover_image_url, category, published_at, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url)',
+      )
+      .eq('status', 'published');
+
+    if (isUuid) {
+      query = query.neq('id', postId);
+    }
+    if (cleanCategory) {
+      query = query.eq('category', cleanCategory);
+    }
+
+    const { data } = await query
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    return data || [];
   }
 
   async insertBlogPost(postData: any) {

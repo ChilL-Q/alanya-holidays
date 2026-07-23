@@ -55,11 +55,23 @@ export const AiPlanner: React.FC = () => {
             setPremiumLoading(false);
             return;
         }
-        subscriptionsService.getPremiumStatus()
+
+        // Safety fallback timer to prevent infinite spinner if network/DB hangs
+        const timeoutId = setTimeout(() => {
+            if (!cancelled) setPremiumLoading(false);
+        }, 3000);
+
+        subscriptionsService.getPremiumStatus(user.id)
             .then(s => { if (!cancelled) setIsPremium(s.isPremium); })
             .catch(() => { if (!cancelled) setIsPremium(false); })
-            .finally(() => { if (!cancelled) setPremiumLoading(false); });
-        return () => { cancelled = true; };
+            .finally(() => {
+                clearTimeout(timeoutId);
+                if (!cancelled) setPremiumLoading(false);
+            });
+        return () => {
+            cancelled = true;
+            clearTimeout(timeoutId);
+        };
     }, [user]);
 
     // A5-M3: re-check premium status when user returns to tab
@@ -68,7 +80,7 @@ export const AiPlanner: React.FC = () => {
         if (!user) return;
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
-                subscriptionsService.getPremiumStatus()
+                subscriptionsService.getPremiumStatus(user.id)
                     .then(s => setIsPremium(s.isPremium))
                     .catch(() => setIsPremium(false));
             }

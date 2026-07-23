@@ -20,7 +20,7 @@ export class BookingsRepository {
       .select('id')
       .eq('item_id', itemId)
       .eq('item_type', itemType)
-      .not('status', 'in', '("cancelled","rejected")')
+      .not('status', 'in', '(cancelled,rejected)')
       .lt('check_in', checkOut)
       .gt('check_out', checkIn);
 
@@ -233,5 +233,60 @@ export class BookingsRepository {
     this.client.functions
       .invoke('send-email', { body: payload })
       .catch((err) => console.error(err));
+  }
+
+  async confirmBookingsFromStripe(
+    bookingIds: string[],
+    userId: string,
+    sessionId: string,
+    paymentIntentId?: string | null,
+  ) {
+    const { data: ownedBookings, error: ownerCheckError } = await this.client
+      .from('bookings')
+      .select('id')
+      .in('id', bookingIds)
+      .eq('user_id', userId);
+
+    if (ownerCheckError) throw new Error('Ownership check failed');
+
+    const ownedIds = (ownedBookings ?? []).map((b: { id: string }) => b.id);
+    const unauthorized = bookingIds.filter((id) => !ownedIds.includes(id));
+    if (unauthorized.length > 0) {
+      throw new Error(`Unauthorized booking IDs in Stripe session: ${unauthorized.join(', ')}`);
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      status: 'confirmed',
+      payment_status: 'paid',
+    };
+    if (paymentIntentId) {
+      updatePayload.payment_intent_id = paymentIntentId;
+    }
+
+    const { data: updatedRows, error } = await this.client
+      .from('bookings')
+      .update(updatePayload)
+      .in('id', bookingIds)
+      .eq('status', 'pending')
+      .eq('stripe_session_id', sessionId)
+      .select('id');
+
+    if (error) throw new Error(`DB update failed: ${error.message}`);
+    return updatedRows || [];
+  }
+
+  async getConfirmedBookingsDetails(bookingIds: string[]) {
+    const { data, error } = await this.client
+      .from('bookings')
+      .select(`
+        id, check_in, check_out, guests,
+        property:properties(title),
+        service:services(title),
+        profile:profiles!bookings_user_id_fkey(email)
+      `)
+      .in('id', bookingIds);
+
+    if (error) return [];
+    return data || [];
   }
 }

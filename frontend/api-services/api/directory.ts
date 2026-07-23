@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { DirectoryListingDB, DirectoryListingCreateInput, ListingAnalyticsSummary, CategoryAnalyticsAverage, ListingClaimDB, ListingAddon } from '../../types/models';
+import { fetchJson } from './fetchHelper';
 
 export const TIER_LIMITS: Record<string, number> = { explorer: 5, voyager: 50, signature: 100, partner: 100 };
 
@@ -17,39 +18,33 @@ export const directoryService = {
     ): Promise<{ data: DirectoryListingDB[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
         const query = new URLSearchParams({ page: page.toString(), limit: limit.toString(), sortBy });
         if (category) query.set('category', category);
-        const res = await fetch(`/api/directory?${query.toString()}`);
-        if (!res.ok) throw new Error('Failed to fetch directory listings');
-        return res.json();
+        return fetchJson(`/api/directory?${query.toString()}`);
     },
 
     async getRestaurantsListings(page: number = 1, limit: number = 20) {
-        const res = await fetch(`/api/directory/restaurants?page=${page}&limit=${limit}`);
-        if (!res.ok) throw new Error('Failed to fetch restaurants');
-        return res.json();
+        return fetchJson(`/api/directory/restaurants?page=${page}&limit=${limit}`);
     },
 
     async getDirectoryListing(id: string): Promise<DirectoryListingDB | null> {
-        const res = await fetch(`/api/directory/${id}`);
-        if (!res.ok) {
-            if (res.status === 404) return null;
-            throw new Error('Failed to fetch directory listing');
+        try {
+            return await fetchJson<DirectoryListingDB>(`/api/directory/${id}`);
+        } catch (err) {
+            if (err instanceof Error && err.message.includes('404')) return null;
+            throw err;
         }
-        return res.json() as Promise<DirectoryListingDB>;
     },
 
     async getDirectoryListingBySlug(slug: string): Promise<DirectoryListingDB | null> {
-        const res = await fetch(`/api/directory/slug/${slug}`);
-        if (!res.ok) {
-            if (res.status === 404) return null;
-            throw new Error('Failed to fetch directory listing by slug');
+        try {
+            return await fetchJson<DirectoryListingDB>(`/api/directory/slug/${slug}`);
+        } catch (err) {
+            if (err instanceof Error && err.message.includes('404')) return null;
+            throw err;
         }
-        return res.json() as Promise<DirectoryListingDB>;
     },
 
     async getDirectoryListingsByCategory(categoryId: string): Promise<DirectoryListingDB[]> {
-        const res = await fetch(`/api/directory/category/${categoryId}`);
-        if (!res.ok) throw new Error('Failed to fetch listings for category');
-        return res.json() as Promise<DirectoryListingDB[]>;
+        return fetchJson<DirectoryListingDB[]>(`/api/directory/category/${categoryId}`);
     },
 
     async searchDirectoryListings(
@@ -63,9 +58,7 @@ export const directoryService = {
         if (categoryId) params.set('category', categoryId);
         if (location) params.set('location', location);
         
-        const res = await fetch(`/api/directory/search?${params.toString()}`);
-        if (!res.ok) throw new Error('Failed to search directory listings');
-        return res.json();
+        return fetchJson(`/api/directory/search?${params.toString()}`);
     },
 
     // ============================================================
@@ -73,27 +66,19 @@ export const directoryService = {
     // ============================================================
 
     async getFreeListings(): Promise<DirectoryListingDB[]> {
-        const res = await fetch('/api/directory/landing/free');
-        if (!res.ok) throw new Error('Failed to fetch free listings');
-        return res.json() as Promise<DirectoryListingDB[]>;
+        return fetchJson<DirectoryListingDB[]>('/api/directory/landing/free').catch(() => []);
     },
 
     async getPremiumListings(): Promise<DirectoryListingDB[]> {
-        const res = await fetch('/api/directory/landing/premium');
-        if (!res.ok) throw new Error('Failed to fetch premium listings');
-        return res.json() as Promise<DirectoryListingDB[]>;
+        return fetchJson<DirectoryListingDB[]>('/api/directory/landing/premium').catch(() => []);
     },
 
     async getSignatureListings(): Promise<DirectoryListingDB[]> {
-        const res = await fetch('/api/directory/landing/signature');
-        if (!res.ok) throw new Error('Failed to fetch signature listings');
-        return res.json() as Promise<DirectoryListingDB[]>;
+        return fetchJson<DirectoryListingDB[]>('/api/directory/landing/signature').catch(() => []);
     },
 
     async getRecentlyClaimedListings(limit: number = 6): Promise<DirectoryListingDB[]> {
-        const res = await fetch(`/api/directory/landing/recent?limit=${limit}`);
-        if (!res.ok) throw new Error('Failed to fetch recently claimed listings');
-        return res.json() as Promise<DirectoryListingDB[]>;
+        return fetchJson<DirectoryListingDB[]>(`/api/directory/landing/recent?limit=${limit}`).catch(() => []);
     },
 
     async voteForListing(listingId: string, vote: 1 | -1): Promise<{ netVotes: number; userVote: number }> {

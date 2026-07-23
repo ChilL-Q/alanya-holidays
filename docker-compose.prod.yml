@@ -1,6 +1,29 @@
 version: '3.8'
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   backend:
     build:
       context: ./backend
@@ -8,14 +31,32 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     env_file:
       - .env
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:4000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
     restart: unless-stopped
+    logging: *default-logging
 
   nginx:
     image: nginx:alpine
@@ -23,17 +64,32 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/www/certbot
     depends_on:
-      - frontend
-      - backend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   certbot:
     image: certbot/certbot
     restart: unless-stopped
+    logging: *default-logging
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/www/certbot
@@ -42,3 +98,4 @@ services:
 volumes:
   certbot-etc:
   certbot-var:
+

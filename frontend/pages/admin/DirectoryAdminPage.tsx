@@ -54,16 +54,21 @@ export const DirectoryAdminPage: React.FC<{ defaultCategory?: string }> = ({ def
         setLoading(true);
         try {
             const category = isCategoryLocked ? defaultCategory : undefined;
-            const [approved, pending, rejected, claimsList] = await Promise.all([
+            const [approved, pending, rejected] = await Promise.all([
                 directoryService.getDirectoryListingsByStatus('approved', category),
                 directoryService.getPendingDirectoryListings(),
                 directoryService.getDirectoryListingsByStatus('rejected', category),
-                directoryService.getListingClaims(),
             ]);
             setListings(approved);
             setPendingListings(pending);
             setRejectedListings(rejected);
-            setClaims(claimsList);
+
+            try {
+                const claimsList = await directoryService.getListingClaims();
+                setClaims(claimsList);
+            } catch (e) {
+                console.error('Failed to load claims', e);
+            }
         } catch (e) {
             console.error('Failed to load listings', e);
         } finally {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { DirectoryListingCard } from './DirectoryListingCard';
 import { DirectoryListingDB } from '../../types/models';
 import { LanguageProvider } from '../../context/LanguageContext';
@@ -35,7 +36,11 @@ const baseListing: DirectoryListingDB = {
 };
 
 const renderWithLanguage = (ui: React.ReactElement) =>
-    render(<LanguageProvider>{ui}</LanguageProvider>);
+    render(
+        <MemoryRouter>
+            <LanguageProvider>{ui}</LanguageProvider>
+        </MemoryRouter>
+    );
 
 describe('DirectoryListingCard', () => {
     beforeEach(() => {

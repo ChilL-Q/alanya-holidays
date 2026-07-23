@@ -1,6 +1,7 @@
 import { supabase } from '../../supabase';
 import { ServiceDB, ApprovalStatus } from '../../../types/index';
 import { serviceSchema } from '../schemas';
+import { fetchJson } from '../fetchHelper';
 
 // Helper to get auth token
 async function getAuthHeaders() {
@@ -13,13 +14,11 @@ export async function createService(data: Omit<ServiceDB, 'id' | 'created_at'>) 
     if (!headers.Authorization) throw new Error('Not authenticated');
 
     const validatedData = serviceSchema.parse(data);
-    const res = await fetch('/api/services', {
+    return fetchJson<ServiceDB>('/api/services', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify(validatedData)
     });
-    if (!res.ok) throw new Error('Failed to create service');
-    return res.json() as Promise<ServiceDB>;
 }
 
 export async function getServices(type?: string, page = 1, limit = 20) {
@@ -29,21 +28,15 @@ export async function getServices(type?: string, page = 1, limit = 20) {
     });
     if (type) params.append('type', type);
 
-    const res = await fetch(`/api/services?${params.toString()}`);
-    if (!res.ok) throw new Error('Failed to fetch services');
-    return res.json() as Promise<{ data: ServiceDB[], count: number }>;
+    return fetchJson<{ data: ServiceDB[], count: number }>(`/api/services?${params.toString()}`);
 }
 
 export async function getServicesByProvider(providerId: string) {
-    const res = await fetch(`/api/services/provider/${providerId}`);
-    if (!res.ok) throw new Error('Failed to fetch provider services');
-    return res.json() as Promise<ServiceDB[]>;
+    return fetchJson<ServiceDB[]>(`/api/services/provider/${providerId}`);
 }
 
 export async function getService(id: string) {
-    const res = await fetch(`/api/services/${id}`);
-    if (!res.ok) throw new Error('Service not found');
-    return res.json() as Promise<ServiceDB>;
+    return fetchJson<ServiceDB>(`/api/services/${id}`);
 }
 
 export async function updateService(id: string, updates: Partial<ServiceDB>) {
@@ -89,7 +82,5 @@ export async function getAdminServices(statusFilter?: string, typesFilter?: stri
     if (statusFilter) params.append('statusFilter', statusFilter);
     if (typesFilter && typesFilter.length > 0) params.append('typesFilter', JSON.stringify(typesFilter));
 
-    const res = await fetch(`/api/services/admin?${params.toString()}`, { headers });
-    if (!res.ok) throw new Error('Failed to fetch admin services');
-    return res.json() as Promise<{ data: ServiceDB[], count: number }>;
+    return fetchJson<{ data: ServiceDB[], count: number }>(`/api/services/admin?${params.toString()}`, { headers });
 }
