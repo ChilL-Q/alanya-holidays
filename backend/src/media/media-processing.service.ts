@@ -38,14 +38,15 @@ export class MediaProcessingService {
     const maxThumbWidth = options.maxThumbWidth ?? 300;
 
     try {
-      // 1. Convert & resize full image
-      const fullBuffer = await sharp(file.buffer)
+      // 1. Process full resolution WebP image first
+      const pipeline = sharp(file.buffer);
+      const fullBuffer = await pipeline
         .resize({ width: maxFullWidth, withoutEnlargement: true })
         .webp({ quality })
         .toBuffer();
 
-      // 2. Convert & resize thumbnail
-      const thumbBuffer = await sharp(file.buffer)
+      // 2. Downscale thumbnail from already downscaled fullBuffer (bounded RAM & fast transform)
+      const thumbBuffer = await sharp(fullBuffer)
         .resize({ width: maxThumbWidth, withoutEnlargement: true })
         .webp({ quality })
         .toBuffer();

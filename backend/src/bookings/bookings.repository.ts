@@ -56,6 +56,34 @@ export class BookingsRepository {
     return booking;
   }
 
+  async createBookingRpc(params: {
+    itemId: string;
+    userId: string;
+    checkIn: string;
+    checkOut: string;
+    totalPrice: number;
+    guests: number;
+    message?: string;
+    paymentMethod?: string;
+    itemType?: string;
+  }): Promise<string> {
+    const { data, error } = await this.client.rpc('create_booking', {
+      p_item_id: params.itemId,
+      p_user_id: params.userId,
+      p_check_in: params.checkIn,
+      p_check_out: params.checkOut,
+      p_total_price: params.totalPrice,
+      p_guests: params.guests,
+      p_message: params.message || null,
+      p_payment_method: params.paymentMethod || 'card',
+      p_item_type: params.itemType || 'property',
+    });
+
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+    return data?.data;
+  }
+
   async upsertPropertyAvailability(blocks: any[]) {
     if (blocks.length > 0) {
       const { error } = await this.client
@@ -69,16 +97,31 @@ export class BookingsRepository {
   async getUserBookings(userId: string) {
     const { data, error } = await this.client
       .from('bookings')
-      .select('*')
+      .select(`
+        *,
+        property:properties(id, title, images, price_per_night, location),
+        service:services(id, title, images, price, type)
+      `)
       .eq('user_id', userId)
       .order('check_in', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data || []).map((booking: any) => ({
+      ...booking,
+      itemTitle: booking.property?.title || booking.service?.title,
+    }));
   }
 
   async getAdminBookings(statusFilter?: string) {
-    let query = this.client.from('bookings').select('*');
+    let query = this.client
+      .from('bookings')
+      .select(`
+        *,
+        property:properties(id, title, images, price_per_night, location),
+        service:services(id, title, images, price, type),
+        user:profiles(id, full_name, email, avatar_url, phone)
+      `);
+
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
     }
@@ -87,7 +130,10 @@ export class BookingsRepository {
     });
 
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data || []).map((booking: any) => ({
+      ...booking,
+      itemTitle: booking.property?.title || booking.service?.title,
+    }));
   }
 
   async getBookingsByPropertyIds(

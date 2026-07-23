@@ -19,6 +19,7 @@ describe('BookingsService', () => {
       getProperty: jest.fn(),
       getService: jest.fn(),
       insertBooking: jest.fn(),
+      createBookingRpc: jest.fn().mockResolvedValue('b-100'),
       upsertPropertyAvailability: jest.fn(),
       getProfile: jest.fn(),
       invokeEmailFunction: jest.fn(),
@@ -125,14 +126,14 @@ describe('BookingsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should create booking and upsert availability blocks for property', async () => {
+    it('should create booking via atomic RPC', async () => {
       mockRepository.getProperty.mockResolvedValueOnce({
         id: 'p1',
         status: 'approved',
         host_id: 'host1',
         title: 'Villa',
       });
-      mockRepository.insertBooking.mockResolvedValueOnce({ id: 'b-100' });
+      mockRepository.createBookingRpc.mockResolvedValueOnce('b-100');
 
       const result = await service.createBooking({
         item_id: 'p1',
@@ -145,7 +146,17 @@ describe('BookingsService', () => {
       });
 
       expect(result).toBe('b-100');
-      expect(mockRepository.upsertPropertyAvailability).toHaveBeenCalled();
+      expect(mockRepository.createBookingRpc).toHaveBeenCalledWith(
+        expect.objectContaining({
+          itemId: 'p1',
+          userId: 'user2',
+          checkIn: '2026-08-01',
+          checkOut: '2026-08-03',
+          totalPrice: 300,
+          guests: 2,
+          itemType: 'property',
+        }),
+      );
     });
   });
 

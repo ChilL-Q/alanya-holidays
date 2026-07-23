@@ -63,6 +63,7 @@ export class BookingsService {
     let hostId: string | null = null;
     let propertyTitle = 'Item';
 
+    // Pre-fetch item title/host and perform early validation
     if (itemType === 'property') {
       const property = await this.bookingsRepository.getProperty(dto.item_id);
       if (!property) throw new BadRequestException('Property not found');
@@ -83,48 +84,32 @@ export class BookingsService {
       propertyTitle = service.title;
     }
 
-    const conflictResult = await this.checkConflict(
-      dto.item_id,
-      itemType,
-      dto.check_in,
-      dto.check_out,
-    );
-    if (conflictResult.has_conflict)
-      throw new BadRequestException(conflictResult.message);
+    // Execute atomic RPC (performs validations, advisory locking, overlap check & date series blocking in 1 DB RTT)
+    let bookingId: string;
+    try {
+      bookingId = await this.bookingsRepository.createBookingRpc({
+        itemId: dto.item_id,
+        userId: dto.user_id,
+        checkIn: dto.check_in,
+        checkOut: dto.check_out,
+        totalPrice: dto.total_price,
+        guests: dto.guests,
+        message: dto.message,
+        paymentMethod: dto.payment_method,
+        itemType,
+      });
+    } catch (err: any) {
+      throw new BadRequestException(err.message || 'Failed to create booking');
+    }
 
-    const booking = await this.bookingsRepository.insertBooking({
-      item_id: dto.item_id,
-      item_type: itemType,
-      user_id: dto.user_id,
+    const booking = {
+      id: bookingId,
       check_in: dto.check_in,
       check_out: dto.check_out,
       total_price: dto.total_price,
       guests: dto.guests,
-      message: dto.message || null,
-      payment_method: dto.payment_method || 'card',
-      status: 'pending',
-      payment_status: 'pending',
-    });
-
-    if (itemType === 'property') {
-      const checkInDate = new Date(dto.check_in);
-      const checkOutDate = new Date(dto.check_out);
-      const blocks = [];
-      for (
-        let d = new Date(checkInDate);
-        d < checkOutDate;
-        d.setDate(d.getDate() + 1)
-      ) {
-        blocks.push({
-          property_id: dto.item_id,
-          date: d.toISOString().split('T')[0],
-          status: 'booked',
-          source: 'reservation',
-          external_id: booking.id,
-        });
-      }
-      await this.bookingsRepository.upsertPropertyAvailability(blocks);
-    }
+      message: dto.message,
+    };
 
     this.sendEmails(booking, dto.user_id, hostId, propertyTitle, itemType);
 
@@ -134,7 +119,7 @@ export class BookingsService {
         title: 'Новое бронирование!',
         message: `Новая заявка на "${propertyTitle}" с ${dto.check_in} по ${dto.check_out}`,
         data: {
-          bookingId: booking.id,
+          bookingId,
           itemId: dto.item_id,
           totalPrice: dto.total_price,
           checkIn: dto.check_in,
@@ -143,7 +128,7 @@ export class BookingsService {
       });
     }
 
-    return booking.id;
+    return bookingId;
   }
 
   private async sendEmails(
@@ -157,7 +142,7 @@ export class BookingsService {
       const profile = await this.bookingsRepository.getProfile(userId);
       const guestName = profile?.full_name || 'Guest';
 
-      this.bookingsRepository.invokeEmailFunction({
+      await this.invokeEmailWithRetry({
         type: 'booking_created',
         userId: userId,
         data: {
@@ -173,7 +158,7 @@ export class BookingsService {
       });
 
       if (hostId) {
-        this.bookingsRepository.invokeEmailFunction({
+        await this.invokeEmailWithRetry({
           type: 'booking_request_host',
           userId: hostId,
           data: {
@@ -194,15 +179,29 @@ export class BookingsService {
     }
   }
 
+  private async invokeEmailWithRetry(payload: any, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.bookingsRepository.invokeEmailFunction(payload);
+        return;
+      } catch (err) {
+        if (attempt === maxRetries) {
+          console.error(`Email delivery failed after ${maxRetries} attempts:`, err);
+        } else {
+          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
+          await new Promise((res) => setTimeout(res, delay));
+        }
+      }
+    }
+  }
+
   // ============================================
   // Booking Queries (Moved from frontend)
   // ============================================
 
   async getUserBookings(userId: string) {
     const bookings = await this.bookingsRepository.getUserBookings(userId);
-    if (!bookings || bookings.length === 0) return [];
-
-    return this.enrichBookings(bookings);
+    return bookings || [];
   }
 
   async getAdminBookings(
@@ -215,9 +214,7 @@ export class BookingsService {
 
     const bookings =
       await this.bookingsRepository.getAdminBookings(statusFilter);
-    if (!bookings || bookings.length === 0) return [];
-
-    return this.enrichBookings(bookings, true);
+    return bookings || [];
   }
 
   async getBookingsForHost(

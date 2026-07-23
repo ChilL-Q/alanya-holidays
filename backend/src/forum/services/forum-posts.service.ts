@@ -18,20 +18,30 @@ export class ForumPostsService {
   }
 
   private async attachCategoryParents(posts: any[]) {
-    const parentIds = Array.from(
-      new Set(posts.map((p) => p.category?.parent_id).filter((x) => !!x)),
+    const missingParentIds = Array.from(
+      new Set(
+        posts
+          .filter((p) => p.category?.parent_id && p.category.parent === undefined)
+          .map((p) => p.category.parent_id),
+      ),
     );
-    if (parentIds.length === 0) return;
+    if (missingParentIds.length === 0) return;
 
     const data = await this.forumPostsRepository.getCategoriesByIds(
-      parentIds as string[],
+      missingParentIds as string[],
     );
     const map = new Map((data || []).map((c) => [c.id, c]));
     for (const p of posts) {
-      if (p.category?.parent_id)
+      if (p.category?.parent_id && p.category.parent === undefined)
         p.category.parent = map.get(p.category.parent_id) || null;
     }
   }
+
+  private POST_SELECT = `
+      *,
+      category:forum_categories(id, name, slug, description, sort_order, parent_id, icon, image_url, accent, created_at, parent:forum_categories(id, name, slug, description, icon, image_url, accent)),
+      author:profiles!forum_posts_author_id_fkey(full_name, avatar_url)
+  `;
 
   private async annotateLikes(
     rows: any[],
