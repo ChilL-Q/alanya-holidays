@@ -94,33 +94,86 @@ export class BookingsRepository {
     }
   }
 
+  private async enrichBookingsWithItems(bookings: any[]) {
+    if (!bookings || !bookings.length) return [];
+
+    const propertyIds = [
+      ...new Set(
+        bookings
+          .map((b) => b.item_id || b.property_id)
+          .filter(Boolean),
+      ),
+    ];
+    const serviceIds = [
+      ...new Set(
+        bookings
+          .map((b) => b.item_id || b.service_id)
+          .filter(Boolean),
+      ),
+    ];
+    const userIds = [...new Set(bookings.map((b) => b.user_id).filter(Boolean))];
+
+    const [propertiesRes, servicesRes, profilesRes] = await Promise.all([
+      propertyIds.length
+        ? this.client
+            .from('properties')
+            .select('id, title, images, price_per_night, location, host_id')
+            .in('id', propertyIds)
+        : Promise.resolve({ data: [] }),
+      serviceIds.length
+        ? this.client
+            .from('services')
+            .select('id, title, images, price, type, provider_id')
+            .in('id', serviceIds)
+        : Promise.resolve({ data: [] }),
+      userIds.length
+        ? this.client
+            .from('profiles')
+            .select('id, full_name, email, avatar_url, phone')
+            .in('id', userIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const propertiesMap = new Map(
+      (propertiesRes.data || []).map((p: any) => [p.id, p]),
+    );
+    const servicesMap = new Map(
+      (servicesRes.data || []).map((s: any) => [s.id, s]),
+    );
+    const profilesMap = new Map(
+      (profilesRes.data || []).map((p: any) => [p.id, p]),
+    );
+
+    return bookings.map((booking: any) => {
+      const propId = booking.item_id || booking.property_id;
+      const servId = booking.item_id || booking.service_id;
+      const property = propertiesMap.get(propId) || null;
+      const service = servicesMap.get(servId) || null;
+      const user = profilesMap.get(booking.user_id) || null;
+
+      return {
+        ...booking,
+        property,
+        service,
+        user,
+        itemTitle: property?.title || service?.title || booking.itemTitle,
+      };
+    });
+  }
+
   async getUserBookings(userId: string) {
     const { data, error } = await this.client
       .from('bookings')
-      .select(`
-        *,
-        property:properties(id, title, images, price_per_night, location),
-        service:services(id, title, images, price, type)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('check_in', { ascending: true });
 
     if (error) throw new Error(error.message);
-    return (data || []).map((booking: any) => ({
-      ...booking,
-      itemTitle: booking.property?.title || booking.service?.title,
-    }));
+    return await this.enrichBookingsWithItems(data || []);
   }
 
   async getAdminBookings(statusFilter?: string) {
-    let query = this.client
-      .from('bookings')
-      .select(`
-        *,
-        property:properties(id, title, images, price_per_night, location),
-        service:services(id, title, images, price, type),
-        user:profiles(id, full_name, email, avatar_url, phone)
-      `);
+    let query = this.client.from('bookings').select('*');
 
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
@@ -130,10 +183,7 @@ export class BookingsRepository {
     });
 
     if (error) throw new Error(error.message);
-    return (data || []).map((booking: any) => ({
-      ...booking,
-      itemTitle: booking.property?.title || booking.service?.title,
-    }));
+    return await this.enrichBookingsWithItems(data || []);
   }
 
   async getBookingsByPropertyIds(
@@ -160,14 +210,13 @@ export class BookingsRepository {
   async getBookingById(id: string) {
     const { data, error } = await this.client
       .from('bookings')
-      .select(
-        'status, user_id, check_in, check_out, property:properties(title, host_id), service:services(title, provider_id)',
-      )
+      .select('*')
       .eq('id', id)
       .single();
 
-    if (error) return null;
-    return data;
+    if (error || !data) return null;
+    const [enriched] = await this.enrichBookingsWithItems([data]);
+    return enriched || null;
   }
 
   async getBookingForCancellation(id: string) {

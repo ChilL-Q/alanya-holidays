@@ -1,10 +1,8 @@
 import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 import { getCorsHeaders } from "../_shared/cors.ts"
 
-// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
-import { createClient } from "npm:@supabase/supabase-js@2"
-// @ts-ignore: npm: specifiers are resolved by Deno, not tsc
-import Anthropic from "npm:@anthropic-ai/sdk@^0.22.0"
+import { createClient } from "@supabase/supabase-js"
+import Anthropic from "@anthropic-ai/sdk"
 
 const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!

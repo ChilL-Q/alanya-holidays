@@ -14,9 +14,6 @@ importers:
 
   backend:
     dependencies:
-      '@alanya-holidays/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.28(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
@@ -138,9 +135,6 @@ importers:
 
   frontend:
     dependencies:
-      '@alanya-holidays/shared':
-        specifier: workspace:*
-        version: link:../shared
       '@googlemaps/markerclusterer':
         specifier: ^2.6.2
         version: 2.6.2

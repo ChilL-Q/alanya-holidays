@@ -29,16 +29,12 @@ docker run --rm -v "$(pwd)/$DATA_PATH/conf:/etc/letsencrypt" \
 echo "Starting Nginx..."
 docker compose -f docker-compose.prod.yml up -d nginx
 
-echo "Deleting dummy certificate..."
-docker run --rm -v "$(pwd)/$DATA_PATH/conf:/etc/letsencrypt" \
-  alpine rm -rf "/etc/letsencrypt/live/$DOMAIN" "/etc/letsencrypt/archive/$DOMAIN" "/etc/letsencrypt/renewal/$DOMAIN.conf"
-
 echo "Requesting real certificate from Let's Encrypt..."
 docker run --rm \
   -v "$(pwd)/$DATA_PATH/conf:/etc/letsencrypt" \
   -v "$(pwd)/$DATA_PATH/www:/var/www/certbot" \
   certbot/certbot certonly --webroot -w /var/www/certbot \
-    -d "$DOMAIN" --email "$EMAIL" --rsa-key-size 4096 --agree-tos --non-interactive
+    -d "$DOMAIN" --email "$EMAIL" --rsa-key-size 4096 --agree-tos --non-interactive --force-renewal
 
 echo "Reloading Nginx..."
 docker compose -f docker-compose.prod.yml exec nginx nginx -s reload

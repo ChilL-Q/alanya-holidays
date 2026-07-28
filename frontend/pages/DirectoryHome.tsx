@@ -76,18 +76,18 @@ export const DirectoryHome: React.FC = () => {
     }, []);
 
     const categories = [
-        { id: 'medical', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.medical'), path: '/medical-tourism-alanya' },
-        { id: 'accommodations', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.accommodations'), path: '/alanya-hotels' },
-        { id: 'tours', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.tours'), path: '/things-to-do-in-alanya' },
-        { id: 'transport', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.transport'), path: '/airport-transfer' },
-        { id: 'restaurants', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.restaurants'), path: '/restaurants' },
-        { id: 'cafes', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.cafes'), path: '/cafes' },
-        { id: 'nature', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
-        { id: 'spa-hamam', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
-        { id: 'hair-beauty', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
-        { id: 'real-estate', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
-        { id: 'visa', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
-        { id: 'shopping', imagePath: '/images/categories/placeholder.jpg', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
+        { id: 'medical', imagePath: '/images/categories/medical.webp', title: t('dir.cat.medical'), path: '/medical-tourism-alanya' },
+        { id: 'accommodations', imagePath: '/images/categories/accommodations.webp', title: t('dir.cat.accommodations'), path: '/alanya-hotels' },
+        { id: 'tours', imagePath: '/images/categories/tours.webp', title: t('dir.cat.tours'), path: '/things-to-do-in-alanya' },
+        { id: 'transport', imagePath: '/images/categories/transport.webp', title: t('dir.cat.transport'), path: '/airport-transfer' },
+        { id: 'restaurants', imagePath: '/images/categories/restaurants.webp', title: t('dir.cat.restaurants'), path: '/restaurants' },
+        { id: 'cafes', imagePath: '/images/categories/cafes.webp', title: t('dir.cat.cafes'), path: '/cafes' },
+        { id: 'nature', imagePath: '/images/categories/nature.webp', title: t('dir.cat.nature'), path: '/alanya-nature-attractions' },
+        { id: 'spa-hamam', imagePath: '/images/categories/spa-hamam.webp', title: t('dir.cat.spa_hamam'), path: '/alanya-spa-hamam' },
+        { id: 'hair-beauty', imagePath: '/images/categories/hair-beauty.webp', title: t('dir.cat.hair_beauty'), path: '/alanya-hair-beauty' },
+        { id: 'real-estate', imagePath: '/images/categories/real-estate.webp', title: t('dir.cat.realestate'), path: '/alanya-real-estate' },
+        { id: 'visa', imagePath: '/images/categories/visa.webp', title: t('dir.cat.visa'), path: '/alanya-residency-guide' },
+        { id: 'shopping', imagePath: '/images/categories/shopping.webp', title: t('dir.cat.shopping'), path: '/alanya-shopping-guide' },
     ];
 
     const travelAgencySchema = useMemo(() => ({
@@ -170,6 +170,8 @@ export const DirectoryHome: React.FC = () => {
                             <div className="flex-[1.5] relative flex items-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800/50">
                                 <Search className="absolute left-4 w-5 h-5 text-slate-400 dark:text-slate-500" />
                                 <input
+                                    id="directory-search-query"
+                                    name="q"
                                     type="text"
                                     placeholder={t('dir.search.placeholder')}
                                     value={searchQuery}

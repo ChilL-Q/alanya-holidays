@@ -1,17 +1,14 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@supabase/functions-js@2": "2.108.2",
+    "jsr:@supabase/functions-js@2": "2.110.8",
     "npm:@anthropic-ai/sdk@0.22": "0.22.0",
     "npm:@supabase/supabase-js@2": "2.110.8",
-    "npm:openai@^4.52.5": "4.104.0_zod@3.25.76",
-    "npm:stripe@17": "17.7.0",
-    "npm:turbo@^2.4.0": "2.10.6",
-    "npm:zod@3": "3.25.76"
+    "npm:openai@^4.52.5": "4.104.0"
   },
   "jsr": {
-    "@supabase/functions-js@2.108.2": {
-      "integrity": "39665d68e1cb721b0714ed1f55c075fba16f8d992672b51458660b3c1ec77c8f",
+    "@supabase/functions-js@2.110.8": {
+      "integrity": "79de9d9de83149576cce2ff4b4d1bf2e1f40df472c04de413c67dc1ce1549220",
       "dependencies": [
         "npm:openai"
       ]
@@ -76,36 +73,6 @@
         "@supabase/storage-js"
       ]
     },
-    "@turbo/darwin-64@2.10.6": {
-      "integrity": "sha512-S+yIyZkmjYBQbIM7sTqMAwnLeMjSK60Q9grUDPbTWvkRjbsn5k1Rt5sPvTX80M4PnlYQBwLiYsjlu6tHsuIqQQ==",
-      "os": ["darwin"],
-      "cpu": ["x64"]
-    },
-    "@turbo/darwin-arm64@2.10.6": {
-      "integrity": "sha512-gnS8G78EjvJzDc1+tFES5BYXdlF+292n+h57G9G+5LJYelRh195f4Ed22RCo4EFIbI4Du9S5xfE9YjrqhoZaxQ==",
-      "os": ["darwin"],
-      "cpu": ["arm64"]
-    },
-    "@turbo/linux-64@2.10.6": {
-      "integrity": "sha512-lPv5AVkzvhs4z6Isr2ZE2UYt9Ndym5aWSMEIRh9OROnAdyEG1CFugJwAn/aFuDMmiCoHasyvD5tTDmVVTTrYxw==",
-      "os": ["linux"],
-      "cpu": ["x64"]
-    },
-    "@turbo/linux-arm64@2.10.6": {
-      "integrity": "sha512-yeQ24es8pz+FhZxt25HIXj4ml7HpWMrmOL1BtCP4XUz7mBJZdAfC7z7HGF+wPSUZoKmoSZbL4r4QWbRddhPZIQ==",
-      "os": ["linux"],
-      "cpu": ["arm64"]
-    },
-    "@turbo/windows-64@2.10.6": {
-      "integrity": "sha512-JiFscBN83F43VG3oM+QU2LvgHcf11tgirLJ3c1QDJBtulTCbDwupzIjqB9yBlfiMWAe6g3ssD6gqLP6a4g7FzA==",
-      "os": ["win32"],
-      "cpu": ["x64"]
-    },
-    "@turbo/windows-arm64@2.10.6": {
-      "integrity": "sha512-emWVdriXsaSVS5VXJxy4DppQ0UnGD+PUKu40DGjC3E5JXeoszL09B/1xU6B+Y8lJQg38cFoaB1NqGC4ayY5SQQ==",
-      "os": ["win32"],
-      "cpu": ["arm64"]
-    },
     "@types/node-fetch@2.6.13": {
       "integrity": "sha512-QGpRVpzSaUs30JBSGPjOg4Uveu384erbHBoT1zeONvyCfwQxIkUshLAOqN/k9EjGviPRmWTTe6aH2qySWKTVSw==",
       "dependencies": [
@@ -139,13 +106,6 @@
       "dependencies": [
         "es-errors",
         "function-bind"
-      ]
-    },
-    "call-bound@1.0.4": {
-      "integrity": "sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==",
-      "dependencies": [
-        "call-bind-apply-helpers",
-        "get-intrinsic"
       ]
     },
     "combined-stream@1.0.8": {
@@ -286,10 +246,7 @@
         "whatwg-url"
       ]
     },
-    "object-inspect@1.13.4": {
-      "integrity": "sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew=="
-    },
-    "openai@4.104.0_zod@3.25.76": {
+    "openai@4.104.0": {
       "integrity": "sha512-p99EFNsA/yX6UhVO93f5kJsDRLAg+CTA2RBqdHK4RtK8u5IJw32Hyb2dTGKbnnFmnuoBv5r7Z2CURI9sGZpSuA==",
       "dependencies": [
         "@types/node",
@@ -298,81 +255,15 @@
         "agentkeepalive",
         "form-data-encoder",
         "formdata-node",
-        "node-fetch",
-        "zod"
-      ],
-      "optionalPeers": [
-        "zod"
+        "node-fetch"
       ],
       "bin": true
-    },
-    "qs@6.15.3": {
-      "integrity": "sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==",
-      "dependencies": [
-        "es-define-property",
-        "side-channel"
-      ]
-    },
-    "side-channel-list@1.0.1": {
-      "integrity": "sha512-mjn/0bi/oUURjc5Xl7IaWi/OJJJumuoJFQJfDDyO46+hBWsfaVM65TBHq2eoZBhzl9EchxOijpkbRC8SVBQU0w==",
-      "dependencies": [
-        "es-errors",
-        "object-inspect"
-      ]
-    },
-    "side-channel-map@1.0.1": {
-      "integrity": "sha512-VCjCNfgMsby3tTdo02nbjtM/ewra6jPHmpThenkTYh8pG9ucZ/1P8So4u4FGBek/BjpOVsDCMoLA/iuBKIFXRA==",
-      "dependencies": [
-        "call-bound",
-        "es-errors",
-        "get-intrinsic",
-        "object-inspect"
-      ]
-    },
-    "side-channel-weakmap@1.0.2": {
-      "integrity": "sha512-WPS/HvHQTYnHisLo9McqBHOJk2FkHO/tlpvldyrnem4aeQp4hai3gythswg6p01oSoTl58rcpiFAjF2br2Ak2A==",
-      "dependencies": [
-        "call-bound",
-        "es-errors",
-        "get-intrinsic",
-        "object-inspect",
-        "side-channel-map"
-      ]
-    },
-    "side-channel@1.1.1": {
-      "integrity": "sha512-6x6dK6zJdpTzF4sQeNYxwtvBzf6Eg4GtlesS94HOvTudUeyK2WXAaIfmDgsyslYrRBeFIlsi54AYsFGUuhmvrQ==",
-      "dependencies": [
-        "es-errors",
-        "object-inspect",
-        "side-channel-list",
-        "side-channel-map",
-        "side-channel-weakmap"
-      ]
-    },
-    "stripe@17.7.0": {
-      "integrity": "sha512-aT2BU9KkizY9SATf14WhhYVv2uOapBWX0OFWF4xvcj1mPaNotlSc2CsxpS4DS46ZueSppmCF5BX1sNYBtwBvfw==",
-      "dependencies": [
-        "@types/node",
-        "qs"
-      ]
     },
     "tr46@0.0.3": {
       "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="
     },
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
-    },
-    "turbo@2.10.6": {
-      "integrity": "sha512-3VfH7fK7WQ/ZHYjvfWyVnPRpcNaX3ZqXfGDMdc82eGdM0ESATyxFK4R4PM3wNsVFsdkUFZ4pZpkNeG37dxOv+g==",
-      "optionalDependencies": [
-        "@turbo/darwin-64",
-        "@turbo/darwin-arm64",
-        "@turbo/linux-64",
-        "@turbo/linux-arm64",
-        "@turbo/windows-64",
-        "@turbo/windows-arm64"
-      ],
-      "bin": true
     },
     "undici-types@5.26.5": {
       "integrity": "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="
@@ -392,20 +283,12 @@
         "tr46",
         "webidl-conversions"
       ]
-    },
-    "zod@3.25.76": {
-      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
     }
   },
   "workspace": {
     "dependencies": [
       "npm:@anthropic-ai/sdk@0.22",
       "npm:@supabase/supabase-js@2"
-    ],
-    "packageJson": {
-      "dependencies": [
-        "npm:turbo@^2.4.0"
-      ]
-    }
+    ]
   }
 }

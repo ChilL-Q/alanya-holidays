@@ -60,12 +60,6 @@ export class ForumPostsService {
     return rows.map((r) => ({ ...r, liked_by_me: liked.has(r.id) }));
   }
 
-  private POST_SELECT = `
-      *,
-      category:forum_categories(id, name, slug, description, sort_order, parent_id, icon, image_url, accent, created_at),
-      author:profiles!forum_posts_author_id_fkey(full_name, avatar_url)
-  `;
-
   // ============================================================
   // Posts
   // ============================================================

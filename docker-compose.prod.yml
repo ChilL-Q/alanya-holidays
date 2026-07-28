@@ -26,15 +26,15 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     env_file:
-      - .env
+      - .env.production
     logging: *default-logging
     deploy:
       resources:
@@ -46,16 +46,19 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:4000/api/health || exit 1"]
+      test: ["CMD-SHELL", "node -e 'fetch(\"http://127.0.0.1:4000/api/health\").then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))'"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 15s
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
+      context: .
+      dockerfile: frontend/Dockerfile.prod
     restart: unless-stopped
+    volumes:
+      - frontend-dist:/usr/share/nginx/html
     logging: *default-logging
 
   nginx:
@@ -73,29 +76,30 @@ services:
           memory: 128M
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
+      - ./certbot-data/conf:/etc/letsencrypt
+      - ./certbot-data/www:/var/www/certbot
+      - frontend-dist:/usr/share/nginx/html:ro
     depends_on:
       backend:
         condition: service_healthy
       frontend:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 10s
 
   certbot:
     image: certbot/certbot
     restart: unless-stopped
     logging: *default-logging
     volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
+      - ./certbot-data/conf:/etc/letsencrypt
+      - ./certbot-data/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
-  certbot-etc:
-  certbot-var:
+  frontend-dist:
 

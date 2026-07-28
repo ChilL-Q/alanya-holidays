@@ -200,12 +200,88 @@ describe('BookingsService', () => {
         'user1',
       );
 
-      expect(result).toEqual({ success: true });
       expect(mockRepository.unblockDatesForBooking).toHaveBeenCalledWith('b1');
       expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith(
         'b1',
         'cancelled',
       );
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('Full Multi-Role Workflows (Client, Host/Vendor, Admin)', () => {
+    it('Client workflow: should fetch client bookings', async () => {
+      mockRepository.getUserBookings.mockResolvedValueOnce([
+        {
+          id: 'b-1',
+          user_id: 'client-1',
+          item_id: 'p-1',
+          item_type: 'property',
+          status: 'confirmed',
+          itemTitle: 'Ocean Villa',
+          property: { id: 'p-1', title: 'Ocean Villa' },
+        },
+      ]);
+
+      const result = await service.getUserBookings('client-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].itemTitle).toBe('Ocean Villa');
+    });
+
+    it('Host/Vendor workflow: should fetch host bookings and allow host to confirm booking', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockRepository.getPropertiesByHost.mockResolvedValueOnce([
+        { id: 'p-10', title: 'Luxury Penthouse' },
+      ]);
+      mockRepository.getBookingsByPropertyIds.mockResolvedValueOnce([
+        {
+          id: 'b-20',
+          item_id: 'p-10',
+          user_id: 'client-5',
+          status: 'confirmed',
+        },
+      ]);
+      mockRepository.getProfilesByIds.mockResolvedValueOnce([
+        { id: 'client-5', full_name: 'John Doe', email: 'john@example.com' },
+      ]);
+
+      const hostBookings = await service.getBookingsForHost('host-123', undefined, undefined, 'host-123');
+      expect(hostBookings).toHaveLength(1);
+      expect(hostBookings[0].user.full_name).toBe('John Doe');
+
+      // Host confirms booking
+      mockRepository.getBookingById.mockResolvedValueOnce({
+        id: 'b-20',
+        user_id: 'client-5',
+        status: 'pending',
+        property: { host_id: 'host-123', title: 'Luxury Penthouse' },
+      });
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+
+      const confirmResult = await service.updateBookingStatus(
+        'b-20',
+        'confirmed',
+        undefined,
+        'host-123',
+      );
+      expect(confirmResult).toEqual({ success: true });
+      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith('b-20', 'confirmed');
+    });
+
+    it('Admin workflow: should allow admin to view all bookings and update payout status', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockRepository.getAdminBookings.mockResolvedValueOnce([
+        { id: 'b-100', status: 'pending', user: { full_name: 'Alice' } },
+      ]);
+
+      const adminBookings = await service.getAdminBookings('pending', 'admin-id');
+      expect(adminBookings).toHaveLength(1);
+      expect(mockRepository.getAdminBookings).toHaveBeenCalledWith('pending');
+
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      const payoutResult = await service.updatePayoutStatus('b-100', 'completed', 'admin-id');
+      expect(payoutResult).toEqual({ success: true });
+      expect(mockRepository.updatePayoutStatus).toHaveBeenCalledWith('b-100', 'completed');
     });
   });
 });
