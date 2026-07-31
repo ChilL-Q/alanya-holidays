@@ -34,7 +34,7 @@ docker run --rm \
   -v "$(pwd)/$DATA_PATH/conf:/etc/letsencrypt" \
   -v "$(pwd)/$DATA_PATH/www:/var/www/certbot" \
   certbot/certbot certonly --webroot -w /var/www/certbot \
-    -d "$DOMAIN" --email "$EMAIL" --rsa-key-size 4096 --agree-tos --non-interactive --force-renewal
+    -d "$DOMAIN" -d "www.$DOMAIN" --email "$EMAIL" --rsa-key-size 4096 --agree-tos --non-interactive --force-renewal
 
 echo "Reloading Nginx..."
 docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
