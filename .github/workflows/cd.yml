@@ -68,13 +68,19 @@ jobs:
               iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
             fi
             [ -f .env.production ] || touch .env.production
-            # Ensure SSL certificate directory and fallback certificates exist so Nginx can boot
+            # Ensure SSL certificate directory and fallback certificates exist with readable permissions
             if [ ! -f "./certbot-data/conf/live/alanyaholidays.com/fullchain.pem" ]; then
               mkdir -p "./certbot-data/conf/live/alanyaholidays.com"
-              openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-                -keyout "./certbot-data/conf/live/alanyaholidays.com/privkey.pem" \
-                -out "./certbot-data/conf/live/alanyaholidays.com/fullchain.pem" \
-                -subj "/CN=alanyaholidays.com" || true
+              docker run --rm -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
+                alpine sh -c "
+                  apk add --no-cache openssl && \
+                  mkdir -p /etc/letsencrypt/live/alanyaholidays.com && \
+                  openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+                    -keyout '/etc/letsencrypt/live/alanyaholidays.com/privkey.pem' \
+                    -out '/etc/letsencrypt/live/alanyaholidays.com/fullchain.pem' \
+                    -subj '/CN=alanyaholidays.com' && \
+                  chmod -R 755 /etc/letsencrypt
+                " || true
             fi
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
