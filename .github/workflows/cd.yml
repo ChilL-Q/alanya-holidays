@@ -75,11 +75,9 @@ jobs:
             [ -f .env.production ] || touch .env.production
             
             CERT_PATH="./certbot-data/conf/live/alanyaholidays.com/fullchain.pem"
-            IS_SELF_SIGNED=0
-            if [ ! -f "$CERT_PATH" ]; then
-              IS_SELF_SIGNED=1
-            elif openssl x509 -in "$CERT_PATH" -noout -issuer 2>/dev/null | grep -q "CN=alanyaholidays.com"; then
-              IS_SELF_SIGNED=1
+            IS_LETS_ENCRYPT=0
+            if [ -f "$CERT_PATH" ] && openssl x509 -in "$CERT_PATH" -noout -issuer 2>/dev/null | grep -qi "Let's Encrypt"; then
+              IS_LETS_ENCRYPT=1
             fi
 
             # Ensure fallback dummy certificate exists if missing so Nginx can start
@@ -101,15 +99,16 @@ jobs:
             # Start production containers
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Obtain real Let's Encrypt certificate if currently self-signed
-            if [ "$IS_SELF_SIGNED" -eq 1 ]; then
+            # Obtain real Let's Encrypt certificate if not currently valid Let's Encrypt cert
+            if [ "$IS_LETS_ENCRYPT" -eq 0 ]; then
               echo "Requesting trusted Let's Encrypt certificate for alanyaholidays.com..."
+              rm -rf ./certbot-data/conf/live/alanyaholidays.com ./certbot-data/conf/archive/alanyaholidays.com ./certbot-data/conf/renewal/alanyaholidays.com.conf || true
               docker run --rm \
                 -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
                 -v "$(pwd)/certbot-data/www:/var/www/certbot" \
                 certbot/certbot certonly --webroot -w /var/www/certbot \
                   -d alanyaholidays.com -d www.alanyaholidays.com \
-                  --email admin@alanyaholidays.com --rsa-key-size 4096 --agree-tos --non-interactive || true
+                  --email admin@alanyaholidays.com --rsa-key-size 4096 --agree-tos --non-interactive --force-renewal || true
               docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
             else
               docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
