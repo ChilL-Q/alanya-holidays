@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main", "feat/**", "fix/**" ]
+    branches: [ "main", "dev", "feat/**", "fix/**" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   workflow_dispatch:
 
 # Cancel previous runs on the same branch when new commits are pushed
