@@ -10,9 +10,12 @@ import {
   Query,
   UseGuards,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { GetPropertiesQueryDto } from './dto/get-properties-query.dto';
+import { PropertyFilterDto } from './dto/property-filter.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -240,22 +243,22 @@ export class PropertiesController {
   }
 
   @Get()
-  async getProperties(@Query() query: any) {
-    let filters = query.filters;
-    if (typeof filters === 'string') {
+  async getProperties(@Query() queryDto: GetPropertiesQueryDto) {
+    let filters: PropertyFilterDto | undefined;
+    if (queryDto.filters) {
       try {
-        filters = JSON.parse(filters);
+        filters = JSON.parse(queryDto.filters);
       } catch (error) {
-        console.warn('Failed to parse filters query param as JSON:', error);
+        throw new BadRequestException('Invalid filters JSON format');
       }
     }
     const queryOptions = {
-      page: query.page ? parseInt(query.page) : 1,
-      limit: query.limit ? parseInt(query.limit) : 20,
+      page: queryDto.page || 1,
+      limit: queryDto.limit || 20,
       filters,
-      location: query.location,
-      allowedIds: query.allowedIds,
-      sort: query.sort,
+      location: queryDto.location,
+      allowedIds: queryDto.allowedIds,
+      sort: queryDto.sort,
     };
     return this.propertiesService.getProperties(queryOptions);
   }
