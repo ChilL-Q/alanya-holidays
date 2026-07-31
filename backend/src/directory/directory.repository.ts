@@ -40,7 +40,7 @@ export class DirectoryRepository {
     const { data, error, count } = await query.range(from, to);
     if (error) throw new Error(error.message);
 
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getDirectoryListingById(id: string) {
@@ -111,7 +111,7 @@ export class DirectoryRepository {
 
     const { data, error, count } = await q;
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getFreeListings() {

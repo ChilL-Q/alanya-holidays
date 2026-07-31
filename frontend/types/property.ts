@@ -39,6 +39,7 @@ export interface PropertyDB {
     bedrooms: number;
     rating?: number;
     reviews_count?: number;
+    reviews?: Array<{ count: number }>;
 
     host?: Partial<UserProfile>;
     created_at?: string;

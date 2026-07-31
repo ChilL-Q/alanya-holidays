@@ -439,12 +439,19 @@ export class BookingsService {
     const bookings =
       await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
 
-    for (const booking of bookings) {
+    for (const booking of bookings as Array<{
+      check_in?: string;
+      check_out?: string;
+      guests?: number;
+      property?: { title?: string };
+      service?: { title?: string };
+      profile?: { email?: string };
+    }>) {
       const itemTitle =
-        (booking.property as any)?.title ??
-        (booking.service as any)?.title ??
+        booking.property?.title ??
+        booking.service?.title ??
         'Booking';
-      const guestEmail = (booking.profile as any)?.email;
+      const guestEmail = booking.profile?.email;
       if (guestEmail) {
         this.bookingsRepository.invokeEmailFunction({
           to: guestEmail,

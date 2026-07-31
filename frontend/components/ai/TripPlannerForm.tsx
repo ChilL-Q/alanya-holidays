@@ -41,13 +41,13 @@ export const TripPlannerForm: React.FC<Props> = ({ onComplete }) => {
         { id: 'nightlife', label: t('ai.planner.interest.nightlife'), icon: '💃' }
     ];
     
-    const paceOptions = [
+    const paceOptions: Array<{ id: PlannerPrefs['pace']; label: string; desc: string; icon: string }> = [
         { id: 'relaxed', label: t('ai.planner.pace.relaxed'), desc: t('ai.planner.pace.relaxed.desc'), icon: '🧘' },
         { id: 'moderate', label: t('ai.planner.pace.moderate'), desc: t('ai.planner.pace.moderate.desc'), icon: '🚶' },
         { id: 'intense', label: t('ai.planner.pace.intense'), desc: t('ai.planner.pace.intense.desc'), icon: '⚡' }
     ];
 
-    const budgetOptions = [
+    const budgetOptions: Array<{ id: PlannerPrefs['budget']; label: string; desc: string; icon: string }> = [
         { id: 'economy', label: t('ai.planner.budget.economy'), desc: t('ai.planner.budget.economy.desc'), icon: '🪙' },
         { id: 'standard', label: t('ai.planner.budget.standard'), desc: t('ai.planner.budget.standard.desc'), icon: '💳' },
         { id: 'luxury', label: t('ai.planner.budget.luxury'), desc: t('ai.planner.budget.luxury.desc'), icon: '💎' }
@@ -199,7 +199,7 @@ export const TripPlannerForm: React.FC<Props> = ({ onComplete }) => {
                             {paceOptions.map(opt => (
                                 <button
                                     key={opt.id}
-                                    onClick={() => setPrefs({...prefs, pace: opt.id as any})}
+                                    onClick={() => setPrefs({...prefs, pace: opt.id})}
                                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${
                                         prefs.pace === opt.id 
                                         ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' 
@@ -239,7 +239,7 @@ export const TripPlannerForm: React.FC<Props> = ({ onComplete }) => {
                             {budgetOptions.map(opt => (
                                 <button
                                     key={opt.id}
-                                    onClick={() => setPrefs({...prefs, budget: opt.id as any})}
+                                    onClick={() => setPrefs({...prefs, budget: opt.id})}
                                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-left ${
                                         prefs.budget === opt.id 
                                         ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' 

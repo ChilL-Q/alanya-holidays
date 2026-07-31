@@ -117,7 +117,7 @@ export class ProductsService {
       product_id: _productId,
       created_at: _createdAt,
       ...safeUpdates
-    } = updates as any;
+    } = updates as Record<string, unknown>;
     await this.productsRepository.updateProductVariant(variantId, safeUpdates);
     return { success: true };
   }

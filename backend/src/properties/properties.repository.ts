@@ -220,7 +220,7 @@ export class PropertiesRepository {
       .order('id', { ascending: true })
       .range(from, from + limit - 1);
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getICalFeeds(propertyId: string) {
@@ -328,7 +328,7 @@ export class PropertiesRepository {
       .order('created_at', { ascending: false })
       .range(from, to);
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getReviewCount(propertyId: string) {
@@ -338,16 +338,19 @@ export class PropertiesRepository {
       .eq('property_id', propertyId)
       .eq('is_hidden', false);
     if (error) throw new Error(error.message);
-    return count || 0;
+    return count ?? 0;
   }
 
   async getExistingReview(propertyId: string, userId: string) {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from('reviews')
       .select('id')
       .eq('property_id', propertyId)
       .eq('user_id', userId)
       .maybeSingle();
+    if (error) {
+      console.error('getExistingReview error:', error);
+    }
     return data;
   }
 
@@ -414,7 +417,7 @@ export class PropertiesRepository {
       .order('created_at', { ascending: false })
       .range(from, to);
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async bulkDeleteReviews(reviewIds: string[]) {

@@ -33,7 +33,7 @@ export class ServicesRepository {
       .order('created_at', { ascending: false })
       .range(from, from + limit - 1);
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getServicesByProvider(providerId: string) {
@@ -68,20 +68,26 @@ export class ServicesRepository {
   }
 
   async getUserRole(userId: string) {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
+    if (error && error.code !== 'PGRST116') {
+      console.error('getUserRole error:', error);
+    }
     return data?.role;
   }
 
   async getServiceOwnershipInfo(id: string) {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from('services')
       .select('provider_id, title, type')
       .eq('id', id)
       .single();
+    if (error && error.code !== 'PGRST116') {
+      console.error('getServiceOwnershipInfo error:', error);
+    }
     return data;
   }
 
@@ -118,7 +124,7 @@ export class ServicesRepository {
       .order('created_at', { ascending: false })
       .range(from, from + limit - 1);
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getServiceBrands(type: string) {

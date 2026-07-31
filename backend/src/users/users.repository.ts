@@ -10,11 +10,14 @@ export class UsersRepository {
   }
 
   async getUserRole(userId: string) {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
+    if (error && error.code !== 'PGRST116') {
+      console.error('getUserRole error:', error);
+    }
     return data?.role;
   }
 
@@ -27,7 +30,7 @@ export class UsersRepository {
       .range(from, from + limit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getUserProfile(id: string) {
@@ -61,7 +64,7 @@ export class UsersRepository {
       .range(from, from + limit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getForumMembers(limit?: number) {
@@ -96,8 +99,11 @@ export class UsersRepository {
       .select('id', { count: 'exact', head: true })
       .gte('last_seen_at', since);
 
-    if (error) return 0;
-    return count || 0;
+    if (error) {
+      console.error('getOnlineCount error:', error);
+      return 0;
+    }
+    return count ?? 0;
   }
 
   async updatePresence(userId: string) {

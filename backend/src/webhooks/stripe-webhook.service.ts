@@ -83,7 +83,7 @@ export class StripeWebhookService {
     const paymentIntentId =
       typeof session.payment_intent === 'string'
         ? session.payment_intent
-        : (session.payment_intent as any)?.id ?? null;
+        : (session.payment_intent as { id: string } | null)?.id ?? null;
 
     // 1. Listing Addon purchase
     if (session.metadata?.type === 'listing_addon') {
@@ -168,8 +168,9 @@ export class StripeWebhookService {
         ? 'trialing'
         : 'active';
 
-    const currentPeriodEnd = (subscription as any).current_period_end
-      ? new Date((subscription as any).current_period_end * 1000).toISOString()
+    const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+    const currentPeriodEnd = periodEnd
+      ? new Date(periodEnd * 1000).toISOString()
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const insertPayload: Record<string, unknown> = {
@@ -202,8 +203,9 @@ export class StripeWebhookService {
 
     if (!subRecord) return;
 
-    const currentPeriodEnd = (subscription as any).current_period_end
-      ? new Date((subscription as any).current_period_end * 1000).toISOString()
+    const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+    const currentPeriodEnd = periodEnd
+      ? new Date(periodEnd * 1000).toISOString()
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const newStatus = subscription.status === 'active' ? 'active' : subscription.status === 'trialing' ? 'trialing' : subscription.status === 'past_due' ? 'past_due' : 'cancelled';
 

@@ -49,18 +49,21 @@ export class ForumPostsRepository {
 
     const { data, count, error } = await q.range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
-    return { data: data || [], total: count || 0 };
+    return { data: data ?? [], total: count ?? 0 };
   }
 
   async getHotPosts(limit: number, postSelect: string) {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from('forum_posts')
       .select(postSelect)
       .eq('is_removed', false)
       .order('view_count', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit);
-    return data || [];
+    if (error) {
+      console.error('getHotPosts error:', error);
+    }
+    return data ?? [];
   }
 
   async getPostBySlug(slug: string, postSelect: string) {

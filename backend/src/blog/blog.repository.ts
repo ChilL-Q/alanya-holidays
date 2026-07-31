@@ -75,7 +75,7 @@ export class BlogRepository {
       .range(offset, offset + limit - 1);
 
     if (error) throw new Error(error.message);
-    return { data: data || [], count: count || 0 };
+    return { data: data ?? [], count: count ?? 0 };
   }
 
   async getFeaturedBlogPosts(limit: number) {

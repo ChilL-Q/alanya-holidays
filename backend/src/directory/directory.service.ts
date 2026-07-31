@@ -105,7 +105,7 @@ export class DirectoryService {
       userId,
     );
     const votes: Record<string, 1 | -1> = {};
-    for (const row of data as any[]) votes[row.listing_id] = row.vote;
+    for (const row of (data as Array<{ listing_id: string; vote: 1 | -1 }>)) votes[row.listing_id] = row.vote;
     return votes;
   }
 
