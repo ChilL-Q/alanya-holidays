@@ -88,6 +88,8 @@ services:
       - ./certbot-data/conf:/etc/letsencrypt
       - ./certbot-data/www:/var/www/certbot
       - frontend-dist:/usr/share/nginx/html:ro
+    tmpfs:
+      - /tmp/nginx_cache:rw,size=256M
     depends_on:
       backend:
         condition: service_healthy

@@ -51,4 +51,28 @@ describe('RedisService', () => {
     expect(await service.getJson('properties:list:page2')).toBeNull();
     expect(await service.getJson('directory:cat:food')).not.toBeNull();
   });
+
+  it('should handle SWR caching correctly', async () => {
+    let callCount = 0;
+    const fetcher = async () => {
+      callCount++;
+      return { count: callCount, title: 'Alanya Tour' };
+    };
+
+    // First call (MISS): fetches data synchronously
+    const firstCall = await service.getOrFetchSWR('swr:test:1', fetcher, {
+      ttlFreshSeconds: 1,
+      ttlStaleSeconds: 60,
+    });
+    expect(firstCall.count).toBe(1);
+    expect(callCount).toBe(1);
+
+    // Immediate second call (FRESH HIT): returns cached data without calling fetcher
+    const secondCall = await service.getOrFetchSWR('swr:test:1', fetcher, {
+      ttlFreshSeconds: 1,
+      ttlStaleSeconds: 60,
+    });
+    expect(secondCall.count).toBe(1);
+    expect(callCount).toBe(1);
+  });
 });

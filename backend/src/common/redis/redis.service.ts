@@ -142,4 +142,61 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       }
     }
   }
+
+  /**
+   * Stale-While-Revalidate (SWR) Caching Strategy.
+   * Returns cached data immediately (0-3ms). If data is stale, launches asynchronous background fetch.
+   */
+  async getOrFetchSWR<T>(
+    key: string,
+    fetchFn: () => Promise<T>,
+    options?: { ttlFreshSeconds?: number; ttlStaleSeconds?: number },
+  ): Promise<T> {
+    const ttlFresh = options?.ttlFreshSeconds ?? 300; // 5 mins fresh
+    const ttlStale = options?.ttlStaleSeconds ?? 3600; // 1 hour total retention
+
+    interface SwrEnvelope<D> {
+      data: D;
+      cachedAt: number;
+      ttlFresh: number;
+    }
+
+    const envelope = await this.getJson<SwrEnvelope<T>>(key);
+
+    if (envelope) {
+      const isFresh = Date.now() - envelope.cachedAt < envelope.ttlFresh * 1000;
+      if (isFresh) {
+        return envelope.data;
+      }
+
+      // Return stale data immediately, revalidate asynchronously in background
+      Promise.resolve().then(async () => {
+        try {
+          const freshData = await fetchFn();
+          const newEnvelope: SwrEnvelope<T> = {
+            data: freshData,
+            cachedAt: Date.now(),
+            ttlFresh,
+          };
+          await this.setJson(key, newEnvelope, ttlStale);
+        } catch (err) {
+          this.logger.warn(
+            `Background SWR revalidation failed for key ${key}: ${(err as Error).message}`,
+          );
+        }
+      });
+
+      return envelope.data;
+    }
+
+    // Cache MISS: Fetch synchronously, store in Redis, return
+    const freshData = await fetchFn();
+    const newEnvelope: SwrEnvelope<T> = {
+      data: freshData,
+      cachedAt: Date.now(),
+      ttlFresh,
+    };
+    await this.setJson(key, newEnvelope, ttlStale);
+    return freshData;
+  }
 }
