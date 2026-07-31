@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { PropertiesRepository } from './properties.repository';
+import { RedisService } from '../common/redis/redis.service';
 
 describe('PropertiesService', () => {
   let service: PropertiesService;
@@ -35,6 +36,14 @@ describe('PropertiesService', () => {
         {
           provide: PropertiesRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            getJson: jest.fn().mockResolvedValue(null),
+            setJson: jest.fn().mockResolvedValue(undefined),
+            delByPattern: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

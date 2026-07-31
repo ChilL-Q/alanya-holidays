@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { ServicesRepository } from './services.repository';
+import { RedisService } from '../common/redis/redis.service';
 
 describe('ServicesService', () => {
   let service: ServicesService;
@@ -38,6 +39,14 @@ describe('ServicesService', () => {
         {
           provide: ServicesRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            getJson: jest.fn().mockResolvedValue(null),
+            setJson: jest.fn().mockResolvedValue(undefined),
+            delByPattern: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

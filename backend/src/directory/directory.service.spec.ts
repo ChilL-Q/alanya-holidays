@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { DirectoryService } from './directory.service';
 import { DirectoryRepository } from './directory.repository';
+import { RedisService } from '../common/redis/redis.service';
 
 describe('DirectoryService', () => {
   let service: DirectoryService;
@@ -38,6 +39,14 @@ describe('DirectoryService', () => {
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            getJson: jest.fn().mockResolvedValue(null),
+            setJson: jest.fn().mockResolvedValue(undefined),
+            delByPattern: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

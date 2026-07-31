@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DirectoryRepository } from './directory.repository';
 import { UserListingVote } from './dto/directory-vote.dto';
+import { RedisService } from '../common/redis/redis.service';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -19,7 +20,10 @@ function validateUUIDs(ids: string[]) {
 
 @Injectable()
 export class DirectoryService {
-  constructor(private readonly directoryRepository: DirectoryRepository) {}
+  constructor(
+    private readonly directoryRepository: DirectoryRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async getDirectoryListings(
     page = 1,
@@ -27,6 +31,10 @@ export class DirectoryService {
     category?: string,
     sortBy = 'base_score',
   ) {
+    const cacheKey = `directory:list:${page}:${limit}:${category || 'all'}:${sortBy}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     const result = await this.directoryRepository.getDirectoryListings(
       page,
       limit,
@@ -34,7 +42,7 @@ export class DirectoryService {
       sortBy,
     );
 
-    return {
+    const response = {
       data: result.data,
       pagination: {
         page,
@@ -43,18 +51,48 @@ export class DirectoryService {
         totalPages: Math.ceil(result.count / limit),
       },
     };
+
+    if (response.data) {
+      await this.redisService.setJson(cacheKey, response, 600); // 10 minutes TTL
+    }
+    return response;
   }
 
   async getDirectoryListing(id: string) {
-    return this.directoryRepository.getDirectoryListingById(id);
+    const cacheKey = `directory:item:${id}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.directoryRepository.getDirectoryListingById(id);
+    if (data) {
+      await this.redisService.setJson(cacheKey, data, 600);
+    }
+    return data;
   }
 
   async getDirectoryListingBySlug(slug: string) {
-    return this.directoryRepository.getDirectoryListingBySlug(slug);
+    const cacheKey = `directory:slug:${slug}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.directoryRepository.getDirectoryListingBySlug(slug);
+    if (data) {
+      await this.redisService.setJson(cacheKey, data, 600);
+    }
+    return data;
   }
 
   async getDirectoryListingsByCategory(categoryId: string) {
-    return this.directoryRepository.getDirectoryListingsByCategory(categoryId);
+    const cacheKey = `directory:cat:${categoryId}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    const data =
+      await this.directoryRepository.getDirectoryListingsByCategory(categoryId);
+    if (data) {
+      await this.redisService.setJson(cacheKey, data, 600);
+    }
+    return data;
   }
 
   async searchDirectoryListings(
@@ -184,6 +222,7 @@ export class DirectoryService {
       await this.directoryRepository.insertListingLocations(rows);
     }
 
+    await this.redisService.delByPattern('directory:*');
     return data;
   }
 
@@ -233,6 +272,8 @@ export class DirectoryService {
         await this.directoryRepository.deleteListingLocations(id);
       }
     }
+
+    await this.redisService.delByPattern('directory:*');
     return data;
   }
 
@@ -245,6 +286,7 @@ export class DirectoryService {
     }
 
     await this.directoryRepository.deleteDirectoryListing(id);
+    await this.redisService.delByPattern('directory:*');
     return { success: true };
   }
 
@@ -280,6 +322,7 @@ export class DirectoryService {
     const listing = await this.directoryRepository.updateListingStatus(id, {
       status: 'approved',
     });
+    await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {
       this.directoryRepository.invokeFunction('send-email', {

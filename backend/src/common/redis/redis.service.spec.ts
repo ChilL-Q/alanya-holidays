@@ -29,4 +29,26 @@ describe('RedisService', () => {
     const val = await service.get('test_key_del');
     expect(val).toBeNull();
   });
+
+  it('should setJson and getJson properly', async () => {
+    const testData = { id: '123', name: 'Alanya Apartment', price: 100 };
+    await service.setJson('properties:item:123', testData, 60);
+
+    const cached = await service.getJson<typeof testData>(
+      'properties:item:123',
+    );
+    expect(cached).toEqual(testData);
+  });
+
+  it('should delete keys by pattern', async () => {
+    await service.setJson('properties:list:page1', { data: [1, 2] });
+    await service.setJson('properties:list:page2', { data: [3, 4] });
+    await service.setJson('directory:cat:food', { data: ['rest1'] });
+
+    await service.delByPattern('properties:*');
+
+    expect(await service.getJson('properties:list:page1')).toBeNull();
+    expect(await service.getJson('properties:list:page2')).toBeNull();
+    expect(await service.getJson('directory:cat:food')).not.toBeNull();
+  });
 });

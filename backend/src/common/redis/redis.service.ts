@@ -101,4 +101,45 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
     this.memoryFallback.delete(key);
   }
+
+  async getJson<T>(key: string): Promise<T | null> {
+    const raw = await this.get(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch (err) {
+      this.logger.warn(
+        `Failed to parse cached JSON for key ${key}: ${(err as Error).message}`,
+      );
+      return null;
+    }
+  }
+
+  async setJson<T>(key: string, data: T, ttlSeconds?: number): Promise<void> {
+    const raw = JSON.stringify(data);
+    await this.set(key, raw, ttlSeconds);
+  }
+
+  async delByPattern(pattern: string): Promise<void> {
+    if (this.client && this.client.status === 'ready') {
+      try {
+        const keys = await this.client.keys(pattern);
+        if (keys.length > 0) {
+          await this.client.del(...keys);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Failed to delete Redis keys by pattern ${pattern}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    // Fallback: match pattern in memoryFallback
+    const regexPattern = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    for (const key of Array.from(this.memoryFallback.keys())) {
+      if (regexPattern.test(key)) {
+        this.memoryFallback.delete(key);
+      }
+    }
+  }
 }

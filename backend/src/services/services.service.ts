@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ServicesRepository } from './services.repository';
+import { RedisService } from '../common/redis/redis.service';
 
 const IMMUTABLE_SERVICE_FIELDS = new Set([
   'id',
@@ -15,7 +16,10 @@ const IMMUTABLE_SERVICE_FIELDS = new Set([
 
 @Injectable()
 export class ServicesService {
-  constructor(private readonly servicesRepository: ServicesRepository) {}
+  constructor(
+    private readonly servicesRepository: ServicesRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   // ============================================
   // Services CRUD (Existing)
@@ -24,10 +28,15 @@ export class ServicesService {
   async createService(data: any, userId: string) {
     const insertData = { ...data, provider_id: userId };
     const service = await this.servicesRepository.insertService(insertData);
+    await this.redisService.delByPattern('services:*');
     return service;
   }
 
   async getServices(type?: string, page = 1, limit = 20) {
+    const cacheKey = `services:list:${type || 'all'}:${page}:${limit}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     const { data, count } = await this.servicesRepository.getServices(
       type,
       page,
@@ -39,7 +48,11 @@ export class ServicesService {
         ...s,
         service_ref: s.service_ref || parseInt(s.id.slice(0, 8), 16) % 10000,
       })) || [];
-    return { data: mappedData, count };
+    const response = { data: mappedData, count };
+    if (response.data) {
+      await this.redisService.setJson(cacheKey, response, 600); // 10 minutes TTL
+    }
+    return response;
   }
 
   async getServicesByProvider(providerId: string) {
@@ -47,9 +60,16 @@ export class ServicesService {
   }
 
   async getService(id: string) {
+    const cacheKey = `services:item:${id}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     const { data, error } =
       await this.servicesRepository.getServiceByIdOrRef(id);
     if (error || !data) throw new NotFoundException('Service not found');
+    if (data) {
+      await this.redisService.setJson(cacheKey, data, 600);
+    }
     return data;
   }
 
@@ -74,6 +94,7 @@ export class ServicesService {
     } = updates;
 
     await this.servicesRepository.updateService(id, safeUpdates);
+    await this.redisService.delByPattern('services:*');
     return { success: true };
   }
 
@@ -87,6 +108,7 @@ export class ServicesService {
     }
 
     await this.servicesRepository.deleteService(id);
+    await this.redisService.delByPattern('services:*');
     return { success: true };
   }
 

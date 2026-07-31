@@ -5,10 +5,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PropertiesRepository } from './properties.repository';
+import { RedisService } from '../common/redis/redis.service';
 
 @Injectable()
 export class PropertiesService {
-  constructor(private readonly propertiesRepository: PropertiesRepository) {}
+  constructor(
+    private readonly propertiesRepository: PropertiesRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   // ============================================
   // Properties CRUD
@@ -20,26 +24,40 @@ export class PropertiesService {
   }
 
   async createProperty(data: any, userId: string) {
-    return this.propertiesRepository.insertProperty(data, userId);
+    const result = await this.propertiesRepository.insertProperty(data, userId);
+    await this.redisService.delByPattern('properties:*');
+    return result;
   }
 
   async getProperties(queryOptions: any) {
-    return this.propertiesRepository.getProperties(queryOptions);
+    const cacheKey = `properties:list:${JSON.stringify(queryOptions || {})}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
+    const data = await this.propertiesRepository.getProperties(queryOptions);
+    if (data) {
+      await this.redisService.setJson(cacheKey, data, 300); // 5 minutes TTL
+    }
+    return data;
   }
 
   async getProperty(id: string) {
+    const cacheKey = `properties:item:${id}`;
+    const cached = await this.redisService.getJson<any>(cacheKey);
+    if (cached) return cached;
+
     const isUUID =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         id,
       );
 
+    let prop: any = null;
     if (isUUID) {
-      const data = await this.propertiesRepository.getPropertyByUUID(id);
-      if (!data) throw new NotFoundException('Property not found');
-      return data;
+      prop = await this.propertiesRepository.getPropertyByUUID(id);
+      if (!prop) throw new NotFoundException('Property not found');
     } else {
       const refId = parseInt(id);
-      const prop = await this.propertiesRepository.getPropertyByRefId(refId);
+      prop = await this.propertiesRepository.getPropertyByRefId(refId);
       if (!prop) throw new NotFoundException('Property not found');
 
       if (prop.host_id) {
@@ -48,8 +66,12 @@ export class PropertiesService {
         );
         if (hostData) prop.host = hostData;
       }
-      return prop;
     }
+
+    if (prop) {
+      await this.redisService.setJson(cacheKey, prop, 600); // 10 minutes TTL
+    }
+    return prop;
   }
 
   async getAvailableProperties(checkIn: string, checkOut: string) {
@@ -87,6 +109,7 @@ export class PropertiesService {
       ...safeUpdates
     } = updates;
     await this.propertiesRepository.updateProperty(id, safeUpdates);
+    await this.redisService.delByPattern('properties:*');
     return { success: true };
   }
 
@@ -104,6 +127,7 @@ export class PropertiesService {
     if (status === 'approved') updates.rejection_reason = null;
 
     await this.propertiesRepository.updateProperty(id, updates);
+    await this.redisService.delByPattern('properties:*');
     return { success: true };
   }
 
@@ -124,6 +148,7 @@ export class PropertiesService {
         location: 'Archived',
       });
     }
+    await this.redisService.delByPattern('properties:*');
     return { success: true };
   }
 
