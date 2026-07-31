@@ -442,9 +442,7 @@ export class BookingsService {
 
     for (const booking of bookings as ConfirmedBookingDetails[]) {
       const itemTitle =
-        booking.property?.title ??
-        booking.service?.title ??
-        'Booking';
+        booking.property?.title ?? booking.service?.title ?? 'Booking';
       const guestEmail = booking.profile?.email;
       if (guestEmail) {
         this.bookingsRepository.invokeEmailFunction({

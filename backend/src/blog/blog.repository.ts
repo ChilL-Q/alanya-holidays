@@ -138,7 +138,10 @@ export class BlogRepository {
           console.warn('get_related_posts RPC warning:', error.message);
         }
       } catch (err) {
-        console.warn('get_related_posts RPC failed, using fallback query:', err);
+        console.warn(
+          'get_related_posts RPC failed, using fallback query:',
+          err,
+        );
       }
     }
 

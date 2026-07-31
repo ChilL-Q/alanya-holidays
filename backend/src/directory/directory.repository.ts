@@ -393,7 +393,11 @@ export class DirectoryRepository {
     return { data, error };
   }
 
-  async callRejectListingClaimRpc(claimId: string, reason: string, userId: string) {
+  async callRejectListingClaimRpc(
+    claimId: string,
+    reason: string,
+    userId: string,
+  ) {
     const { data, error } = await this.client.rpc('reject_listing_claim', {
       p_claim_id: claimId,
       p_reason: reason,

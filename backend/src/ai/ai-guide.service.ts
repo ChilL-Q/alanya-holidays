@@ -21,7 +21,9 @@ export class AiGuideService {
     return crypto.createHash('sha256').update(raw).digest('hex');
   }
 
-  async askGuide(dto: AiGuideDto): Promise<{ answer: string; cached: boolean }> {
+  async askGuide(
+    dto: AiGuideDto,
+  ): Promise<{ answer: string; cached: boolean }> {
     const hash = this.computeHash(dto);
     const cacheKey = `ai_guide:${hash}`;
 
@@ -78,7 +80,7 @@ export class AiGuideService {
     return this.getCuratedFallback(dto);
   }
 
-  private getCuratedFallback(dto: AiGuideDto): string {
+  private getCuratedFallback(_dto: AiGuideDto): string {
     return (
       `Here are recommended highlights for your Alanya holiday:\n` +
       `• Alanya Castle (Alanya Kalesi): Medieval fortress with panoramic Mediterranean sunset views.\n` +

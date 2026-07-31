@@ -106,7 +106,8 @@ export class DirectoryService {
       userId,
     );
     const votes: Record<string, 1 | -1> = {};
-    for (const row of (data as UserListingVote[])) votes[row.listing_id] = row.vote;
+    for (const row of data as UserListingVote[])
+      votes[row.listing_id] = row.vote;
     return votes;
   }
 
@@ -434,7 +435,10 @@ export class DirectoryService {
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const { data, error } =
-      await this.directoryRepository.callApproveListingClaimRpc(claimId, userId);
+      await this.directoryRepository.callApproveListingClaimRpc(
+        claimId,
+        userId,
+      );
     if (error || !data || !data[0]?.success)
       throw new Error(data?.[0]?.message || 'Failed to approve claim');
 
@@ -458,7 +462,11 @@ export class DirectoryService {
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const { data, error } =
-      await this.directoryRepository.callRejectListingClaimRpc(claimId, reason, userId);
+      await this.directoryRepository.callRejectListingClaimRpc(
+        claimId,
+        reason,
+        userId,
+      );
     if (error || !data || !data[0]?.success)
       throw new Error(data?.[0]?.message || 'Failed to reject claim');
 

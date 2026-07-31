@@ -58,19 +58,31 @@ export class MediaProcessingService {
       const thumbPath = `${folderPrefix}${fileId}-thumb.webp`;
 
       // 4. Upload to Supabase Storage
-      const storage = this.supabaseService.getClient().storage.from(options.bucket);
+      const storage = this.supabaseService
+        .getClient()
+        .storage.from(options.bucket);
 
       const [fullUpload, thumbUpload] = await Promise.all([
-        storage.upload(fullPath, fullBuffer, { contentType: 'image/webp', upsert: true }),
-        storage.upload(thumbPath, thumbBuffer, { contentType: 'image/webp', upsert: true }),
+        storage.upload(fullPath, fullBuffer, {
+          contentType: 'image/webp',
+          upsert: true,
+        }),
+        storage.upload(thumbPath, thumbBuffer, {
+          contentType: 'image/webp',
+          upsert: true,
+        }),
       ]);
 
       if (fullUpload.error) {
-        throw new Error(fullUpload.error.message || 'Failed to upload full image');
+        throw new Error(
+          fullUpload.error.message || 'Failed to upload full image',
+        );
       }
 
       if (thumbUpload.error) {
-        throw new Error(thumbUpload.error.message || 'Failed to upload thumbnail');
+        throw new Error(
+          thumbUpload.error.message || 'Failed to upload thumbnail',
+        );
       }
 
       // 5. Get Public URLs

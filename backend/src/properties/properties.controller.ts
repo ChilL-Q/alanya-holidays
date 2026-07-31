@@ -249,7 +249,7 @@ export class PropertiesController {
     if (queryDto.filters) {
       try {
         filters = JSON.parse(queryDto.filters);
-      } catch (error) {
+      } catch {
         throw new BadRequestException('Invalid filters JSON format');
       }
     }

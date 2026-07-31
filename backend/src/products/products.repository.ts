@@ -10,7 +10,9 @@ export class ProductsRepository {
   }
 
   private isValidUuid(id: string): boolean {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      id,
+    );
   }
 
   async insertProduct(productData: any) {

@@ -1,11 +1,19 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client: Redis | null = null;
-  private memoryFallback = new Map<string, { value: string; expiresAt?: number }>();
+  private memoryFallback = new Map<
+    string,
+    { value: string; expiresAt?: number }
+  >();
 
   onModuleInit() {
     const host = process.env.REDIS_HOST || 'localhost';
@@ -24,14 +32,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.client.on('error', (err) => {
-        this.logger.warn(`Redis connection warning: ${err.message}. Using memory fallback.`);
+        this.logger.warn(
+          `Redis connection warning: ${err.message}. Using memory fallback.`,
+        );
       });
 
       this.client.connect().catch(() => {
-        this.logger.warn('Redis connection failed on startup. Operating in in-memory fallback mode.');
+        this.logger.warn(
+          'Redis connection failed on startup. Operating in in-memory fallback mode.',
+        );
       });
     } catch {
-      this.logger.warn('Redis initialization skipped. Operating in in-memory fallback mode.');
+      this.logger.warn(
+        'Redis initialization skipped. Operating in in-memory fallback mode.',
+      );
     }
   }
 

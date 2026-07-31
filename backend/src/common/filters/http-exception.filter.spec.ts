@@ -1,5 +1,5 @@
 import { GlobalHttpExceptionFilter } from './http-exception.filter';
-import { HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
+import { HttpStatus, BadRequestException } from '@nestjs/common';
 import { ArgumentsHost } from '@nestjs/common';
 
 describe('GlobalHttpExceptionFilter', () => {
@@ -48,7 +48,9 @@ describe('GlobalHttpExceptionFilter', () => {
 
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(mockResponse.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: false,

@@ -9,7 +9,10 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { MediaProcessingService, ProcessedMediaResult } from './media-processing.service';
+import {
+  MediaProcessingService,
+  ProcessedMediaResult,
+} from './media-processing.service';
 
 export class UploadMediaDto {
   bucket: string;
@@ -18,7 +21,9 @@ export class UploadMediaDto {
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaProcessingService: MediaProcessingService) {}
+  constructor(
+    private readonly mediaProcessingService: MediaProcessingService,
+  ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))

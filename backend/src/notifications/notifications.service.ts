@@ -3,7 +3,8 @@ import { Server } from 'socket.io';
 import { randomUUID } from 'crypto';
 
 export interface NotificationPayload {
-  type: 'NEW_BOOKING' | 'BOOKING_STATUS_CHANGED' | 'BOOKING_CANCELLED' | 'SYSTEM';
+  type:
+    'NEW_BOOKING' | 'BOOKING_STATUS_CHANGED' | 'BOOKING_CANCELLED' | 'SYSTEM';
   title: string;
   message: string;
   data?: Record<string, any>;
@@ -43,7 +44,9 @@ export class NotificationsService {
     // 2. Emit real-time WebSocket event if server connected
     if (this.server) {
       this.server.to(`user:${userId}`).emit('notification', notification);
-      this.logger.log(`Emitted live notification to user:${userId} (${notification.type})`);
+      this.logger.log(
+        `Emitted live notification to user:${userId} (${notification.type})`,
+      );
     }
 
     return notification;

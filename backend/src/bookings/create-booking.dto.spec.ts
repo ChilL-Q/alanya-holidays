@@ -21,7 +21,7 @@ describe('CreateBookingDto validation', () => {
   });
 
   it('rejects a missing required field (check_in) with 400', async () => {
-    const { check_in, ...missing } = valid;
+    const { check_in: _check_in, ...missing } = valid;
     await expect(pipe.transform(missing, meta)).rejects.toBeInstanceOf(
       BadRequestException,
     );

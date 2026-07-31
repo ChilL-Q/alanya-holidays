@@ -21,8 +21,10 @@ export class ForumStatsRepository {
         .eq('is_removed', false),
     ]);
 
-    if (topicsRes.error) console.error('getStats topics query failed:', topicsRes.error);
-    if (repliesRes.error) console.error('getStats replies query failed:', repliesRes.error);
+    if (topicsRes.error)
+      console.error('getStats topics query failed:', topicsRes.error);
+    if (repliesRes.error)
+      console.error('getStats replies query failed:', repliesRes.error);
 
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
@@ -31,14 +33,16 @@ export class ForumStatsRepository {
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .gte('last_seen_at', since);
-    if (onlineRes.error) console.error('getStats online count query failed:', onlineRes.error);
+    if (onlineRes.error)
+      console.error('getStats online count query failed:', onlineRes.error);
 
     const membersRes = await this.client
       .from('profiles')
       .select('full_name')
       .order('created_at', { ascending: false })
       .limit(1);
-    if (membersRes.error) console.error('getStats latest member query failed:', membersRes.error);
+    if (membersRes.error)
+      console.error('getStats latest member query failed:', membersRes.error);
 
     return {
       totalTopics: topicsRes.count ?? 0,

@@ -36,8 +36,11 @@ describe('NotificationsGateway', () => {
       emit: jest.fn(),
     } as unknown as Socket;
 
-    const result = await gateway.handleSubscribe(socketMock, { userId: 'user-777' });
+    const result = await gateway.handleSubscribe(socketMock, {
+      userId: 'user-777',
+    });
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(socketMock.join).toHaveBeenCalledWith('user:user-777');
     expect(result).toEqual({ event: 'subscribed', room: 'user:user-777' });
   });

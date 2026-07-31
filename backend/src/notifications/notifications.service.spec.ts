@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotificationsService, NotificationPayload } from './notifications.service';
+import {
+  NotificationsService,
+  NotificationPayload,
+} from './notifications.service';
 import { Server } from 'socket.io';
 
 describe('NotificationsService', () => {

@@ -13,7 +13,8 @@ export class StripeWebhookService {
     private readonly bookingsService: BookingsService,
   ) {
     const apiKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
-    const apiVersion = (process.env.STRIPE_API_VERSION || '2025-01-27.acacia') as Stripe.LatestApiVersion;
+    const apiVersion = (process.env.STRIPE_API_VERSION ||
+      '2025-01-27.acacia') as Stripe.LatestApiVersion;
     this.stripe = new Stripe(apiKey, { apiVersion });
   }
 
@@ -21,17 +22,28 @@ export class StripeWebhookService {
     return this.supabaseService.getClient();
   }
 
-  async processWebhookEvent(rawBody: Buffer, signature: string): Promise<{ received: boolean }> {
+  async processWebhookEvent(
+    rawBody: Buffer,
+    signature: string,
+  ): Promise<{ received: boolean }> {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      throw new BadRequestException('STRIPE_WEBHOOK_SECRET is not configured on server');
+      throw new BadRequestException(
+        'STRIPE_WEBHOOK_SECRET is not configured on server',
+      );
     }
 
     let event: Stripe.Event;
     try {
-      event = await this.stripe.webhooks.constructEventAsync(rawBody, signature, webhookSecret);
+      event = await this.stripe.webhooks.constructEventAsync(
+        rawBody,
+        signature,
+        webhookSecret,
+      );
     } catch (err: any) {
-      this.logger.error(`Webhook signature verification failed: ${err.message}`);
+      this.logger.error(
+        `Webhook signature verification failed: ${err.message}`,
+      );
       throw new BadRequestException(`Webhook Error: ${err.message}`);
     }
 
@@ -39,35 +51,35 @@ export class StripeWebhookService {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        await this.handleCheckoutSessionCompleted(event.data.object);
         break;
 
       case 'customer.subscription.created':
-        await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+        await this.handleSubscriptionCreated(event.data.object);
         break;
 
       case 'customer.subscription.updated':
-        await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        await this.handleSubscriptionUpdated(event.data.object);
         break;
 
       case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        await this.handleSubscriptionDeleted(event.data.object);
         break;
 
       case 'invoice.payment_failed':
-        await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        await this.handleInvoicePaymentFailed(event.data.object);
         break;
 
       case 'payment_intent.payment_failed':
-        await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+        await this.handlePaymentIntentFailed(event.data.object);
         break;
 
       case 'charge.dispute.created':
-        await this.handleDisputeCreated(event.data.object as Stripe.Dispute);
+        await this.handleDisputeCreated(event.data.object);
         break;
 
       case 'charge.refunded':
-        await this.handleChargeRefunded(event.data.object as Stripe.Charge);
+        await this.handleChargeRefunded(event.data.object);
         break;
 
       default:
@@ -77,13 +89,15 @@ export class StripeWebhookService {
     return { received: true };
   }
 
-  private async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  private async handleCheckoutSessionCompleted(
+    session: Stripe.Checkout.Session,
+  ) {
     if (session.payment_status !== 'paid') return;
 
     const paymentIntentId =
       typeof session.payment_intent === 'string'
         ? session.payment_intent
-        : (session.payment_intent as { id: string } | null)?.id ?? null;
+        : ((session.payment_intent as { id: string } | null)?.id ?? null);
 
     // 1. Listing Addon purchase
     if (session.metadata?.type === 'listing_addon') {
@@ -98,7 +112,9 @@ export class StripeWebhookService {
           .maybeSingle();
 
         if (existing) {
-          this.logger.warn(`Skipping duplicate add-on webhook for payment_intent ${paymentIntentId}`);
+          this.logger.warn(
+            `Skipping duplicate add-on webhook for payment_intent ${paymentIntentId}`,
+          );
           return;
         }
       }
@@ -121,7 +137,10 @@ export class StripeWebhookService {
       if (addonType === 'seasonal_placement') patch.is_featured = true;
 
       if (Object.keys(patch).length > 0) {
-        await this.supabase.from('directory_listings').update(patch).eq('id', listingId);
+        await this.supabase
+          .from('directory_listings')
+          .update(patch)
+          .eq('id', listingId);
       }
 
       await this.supabase.from('notifications').insert({
@@ -164,11 +183,14 @@ export class StripeWebhookService {
 
     const status =
       subscription.status === 'trialing' ||
-      (subscription.trial_end && new Date(subscription.trial_end * 1000) > new Date())
+      (subscription.trial_end &&
+        new Date(subscription.trial_end * 1000) > new Date())
         ? 'trialing'
         : 'active';
 
-    const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+    const periodEnd = (
+      subscription as unknown as { current_period_end?: number }
+    ).current_period_end;
     const currentPeriodEnd = periodEnd
       ? new Date(periodEnd * 1000).toISOString()
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -203,11 +225,20 @@ export class StripeWebhookService {
 
     if (!subRecord) return;
 
-    const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
+    const periodEnd = (
+      subscription as unknown as { current_period_end?: number }
+    ).current_period_end;
     const currentPeriodEnd = periodEnd
       ? new Date(periodEnd * 1000).toISOString()
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    const newStatus = subscription.status === 'active' ? 'active' : subscription.status === 'trialing' ? 'trialing' : subscription.status === 'past_due' ? 'past_due' : 'cancelled';
+    const newStatus =
+      subscription.status === 'active'
+        ? 'active'
+        : subscription.status === 'trialing'
+          ? 'trialing'
+          : subscription.status === 'past_due'
+            ? 'past_due'
+            : 'cancelled';
 
     await this.supabase
       .from('premium_subscriptions')
@@ -262,7 +293,8 @@ export class StripeWebhookService {
     await this.supabase.from('notifications').insert({
       user_id: subRecord.user_id,
       title: '⚠️ Payment Failed',
-      message: 'Your Premium subscription payment failed. Please update your payment method.',
+      message:
+        'Your Premium subscription payment failed. Please update your payment method.',
       type: 'error',
       link: '/profile',
     });
@@ -294,7 +326,10 @@ export class StripeWebhookService {
       .maybeSingle();
 
     if (booking) {
-      await this.supabase.from('bookings').update({ payment_status: 'failed' }).eq('id', booking.id);
+      await this.supabase
+        .from('bookings')
+        .update({ payment_status: 'failed' })
+        .eq('id', booking.id);
     }
   }
 
@@ -309,7 +344,10 @@ export class StripeWebhookService {
       .maybeSingle();
 
     if (booking) {
-      await this.supabase.from('bookings').update({ payment_status: 'refunded' }).eq('id', booking.id);
+      await this.supabase
+        .from('bookings')
+        .update({ payment_status: 'refunded' })
+        .eq('id', booking.id);
     }
   }
 }

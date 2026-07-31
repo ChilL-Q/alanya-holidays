@@ -12,9 +12,14 @@ describe('MediaProcessingService', () => {
   let getPublicUrlMock: jest.Mock;
 
   beforeEach(async () => {
-    uploadMock = jest.fn().mockResolvedValue({ data: { path: 'test.webp' }, error: null });
+    uploadMock = jest
+      .fn()
+      .mockResolvedValue({ data: { path: 'test.webp' }, error: null });
     getPublicUrlMock = jest.fn().mockReturnValue({
-      data: { publicUrl: 'https://example.supabase.co/storage/v1/object/public/properties/test.webp' },
+      data: {
+        publicUrl:
+          'https://example.supabase.co/storage/v1/object/public/properties/test.webp',
+      },
     });
 
     supabaseServiceMock = {
@@ -74,10 +79,18 @@ describe('MediaProcessingService', () => {
     const secondCallArgs = uploadMock.mock.calls[1];
 
     expect(firstCallArgs[0]).toMatch(/^apartment-123\/[a-f0-9-]+-full\.webp$/);
-    expect(firstCallArgs[2]).toEqual({ contentType: 'image/webp', upsert: true });
+    expect(firstCallArgs[2]).toEqual({
+      contentType: 'image/webp',
+      upsert: true,
+    });
 
-    expect(secondCallArgs[0]).toMatch(/^apartment-123\/[a-f0-9-]+-thumb\.webp$/);
-    expect(secondCallArgs[2]).toEqual({ contentType: 'image/webp', upsert: true });
+    expect(secondCallArgs[0]).toMatch(
+      /^apartment-123\/[a-f0-9-]+-thumb\.webp$/,
+    );
+    expect(secondCallArgs[2]).toEqual({
+      contentType: 'image/webp',
+      upsert: true,
+    });
 
     // Verify sharp metadata on uploaded buffers
     const uploadedMainBuffer = firstCallArgs[1] as Buffer;
@@ -96,7 +109,10 @@ describe('MediaProcessingService', () => {
   });
 
   it('should throw an error if file upload to Supabase fails', async () => {
-    uploadMock.mockResolvedValueOnce({ data: null, error: new Error('Storage bucket full') });
+    uploadMock.mockResolvedValueOnce({
+      data: null,
+      error: new Error('Storage bucket full'),
+    });
 
     const inputBuffer = await sharp({
       create: {

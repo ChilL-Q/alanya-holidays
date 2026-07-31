@@ -21,7 +21,9 @@ export class ForumPostsService {
     const missingParentIds = Array.from(
       new Set(
         posts
-          .filter((p) => p.category?.parent_id && p.category.parent === undefined)
+          .filter(
+            (p) => p.category?.parent_id && p.category.parent === undefined,
+          )
           .map((p) => p.category.parent_id),
       ),
     );

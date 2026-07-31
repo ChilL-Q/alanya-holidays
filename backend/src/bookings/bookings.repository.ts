@@ -322,8 +322,8 @@ export class BookingsRepository {
     return data || [];
   }
 
-  invokeEmailFunction(payload: any) {
-    this.client.functions
+  async invokeEmailFunction(payload: any): Promise<void> {
+    await this.client.functions
       .invoke('send-email', { body: payload })
       .catch((err) => console.error(err));
   }

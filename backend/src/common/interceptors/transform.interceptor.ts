@@ -14,9 +14,10 @@ export interface ResponseEnvelope<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseEnvelope<T> | T>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ResponseEnvelope<T> | T
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,

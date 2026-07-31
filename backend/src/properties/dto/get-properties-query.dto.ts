@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsNumber, ValidateNested } from 'class-validator';
-import { PropertyFilterDto } from './property-filter.dto';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class GetPropertiesQueryDto {
   @IsOptional()

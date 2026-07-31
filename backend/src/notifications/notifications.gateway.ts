@@ -40,7 +40,9 @@ export class NotificationsGateway implements OnGatewayInit {
       this.logger.log(`Client ${client.id} joined room ${room}`);
 
       // Send recent unread notifications upon connection
-      const recent = this.notificationsService.getUserNotifications(data.userId);
+      const recent = this.notificationsService.getUserNotifications(
+        data.userId,
+      );
       client.emit('initial_notifications', recent);
 
       return { event: 'subscribed', room };

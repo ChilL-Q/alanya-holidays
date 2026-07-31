@@ -71,7 +71,10 @@ describe('ServicesService', () => {
     it('should return mapped services with ref', async () => {
       mockRepository.getServices.mockResolvedValueOnce({
         data: [
-          { id: '12345678-abcd-1234-5678-123456789abc', title: 'Service A' } as any,
+          {
+            id: '12345678-abcd-1234-5678-123456789abc',
+            title: 'Service A',
+          } as any,
         ],
         count: 1,
       });
