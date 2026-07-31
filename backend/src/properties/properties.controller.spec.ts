@@ -66,9 +66,11 @@ describe('PropertiesController', () => {
   });
 
   it('should parse filters JSON in getProperties when passed as string', async () => {
+    // Unit test bypasses the global ValidationPipe, so pass post-transform
+    // numeric page/limit (the string→number coercion is covered by the DTO spec).
     await controller.getProperties({
-      page: '2',
-      limit: '15',
+      page: 2,
+      limit: 15,
       filters: '{"minPrice":100}',
     });
 
