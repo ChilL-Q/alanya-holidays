@@ -56,6 +56,17 @@ jobs:
             cd "$TARGET_DIR"
             git fetch origin main
             git reset --hard origin/main
+            # Ensure VPS firewall allows HTTP (80), HTTPS (443), and SSH (22)
+            if command -v ufw >/dev/null 2>&1; then
+              ufw allow 80/tcp || true
+              ufw allow 443/tcp || true
+              ufw allow 22/tcp || true
+              ufw --force enable || true
+            fi
+            if command -v iptables >/dev/null 2>&1; then
+              iptables -I INPUT -p tcp --dport 80 -j ACCEPT || true
+              iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
+            fi
             [ -f .env.production ] || touch .env.production
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
