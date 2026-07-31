@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DirectoryRepository } from './directory.repository';
+import { UserListingVote } from './dto/directory-vote.dto';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -105,7 +106,7 @@ export class DirectoryService {
       userId,
     );
     const votes: Record<string, 1 | -1> = {};
-    for (const row of (data as Array<{ listing_id: string; vote: 1 | -1 }>)) votes[row.listing_id] = row.vote;
+    for (const row of (data as UserListingVote[])) votes[row.listing_id] = row.vote;
     return votes;
   }
 

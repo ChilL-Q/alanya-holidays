@@ -7,6 +7,7 @@ import {
 import { BookingsRepository } from './bookings.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { ConfirmedBookingDetails } from './dto/booking-notification.dto';
 
 @Injectable()
 export class BookingsService {
@@ -439,14 +440,7 @@ export class BookingsService {
     const bookings =
       await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
 
-    for (const booking of bookings as Array<{
-      check_in?: string;
-      check_out?: string;
-      guests?: number;
-      property?: { title?: string };
-      service?: { title?: string };
-      profile?: { email?: string };
-    }>) {
+    for (const booking of bookings as ConfirmedBookingDetails[]) {
       const itemTitle =
         booking.property?.title ??
         booking.service?.title ??
