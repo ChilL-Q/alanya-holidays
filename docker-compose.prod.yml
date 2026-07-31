@@ -12,6 +12,8 @@ services:
     restart: unless-stopped
     command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
     logging: *default-logging
+    networks:
+      - backend-net
     deploy:
       resources:
         limits:
@@ -36,6 +38,8 @@ services:
     env_file:
       - .env.production
     logging: *default-logging
+    networks:
+      - backend-net
     deploy:
       resources:
         limits:
@@ -57,6 +61,8 @@ services:
       context: .
       dockerfile: frontend/Dockerfile.prod
     restart: unless-stopped
+    networks:
+      - frontend-net
     volumes:
       - frontend-dist:/usr/share/nginx/html
     logging: *default-logging
@@ -68,6 +74,9 @@ services:
       - "80:80"
       - "443:443"
     logging: *default-logging
+    networks:
+      - frontend-net
+      - backend-net
     deploy:
       resources:
         limits:
@@ -95,6 +104,8 @@ services:
     image: certbot/certbot
     restart: unless-stopped
     logging: *default-logging
+    networks:
+      - frontend-net
     volumes:
       - ./certbot-data/conf:/etc/letsencrypt
       - ./certbot-data/www:/var/www/certbot
@@ -102,4 +113,12 @@ services:
 
 volumes:
   frontend-dist:
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+    internal: true
+
 
