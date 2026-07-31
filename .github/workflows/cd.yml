@@ -56,16 +56,21 @@ jobs:
             cd "$TARGET_DIR"
             git fetch origin main
             git reset --hard origin/main
-            # Ensure VPS firewall allows HTTP (80), HTTPS (443), and SSH (22)
+            # Ensure VPS firewall and Docker forwarding allow HTTP (80), HTTPS (443), and SSH (22)
             if command -v ufw >/dev/null 2>&1; then
               ufw allow 80/tcp || true
               ufw allow 443/tcp || true
               ufw allow 22/tcp || true
-              ufw --force enable || true
+              ufw route allow proto tcp from any to any port 80 || true
+              ufw route allow proto tcp from any to any port 443 || true
+              sed -i 's/DEFAULT_FORWARD_POLICY="DROP"/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw || true
+              ufw reload || true
             fi
             if command -v iptables >/dev/null 2>&1; then
               iptables -I INPUT -p tcp --dport 80 -j ACCEPT || true
               iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
+              iptables -I DOCKER-USER -p tcp --dport 80 -j ACCEPT || true
+              iptables -I DOCKER-USER -p tcp --dport 443 -j ACCEPT || true
             fi
             [ -f .env.production ] || touch .env.production
             # Ensure SSL certificate directory and fallback certificates exist with readable permissions
