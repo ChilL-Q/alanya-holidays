@@ -35,12 +35,13 @@ export const membersService = {
         try {
             const headers = await getAuthHeaders();
             if (!headers.Authorization) return;
-            await fetch('/api/users/presence/touch', {
+            const res = await fetch('/api/users/presence/touch', {
                 method: 'PUT',
                 headers,
             });
-        } catch (e) {
-            console.error('Failed to update presence:', e);
+            if (!res.ok) return;
+        } catch {
+            // Ignore presence touch errors quietly
         }
     },
 };

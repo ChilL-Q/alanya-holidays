@@ -43,6 +43,7 @@ export const favoritesService = {
         const headers = await getAuthHeaders();
         if (!headers.Authorization) return [];
         const res = await fetch('/api/favorites', { headers });
+        if (res.status === 401 || res.status === 403) return [];
         if (!res.ok) throw new Error('Failed to fetch favorites');
         return res.json() as Promise<string[]>;
     }
