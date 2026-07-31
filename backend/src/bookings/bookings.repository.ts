@@ -99,19 +99,17 @@ export class BookingsRepository {
 
     const propertyIds = [
       ...new Set(
-        bookings
-          .map((b) => b.item_id || b.property_id)
-          .filter(Boolean),
+        bookings.map((b) => b.item_id || b.property_id).filter(Boolean),
       ),
     ];
     const serviceIds = [
       ...new Set(
-        bookings
-          .map((b) => b.item_id || b.service_id)
-          .filter(Boolean),
+        bookings.map((b) => b.item_id || b.service_id).filter(Boolean),
       ),
     ];
-    const userIds = [...new Set(bookings.map((b) => b.user_id).filter(Boolean))];
+    const userIds = [
+      ...new Set(bookings.map((b) => b.user_id).filter(Boolean)),
+    ];
 
     const [propertiesRes, servicesRes, profilesRes] = await Promise.all([
       propertyIds.length
@@ -347,7 +345,9 @@ export class BookingsRepository {
     const ownedIds = (ownedBookings ?? []).map((b: { id: string }) => b.id);
     const unauthorized = bookingIds.filter((id) => !ownedIds.includes(id));
     if (unauthorized.length > 0) {
-      throw new Error(`Unauthorized booking IDs in Stripe session: ${unauthorized.join(', ')}`);
+      throw new Error(
+        `Unauthorized booking IDs in Stripe session: ${unauthorized.join(', ')}`,
+      );
     }
 
     const updatePayload: Record<string, unknown> = {
@@ -373,12 +373,14 @@ export class BookingsRepository {
   async getConfirmedBookingsDetails(bookingIds: string[]) {
     const { data, error } = await this.client
       .from('bookings')
-      .select(`
+      .select(
+        `
         id, check_in, check_out, guests,
         property:properties(title),
         service:services(title),
         profile:profiles!bookings_user_id_fkey(email)
-      `)
+      `,
+      )
       .in('id', bookingIds);
 
     if (error) return [];

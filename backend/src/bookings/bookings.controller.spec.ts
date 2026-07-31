@@ -53,7 +53,14 @@ describe('BookingsController', () => {
   });
 
   it('should delegate createBooking call to service', async () => {
-    const dto = { item_id: 'p1', user_id: 'u1' };
+    const dto = {
+      item_id: 'p1',
+      user_id: 'u1',
+      check_in: '2026-08-01',
+      check_out: '2026-08-05',
+      total_price: 100,
+      guests: 2,
+    };
     const res = await controller.createBooking(dto);
     expect(res).toEqual({ id: 'booking-id-123', data: 'booking-id-123' });
     expect(mockService.createBooking).toHaveBeenCalledWith(dto);

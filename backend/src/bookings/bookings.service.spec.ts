@@ -245,7 +245,12 @@ describe('BookingsService', () => {
         { id: 'client-5', full_name: 'John Doe', email: 'john@example.com' },
       ]);
 
-      const hostBookings = await service.getBookingsForHost('host-123', undefined, undefined, 'host-123');
+      const hostBookings = await service.getBookingsForHost(
+        'host-123',
+        undefined,
+        undefined,
+        'host-123',
+      );
       expect(hostBookings).toHaveLength(1);
       expect(hostBookings[0].user.full_name).toBe('John Doe');
 
@@ -265,7 +270,10 @@ describe('BookingsService', () => {
         'host-123',
       );
       expect(confirmResult).toEqual({ success: true });
-      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith('b-20', 'confirmed');
+      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith(
+        'b-20',
+        'confirmed',
+      );
     });
 
     it('Admin workflow: should allow admin to view all bookings and update payout status', async () => {
@@ -274,14 +282,24 @@ describe('BookingsService', () => {
         { id: 'b-100', status: 'pending', user: { full_name: 'Alice' } },
       ]);
 
-      const adminBookings = await service.getAdminBookings('pending', 'admin-id');
+      const adminBookings = await service.getAdminBookings(
+        'pending',
+        'admin-id',
+      );
       expect(adminBookings).toHaveLength(1);
       expect(mockRepository.getAdminBookings).toHaveBeenCalledWith('pending');
 
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
-      const payoutResult = await service.updatePayoutStatus('b-100', 'completed', 'admin-id');
+      const payoutResult = await service.updatePayoutStatus(
+        'b-100',
+        'completed',
+        'admin-id',
+      );
       expect(payoutResult).toEqual({ success: true });
-      expect(mockRepository.updatePayoutStatus).toHaveBeenCalledWith('b-100', 'completed');
+      expect(mockRepository.updatePayoutStatus).toHaveBeenCalledWith(
+        'b-100',
+        'completed',
+      );
     });
   });
 });
