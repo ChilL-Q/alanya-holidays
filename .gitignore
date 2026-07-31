@@ -93,5 +93,10 @@ dock
 .turbo/
 .vite/
 shared/types/*.js
-shared/types/*.js.map
 shared/types/*.d.ts
+
+# Agent customization and knowledge graph artifacts
+.agents/
+graphify-out/
+
+
