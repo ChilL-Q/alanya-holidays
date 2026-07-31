@@ -13,6 +13,7 @@ import {
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateStatusDto } from '../common/dto/update-status.dto';
 
 @Controller('bookings')
 export class BookingsController {
@@ -80,7 +81,7 @@ export class BookingsController {
   @UseGuards(AuthGuard)
   async updateBookingStatus(
     @Param('id') id: string,
-    @Body() body: { status: string; reason?: string },
+    @Body() body: UpdateStatusDto,
     @Req() req: any,
   ) {
     return this.bookingsService.updateBookingStatus(

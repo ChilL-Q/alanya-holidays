@@ -16,6 +16,7 @@ import { PropertiesService } from './properties.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { GetPropertiesQueryDto } from './dto/get-properties-query.dto';
 import { PropertyFilterDto } from './dto/property-filter.dto';
+import { UpdateStatusDto } from '../common/dto/update-status.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -288,7 +289,7 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   async updatePropertyStatus(
     @Param('id') id: string,
-    @Body() data: { status: string; reason?: string },
+    @Body() data: UpdateStatusDto,
     @Req() request: any,
   ) {
     return this.propertiesService.updatePropertyStatus(

@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { DirectoryService } from './directory.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { SubmitClaimDto } from './dto/submit-claim.dto';
 
 @Controller('directory')
 export class DirectoryController {
@@ -186,7 +187,7 @@ export class DirectoryController {
   // Claims
   @Post('claims')
   @UseGuards(AuthGuard)
-  async submitListingClaim(@Body() claim: any, @Req() req: any) {
+  async submitListingClaim(@Body() claim: SubmitClaimDto, @Req() req: any) {
     return this.directoryService.submitListingClaim(claim, req.user.id);
   }
 
