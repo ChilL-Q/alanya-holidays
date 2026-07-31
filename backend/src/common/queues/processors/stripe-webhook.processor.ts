@@ -5,7 +5,10 @@ export class StripeWebhookProcessor {
   private readonly logger = new Logger(StripeWebhookProcessor.name);
 
   async processEvent(payload: { id: string; type: string }): Promise<boolean> {
-    this.logger.log(`Processing async Stripe event ${payload.type} (${payload.id})`);
+    this.logger.log(
+      `Processing async Stripe event ${payload.type} (${payload.id})`,
+    );
+    await Promise.resolve();
     return true;
   }
 }

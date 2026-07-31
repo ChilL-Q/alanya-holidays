@@ -147,4 +147,3 @@ describe('MediaProcessingService', () => {
     expect(Buffer.isBuffer(webpBuffer)).toBe(true);
   });
 });
-

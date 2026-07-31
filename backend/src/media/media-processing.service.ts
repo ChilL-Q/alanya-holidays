@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
@@ -41,7 +45,6 @@ export class MediaProcessingService {
   }
 
   async processAndUploadImage(
-
     file: UploadedFile,
     options: ImageProcessingOptions,
   ): Promise<ProcessedMediaResult> {

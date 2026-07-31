@@ -91,8 +91,8 @@ describe('ServicesService', () => {
       const result = await service.getServices('car', 1, 20);
 
       expect(result.count).toBe(1);
-      expect((result.data[0] as any).title).toBe('Service A');
-      expect((result.data[0] as any).service_ref).toBeDefined();
+      expect(result.data[0].title).toBe('Service A');
+      expect(result.data[0].service_ref).toBeDefined();
       expect(mockRepository.getServices).toHaveBeenCalledWith('car', 1, 20);
     });
   });

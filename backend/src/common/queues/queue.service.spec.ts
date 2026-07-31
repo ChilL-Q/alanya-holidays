@@ -30,7 +30,9 @@ describe('QueueService', () => {
 
   it('should format queue job correctly', async () => {
     expect(service).toBeDefined();
-    const result = await service.enqueueTask('media', 'process-photo', { id: '123' });
+    const result = await service.enqueueTask('media', 'process-photo', {
+      id: '123',
+    });
     expect(result).toBe(true);
     expect(redisServiceMock.setJson).toHaveBeenCalledWith(
       expect.stringMatching(/^queue:media:process-photo:\d+$/),
