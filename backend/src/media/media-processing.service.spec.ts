@@ -136,4 +136,15 @@ describe('MediaProcessingService', () => {
       ),
     ).rejects.toThrow('Storage bucket full');
   });
+
+  it('should convert raw image buffer into WebP format', async () => {
+    const samplePng = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const webpBuffer = await service.convertToWebp(samplePng, 80);
+    expect(webpBuffer).toBeDefined();
+    expect(Buffer.isBuffer(webpBuffer)).toBe(true);
+  });
 });
+

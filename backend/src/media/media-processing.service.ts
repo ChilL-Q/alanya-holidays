@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
@@ -27,9 +27,21 @@ export interface UploadedFile {
 
 @Injectable()
 export class MediaProcessingService {
+  private readonly logger = new Logger(MediaProcessingService.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
+  async convertToWebp(inputBuffer: Buffer, quality = 80): Promise<Buffer> {
+    try {
+      return await sharp(inputBuffer).webp({ quality }).toBuffer();
+    } catch (err) {
+      this.logger.error(`WebP conversion failed: ${(err as Error).message}`);
+      throw err;
+    }
+  }
+
   async processAndUploadImage(
+
     file: UploadedFile,
     options: ImageProcessingOptions,
   ): Promise<ProcessedMediaResult> {
