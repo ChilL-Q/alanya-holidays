@@ -33,18 +33,29 @@ jobs:
             set -e
             TARGET_DIR=""
             for dir in /opt/alanya-holidays ~/alanya-holidays /var/www/alanya-holidays; do
-              if [ -d "$dir" ]; then
+              if [ -d "$dir/.git" ]; then
                 TARGET_DIR="$dir"
                 break
               fi
             done
             if [ -z "$TARGET_DIR" ]; then
               TARGET_DIR="/opt/alanya-holidays"
-              mkdir -p "$TARGET_DIR"
-              git clone https://github.com/Nazarovruslan01/alanya-holidays.git "$TARGET_DIR"
+              if [ ! -d "$TARGET_DIR/.git" ]; then
+                mkdir -p "$TARGET_DIR"
+                if [ -d "$TARGET_DIR" ] && [ "$(ls -A "$TARGET_DIR")" ]; then
+                  cd "$TARGET_DIR"
+                  git init
+                  git remote add origin https://github.com/Nazarovruslan01/alanya-holidays.git || true
+                  git fetch origin main
+                  git checkout -B main origin/main
+                else
+                  git clone https://github.com/Nazarovruslan01/alanya-holidays.git "$TARGET_DIR"
+                fi
+              fi
             fi
             cd "$TARGET_DIR"
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
             docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
             docker image prune -f
