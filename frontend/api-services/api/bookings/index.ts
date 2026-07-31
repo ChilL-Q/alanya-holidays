@@ -5,10 +5,7 @@ import { createBooking, updateBookingStatus, updatePayoutStatus, cancelBooking, 
 export type { BookingCreateInput } from './mutations';
 export type { BookingConflictResult } from './mutations';
 
-export type EnrichedBooking = Booking & {
-    user?: Partial<UserProfile>;
-    itemTitle?: string;
-};
+export type { EnrichedBooking } from './types';
 
 export const bookingsService = {
     createBooking,

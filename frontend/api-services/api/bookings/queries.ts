@@ -1,5 +1,5 @@
 import { supabase } from '../../supabase';
-import type { EnrichedBooking } from './index';
+import type { EnrichedBooking } from './types';
 
 async function getAuthHeaders() {
     const { data: { session } } = await supabase.auth.getSession();

@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { BlogPostPreview } from '../../modules/blog';
+import { BlogPostPreview } from '../../modules/blog/api/types';
 
 interface BlogPostCardProps {
     post: BlogPostPreview;
