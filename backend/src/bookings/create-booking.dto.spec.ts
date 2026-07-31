@@ -6,8 +6,8 @@ describe('CreateBookingDto validation', () => {
   const meta = { type: 'body' as const, metatype: CreateBookingDto };
 
   const valid = {
-    item_id: '11111111-1111-1111-1111-111111111111',
-    user_id: '22222222-2222-2222-2222-222222222222',
+    item_id: '11111111-1111-4111-8111-111111111111',
+    user_id: '22222222-2222-4222-8222-222222222222',
     check_in: '2026-08-01',
     check_out: '2026-08-05',
     total_price: 100,
