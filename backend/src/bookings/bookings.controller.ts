@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateStatusDto } from '../common/dto/update-status.dto';
 
 @Controller('bookings')
 export class BookingsController {
@@ -33,7 +35,7 @@ export class BookingsController {
   }
 
   @Post()
-  async createBooking(@Body() createBookingDto: any) {
+  async createBooking(@Body() createBookingDto: CreateBookingDto) {
     const bookingId =
       await this.bookingsService.createBooking(createBookingDto);
     return { id: bookingId, data: bookingId };
@@ -79,7 +81,7 @@ export class BookingsController {
   @UseGuards(AuthGuard)
   async updateBookingStatus(
     @Param('id') id: string,
-    @Body() body: { status: string; reason?: string },
+    @Body() body: UpdateStatusDto,
     @Req() req: any,
   ) {
     return this.bookingsService.updateBookingStatus(

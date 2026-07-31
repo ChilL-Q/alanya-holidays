@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { UpdateStatusDto } from '../common/dto/update-status.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -203,7 +204,7 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async updateServiceStatus(
     @Param('id') id: string,
-    @Body() data: { status: string; reason?: string },
+    @Body() data: UpdateStatusDto,
     @Req() request: any,
   ) {
     return this.servicesService.updateServiceStatus(

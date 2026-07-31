@@ -385,17 +385,19 @@ export class DirectoryRepository {
     }
   }
 
-  async callApproveListingClaimRpc(claimId: string) {
+  async callApproveListingClaimRpc(claimId: string, userId: string) {
     const { data, error } = await this.client.rpc('approve_listing_claim', {
       p_claim_id: claimId,
+      p_user_id: userId,
     });
     return { data, error };
   }
 
-  async callRejectListingClaimRpc(claimId: string, reason: string) {
+  async callRejectListingClaimRpc(claimId: string, reason: string, userId: string) {
     const { data, error } = await this.client.rpc('reject_listing_claim', {
       p_claim_id: claimId,
       p_reason: reason,
+      p_user_id: userId,
     });
     return { data, error };
   }

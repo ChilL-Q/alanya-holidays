@@ -6,18 +6,7 @@ import {
 } from '@nestjs/common';
 import { BookingsRepository } from './bookings.repository';
 import { NotificationsService } from '../notifications/notifications.service';
-
-export interface CreateBookingDto {
-  item_id: string;
-  user_id: string;
-  check_in: string;
-  check_out: string;
-  total_price: number;
-  guests: number;
-  message?: string;
-  payment_method?: string;
-  item_type?: string;
-}
+import { CreateBookingDto } from './dto/create-booking.dto';
 
 @Injectable()
 export class BookingsService {
@@ -186,7 +175,10 @@ export class BookingsService {
         return;
       } catch (err) {
         if (attempt === maxRetries) {
-          console.error(`Email delivery failed after ${maxRetries} attempts:`, err);
+          console.error(
+            `Email delivery failed after ${maxRetries} attempts:`,
+            err,
+          );
         } else {
           const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
           await new Promise((res) => setTimeout(res, delay));
@@ -444,11 +436,14 @@ export class BookingsService {
     }
 
     const confirmedIds = updatedRows.map((r: { id: string }) => r.id);
-    const bookings = await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
+    const bookings =
+      await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
 
     for (const booking of bookings) {
       const itemTitle =
-        (booking.property as any)?.title ?? (booking.service as any)?.title ?? 'Booking';
+        (booking.property as any)?.title ??
+        (booking.service as any)?.title ??
+        'Booking';
       const guestEmail = (booking.profile as any)?.email;
       if (guestEmail) {
         this.bookingsRepository.invokeEmailFunction({
