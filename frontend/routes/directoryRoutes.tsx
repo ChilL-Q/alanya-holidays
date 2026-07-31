@@ -10,7 +10,7 @@ const SeasonalPage = React.lazy(() => import('../pages/SeasonalPage').then(modul
 const NationalityLandingPage = React.lazy(() => import('../pages/NationalityLandingPage').then(module => ({ default: module.NationalityLandingPage })));
 const DirectoryListingPage = React.lazy(() => import('../pages/DirectoryListingPage').then(module => ({ default: module.DirectoryListingPage })));
 
-export const DirectoryRoutes: React.FC = () => (
+export const DirectoryRoutes = (): React.ReactNode => (
     <>
         <Route path="/" element={<DirectoryHome />} />
 

@@ -31,8 +31,20 @@ jobs:
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
           script: |
             set -e
-            cd /opt/alanya-holidays || cd ~/alanya-holidays
+            TARGET_DIR=""
+            for dir in /opt/alanya-holidays ~/alanya-holidays /var/www/alanya-holidays; do
+              if [ -d "$dir" ]; then
+                TARGET_DIR="$dir"
+                break
+              fi
+            done
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR="/opt/alanya-holidays"
+              mkdir -p "$TARGET_DIR"
+              git clone https://github.com/Nazarovruslan01/alanya-holidays.git "$TARGET_DIR"
+            fi
+            cd "$TARGET_DIR"
             git pull origin main
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
-            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
             docker image prune -f

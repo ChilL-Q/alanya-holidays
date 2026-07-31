@@ -17,7 +17,7 @@ const DirectoryAnalyticsPage = React.lazy(() => import('../pages/host/DirectoryA
 const HostUpgradesPage = React.lazy(() => import('../pages/host/HostUpgradesPage').then(module => ({ default: module.HostUpgradesPage })));
 const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditPropertyPage').then(module => ({ default: module.AdminEditPropertyPage })));
 
-export const HostRoutes: React.FC = () => (
+export const HostRoutes = (): React.ReactNode => (
     <>
         <Route path="/add-service" element={
             <HostRoute>

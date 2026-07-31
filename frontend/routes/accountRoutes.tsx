@@ -19,7 +19,7 @@ const BlogSubmitPage = React.lazy(() => import('../modules/blog').then(module =>
 const ForumSubmitPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumSubmitPage })));
 const ForumAskPage = React.lazy(() => import('../modules/forum').then(module => ({ default: module.ForumAskPage })));
 
-export const AccountRoutes: React.FC = () => (
+export const AccountRoutes = (): React.ReactNode => (
     <>
         <Route path="/ai-planner" element={<AuthRoute><AiPlanner /></AuthRoute>} />
         <Route path="/my-itineraries" element={<AuthRoute><MyItinerariesPage /></AuthRoute>} />

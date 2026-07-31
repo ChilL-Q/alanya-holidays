@@ -25,7 +25,7 @@ const AdminEditPropertyPage = React.lazy(() => import('../pages/admin/AdminEditP
 const AdminEditUserPage = React.lazy(() => import('../pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })));
 const AdminEditServicePage = React.lazy(() => import('../pages/admin/AdminEditServicePage').then(module => ({ default: module.AdminEditServicePage })));
 
-export const AdminRoutes: React.FC = () => (
+export const AdminRoutes = (): React.ReactNode => (
     <>
         <Route path="/admin" element={
             <AdminRoute>

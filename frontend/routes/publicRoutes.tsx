@@ -38,7 +38,7 @@ const ForumPostPage = React.lazy(() => import('../modules/forum').then(module =>
 const EventsPage = React.lazy(() => import('../pages/EventsPage').then(module => ({ default: module.EventsPage })));
 const MembersPage = React.lazy(() => import('../pages/MembersPage').then(module => ({ default: module.MembersPage })));
 
-export const PublicRoutes: React.FC = () => (
+export const PublicRoutes = (): React.ReactNode => (
     <>
         <Route path="/itinerary/:id" element={<SharedItineraryPage />} />
         <Route path="/list-property" element={<ListProperty />} />
