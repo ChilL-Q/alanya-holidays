@@ -56,7 +56,7 @@ describe('RedisService', () => {
     let callCount = 0;
     const fetcher = async () => {
       callCount++;
-      return { count: callCount, title: 'Alanya Tour' };
+      return Promise.resolve({ count: callCount, title: 'Alanya Tour' });
     };
 
     // First call (MISS): fetches data synchronously
