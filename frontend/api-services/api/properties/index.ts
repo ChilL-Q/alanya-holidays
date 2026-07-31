@@ -11,6 +11,16 @@ import {
 } from './availability';
 import { getICalFeeds, addICalFeed, removeICalFeed } from './ical';
 
+import { QueryClient } from '@tanstack/react-query';
+
+export async function prefetchPropertyQuery(queryClient: QueryClient, id: string) {
+  return queryClient.prefetchQuery({
+    queryKey: ['property', id],
+    queryFn: () => getProperty(id),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export const propertiesService = {
     // CRUD
     getPropertiesByIds,
@@ -50,4 +60,8 @@ export const propertiesService = {
     getICalFeeds,
     addICalFeed,
     removeICalFeed,
+
+    // Prefetch
+    prefetchPropertyQuery,
 };
+
