@@ -119,7 +119,7 @@ export const Profile: React.FC = () => {
 
         fetchData();
         return () => { isMountedRef.current = false; };
-    }, [user, isAuthenticated, navigate]);
+    }, [user, isAuthenticated, isLoading, navigate]);
 
     const handleLogout = () => {
         logout();
