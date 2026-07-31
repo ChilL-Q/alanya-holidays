@@ -30,3 +30,18 @@ export function transitionTo(navigateCallback: () => void) {
     navigateCallback();
   }
 }
+
+/**
+ * Convert external Supabase Storage URLs to relative proxied Nginx paths
+ * to leverage Single Origin HTTP/2 multiplexing and RAM edge caching (< 1ms).
+ */
+export function getProxiedImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.includes('.supabase.co/storage/v1/object/public/')) {
+    const parts = url.split('/storage/v1/object/public/');
+    if (parts.length > 1) {
+      return `/storage/v1/object/public/${parts[1]}`;
+    }
+  }
+  return url;
+}

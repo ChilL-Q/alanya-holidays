@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Property } from '../../types/index';
+import { prefetchModule, getProxiedImageUrl } from '../../src/utils/prefetch-utils';
 
 interface PropertyCardProps {
     property: Property;
@@ -19,11 +20,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     return (
         <Link
             to={`/property/${property.ref_id || property.id}`}
+            onMouseEnter={() => prefetchModule(() => import('../../pages/PropertyDetails'))}
+            onFocus={() => prefetchModule(() => import('../../pages/PropertyDetails'))}
             className="group block bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover-lift border border-slate-100 dark:border-slate-800/50 relative"
         >
             <div className="relative aspect-[4/3] overflow-hidden bg-slate-200 dark:bg-slate-800/80">
                 <img
-                    src={property.image || undefined}
+                    src={getProxiedImageUrl(property.image) || undefined}
                     alt={property.title}
                     loading="lazy"
                     decoding="async"
