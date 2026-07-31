@@ -199,7 +199,7 @@ export const Checkout: React.FC = () => {
                         />
                     </div>
 
-                    <div className="md:col-span-1 animate-fade-up delay-200 opacity-0 fill-mode-forwards">
+                    <div className="md:col-span-1 animate-fade-up">
                         <CheckoutOrderSummary
                             items={items}
                             total={total}

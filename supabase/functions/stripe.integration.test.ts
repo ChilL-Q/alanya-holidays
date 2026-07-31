@@ -19,9 +19,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 // Use test Supabase instance
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:54321';
-const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.SUPABASE_SERVICE_ROLE_KEY || 'test-key';
-const _STRIPE_SECRET_KEY = import.meta.env.STRIPE_SECRET_KEY || 'sk_test_mock';
+const SUPABASE_URL = (globalThis as any).process?.env?.VITE_SUPABASE_URL || 'http://localhost:54321';
+const SUPABASE_SERVICE_ROLE_KEY = (globalThis as any).process?.env?.SUPABASE_SERVICE_ROLE_KEY || 'test-key';
+const _STRIPE_SECRET_KEY = (globalThis as any).process?.env?.STRIPE_SECRET_KEY || 'sk_test_mock';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -34,12 +34,13 @@ describe('Stripe Integration Tests', () => {
     const { data: { users } } = await supabase.auth.admin.listUsers();
     let testUser = users.find(u => u.email === 'test@example.com');
     if (!testUser) {
-        const { data } = await supabase.auth.admin.createUser({
-            email: 'test@example.com',
-            password: 'TestPassword123!',
-            email_confirm: true
-        });
-        testUser = data.user!;
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: 'test@example.com',
+        password: 'TestPassword123!',
+        email_confirm: true,
+      });
+      if (error) throw error;
+      testUser = data.user;
     }
     testUserId = testUser.id;
 
@@ -327,7 +328,7 @@ describe('Stripe Integration Tests', () => {
 
       expect(error).toBeNull();
       expect(data).toBeDefined();
-      expect(data?.profile?.email).toBeDefined();
+      expect((data as any)?.profile?.email).toBeDefined();
     });
 
     it('fetches booking with related service data', async () => {

@@ -12,11 +12,11 @@ const NotFound = React.lazy(() => import('../components/pages/NotFound').then(m 
 export const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <DirectoryRoutes />
-            <PublicRoutes />
-            <AccountRoutes />
-            <HostRoutes />
-            <AdminRoutes />
+            {DirectoryRoutes()}
+            {PublicRoutes()}
+            {AccountRoutes()}
+            {HostRoutes()}
+            {AdminRoutes()}
 
             <Route path="*" element={<NotFound />} />
         </Routes>

@@ -10,7 +10,7 @@ import "jsr:@supabase/functions-js@^2/edge-runtime.d.ts"
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   // L1: Allow override via env var for easy API version updates without code change
-  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as Stripe.StripeConstructorOptions['apiVersion'],
+  apiVersion: (Deno.env.get('STRIPE_API_VERSION') ?? '2025-01-27.acacia') as any,
 })
 
 const supabase = createClient(
@@ -636,8 +636,7 @@ Deno.serve(async (req: Request) => {
         // Отправляем email гостю по каждой брони
         // M4: fire-and-forget — don't block on email delivery to stay within Stripe 30s timeout
         if (bookings && bookings.length > 0) {
-          type BookingRow = { id: string; check_in: string; check_out: string; guests: number | null; property: { title: string } | null; service: { title: string } | null; profile: { email: string } | null }
-          bookings.forEach((booking: BookingRow) => {
+          bookings.forEach((booking: any) => {
             const itemTitle = booking.property?.title ?? booking.service?.title ?? 'Booking'
             const guestEmail = booking.profile?.email
             if (!guestEmail) return
@@ -659,10 +658,11 @@ Deno.serve(async (req: Request) => {
               // M5: audit_logs on failure
               const msg = e instanceof Error ? e.message : String(e)
               console.error(`Email send failed for booking ${booking.id}:`, msg)
-              supabase.from('audit_logs').insert({
+              const insertPromise = supabase.from('audit_logs').insert({
                 event_type: 'EMAIL_DELIVERY_FAILED',
                 details: { email_type: 'booking_confirmed', booking_id: booking.id, error: msg },
-              }).then(() => {}).catch(() => {})
+              }) as unknown as Promise<unknown>
+              insertPromise.then(() => {}).catch(() => {})
             })
           })
         }

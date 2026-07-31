@@ -402,4 +402,13 @@ export async function mockAllSupabaseRequests(page: Page) {
   await page.route('**/realtime/**', async (route) => {
     await route.abort('connectionrefused');
   });
+
+  // Catch-all for NestJS backend /api endpoints (prevents ECONNREFUSED when backend is not running in E2E)
+  await page.route('**/api/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
 }

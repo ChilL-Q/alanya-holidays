@@ -4,7 +4,8 @@
     "@shared/": "./shared/types/",
     "@alanya-holidays/shared": "./shared/types/index.ts",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
-    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.22.0"
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.22.0",
+    "vitest": "npm:vitest@^4.0.0"
   },
   "exclude": [
     "backend/",
