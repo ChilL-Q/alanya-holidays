@@ -5,6 +5,8 @@ import {
     taxiServiceSchema,
     touristAttractionSchema,
     itemListSchema,
+    articleSchema,
+    breadcrumbSchema,
 } from './schemaGenerators';
 
 describe('schemaGenerators', () => {
@@ -149,4 +151,51 @@ describe('schemaGenerators', () => {
             expect(itemListSchema([])).toBeNull();
         });
     });
+
+    describe('articleSchema', () => {
+        it('builds correct Article schema with headline and author', () => {
+            const schema = articleSchema({
+                title: 'Best Beaches in Alanya',
+                description: 'A guide to Cleopatra Beach and more',
+                url: 'https://alanya-holidays.com/blog/best-beaches',
+                authorName: 'Alex Smith',
+            }) as Record<string, unknown>;
+
+            expect(schema['@context']).toBe('https://schema.org');
+            expect(schema['@type']).toBe('Article');
+            expect(schema.headline).toBe('Best Beaches in Alanya');
+
+            const author = schema.author as Record<string, string>;
+            expect(author['@type']).toBe('Person');
+            expect(author.name).toBe('Alex Smith');
+
+            const publisher = schema.publisher as Record<string, unknown>;
+            expect(publisher.name).toBe('Alanya Holidays');
+        });
+    });
+
+    describe('breadcrumbSchema', () => {
+        it('returns null for empty breadcrumb list', () => {
+            expect(breadcrumbSchema([])).toBeNull();
+        });
+
+        it('builds correct BreadcrumbList schema', () => {
+            const crumbs = [
+                { name: 'Home', url: 'https://alanya-holidays.com' },
+                { name: 'Blog', url: 'https://alanya-holidays.com/blog' },
+            ];
+            const schema = breadcrumbSchema(crumbs) as Record<string, unknown>;
+
+            expect(schema['@context']).toBe('https://schema.org');
+            expect(schema['@type']).toBe('BreadcrumbList');
+
+            const list = schema.itemListElement as Array<Record<string, unknown>>;
+            expect(list).toHaveLength(2);
+            expect(list[0].position).toBe(1);
+            expect(list[0].name).toBe('Home');
+            expect(list[1].position).toBe(2);
+            expect(list[1].name).toBe('Blog');
+        });
+    });
 });
+

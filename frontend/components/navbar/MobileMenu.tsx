@@ -96,30 +96,30 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
                 {isAuthenticated && (
                     <>
                         <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-2 mx-4"></div>
-                        <Link to="/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                        <PreloadLink to="/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                             <Heart size={18} className="text-slate-400" />
                             {t('nav.favorites')}
-                        </Link>
-                        <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                        </PreloadLink>
+                        <PreloadLink to="/profile" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                             <User size={18} className="text-slate-400" />
                             {t('nav.profile')}
-                        </Link>
+                        </PreloadLink>
                         {user?.role === 'admin' && (
-                            <Link to="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                            <PreloadLink to="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                                 <LayoutDashboard size={18} className="text-purple-600" />
                                 {t('nav.admin_panel')}
-                            </Link>
+                            </PreloadLink>
                         )}
                         {(user?.role === 'host' || user?.role === 'admin') && (
                             <>
-                                <Link to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                                <PreloadLink to="/host/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                                     <LayoutDashboard size={18} className="text-teal-500 dark:text-cyan-400 " />
                                     {t('nav.host_dashboard')}
-                                </Link>
-                                <Link to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
+                                </PreloadLink>
+                                <PreloadLink to="/list-property" onClick={onClose} className="flex items-center gap-3 px-4 py-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/90 font-medium text-slate-700 dark:text-slate-200">
                                     <Home size={18} className="text-teal-500 dark:text-cyan-400" />
                                     {t('nav.list_rental_or_service')}
-                                </Link>
+                                </PreloadLink>
                             </>
                         )}
                     </>
@@ -129,12 +129,12 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, mode, s
             {/* Listing CTAs */}
             <div className="h-px bg-slate-100 dark:bg-slate-800/80"></div>
             <div className="flex gap-2 p-3 bg-slate-50/50 dark:bg-slate-950/20">
-                <Link to="/list-property" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
+                <PreloadLink to="/list-property" onClick={onClose} className="flex-1 p-2 bg-white dark:bg-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 text-center group active:scale-95 transition-transform shadow-sm border border-slate-100 dark:border-slate-800/50">
                     <div className="w-9 h-9 bg-teal-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-teal-600 dark:text-cyan-400 shadow-sm">
                         <Home size={16} />
                     </div>
                     <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 tracking-tight leading-tight">{t('nav.list_property')}</span>
-                </Link>
+                </PreloadLink>
                 <Link
                     to="/add-service"
                     onClick={(e) => {

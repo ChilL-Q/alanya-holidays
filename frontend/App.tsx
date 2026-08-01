@@ -1,24 +1,16 @@
 import React from 'react';
-import { BrowserRouter, useLocation } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { CartProvider } from './context/CartContext';
-import { ModalProvider } from './context/ModalContext';
-import { FavoritesProvider } from './context/FavoritesContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { LanguageProvider } from './context/LanguageContext';
-import { CardStyleProvider } from './context/CardStyleContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { LightboxProvider } from './context/LightboxContext';
-import { NotificationProvider } from './context/NotificationContext';
+import { useAuth } from './context/AuthContext';
 import { PageTransition } from './components/PageTransition';
-import { CurrencyProvider } from './context/CurrencyContext';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { AppProviders } from './components/providers/AppProviders';
+import { TopLoader } from './components/ui/TopLoader';
 
-// Lazy load heavy components (named exports → default)
+// Lazy load heavy global UI overlays (named exports → default)
 const Lightbox = React.lazy(() => import('./components/ui/Lightbox').then(m => ({ default: m.Lightbox })));
 const CartDrawer = React.lazy(() => import('./components/ui/CartDrawer').then(m => ({ default: m.CartDrawer })));
 const TripAssistant = React.lazy(() => import('./components/TripAssistant').then(m => ({ default: m.TripAssistant })));
@@ -27,10 +19,16 @@ const CommandPalette = React.lazy(() => import('./components/ui/CommandPalette')
 const LoginModal = React.lazy(() => import('./components/auth/LoginModal').then(m => ({ default: m.LoginModal })));
 const RegisterModal = React.lazy(() => import('./components/auth/RegisterModal').then(m => ({ default: m.RegisterModal })));
 
-// Loading Component
+// Smooth Skeleton Loading Component (prevents layout collapse)
 const PageLoader = () => (
-  <div className="min-h-[50vh] flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+  <div className="w-full min-h-[60vh] max-w-7xl mx-auto px-4 py-8 animate-pulse">
+    <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-xl w-1/3 mb-6"></div>
+    <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-3xl w-full mb-6"></div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+      <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+    </div>
   </div>
 );
 
@@ -63,6 +61,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen font-sans w-full">
+      <TopLoader />
       <Navbar />
       <main className="flex-grow overflow-x-hidden">
         <PageTransition>
@@ -80,44 +79,20 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <HelmetProvider>
-      <BrowserRouter>
-        <Toaster position="bottom-left" />
-        <ScrollToTop />
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              <CurrencyProvider>
-                <NotificationProvider>
-                  <CartProvider>
-                    <FavoritesProvider>
-                      <ModalProvider>
-                        <LightboxProvider>
-                          <CardStyleProvider>
-                              <AppContent />
-                              <React.Suspense fallback={null}>
-                                <LoginModal />
-                                <RegisterModal />
-                              </React.Suspense>
-                              <React.Suspense fallback={null}>
-                                <Lightbox />
-                                <CartDrawer />
-                                <TripAssistant />
-                                <CookieConsent />
-                                <CommandPalette />
-                              </React.Suspense>
-                            </CardStyleProvider>
-                        </LightboxProvider>
-                      </ModalProvider>
-                    </FavoritesProvider>
-                  </CartProvider>
-                </NotificationProvider>
-              </CurrencyProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider >
-      </BrowserRouter>
-    </HelmetProvider>
+    <AppProviders>
+      <Toaster position="bottom-left" />
+      <ScrollToTop />
+      <AppContent />
+      <React.Suspense fallback={null}>
+        <LoginModal />
+        <RegisterModal />
+        <Lightbox />
+        <CartDrawer />
+        <TripAssistant />
+        <CookieConsent />
+        <CommandPalette />
+      </React.Suspense>
+    </AppProviders>
   );
 };
 

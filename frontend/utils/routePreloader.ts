@@ -52,8 +52,21 @@ export function prefetchRoute(pathname: string): void {
   }
 
   // Find exact match or prefix match
-  const preloader = routePreloaders[cleanPath] || 
-    Object.entries(routePreloaders).find(([route]) => route !== '/' && cleanPath.startsWith(route))?.[1];
+  let preloader = routePreloaders[cleanPath];
+
+  if (!preloader) {
+    if (cleanPath.startsWith('/hotels-in-') || cleanPath.startsWith('/villas-in-') || cleanPath.startsWith('/apartments-in-') || cleanPath.startsWith('/things-to-do-in-') || cleanPath.startsWith('/airport-transfer-to-')) {
+      preloader = () => import('../pages/DistrictPage');
+    } else if (cleanPath.startsWith('/alanya-in-') || cleanPath.startsWith('/alanya-summer') || cleanPath.startsWith('/alanya-winter') || cleanPath.startsWith('/best-time-to-visit')) {
+      preloader = () => import('../pages/SeasonalPage');
+    } else if (cleanPath.startsWith('/alanya-boat') || cleanPath.startsWith('/alanya-jeep') || cleanPath.startsWith('/alanya-buggy') || cleanPath.startsWith('/alanya-rafting') || cleanPath.startsWith('/scuba-diving') || cleanPath.startsWith('/sapadere-canyon-tour') || cleanPath.startsWith('/green-canyon-tour') || cleanPath.startsWith('/parasailing') || cleanPath.startsWith('/alanya-fishing') || cleanPath.startsWith('/alanya-city') || cleanPath.startsWith('/alanya-yacht')) {
+      preloader = () => import('../pages/ExcursionTypePage');
+    } else if (cleanPath.startsWith('/cleopatra-beach') || cleanPath.startsWith('/incekum-beach') || cleanPath.startsWith('/keykubat-beach') || cleanPath.startsWith('/dim-cave') || cleanPath.startsWith('/dim-river') || cleanPath.startsWith('/sapadere-canyon') || cleanPath.startsWith('/alanya-castle') || cleanPath.startsWith('/red-tower') || cleanPath.startsWith('/alanya-shipyard') || cleanPath.startsWith('/syedra') || cleanPath.startsWith('/manavgat') || cleanPath.startsWith('/side-day') || cleanPath.startsWith('/green-canyon')) {
+      preloader = () => import('../pages/AttractionPage');
+    } else {
+      preloader = Object.entries(routePreloaders).find(([route]) => route !== '/' && cleanPath.startsWith(route))?.[1];
+    }
+  }
 
   if (preloader) {
     prefetchedRoutes.add(cleanPath);
