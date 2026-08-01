@@ -60,12 +60,19 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile.prod
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+        - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
+        - VITE_APP_URL=${VITE_APP_URL}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
     restart: unless-stopped
     networks:
       - frontend-net
     volumes:
       - frontend-dist:/usr/share/nginx/html
     logging: *default-logging
+
 
   nginx:
     image: nginx:alpine

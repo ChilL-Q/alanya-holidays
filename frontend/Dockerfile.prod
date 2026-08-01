@@ -1,6 +1,19 @@
 # Stage 1: Build static assets
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_GOOGLE_MAPS_API_KEY
+ARG VITE_APP_URL
+ARG VITE_SENTRY_DSN
+
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_APP_URL=$VITE_APP_URL
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
+
 COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install --legacy-peer-deps
 COPY frontend ./frontend
@@ -13,4 +26,5 @@ FROM nginx:alpine AS runner
 COPY --from=builder /app/frontend/dist /dist-build
 EXPOSE 80
 CMD ["sh", "-c", "cp -rf /dist-build/* /usr/share/nginx/html/ && exec nginx -g 'daemon off;'"]
+
 
