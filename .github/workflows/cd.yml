@@ -1,8 +1,11 @@
 name: CD Production Deployment
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI Pipeline"]
     branches: [ "main" ]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -11,6 +14,7 @@ permissions:
 jobs:
   deploy:
     name: Deploy to Production VPS
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
