@@ -103,7 +103,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const toggleFavorite = useCallback((businessId: string) => {
     setFavorites((prev) => {
       const isRemoving = prev.has(businessId);
-      const next = new Set(prev);
+      const next = new Set<string>(prev);
 
       if (isRemoving) {
         next.delete(businessId);

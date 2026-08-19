@@ -150,7 +150,7 @@ export default function ComparePage() {
     localStorage.removeItem(NOTES_STORAGE_KEY);
   }
 
-  const hasNotes = hasData && Object.values(notes).some((n) => n.trim());
+  const hasNotes = hasData && Object.values(notes).some((n: string) => n.trim());
 
   /** Returns row classes — dims the row when highlight mode is on and all values match */
   function rowCls(key: string): string {
@@ -968,7 +968,7 @@ export default function ComparePage() {
                           </tr>
 
                           {/* Notes */}
-                          {Object.values(notes).some((n) => n.trim()) && (
+                          {Object.values(notes).some((n: string) => n.trim()) && (
                             <tr>
                               <td className="py-2.5 pr-4 align-top">
                                 <span className="text-xs font-semibold text-foreground-500 uppercase tracking-wider">Notes</span>

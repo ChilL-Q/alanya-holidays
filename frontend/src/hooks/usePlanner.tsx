@@ -283,8 +283,8 @@ export function usePlanner() {
   const getDayLabels = useCallback((planId: string): string[] => {
     const plan = plans.find((p) => p.id === planId);
     if (!plan || plan.items.length === 0) return ['Day 1'];
-    const labels = new Set(plan.items.map((i) => i.dayLabel));
-    const sorted = Array.from(labels).sort((a, b) => {
+    const labels = new Set<string>(plan.items.map((i) => i.dayLabel));
+    const sorted = Array.from(labels).sort((a: string, b: string) => {
       const numA = parseInt(a.replace(/\D/g, ''), 10) || 0;
       const numB = parseInt(b.replace(/\D/g, ''), 10) || 0;
       return numA - numB;
