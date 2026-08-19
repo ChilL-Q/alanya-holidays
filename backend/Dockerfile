@@ -14,5 +14,6 @@ COPY backend ./backend
 RUN pnpm --filter @alanya-holidays/shared build
 RUN pnpm --filter @alanya-holidays/backend build
 
+WORKDIR /app/backend
 EXPOSE 4000
-CMD ["node", "backend/dist/src/main.js"]
+CMD ["sh", "-c", "node dist/backend/src/main.js || node dist/src/main.js || node dist/main.js"]
