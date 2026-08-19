@@ -1,9 +1,22 @@
 import { SupabaseReviewsRepository } from './supabase-reviews.repository';
 import { SupabaseService } from '../../../supabase/supabase.service';
 
+interface MockSupabaseClient {
+  from: jest.Mock;
+  select: jest.Mock;
+  insert: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+  eq: jest.Mock;
+  order: jest.Mock;
+  range: jest.Mock;
+  single: jest.Mock;
+  maybeSingle: jest.Mock;
+}
+
 describe('SupabaseReviewsRepository', () => {
   let repository: SupabaseReviewsRepository;
-  let mockSupabaseClient: any;
+  let mockSupabaseClient: MockSupabaseClient;
   let mockSupabaseService: SupabaseService;
 
   const validUuid = '123e4567-e89b-12d3-a456-426614174000';

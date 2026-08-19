@@ -29,6 +29,7 @@ describe('DirectoryService', () => {
     callApproveListingClaimRpc: jest.Mock;
     callRejectListingClaimRpc: jest.Mock;
     getListingClaimById: jest.Mock;
+    getListingAddons: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -57,6 +58,7 @@ describe('DirectoryService', () => {
       callApproveListingClaimRpc: jest.fn(),
       callRejectListingClaimRpc: jest.fn(),
       getListingClaimById: jest.fn(),
+      getListingAddons: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -249,6 +251,17 @@ describe('DirectoryService', () => {
       const res = await service.getListingAddons('biz-003');
       expect(res).toEqual([]);
       expect(mockRepository.getListingClaimById).not.toHaveBeenCalled();
+    });
+
+    it('should query repository when listingId is a valid UUID', async () => {
+      mockRepository.getListingAddons.mockResolvedValueOnce([
+        { id: 'addon-1' },
+      ]);
+      const res = await service.getListingAddons(validListingId);
+      expect(res).toEqual([{ id: 'addon-1' }]);
+      expect(mockRepository.getListingAddons).toHaveBeenCalledWith(
+        validListingId,
+      );
     });
   });
 
