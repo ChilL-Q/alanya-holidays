@@ -1,10 +1,15 @@
 import {
   Injectable,
+  Inject,
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { ServicesRepository } from './services.repository';
+import {
+  IServicesRepository,
+  SERVICES_REPOSITORY,
+} from './domain/repositories/services.repository.interface';
 import { RedisService } from '../common/redis/redis.service';
+import { ServiceListResponse } from './types/services.types';
 
 const IMMUTABLE_SERVICE_FIELDS = new Set([
   'id',
@@ -17,24 +22,36 @@ const IMMUTABLE_SERVICE_FIELDS = new Set([
 @Injectable()
 export class ServicesService {
   constructor(
-    private readonly servicesRepository: ServicesRepository,
+    @Inject(SERVICES_REPOSITORY)
+    private readonly servicesRepository: IServicesRepository,
     private readonly redisService: RedisService,
   ) {}
 
   // ============================================
-  // Services CRUD (Existing)
+  // Services CRUD
   // ============================================
 
-  async createService(data: any, userId: string) {
-    const insertData = { ...data, provider_id: userId };
+  async createService(
+    data: Record<string, unknown>,
+    userId: string,
+  ): Promise<Record<string, unknown>> {
+    const insertData: Record<string, unknown> = {
+      ...data,
+      provider_id: userId,
+    };
     const service = await this.servicesRepository.insertService(insertData);
     await this.redisService.delByPattern('services:*');
     return service;
   }
 
-  async getServices(type?: string, page = 1, limit = 20) {
+  async getServices(
+    type?: string,
+    page = 1,
+    limit = 20,
+  ): Promise<ServiceListResponse> {
     const cacheKey = `services:list:${type || 'all'}:${page}:${limit}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<ServiceListResponse>(cacheKey);
     if (cached) return cached;
 
     const { data, count } = await this.servicesRepository.getServices(
@@ -44,24 +61,35 @@ export class ServicesService {
     );
 
     const mappedData =
-      data?.map((s) => ({
-        ...s,
-        service_ref: s.service_ref || parseInt(s.id.slice(0, 8), 16) % 10000,
-      })) || [];
-    const response = { data: mappedData, count };
+      data?.map((s) => {
+        const idStr =
+          typeof s.id === 'string'
+            ? s.id
+            : typeof s.id === 'number'
+              ? String(s.id)
+              : '';
+        return {
+          ...s,
+          service_ref: s.service_ref || parseInt(idStr.slice(0, 8), 16) % 10000,
+        };
+      }) || [];
+    const response: ServiceListResponse = { data: mappedData, count };
     if (response.data) {
       await this.redisService.setJson(cacheKey, response, 600); // 10 minutes TTL
     }
     return response;
   }
 
-  async getServicesByProvider(providerId: string) {
+  async getServicesByProvider(
+    providerId: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getServicesByProvider(providerId);
   }
 
-  async getService(id: string) {
+  async getService(id: string): Promise<Record<string, unknown>> {
     const cacheKey = `services:item:${id}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<Record<string, unknown>>(cacheKey);
     if (cached) return cached;
 
     const { data, error } =
@@ -73,7 +101,11 @@ export class ServicesService {
     return data;
   }
 
-  async updateService(id: string, updates: any, userId: string) {
+  async updateService(
+    id: string,
+    updates: Record<string, unknown>,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const existingService =
       await this.servicesRepository.getServiceOwnershipInfo(id);
     const role = await this.servicesRepository.getUserRole(userId);
@@ -85,20 +117,23 @@ export class ServicesService {
       throw new UnauthorizedException('Not authorized');
     }
 
-    const {
-      status: _status,
-      provider_id: _providerId,
-      id: _id,
-      created_at: _createdAt,
-      ...safeUpdates
-    } = updates;
+    const safeUpdates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      if (!IMMUTABLE_SERVICE_FIELDS.has(key)) {
+        safeUpdates[key] = value;
+      }
+    }
 
     await this.servicesRepository.updateService(id, safeUpdates);
     await this.redisService.delByPattern('services:*');
     return { success: true };
   }
 
-  async deleteService(id: string, reason: string | undefined, userId: string) {
+  async deleteService(
+    id: string,
+    _reason: string | undefined,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const service = await this.servicesRepository.getServiceOwnershipInfo(id);
     if (!service) throw new NotFoundException('Service not found');
 
@@ -117,18 +152,20 @@ export class ServicesService {
     status: string,
     reason: string | undefined,
     userId: string,
-  ) {
+  ): Promise<{ success: boolean }> {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin')
+    if (role !== 'admin') {
       throw new UnauthorizedException(
         'Not authorized: only admins can change service status',
       );
+    }
 
-    const updates: any = { status };
+    const updates: Record<string, unknown> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
     if (status === 'approved') updates.rejection_reason = null;
 
     await this.servicesRepository.updateService(id, updates);
+    await this.redisService.delByPattern('services:*');
     return { success: true };
   }
 
@@ -137,7 +174,7 @@ export class ServicesService {
     typesFilter: string[] | undefined,
     page = 1,
     limit = 50,
-  ) {
+  ): Promise<{ data: Record<string, unknown>[]; count: number }> {
     return this.servicesRepository.getAdminServices(
       statusFilter,
       typesFilter,
@@ -150,20 +187,39 @@ export class ServicesService {
   // Services Catalog
   // ============================================
 
-  getServiceTypes() {
+  getServiceTypes(): string[] {
     return ['car', 'bike', 'tour', 'transfer', 'visa', 'esim'];
   }
 
-  async getServiceBrands(type: string) {
+  async getServiceBrands(type: string): Promise<string[]> {
     const data = await this.servicesRepository.getServiceBrands(type);
-    return [...new Set(data.map((item: any) => item.brand))];
+    return [
+      ...new Set(
+        data
+          .map((item) =>
+            typeof item.brand === 'string'
+              ? item.brand
+              : typeof item.brand === 'number'
+                ? String(item.brand)
+                : '',
+          )
+          .filter((b) => b.length > 0),
+      ),
+    ];
   }
 
-  async getServiceModels(type: string, brand: string) {
+  async getServiceModels(
+    type: string,
+    brand: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getServiceModels(type, brand);
   }
 
-  async getServiceModel(type: string, brand: string, model: string) {
+  async getServiceModel(
+    type: string,
+    brand: string,
+    model: string,
+  ): Promise<Record<string, unknown>> {
     const { data, error } = await this.servicesRepository.getServiceModel(
       type,
       brand,
@@ -173,7 +229,11 @@ export class ServicesService {
     return data;
   }
 
-  async updateServiceModel(id: string, updates: any, userId: string) {
+  async updateServiceModel(
+    id: string,
+    updates: Record<string, unknown>,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.servicesRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -181,7 +241,11 @@ export class ServicesService {
     return { success: true };
   }
 
-  async getServicesByModel(type: string, brand: string, model: string) {
+  async getServicesByModel(
+    type: string,
+    brand: string,
+    model: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getServicesByModel(type, brand, model);
   }
 
@@ -189,7 +253,11 @@ export class ServicesService {
   // Services Edits
   // ============================================
 
-  async requestServiceUpdate(serviceId: string, changes: any, userId: string) {
+  async requestServiceUpdate(
+    serviceId: string,
+    changes: Record<string, unknown>,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const service =
       await this.servicesRepository.getServiceOwnershipInfo(serviceId);
     if (!service) throw new NotFoundException('Service not found');
@@ -207,57 +275,73 @@ export class ServicesService {
     return { success: true };
   }
 
-  async getPendingServiceEdits() {
+  async getPendingServiceEdits(): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getPendingServiceEdits();
   }
 
-  async getServiceEditsByService(serviceId: string) {
+  async getServiceEditsByService(
+    serviceId: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getServiceEditsByService(serviceId);
   }
 
-  async getMyPendingEdits(userId: string) {
+  async getMyPendingEdits(userId: string): Promise<Record<string, unknown>[]> {
     return this.servicesRepository.getMyPendingEdits(userId);
   }
 
-  async getServiceEdit(editId: string) {
+  async getServiceEdit(editId: string): Promise<Record<string, unknown>> {
     const { data, error } =
       await this.servicesRepository.getServiceEditById(editId);
     if (error || !data) throw new NotFoundException('Service edit not found');
     return data;
   }
 
-  async deleteServiceEdit(editId: string, userId: string) {
+  async deleteServiceEdit(
+    editId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin')
+    if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
+    }
 
     await this.servicesRepository.deleteServiceEdit(editId);
     return { success: true };
   }
 
-  async approveServiceEdit(editId: string, userId: string) {
+  async approveServiceEdit(
+    editId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin')
+    if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
+    }
 
     const { data: edit, error: fetchError } =
       await this.servicesRepository.getServiceEditById(editId);
     if (fetchError || !edit) throw new NotFoundException('Edit not found');
 
+    const changedData =
+      edit.changed_data && typeof edit.changed_data === 'object'
+        ? (edit.changed_data as Record<string, unknown>)
+        : {};
+
     const safeChanges: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(edit.changed_data)) {
+    for (const [key, value] of Object.entries(changedData)) {
       if (!IMMUTABLE_SERVICE_FIELDS.has(key)) safeChanges[key] = value;
     }
 
-    await this.servicesRepository.updateService(edit.service_id, safeChanges);
+    const serviceId =
+      typeof edit.service_id === 'string'
+        ? edit.service_id
+        : typeof edit.service_id === 'number'
+          ? String(edit.service_id)
+          : '';
+    await this.servicesRepository.updateService(serviceId, safeChanges);
     await this.servicesRepository.deleteServiceEdit(editId);
+    await this.redisService.delByPattern('services:*');
 
-    const service = await this.servicesRepository.getServiceOwnershipInfo(
-      edit.service_id,
-    );
-    if (service) {
-      // In a real app we'd use a notifications service here. Skipping for backend simplicity.
-    }
     return { success: true };
   }
 
@@ -265,10 +349,11 @@ export class ServicesService {
     editId: string,
     reason: string | undefined,
     userId: string,
-  ) {
+  ): Promise<{ success: boolean }> {
     const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin')
+    if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
+    }
 
     await this.servicesRepository.updateServiceEdit(editId, {
       status: 'rejected',

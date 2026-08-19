@@ -19,6 +19,8 @@ import { RedisModule } from './common/redis/redis.module';
 import { AiModule } from './ai/ai.module';
 import { MediaModule } from './media/media.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AdminModule } from './admin/admin.module';
+import { ItinerariesModule } from './itineraries/itineraries.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     AiModule,
     MediaModule,
     NotificationsModule,
+    AdminModule,
+    ItinerariesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from '../forum/types/forum.types';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Controller('users')
 export class UsersController {
@@ -33,7 +35,7 @@ export class UsersController {
 
   @Put('presence/touch')
   @UseGuards(AuthGuard)
-  async touchPresence(@Req() req: any) {
+  async touchPresence(@Req() req: AuthenticatedRequest) {
     return this.usersService.touchPresence(req.user.id);
   }
 
@@ -42,7 +44,7 @@ export class UsersController {
   async getAllUsers(
     @Query('page') page: string,
     @Query('limit') limit: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.usersService.getAllUsers(
       page ? parseInt(page) : 1,
@@ -57,7 +59,7 @@ export class UsersController {
     @Param('role') role: string,
     @Query('page') page: string,
     @Query('limit') limit: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.usersService.getUsersByRole(
       role,
@@ -76,8 +78,8 @@ export class UsersController {
   @UseGuards(AuthGuard)
   async updateUserProfile(
     @Param('id') id: string,
-    @Body() updates: any,
-    @Req() req: any,
+    @Body() updates: UpdateUserProfileDto,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.usersService.updateUserProfile(id, updates, req.user.id);
   }

@@ -75,8 +75,16 @@ describe('MediaProcessingService', () => {
     expect(uploadMock).toHaveBeenCalledTimes(2);
 
     // Check bucket upload call arguments
-    const firstCallArgs = uploadMock.mock.calls[0];
-    const secondCallArgs = uploadMock.mock.calls[1];
+    const firstCallArgs = uploadMock.mock.calls[0] as [
+      string,
+      Buffer,
+      { contentType: string; upsert: boolean },
+    ];
+    const secondCallArgs = uploadMock.mock.calls[1] as [
+      string,
+      Buffer,
+      { contentType: string; upsert: boolean },
+    ];
 
     expect(firstCallArgs[0]).toMatch(/^apartment-123\/[a-f0-9-]+-full\.webp$/);
     expect(firstCallArgs[2]).toEqual({
@@ -93,11 +101,11 @@ describe('MediaProcessingService', () => {
     });
 
     // Verify sharp metadata on uploaded buffers
-    const uploadedMainBuffer = firstCallArgs[1] as Buffer;
+    const uploadedMainBuffer = firstCallArgs[1];
     const mainMeta = await sharp(uploadedMainBuffer).metadata();
     expect(mainMeta.format).toBe('webp');
 
-    const uploadedThumbBuffer = secondCallArgs[1] as Buffer;
+    const uploadedThumbBuffer = secondCallArgs[1];
     const thumbMeta = await sharp(uploadedThumbBuffer).metadata();
     expect(thumbMeta.format).toBe('webp');
     expect(thumbMeta.width).toBeLessThanOrEqual(300);

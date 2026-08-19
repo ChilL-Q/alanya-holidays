@@ -1,5 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import {
+  ForumEvent,
+  ForumEventAttendee,
+  ForumEventsFilter,
+  InsertForumEventDbInput,
+  InsertForumEventRsvpDbInput,
+  UpdateForumEventDbInput,
+} from '../types/forum.types';
 
 @Injectable()
 export class ForumEventsRepository {
@@ -9,7 +17,10 @@ export class ForumEventsRepository {
     return this.supabaseService.getClient();
   }
 
-  async getEvents(filters: any, eventSelect: string) {
+  async getEvents(
+    filters: ForumEventsFilter,
+    eventSelect: string,
+  ): Promise<ForumEvent[]> {
     let q = this.client.from('forum_events').select(eventSelect);
 
     if (!filters.includeUnpublished) q = q.eq('is_published', true);
@@ -22,37 +33,43 @@ export class ForumEventsRepository {
       .order('event_date', { ascending: true })
       .limit(filters.limit || 20);
 
-    return data || [];
+    return (data as unknown as ForumEvent[]) || [];
   }
 
-  async getEventBySlug(slug: string, eventSelect: string) {
+  async getEventBySlug(
+    slug: string,
+    eventSelect: string,
+  ): Promise<ForumEvent | null> {
     const { data } = await this.client
       .from('forum_events')
       .select(eventSelect)
       .eq('slug', slug)
       .single();
-    return data;
+    return (data as unknown as ForumEvent) ?? null;
   }
 
-  async getEventSlugs(seed: string) {
+  async getEventSlugs(seed: string): Promise<string[]> {
     const { data } = await this.client
       .from('forum_events')
       .select('slug')
       .ilike('slug', `${seed}%`);
-    return (data || []).map((e: any) => e.slug);
+    return (data || []).map((e) => String(e.slug));
   }
 
-  async insertEvent(data: any) {
+  async insertEvent(data: InsertForumEventDbInput): Promise<ForumEvent> {
     const { data: event, error } = await this.client
       .from('forum_events')
       .insert([data])
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return event;
+    return event as unknown as ForumEvent;
   }
 
-  async updateEvent(id: string, updates: any) {
+  async updateEvent(
+    id: string,
+    updates: UpdateForumEventDbInput,
+  ): Promise<ForumEvent> {
     const { data, error } = await this.client
       .from('forum_events')
       .update(updates)
@@ -60,10 +77,10 @@ export class ForumEventsRepository {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as ForumEvent;
   }
 
-  async deleteEvent(id: string) {
+  async deleteEvent(id: string): Promise<void> {
     const { error } = await this.client
       .from('forum_events')
       .delete()
@@ -71,7 +88,11 @@ export class ForumEventsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getEventRsvpAttendees(eventId: string) {
+  async getEventRsvpAttendees(
+    eventId: string,
+  ): Promise<
+    Array<{ user_id: string; contact_phone: string | null; created_at: string }>
+  > {
     const { data } = await this.client
       .from('forum_event_rsvps')
       .select('user_id, contact_phone, created_at')
@@ -79,51 +100,57 @@ export class ForumEventsRepository {
     return data || [];
   }
 
-  async getProfilesByIds(userIds: string[]) {
+  async getProfilesByIds(userIds: string[]): Promise<ForumEventAttendee[]> {
     if (!userIds || userIds.length === 0) return [];
     const { data } = await this.client
       .from('profiles')
       .select('id, full_name, avatar_url')
       .in('id', userIds);
-    return data || [];
+    return (data as unknown as ForumEventAttendee[]) || [];
   }
 
-  async checkEventRsvp(eventId: string, userId: string) {
+  async checkEventRsvp(
+    eventId: string,
+    userId: string,
+  ): Promise<{ event_id: string } | null> {
     const { data } = await this.client
       .from('forum_event_rsvps')
       .select('event_id')
       .eq('event_id', eventId)
       .eq('user_id', userId)
       .single();
-    return data;
+    return data ?? null;
   }
 
-  async insertEventRsvp(data: any) {
+  async insertEventRsvp(data: InsertForumEventRsvpDbInput): Promise<void> {
     await this.client.from('forum_event_rsvps').insert([data]);
   }
 
-  async deleteEventRsvp(eventId: string, userId: string) {
+  async deleteEventRsvp(eventId: string, userId: string): Promise<void> {
     await this.client
       .from('forum_event_rsvps')
       .delete()
       .match({ event_id: eventId, user_id: userId });
   }
 
-  async getEventRsvps(userId: string, ids: string[]) {
+  async getEventRsvps(
+    userId: string,
+    ids: string[],
+  ): Promise<Array<{ event_id: string }> | null> {
     const { data } = await this.client
       .from('forum_event_rsvps')
       .select('event_id')
       .eq('user_id', userId)
       .in('event_id', ids);
-    return data;
+    return data ?? null;
   }
 
-  async getUserRole(userId: string) {
+  async getUserRole(userId: string): Promise<string | undefined> {
     const { data } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
-    return data?.role;
+    return (data as { role?: string } | null)?.role;
   }
 }

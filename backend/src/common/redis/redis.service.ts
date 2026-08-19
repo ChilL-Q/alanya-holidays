@@ -170,7 +170,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Return stale data immediately, revalidate asynchronously in background
-      Promise.resolve().then(async () => {
+      void (async () => {
         try {
           const freshData = await fetchFn();
           const newEnvelope: SwrEnvelope<T> = {
@@ -184,7 +184,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
             `Background SWR revalidation failed for key ${key}: ${(err as Error).message}`,
           );
         }
-      });
+      })();
 
       return envelope.data;
     }

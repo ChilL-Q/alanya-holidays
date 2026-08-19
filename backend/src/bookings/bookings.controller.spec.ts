@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from '../forum/types/forum.types';
 
 describe('BookingsController', () => {
   let controller: BookingsController;
-  let mockService: any;
+  let mockService: jest.Mocked<Partial<BookingsService>>;
 
   beforeEach(async () => {
     mockService = {
@@ -67,13 +68,13 @@ describe('BookingsController', () => {
   });
 
   it('should pass req.user.id to getUserBookings', async () => {
-    const req = { user: { id: 'usr-7' } };
+    const req = { user: { id: 'usr-7' } } as unknown as AuthenticatedRequest;
     await controller.getUserBookings(req);
     expect(mockService.getUserBookings).toHaveBeenCalledWith('usr-7');
   });
 
   it('should pass req.user.id and body to updateBookingStatus', async () => {
-    const req = { user: { id: 'usr-7' } };
+    const req = { user: { id: 'usr-7' } } as unknown as AuthenticatedRequest;
     await controller.updateBookingStatus('b1', { status: 'confirmed' }, req);
     expect(mockService.updateBookingStatus).toHaveBeenCalledWith(
       'b1',

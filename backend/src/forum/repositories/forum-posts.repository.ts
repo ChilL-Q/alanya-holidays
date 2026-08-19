@@ -1,5 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import {
+  ForumCategory,
+  ForumComment,
+  ForumPaginatedResult,
+  ForumPost,
+  ForumPostsRepoFilter,
+  InsertForumCommentDbInput,
+  InsertForumPostDbInput,
+  UpdateForumPostDbInput,
+} from '../types/forum.types';
 
 @Injectable()
 export class ForumPostsRepository {
@@ -10,11 +20,11 @@ export class ForumPostsRepository {
   }
 
   async getPosts(
-    filters: any,
+    filters: ForumPostsRepoFilter,
     limit: number,
     offset: number,
     postSelect: string,
-  ) {
+  ): Promise<ForumPaginatedResult<ForumPost>> {
     let q = this.client
       .from('forum_posts')
       .select(postSelect, { count: 'exact' });
@@ -49,10 +59,13 @@ export class ForumPostsRepository {
 
     const { data, count, error } = await q.range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
-    return { data: data ?? [], total: count ?? 0 };
+    return {
+      data: (data as unknown as ForumPost[]) ?? [],
+      total: count ?? 0,
+    };
   }
 
-  async getHotPosts(limit: number, postSelect: string) {
+  async getHotPosts(limit: number, postSelect: string): Promise<ForumPost[]> {
     const { data, error } = await this.client
       .from('forum_posts')
       .select(postSelect)
@@ -63,46 +76,52 @@ export class ForumPostsRepository {
     if (error) {
       console.error('getHotPosts error:', error);
     }
-    return data ?? [];
+    return (data as unknown as ForumPost[]) ?? [];
   }
 
-  async getPostBySlug(slug: string, postSelect: string) {
+  async getPostBySlug(
+    slug: string,
+    postSelect: string,
+  ): Promise<ForumPost | null> {
     const { data } = await this.client
       .from('forum_posts')
       .select(postSelect)
       .eq('slug', slug)
       .single();
-    return data;
+    return (data as unknown as ForumPost) ?? null;
   }
 
-  async getPostSlugs(seed: string) {
+  async getPostSlugs(seed: string): Promise<string[]> {
     const { data } = await this.client
       .from('forum_posts')
       .select('slug')
       .ilike('slug', `${seed}%`);
-    return (data || []).map((p: any) => p.slug);
+    return (data || []).map((p) => String(p.slug));
   }
 
-  async insertPost(data: any) {
+  async insertPost(data: InsertForumPostDbInput): Promise<ForumPost> {
     const { data: post, error } = await this.client
       .from('forum_posts')
       .insert([data])
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return post;
+    return post as unknown as ForumPost;
   }
 
-  async getPostById(id: string) {
+  async getPostById(id: string): Promise<ForumPost | null> {
     const { data } = await this.client
       .from('forum_posts')
       .select('*')
       .eq('id', id)
       .single();
-    return data;
+    return (data as unknown as ForumPost) ?? null;
   }
 
-  async updatePost(id: string, updates: any) {
+  async updatePost(
+    id: string,
+    updates: UpdateForumPostDbInput,
+  ): Promise<ForumPost> {
     const { data, error } = await this.client
       .from('forum_posts')
       .update(updates)
@@ -110,10 +129,10 @@ export class ForumPostsRepository {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as ForumPost;
   }
 
-  async deletePost(id: string) {
+  async deletePost(id: string): Promise<void> {
     const { error } = await this.client
       .from('forum_posts')
       .delete()
@@ -121,11 +140,11 @@ export class ForumPostsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async incrementPostView(id: string) {
+  async incrementPostView(id: string): Promise<void> {
     await this.client.rpc('increment_forum_post_view', { p_post_id: id });
   }
 
-  async updatePostPinned(id: string, pinned: boolean) {
+  async updatePostPinned(id: string, pinned: boolean): Promise<void> {
     const { error } = await this.client
       .from('forum_posts')
       .update({ is_pinned: pinned })
@@ -137,7 +156,7 @@ export class ForumPostsRepository {
     table: 'forum_posts' | 'forum_comments',
     id: string,
     removed: boolean,
-  ) {
+  ): Promise<void> {
     const { error } = await this.client
       .from(table)
       .update({ is_removed: removed })
@@ -145,7 +164,10 @@ export class ForumPostsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getComments(postId: string, includeRemoved: boolean) {
+  async getComments(
+    postId: string,
+    includeRemoved: boolean,
+  ): Promise<ForumComment[]> {
     let q = this.client
       .from('forum_comments')
       .select(
@@ -158,10 +180,10 @@ export class ForumPostsRepository {
       q = q.eq('is_removed', false);
     }
     const { data } = await q;
-    return data || [];
+    return (data as unknown as ForumComment[]) || [];
   }
 
-  async insertComment(data: any) {
+  async insertComment(data: InsertForumCommentDbInput): Promise<ForumComment> {
     const { data: comment, error } = await this.client
       .from('forum_comments')
       .insert([data])
@@ -170,19 +192,19 @@ export class ForumPostsRepository {
       )
       .single();
     if (error) throw new Error(error.message);
-    return comment;
+    return comment as unknown as ForumComment;
   }
 
-  async getCommentById(id: string) {
+  async getCommentById(id: string): Promise<ForumComment | null> {
     const { data } = await this.client
       .from('forum_comments')
       .select('*')
       .eq('id', id)
       .single();
-    return data;
+    return (data as unknown as ForumComment) ?? null;
   }
 
-  async deleteComment(id: string) {
+  async deleteComment(id: string): Promise<void> {
     const { error } = await this.client
       .from('forum_comments')
       .delete()
@@ -190,7 +212,7 @@ export class ForumPostsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getRemovedComments(limit: number) {
+  async getRemovedComments(limit: number): Promise<ForumComment[]> {
     const { data } = await this.client
       .from('forum_comments')
       .select(
@@ -199,104 +221,116 @@ export class ForumPostsRepository {
       .eq('is_removed', true)
       .order('created_at', { ascending: false })
       .limit(limit);
-    return data || [];
+    return (data as unknown as ForumComment[]) || [];
   }
 
-  async checkPostLike(postId: string, userId: string) {
+  async checkPostLike(
+    postId: string,
+    userId: string,
+  ): Promise<{ post_id: string } | null> {
     const { data } = await this.client
       .from('forum_post_likes')
       .select('post_id')
       .eq('post_id', postId)
       .eq('user_id', userId)
       .single();
-    return data;
+    return data ?? null;
   }
 
-  async insertPostLike(postId: string, userId: string) {
+  async insertPostLike(postId: string, userId: string): Promise<void> {
     await this.client
       .from('forum_post_likes')
       .insert([{ post_id: postId, user_id: userId }]);
   }
 
-  async deletePostLike(postId: string, userId: string) {
+  async deletePostLike(postId: string, userId: string): Promise<void> {
     await this.client
       .from('forum_post_likes')
       .delete()
       .match({ post_id: postId, user_id: userId });
   }
 
-  async checkCommentLike(commentId: string, userId: string) {
+  async checkCommentLike(
+    commentId: string,
+    userId: string,
+  ): Promise<{ comment_id: string } | null> {
     const { data } = await this.client
       .from('forum_comment_likes')
       .select('comment_id')
       .eq('comment_id', commentId)
       .eq('user_id', userId)
       .single();
-    return data;
+    return data ?? null;
   }
 
-  async insertCommentLike(commentId: string, userId: string) {
+  async insertCommentLike(commentId: string, userId: string): Promise<void> {
     await this.client
       .from('forum_comment_likes')
       .insert([{ comment_id: commentId, user_id: userId }]);
   }
 
-  async deleteCommentLike(commentId: string, userId: string) {
+  async deleteCommentLike(commentId: string, userId: string): Promise<void> {
     await this.client
       .from('forum_comment_likes')
       .delete()
       .match({ comment_id: commentId, user_id: userId });
   }
 
-  async getPostLikes(userId: string, ids: string[]) {
+  async getPostLikes(
+    userId: string,
+    ids: string[],
+  ): Promise<Array<{ post_id: string }> | null> {
     const { data } = await this.client
       .from('forum_post_likes')
       .select('post_id')
       .eq('user_id', userId)
       .in('post_id', ids);
-    return data;
+    return data ?? null;
   }
 
-  async getCommentLikes(userId: string, ids: string[]) {
+  async getCommentLikes(
+    userId: string,
+    ids: string[],
+  ): Promise<Array<{ comment_id: string }> | null> {
     const { data } = await this.client
       .from('forum_comment_likes')
       .select('comment_id')
       .eq('user_id', userId)
       .in('comment_id', ids);
-    return data;
+    return data ?? null;
   }
 
-  async getCategoryBySlug(slug: string) {
+  async getCategoryBySlug(slug: string): Promise<ForumCategory | null> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .eq('slug', slug)
       .single();
-    return data;
+    return (data as unknown as ForumCategory) ?? null;
   }
 
-  async getChildCategories(parentId: string) {
+  async getChildCategories(parentId: string): Promise<ForumCategory[]> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .eq('parent_id', parentId);
-    return data || [];
+    return (data as unknown as ForumCategory[]) || [];
   }
 
-  async getCategoriesByIds(ids: string[]) {
+  async getCategoriesByIds(ids: string[]): Promise<ForumCategory[]> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .in('id', ids);
-    return data || [];
+    return (data as unknown as ForumCategory[]) || [];
   }
 
-  async getUserRole(userId: string) {
+  async getUserRole(userId: string): Promise<string | undefined> {
     const { data } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
-    return data?.role;
+    return (data as { role?: string } | null)?.role;
   }
 }

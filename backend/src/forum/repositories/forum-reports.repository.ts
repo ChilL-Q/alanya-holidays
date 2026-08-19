@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { ForumReport, InsertForumReportDbInput } from '../types/forum.types';
 
 @Injectable()
 export class ForumReportsRepository {
@@ -9,12 +10,12 @@ export class ForumReportsRepository {
     return this.supabaseService.getClient();
   }
 
-  async insertReport(data: any) {
+  async insertReport(data: InsertForumReportDbInput): Promise<void> {
     const { error } = await this.client.from('forum_reports').insert([data]);
     if (error) throw new Error(error.message);
   }
 
-  async getReports(includeResolved: boolean) {
+  async getReports(includeResolved: boolean): Promise<ForumReport[]> {
     let q = this.client
       .from('forum_reports')
       .select(
@@ -27,10 +28,10 @@ export class ForumReportsRepository {
     }
 
     const { data } = await q;
-    return data || [];
+    return (data as unknown as ForumReport[]) || [];
   }
 
-  async updateReportResolved(id: string) {
+  async updateReportResolved(id: string): Promise<void> {
     const { error } = await this.client
       .from('forum_reports')
       .update({ resolved: true })
@@ -38,12 +39,12 @@ export class ForumReportsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getUserRole(userId: string) {
+  async getUserRole(userId: string): Promise<string | undefined> {
     const { data } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
-    return data?.role;
+    return (data as { role?: string } | null)?.role;
   }
 }

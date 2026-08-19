@@ -1,10 +1,18 @@
-FROM node:22-alpine
+FROM node:22-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install --legacy-peer-deps
-COPY backend ./backend
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY shared/package.json ./shared/
+COPY backend/package.json ./backend/
+
+RUN pnpm install --frozen-lockfile
+
 COPY shared ./shared
-WORKDIR /app/backend
-RUN npm run build
+COPY backend ./backend
+
+RUN pnpm --filter @alanya-holidays/shared build
+RUN pnpm --filter @alanya-holidays/backend build
+
 EXPOSE 4000
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "backend/dist/src/main.js"]

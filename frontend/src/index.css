@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-heading: "DM Serif Display", Georgia, serif;
+    --font-body: "DM Sans", system-ui, sans-serif;
+    --font-label: "DM Sans", system-ui, sans-serif;
+
+    /* Warm background scale */
+    --background-50: 0.97 0.01 80;
+    --background-100: 0.94 0.02 80;
+    --background-200: 0.90 0.03 80;
+    --background-300: 0.85 0.04 80;
+    --background-400: 0.78 0.05 80;
+    --background-500: 0.70 0.06 80;
+    --background-600: 0.62 0.07 80;
+    --background-700: 0.55 0.08 80;
+    --background-800: 0.48 0.09 80;
+    --background-900: 0.42 0.10 80;
+    --background-950: 0.35 0.11 80;
+
+    /* Coral/Orange primary */
+    --primary-50: 0.97 0.02 50;
+    --primary-100: 0.93 0.05 45;
+    --primary-200: 0.88 0.10 42;
+    --primary-300: 0.82 0.14 40;
+    --primary-400: 0.75 0.17 38;
+    --primary-500: 0.68 0.19 35;
+    --primary-600: 0.60 0.18 32;
+    --primary-700: 0.52 0.17 30;
+    --primary-800: 0.44 0.16 28;
+    --primary-900: 0.37 0.15 26;
+    --primary-950: 0.30 0.14 24;
+
+    /* Teal accent */
+    --accent-50: 0.97 0.02 190;
+    --accent-100: 0.92 0.05 185;
+    --accent-200: 0.87 0.09 180;
+    --accent-300: 0.80 0.13 175;
+    --accent-400: 0.72 0.16 170;
+    --accent-500: 0.64 0.18 165;
+    --accent-600: 0.56 0.17 160;
+    --accent-700: 0.48 0.16 155;
+    --accent-800: 0.40 0.15 150;
+    --accent-900: 0.34 0.14 145;
+    --accent-950: 0.28 0.13 140;
+
+    /* Warm brown secondary */
+    --secondary-50: 0.96 0.02 70;
+    --secondary-100: 0.91 0.04 65;
+    --secondary-200: 0.85 0.07 60;
+    --secondary-300: 0.78 0.10 55;
+    --secondary-400: 0.70 0.12 50;
+    --secondary-500: 0.62 0.13 45;
+    --secondary-600: 0.54 0.12 42;
+    --secondary-700: 0.47 0.11 40;
+    --secondary-800: 0.40 0.10 38;
+    --secondary-900: 0.34 0.09 36;
+    --secondary-950: 0.28 0.08 34;
+
+    /* Dark foreground (near-black) */
+    --foreground-50: 0.97 0.01 280;
+    --foreground-100: 0.91 0.02 280;
+    --foreground-200: 0.85 0.03 280;
+    --foreground-300: 0.75 0.04 280;
+    --foreground-400: 0.65 0.05 280;
+    --foreground-500: 0.55 0.06 280;
+    --foreground-600: 0.45 0.07 280;
+    --foreground-700: 0.37 0.08 280;
+    --foreground-800: 0.28 0.09 280;
+    --foreground-900: 0.20 0.10 280;
+    --foreground-950: 0.14 0.11 280;
+  }
+
+  .dark {
+    /* Dark background scale — deep charcoal palette */
+    --background-50: 0.18 0.015 260;
+    --background-100: 0.22 0.018 260;
+    --background-200: 0.26 0.022 260;
+    --background-300: 0.30 0.025 260;
+    --background-400: 0.34 0.028 260;
+    --background-500: 0.38 0.030 260;
+    --background-600: 0.43 0.032 260;
+    --background-700: 0.48 0.034 260;
+    --background-800: 0.53 0.036 260;
+    --background-900: 0.58 0.038 260;
+    --background-950: 0.63 0.040 260;
+
+    /* Brighter coral for dark backgrounds */
+    --primary-50: 0.25 0.04 35;
+    --primary-100: 0.30 0.07 32;
+    --primary-200: 0.35 0.10 30;
+    --primary-300: 0.42 0.13 28;
+    --primary-400: 0.50 0.16 30;
+    --primary-500: 0.58 0.19 32;
+    --primary-600: 0.65 0.20 34;
+    --primary-700: 0.72 0.18 36;
+    --primary-800: 0.78 0.14 38;
+    --primary-900: 0.83 0.10 40;
+    --primary-950: 0.88 0.06 42;
+
+    /* Brighter teal for dark backgrounds */
+    --accent-50: 0.22 0.03 165;
+    --accent-100: 0.28 0.06 160;
+    --accent-200: 0.34 0.09 158;
+    --accent-300: 0.40 0.12 160;
+    --accent-400: 0.48 0.15 162;
+    --accent-500: 0.56 0.18 164;
+    --accent-600: 0.62 0.17 166;
+    --accent-700: 0.68 0.15 168;
+    --accent-800: 0.74 0.12 170;
+    --accent-900: 0.80 0.08 172;
+    --accent-950: 0.87 0.04 174;
+
+    /* Warm brown, lifted for dark mode */
+    --secondary-50: 0.24 0.03 55;
+    --secondary-100: 0.30 0.06 50;
+    --secondary-200: 0.36 0.08 48;
+    --secondary-300: 0.42 0.10 46;
+    --secondary-400: 0.48 0.12 44;
+    --secondary-500: 0.54 0.13 46;
+    --secondary-600: 0.60 0.12 48;
+    --secondary-700: 0.66 0.10 50;
+    --secondary-800: 0.72 0.08 52;
+    --secondary-900: 0.78 0.06 54;
+    --secondary-950: 0.85 0.04 56;
+
+    /* Light foreground for dark mode — reversed from light */
+    --foreground-50: 0.14 0.02 280;
+    --foreground-100: 0.22 0.025 280;
+    --foreground-200: 0.30 0.030 280;
+    --foreground-300: 0.40 0.035 280;
+    --foreground-400: 0.50 0.040 280;
+    --foreground-500: 0.60 0.045 280;
+    --foreground-600: 0.70 0.040 280;
+    --foreground-700: 0.78 0.035 280;
+    --foreground-800: 0.86 0.025 280;
+    --foreground-900: 0.92 0.015 280;
+    --foreground-950: 0.97 0.008 280;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: oklch(var(--background-50));
+    color: oklch(var(--foreground-900));
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.review-form-honeypot {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.personal-shopper-honeypot {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.booking-offscreen {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Hide built-in agent widget */
+#vapi-widget-floating-button,
+#vapi-widget-floating-button * {
+  display: none !important;
+}
+
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .guide-modal-wrapper {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .guide-modal-wrapper > .fixed.inset-0 {
+    display: none !important;
+  }
+
+  .guide-modal-card {
+    position: static !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .guide-modal-card img {
+    max-height: 300px !important;
+    object-fit: cover !important;
+    page-break-inside: avoid !important;
+  }
+
+  .guide-modal-card h3,
+  .guide-modal-card h2 {
+    page-break-after: avoid !important;
+  }
+
+  .guide-modal-card article {
+    page-break-inside: avoid !important;
+  }
+
+  .all-guides-print h1 {
+    page-break-before: avoid !important;
+  }
+
+  .all-guides-print .guide-print-entry {
+    page-break-inside: avoid !important;
+    margin-bottom: 32px !important;
+  }
+
+  .all-guides-print .guide-print-entry img {
+    max-height: 220px !important;
+    object-fit: cover !important;
+    page-break-inside: avoid !important;
+  }
+
+  .all-guides-print h3 {
+    page-break-after: avoid !important;
+  }
+}

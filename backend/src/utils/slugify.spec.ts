@@ -4,8 +4,8 @@ describe('slugify utils', () => {
   describe('slugify', () => {
     it('should return an empty string for empty or falsy inputs', () => {
       expect(slugify('')).toBe('');
-      expect(slugify(null as any)).toBe('');
-      expect(slugify(undefined as any)).toBe('');
+      expect(slugify(null as unknown as string)).toBe('');
+      expect(slugify(undefined as unknown as string)).toBe('');
     });
 
     it('should convert text to lowercase and replace spaces with hyphens', () => {

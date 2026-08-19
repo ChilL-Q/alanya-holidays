@@ -3,6 +3,10 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __dirname = import.meta.dirname ?? path.dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
   { ignores: ['dist', 'node_modules', '.venv', 'testsprite_tests', 'scripts', 'coverage', '.claude'] },
@@ -20,6 +24,9 @@ export default tseslint.config(
         expect: 'readonly',
         beforeEach: 'readonly',
         afterEach: 'readonly',
+      },
+      parserOptions: {
+        tsconfigRootDir: __dirname,
       },
     },
     plugins: {

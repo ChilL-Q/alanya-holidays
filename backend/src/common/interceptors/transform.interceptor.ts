@@ -20,16 +20,16 @@ export class TransformInterceptor<T> implements NestInterceptor<
 > {
   intercept(
     context: ExecutionContext,
-    next: CallHandler,
+    next: CallHandler<T>,
   ): Observable<ResponseEnvelope<T> | T> {
     return next.handle().pipe(
-      map((data) => {
+      map((data: T): ResponseEnvelope<T> | T => {
         // If data is null/undefined or primitive/object not already formatted with success key
         if (
           data &&
           typeof data === 'object' &&
           'success' in data &&
-          typeof data.success === 'boolean'
+          typeof (data as Record<string, unknown>).success === 'boolean'
         ) {
           return data;
         }

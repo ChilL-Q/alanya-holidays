@@ -1,32 +1,122 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import {
+  BookingEntity,
+  BookingStatus,
+  IBookingsRepository,
+  StayPeriod,
+} from './domain';
+import { BookingMapper } from './infrastructure/booking.mapper';
+import {
+  PropertySummaryRow,
+  ServiceSummaryRow,
+  ProfileSummaryRow,
+  EnrichedBookingRow,
+} from './dto/booking-repository.dto';
 
 @Injectable()
-export class BookingsRepository {
+export class BookingsRepository implements IBookingsRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
     return this.supabaseService.getClient();
   }
 
+  /**
+   * Domain Repository implementation: find single booking by ID.
+   */
+  async findById(id: string): Promise<BookingEntity | null> {
+    const { data, error } = await this.client
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+    return BookingMapper.toDomain(data);
+  }
+
+  /**
+   * Domain Repository implementation: find overlapping active bookings for an item and stay period.
+   * Supports both StayPeriod value object and legacy (checkIn, checkOut) strings.
+   */
   async findOverlappingBookings(
     itemId: string,
     itemType: string,
-    checkIn: string,
-    checkOut: string,
-  ) {
+    checkInOrPeriod: StayPeriod | string,
+    checkOut?: string,
+  ): Promise<BookingEntity[]> {
+    let checkInStr: string;
+    let checkOutStr: string;
+
+    if (checkInOrPeriod instanceof StayPeriod) {
+      checkInStr = checkInOrPeriod.checkIn;
+      checkOutStr = checkInOrPeriod.checkOut;
+    } else {
+      checkInStr = checkInOrPeriod;
+      checkOutStr = checkOut || '';
+    }
+
     const { data, error } = await this.client
       .from('bookings')
-      .select('id')
+      .select('*')
       .eq('item_id', itemId)
       .eq('item_type', itemType)
       .not('status', 'in', '(cancelled,rejected)')
-      .lt('check_in', checkOut)
-      .gt('check_out', checkIn);
+      .lt('check_in', checkOutStr)
+      .gt('check_out', checkInStr);
 
     if (error) throw new Error('Failed to query bookings');
-    return data || [];
+    return (data || []).map((row: Record<string, unknown>) =>
+      BookingMapper.toDomain(row),
+    );
   }
+
+  /**
+   * Domain Repository implementation: find all bookings for a guest ID.
+   */
+  async findByGuestId(guestId: string): Promise<BookingEntity[]> {
+    const { data, error } = await this.client
+      .from('bookings')
+      .select('*')
+      .eq('user_id', guestId)
+      .order('check_in', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return (data || []).map((row: Record<string, unknown>) =>
+      BookingMapper.toDomain(row),
+    );
+  }
+
+  /**
+   * Domain Repository implementation: save or persist a BookingEntity.
+   */
+  async save(booking: BookingEntity): Promise<BookingEntity> {
+    const persistenceData = BookingMapper.toPersistence(booking);
+    const { data, error } = await this.client
+      .from('bookings')
+      .upsert(persistenceData)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to save booking: ${error.message}`);
+    return BookingMapper.toDomain(data);
+  }
+
+  /**
+   * Domain Repository implementation: update booking status.
+   */
+  async updateStatus(id: string, status: BookingStatus): Promise<void> {
+    const { error } = await this.client
+      .from('bookings')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  // =========================================================================
+  // Existing Repository Queries & RPC Optimizations (100% Backward Compatible)
+  // =========================================================================
 
   async checkPropertyAvailabilityBlocks(
     itemId: string,
@@ -45,7 +135,7 @@ export class BookingsRepository {
     return data || [];
   }
 
-  async insertBooking(data: any) {
+  async insertBooking(data: Record<string, unknown>) {
     const { data: booking, error } = await this.client
       .from('bookings')
       .insert(data)
@@ -67,7 +157,7 @@ export class BookingsRepository {
     paymentMethod?: string;
     itemType?: string;
   }): Promise<string> {
-    const { data, error } = await this.client.rpc('create_booking', {
+    const res = await this.client.rpc('create_booking', {
       p_item_id: params.itemId,
       p_user_id: params.userId,
       p_check_in: params.checkIn,
@@ -79,12 +169,14 @@ export class BookingsRepository {
       p_item_type: params.itemType || 'property',
     });
 
-    if (error) throw new Error(error.message);
-    if (data?.error) throw new Error(data.error);
-    return data?.data;
+    if (res.error) throw new Error(res.error.message);
+    const result = res.data as { error?: string; data?: string } | null;
+    if (result?.error) throw new Error(result.error);
+    if (!result?.data) throw new Error('No booking ID returned');
+    return result.data;
   }
 
-  async upsertPropertyAvailability(blocks: any[]) {
+  async upsertPropertyAvailability(blocks: Record<string, unknown>[]) {
     if (blocks.length > 0) {
       const { error } = await this.client
         .from('property_availability')
@@ -94,21 +186,27 @@ export class BookingsRepository {
     }
   }
 
-  private async enrichBookingsWithItems(bookings: any[]) {
+  private async enrichBookingsWithItems(
+    bookings: Record<string, unknown>[],
+  ): Promise<EnrichedBookingRow[]> {
     if (!bookings || !bookings.length) return [];
 
     const propertyIds = [
       ...new Set(
-        bookings.map((b) => b.item_id || b.property_id).filter(Boolean),
+        bookings
+          .map((b) => (b.item_id || b.property_id) as string)
+          .filter(Boolean),
       ),
     ];
     const serviceIds = [
       ...new Set(
-        bookings.map((b) => b.item_id || b.service_id).filter(Boolean),
+        bookings
+          .map((b) => (b.item_id || b.service_id) as string)
+          .filter(Boolean),
       ),
     ];
     const userIds = [
-      ...new Set(bookings.map((b) => b.user_id).filter(Boolean)),
+      ...new Set(bookings.map((b) => b.user_id as string).filter(Boolean)),
     ];
 
     const [propertiesRes, servicesRes, profilesRes] = await Promise.all([
@@ -117,49 +215,57 @@ export class BookingsRepository {
             .from('properties')
             .select('id, title, images, price_per_night, location, host_id')
             .in('id', propertyIds)
-        : Promise.resolve({ data: [] }),
+        : Promise.resolve({ data: [] as PropertySummaryRow[] }),
       serviceIds.length
         ? this.client
             .from('services')
             .select('id, title, images, price, type, provider_id')
             .in('id', serviceIds)
-        : Promise.resolve({ data: [] }),
+        : Promise.resolve({ data: [] as ServiceSummaryRow[] }),
       userIds.length
         ? this.client
             .from('profiles')
             .select('id, full_name, email, avatar_url, phone')
             .in('id', userIds)
-        : Promise.resolve({ data: [] }),
+        : Promise.resolve({ data: [] as ProfileSummaryRow[] }),
     ]);
 
-    const propertiesMap = new Map(
-      (propertiesRes.data || []).map((p: any) => [p.id, p]),
+    const propertiesMap = new Map<string, PropertySummaryRow>(
+      (propertiesRes.data || []).map((p) => [p.id, p]),
     );
-    const servicesMap = new Map(
-      (servicesRes.data || []).map((s: any) => [s.id, s]),
+    const servicesMap = new Map<string, ServiceSummaryRow>(
+      (servicesRes.data || []).map((s) => [s.id, s]),
     );
-    const profilesMap = new Map(
-      (profilesRes.data || []).map((p: any) => [p.id, p]),
+    const profilesMap = new Map<string, ProfileSummaryRow>(
+      (profilesRes.data || []).map((p) => [p.id, p]),
     );
 
-    return bookings.map((booking: any) => {
-      const propId = booking.item_id || booking.property_id;
-      const servId = booking.item_id || booking.service_id;
-      const property = propertiesMap.get(propId) || null;
-      const service = servicesMap.get(servId) || null;
-      const user = profilesMap.get(booking.user_id) || null;
+    return bookings.map(
+      (booking: Record<string, unknown>): EnrichedBookingRow => {
+        const propId = (booking.item_id || booking.property_id) as string;
+        const servId = (booking.item_id || booking.service_id) as string;
+        const property = propertiesMap.get(propId) || null;
+        const service = servicesMap.get(servId) || null;
+        const user = profilesMap.get(booking.user_id as string) || null;
 
-      return {
-        ...booking,
-        property,
-        service,
-        user,
-        itemTitle: property?.title || service?.title || booking.itemTitle,
-      };
-    });
+        return {
+          ...booking,
+          id: String(booking.id),
+          property,
+          service,
+          user,
+          itemTitle:
+            property?.title ||
+            service?.title ||
+            (typeof booking.itemTitle === 'string'
+              ? booking.itemTitle
+              : undefined),
+        };
+      },
+    );
   }
 
-  async getUserBookings(userId: string) {
+  async getUserBookings(userId: string): Promise<EnrichedBookingRow[]> {
     const { data, error } = await this.client
       .from('bookings')
       .select('*')
@@ -170,7 +276,7 @@ export class BookingsRepository {
     return await this.enrichBookingsWithItems(data || []);
   }
 
-  async getAdminBookings(statusFilter?: string) {
+  async getAdminBookings(statusFilter?: string): Promise<EnrichedBookingRow[]> {
     let query = this.client.from('bookings').select('*');
 
     if (statusFilter && statusFilter !== 'all') {
@@ -205,7 +311,7 @@ export class BookingsRepository {
     return data || [];
   }
 
-  async getBookingById(id: string) {
+  async getBookingById(id: string): Promise<EnrichedBookingRow | null> {
     const { data, error } = await this.client
       .from('bookings')
       .select('*')
@@ -252,9 +358,13 @@ export class BookingsRepository {
     if (error) throw new Error(error.message);
   }
 
-  // --- ADDED MISSING FUNCTIONS FOR SERVICE ---
+  // --- QUERY HELPER FUNCTIONS FOR APPLICATION SERVICE ---
 
-  async getProperty(id: string) {
+  async getProperty(id: string): Promise<{
+    status: string | null;
+    host_id: string | null;
+    title: string;
+  } | null> {
     const { data } = await this.client
       .from('properties')
       .select('status, host_id, title')
@@ -263,7 +373,11 @@ export class BookingsRepository {
     return data;
   }
 
-  async getService(id: string) {
+  async getService(id: string): Promise<{
+    status: string | null;
+    provider_id: string | null;
+    title: string;
+  } | null> {
     const { data } = await this.client
       .from('services')
       .select('status, provider_id, title')
@@ -272,7 +386,13 @@ export class BookingsRepository {
     return data;
   }
 
-  async getProfile(userId: string) {
+  async getProfile(userId: string): Promise<{
+    full_name: string | null;
+    role: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    phone: string | null;
+  } | null> {
     const { data } = await this.client
       .from('profiles')
       .select('full_name, role, email, avatar_url, phone')
@@ -322,10 +442,10 @@ export class BookingsRepository {
     return data || [];
   }
 
-  async invokeEmailFunction(payload: any): Promise<void> {
+  async invokeEmailFunction(payload: Record<string, unknown>): Promise<void> {
     await this.client.functions
       .invoke('send-email', { body: payload })
-      .catch((err) => console.error(err));
+      .catch((err: unknown) => console.error(err));
   }
 
   async confirmBookingsFromStripe(

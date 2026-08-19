@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../supabase/supabase.service';
 import { BookingsService } from '../bookings/bookings.service';
+import { BookingsRepository } from '../bookings/bookings.repository';
 
 @Injectable()
 export class StripeWebhookService {
@@ -11,6 +12,7 @@ export class StripeWebhookService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly bookingsService: BookingsService,
+    private readonly bookingsRepository: BookingsRepository,
   ) {
     const apiKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
     const apiVersion = (process.env.STRIPE_API_VERSION ||
@@ -40,11 +42,10 @@ export class StripeWebhookService {
         signature,
         webhookSecret,
       );
-    } catch (err: any) {
-      this.logger.error(
-        `Webhook signature verification failed: ${err.message}`,
-      );
-      throw new BadRequestException(`Webhook Error: ${err.message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Webhook signature verification failed: ${msg}`);
+      throw new BadRequestException(`Webhook Error: ${msg}`);
     }
 
     this.logger.log(`Received Stripe event type: ${event.type} [${event.id}]`);
@@ -74,12 +75,12 @@ export class StripeWebhookService {
         await this.handlePaymentIntentFailed(event.data.object);
         break;
 
-      case 'charge.dispute.created':
-        await this.handleDisputeCreated(event.data.object);
-        break;
-
       case 'charge.refunded':
         await this.handleChargeRefunded(event.data.object);
+        break;
+
+      case 'charge.dispute.created':
+        await this.handleDisputeCreated(event.data.object);
         break;
 
       default:
@@ -92,64 +93,107 @@ export class StripeWebhookService {
   private async handleCheckoutSessionCompleted(
     session: Stripe.Checkout.Session,
   ) {
-    if (session.payment_status !== 'paid') return;
-
+    const sessionType = session.metadata?.type;
     const paymentIntentId =
       typeof session.payment_intent === 'string'
         ? session.payment_intent
-        : ((session.payment_intent as { id: string } | null)?.id ?? null);
+        : session.payment_intent?.id || null;
 
-    // 1. Listing Addon purchase
-    if (session.metadata?.type === 'listing_addon') {
-      const { userId, listingId, addonType } = session.metadata;
-      if (!userId || !listingId || !addonType) return;
+    // 1. Listing add-on purchase
+    if (sessionType === 'listing_addon') {
+      const listingId = session.metadata?.listingId;
+      const addonType = session.metadata?.addonType;
+      const durationDays = parseInt(session.metadata?.durationDays || '30', 10);
+      const userId = session.metadata?.userId;
 
-      if (paymentIntentId) {
-        const { data: existing } = await this.supabase
-          .from('listing_addons')
-          .select('id')
-          .eq('stripe_payment_intent_id', paymentIntentId)
-          .maybeSingle();
+      if (!listingId || !addonType || !userId) {
+        this.logger.error(
+          `Missing metadata for listing_addon checkout: ${JSON.stringify(session.metadata)}`,
+        );
+        return;
+      }
 
-        if (existing) {
-          this.logger.warn(
-            `Skipping duplicate add-on webhook for payment_intent ${paymentIntentId}`,
-          );
-          return;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+      try {
+        if (paymentIntentId) {
+          const { data: existingAddon } = await this.supabase
+            .from('listing_addons')
+            .select('id')
+            .eq('stripe_payment_id', paymentIntentId)
+            .maybeSingle();
+
+          if (existingAddon) {
+            this.logger.log(
+              `Listing add-on already recorded for payment ${paymentIntentId}, skipping duplicate`,
+            );
+            return;
+          }
         }
+
+        const { error: insertError } = await this.supabase
+          .from('listing_addons')
+          .insert({
+            listing_id: listingId,
+            addon_type: addonType,
+            status: 'active',
+            starts_at: new Date().toISOString(),
+            expires_at: expiresAt.toISOString(),
+            stripe_payment_id: paymentIntentId,
+            amount: session.amount_total ? session.amount_total / 100 : 0,
+            currency: session.currency || 'eur',
+          });
+
+        if (insertError) {
+          this.logger.error(
+            `Failed to insert listing_addon for session ${session.id}: ${insertError.message}`,
+          );
+          throw insertError;
+        }
+
+        // Apply fast-path flags to the listing record directly
+        let patch: Record<string, unknown> | null = null;
+        if (addonType === 'verified_badge') {
+          patch = { is_verified: true };
+        } else if (
+          addonType === 'featured' ||
+          addonType === 'seasonal_placement'
+        ) {
+          patch = { is_featured: true };
+        } else if (addonType === 'top_placement') {
+          patch = { is_top_placement: true };
+        }
+
+        if (patch) {
+          const { error: patchError } = await this.supabase
+            .from('directory_listings')
+            .update(patch)
+            .eq('id', listingId);
+
+          if (patchError) {
+            this.logger.error(
+              `Failed to update directory_listings for listing ${listingId} with patch ${JSON.stringify(patch)}: ${patchError.message}`,
+            );
+          }
+        }
+
+        await this.supabase.from('notifications').insert({
+          user_id: userId,
+          title: 'Upgrade activated',
+          message: `Your "${addonType.replace(/_/g, ' ')}" add-on is now active.`,
+          type: 'success',
+          link: '/host/upgrades',
+        });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error ? err.stack : undefined;
+        this.logger.error(
+          `Failed processing listing_addon checkout for session ${session.id}: ${msg}`,
+          stack,
+        );
+        throw err;
       }
-
-      const expiresAt =
-        addonType === 'seasonal_placement'
-          ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
-          : null;
-
-      await this.supabase.from('listing_addons').insert({
-        listing_id: listingId,
-        addon_type: addonType,
-        status: 'active',
-        stripe_payment_intent_id: paymentIntentId,
-        expires_at: expiresAt,
-      });
-
-      const patch: Record<string, unknown> = {};
-      if (addonType === 'verified_badge') patch.is_verified = true;
-      if (addonType === 'seasonal_placement') patch.is_featured = true;
-
-      if (Object.keys(patch).length > 0) {
-        await this.supabase
-          .from('directory_listings')
-          .update(patch)
-          .eq('id', listingId);
-      }
-
-      await this.supabase.from('notifications').insert({
-        user_id: userId,
-        title: 'Upgrade activated',
-        message: `Your "${addonType.replace(/_/g, ' ')}" add-on is now active.`,
-        type: 'success',
-        link: '/host/upgrades',
-      });
       return;
     }
 
@@ -158,28 +202,54 @@ export class StripeWebhookService {
     const userId = session.metadata?.userId;
 
     if (bookingIdsStr && userId) {
-      const bookingIds = bookingIdsStr.split(',').filter(Boolean);
-      await this.bookingsService.confirmBookingPayment(
-        bookingIds,
-        userId,
-        session.id,
-        paymentIntentId,
-      );
+      try {
+        const bookingIds = bookingIdsStr.split(',').filter(Boolean);
+        await this.bookingsService.confirmBookingPayment(
+          bookingIds,
+          userId,
+          session.id,
+          paymentIntentId,
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error ? err.stack : undefined;
+        this.logger.error(
+          `Failed confirming booking payment for session ${session.id}, bookingIds: ${bookingIdsStr}: ${msg}`,
+          stack,
+        );
+        throw err;
+      }
     }
   }
 
   private async handleSubscriptionCreated(subscription: Stripe.Subscription) {
     const customerId = subscription.customer as string;
     const { userId, plan, tier } = subscription.metadata || {};
-    if (!userId || !plan) return;
+    if (!userId || !plan) {
+      this.logger.warn(
+        `Subscription created missing metadata: userId=${userId}, plan=${plan}`,
+      );
+      return;
+    }
 
-    const { data: existing } = await this.supabase
+    const { data: existing, error: findError } = await this.supabase
       .from('premium_subscriptions')
       .select('id')
       .eq('stripe_subscription_id', subscription.id)
       .maybeSingle();
 
-    if (existing) return;
+    if (findError) {
+      this.logger.error(
+        `Error checking existing subscription ${subscription.id}: ${findError.message}`,
+      );
+    }
+
+    if (existing) {
+      this.logger.warn(
+        `Skipping duplicate subscription.created for ${subscription.id}`,
+      );
+      return;
+    }
 
     const status =
       subscription.status === 'trialing' ||
@@ -202,11 +272,23 @@ export class StripeWebhookService {
       stripe_subscription_id: subscription.id,
       stripe_customer_id: customerId,
       current_period_end: currentPeriodEnd,
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      cancel_at_period_end: subscription.cancel_at_period_end ?? false,
     };
     if (tier) insertPayload.tier = tier;
 
-    await this.supabase.from('premium_subscriptions').insert(insertPayload);
+    const { error: insertError } = await this.supabase
+      .from('premium_subscriptions')
+      .insert(insertPayload);
+
+    if (insertError) {
+      this.logger.error(
+        `Failed to insert premium_subscription for user ${userId}: ${insertError.message}`,
+      );
+      throw new Error(
+        `Failed to insert premium_subscription: ${insertError.message}`,
+      );
+    }
+
     await this.supabase.from('notifications').insert({
       user_id: userId,
       title: '🎉 Welcome to Premium!',
@@ -217,13 +299,25 @@ export class StripeWebhookService {
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-    const { data: subRecord } = await this.supabase
+    const { data: subRecord, error: findError } = await this.supabase
       .from('premium_subscriptions')
-      .select('id, user_id')
+      .select('id, user_id, status')
       .eq('stripe_subscription_id', subscription.id)
       .maybeSingle();
 
-    if (!subRecord) return;
+    if (findError) {
+      this.logger.error(
+        `Error querying subscription ${subscription.id}: ${findError.message}`,
+      );
+      return;
+    }
+
+    if (!subRecord) {
+      this.logger.warn(
+        `Subscription ${subscription.id} not found for subscription.updated event`,
+      );
+      return;
+    }
 
     const periodEnd = (
       subscription as unknown as { current_period_end?: number }
@@ -240,7 +334,7 @@ export class StripeWebhookService {
             ? 'past_due'
             : 'cancelled';
 
-    await this.supabase
+    const { error: updateError } = await this.supabase
       .from('premium_subscriptions')
       .update({
         status: newStatus,
@@ -248,21 +342,49 @@ export class StripeWebhookService {
         cancel_at_period_end: subscription.cancel_at_period_end ?? false,
       })
       .eq('id', subRecord.id);
+
+    if (updateError) {
+      this.logger.error(
+        `Failed updating subscription ${subRecord.id}: ${updateError.message}`,
+      );
+      throw new Error(`Failed updating subscription: ${updateError.message}`);
+    }
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-    const { data: subRecord } = await this.supabase
+    const { data: subRecord, error: findError } = await this.supabase
       .from('premium_subscriptions')
       .select('id, user_id')
       .eq('stripe_subscription_id', subscription.id)
       .maybeSingle();
 
-    if (!subRecord) return;
+    if (findError) {
+      this.logger.error(
+        `Error querying subscription ${subscription.id}: ${findError.message}`,
+      );
+      return;
+    }
 
-    await this.supabase
+    if (!subRecord) {
+      this.logger.warn(
+        `Subscription ${subscription.id} not found for subscription.deleted event`,
+      );
+      return;
+    }
+
+    const { error: updateError } = await this.supabase
       .from('premium_subscriptions')
       .update({ status: 'cancelled' })
       .eq('id', subRecord.id);
+
+    if (updateError) {
+      this.logger.error(
+        `Failed updating cancelled subscription ${subRecord.id}: ${updateError.message}`,
+      );
+      throw new Error(
+        `Failed updating cancelled subscription: ${updateError.message}`,
+      );
+    }
 
     await this.supabase.from('notifications').insert({
       user_id: subRecord.user_id,
@@ -275,7 +397,7 @@ export class StripeWebhookService {
 
   private async handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     const customerId = invoice.customer as string;
-    const { data: subRecord } = await this.supabase
+    const { data: subRecord, error: findError } = await this.supabase
       .from('premium_subscriptions')
       .select('id, user_id')
       .eq('stripe_customer_id', customerId)
@@ -283,12 +405,31 @@ export class StripeWebhookService {
       .limit(1)
       .maybeSingle();
 
-    if (!subRecord) return;
+    if (findError) {
+      this.logger.error(
+        `Error querying subscription for customer ${customerId}: ${findError.message}`,
+      );
+      return;
+    }
 
-    await this.supabase
+    if (!subRecord) {
+      this.logger.warn(
+        `No active subscription found for customer ${customerId} on invoice failure`,
+      );
+      return;
+    }
+
+    const { error: updateError } = await this.supabase
       .from('premium_subscriptions')
       .update({ status: 'past_due' })
       .eq('id', subRecord.id);
+
+    if (updateError) {
+      this.logger.error(
+        `Failed updating subscription ${subRecord.id} to past_due: ${updateError.message}`,
+      );
+      throw new Error(`Failed updating subscription: ${updateError.message}`);
+    }
 
     await this.supabase.from('notifications').insert({
       user_id: subRecord.user_id,
@@ -301,53 +442,237 @@ export class StripeWebhookService {
   }
 
   private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
-    const { data: booking } = await this.supabase
+    this.logger.warn(
+      `Payment failed for payment_intent ${paymentIntent.id}: ${paymentIntent.last_payment_error?.message || 'unknown error'}`,
+    );
+
+    const { data: bookings, error: fetchError } = await this.supabase
       .from('bookings')
-      .select('id, user_id')
-      .eq('payment_intent_id', paymentIntent.id)
-      .maybeSingle();
+      .select('id, user_id, item_id, item_type')
+      .eq('payment_intent_id', paymentIntent.id);
 
-    if (!booking) return;
+    if (fetchError) {
+      this.logger.error(
+        `Failed to fetch bookings for failed payment_intent ${paymentIntent.id}: ${fetchError.message}`,
+      );
+      return;
+    }
 
-    await this.supabase
-      .from('bookings')
-      .update({ payment_status: 'failed' })
-      .eq('id', booking.id);
-  }
+    if (!bookings || bookings.length === 0) {
+      this.logger.warn(
+        `No bookings found for failed payment_intent ${paymentIntent.id}`,
+      );
+      return;
+    }
 
-  private async handleDisputeCreated(dispute: Stripe.Dispute) {
-    const paymentIntentId = dispute.payment_intent as string | undefined;
-    if (!paymentIntentId) return;
-
-    const { data: booking } = await this.supabase
-      .from('bookings')
-      .select('id')
-      .eq('payment_intent_id', paymentIntentId)
-      .maybeSingle();
-
-    if (booking) {
-      await this.supabase
+    for (const booking of bookings) {
+      const { error: updateError } = await this.supabase
         .from('bookings')
         .update({ payment_status: 'failed' })
         .eq('id', booking.id);
+
+      if (updateError) {
+        this.logger.error(
+          `Failed updating payment_status to failed for booking ${booking.id}: ${updateError.message}`,
+        );
+      }
+
+      if (booking.user_id) {
+        await this.supabase.from('notifications').insert({
+          user_id: booking.user_id,
+          title: '⚠️ Payment Failed',
+          message:
+            'Your booking payment could not be processed. Please check your payment details and try again.',
+          type: 'error',
+          link: '/profile',
+        });
+      }
+    }
+  }
+
+  private async handleDisputeCreated(dispute: Stripe.Dispute) {
+    const paymentIntentId =
+      typeof dispute.payment_intent === 'string'
+        ? dispute.payment_intent
+        : ((dispute.payment_intent as { id: string } | null)?.id ?? null);
+
+    const amountStr = dispute.amount
+      ? (dispute.amount / 100).toFixed(2)
+      : '0.00';
+    const currencyStr = dispute.currency?.toUpperCase() || 'EUR';
+
+    this.logger.warn(
+      `Charge dispute created: ID=${dispute.id}, Amount=${amountStr} ${currencyStr}, Reason=${dispute.reason || 'unknown'}, Status=${dispute.status}, PaymentIntent=${paymentIntentId || 'none'}`,
+    );
+
+    let bookingSummary = '';
+
+    if (paymentIntentId) {
+      const { data: bookings, error: fetchError } = await this.supabase
+        .from('bookings')
+        .select('id, user_id')
+        .eq('payment_intent_id', paymentIntentId);
+
+      if (fetchError) {
+        this.logger.error(
+          `Failed fetching bookings for disputed payment_intent ${paymentIntentId}: ${fetchError.message}`,
+        );
+      } else if (bookings && bookings.length > 0) {
+        bookingSummary = ` Booking ID(s): ${bookings.map((b) => b.id).join(', ')}.`;
+        const bookingIds = bookings.map((b) => b.id);
+        const { error: updateError } = await this.supabase
+          .from('bookings')
+          .update({ payment_status: 'failed' })
+          .in('id', bookingIds);
+
+        if (updateError) {
+          this.logger.error(
+            `Failed marking bookings ${bookingIds.join(', ')} as failed on dispute: ${updateError.message}`,
+          );
+        }
+      }
+    }
+
+    // Admin notification
+    const { data: admins, error: adminError } = await this.supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin');
+
+    if (adminError) {
+      this.logger.error(
+        `Failed to fetch admin users for dispute notification: ${adminError.message}`,
+      );
+    } else if (admins && admins.length > 0) {
+      const notifications = admins.map((admin: { id: string }) => ({
+        user_id: admin.id,
+        title: 'Charge Dispute Filed',
+        message: `A dispute has been filed for payment intent ${paymentIntentId || dispute.id}.${bookingSummary} Reason: ${dispute.reason || 'unknown'}. Amount: ${amountStr} ${currencyStr}.`,
+        type: 'warning',
+        link: '/admin/bookings',
+      }));
+
+      const { error: notifError } = await this.supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (notifError) {
+        this.logger.error(
+          `Failed to insert admin dispute notifications: ${notifError.message}`,
+        );
+      }
     }
   }
 
   private async handleChargeRefunded(charge: Stripe.Charge) {
-    const paymentIntentId = charge.payment_intent as string | undefined;
-    if (!paymentIntentId) return;
+    const paymentIntentId =
+      typeof charge.payment_intent === 'string'
+        ? charge.payment_intent
+        : ((charge.payment_intent as { id: string } | null)?.id ?? null);
 
-    const { data: booking } = await this.supabase
+    if (!paymentIntentId) {
+      this.logger.warn('charge.refunded event received without payment_intent');
+      return;
+    }
+
+    const { data: bookings, error: fetchError } = await this.supabase
       .from('bookings')
-      .select('id, user_id')
-      .eq('payment_intent_id', paymentIntentId)
-      .maybeSingle();
+      .select('id, user_id, item_id, item_type, payment_status, status')
+      .eq('payment_intent_id', paymentIntentId);
 
-    if (booking) {
-      await this.supabase
+    if (fetchError) {
+      this.logger.error(
+        `Failed fetching bookings for refund payment_intent ${paymentIntentId}: ${fetchError.message}`,
+      );
+      return;
+    }
+
+    if (!bookings || bookings.length === 0) {
+      this.logger.warn(
+        `No bookings found for refunded payment_intent ${paymentIntentId}`,
+      );
+      return;
+    }
+
+    for (const booking of bookings) {
+      const { error: updateError } = await this.supabase
         .from('bookings')
-        .update({ payment_status: 'refunded' })
+        .update({
+          status: 'cancelled',
+          payment_status: 'refunded',
+        })
         .eq('id', booking.id);
+
+      if (updateError) {
+        this.logger.error(
+          `Failed updating booking ${booking.id} to cancelled/refunded: ${updateError.message}`,
+        );
+        continue;
+      }
+
+      // Automatically unblock calendar dates for the property/service
+      await this.bookingsRepository.unblockDatesForBooking(booking.id);
+      this.logger.log(`Unblocked dates for refunded booking ${booking.id}`);
+
+      // In-app notification to guest
+      if (booking.user_id) {
+        await this.supabase.from('notifications').insert({
+          user_id: booking.user_id,
+          title: 'Booking Refunded & Cancelled',
+          message: `Your booking #${booking.id.slice(0, 8)} has been cancelled and refunded.`,
+          type: 'info',
+          link: '/profile',
+        });
+      }
+
+      // In-app notification to host/provider
+      let hostId: string | null = null;
+      let itemTitle = 'your listing';
+
+      if (booking.item_id) {
+        const itemId = String(booking.item_id);
+        if (booking.item_type === 'service') {
+          const { data: service } = await this.supabase
+            .from('services')
+            .select('provider_id, title')
+            .eq('id', itemId)
+            .maybeSingle();
+
+          if (service) {
+            const svc = service as {
+              provider_id?: string | null;
+              title?: string | null;
+            };
+            hostId = svc.provider_id || null;
+            itemTitle = svc.title || 'your listing';
+          }
+        } else {
+          const { data: property } = await this.supabase
+            .from('properties')
+            .select('host_id, title')
+            .eq('id', itemId)
+            .maybeSingle();
+
+          if (property) {
+            const prop = property as {
+              host_id?: string | null;
+              title?: string | null;
+            };
+            hostId = prop.host_id || null;
+            itemTitle = prop.title || 'your listing';
+          }
+        }
+      }
+
+      if (hostId && hostId !== booking.user_id) {
+        await this.supabase.from('notifications').insert({
+          user_id: hostId,
+          title: 'Booking Refunded & Cancelled',
+          message: `Booking for "${itemTitle}" was cancelled due to a refund. Dates have been reopened.`,
+          type: 'warning',
+          link: '/host/bookings',
+        });
+      }
     }
   }
 }

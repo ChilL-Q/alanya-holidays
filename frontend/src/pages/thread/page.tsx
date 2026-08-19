@@ -1,0 +1,263 @@
+import { useState, useRef, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { forumService, type ThreadDetail, type ThreadReply } from "@/api-services/forum.service";
+import { threadDetails } from "@/mocks/thread-details";
+import ThreadHero from "./components/ThreadHero";
+import OriginalPost from "./components/OriginalPost";
+import ReplyCard from "./components/ReplyCard";
+import ReplyInput from "./components/ReplyInput";
+import AuthorSidebar from "./components/AuthorSidebar";
+
+export default function ThreadPage() {
+  const { threadId } = useParams<{ threadId: string }>();
+  const initialThread = threadId ? threadDetails[threadId] ?? null : null;
+
+  const [thread, setThread] = useState<ThreadDetail | null>(initialThread);
+  const [liked, setLiked] = useState(initialThread?.isLiked ?? false);
+  const [likeCount, setLikeCount] = useState(initialThread?.likes ?? 0);
+  const [replies, setReplies] = useState<ThreadReply[]>(initialThread?.replies ?? []);
+  const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null);
+  const [shareToast, setShareToast] = useState(false);
+  const replySectionRef = useRef<HTMLDivElement>(null);
+
+  // Load thread from API
+  useEffect(() => {
+    if (!threadId) return;
+    let isMounted = true;
+
+    forumService
+      .getThreadById(threadId)
+      .then((data) => {
+        if (isMounted && data) {
+          setThread(data);
+          setLiked(data.isLiked);
+          setLikeCount(data.likes);
+          setReplies(data.replies || []);
+          forumService.incrementPostView(data.id);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load thread details:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [threadId]);
+
+  if (!thread) {
+    return (
+      <div className="min-h-screen bg-background-50 flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-background-100 rounded-full">
+              <i className="ri-chat-off-line text-2xl text-foreground-300"></i>
+            </div>
+            <h2 className="font-heading text-xl text-foreground-900 mb-2">Thread not found</h2>
+            <p className="text-sm text-foreground-500 mb-6">
+              This discussion might have been moved or deleted.
+            </p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors"
+            >
+              <i className="ri-arrow-left-line"></i>
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleLikePost = async () => {
+    const nextLiked = !liked;
+    setLiked(nextLiked);
+    setLikeCount((c) => (nextLiked ? c + 1 : Math.max(0, c - 1)));
+
+    try {
+      await forumService.toggleLike("post", thread.id);
+    } catch (err) {
+      console.warn("Failed to toggle post like:", err);
+    }
+  };
+
+  const handleLikeReply = async (replyId: string) => {
+    const updateReplyLikes = (repliesList: ThreadReply[]): ThreadReply[] =>
+      repliesList.map((r) => {
+        if (r.id === replyId) {
+          return {
+            ...r,
+            isLiked: !r.isLiked,
+            likes: r.isLiked ? Math.max(0, r.likes - 1) : r.likes + 1,
+          };
+        }
+        if (r.replies.length > 0) {
+          return { ...r, replies: updateReplyLikes(r.replies) };
+        }
+        return r;
+      });
+
+    setReplies(updateReplyLikes);
+
+    try {
+      await forumService.toggleLike("comment", replyId);
+    } catch (err) {
+      console.warn("Failed to toggle reply like:", err);
+    }
+  };
+
+  const handleReplyClick = (replyId: string) => {
+    const findReply = (list: ThreadReply[]): ThreadReply | null => {
+      for (const r of list) {
+        if (r.id === replyId) return r;
+        const found = findReply(r.replies);
+        if (found) return found;
+      }
+      return null;
+    };
+    const target = findReply(replies);
+    if (target) {
+      setReplyTarget({ id: replyId, author: target.author });
+    }
+  };
+
+  const scrollToReplies = () => {
+    replySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleSubmitReply = async (content: string, parentId: string | null) => {
+    try {
+      const newReply = await forumService.createComment(thread.id, content);
+      newReply.parentId = parentId;
+
+      if (parentId) {
+        const addNestedReply = (list: ThreadReply[]): ThreadReply[] =>
+          list.map((r) => {
+            if (r.id === parentId) {
+              return { ...r, replies: [...r.replies, newReply] };
+            }
+            if (r.replies.length > 0) {
+              return { ...r, replies: addNestedReply(r.replies) };
+            }
+            return r;
+          });
+        setReplies(addNestedReply);
+      } else {
+        setReplies((prev) => [...prev, newReply]);
+      }
+    } catch (err) {
+      console.warn("Failed to submit reply:", err);
+    } finally {
+      setReplyTarget(null);
+    }
+  };
+
+  const handleShare = () => {
+    setShareToast(true);
+    setTimeout(() => setShareToast(false), 2500);
+  };
+
+  return (
+    <div className="min-h-screen bg-background-50 flex flex-col">
+      {/* Toast */}
+      {shareToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-foreground-900 text-background-50 px-5 py-3 rounded-full text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease-out]">
+          <i className="ri-check-line mr-1.5"></i>
+          Link copied to clipboard!
+        </div>
+      )}
+
+      <ThreadHero thread={{ ...thread, likes: likeCount, isLiked: liked, replies, isPinned: thread.isPinned, isHot: thread.isHot, isVerified: thread.isVerified, subcategory: thread.subcategory, views: thread.views, postedAt: thread.postedAt, title: thread.title, category: thread.category, categoryId: thread.categoryId }} />
+
+      {/* Main content area */}
+      <main className="flex-1 w-full px-4 md:px-8 lg:px-12 py-6 md:py-8">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+          {/* Left: Thread content */}
+          <div className="flex-1 min-w-0 space-y-4">
+            <OriginalPost
+              thread={{ ...thread, likes: likeCount, isLiked: liked, replies, isPinned: thread.isPinned, isHot: thread.isHot, isVerified: thread.isVerified, subcategory: thread.subcategory, views: thread.views, postedAt: thread.postedAt, title: thread.title, category: thread.category, categoryId: thread.categoryId, author: thread.author, content: thread.content, authorAvatar: thread.authorAvatar, authorRole: thread.authorRole, id: thread.id, authorBio: thread.authorBio, authorPosts: thread.authorPosts, authorReputation: thread.authorReputation, authorJoinDate: thread.authorJoinDate, authorLocation: thread.authorLocation, authorBadges: thread.authorBadges }}
+              onLike={handleLikePost}
+              onShare={handleShare}
+              onScrollToReplies={scrollToReplies}
+            />
+
+            {/* Replies count heading */}
+            <div className="flex items-center justify-between pt-2">
+              <h3 className="font-heading text-sm md:text-base text-foreground-900">
+                Replies{" "}
+                <span className="text-foreground-400 font-normal">
+                  ({replies.length})
+                </span>
+              </h3>
+            </div>
+
+            {/* Reply list */}
+            <div className="space-y-1">
+              {replies.length === 0 ? (
+                <div className="bg-background-50 rounded-xl border border-background-200/70 p-8 text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center bg-background-100 rounded-full">
+                    <i className="ri-chat-smile-2-line text-xl text-foreground-300"></i>
+                  </div>
+                  <p className="text-sm text-foreground-500 mb-2">
+                    No replies yet. Be the first to share your thoughts!
+                  </p>
+                </div>
+              ) : (
+                replies.map((reply) => (
+                  <ReplyCard
+                    key={reply.id}
+                    reply={reply}
+                    depth={0}
+                    onLike={handleLikeReply}
+                    onReply={handleReplyClick}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Reply input at bottom */}
+            <div ref={replySectionRef}>
+              <ReplyInput
+                replyTo={replyTarget?.id ?? null}
+                replyToAuthor={replyTarget?.author}
+                onSubmit={handleSubmitReply}
+                onCancel={() => setReplyTarget(null)}
+              />
+            </div>
+          </div>
+
+          {/* Right: Author sidebar */}
+          <AuthorSidebar thread={thread} />
+        </div>
+      </main>
+
+      {/* Bottom CTA */}
+      <section className="w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
+        <div className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-8 md:p-10 text-center">
+          <h3 className="font-heading text-xl md:text-2xl text-background-50 mb-3">
+            Loved this discussion?
+          </h3>
+          <p className="text-background-50/80 text-sm md:text-base mb-6 max-w-lg mx-auto">
+            Join the Alanya Holidays community to participate in conversations, ask questions, and connect with locals and travelers.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-background-50 text-primary-600 text-sm font-medium hover:bg-background-50/90 transition-colors whitespace-nowrap"
+            >
+              Create Free Account
+              <i className="ri-arrow-right-line"></i>
+            </Link>
+            <Link
+              to={`/category/${thread.categoryId}`}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-background-50/30 text-background-50 text-sm font-medium hover:bg-background-50/10 transition-colors whitespace-nowrap"
+            >
+              More {thread.category} Threads
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

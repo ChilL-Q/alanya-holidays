@@ -30,9 +30,22 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       if (typeof res === 'string') {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
-        const resObj = res as Record<string, any>;
-        message = resObj.message || exception.message;
-        errorCode = resObj.error || exception.name || 'HTTP_ERROR';
+        const resObj = res as Record<string, unknown>;
+        const rawMessage = resObj.message;
+        if (typeof rawMessage === 'string') {
+          message = rawMessage;
+        } else if (
+          Array.isArray(rawMessage) &&
+          rawMessage.every((item): item is string => typeof item === 'string')
+        ) {
+          message = rawMessage;
+        } else {
+          message = exception.message;
+        }
+        errorCode =
+          typeof resObj.error === 'string'
+            ? resObj.error
+            : exception.name || 'HTTP_ERROR';
       } else {
         message = exception.message;
       }

@@ -1,0 +1,37 @@
+import { Link } from "react-router-dom";
+
+export default function NewThreadHero() {
+  return (
+    <section className="relative w-full pt-20 md:pt-24 pb-8 md:pb-12 px-4 md:px-8 lg:px-12">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background-100 to-background-50" />
+      <div className="absolute inset-0">
+        <img
+          src="https://readdy.ai/api/search-image?query=Abstract%20geometric%20composition%20with%20warm%20coral%20and%20teal%20gradients%20flowing%20organic%20shapes%20layered%20translucent%20forms%20creating%20depth%20modern%20digital%20art%20style%20editorial%20design%20soft%20atmospheric%20background&width=1600&height=500&seq=newthread-hero-bg&orientation=landscape"
+          alt=""
+          className="w-full h-full object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background-50/80 via-background-50/50 to-background-50" />
+      </div>
+
+      <div className="relative max-w-3xl mx-auto text-center">
+        {/* Breadcrumb */}
+        <div className="flex items-center justify-center gap-2 text-xs text-foreground-500 mb-4">
+          <Link to="/" className="hover:text-primary-500 transition-colors">
+            Home
+          </Link>
+          <i className="ri-arrow-right-s-line"></i>
+          <span className="text-foreground-700">Start a Discussion</span>
+        </div>
+
+        <h1 className="font-heading text-2xl md:text-4xl text-foreground-900 mb-3">
+          Start a New Discussion
+        </h1>
+        <p className="text-sm md:text-base text-foreground-600 max-w-xl mx-auto">
+          Share your question, experience, or insight with the Alanya community. 
+          Pick the right category so the right people can find it.
+        </p>
+      </div>
+    </section>
+  );
+}

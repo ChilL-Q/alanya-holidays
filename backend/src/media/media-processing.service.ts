@@ -38,8 +38,9 @@ export class MediaProcessingService {
   async convertToWebp(inputBuffer: Buffer, quality = 80): Promise<Buffer> {
     try {
       return await sharp(inputBuffer).webp({ quality }).toBuffer();
-    } catch (err) {
-      this.logger.error(`WebP conversion failed: ${(err as Error).message}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`WebP conversion failed: ${msg}`);
       throw err;
     }
   }
@@ -111,13 +112,15 @@ export class MediaProcessingService {
         format: 'webp',
         sizeBytes: fullBuffer.length,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof Error && error.message.includes('Storage bucket')) {
         throw error;
       }
-      throw new InternalServerErrorException(
-        error.message || 'Image processing or storage upload failed',
-      );
+      const msg =
+        error instanceof Error
+          ? error.message
+          : 'Image processing or storage upload failed';
+      throw new InternalServerErrorException(msg);
     }
   }
 }

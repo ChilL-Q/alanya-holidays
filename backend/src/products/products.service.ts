@@ -3,7 +3,16 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { ProductsRepository } from './products.repository';
+import {
+  ProductsRepository,
+  ProductCategoryRow,
+  ProductItemRow,
+  ProductSkuRow,
+  ShopCatalogResult,
+  CreateOrderResult,
+} from './products.repository';
+import { CreateProductOrderDto } from './dto/create-product-order.dto';
+import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
 
 export interface Product {
   id?: string;
@@ -27,6 +36,12 @@ export interface ProductVariant {
   created_at: string;
 }
 
+export interface ShopProductDetailResult {
+  product: ProductItemRow;
+  variants: unknown[];
+  skus: ProductSkuRow[];
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly productsRepository: ProductsRepository) {}
@@ -40,6 +55,10 @@ export class ProductsService {
   async getProducts(category?: string) {
     const data = await this.productsRepository.getProducts(category);
     return data as Product[];
+  }
+
+  async getFeaturedProducts(limit = 8) {
+    return this.productsRepository.getFeaturedProducts(limit);
   }
 
   async getProduct(id: string) {
@@ -130,5 +149,39 @@ export class ProductsService {
     await this.checkOwnership(productId, requestUserId);
     await this.productsRepository.deleteProductVariant(variantId);
     return { success: true };
+  }
+
+  // --- Shop Catalog & Orders Methods ---
+
+  async getShopCategories(): Promise<ProductCategoryRow[]> {
+    return this.productsRepository.getShopCategories();
+  }
+
+  async getShopCatalog(
+    query?: GetShopCatalogQueryDto,
+  ): Promise<ShopCatalogResult> {
+    return this.productsRepository.getShopCatalog(query);
+  }
+
+  async getShopProductDetails(
+    productId: string | number,
+  ): Promise<ShopProductDetailResult> {
+    const result =
+      await this.productsRepository.getShopProductDetails(productId);
+    if (!result.product) {
+      throw new NotFoundException('Product not found');
+    }
+    return {
+      product: result.product,
+      variants: result.variants,
+      skus: result.skus,
+    };
+  }
+
+  async createProductOrder(
+    dto: CreateProductOrderDto,
+    userId?: string,
+  ): Promise<CreateOrderResult> {
+    return this.productsRepository.createProductOrder(dto, userId);
   }
 }

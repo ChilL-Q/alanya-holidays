@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DirectoryController } from './directory.controller';
 import { DirectoryService } from './directory.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from './types/directory.types';
 
 describe('DirectoryController', () => {
   let controller: DirectoryController;
-  let mockService: any;
+  let mockService: Record<keyof DirectoryService, jest.Mock>;
 
   beforeEach(async () => {
     mockService = {
@@ -88,7 +89,7 @@ describe('DirectoryController', () => {
   });
 
   it('should pass req.user.id to approveDirectoryListing', async () => {
-    const req = { user: { id: 'admin-77' } };
+    const req = { user: { id: 'admin-77' } } as AuthenticatedRequest;
     await controller.approveDirectoryListing('dir-9', req);
     expect(mockService.approveDirectoryListing).toHaveBeenCalledWith(
       'dir-9',
@@ -97,7 +98,7 @@ describe('DirectoryController', () => {
   });
 
   it('should pass req.user.id to voteForListing', async () => {
-    const req = { user: { id: 'usr-88' } };
+    const req = { user: { id: 'usr-88' } } as AuthenticatedRequest;
     await controller.voteForListing('dir-9', 1, req);
     expect(mockService.voteForListing).toHaveBeenCalledWith(
       'dir-9',

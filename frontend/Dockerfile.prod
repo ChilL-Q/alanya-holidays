@@ -1,5 +1,6 @@
 # Stage 1: Build static assets
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 ARG VITE_SUPABASE_URL
@@ -14,12 +15,17 @@ ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 ENV VITE_APP_URL=$VITE_APP_URL
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install --legacy-peer-deps
-COPY frontend ./frontend
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY shared/package.json ./shared/
+COPY frontend/package.json ./frontend/
+
+RUN pnpm install --frozen-lockfile
+
 COPY shared ./shared
-WORKDIR /app/frontend
-RUN npm run build
+COPY frontend ./frontend
+
+RUN pnpm --filter @alanya-holidays/shared build
+RUN pnpm --filter @alanya-holidays/frontend build
 
 # Stage 2: Serve static assets with Nginx
 FROM nginx:alpine AS runner

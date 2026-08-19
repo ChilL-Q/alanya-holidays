@@ -8,6 +8,12 @@ import { BookingsRepository } from './bookings.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ConfirmedBookingDetails } from './dto/booking-notification.dto';
+import { BookingEntity, BookingItemType, Money, StayPeriod } from './domain';
+import { BookingMapper } from './infrastructure/booking.mapper';
+import {
+  PropertySummaryRow,
+  ServiceSummaryRow,
+} from './dto/booking-repository.dto';
 
 @Injectable()
 export class BookingsService {
@@ -22,12 +28,19 @@ export class BookingsService {
     checkIn: string,
     checkOut: string,
   ) {
+    let stayPeriod: StayPeriod;
+    try {
+      stayPeriod = new StayPeriod(checkIn, checkOut);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid stay period';
+      throw new BadRequestException(msg);
+    }
+
     const overlappingBookings =
       await this.bookingsRepository.findOverlappingBookings(
         itemId,
         itemType,
-        checkIn,
-        checkOut,
+        stayPeriod,
       );
 
     if (overlappingBookings.length > 0)
@@ -37,8 +50,8 @@ export class BookingsService {
       const blocks =
         await this.bookingsRepository.checkPropertyAvailabilityBlocks(
           itemId,
-          checkIn,
-          checkOut,
+          stayPeriod.checkIn,
+          stayPeriod.checkOut,
         );
 
       if (blocks.length > 0)
@@ -49,71 +62,108 @@ export class BookingsService {
   }
 
   async createBooking(dto: CreateBookingDto) {
-    const itemType = dto.item_type || 'property';
+    const itemType = (dto.item_type || 'property') as BookingItemType;
+
+    // Validate domain invariants through Value Objects and BookingEntity factory
+    let stayPeriod: StayPeriod;
+    let totalPrice: Money;
+    let bookingEntity: BookingEntity;
+
+    try {
+      stayPeriod = new StayPeriod(dto.check_in, dto.check_out);
+      totalPrice = new Money(dto.total_price, 'EUR');
+      bookingEntity = BookingEntity.create({
+        itemId: dto.item_id,
+        itemType,
+        guestId: dto.user_id,
+        stayPeriod,
+        totalPrice,
+        guestsCount: dto.guests,
+        message: dto.message,
+        paymentMethod: dto.payment_method,
+      });
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Invalid booking details';
+      throw new BadRequestException(msg);
+    }
+
     let hostId: string | null = null;
     let propertyTitle = 'Item';
 
     // Pre-fetch item title/host and perform early validation
-    if (itemType === 'property') {
-      const property = await this.bookingsRepository.getProperty(dto.item_id);
+    if (bookingEntity.itemType === 'property') {
+      const property = await this.bookingsRepository.getProperty(
+        bookingEntity.itemId,
+      );
       if (!property) throw new BadRequestException('Property not found');
       if (property.status !== 'approved')
         throw new BadRequestException('Property is not available');
-      if (property.host_id === dto.user_id)
+      if (property.host_id === bookingEntity.guestId)
         throw new BadRequestException('Cannot book your own property');
       hostId = property.host_id;
       propertyTitle = property.title;
-    } else if (itemType === 'service') {
-      const service = await this.bookingsRepository.getService(dto.item_id);
+    } else if (bookingEntity.itemType === 'service') {
+      const service = await this.bookingsRepository.getService(
+        bookingEntity.itemId,
+      );
       if (!service) throw new BadRequestException('Service not found');
       if (service.status !== 'approved')
         throw new BadRequestException('Service is not available');
-      if (service.provider_id === dto.user_id)
+      if (service.provider_id === bookingEntity.guestId)
         throw new BadRequestException('Cannot book your own service');
       hostId = service.provider_id;
       propertyTitle = service.title;
     }
 
-    // Execute atomic RPC (performs validations, advisory locking, overlap check & date series blocking in 1 DB RTT)
+    // Execute atomic RPC (validations, advisory locking, overlap check & date series blocking in 1 DB RTT)
     let bookingId: string;
     try {
       bookingId = await this.bookingsRepository.createBookingRpc({
-        itemId: dto.item_id,
-        userId: dto.user_id,
-        checkIn: dto.check_in,
-        checkOut: dto.check_out,
-        totalPrice: dto.total_price,
-        guests: dto.guests,
-        message: dto.message,
-        paymentMethod: dto.payment_method,
-        itemType,
+        itemId: bookingEntity.itemId,
+        userId: bookingEntity.guestId,
+        checkIn: bookingEntity.stayPeriod.checkIn,
+        checkOut: bookingEntity.stayPeriod.checkOut,
+        totalPrice: bookingEntity.totalPrice.amount,
+        guests: bookingEntity.guestsCount,
+        message: bookingEntity.message,
+        paymentMethod: bookingEntity.paymentMethod,
+        itemType: bookingEntity.itemType,
       });
-    } catch (err: any) {
-      throw new BadRequestException(err.message || 'Failed to create booking');
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Failed to create booking';
+      throw new BadRequestException(msg);
     }
 
-    const booking = {
+    const bookingInfo = {
       id: bookingId,
-      check_in: dto.check_in,
-      check_out: dto.check_out,
-      total_price: dto.total_price,
-      guests: dto.guests,
-      message: dto.message,
+      check_in: bookingEntity.stayPeriod.checkIn,
+      check_out: bookingEntity.stayPeriod.checkOut,
+      total_price: bookingEntity.totalPrice.amount,
+      guests: bookingEntity.guestsCount,
+      message: bookingEntity.message,
     };
 
-    this.sendEmails(booking, dto.user_id, hostId, propertyTitle, itemType);
+    void this.sendEmails(
+      bookingInfo,
+      bookingEntity.guestId,
+      hostId,
+      propertyTitle,
+      bookingEntity.itemType,
+    );
 
     if (hostId && this.notificationsService) {
       this.notificationsService.notifyUser(hostId, {
         type: 'NEW_BOOKING',
         title: 'Новое бронирование!',
-        message: `Новая заявка на "${propertyTitle}" с ${dto.check_in} по ${dto.check_out}`,
+        message: `Новая заявка на "${propertyTitle}" с ${bookingEntity.stayPeriod.checkIn} по ${bookingEntity.stayPeriod.checkOut}`,
         data: {
           bookingId,
-          itemId: dto.item_id,
-          totalPrice: dto.total_price,
-          checkIn: dto.check_in,
-          checkOut: dto.check_out,
+          itemId: bookingEntity.itemId,
+          totalPrice: bookingEntity.totalPrice.amount,
+          checkIn: bookingEntity.stayPeriod.checkIn,
+          checkOut: bookingEntity.stayPeriod.checkOut,
         },
       });
     }
@@ -122,7 +172,14 @@ export class BookingsService {
   }
 
   private async sendEmails(
-    booking: any,
+    booking: {
+      id: string;
+      check_in: string;
+      check_out: string;
+      total_price: number;
+      guests: number;
+      message?: string;
+    },
     userId: string,
     hostId: string | null,
     title: string,
@@ -169,7 +226,10 @@ export class BookingsService {
     }
   }
 
-  private async invokeEmailWithRetry(payload: any, maxRetries = 3) {
+  private async invokeEmailWithRetry(
+    payload: Record<string, unknown>,
+    maxRetries = 3,
+  ) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await this.bookingsRepository.invokeEmailFunction(payload);
@@ -189,7 +249,7 @@ export class BookingsService {
   }
 
   // ============================================
-  // Booking Queries (Moved from frontend)
+  // Booking Queries (Backward Compatible)
   // ============================================
 
   async getUserBookings(userId: string) {
@@ -215,7 +275,7 @@ export class BookingsService {
     dateFrom?: string,
     dateTo?: string,
     requestUserId?: string,
-  ) {
+  ): Promise<Record<string, unknown>[]> {
     const role = await this.bookingsRepository.getUserRole(requestUserId!);
     if (requestUserId !== hostId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
@@ -224,8 +284,8 @@ export class BookingsService {
       await this.bookingsRepository.getPropertiesByHost(hostId);
     if (!properties || properties.length === 0) return [];
 
-    const propertyIds = properties.map((p: any) => p.id);
-    const propertyMap = new Map(properties.map((p: any) => [p.id, p]));
+    const propertyIds = properties.map((p) => String(p.id));
+    const propertyMap = new Map(properties.map((p) => [String(p.id), p]));
 
     const bookings = await this.bookingsRepository.getBookingsByPropertyIds(
       propertyIds,
@@ -235,81 +295,24 @@ export class BookingsService {
     if (!bookings || bookings.length === 0) return [];
 
     const guestIds = Array.from(
-      new Set(bookings.map((b: any) => b.user_id).filter(Boolean)),
+      new Set(bookings.map((b) => String(b.user_id)).filter(Boolean)),
     );
     const profiles = await this.bookingsRepository.getProfilesByIds(guestIds);
-    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-
-    return bookings.map((booking: any) => ({
-      ...booking,
-      user: profileMap.get(booking.user_id),
-      property: propertyMap.get(booking.item_id),
-      itemTitle: propertyMap.get(booking.item_id)?.title,
-    }));
-  }
-
-  private async enrichBookings(bookings: any[], includeUser = false) {
-    const propertyIds = Array.from(
-      new Set(
-        bookings
-          .filter((b) => b.item_type === 'property')
-          .map((b) => b.item_id)
-          .filter(Boolean),
-      ),
-    );
-    const serviceIds = Array.from(
-      new Set(
-        bookings
-          .filter((b) => b.item_type === 'service')
-          .map((b) => b.item_id)
-          .filter(Boolean),
-      ),
-    );
-
-    let usersMap = new Map();
-    if (includeUser) {
-      const userIds = Array.from(
-        new Set(bookings.map((b) => b.user_id).filter(Boolean)),
-      );
-      if (userIds.length > 0) {
-        const users = await this.bookingsRepository.getProfilesByIds(userIds);
-        usersMap = new Map((users || []).map((u: any) => [u.id, u]));
-      }
-    }
-
-    const [propertiesData, servicesData] = await Promise.all([
-      propertyIds.length > 0
-        ? this.bookingsRepository.getPropertiesByIds(propertyIds)
-        : Promise.resolve([]),
-      serviceIds.length > 0
-        ? this.bookingsRepository.getServicesByIds(serviceIds)
-        : Promise.resolve([]),
-    ]);
-
-    const propertyMap = new Map(
-      (propertiesData || []).map((p: any) => [p.id, p]),
-    );
-    const serviceMap = new Map((servicesData || []).map((s: any) => [s.id, s]));
+    const profileMap = new Map((profiles || []).map((p) => [String(p.id), p]));
 
     return bookings.map((booking) => {
-      let itemDetails: any = {};
-      if (booking.item_type === 'property') {
-        const property = propertyMap.get(booking.item_id);
-        itemDetails = { property, itemTitle: property?.title };
-      } else if (booking.item_type === 'service') {
-        const service = serviceMap.get(booking.item_id);
-        itemDetails = { service, itemTitle: service?.title };
-      }
+      const prop = propertyMap.get(String(booking.item_id));
       return {
         ...booking,
-        ...itemDetails,
-        ...(includeUser ? { user: usersMap.get(booking.user_id) } : {}),
+        user: profileMap.get(String(booking.user_id)),
+        property: prop,
+        itemTitle: prop?.title,
       };
     });
   }
 
   // ============================================
-  // Booking Mutations (Moved from frontend)
+  // Booking Mutations & State Transitions
   // ============================================
 
   async updateBookingStatus(
@@ -322,27 +325,37 @@ export class BookingsService {
 
     if (!currentBooking) throw new NotFoundException('Booking not found');
 
-    const isBookingOwner = currentBooking.user_id === userId;
-    const propertyObj = Array.isArray(currentBooking.property)
-      ? currentBooking.property[0]
-      : currentBooking.property;
-    const serviceObj = Array.isArray(currentBooking.service)
-      ? currentBooking.service[0]
-      : currentBooking.service;
+    const domainBooking = BookingMapper.toDomain(currentBooking);
+
+    const isBookingOwner = domainBooking.guestId === userId;
+    const propertyObj = (
+      Array.isArray(currentBooking.property)
+        ? currentBooking.property[0]
+        : currentBooking.property
+    ) as PropertySummaryRow | null | undefined;
+    const serviceObj = (
+      Array.isArray(currentBooking.service)
+        ? currentBooking.service[0]
+        : currentBooking.service
+    ) as ServiceSummaryRow | null | undefined;
     const isPropertyHost = propertyObj?.host_id === userId;
     const isServiceProvider = serviceObj?.provider_id === userId;
 
     const role = await this.bookingsRepository.getUserRole(userId);
-    if (
-      !isBookingOwner &&
-      !isPropertyHost &&
-      !isServiceProvider &&
-      role !== 'admin'
-    ) {
+    const isAdmin = role === 'admin';
+
+    if (!isBookingOwner && !isPropertyHost && !isServiceProvider && !isAdmin) {
       throw new UnauthorizedException('Not authorized');
     }
 
     if (status === 'cancelled') {
+      if (isBookingOwner && !isAdmin && !isPropertyHost && !isServiceProvider) {
+        if (!domainBooking.canBeCancelledBy(userId)) {
+          throw new BadRequestException(
+            'Booking cannot be cancelled in its current state',
+          );
+        }
+      }
       await this.bookingsRepository.unblockDatesForBooking(id);
     }
 
@@ -360,35 +373,34 @@ export class BookingsService {
     let emailType: string | null = null;
     if (status === 'confirmed') emailType = 'booking_confirmed';
     else if (status === 'cancelled')
-      emailType =
-        currentBooking.status === 'pending'
-          ? 'booking_rejected'
-          : 'booking_cancelled';
+      emailType = domainBooking.isPending()
+        ? 'booking_rejected'
+        : 'booking_cancelled';
 
     if (emailType) {
-      this.bookingsRepository.invokeEmailFunction({
+      void this.bookingsRepository.invokeEmailFunction({
         type: emailType,
-        userId: currentBooking.user_id,
+        userId: domainBooking.guestId,
         data: {
           itemTitle,
           itemTypeLabel: typeLabel,
-          checkIn: currentBooking.check_in,
-          checkOut: currentBooking.check_out,
+          checkIn: domainBooking.stayPeriod.checkIn,
+          checkOut: domainBooking.stayPeriod.checkOut,
           reason,
           link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/profile`,
         },
       });
 
       if (status === 'cancelled' && hostId) {
-        this.bookingsRepository.invokeEmailFunction({
+        void this.bookingsRepository.invokeEmailFunction({
           type: 'booking_cancelled_host',
           userId: hostId,
           data: {
             guestName: 'Guest',
             itemTitle,
             itemTypeLabel: typeLabel,
-            checkIn: currentBooking.check_in,
-            checkOut: currentBooking.check_out,
+            checkIn: domainBooking.stayPeriod.checkIn,
+            checkOut: domainBooking.stayPeriod.checkOut,
             link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/host/bookings`,
           },
         });
@@ -401,7 +413,6 @@ export class BookingsService {
     const booking = await this.bookingsRepository.getBookingForCancellation(id);
     if (!booking) throw new NotFoundException('Booking not found');
 
-    // Authorization is handled inside updateBookingStatus, but we ensure it's either user or admin
     return this.updateBookingStatus(
       id,
       'cancelled',
@@ -445,7 +456,7 @@ export class BookingsService {
         booking.property?.title ?? booking.service?.title ?? 'Booking';
       const guestEmail = booking.profile?.email;
       if (guestEmail) {
-        this.bookingsRepository.invokeEmailFunction({
+        void this.bookingsRepository.invokeEmailFunction({
           to: guestEmail,
           type: 'booking_confirmed',
           data: {

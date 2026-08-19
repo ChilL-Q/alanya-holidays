@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import {
+  ForumCategory,
+  InsertForumCategoryDbInput,
+  UpdateForumCategoryDbInput,
+} from '../types/forum.types';
 
 @Injectable()
 export class ForumCategoriesRepository {
@@ -9,62 +14,67 @@ export class ForumCategoriesRepository {
     return this.supabaseService.getClient();
   }
 
-  async getCategories() {
+  async getCategories(): Promise<ForumCategory[]> {
     const { data, error } = await this.client
       .from('forum_categories')
       .select('*')
       .order('sort_order', { ascending: true });
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as ForumCategory[]) || [];
   }
 
-  async getCategoryBySlug(slug: string) {
+  async getCategoryBySlug(slug: string): Promise<ForumCategory | null> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .eq('slug', slug)
       .single();
-    return data;
+    return (data as unknown as ForumCategory) ?? null;
   }
 
-  async getCategoryById(id: string) {
+  async getCategoryById(id: string): Promise<ForumCategory | null> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .eq('id', id)
       .single();
-    return data;
+    return (data as unknown as ForumCategory) ?? null;
   }
 
-  async getCategoriesByIds(ids: string[]) {
+  async getCategoriesByIds(ids: string[]): Promise<ForumCategory[]> {
     const { data, error } = await this.client
       .from('forum_categories')
       .select('*')
       .in('id', ids);
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as unknown as ForumCategory[]) || [];
   }
 
-  async getChildCategories(parentId: string) {
+  async getChildCategories(parentId: string): Promise<ForumCategory[]> {
     const { data } = await this.client
       .from('forum_categories')
       .select('*')
       .eq('parent_id', parentId)
       .order('sort_order', { ascending: true });
-    return data || [];
+    return (data as unknown as ForumCategory[]) || [];
   }
 
-  async insertCategory(data: any) {
+  async insertCategory(
+    data: InsertForumCategoryDbInput,
+  ): Promise<ForumCategory> {
     const { data: cat, error } = await this.client
       .from('forum_categories')
       .insert([data])
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return cat;
+    return cat as unknown as ForumCategory;
   }
 
-  async updateCategory(id: string, updates: any) {
+  async updateCategory(
+    id: string,
+    updates: UpdateForumCategoryDbInput,
+  ): Promise<ForumCategory> {
     const { data, error } = await this.client
       .from('forum_categories')
       .update(updates)
@@ -72,10 +82,10 @@ export class ForumCategoriesRepository {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return data;
+    return data as unknown as ForumCategory;
   }
 
-  async deleteCategory(id: string) {
+  async deleteCategory(id: string): Promise<void> {
     const { error } = await this.client
       .from('forum_categories')
       .delete()
@@ -83,16 +93,18 @@ export class ForumCategoriesRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getUserRole(userId: string) {
+  async getUserRole(userId: string): Promise<string | undefined> {
     const { data } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single();
-    return data?.role;
+    return (data as { role?: string } | null)?.role;
   }
 
-  async getPostCategoryCounts() {
+  async getPostCategoryCounts(): Promise<
+    Array<{ category_id: string | null }>
+  > {
     const { data } = await this.client
       .from('forum_posts')
       .select('category_id')

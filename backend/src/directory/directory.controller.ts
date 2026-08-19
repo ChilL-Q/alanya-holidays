@@ -13,6 +13,10 @@ import {
 import { DirectoryService } from './directory.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { SubmitClaimDto } from './dto/submit-claim.dto';
+import {
+  AuthenticatedRequest,
+  DirectoryListingRecord,
+} from './types/directory.types';
 
 @Controller('directory')
 export class DirectoryController {
@@ -103,7 +107,10 @@ export class DirectoryController {
 
   @Post(':id/approve')
   @UseGuards(AuthGuard)
-  async approveDirectoryListing(@Param('id') id: string, @Req() req: any) {
+  async approveDirectoryListing(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.directoryService.approveDirectoryListing(id, req.user.id);
   }
 
@@ -112,7 +119,7 @@ export class DirectoryController {
   async rejectDirectoryListing(
     @Param('id') id: string,
     @Body('reason') reason: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.rejectDirectoryListing(
       id,
@@ -126,7 +133,7 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async getDirectoryAnalyticsForOwner(
     @Query('days') days: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.getDirectoryAnalyticsForOwner(
       days ? parseInt(days) : 30,
@@ -164,7 +171,7 @@ export class DirectoryController {
   async voteForListing(
     @Param('id') id: string,
     @Body('vote') vote: 1 | -1,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.voteForListing(id, vote, req.user.id);
   }
@@ -173,21 +180,27 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async getUserVotesBatch(
     @Body('listingIds') listingIds: string[],
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.getUserVotesBatch(listingIds, req.user.id);
   }
 
   @Delete(':id/vote')
   @UseGuards(AuthGuard)
-  async removeListingVote(@Param('id') id: string, @Req() req: any) {
+  async removeListingVote(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.directoryService.removeListingVote(id, req.user.id);
   }
 
   // Claims
   @Post('claims')
   @UseGuards(AuthGuard)
-  async submitListingClaim(@Body() claim: SubmitClaimDto, @Req() req: any) {
+  async submitListingClaim(
+    @Body() claim: SubmitClaimDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.directoryService.submitListingClaim(claim, req.user.id);
   }
 
@@ -198,13 +211,16 @@ export class DirectoryController {
 
   @Get('claims')
   @UseGuards(AuthGuard)
-  async getListingClaims(@Req() req: any) {
+  async getListingClaims(@Req() req: AuthenticatedRequest) {
     return this.directoryService.getListingClaims(req.user.id);
   }
 
   @Post('claims/:id/approve')
   @UseGuards(AuthGuard)
-  async approveListingClaim(@Param('id') id: string, @Req() req: any) {
+  async approveListingClaim(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.directoryService.approveListingClaim(id, req.user.id);
   }
 
@@ -213,7 +229,7 @@ export class DirectoryController {
   async rejectListingClaim(
     @Param('id') id: string,
     @Body('reason') reason: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.rejectListingClaim(id, reason, req.user.id);
   }
@@ -229,7 +245,7 @@ export class DirectoryController {
   async createAddonCheckout(
     @Param('id') id: string,
     @Body('addonType') addonType: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.createAddonCheckout(
       id,
@@ -244,7 +260,7 @@ export class DirectoryController {
   sendListingPaymentInstructions(
     @Body('businessName') businessName: string,
     @Body('tier') tier: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.sendListingPaymentInstructions(
       businessName,
@@ -256,7 +272,7 @@ export class DirectoryController {
   // User Listings
   @Get('me/listings')
   @UseGuards(AuthGuard)
-  async getMyDirectoryListings(@Req() req: any) {
+  async getMyDirectoryListings(@Req() req: AuthenticatedRequest) {
     return this.directoryService.getMyDirectoryListings(req.user.id);
   }
 
@@ -278,9 +294,9 @@ export class DirectoryController {
   @Post()
   @UseGuards(AuthGuard)
   async createDirectoryListing(
-    @Body('listing') listing: any,
+    @Body('listing') listing: Partial<DirectoryListingRecord>,
     @Body('locationIds') locationIds: string[],
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.createDirectoryListing(
       listing,
@@ -293,9 +309,9 @@ export class DirectoryController {
   @UseGuards(AuthGuard)
   async updateDirectoryListing(
     @Param('id') id: string,
-    @Body('updates') updates: any,
+    @Body('updates') updates: Partial<DirectoryListingRecord>,
     @Body('locationIds') locationIds: string[],
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.directoryService.updateDirectoryListing(
       id,
@@ -307,7 +323,10 @@ export class DirectoryController {
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async deleteDirectoryListing(@Param('id') id: string, @Req() req: any) {
+  async deleteDirectoryListing(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.directoryService.deleteDirectoryListing(id, req.user.id);
   }
 }

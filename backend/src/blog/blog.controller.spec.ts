@@ -7,29 +7,99 @@ jest.mock('sanitize-html', () => {
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
+import {
+  AuthenticatedRequest,
+  BlogPost,
+  BlogPostSummary,
+  BlogSubmission,
+  BlogTag,
+  OptionalAuthenticatedRequest,
+} from './types/blog.types';
+import {
+  CreateBlogPostDto,
+  CreateBlogSubmissionDto,
+  CreateBlogTagDto,
+  GetBlogQueryDto,
+  GetBlogSubmissionsQueryDto,
+  RejectBlogSubmissionDto,
+  UpdateBlogPostDto,
+} from './dto';
+
+type MockServiceType = {
+  [K in keyof BlogService]: jest.Mock;
+};
 
 describe('BlogController', () => {
   let controller: BlogController;
-  let mockService: any;
+  let mockService: MockServiceType;
+
+  const mockBlogPost: BlogPost = {
+    id: 'post-1',
+    title: 'Test Post',
+    slug: 'test-post',
+    content: 'Content here',
+    excerpt: 'Excerpt here',
+    cover_image_url: 'https://example.com/cover.jpg',
+    video_url: null,
+    category: 'Guides',
+    status: 'published',
+    is_featured: false,
+    author_id: 'user-1',
+    published_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const mockBlogPostSummary: BlogPostSummary = {
+    id: 'post-1',
+    title: 'Test Post',
+    slug: 'test-post',
+    excerpt: 'Excerpt here',
+    cover_image_url: 'https://example.com/cover.jpg',
+    category: 'Guides',
+    published_at: new Date().toISOString(),
+  };
+
+  const mockBlogTag: BlogTag = {
+    id: 'tag-1',
+    name: 'Alanya Castle',
+    slug: 'alanya-castle',
+  };
+
+  const mockSubmission: BlogSubmission = {
+    id: 'sub-1',
+    user_id: 'user-1',
+    title: 'Submission 1',
+    content: 'Content',
+    status: 'pending_review',
+    created_at: new Date().toISOString(),
+  };
+
+  const mockAuthReq: AuthenticatedRequest = {
+    user: { id: 'user-1', email: 'user@test.com' },
+  };
 
   beforeEach(async () => {
     mockService = {
-      getBlogPosts: jest.fn().mockResolvedValue({ data: [], total: 0 }),
-      getFeaturedBlogPosts: jest.fn().mockResolvedValue([]),
-      getBlogTags: jest.fn().mockResolvedValue([]),
-      createBlogTag: jest.fn().mockResolvedValue({ id: 'tag-1' }),
+      getBlogPosts: jest.fn().mockResolvedValue({
+        data: [mockBlogPost],
+        total: 1,
+      }),
+      getFeaturedBlogPosts: jest.fn().mockResolvedValue([mockBlogPostSummary]),
+      getBlogTags: jest.fn().mockResolvedValue([mockBlogTag]),
+      createBlogTag: jest.fn().mockResolvedValue(mockBlogTag),
       deleteBlogTag: jest.fn().mockResolvedValue({ success: true }),
-      getBlogSubmissions: jest.fn().mockResolvedValue([]),
-      getUserBlogSubmissions: jest.fn().mockResolvedValue([]),
-      createBlogSubmission: jest
-        .fn()
-        .mockResolvedValue({ submissionId: 'sub-1' }),
-      approveBlogSubmission: jest.fn().mockResolvedValue({ id: 'post-1' }),
+      getBlogSubmissions: jest.fn().mockResolvedValue([mockSubmission]),
+      getUserBlogSubmissions: jest.fn().mockResolvedValue([mockSubmission]),
+      createBlogSubmission: jest.fn().mockResolvedValue({
+        submissionId: 'sub-1',
+      }),
+      approveBlogSubmission: jest.fn().mockResolvedValue(mockBlogPost),
       rejectBlogSubmission: jest.fn().mockResolvedValue({ success: true }),
-      getBlogPost: jest.fn().mockResolvedValue({ id: 'post-1', title: 'Post' }),
-      getRelatedPosts: jest.fn().mockResolvedValue([]),
-      createBlogPost: jest.fn().mockResolvedValue({ id: 'post-1' }),
-      updateBlogPost: jest.fn().mockResolvedValue({ id: 'post-1' }),
+      getBlogPost: jest.fn().mockResolvedValue(mockBlogPost),
+      getRelatedPosts: jest.fn().mockResolvedValue([mockBlogPostSummary]),
+      createBlogPost: jest.fn().mockResolvedValue(mockBlogPost),
+      updateBlogPost: jest.fn().mockResolvedValue(mockBlogPost),
       deleteBlogPost: jest.fn().mockResolvedValue({ success: true }),
       addTagToPost: jest.fn().mockResolvedValue({ success: true }),
       removeTagFromPost: jest.fn().mockResolvedValue({ success: true }),
@@ -51,31 +121,169 @@ describe('BlogController', () => {
     controller = module.get<BlogController>(BlogController);
   });
 
-  it('should delegate getBlogPosts call to service with optional user ID', async () => {
-    const req = { user: { id: 'user-1' } };
-    await controller.getBlogPosts({ category: 'news' }, req);
-    expect(mockService.getBlogPosts).toHaveBeenCalledWith(
-      { category: 'news' },
-      'user-1',
-    );
+  describe('GET /blog endpoints', () => {
+    it('should delegate getBlogPosts call to service with optional user ID', async () => {
+      const query: GetBlogQueryDto = { category: 'news', page: 1, limit: 10 };
+      const req: OptionalAuthenticatedRequest = { user: { id: 'user-1' } };
+      const res = await controller.getBlogPosts(query, req);
+
+      expect(res.total).toBe(1);
+      expect(mockService.getBlogPosts).toHaveBeenCalledWith(query, 'user-1');
+    });
+
+    it('should delegate getFeaturedBlogPosts with limit parameter', async () => {
+      const res = await controller.getFeaturedBlogPosts('5');
+      expect(res).toHaveLength(1);
+      expect(mockService.getFeaturedBlogPosts).toHaveBeenCalledWith(5);
+    });
+
+    it('should delegate getBlogPost with incrementViews flag', async () => {
+      const res = await controller.getBlogPost('test-slug', 'false');
+      expect(res.slug).toBe('test-post');
+      expect(mockService.getBlogPost).toHaveBeenCalledWith('test-slug', false);
+    });
+
+    it('should delegate getRelatedPosts with category and limit', async () => {
+      const res = await controller.getRelatedPosts('post-1', 'Guides', '4');
+      expect(res).toHaveLength(1);
+      expect(mockService.getRelatedPosts).toHaveBeenCalledWith(
+        'post-1',
+        'Guides',
+        4,
+      );
+    });
   });
 
-  it('should delegate getFeaturedBlogPosts with limit parameter', async () => {
-    await controller.getFeaturedBlogPosts('5');
-    expect(mockService.getFeaturedBlogPosts).toHaveBeenCalledWith(5);
+  describe('Tags endpoints', () => {
+    it('should delegate getBlogTags', async () => {
+      const res = await controller.getBlogTags();
+      expect(res).toHaveLength(1);
+      expect(mockService.getBlogTags).toHaveBeenCalled();
+    });
+
+    it('should delegate createBlogTag with DTO', async () => {
+      const dto: CreateBlogTagDto = { name: 'New Tag' };
+      const res = await controller.createBlogTag(dto, mockAuthReq);
+      expect(res.name).toBe('Alanya Castle');
+      expect(mockService.createBlogTag).toHaveBeenCalledWith(
+        'New Tag',
+        'user-1',
+      );
+    });
+
+    it('should delegate deleteBlogTag', async () => {
+      const res = await controller.deleteBlogTag('tag-1', mockAuthReq);
+      expect(res.success).toBe(true);
+      expect(mockService.deleteBlogTag).toHaveBeenCalledWith('tag-1', 'user-1');
+    });
+
+    it('should delegate addTagToPost and removeTagFromPost', async () => {
+      await controller.addTagToPost('post-1', 'tag-1', mockAuthReq);
+      expect(mockService.addTagToPost).toHaveBeenCalledWith(
+        'post-1',
+        'tag-1',
+        'user-1',
+      );
+
+      await controller.removeTagFromPost('post-1', 'tag-1', mockAuthReq);
+      expect(mockService.removeTagFromPost).toHaveBeenCalledWith(
+        'post-1',
+        'tag-1',
+        'user-1',
+      );
+    });
   });
 
-  it('should delegate getBlogPost with incrementViews flag', async () => {
-    await controller.getBlogPost('test-slug', 'false');
-    expect(mockService.getBlogPost).toHaveBeenCalledWith('test-slug', false);
+  describe('Submissions endpoints', () => {
+    it('should delegate createBlogSubmission with req.user.id', async () => {
+      const dto: CreateBlogSubmissionDto = {
+        title: 'New Submission',
+        content: 'Content text',
+        author_name: 'Author',
+        author_email: 'author@test.com',
+      };
+      const res = await controller.createBlogSubmission(dto, mockAuthReq);
+      expect(res.submissionId).toBe('sub-1');
+      expect(mockService.createBlogSubmission).toHaveBeenCalledWith(
+        dto,
+        'user-1',
+      );
+    });
+
+    it('should delegate getBlogSubmissions for admin', async () => {
+      const query: GetBlogSubmissionsQueryDto = { status: 'pending_review' };
+      const res = await controller.getBlogSubmissions(query, mockAuthReq);
+      expect(res).toHaveLength(1);
+      expect(mockService.getBlogSubmissions).toHaveBeenCalledWith(
+        query,
+        'user-1',
+      );
+    });
+
+    it('should delegate getUserBlogSubmissions for current user', async () => {
+      const res = await controller.getUserBlogSubmissions(mockAuthReq);
+      expect(res).toHaveLength(1);
+      expect(mockService.getUserBlogSubmissions).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should delegate approveBlogSubmission', async () => {
+      const res = await controller.approveBlogSubmission('sub-1', mockAuthReq);
+      expect(res.id).toBe('post-1');
+      expect(mockService.approveBlogSubmission).toHaveBeenCalledWith(
+        'sub-1',
+        'user-1',
+      );
+    });
+
+    it('should delegate rejectBlogSubmission', async () => {
+      const dto: RejectBlogSubmissionDto = {
+        reason: 'Content does not meet guidelines',
+      };
+      const res = await controller.rejectBlogSubmission(
+        'sub-1',
+        dto,
+        mockAuthReq,
+      );
+      expect(res.success).toBe(true);
+      expect(mockService.rejectBlogSubmission).toHaveBeenCalledWith(
+        'sub-1',
+        dto.reason,
+        'user-1',
+      );
+    });
   });
 
-  it('should delegate createBlogSubmission with req.user.id', async () => {
-    const req = { user: { id: 'user-2' } };
-    await controller.createBlogSubmission({ title: 'New Submission' }, req);
-    expect(mockService.createBlogSubmission).toHaveBeenCalledWith(
-      { title: 'New Submission' },
-      'user-2',
-    );
+  describe('Post CRUD endpoints', () => {
+    it('should delegate createBlogPost', async () => {
+      const dto: CreateBlogPostDto = {
+        title: 'Post Title',
+        content: 'Post Content',
+      };
+      const res = await controller.createBlogPost(dto, mockAuthReq);
+      expect(res.id).toBe('post-1');
+      expect(mockService.createBlogPost).toHaveBeenCalledWith(dto, 'user-1');
+    });
+
+    it('should delegate updateBlogPost', async () => {
+      const dto: UpdateBlogPostDto = {
+        title: 'Updated Title',
+      };
+      const res = await controller.updateBlogPost('post-1', dto, mockAuthReq);
+      expect(res.id).toBe('post-1');
+      expect(mockService.updateBlogPost).toHaveBeenCalledWith(
+        'post-1',
+        dto,
+        'user-1',
+      );
+    });
+
+    it('should delegate deleteBlogPost', async () => {
+      const res = await controller.deleteBlogPost('post-1', mockAuthReq);
+      expect(res.success).toBe(true);
+      expect(mockService.deleteBlogPost).toHaveBeenCalledWith(
+        'post-1',
+        'user-1',
+      );
+    });
   });
 });

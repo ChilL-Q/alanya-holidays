@@ -409,10 +409,15 @@ export type Database = {
           title: string | null;
           slug: string | null;
           content: string | null;
+          excerpt: string | null;
+          cover_image_url: string | null;
+          video_url: string | null;
           status: string | null;
           author_id: string | null;
           category: string | null;
           views: number | null;
+          is_featured: boolean | null;
+          published_at: string | null;
           created_at: string | null;
           updated_at: string | null;
           [key: string]: any;
@@ -422,10 +427,15 @@ export type Database = {
           title?: string | null;
           slug?: string | null;
           content?: string | null;
+          excerpt?: string | null;
+          cover_image_url?: string | null;
+          video_url?: string | null;
           status?: string | null;
           author_id?: string | null;
           category?: string | null;
           views?: number | null;
+          is_featured?: boolean | null;
+          published_at?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
           [key: string]: any;
@@ -435,10 +445,15 @@ export type Database = {
           title?: string | null;
           slug?: string | null;
           content?: string | null;
+          excerpt?: string | null;
+          cover_image_url?: string | null;
+          video_url?: string | null;
           status?: string | null;
           author_id?: string | null;
           category?: string | null;
           views?: number | null;
+          is_featured?: boolean | null;
+          published_at?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
           [key: string]: any;
@@ -447,6 +462,68 @@ export type Database = {
           {
             foreignKeyName: "blog_posts_author_id_fkey";
             columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      blog_submissions: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          title: string | null;
+          content: string | null;
+          author_name?: string | null;
+          author_email?: string | null;
+          category?: string | null;
+          video_url?: string | null;
+          media_urls?: string[] | null;
+          status: 'pending_review' | 'approved' | 'rejected' | string | null;
+          payment_details?: Json | null;
+          rejection_reason?: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          [key: string]: any;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          title?: string | null;
+          content?: string | null;
+          author_name?: string | null;
+          author_email?: string | null;
+          category?: string | null;
+          video_url?: string | null;
+          media_urls?: string[] | null;
+          status?: 'pending_review' | 'approved' | 'rejected' | string | null;
+          payment_details?: Json | null;
+          rejection_reason?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          [key: string]: any;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          title?: string | null;
+          content?: string | null;
+          author_name?: string | null;
+          author_email?: string | null;
+          category?: string | null;
+          video_url?: string | null;
+          media_urls?: string[] | null;
+          status?: 'pending_review' | 'approved' | 'rejected' | string | null;
+          payment_details?: Json | null;
+          rejection_reason?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          [key: string]: any;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blog_submissions_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

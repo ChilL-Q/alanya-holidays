@@ -46,7 +46,7 @@ export class UsersRepository {
     return data;
   }
 
-  async updateUserProfile(id: string, updates: any) {
+  async updateUserProfile(id: string, updates: Record<string, unknown>) {
     const { error } = await this.client
       .from('profiles')
       .update(updates)

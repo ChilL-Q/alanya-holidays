@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -32,14 +33,18 @@ export class UsersService {
     return data;
   }
 
-  async updateUserProfile(id: string, updates: any, requestUserId: string) {
+  async updateUserProfile(
+    id: string,
+    updates: UpdateUserProfileDto,
+    requestUserId: string,
+  ) {
     const role = await this.usersRepository.getUserRole(requestUserId);
 
     if (requestUserId !== id && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
     }
 
-    const safeUpdates = { ...updates };
+    const safeUpdates: Partial<UpdateUserProfileDto> = { ...updates };
     if (role !== 'admin') {
       delete safeUpdates.role;
     }
@@ -74,7 +79,10 @@ export class UsersService {
     };
   }
 
-  async getForumMembers(limit?: number, onlineOnly?: boolean) {
+  async getForumMembers(
+    limit?: number,
+    onlineOnly?: boolean,
+  ): Promise<Record<string, unknown>[]> {
     const [data, postData] = await Promise.all([
       this.usersRepository.getForumMembers(limit),
       this.usersRepository.getForumPostsAuthors(),
@@ -83,7 +91,10 @@ export class UsersService {
     const counts = new Map<string, number>();
     for (const row of postData as { author_id: string | null }[]) {
       if (row.author_id)
-        counts.set(row.author_id, (counts.get(row.author_id) || 0) + 1);
+        counts.set(
+          String(row.author_id),
+          (counts.get(String(row.author_id)) || 0) + 1,
+        );
     }
 
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
@@ -92,13 +103,13 @@ export class UsersService {
         ? Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS
         : false;
 
-    let members = (data || []).map((m: any) => ({
+    let members = ((data as Record<string, unknown>[]) || []).map((m) => ({
       ...m,
-      post_count: counts.get(m.id) || 0,
-      is_online: isOnline(m.last_seen_at),
+      post_count: counts.get(String(m.id)) || 0,
+      is_online: isOnline(m.last_seen_at as string | null),
     }));
 
-    if (onlineOnly) members = members.filter((m: any) => m.is_online);
+    if (onlineOnly) members = members.filter((m) => m.is_online);
     return members;
   }
 

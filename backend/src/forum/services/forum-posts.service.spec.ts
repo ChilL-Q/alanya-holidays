@@ -5,7 +5,7 @@ import { ForumPostsRepository } from '../repositories/forum-posts.repository';
 
 describe('ForumPostsService', () => {
   let service: ForumPostsService;
-  let mockRepository: any;
+  let mockRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockRepository = {
@@ -19,13 +19,15 @@ describe('ForumPostsService', () => {
       getPosts: jest.fn().mockResolvedValue({ data: [], total: 0 }),
       getHotPosts: jest.fn().mockResolvedValue([]),
       getPostBySlug: jest.fn(),
+      getPostById: jest.fn(),
       insertPost: jest.fn(),
       updatePost: jest.fn(),
-      getPostOwner: jest.fn(),
       deletePost: jest.fn(),
       incrementPostView: jest.fn(),
-      togglePostLike: jest.fn().mockResolvedValue({ liked: true }),
-      updatePostPinned: jest.fn().mockResolvedValue({}),
+      checkPostLike: jest.fn(),
+      insertPostLike: jest.fn(),
+      deletePostLike: jest.fn(),
+      updatePostPinned: jest.fn().mockResolvedValue(undefined),
       setRemoved: jest.fn(),
     };
 
@@ -95,7 +97,7 @@ describe('ForumPostsService', () => {
 
     it('should call updatePostPinned on repository when requester is admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
-      mockRepository.updatePostPinned.mockResolvedValueOnce({ id: 'post-1' });
+      mockRepository.updatePostPinned.mockResolvedValueOnce(undefined);
 
       const res = await service.setPinned('post-1', true, 'admin-1');
       expect(res).toEqual({ success: true });

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { ForumStatsResponse } from '../types/forum.types';
 
 @Injectable()
 export class ForumStatsRepository {
@@ -9,7 +10,7 @@ export class ForumStatsRepository {
     return this.supabaseService.getClient();
   }
 
-  async getStats() {
+  async getStats(): Promise<ForumStatsResponse> {
     const [topicsRes, repliesRes] = await Promise.all([
       this.client
         .from('forum_posts')
@@ -44,11 +45,13 @@ export class ForumStatsRepository {
     if (membersRes.error)
       console.error('getStats latest member query failed:', membersRes.error);
 
+    const memberData = membersRes.data;
+
     return {
       totalTopics: topicsRes.count ?? 0,
       totalReplies: repliesRes.count ?? 0,
       usersOnline: onlineRes.count ?? 0,
-      latestMember: membersRes.data?.[0]?.full_name || null,
+      latestMember: memberData?.[0]?.full_name || null,
     };
   }
 }

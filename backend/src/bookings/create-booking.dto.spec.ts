@@ -28,8 +28,13 @@ describe('CreateBookingDto validation', () => {
   });
 
   it('accepts a valid body and strips unknown fields', async () => {
-    const out = await pipe.transform({ ...valid, hackerField: 'x' }, meta);
+    const out = (await pipe.transform(
+      { ...valid, hackerField: 'x' },
+      meta,
+    )) as CreateBookingDto;
     expect(out).toBeInstanceOf(CreateBookingDto);
-    expect((out as Record<string, unknown>).hackerField).toBeUndefined();
+    expect(
+      (out as unknown as Record<string, unknown>).hackerField,
+    ).toBeUndefined();
   });
 });

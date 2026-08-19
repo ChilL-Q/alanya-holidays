@@ -69,7 +69,9 @@ describe('MediaController', () => {
 
   it('should throw BadRequestException if no file is provided', async () => {
     await expect(
-      controller.uploadMedia(undefined as any, { bucket: 'properties' }),
+      controller.uploadMedia(undefined as unknown as Express.Multer.File, {
+        bucket: 'properties',
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 });

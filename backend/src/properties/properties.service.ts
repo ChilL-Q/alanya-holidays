@@ -1,16 +1,28 @@
 import {
   Injectable,
+  Inject,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PropertiesRepository } from './properties.repository';
+import {
+  IPropertiesRepository,
+  PROPERTIES_REPOSITORY,
+  PropertyQueryOptions,
+} from './domain';
 import { RedisService } from '../common/redis/redis.service';
+import {
+  CreatePropertyDto,
+  UpdatePropertyDto,
+  CreatePropertyReviewDto,
+} from './dto';
+import { ICalSyncResult } from './types/property.types';
 
 @Injectable()
 export class PropertiesService {
   constructor(
-    private readonly propertiesRepository: PropertiesRepository,
+    @Inject(PROPERTIES_REPOSITORY)
+    private readonly propertiesRepository: IPropertiesRepository,
     private readonly redisService: RedisService,
   ) {}
 
@@ -18,20 +30,28 @@ export class PropertiesService {
   // Properties CRUD
   // ============================================
 
-  async getPropertiesByIds(ids: string[]) {
+  async getPropertiesByIds(ids: string[]): Promise<Record<string, unknown>[]> {
     if (!ids || !ids.length) return [];
     return this.propertiesRepository.getPropertiesByIds(ids);
   }
 
-  async createProperty(data: any, userId: string) {
+  async createProperty(
+    data: CreatePropertyDto,
+    userId: string,
+  ): Promise<Record<string, unknown>> {
     const result = await this.propertiesRepository.insertProperty(data, userId);
     await this.redisService.delByPattern('properties:*');
     return result;
   }
 
-  async getProperties(queryOptions: any) {
+  async getProperties(
+    queryOptions: PropertyQueryOptions,
+  ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
     const cacheKey = `properties:list:${JSON.stringify(queryOptions || {})}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached = await this.redisService.getJson<{
+      data: Record<string, unknown>[];
+      count: number | null;
+    }>(cacheKey);
     if (cached) return cached;
 
     const data = await this.propertiesRepository.getProperties(queryOptions);
@@ -41,9 +61,10 @@ export class PropertiesService {
     return data;
   }
 
-  async getProperty(id: string) {
+  async getProperty(id: string): Promise<Record<string, unknown>> {
     const cacheKey = `properties:item:${id}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<Record<string, unknown>>(cacheKey);
     if (cached) return cached;
 
     const isUUID =
@@ -51,16 +72,16 @@ export class PropertiesService {
         id,
       );
 
-    let prop: any = null;
+    let prop: Record<string, unknown> | null = null;
     if (isUUID) {
       prop = await this.propertiesRepository.getPropertyByUUID(id);
       if (!prop) throw new NotFoundException('Property not found');
     } else {
-      const refId = parseInt(id);
+      const refId = parseInt(id, 10);
       prop = await this.propertiesRepository.getPropertyByRefId(refId);
       if (!prop) throw new NotFoundException('Property not found');
 
-      if (prop.host_id) {
+      if (prop.host_id && typeof prop.host_id === 'string') {
         const hostData = await this.propertiesRepository.getProfile(
           prop.host_id,
         );
@@ -74,15 +95,24 @@ export class PropertiesService {
     return prop;
   }
 
-  async getAvailableProperties(checkIn: string, checkOut: string) {
+  async getAvailableProperties(
+    checkIn: string,
+    checkOut: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.propertiesRepository.getAvailableProperties(checkIn, checkOut);
   }
 
-  async getPropertiesByHost(hostId: string) {
+  async getPropertiesByHost(
+    hostId: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.propertiesRepository.getPropertiesByHost(hostId);
   }
 
-  async getAdminProperties(statusFilter: string = 'all', page = 1, limit = 50) {
+  async getAdminProperties(
+    statusFilter: string = 'all',
+    page = 1,
+    limit = 50,
+  ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
     return this.propertiesRepository.getAdminProperties(
       statusFilter,
       page,
@@ -90,7 +120,11 @@ export class PropertiesService {
     );
   }
 
-  async updateProperty(id: string, updates: any, userId: string) {
+  async updateProperty(
+    id: string,
+    updates: UpdatePropertyDto,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const existingProp = await this.propertiesRepository.getPropertyHostId(id);
     const role = await this.propertiesRepository.getUserRole(userId);
 
@@ -118,11 +152,11 @@ export class PropertiesService {
     status: string,
     reason: string | undefined,
     userId: string,
-  ) {
+  ): Promise<{ success: boolean }> {
     const role = await this.propertiesRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
-    const updates: any = { status };
+    const updates: Record<string, unknown> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
     if (status === 'approved') updates.rejection_reason = null;
 
@@ -131,7 +165,11 @@ export class PropertiesService {
     return { success: true };
   }
 
-  async deleteProperty(id: string, reason: string | undefined, userId: string) {
+  async deleteProperty(
+    id: string,
+    reason: string | undefined,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const property = await this.propertiesRepository.getPropertyHostId(id);
     if (!property) throw new NotFoundException('Property not found');
 
@@ -156,11 +194,11 @@ export class PropertiesService {
   // Properties Catalog
   // ============================================
 
-  async getPropertyTypes() {
+  async getPropertyTypes(): Promise<string[]> {
     return this.propertiesRepository.getPropertyTypes();
   }
 
-  async getPropertyLocations(type: string) {
+  async getPropertyLocations(type: string): Promise<string[]> {
     return this.propertiesRepository.getPropertyLocations(type);
   }
 
@@ -169,7 +207,7 @@ export class PropertiesService {
     location: string,
     page = 1,
     limit = 20,
-  ) {
+  ): Promise<{ data: Record<string, unknown>[]; count: number }> {
     return this.propertiesRepository.getPropertiesByLocation(
       type,
       location,
@@ -182,7 +220,7 @@ export class PropertiesService {
   // Properties iCal
   // ============================================
 
-  async getICalFeeds(propertyId: string) {
+  async getICalFeeds(propertyId: string): Promise<Record<string, unknown>[]> {
     return this.propertiesRepository.getICalFeeds(propertyId);
   }
 
@@ -191,7 +229,7 @@ export class PropertiesService {
     name: string,
     url: string,
     userId: string,
-  ) {
+  ): Promise<Record<string, unknown>> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
     const role = await this.propertiesRepository.getUserRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
@@ -200,7 +238,10 @@ export class PropertiesService {
     return this.propertiesRepository.insertICalFeed(propertyId, name, url);
   }
 
-  async syncPropertyICal(propertyId: string, userId: string) {
+  async syncPropertyICal(
+    propertyId: string,
+    userId: string,
+  ): Promise<ICalSyncResult[]> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
     const role = await this.propertiesRepository.getUserRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
@@ -210,19 +251,28 @@ export class PropertiesService {
     if (!data || data.length === 0) return [];
 
     const results = await Promise.all(
-      data.map(async (feed: any) => {
+      data.map(async (feed) => {
+        const feedId =
+          typeof feed.id === 'string'
+            ? feed.id
+            : typeof feed.id === 'number'
+              ? String(feed.id)
+              : '';
         try {
-          const result = await this.propertiesRepository.syncICalFeed(feed.id);
-          return { feedId: feed.id, success: true, count: result };
-        } catch (e) {
-          return { feedId: feed.id, success: false, error: e };
+          const result = await this.propertiesRepository.syncICalFeed(feedId);
+          return { feedId, success: true, count: result };
+        } catch (e: unknown) {
+          return { feedId, success: false, error: e };
         }
       }),
     );
     return results;
   }
 
-  async removeICalFeed(id: string, userId: string) {
+  async removeICalFeed(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const propertyId =
       await this.propertiesRepository.getICalFeedPropertyId(id);
     if (!propertyId) throw new NotFoundException('iCal feed not found');
@@ -243,7 +293,7 @@ export class PropertiesService {
     propertyId: string,
     startDate: string,
     endDate: string,
-  ) {
+  ): Promise<Record<string, unknown>[]> {
     return this.propertiesRepository.getPropertyAvailability(
       propertyId,
       startDate,
@@ -257,7 +307,7 @@ export class PropertiesService {
     status: string,
     price: number | undefined,
     userId: string,
-  ) {
+  ): Promise<{ success: boolean }> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
     const role = await this.propertiesRepository.getUserRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
@@ -277,11 +327,11 @@ export class PropertiesService {
     return { success: true };
   }
 
-  async syncPropertyCalendar(propertyId: string) {
+  async syncPropertyCalendar(propertyId: string): Promise<unknown> {
     return this.propertiesRepository.syncPropertyCalendar(propertyId);
   }
 
-  async getUnavailableDates(propertyId: string) {
+  async getUnavailableDates(propertyId: string): Promise<string[]> {
     const today = new Date().toISOString().split('T')[0];
     return this.propertiesRepository.getUnavailableDates(propertyId, today);
   }
@@ -290,7 +340,11 @@ export class PropertiesService {
   // Properties Reviews
   // ============================================
 
-  async getReviews(propertyId: string, page = 1, limit = 10) {
+  async getReviews(
+    propertyId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     const result = await this.propertiesRepository.getReviews(
@@ -301,13 +355,21 @@ export class PropertiesService {
     return { data: result.data, total: result.count };
   }
 
-  async getReviewCount(propertyId: string) {
+  async getReviewCount(propertyId: string): Promise<number> {
     return this.propertiesRepository.getReviewCount(propertyId);
   }
 
-  async addReview(review: any, userId: string) {
+  async addReview(
+    review: CreatePropertyReviewDto,
+    userId: string,
+  ): Promise<{ success: boolean }> {
+    const propertyId = review.property_id;
+    if (!propertyId) {
+      throw new BadRequestException('property_id is required');
+    }
+
     const existing = await this.propertiesRepository.getExistingReview(
-      review.property_id,
+      propertyId,
       userId,
     );
     if (existing)
@@ -315,7 +377,7 @@ export class PropertiesService {
 
     const bookingCount =
       await this.propertiesRepository.getBookingCountForReview(
-        review.property_id,
+        propertyId,
         userId,
       );
     if (!bookingCount)
@@ -328,9 +390,8 @@ export class PropertiesService {
       user_id: userId,
     });
 
-    const property = await this.propertiesRepository.getPropertyHostId(
-      review.property_id,
-    );
+    const property =
+      await this.propertiesRepository.getPropertyHostId(propertyId);
     if (property) {
       this.propertiesRepository.invokeEmailFunction({
         type: 'new_review',
@@ -340,14 +401,17 @@ export class PropertiesService {
           rating: review.rating,
           comment: review.comment,
           guestName: 'A Guest',
-          link: `https://alanyaholidays.com/property/${review.property_id}`,
+          link: `https://alanyaholidays.com/property/${propertyId}`,
         },
       });
     }
     return { success: true };
   }
 
-  async deleteReview(reviewId: string, userId: string) {
+  async deleteReview(
+    reviewId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const review = await this.propertiesRepository.getReviewUserId(reviewId);
     if (!review) throw new NotFoundException('Review not found');
 
@@ -359,7 +423,10 @@ export class PropertiesService {
     return { success: true };
   }
 
-  async flagReview(reviewId: string, userId: string) {
+  async flagReview(
+    reviewId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     await this.propertiesRepository.updateReviewFlag(
       reviewId,
       true,
@@ -369,7 +436,10 @@ export class PropertiesService {
     return { success: true };
   }
 
-  async unflagReview(reviewId: string, userId: string) {
+  async unflagReview(
+    reviewId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.propertiesRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -377,7 +447,11 @@ export class PropertiesService {
     return { success: true };
   }
 
-  async getFlaggedReviews(page = 1, limit = 20, userId: string) {
+  async getFlaggedReviews(
+    page = 1,
+    limit = 20,
+    userId: string,
+  ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
     const role = await this.propertiesRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -387,7 +461,10 @@ export class PropertiesService {
     return { data: result.data, total: result.count };
   }
 
-  async bulkDeleteReviews(reviewIds: string[], userId: string) {
+  async bulkDeleteReviews(
+    reviewIds: string[],
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.propertiesRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 

@@ -5,7 +5,7 @@ import { UsersRepository } from './users.repository';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let mockRepository: any;
+  let mockRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockRepository = {

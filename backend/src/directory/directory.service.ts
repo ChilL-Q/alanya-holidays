@@ -1,7 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { DirectoryRepository } from './directory.repository';
-import { UserListingVote } from './dto/directory-vote.dto';
+import { SubmitClaimDto } from './dto/submit-claim.dto';
 import { RedisService } from '../common/redis/redis.service';
+import {
+  DirectoryListingRecord,
+  DirectoryListResponse,
+  DirectoryClaimRecord,
+  VoteResult,
+} from './types/directory.types';
+import { UserListingVote } from './dto/directory-vote.dto';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -12,7 +19,7 @@ const TIER_LIMITS: Record<string, number> = {
   partner: 100,
 };
 
-function validateUUIDs(ids: string[]) {
+function validateUUIDs(ids: string[]): void {
   for (const id of ids) {
     if (!UUID_RE.test(id)) throw new Error(`Invalid UUID: ${id}`);
   }
@@ -30,9 +37,10 @@ export class DirectoryService {
     limit = 20,
     category?: string,
     sortBy = 'base_score',
-  ) {
+  ): Promise<DirectoryListResponse> {
     const cacheKey = `directory:list:${page}:${limit}:${category || 'all'}:${sortBy}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<DirectoryListResponse>(cacheKey);
     if (cached) return cached;
 
     const result = await this.directoryRepository.getDirectoryListings(
@@ -42,7 +50,7 @@ export class DirectoryService {
       sortBy,
     );
 
-    const response = {
+    const response: DirectoryListResponse = {
       data: result.data,
       pagination: {
         page,
@@ -58,9 +66,12 @@ export class DirectoryService {
     return response;
   }
 
-  async getDirectoryListing(id: string) {
+  async getDirectoryListing(
+    id: string,
+  ): Promise<DirectoryListingRecord | null> {
     const cacheKey = `directory:item:${id}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
     if (cached) return cached;
 
     const data = await this.directoryRepository.getDirectoryListingById(id);
@@ -70,9 +81,12 @@ export class DirectoryService {
     return data;
   }
 
-  async getDirectoryListingBySlug(slug: string) {
+  async getDirectoryListingBySlug(
+    slug: string,
+  ): Promise<DirectoryListingRecord | null> {
     const cacheKey = `directory:slug:${slug}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
     if (cached) return cached;
 
     const data = await this.directoryRepository.getDirectoryListingBySlug(slug);
@@ -82,9 +96,12 @@ export class DirectoryService {
     return data;
   }
 
-  async getDirectoryListingsByCategory(categoryId: string) {
+  async getDirectoryListingsByCategory(
+    categoryId: string,
+  ): Promise<DirectoryListingRecord[]> {
     const cacheKey = `directory:cat:${categoryId}`;
-    const cached = await this.redisService.getJson<any>(cacheKey);
+    const cached =
+      await this.redisService.getJson<DirectoryListingRecord[]>(cacheKey);
     if (cached) return cached;
 
     const data =
@@ -101,7 +118,7 @@ export class DirectoryService {
     location?: string,
     page = 1,
     limit = 40,
-  ) {
+  ): Promise<{ data: DirectoryListingRecord[]; total: number }> {
     const result = await this.directoryRepository.searchDirectoryListings(
       query,
       categoryId,
@@ -113,63 +130,83 @@ export class DirectoryService {
   }
 
   // Landing Page Listings
-  async getFreeListings() {
+  async getFreeListings(): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getFreeListings();
   }
 
-  async getPremiumListings() {
+  async getPremiumListings(): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getPremiumListings();
   }
 
-  async getSignatureListings() {
+  async getSignatureListings(): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getSignatureListings();
   }
 
-  async getRecentlyClaimedListings(limit = 6) {
+  async getRecentlyClaimedListings(
+    limit = 6,
+  ): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getRecentlyClaimedListings(limit);
   }
 
-  async voteForListing(listingId: string, vote: 1 | -1, userId: string) {
-    const data = await this.directoryRepository.voteForListing(
+  async voteForListing(
+    listingId: string,
+    vote: 1 | -1,
+    userId: string,
+  ): Promise<{ netVotes: number; userVote: number }> {
+    const data: VoteResult[] = await this.directoryRepository.voteForListing(
       listingId,
       vote,
       userId,
     );
-    return { netVotes: data[0].net_votes, userVote: data[0].user_vote };
+    const item: VoteResult | undefined = data[0];
+    return {
+      netVotes: typeof item?.net_votes === 'number' ? item.net_votes : 0,
+      userVote: typeof item?.user_vote === 'number' ? item.user_vote : 0,
+    };
   }
 
-  async getUserVotesBatch(listingIds: string[], userId: string) {
-    const data = await this.directoryRepository.getUserVotesBatch(
-      listingIds,
-      userId,
-    );
+  async getUserVotesBatch(
+    listingIds: string[],
+    userId: string,
+  ): Promise<Record<string, 1 | -1>> {
+    const data: UserListingVote[] =
+      await this.directoryRepository.getUserVotesBatch(listingIds, userId);
     const votes: Record<string, 1 | -1> = {};
-    for (const row of data as UserListingVote[])
+    for (const row of data) {
       votes[row.listing_id] = row.vote;
+    }
     return votes;
   }
 
-  async removeListingVote(listingId: string, userId: string) {
-    const data = await this.directoryRepository.removeListingVote(
+  async removeListingVote(
+    listingId: string,
+    userId: string,
+  ): Promise<{ netVotes: number }> {
+    const data: VoteResult[] = await this.directoryRepository.removeListingVote(
       listingId,
       userId,
     );
-    return { netVotes: data[0].net_votes };
+    const item: VoteResult | undefined = data[0];
+    return {
+      netVotes: typeof item?.net_votes === 'number' ? item.net_votes : 0,
+    };
   }
 
   // Admin / CRUD
-  async getMyDirectoryListings(userId: string) {
+  async getMyDirectoryListings(
+    userId: string,
+  ): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getMyDirectoryListings(userId);
   }
 
   async createDirectoryListing(
-    listing: any,
+    listing: Partial<DirectoryListingRecord>,
     locationIds: string[],
     userId: string,
-  ) {
+  ): Promise<DirectoryListingRecord> {
     if (locationIds?.length) validateUUIDs(locationIds);
 
-    const tier = listing.tier || 'explorer';
+    const tier = (listing.tier as string) || 'explorer';
     const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
     const limit = TIER_LIMITS[tier] ?? 5;
     if (gallery.length > limit)
@@ -177,7 +214,7 @@ export class DirectoryService {
         `Photo limit exceeded for ${tier} tier: max ${limit} photos`,
       );
 
-    const safeData = {
+    const safeData: Record<string, unknown> = {
       name: (listing.name ?? '').slice(0, 200),
       short_description: (listing.short_description ?? '').slice(0, 500),
       category_id: listing.category_id,
@@ -228,10 +265,10 @@ export class DirectoryService {
 
   async updateDirectoryListing(
     id: string,
-    updates: any,
+    updates: Partial<DirectoryListingRecord>,
     locationIds: string[],
     userId: string,
-  ) {
+  ): Promise<DirectoryListingRecord> {
     const role = await this.directoryRepository.getUserRole(userId);
     const listing = await this.directoryRepository.getDirectoryListingOwner(id);
 
@@ -241,7 +278,7 @@ export class DirectoryService {
 
     if (locationIds?.length) validateUUIDs(locationIds);
 
-    const safeUpdates = { ...updates };
+    const safeUpdates: Record<string, unknown> = { ...updates };
     delete safeUpdates.id;
     delete safeUpdates.created_at;
     delete safeUpdates.updated_at;
@@ -277,7 +314,10 @@ export class DirectoryService {
     return data;
   }
 
-  async deleteDirectoryListing(id: string, userId: string) {
+  async deleteDirectoryListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.directoryRepository.getUserRole(userId);
     const listing = await this.directoryRepository.getDirectoryListingOwner(id);
 
@@ -290,12 +330,15 @@ export class DirectoryService {
     return { success: true };
   }
 
-  async trackListingView(listingId: string) {
+  async trackListingView(listingId: string): Promise<{ success: boolean }> {
     await this.directoryRepository.trackListingView(listingId);
     return { success: true };
   }
 
-  async trackListingClick(listingId: string, clickType: string) {
+  async trackListingClick(
+    listingId: string,
+    clickType: string,
+  ): Promise<{ success: boolean }> {
     await this.directoryRepository.trackListingClick(listingId, clickType);
     return { success: true };
   }
@@ -304,18 +347,21 @@ export class DirectoryService {
   async getDirectoryListingsByStatus(
     status: 'approved' | 'rejected',
     category?: string,
-  ) {
+  ): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getDirectoryListingsByStatus(
       status,
       category,
     );
   }
 
-  async getPendingDirectoryListings() {
+  async getPendingDirectoryListings(): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getPendingDirectoryListings();
   }
 
-  async approveDirectoryListing(id: string, userId: string) {
+  async approveDirectoryListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.directoryRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -325,18 +371,22 @@ export class DirectoryService {
     await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {
-      this.directoryRepository.invokeFunction('send-email', {
+      void this.directoryRepository.invokeFunction('send-email', {
         body: {
           type: 'listing_approved',
           userId: listing.owner_user_id,
-          data: { title: listing.name },
+          data: { title: listing.name ?? '' },
         },
       });
     }
     return { success: true };
   }
 
-  async rejectDirectoryListing(id: string, reason: string, userId: string) {
+  async rejectDirectoryListing(
+    id: string,
+    reason: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.directoryRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -349,11 +399,11 @@ export class DirectoryService {
     });
 
     if (listing?.owner_user_id) {
-      this.directoryRepository.invokeFunction('send-email', {
+      void this.directoryRepository.invokeFunction('send-email', {
         body: {
           type: 'listing_rejected',
           userId: listing.owner_user_id,
-          data: { title: listing.name, reason },
+          data: { title: listing.name ?? '', reason },
         },
       });
     }
@@ -361,11 +411,17 @@ export class DirectoryService {
   }
 
   // Analytics
-  async getDirectoryAnalyticsForOwner(days = 30, userId: string) {
+  async getDirectoryAnalyticsForOwner(
+    days = 30,
+    userId: string,
+  ): Promise<Record<string, unknown>[]> {
     return this.directoryRepository.getDirectoryAnalyticsForOwner(userId, days);
   }
 
-  async getCategoryAnalyticsAverage(categoryId: string, days = 30) {
+  async getCategoryAnalyticsAverage(
+    categoryId: string,
+    days = 30,
+  ): Promise<Record<string, unknown> | null> {
     return this.directoryRepository.getCategoryAnalyticsAverage(
       categoryId,
       days,
@@ -373,7 +429,9 @@ export class DirectoryService {
   }
 
   // Addons & Payments
-  async getListingAddons(listingId: string) {
+  async getListingAddons(
+    listingId: string,
+  ): Promise<Record<string, unknown>[]> {
     validateUUIDs([listingId]);
     return this.directoryRepository.getListingAddons(listingId);
   }
@@ -382,7 +440,7 @@ export class DirectoryService {
     listingId: string,
     addonType: string,
     userId: string,
-  ) {
+  ): Promise<{ url: string }> {
     validateUUIDs([listingId]);
     const { data, error } = await this.directoryRepository.invokeFunction(
       'create-addon-checkout',
@@ -401,15 +459,19 @@ export class DirectoryService {
     businessName: string,
     tier: string,
     userId: string,
-  ) {
-    this.directoryRepository.invokeFunction('send-email', {
+  ): { success: boolean } {
+    void this.directoryRepository.invokeFunction('send-email', {
       body: {
         type: 'listing_payment_instructions',
         userId,
         data: {
           businessName,
           tier,
-          link: process.env.NEXT_PUBLIC_SITE_URL + '/profile',
+          link:
+            (process.env.APP_URL ||
+              process.env.SITE_URL ||
+              process.env.NEXT_PUBLIC_SITE_URL ||
+              'https://alanyaholidays.com') + '/profile',
         },
       },
     });
@@ -417,8 +479,11 @@ export class DirectoryService {
   }
 
   // Claims
-  async submitListingClaim(claim: any, userId: string) {
-    const safeData = {
+  async submitListingClaim(
+    claim: SubmitClaimDto,
+    userId: string,
+  ): Promise<DirectoryClaimRecord> {
+    const safeData: Record<string, unknown> = {
       listing_id: claim.listing_id,
       user_id: userId,
       email: claim.email.trim(),
@@ -436,7 +501,7 @@ export class DirectoryService {
 
     const data = await this.directoryRepository.insertListingClaim(safeData);
 
-    this.directoryRepository.invokeFunction('send-email', {
+    void this.directoryRepository.invokeFunction('send-email', {
       body: {
         type: 'listing_claim_verification',
         data: {
@@ -449,11 +514,11 @@ export class DirectoryService {
     return data;
   }
 
-  async verifyClaimEmail(token: string) {
+  async verifyClaimEmail(token: string): Promise<DirectoryClaimRecord | null> {
     const claim = await this.directoryRepository.verifyClaimEmail(token);
     if (!claim) return null;
 
-    this.directoryRepository.invokeFunction('send-email', {
+    void this.directoryRepository.invokeFunction('send-email', {
       body: {
         type: 'admin_claim_notification',
         data: {
@@ -466,14 +531,17 @@ export class DirectoryService {
     return claim;
   }
 
-  async getListingClaims(userId: string) {
+  async getListingClaims(userId: string): Promise<DirectoryClaimRecord[]> {
     const role = await this.directoryRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     return this.directoryRepository.getListingClaims();
   }
 
-  async approveListingClaim(claimId: string, userId: string) {
+  async approveListingClaim(
+    claimId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.directoryRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -482,12 +550,13 @@ export class DirectoryService {
         claimId,
         userId,
       );
-    if (error || !data || !data[0]?.success)
-      throw new Error(data?.[0]?.message || 'Failed to approve claim');
+    const firstResult = data?.[0];
+    if (error || !firstResult?.success)
+      throw new Error(firstResult?.message || 'Failed to approve claim');
 
     const claim = await this.directoryRepository.getListingClaimById(claimId);
     if (claim) {
-      this.directoryRepository.invokeFunction('send-email', {
+      void this.directoryRepository.invokeFunction('send-email', {
         body: {
           type: 'listing_claim_approved',
           data: {
@@ -500,7 +569,11 @@ export class DirectoryService {
     return { success: true };
   }
 
-  async rejectListingClaim(claimId: string, reason: string, userId: string) {
+  async rejectListingClaim(
+    claimId: string,
+    reason: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
     const role = await this.directoryRepository.getUserRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
@@ -510,12 +583,13 @@ export class DirectoryService {
         reason,
         userId,
       );
-    if (error || !data || !data[0]?.success)
-      throw new Error(data?.[0]?.message || 'Failed to reject claim');
+    const firstResult = data?.[0];
+    if (error || !firstResult?.success)
+      throw new Error(firstResult?.message || 'Failed to reject claim');
 
     const claim = await this.directoryRepository.getListingClaimById(claimId);
     if (claim) {
-      this.directoryRepository.invokeFunction('send-email', {
+      void this.directoryRepository.invokeFunction('send-email', {
         body: {
           type: 'listing_claim_rejected',
           data: {

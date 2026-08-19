@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from '../forum/types/forum.types';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateStatusDto } from '../common/dto/update-status.dto';
 
@@ -47,13 +48,16 @@ export class BookingsController {
 
   @Get('my-bookings')
   @UseGuards(AuthGuard)
-  async getUserBookings(@Req() req: any) {
+  async getUserBookings(@Req() req: AuthenticatedRequest) {
     return this.bookingsService.getUserBookings(req.user.id);
   }
 
   @Get('admin')
   @UseGuards(AuthGuard)
-  async getAdminBookings(@Query('status') status: string, @Req() req: any) {
+  async getAdminBookings(
+    @Query('status') status: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.bookingsService.getAdminBookings(status, req.user.id);
   }
 
@@ -63,7 +67,7 @@ export class BookingsController {
     @Param('hostId') hostId: string,
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.bookingsService.getBookingsForHost(
       hostId,
@@ -82,7 +86,7 @@ export class BookingsController {
   async updateBookingStatus(
     @Param('id') id: string,
     @Body() body: UpdateStatusDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.bookingsService.updateBookingStatus(
       id,
@@ -94,7 +98,10 @@ export class BookingsController {
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async cancelBooking(@Param('id') id: string, @Req() req: any) {
+  async cancelBooking(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
     return this.bookingsService.cancelBooking(id, req.user.id);
   }
 
@@ -103,7 +110,7 @@ export class BookingsController {
   async updatePayoutStatus(
     @Param('id') id: string,
     @Body('payoutStatus') payoutStatus: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ) {
     return this.bookingsService.updatePayoutStatus(
       id,

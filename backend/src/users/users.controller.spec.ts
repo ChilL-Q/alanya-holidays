@@ -2,10 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthenticatedRequest } from '../forum/types/forum.types';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  let mockService: any;
+  let mockService: jest.Mocked<Partial<UsersService>>;
 
   beforeEach(async () => {
     mockService = {
@@ -40,7 +41,7 @@ describe('UsersController', () => {
   });
 
   it('should pass req.user.id to touchPresence', async () => {
-    const req = { user: { id: 'usr-55' } };
+    const req = { user: { id: 'usr-55' } } as unknown as AuthenticatedRequest;
     await controller.touchPresence(req);
     expect(mockService.touchPresence).toHaveBeenCalledWith('usr-55');
   });

@@ -1,18 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PropertiesService } from './properties.service';
-import { PropertiesRepository } from './properties.repository';
+import { PROPERTIES_REPOSITORY } from './domain';
 import { RedisService } from '../common/redis/redis.service';
 
 describe('PropertiesService', () => {
   let service: PropertiesService;
-  let mockRepository: any;
+  let mockRepository: Record<string, jest.Mock>;
+  let mockRedisService: {
+    getJson: jest.Mock;
+    setJson: jest.Mock;
+    delByPattern: jest.Mock;
+  };
 
   beforeEach(async () => {
     mockRepository = {
+      findById: jest.fn(),
+      save: jest.fn(),
       getPropertiesByIds: jest.fn().mockResolvedValue([]),
       insertProperty: jest.fn(),
-      getProperties: jest.fn().mockResolvedValue({ data: [], total: 0 }),
+      getProperties: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       getPropertyByUUID: jest.fn(),
       getPropertyByRefId: jest.fn(),
       getProfile: jest.fn(),
@@ -21,29 +32,52 @@ describe('PropertiesService', () => {
       getAdminProperties: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       getPropertyHostId: jest.fn(),
       getUserRole: jest.fn(),
-      updateProperty: jest.fn().mockResolvedValue({}),
-      deleteProperty: jest.fn().mockResolvedValue({}),
+      updateProperty: jest.fn().mockResolvedValue(undefined),
+      deletePropertyCascading: jest.fn().mockResolvedValue(undefined),
       getPropertyTypes: jest.fn().mockResolvedValue(['apartment', 'villa']),
       getPropertyLocations: jest.fn().mockResolvedValue(['Cleopatra Beach']),
       getPropertiesByLocation: jest
         .fn()
         .mockResolvedValue({ data: [], count: 0 }),
+      getICalFeeds: jest.fn().mockResolvedValue([]),
+      insertICalFeed: jest.fn().mockResolvedValue({ id: 'feed-1' }),
+      syncICalFeed: jest.fn().mockResolvedValue(5),
+      getICalFeedPropertyId: jest.fn(),
+      removeICalFeed: jest.fn().mockResolvedValue(undefined),
+      getPropertyAvailability: jest.fn().mockResolvedValue([]),
+      deleteAvailability: jest.fn().mockResolvedValue(undefined),
+      insertAvailability: jest.fn().mockResolvedValue(undefined),
+      syncPropertyCalendar: jest.fn().mockResolvedValue({ success: true }),
+      getUnavailableDates: jest.fn().mockResolvedValue([]),
+      getReviews: jest.fn().mockResolvedValue({ data: [], count: 0 }),
+      getReviewCount: jest.fn().mockResolvedValue(0),
+      getExistingReview: jest.fn().mockResolvedValue(null),
+      getBookingCountForReview: jest.fn().mockResolvedValue(1),
+      insertReview: jest.fn().mockResolvedValue(undefined),
+      getReviewUserId: jest.fn(),
+      deleteReview: jest.fn().mockResolvedValue(undefined),
+      updateReviewFlag: jest.fn().mockResolvedValue(undefined),
+      getFlaggedReviews: jest.fn().mockResolvedValue({ data: [], count: 0 }),
+      bulkDeleteReviews: jest.fn().mockResolvedValue(undefined),
+      invokeEmailFunction: jest.fn(),
+    };
+
+    mockRedisService = {
+      getJson: jest.fn().mockResolvedValue(null),
+      setJson: jest.fn().mockResolvedValue(undefined),
+      delByPattern: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PropertiesService,
         {
-          provide: PropertiesRepository,
+          provide: PROPERTIES_REPOSITORY,
           useValue: mockRepository,
         },
         {
           provide: RedisService,
-          useValue: {
-            getJson: jest.fn().mockResolvedValue(null),
-            setJson: jest.fn().mockResolvedValue(undefined),
-            delByPattern: jest.fn().mockResolvedValue(undefined),
-          },
+          useValue: mockRedisService,
         },
       ],
     }).compile();
@@ -52,6 +86,14 @@ describe('PropertiesService', () => {
   });
 
   describe('getProperty', () => {
+    it('should return cached property if present in Redis', async () => {
+      mockRedisService.getJson.mockResolvedValueOnce({ id: 'cached-prop' });
+
+      const res = await service.getProperty('prop-1');
+      expect(res).toEqual({ id: 'cached-prop' });
+      expect(mockRepository.getPropertyByUUID).not.toHaveBeenCalled();
+    });
+
     it('should throw NotFoundException if property by UUID is missing', async () => {
       mockRepository.getPropertyByUUID.mockResolvedValueOnce(null);
 
@@ -74,6 +116,65 @@ describe('PropertiesService', () => {
 
       expect(res.title).toBe('Seaview Apartment');
       expect(res.host).toEqual({ full_name: 'Jane Host' });
+      expect(mockRedisService.setJson).toHaveBeenCalledWith(
+        'properties:item:1001',
+        expect.objectContaining({ title: 'Seaview Apartment' }),
+        600,
+      );
+    });
+  });
+
+  describe('createProperty', () => {
+    it('should insert property and invalidate cache', async () => {
+      const propData = {
+        title: 'New Villa',
+        type: 'villa',
+        location: 'Alanya',
+        price_per_night: 200,
+      };
+      mockRepository.insertProperty.mockResolvedValueOnce({
+        id: 'prop-new',
+        ...propData,
+      });
+
+      const res = await service.createProperty(propData, 'host-1');
+
+      expect(res).toEqual({ id: 'prop-new', ...propData });
+      expect(mockRepository.insertProperty).toHaveBeenCalledWith(
+        propData,
+        'host-1',
+      );
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith(
+        'properties:*',
+      );
+    });
+  });
+
+  describe('getProperties', () => {
+    it('should return cached list if present', async () => {
+      mockRedisService.getJson.mockResolvedValueOnce({
+        data: [{ id: 'p1' }],
+        count: 1,
+      });
+
+      const res = await service.getProperties({ page: 1, limit: 10 });
+      expect(res).toEqual({ data: [{ id: 'p1' }], count: 1 });
+      expect(mockRepository.getProperties).not.toHaveBeenCalled();
+    });
+
+    it('should fetch from repository and cache for 5 minutes', async () => {
+      mockRepository.getProperties.mockResolvedValueOnce({
+        data: [{ id: 'p2' }],
+        count: 1,
+      });
+
+      const res = await service.getProperties({ page: 1, limit: 10 });
+      expect(res).toEqual({ data: [{ id: 'p2' }], count: 1 });
+      expect(mockRedisService.setJson).toHaveBeenCalledWith(
+        expect.stringContaining('properties:list:'),
+        { data: [{ id: 'p2' }], count: 1 },
+        300,
+      );
     });
   });
 
@@ -81,6 +182,7 @@ describe('PropertiesService', () => {
     it('should throw UnauthorizedException if caller is not host and not admin', async () => {
       mockRepository.getPropertyHostId.mockResolvedValueOnce({
         host_id: 'owner-host',
+        title: 'Villa',
       });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
@@ -92,18 +194,203 @@ describe('PropertiesService', () => {
     it('should strip status and sensitive ical fields when updating', async () => {
       mockRepository.getPropertyHostId.mockResolvedValueOnce({
         host_id: 'owner-host',
+        title: 'Villa',
       });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
       const res = await service.updateProperty(
         'prop-1',
-        { title: 'New Title', status: 'approved', ical_token: 'secret' },
+        {
+          title: 'New Title',
+          status: 'approved',
+          ical_token: 'secret',
+        },
         'owner-host',
       );
 
       expect(res).toEqual({ success: true });
       expect(mockRepository.updateProperty).toHaveBeenCalledWith('prop-1', {
         title: 'New Title',
+      });
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith(
+        'properties:*',
+      );
+    });
+  });
+
+  describe('updatePropertyStatus', () => {
+    it('should throw UnauthorizedException if user is not admin', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.updatePropertyStatus('prop-1', 'approved', undefined, 'user-1'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should update status and rejection reason when rejected by admin', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+
+      const res = await service.updatePropertyStatus(
+        'prop-1',
+        'rejected',
+        'Incomplete photos',
+        'admin-1',
+      );
+
+      expect(res).toEqual({ success: true });
+      expect(mockRepository.updateProperty).toHaveBeenCalledWith('prop-1', {
+        status: 'rejected',
+        rejection_reason: 'Incomplete photos',
+      });
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith(
+        'properties:*',
+      );
+    });
+  });
+
+  describe('deleteProperty', () => {
+    it('should throw NotFoundException if property does not exist', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValueOnce(null);
+
+      await expect(
+        service.deleteProperty('prop-unknown', undefined, 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw UnauthorizedException if not owner and not admin', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'owner-1',
+        title: 'Apartment',
+      });
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.deleteProperty('prop-1', undefined, 'user-2'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should fallback to soft archiving when cascading delete fails', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'owner-1',
+        title: 'Apartment',
+      });
+      mockRepository.getUserRole.mockResolvedValueOnce('owner-1');
+      mockRepository.deletePropertyCascading.mockRejectedValueOnce(
+        new Error('Foreign key violation'),
+      );
+
+      const res = await service.deleteProperty('prop-1', undefined, 'owner-1');
+
+      expect(res).toEqual({ success: true });
+      expect(mockRepository.updateProperty).toHaveBeenCalledWith('prop-1', {
+        status: 'rejected',
+        title: 'Apartment (Deleted)',
+        location: 'Archived',
+      });
+    });
+  });
+
+  describe('iCal operations', () => {
+    it('should add iCal feed when authorized', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'host-1',
+        title: 'Villa',
+      });
+      mockRepository.getUserRole.mockResolvedValueOnce('host');
+
+      const res = await service.addICalFeed(
+        'prop-1',
+        'Airbnb',
+        'https://airbnb.com/ical',
+        'host-1',
+      );
+
+      expect(res).toEqual({ id: 'feed-1' });
+      expect(mockRepository.insertICalFeed).toHaveBeenCalledWith(
+        'prop-1',
+        'Airbnb',
+        'https://airbnb.com/ical',
+      );
+    });
+
+    it('should sync property iCal feeds', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'host-1',
+        title: 'Villa',
+      });
+      mockRepository.getUserRole.mockResolvedValueOnce('host');
+      mockRepository.getICalFeeds.mockResolvedValueOnce([
+        { id: 'feed-1' },
+        { id: 'feed-2' },
+      ]);
+      mockRepository.syncICalFeed
+        .mockResolvedValueOnce(3)
+        .mockRejectedValueOnce(new Error('Sync failed'));
+
+      const res = await service.syncPropertyICal('prop-1', 'host-1');
+
+      expect(res).toHaveLength(2);
+      expect(res[0]).toEqual({ feedId: 'feed-1', success: true, count: 3 });
+      expect(res[1].feedId).toBe('feed-2');
+      expect(res[1].success).toBe(false);
+      expect(res[1].error).toBeDefined();
+    });
+  });
+
+  describe('reviews operations', () => {
+    it('should throw BadRequestException if review already exists', async () => {
+      mockRepository.getExistingReview.mockResolvedValueOnce({ id: 'rev-1' });
+
+      await expect(
+        service.addReview(
+          { property_id: 'prop-1', rating: 5, comment: 'Great' },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if user has never booked the property', async () => {
+      mockRepository.getExistingReview.mockResolvedValueOnce(null);
+      mockRepository.getBookingCountForReview.mockResolvedValueOnce(0);
+
+      await expect(
+        service.addReview(
+          { property_id: 'prop-1', rating: 5, comment: 'Great' },
+          'user-1',
+        ),
+      ).rejects.toThrow('You can only review properties you have booked');
+    });
+
+    it('should insert review and send notification email to host', async () => {
+      mockRepository.getExistingReview.mockResolvedValueOnce(null);
+      mockRepository.getBookingCountForReview.mockResolvedValueOnce(1);
+      mockRepository.getPropertyHostId.mockResolvedValueOnce({
+        host_id: 'host-1',
+        title: 'Sea Villa',
+      });
+
+      const res = await service.addReview(
+        { property_id: 'prop-1', rating: 5, comment: 'Loved the stay!' },
+        'user-1',
+      );
+
+      expect(res).toEqual({ success: true });
+      expect(mockRepository.insertReview).toHaveBeenCalledWith({
+        property_id: 'prop-1',
+        rating: 5,
+        comment: 'Loved the stay!',
+        user_id: 'user-1',
+      });
+      expect(mockRepository.invokeEmailFunction).toHaveBeenCalledWith({
+        type: 'new_review',
+        userId: 'host-1',
+        data: {
+          itemTitle: 'Sea Villa',
+          rating: 5,
+          comment: 'Loved the stay!',
+          guestName: 'A Guest',
+          link: 'https://alanyaholidays.com/property/prop-1',
+        },
       });
     });
   });

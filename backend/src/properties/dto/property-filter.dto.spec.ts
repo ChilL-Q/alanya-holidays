@@ -16,7 +16,7 @@ describe('PropertyFilterDto', () => {
       hasPhotos: true,
     };
 
-    const result = await pipe.transform(input, meta);
+    const result = (await pipe.transform(input, meta)) as PropertyFilterDto;
 
     expect(result).toBeDefined();
     expect(result.priceRange).toEqual([100, 500]);
@@ -31,7 +31,7 @@ describe('PropertyFilterDto', () => {
   it('should accept empty object', async () => {
     const input = {};
 
-    const result = await pipe.transform(input, meta);
+    const result = (await pipe.transform(input, meta)) as PropertyFilterDto;
 
     expect(result).toBeDefined();
     expect(result.priceRange).toBeUndefined();

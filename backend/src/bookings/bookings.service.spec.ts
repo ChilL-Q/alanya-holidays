@@ -10,7 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 describe('BookingsService', () => {
   let service: BookingsService;
-  let mockRepository: any;
+  let mockRepository: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockRepository = {
@@ -85,6 +85,12 @@ describe('BookingsService', () => {
         '2026-08-05',
       );
       expect(result.has_conflict).toBe(false);
+    });
+
+    it('should throw BadRequestException if dates are invalid', async () => {
+      await expect(
+        service.checkConflict('p1', 'property', 'invalid-date', '2026-08-05'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -173,6 +179,12 @@ describe('BookingsService', () => {
       mockRepository.getBookingById.mockResolvedValueOnce({
         id: 'b1',
         user_id: 'user1',
+        item_id: 'prop-1',
+        item_type: 'property',
+        check_in: '2026-08-01',
+        check_out: '2026-08-05',
+        total_price: 400,
+        status: 'pending',
         property: { host_id: 'host1' },
       });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
@@ -186,9 +198,12 @@ describe('BookingsService', () => {
       mockRepository.getBookingById.mockResolvedValueOnce({
         id: 'b1',
         user_id: 'user1',
+        item_id: 'prop-1',
+        item_type: 'property',
         status: 'pending',
         check_in: '2026-08-01',
         check_out: '2026-08-05',
+        total_price: 400,
         property: { host_id: 'host1', title: 'Villa' },
       });
       mockRepository.getUserRole.mockResolvedValueOnce('user');
@@ -252,12 +267,19 @@ describe('BookingsService', () => {
         'host-123',
       );
       expect(hostBookings).toHaveLength(1);
-      expect(hostBookings[0].user.full_name).toBe('John Doe');
+      expect(
+        (hostBookings[0].user as { full_name?: string } | undefined)?.full_name,
+      ).toBe('John Doe');
 
       // Host confirms booking
       mockRepository.getBookingById.mockResolvedValueOnce({
         id: 'b-20',
         user_id: 'client-5',
+        item_id: 'p-10',
+        item_type: 'property',
+        check_in: '2026-08-10',
+        check_out: '2026-08-15',
+        total_price: 500,
         status: 'pending',
         property: { host_id: 'host-123', title: 'Luxury Penthouse' },
       });

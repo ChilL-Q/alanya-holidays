@@ -13,6 +13,22 @@ import {
 import { ForumPostsService } from '../services/forum-posts.service';
 import { AuthGuard } from '../../auth/auth.guard';
 import { OptionalAuthGuard } from '../../auth/optional-auth.guard';
+import {
+  CreateForumPostDto,
+  GetForumPostsQueryDto,
+  SetPinnedDto,
+  SetRemovedDto,
+  UpdateForumPostDto,
+} from '../dto/forum-posts.dto';
+import {
+  AuthenticatedRequest,
+  ForumActionResponse,
+  ForumLikeResponse,
+  ForumPaginatedResult,
+  ForumPost,
+  ForumPostsFilter,
+  OptionalAuthenticatedRequest,
+} from '../types/forum.types';
 
 @Controller('forum/posts')
 export class ForumPostsController {
@@ -20,37 +36,55 @@ export class ForumPostsController {
 
   @Get()
   @UseGuards(OptionalAuthGuard)
-  async getForumPosts(@Query() query: any, @Req() req: any) {
-    const filters = {
+  async getForumPosts(
+    @Query()
+    query: GetForumPostsQueryDto,
+    @Req() req: OptionalAuthenticatedRequest,
+  ): Promise<ForumPaginatedResult<ForumPost>> {
+    const filters: ForumPostsFilter = {
       categorySlug: query.categorySlug,
       sort: query.sort,
-      limit: query.limit ? parseInt(query.limit) : 20,
-      offset: query.offset ? parseInt(query.offset) : 0,
-      includeRemoved: query.includeRemoved === 'true',
-      removedOnly: query.removedOnly === 'true',
+      limit: query.limit !== undefined ? Number(query.limit) : 20,
+      offset: query.offset !== undefined ? Number(query.offset) : 0,
+      includeRemoved:
+        query.includeRemoved === true ||
+        (query.includeRemoved as unknown) === 'true',
+      removedOnly:
+        query.removedOnly === true || (query.removedOnly as unknown) === 'true',
       postType: query.postType,
+      authorId: query.authorId,
+      search: query.search,
     };
     return this.forumPostsService.getForumPosts(filters, req.user?.id);
   }
 
   @Get('hot')
   @UseGuards(OptionalAuthGuard)
-  async getHotPosts(@Query('limit') limit?: string, @Req() req?: any) {
+  async getHotPosts(
+    @Query('limit') limit?: string,
+    @Req() req?: OptionalAuthenticatedRequest,
+  ): Promise<ForumPost[]> {
     return this.forumPostsService.getHotPosts(
-      limit ? parseInt(limit) : 8,
-      req.user?.id,
+      limit ? parseInt(String(limit), 10) : 8,
+      req?.user?.id,
     );
   }
 
   @Get('slug/:slug')
   @UseGuards(OptionalAuthGuard)
-  async getForumPost(@Param('slug') slug: string, @Req() req: any) {
+  async getForumPost(
+    @Param('slug') slug: string,
+    @Req() req: OptionalAuthenticatedRequest,
+  ): Promise<ForumPost | null> {
     return this.forumPostsService.getForumPost(slug, req.user?.id);
   }
 
   @Post()
   @UseGuards(AuthGuard)
-  async createForumPost(@Body() body: any, @Req() req: any) {
+  async createForumPost(
+    @Body() body: CreateForumPostDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumPost> {
     return this.forumPostsService.createForumPost(
       body,
       'discussion',
@@ -60,7 +94,10 @@ export class ForumPostsController {
 
   @Post('question')
   @UseGuards(AuthGuard)
-  async createQuestionPost(@Body() body: any, @Req() req: any) {
+  async createQuestionPost(
+    @Body() body: CreateForumPostDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumPost> {
     return this.forumPostsService.createForumPost(
       body,
       'question',
@@ -72,26 +109,34 @@ export class ForumPostsController {
   @UseGuards(AuthGuard)
   async updateForumPost(
     @Param('id') id: string,
-    @Body() body: any,
-    @Req() req: any,
-  ) {
+    @Body() body: UpdateForumPostDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumPost> {
     return this.forumPostsService.updateForumPost(id, body, req.user.id);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async deleteForumPost(@Param('id') id: string, @Req() req: any) {
+  async deleteForumPost(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumActionResponse> {
     return this.forumPostsService.deleteForumPost(id, req.user.id);
   }
 
   @Post(':id/view')
-  async incrementPostView(@Param('id') id: string) {
+  async incrementPostView(
+    @Param('id') id: string,
+  ): Promise<ForumActionResponse> {
     return this.forumPostsService.incrementPostView(id);
   }
 
   @Post(':id/like')
   @UseGuards(AuthGuard)
-  async togglePostLike(@Param('id') id: string, @Req() req: any) {
+  async togglePostLike(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumLikeResponse> {
     return this.forumPostsService.togglePostLike(id, req.user.id);
   }
 
@@ -99,9 +144,13 @@ export class ForumPostsController {
   @UseGuards(AuthGuard)
   async setPinned(
     @Param('id') id: string,
-    @Body('pinned') pinned: boolean,
-    @Req() req: any,
-  ) {
+    @Body() body: SetPinnedDto | { pinned: boolean } | boolean,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumActionResponse> {
+    const pinned =
+      typeof body === 'object' && body !== null && 'pinned' in body
+        ? Boolean(body.pinned)
+        : Boolean(body);
     return this.forumPostsService.setPinned(id, pinned, req.user.id);
   }
 
@@ -109,9 +158,13 @@ export class ForumPostsController {
   @UseGuards(AuthGuard)
   async setRemoved(
     @Param('id') id: string,
-    @Body('removed') removed: boolean,
-    @Req() req: any,
-  ) {
+    @Body() body: SetRemovedDto | { removed: boolean } | boolean,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<ForumActionResponse> {
+    const removed =
+      typeof body === 'object' && body !== null && 'removed' in body
+        ? Boolean(body.removed)
+        : Boolean(body);
     return this.forumPostsService.setRemoved('post', id, removed, req.user.id);
   }
 }
