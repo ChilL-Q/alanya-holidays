@@ -80,6 +80,54 @@ describe('DirectoryService', () => {
     service = module.get<DirectoryService>(DirectoryService);
   });
 
+  describe('getDirectoryListing', () => {
+    const validUuid = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should query getDirectoryListingById when id is a valid UUID', async () => {
+      mockRepository.getDirectoryListingById.mockResolvedValueOnce({
+        id: validUuid,
+        name: 'Grand Hotel',
+      });
+
+      const res = await service.getDirectoryListing(validUuid);
+      expect(res).toEqual({ id: validUuid, name: 'Grand Hotel' });
+      expect(mockRepository.getDirectoryListingById).toHaveBeenCalledWith(
+        validUuid,
+      );
+      expect(mockRepository.getDirectoryListingBySlug).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to getDirectoryListingBySlug when id is not a UUID (e.g. biz-003)', async () => {
+      mockRepository.getDirectoryListingBySlug.mockResolvedValueOnce({
+        id: validUuid,
+        slug: 'biz-003',
+        name: 'Alanya Boat Tours',
+      });
+
+      const res = await service.getDirectoryListing('biz-003');
+      expect(res).toEqual({
+        id: validUuid,
+        slug: 'biz-003',
+        name: 'Alanya Boat Tours',
+      });
+      expect(mockRepository.getDirectoryListingById).not.toHaveBeenCalled();
+      expect(mockRepository.getDirectoryListingBySlug).toHaveBeenCalledWith(
+        'biz-003',
+      );
+    });
+
+    it('should return null when non-UUID slug is not found in database', async () => {
+      mockRepository.getDirectoryListingBySlug.mockResolvedValueOnce(null);
+
+      const res = await service.getDirectoryListing('non-existent-slug');
+      expect(res).toBeNull();
+      expect(mockRepository.getDirectoryListingById).not.toHaveBeenCalled();
+      expect(mockRepository.getDirectoryListingBySlug).toHaveBeenCalledWith(
+        'non-existent-slug',
+      );
+    });
+  });
+
   describe('getDirectoryListingBySlug', () => {
     it('should return listing data when found', async () => {
       mockRepository.getDirectoryListingBySlug.mockResolvedValueOnce({
@@ -122,47 +170,85 @@ describe('DirectoryService', () => {
   });
 
   describe('voteForListing', () => {
-    it('should call repository voteForListing', async () => {
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should call repository voteForListing for valid UUIDs', async () => {
       mockRepository.voteForListing.mockResolvedValueOnce([
         { net_votes: 5, user_vote: 1 },
       ]);
 
-      const res = await service.voteForListing('dir-1', 1, 'user-1');
+      const res = await service.voteForListing(validListingId, 1, validUserId);
       expect(res).toEqual({ netVotes: 5, userVote: 1 });
       expect(mockRepository.voteForListing).toHaveBeenCalledWith(
-        'dir-1',
+        validListingId,
         1,
-        'user-1',
+        validUserId,
       );
     });
 
     it('should return default 0 votes when repository returns empty array', async () => {
       mockRepository.voteForListing.mockResolvedValueOnce([]);
 
-      const res = await service.voteForListing('dir-1', 1, 'user-1');
+      const res = await service.voteForListing(validListingId, 1, validUserId);
       expect(res).toEqual({ netVotes: 0, userVote: 0 });
+    });
+
+    it('should safely return 0 votes without querying repository when listingId is not a valid UUID (e.g. biz-003)', async () => {
+      const res = await service.voteForListing('biz-003', 1, validUserId);
+      expect(res).toEqual({ netVotes: 0, userVote: 0 });
+      expect(mockRepository.voteForListing).not.toHaveBeenCalled();
+    });
+
+    it('should safely return 0 votes without querying repository when userId is not a valid UUID', async () => {
+      const res = await service.voteForListing(
+        validListingId,
+        1,
+        'invalid-user',
+      );
+      expect(res).toEqual({ netVotes: 0, userVote: 0 });
+      expect(mockRepository.voteForListing).not.toHaveBeenCalled();
     });
   });
 
   describe('removeListingVote', () => {
-    it('should call repository removeListingVote and return netVotes', async () => {
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should call repository removeListingVote and return netVotes for valid UUIDs', async () => {
       mockRepository.removeListingVote.mockResolvedValueOnce([
         { net_votes: 3 },
       ]);
 
-      const res = await service.removeListingVote('dir-1', 'user-1');
+      const res = await service.removeListingVote(validListingId, validUserId);
       expect(res).toEqual({ netVotes: 3 });
       expect(mockRepository.removeListingVote).toHaveBeenCalledWith(
-        'dir-1',
-        'user-1',
+        validListingId,
+        validUserId,
       );
     });
 
     it('should return 0 netVotes when repository returns empty array', async () => {
       mockRepository.removeListingVote.mockResolvedValueOnce([]);
 
-      const res = await service.removeListingVote('dir-1', 'user-1');
+      const res = await service.removeListingVote(validListingId, validUserId);
       expect(res).toEqual({ netVotes: 0 });
+    });
+
+    it('should safely return 0 netVotes without querying repository when listingId is not a valid UUID', async () => {
+      const res = await service.removeListingVote('biz-003', validUserId);
+      expect(res).toEqual({ netVotes: 0 });
+      expect(mockRepository.removeListingVote).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getListingAddons', () => {
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should return empty array without querying repository when listingId is not a valid UUID (e.g. biz-003)', async () => {
+      const res = await service.getListingAddons('biz-003');
+      expect(res).toEqual([]);
+      expect(mockRepository.getListingClaimById).not.toHaveBeenCalled();
     });
   });
 

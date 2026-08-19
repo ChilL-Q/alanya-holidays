@@ -44,30 +44,38 @@ describe('ReviewsService', () => {
   });
 
   describe('getListingReviews', () => {
-    it('should calculate offset range (from/to) and return formatted response', async () => {
+    const validUuid = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should calculate offset range (from/to) and return formatted response for valid UUID', async () => {
       mockRepository.getListingReviews.mockResolvedValueOnce({
         data: [{ id: 'r1', rating: 5 }],
         count: 1,
       });
 
-      const res = await service.getListingReviews('list-1', 2, 10);
+      const res = await service.getListingReviews(validUuid, 2, 10);
       expect(res).toEqual({ data: [{ id: 'r1', rating: 5 }], total: 1 });
       expect(mockRepository.getListingReviews).toHaveBeenCalledWith(
-        'list-1',
+        validUuid,
         10,
         19,
       );
     });
 
-    it('should use default page=1 and limit=20 if omitted', async () => {
+    it('should return empty paginated result { data: [], total: 0 } when listingId is not a valid UUID (e.g. biz-003)', async () => {
+      const res = await service.getListingReviews('biz-003', 1, 20);
+      expect(res).toEqual({ data: [], total: 0 });
+      expect(mockRepository.getListingReviews).not.toHaveBeenCalled();
+    });
+
+    it('should use default page=1 and limit=20 if omitted for valid UUID', async () => {
       mockRepository.getListingReviews.mockResolvedValueOnce({
         data: [],
         count: 0,
       });
 
-      await service.getListingReviews('list-1');
+      await service.getListingReviews(validUuid);
       expect(mockRepository.getListingReviews).toHaveBeenCalledWith(
-        'list-1',
+        validUuid,
         0,
         19,
       );
@@ -75,45 +83,94 @@ describe('ReviewsService', () => {
   });
 
   describe('submitListingReview', () => {
-    it('should delegate to repository insertListingReview', async () => {
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should delegate to repository insertListingReview for valid UUIDs', async () => {
       mockRepository.insertListingReview.mockResolvedValueOnce({ id: 'r-new' });
 
       const res = await service.submitListingReview(
-        'list-1',
+        validListingId,
         5,
         'Great place!',
-        'user-1',
+        validUserId,
       );
       expect(res).toEqual({ id: 'r-new' });
       expect(mockRepository.insertListingReview).toHaveBeenCalledWith(
-        'list-1',
+        validListingId,
         5,
         'Great place!',
-        'user-1',
+        validUserId,
       );
+    });
+
+    it('should return empty object without querying repository when listingId is not a valid UUID (e.g. biz-003)', async () => {
+      const res = await service.submitListingReview(
+        'biz-003',
+        5,
+        'Great place!',
+        validUserId,
+      );
+      expect(res).toEqual({});
+      expect(mockRepository.insertListingReview).not.toHaveBeenCalled();
+    });
+
+    it('should return empty object without querying repository when userId is not a valid UUID', async () => {
+      const res = await service.submitListingReview(
+        validListingId,
+        5,
+        'Great place!',
+        'invalid-user',
+      );
+      expect(res).toEqual({});
+      expect(mockRepository.insertListingReview).not.toHaveBeenCalled();
     });
   });
 
   describe('getUserReviewForListing', () => {
-    it('should return user review if found', async () => {
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should return user review if found for valid UUIDs', async () => {
       mockRepository.getUserReviewForListing.mockResolvedValueOnce({
         id: 'rev-user-1',
         rating: 4,
       });
 
-      const res = await service.getUserReviewForListing('list-1', 'user-1');
+      const res = await service.getUserReviewForListing(
+        validListingId,
+        validUserId,
+      );
       expect(res).toEqual({ id: 'rev-user-1', rating: 4 });
       expect(mockRepository.getUserReviewForListing).toHaveBeenCalledWith(
-        'list-1',
-        'user-1',
+        validListingId,
+        validUserId,
       );
     });
 
-    it('should return null if user review is not found', async () => {
+    it('should return null if user review is not found for valid UUIDs', async () => {
       mockRepository.getUserReviewForListing.mockResolvedValueOnce(null);
 
-      const res = await service.getUserReviewForListing('list-1', 'user-1');
+      const res = await service.getUserReviewForListing(
+        validListingId,
+        validUserId,
+      );
       expect(res).toBeNull();
+    });
+
+    it('should return null without querying repository when listingId is not a valid UUID (e.g. biz-003)', async () => {
+      const res = await service.getUserReviewForListing('biz-003', validUserId);
+      expect(res).toBeNull();
+      expect(mockRepository.getUserReviewForListing).not.toHaveBeenCalled();
+    });
+
+    it('should return null without querying repository when userId is not a valid UUID', async () => {
+      const res = await service.getUserReviewForListing(
+        validListingId,
+        'invalid-user-id',
+      );
+      expect(res).toBeNull();
+      expect(mockRepository.getUserReviewForListing).not.toHaveBeenCalled();
     });
   });
 
@@ -177,62 +234,95 @@ describe('ReviewsService', () => {
   });
 
   describe('approveReview', () => {
+    const validReviewId = '123e4567-e89b-12d3-a456-426614174000';
+    const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
+
     it('should throw UnauthorizedException if caller is not admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
-      await expect(service.approveReview('r1', 'user-1')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.approveReview(validReviewId, 'user-1'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should call repository updateReviewStatus when caller is admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
 
-      const res = await service.approveReview('r1', 'admin-1');
+      const res = await service.approveReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
       expect(mockRepository.updateReviewStatus).toHaveBeenCalledWith(
-        'r1',
+        validReviewId,
         'approved',
       );
+    });
+
+    it('should return success false without calling repository when review id is not a valid UUID', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+
+      const res = await service.approveReview('invalid-rev-id', validAdminId);
+      expect(res).toEqual({ success: false });
+      expect(mockRepository.updateReviewStatus).not.toHaveBeenCalled();
     });
   });
 
   describe('rejectReview', () => {
+    const validReviewId = '123e4567-e89b-12d3-a456-426614174000';
+    const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
+
     it('should throw UnauthorizedException if caller is not admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
-      await expect(service.rejectReview('r1', 'user-1')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.rejectReview(validReviewId, 'user-1'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should call repository updateReviewStatus with rejected when caller is admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
 
-      const res = await service.rejectReview('r1', 'admin-1');
+      const res = await service.rejectReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
       expect(mockRepository.updateReviewStatus).toHaveBeenCalledWith(
-        'r1',
+        validReviewId,
         'rejected',
       );
+    });
+
+    it('should return success false without calling repository when review id is not a valid UUID', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+
+      const res = await service.rejectReview('invalid-rev-id', validAdminId);
+      expect(res).toEqual({ success: false });
+      expect(mockRepository.updateReviewStatus).not.toHaveBeenCalled();
     });
   });
 
   describe('deleteReview', () => {
+    const validReviewId = '123e4567-e89b-12d3-a456-426614174000';
+    const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
+
     it('should throw UnauthorizedException if caller is not admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('user');
 
-      await expect(service.deleteReview('r1', 'user-1')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.deleteReview(validReviewId, 'user-1'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should call repository deleteReview when caller is admin', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
 
-      const res = await service.deleteReview('r1', 'admin-1');
+      const res = await service.deleteReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
-      expect(mockRepository.deleteReview).toHaveBeenCalledWith('r1');
+      expect(mockRepository.deleteReview).toHaveBeenCalledWith(validReviewId);
+    });
+
+    it('should return success false without calling repository when review id is not a valid UUID', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+
+      const res = await service.deleteReview('invalid-rev-id', validAdminId);
+      expect(res).toEqual({ success: false });
+      expect(mockRepository.deleteReview).not.toHaveBeenCalled();
     });
   });
 });

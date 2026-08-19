@@ -10,6 +10,8 @@ import { UserListingVote } from './dto/directory-vote.dto';
 
 const LISTING_LOCATIONS_SELECT =
   '*, listing_locations(id, location_id, display_order, locations(id, name))';
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class DirectoryRepository {
@@ -20,11 +22,15 @@ export class DirectoryRepository {
   }
 
   async getUserRole(userId: string): Promise<string | undefined> {
-    const { data } = await this.client
+    if (!UUID_RE.test(userId)) return undefined;
+    const { data, error } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .single<{ role: string }>();
+    if (error && (error.code === 'PGRST116' || error.code === '22P02')) {
+      return undefined;
+    }
     return data?.role ?? undefined;
   }
 
@@ -70,12 +76,18 @@ export class DirectoryRepository {
   async getDirectoryListingById(
     id: string,
   ): Promise<DirectoryListingRecord | null> {
+    if (!UUID_RE.test(id)) return null;
     const { data, error } = await this.client
       .from('directory_listings')
       .select(LISTING_LOCATIONS_SELECT)
       .eq('id', id)
       .single<DirectoryListingRecord>();
-    if (error && error.code !== 'PGRST116') throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return null;
+      }
+      throw new Error(error.message);
+    }
     return data || null;
   }
 
@@ -84,10 +96,15 @@ export class DirectoryRepository {
   ): Promise<DirectoryListingRecord | null> {
     const { data, error } = await this.client
       .from('directory_listings')
-      .select('*')
+      .select(LISTING_LOCATIONS_SELECT)
       .eq('slug', slug)
       .single<DirectoryListingRecord>();
-    if (error && error.code !== 'PGRST116') throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return null;
+      }
+      throw new Error(error.message);
+    }
     return data || null;
   }
 
@@ -200,6 +217,7 @@ export class DirectoryRepository {
     vote: 1 | -1,
     userId: string,
   ): Promise<VoteResult[]> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) return [];
     const res = await this.client.rpc('vote_listing', {
       p_listing_id: listingId,
       p_listing_type: 'directory',
@@ -214,8 +232,11 @@ export class DirectoryRepository {
     listingIds: string[],
     userId: string,
   ): Promise<UserListingVote[]> {
+    if (!UUID_RE.test(userId)) return [];
+    const validListingIds = (listingIds || []).filter((id) => UUID_RE.test(id));
+    if (validListingIds.length === 0) return [];
     const res = await this.client.rpc('get_user_votes_batch', {
-      p_listing_ids: listingIds,
+      p_listing_ids: validListingIds,
       p_listing_type: 'directory',
       p_user_id: userId,
     });
@@ -227,6 +248,7 @@ export class DirectoryRepository {
     listingId: string,
     userId: string,
   ): Promise<VoteResult[]> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) return [];
     const res = await this.client.rpc('remove_listing_vote', {
       p_listing_id: listingId,
       p_listing_type: 'directory',
@@ -268,12 +290,16 @@ export class DirectoryRepository {
   async getDirectoryListingOwner(
     id: string,
   ): Promise<{ owner_user_id?: string | null } | null> {
-    const { data } = await this.client
+    if (!UUID_RE.test(id)) return null;
+    const { data, error } = await this.client
       .from('directory_listings')
       .select('owner_user_id')
       .eq('id', id)
       .single<{ owner_user_id?: string | null }>();
-    return data;
+    if (error && (error.code === 'PGRST116' || error.code === '22P02')) {
+      return null;
+    }
+    return data || null;
   }
 
   async updateDirectoryListing(
@@ -301,6 +327,7 @@ export class DirectoryRepository {
     listingId: string,
     locationIdsToKeep?: string[],
   ): Promise<void> {
+    if (!UUID_RE.test(listingId)) return;
     let query = this.client
       .from('listing_locations')
       .delete()
@@ -316,6 +343,7 @@ export class DirectoryRepository {
   }
 
   async deleteDirectoryListing(id: string): Promise<void> {
+    if (!UUID_RE.test(id)) return;
     const { error } = await this.client
       .from('directory_listings')
       .delete()
@@ -324,10 +352,12 @@ export class DirectoryRepository {
   }
 
   async trackListingView(listingId: string): Promise<void> {
+    if (!UUID_RE.test(listingId)) return;
     await this.client.rpc('track_listing_view', { p_listing_id: listingId });
   }
 
   async trackListingClick(listingId: string, clickType: string): Promise<void> {
+    if (!UUID_RE.test(listingId)) return;
     await this.client.rpc('track_listing_click', {
       p_listing_id: listingId,
       p_click_type: clickType,
@@ -363,13 +393,19 @@ export class DirectoryRepository {
     id: string,
     updates: Record<string, unknown>,
   ): Promise<{ name?: string; owner_user_id?: string | null } | null> {
+    if (!UUID_RE.test(id)) return null;
     const { data, error } = await this.client
       .from('directory_listings')
       .update(updates)
       .eq('id', id)
       .select('name, owner_user_id')
       .single<{ name?: string; owner_user_id?: string | null }>();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return null;
+      }
+      throw new Error(error.message);
+    }
     return data;
   }
 
@@ -377,6 +413,7 @@ export class DirectoryRepository {
     userId: string,
     days: number,
   ): Promise<Record<string, unknown>[]> {
+    if (!UUID_RE.test(userId)) return [];
     const res = await this.client.rpc('get_directory_analytics_for_owner', {
       p_owner_id: userId,
       p_days: days,
@@ -401,12 +438,18 @@ export class DirectoryRepository {
   async getListingAddons(
     listingId: string,
   ): Promise<Record<string, unknown>[]> {
+    if (!UUID_RE.test(listingId)) return [];
     const { data, error } = await this.client
       .from('listing_addons')
       .select('*')
       .eq('listing_id', listingId)
       .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return [];
+      }
+      throw new Error(error.message);
+    }
     return data || [];
   }
 
@@ -485,12 +528,16 @@ export class DirectoryRepository {
   async getListingClaimById(
     id: string,
   ): Promise<{ email: string; business_name: string } | null> {
-    const { data } = await this.client
+    if (!UUID_RE.test(id)) return null;
+    const { data, error } = await this.client
       .from('listing_claims')
       .select('email, business_name')
       .eq('id', id)
       .single<{ email: string; business_name: string }>();
-    return data;
+    if (error && (error.code === 'PGRST116' || error.code === '22P02')) {
+      return null;
+    }
+    return data || null;
   }
 
   async invokeFunction(

@@ -69,6 +69,11 @@ export class DirectoryService {
   async getDirectoryListing(
     id: string,
   ): Promise<DirectoryListingRecord | null> {
+    const isUuid = UUID_RE.test(id);
+    if (!isUuid) {
+      return this.getDirectoryListingBySlug(id);
+    }
+
     const cacheKey = `directory:item:${id}`;
     const cached =
       await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
@@ -153,6 +158,9 @@ export class DirectoryService {
     vote: 1 | -1,
     userId: string,
   ): Promise<{ netVotes: number; userVote: number }> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) {
+      return { netVotes: 0, userVote: 0 };
+    }
     const data: VoteResult[] = await this.directoryRepository.voteForListing(
       listingId,
       vote,
@@ -182,6 +190,9 @@ export class DirectoryService {
     listingId: string,
     userId: string,
   ): Promise<{ netVotes: number }> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) {
+      return { netVotes: 0 };
+    }
     const data: VoteResult[] = await this.directoryRepository.removeListingVote(
       listingId,
       userId,
@@ -432,7 +443,7 @@ export class DirectoryService {
   async getListingAddons(
     listingId: string,
   ): Promise<Record<string, unknown>[]> {
-    validateUUIDs([listingId]);
+    if (!UUID_RE.test(listingId)) return [];
     return this.directoryRepository.getListingAddons(listingId);
   }
 

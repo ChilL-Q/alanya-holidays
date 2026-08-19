@@ -7,6 +7,9 @@ import {
 import { ReviewEntity } from '../../domain/entities/review.entity';
 import { ReviewMapper } from '../mappers/review.mapper';
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Injectable()
 export class SupabaseReviewsRepository implements IReviewsRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -20,6 +23,10 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
   // ============================================
 
   async findById(id: string): Promise<ReviewEntity | null> {
+    if (!UUID_RE.test(id)) {
+      return null;
+    }
+
     const { data, error } = await this.client
       .from('listing_reviews')
       .select(
@@ -69,13 +76,17 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
   // ============================================
 
   async getUserRole(userId: string): Promise<string | undefined> {
+    if (!UUID_RE.test(userId)) {
+      return undefined;
+    }
+
     const { data, error } = await this.client
       .from('profiles')
       .select('role')
       .eq('id', userId)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== 'PGRST116' && error.code !== '22P02') {
       console.error('getUserRole error:', error);
     }
     return (data?.role as string) || undefined;
@@ -86,6 +97,10 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
     from: number,
     to: number,
   ): Promise<ReviewListResult> {
+    if (!UUID_RE.test(listingId)) {
+      return { data: [], count: 0 };
+    }
+
     const { data, error, count } = await this.client
       .from('listing_reviews')
       .select('*, user:profiles(full_name, avatar_url)', { count: 'exact' })
@@ -94,7 +109,12 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
       .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return { data: [], count: 0 };
+      }
+      throw new Error(error.message);
+    }
     return {
       data: data || [],
       count: count || 0,
@@ -107,13 +127,22 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
     comment: string,
     userId: string,
   ): Promise<Record<string, unknown>> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) {
+      return {};
+    }
+
     const { data, error } = await this.client
       .from('listing_reviews')
       .insert({ listing_id: listingId, user_id: userId, rating, comment })
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return {};
+      }
+      throw new Error(error.message);
+    }
     return data ?? {};
   }
 
@@ -121,6 +150,10 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
     listingId: string,
     userId: string,
   ): Promise<Record<string, unknown> | null> {
+    if (!UUID_RE.test(listingId) || !UUID_RE.test(userId)) {
+      return null;
+    }
+
     const { data, error } = await this.client
       .from('listing_reviews')
       .select('*')
@@ -128,7 +161,7 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== 'PGRST116' && error.code !== '22P02') {
       console.error('getUserReviewForListing error:', error);
     }
     return data || null;
@@ -150,7 +183,12 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
       .order('created_at', { ascending })
       .range(from, to);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') {
+        return { data: [], count: 0 };
+      }
+      throw new Error(error.message);
+    }
     return {
       data: data || [],
       count: count || 0,
@@ -158,20 +196,28 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
   }
 
   async updateReviewStatus(id: string, status: string): Promise<void> {
+    if (!UUID_RE.test(id)) return;
     const { error } = await this.client
       .from('listing_reviews')
       .update({ status })
       .eq('id', id);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') return;
+      throw new Error(error.message);
+    }
   }
 
   async deleteReview(id: string): Promise<void> {
+    if (!UUID_RE.test(id)) return;
     const { error } = await this.client
       .from('listing_reviews')
       .delete()
       .eq('id', id);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') return;
+      throw new Error(error.message);
+    }
   }
 }
