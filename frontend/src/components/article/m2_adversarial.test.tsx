@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import VideoEmbed from "./VideoEmbed";
 import ArticleFigure from "./ArticleFigure";
@@ -8,7 +8,6 @@ import ArticleCallout from "./ArticleCallout";
 import PullQuote from "./PullQuote";
 import LeadParagraph from "./LeadParagraph";
 import ArticleContentRenderer from "./ArticleContentRenderer";
-import { parseArticleContent } from "./parser";
 import type { ArticleBlockNode } from "./types";
 
 describe("Milestone 2 Adversarial & Stress Testing Suite", () => {
