@@ -51,4 +51,20 @@ describe('UsersController', () => {
     expect(res).toEqual({ id: 'usr-1' });
     expect(mockService.getUserProfile).toHaveBeenCalledWith('usr-55');
   });
+
+  it('should delegate updateUserProfile with bio and company_name', async () => {
+    const req = { user: { id: 'usr-55' } } as unknown as AuthenticatedRequest;
+    const dto = {
+      full_name: 'Jane Doe',
+      bio: 'Travel enthusiast',
+      company_name: 'Holiday Homes LLC',
+    };
+    const res = await controller.updateUserProfile('usr-55', dto, req);
+    expect(res).toEqual({ success: true });
+    expect(mockService.updateUserProfile).toHaveBeenCalledWith(
+      'usr-55',
+      dto,
+      'usr-55',
+    );
+  });
 });

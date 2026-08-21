@@ -281,4 +281,36 @@ describe('DirectoryRepository', () => {
       expect(mockSupabaseClient.from).not.toHaveBeenCalled();
     });
   });
+
+  describe('getMyListingClaims', () => {
+    it('should return empty array immediately for non-UUID userId', async () => {
+      const res = await repository.getMyListingClaims('invalid-user');
+      expect(res).toEqual([]);
+      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
+    });
+
+    it('should query listing_claims with user_id and return claims', async () => {
+      const claims = [
+        {
+          id: 'claim-1',
+          listing_id: validUuid,
+          user_id: validUserId,
+          status: 'pending',
+          business_name: 'Bistro',
+        },
+      ];
+      mockSupabaseClient.order.mockResolvedValueOnce({
+        data: claims,
+        error: null,
+      });
+
+      const res = await repository.getMyListingClaims(validUserId);
+      expect(res).toEqual(claims);
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('listing_claims');
+      expect(mockSupabaseClient.eq).toHaveBeenCalledWith(
+        'user_id',
+        validUserId,
+      );
+    });
+  });
 });

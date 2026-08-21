@@ -30,6 +30,12 @@ describe('DirectoryService', () => {
     callRejectListingClaimRpc: jest.Mock;
     getListingClaimById: jest.Mock;
     getListingAddons: jest.Mock;
+    getDirectoryListingOwner: jest.Mock;
+    insertListingLocations: jest.Mock;
+    upsertListingLocations: jest.Mock;
+    deleteListingLocations: jest.Mock;
+    getMyDirectoryListings: jest.Mock;
+    getMyListingClaims: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -59,6 +65,12 @@ describe('DirectoryService', () => {
       callRejectListingClaimRpc: jest.fn(),
       getListingClaimById: jest.fn(),
       getListingAddons: jest.fn().mockResolvedValue([]),
+      getDirectoryListingOwner: jest.fn(),
+      insertListingLocations: jest.fn().mockResolvedValue(undefined),
+      upsertListingLocations: jest.fn().mockResolvedValue(undefined),
+      deleteListingLocations: jest.fn().mockResolvedValue(undefined),
+      getMyDirectoryListings: jest.fn().mockResolvedValue([]),
+      getMyListingClaims: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -374,6 +386,275 @@ describe('DirectoryService', () => {
       await expect(
         service.rejectListingClaim('claim-1', 'Invalid docs', 'admin-1'),
       ).rejects.toThrow('Claim not found or invalid');
+    });
+  });
+
+  describe('saveDraft', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+    const validDraftId = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should create a new draft with status = draft and default name when draftId is not provided', async () => {
+      mockRepository.insertDirectoryListing.mockResolvedValueOnce({
+        id: validDraftId,
+        name: 'Untitled Draft',
+        status: 'draft',
+        owner_user_id: validUserId,
+        tier: 'explorer',
+      });
+
+      const res = await service.saveDraft({}, [], validUserId);
+
+      expect(res).toEqual(
+        expect.objectContaining({
+          id: validDraftId,
+          status: 'draft',
+          owner_user_id: validUserId,
+        }),
+      );
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Untitled Draft',
+          status: 'draft',
+          owner_user_id: validUserId,
+          tier: 'explorer',
+          is_featured: false,
+          is_verified: false,
+          is_premium: false,
+          base_score: 0,
+        }),
+      );
+    });
+
+    it('should update an existing draft when valid draftId is provided and user is owner', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validDraftId,
+        name: 'Updated Partial Cafe',
+        status: 'draft',
+        owner_user_id: validUserId,
+      });
+
+      const res = await service.saveDraft(
+        { name: 'Updated Partial Cafe', tier: 'voyager' },
+        [],
+        validUserId,
+        validDraftId,
+      );
+
+      expect(res.name).toBe('Updated Partial Cafe');
+      expect(mockRepository.getDirectoryListingOwner).toHaveBeenCalledWith(
+        validDraftId,
+      );
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validDraftId,
+        expect.objectContaining({
+          name: 'Updated Partial Cafe',
+          status: 'draft',
+          tier: 'voyager',
+        }),
+      );
+    });
+
+    it('should throw UnauthorizedException when attempting to update a draft owned by another user', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: 'other-user-99',
+      });
+
+      await expect(
+        service.saveDraft(
+          { name: 'Hacked Draft' },
+          [],
+          validUserId,
+          validDraftId,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw an error if photo gallery exceeds tier limit', async () => {
+      const photos = Array(6).fill('https://example.com/p.jpg');
+      await expect(
+        service.saveDraft(
+          { tier: 'explorer', gallery: photos },
+          [],
+          validUserId,
+        ),
+      ).rejects.toThrow(/Photo limit exceeded/);
+    });
+  });
+
+  describe('publishDraft', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should validate required fields, update status from draft to pending, and save', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockRepository.getDirectoryListingOwner.mockResolvedValue({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        name: 'Alanya Seaside Restaurant',
+        category_id: 'restaurants',
+        description: 'Fine dining by the sea with Mediterranean flavors.',
+        location: 'Damlatas Cad. 10',
+        status: 'pending',
+        owner_user_id: validUserId,
+      });
+
+      const res = await service.publishDraft(
+        validListingId,
+        {
+          name: 'Alanya Seaside Restaurant',
+          category_id: 'restaurants',
+          description: 'Fine dining by the sea with Mediterranean flavors.',
+          location: 'Damlatas Cad. 10',
+          email: 'info@seaside.test',
+          phone: '+90 242 511 0000',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(res.status).toBe('pending');
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        expect.objectContaining({
+          name: 'Alanya Seaside Restaurant',
+          status: 'pending',
+        }),
+      );
+    });
+
+    it('should throw error when business name is missing or too short', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+
+      await expect(
+        service.publishDraft(
+          validListingId,
+          {
+            name: 'A',
+            category_id: 'restaurants',
+            description: 'A valid description with enough characters.',
+            address: 'Alanya Beach',
+            email: 'test@example.com',
+          },
+          [],
+          validUserId,
+        ),
+      ).rejects.toThrow('Business name is required to publish');
+    });
+
+    it('should throw error when category is missing', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+
+      await expect(
+        service.publishDraft(
+          validListingId,
+          {
+            name: 'Valid Name',
+            description: 'A valid description with enough characters.',
+            address: 'Alanya Beach',
+            email: 'test@example.com',
+          },
+          [],
+          validUserId,
+        ),
+      ).rejects.toThrow('Category is required to publish');
+    });
+
+    it('should throw error when email is missing', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+
+      await expect(
+        service.publishDraft(
+          validListingId,
+          {
+            name: 'Valid Name',
+            category_id: 'restaurants',
+            description: 'A valid description with enough characters.',
+            address: 'Alanya Beach',
+            email: '',
+          },
+          [],
+          validUserId,
+        ),
+      ).rejects.toThrow('Valid email is required to publish');
+    });
+
+    it('should throw UnauthorizedException if caller is not the owner', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: 'different-user',
+      });
+
+      await expect(
+        service.publishDraft(
+          validListingId,
+          {
+            name: 'Valid Name',
+            category_id: 'restaurants',
+            description: 'Valid description',
+            address: 'Valid address',
+            email: 'test@example.com',
+          },
+          [],
+          validUserId,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('getMyDirectoryListings', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should pass status filter to repository when status is provided', async () => {
+      mockRepository.getMyDirectoryListings.mockResolvedValueOnce([
+        { id: 'draft-1', status: 'draft', owner_user_id: validUserId },
+      ]);
+
+      const res = await service.getMyDirectoryListings(validUserId, 'draft');
+
+      expect(res).toHaveLength(1);
+      expect(mockRepository.getMyDirectoryListings).toHaveBeenCalledWith(
+        validUserId,
+        'draft',
+      );
+    });
+  });
+
+  describe('getMyListingClaims', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+
+    it('should return empty array without querying repository when userId is not a valid UUID', async () => {
+      const res = await service.getMyListingClaims('invalid-uuid');
+      expect(res).toEqual([]);
+      expect(mockRepository.getMyListingClaims).not.toHaveBeenCalled();
+    });
+
+    it('should return claims from repository when valid UUID userId is provided', async () => {
+      const claims = [
+        {
+          id: 'claim-1',
+          listing_id: '123e4567-e89b-12d3-a456-426614174000',
+          user_id: validUserId,
+          status: 'pending',
+          business_name: 'Seaside Bistro',
+        },
+      ];
+      mockRepository.getMyListingClaims.mockResolvedValueOnce(claims);
+
+      const res = await service.getMyListingClaims(validUserId);
+      expect(res).toEqual(claims);
+      expect(mockRepository.getMyListingClaims).toHaveBeenCalledWith(
+        validUserId,
+      );
     });
   });
 });

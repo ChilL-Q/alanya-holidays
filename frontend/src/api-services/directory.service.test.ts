@@ -405,6 +405,242 @@ describe("directory.service", () => {
     });
   });
 
+  describe("saveDraft", () => {
+    it("should post draft payload to /directory/draft and return mapped Business", async () => {
+      const mockBackendDraft: BackendDirectoryListing = {
+        id: "draft-123",
+        name: "Draft Cafe",
+        category_id: "restaurants",
+        status: "draft",
+      };
+
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockBackendDraft);
+
+      const result = await directoryService.saveDraft({
+        name: "Draft Cafe",
+        category: "restaurants",
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/draft", {
+        listing: expect.objectContaining({
+          name: "Draft Cafe",
+          category_id: "restaurants",
+          status: "draft",
+        }),
+        draftId: undefined,
+        locationIds: [],
+      });
+      expect(result.id).toBe("draft-123");
+      expect(result.name).toBe("Draft Cafe");
+      expect(result.status).toBe("draft");
+    });
+
+    it("should pass draftId when updating an existing draft", async () => {
+      const mockBackendDraft: BackendDirectoryListing = {
+        id: "draft-456",
+        name: "Updated Draft Cafe",
+        status: "draft",
+      };
+
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockBackendDraft);
+
+      const result = await directoryService.saveDraft(
+        { name: "Updated Draft Cafe" },
+        "draft-456"
+      );
+
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/draft", {
+        listing: expect.objectContaining({
+          name: "Updated Draft Cafe",
+          status: "draft",
+        }),
+        draftId: "draft-456",
+        locationIds: [],
+      });
+      expect(result.id).toBe("draft-456");
+    });
+
+    it("should provide fallback Business with status draft if API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network Error"));
+
+      const result = await directoryService.saveDraft({
+        name: "Offline Draft",
+        category: "bars",
+      });
+
+      expect(result.name).toBe("Offline Draft");
+      expect(result.status).toBe("draft");
+      expect(result.id).toBeDefined();
+    });
+  });
+
+  describe("publishDraft", () => {
+    it("should post publish payload to /directory/:id/publish", async () => {
+      const mockPublished: BackendDirectoryListing = {
+        id: "draft-123",
+        name: "Published Restaurant",
+        category_id: "restaurants",
+        status: "pending",
+      };
+
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockPublished);
+
+      const result = await directoryService.publishDraft("draft-123", {
+        name: "Published Restaurant",
+        category: "restaurants",
+        description: "Full details for publication.",
+        address: "Alanya Beach",
+        phone: "+90 242 000 0000",
+        email: "contact@published.test",
+        tier: "explorer",
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/draft-123/publish", {
+        name: "Published Restaurant",
+        category_id: "restaurants",
+        description: "Full details for publication.",
+        short_description: "Full details for publication.",
+        location: "Alanya Beach",
+        address: "Alanya Beach",
+        phone: "+90 242 000 0000",
+        email: "contact@published.test",
+        tier: "explorer",
+        gallery: [],
+        status: "pending",
+        locationIds: [],
+      });
+      expect(result.status).toBe("pending");
+    });
+  });
+
+  describe("getMyListings", () => {
+    it("should call /directory/me/listings with status parameter when provided", async () => {
+      const mockListings = [
+        {
+          id: "listing-1",
+          name: "My Draft",
+          status: "draft",
+        },
+      ];
+
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockListings);
+
+      const result = await directoryService.getMyListings("draft");
+
+      expect(apiClient.get).toHaveBeenCalledWith("/directory/me/listings", {
+        params: { status: "draft" },
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("My Draft");
+      expect(result[0].status).toBe("draft");
+    });
+  });
+
+  describe("getMyClaims", () => {
+    it("should call /directory/me/claims and return claims array", async () => {
+      const mockClaims = [
+        {
+          id: "claim-101",
+          listing_id: "biz-001",
+          business_name: "Alanya Sun Hotel",
+          status: "pending",
+          created_at: "2026-08-10T12:00:00Z",
+        },
+      ];
+
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockClaims);
+
+      const result = await directoryService.getMyClaims();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/directory/me/claims");
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe("claim-101");
+      expect(result[0].business_name).toBe("Alanya Sun Hotel");
+      expect(result[0].status).toBe("pending");
+    });
+
+    it("should return empty array on API failure", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+
+      const result = await directoryService.getMyClaims();
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getOwnerAnalytics", () => {
+    it("should call /directory/analytics/owner with days parameter and return summary", async () => {
+      const mockAnalytics = [
+        {
+          total_views: 1250,
+          total_whatsapp_clicks: 84,
+          total_website_clicks: 142,
+          total_map_clicks: 65,
+          daily_data: [
+            {
+              date: "2026-08-19",
+              views: 45,
+              whatsapp_clicks: 3,
+              website_clicks: 5,
+              map_clicks: 2,
+            },
+          ],
+        },
+      ];
+
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockAnalytics);
+
+      const result = await directoryService.getOwnerAnalytics(30);
+
+      expect(apiClient.get).toHaveBeenCalledWith("/directory/analytics/owner", {
+        params: { days: 30 },
+      });
+      expect(result.total_views).toBe(1250);
+      expect(result.total_whatsapp_clicks).toBe(84);
+      expect(result.daily_data).toHaveLength(1);
+    });
+
+    it("should return fallback empty structure when API returns empty or fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Analytics API Offline"));
+
+      const result = await directoryService.getOwnerAnalytics(7);
+
+      expect(result.total_views).toBe(0);
+      expect(result.total_whatsapp_clicks).toBe(0);
+      expect(result.daily_data).toBeDefined();
+    });
+  });
+
+  describe("updateListing and deleteListing", () => {
+    it("should call PUT /directory/:id when updating listing", async () => {
+      const mockUpdated: BackendDirectoryListing = {
+        id: "biz-123",
+        name: "Updated Name",
+        status: "approved",
+      };
+
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce(mockUpdated);
+
+      const result = await directoryService.updateListing("biz-123", {
+        name: "Updated Name",
+      });
+
+      expect(apiClient.put).toHaveBeenCalledWith("/directory/biz-123", {
+        updates: expect.objectContaining({ name: "Updated Name" }),
+        locationIds: [],
+      });
+      expect(result.name).toBe("Updated Name");
+    });
+
+    it("should call DELETE /directory/:id when deleting listing", async () => {
+      vi.spyOn(apiClient, "delete").mockResolvedValueOnce({ success: true });
+
+      const result = await directoryService.deleteListing("biz-123");
+
+      expect(apiClient.delete).toHaveBeenCalledWith("/directory/biz-123");
+      expect(result).toEqual({ success: true });
+    });
+  });
+
   describe("Standalone Helper Exports", () => {
     it("should export top-level helpers that proxy to directoryService", async () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce({

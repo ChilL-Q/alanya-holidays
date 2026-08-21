@@ -8,17 +8,38 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+export interface SentryScope {
+  setTag(key: string, value: string): void;
+  setExtra(key: string, value: unknown): void;
+  setUser(user: { id?: string; email?: string }): void;
+}
+
+export interface SentrySdk {
+  withScope(callback: (scope: SentryScope) => void): void;
+  captureException(error: unknown): string | void;
+}
+
+interface RequestWithUser extends Request {
+  user?: {
+    id?: string;
+    sub?: string;
+    email?: string;
+  };
+}
+
 @Catch()
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalHttpExceptionFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  constructor(private readonly sentry?: SentrySdk) {}
+
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<RequestWithUser>();
 
     const isHttpException = exception instanceof HttpException;
-    const status = isHttpException
+    const status: number = isHttpException
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -55,6 +76,14 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
         `Unhandled Exception: ${exception.message}`,
         exception.stack,
       );
+    } else {
+      this.logger.error('Unhandled Unknown Exception', String(exception));
+    }
+
+    // Capture 5xx server errors and unhandled runtime exceptions in Sentry
+    const internalServerThreshold: number = HttpStatus.INTERNAL_SERVER_ERROR;
+    if (!isHttpException || status >= internalServerThreshold) {
+      this.captureToSentry(exception, request, status);
     }
 
     response.status(status).json({
@@ -67,5 +96,43 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
         path: request.url,
       },
     });
+  }
+
+  private captureToSentry(
+    exception: unknown,
+    request: RequestWithUser,
+    status: number,
+  ): void {
+    const dsn = process.env.SENTRY_DSN;
+    if (!dsn || dsn.trim() === '') {
+      return;
+    }
+
+    try {
+      const sentryClient =
+        this.sentry || (globalThis as unknown as { Sentry?: SentrySdk }).Sentry;
+
+      if (sentryClient && typeof sentryClient.withScope === 'function') {
+        sentryClient.withScope((scope: SentryScope) => {
+          scope.setTag('path', request.url || 'unknown');
+          scope.setTag('method', request.method || 'unknown');
+          scope.setExtra('statusCode', status);
+          scope.setExtra('timestamp', new Date().toISOString());
+
+          if (request.user) {
+            scope.setUser({
+              id: request.user.id || request.user.sub,
+              email: request.user.email,
+            });
+          }
+
+          sentryClient.captureException(exception);
+        });
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Failed to report exception to Sentry: ${(err as Error).message}`,
+      );
+    }
   }
 }

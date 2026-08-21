@@ -1,12 +1,16 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { Business } from "@/mocks/businesses";
+import TrustBadge from "@/components/common/TrustBadge";
 
-interface BusinessCardProps {
+export interface BusinessCardProps {
   business: Business;
+  layout?: "horizontal" | "grid";
   compareMode?: boolean;
   isCompared?: boolean;
   onToggleCompare?: (id: string) => void;
+  onClaimClick?: (business: Business) => void;
   maxReached?: boolean;
 }
 
@@ -16,7 +20,15 @@ const priceRangeLabel: Record<string, string> = {
   "$$$": "Premium",
 };
 
-export default function BusinessCard({ business, compareMode = false, isCompared = false, onToggleCompare, maxReached = false }: BusinessCardProps) {
+export default function BusinessCard({
+  business,
+  layout = "horizontal",
+  compareMode = false,
+  isCompared = false,
+  onToggleCompare,
+  onClaimClick,
+  maxReached = false,
+}: BusinessCardProps) {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(business.id);
@@ -36,120 +48,156 @@ export default function BusinessCard({ business, compareMode = false, isCompared
     }
   };
 
+  const isHorizontal = layout === "horizontal";
+
   return (
     <div
       data-testid="business-card"
+      data-layout={layout}
       role="button"
       tabIndex={0}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      className={`bg-white rounded-2xl border transition-all group overflow-hidden flex flex-col cursor-pointer ${
+      className={`bg-white rounded-2xl border transition-all duration-300 group overflow-hidden cursor-pointer ${
+        isHorizontal
+          ? "flex flex-col md:flex-row hover:shadow-lg"
+          : "flex flex-col hover:shadow-md"
+      } ${
         compareMode
           ? isCompared
-            ? "border-accent-400 ring-2 ring-accent-200"
-            : "border-background-200/70 hover:border-accent-200"
-          : "border-background-200/70 hover:border-primary-200/60"
+            ? "border-accent-500 ring-2 ring-accent-300 shadow-sm"
+            : "border-background-200/80 hover:border-accent-300"
+          : "border-background-200/80 hover:border-primary-300"
       }`}
     >
-      {/* Image */}
-      <div className="relative w-full h-48 overflow-hidden">
+      {/* Image Container */}
+      <div
+        className={`relative overflow-hidden shrink-0 ${
+          isHorizontal
+            ? "w-full md:w-80 md:min-w-[20rem] h-52 md:h-auto min-h-[13rem]"
+            : "w-full h-52"
+        }`}
+      >
         <img
           src={business.image}
           alt={business.name}
-          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          loading="lazy"
         />
-        {/* Compare checkbox overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 md:hidden pointer-events-none" />
+
+        {/* Compare Checkbox Overlay */}
         {compareMode && (
           <button
-            onClick={(e) => { e.stopPropagation(); onToggleCompare?.(business.id); }}
-            className={`absolute top-3 left-3 w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer z-10 ${
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCompare?.(business.id);
+            }}
+            className={`absolute top-3 left-3 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all cursor-pointer z-20 shadow-sm ${
               isCompared
                 ? "bg-accent-500 border-accent-500 text-white"
                 : maxReached
-                  ? "bg-white/70 border-foreground-300 text-foreground-400 cursor-not-allowed"
-                  : "bg-white/80 border-foreground-300 text-transparent hover:border-accent-400"
+                ? "bg-white/80 border-foreground-300 text-foreground-400 cursor-not-allowed"
+                : "bg-white/90 border-foreground-300 text-transparent hover:border-accent-400"
             }`}
             disabled={maxReached && !isCompared}
-            title={isCompared ? "Remove from comparison" : maxReached ? "Max 4 businesses" : "Add to comparison"}
+            title={
+              isCompared
+                ? "Remove from comparison"
+                : maxReached
+                ? "Max 4 businesses"
+                : "Add to comparison"
+            }
           >
-            {isCompared && <i className="ri-check-line text-sm"></i>}
+            {isCompared && <i className="ri-check-line text-base font-bold" />}
           </button>
         )}
-        {/* Featured badge */}
-        {business.featured && !compareMode && (
-          <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-            <i className="ri-star-fill text-[10px]"></i>
-            Featured
+
+        {/* Trust Badge */}
+        {!compareMode && (
+          <div className="absolute top-3 left-3 z-10 max-w-[calc(100%-5.5rem)]">
+            <TrustBadge
+              badge={business.trustBadge}
+              business={business}
+              variant="glass"
+              size="sm"
+            />
           </div>
         )}
-        {/* Price range */}
-        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap">
+
+        {/* Price Range Pill */}
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md text-foreground-800 text-xs font-semibold shadow-sm whitespace-nowrap z-10">
           {priceRangeLabel[business.priceRange] || business.priceRange}
         </div>
-        {/* Category badge */}
-        <div className="absolute bottom-3 left-3">
-          <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">
-            {business.subcategory}
+
+        {/* Category Badge */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <span className="px-3 py-1 rounded-full bg-foreground-950/80 backdrop-blur-md text-white text-xs font-medium shadow-sm whitespace-nowrap flex items-center gap-1.5">
+            <i className="ri-bookmark-3-fill text-[11px] text-primary-400" />
+            {business.subcategory || business.category}
           </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
-        {/* Name & Rating */}
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="font-heading text-base md:text-lg text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">
-            {business.name}
-          </h3>
-          <div className="flex items-center gap-1 shrink-0">
-            <i className="ri-star-fill text-yellow-400 text-sm"></i>
-            <span className="text-sm font-semibold text-foreground-900">{business.rating}</span>
-            <span className="text-xs text-foreground-500">({business.reviewCount})</span>
+      {/* Content Container */}
+      <div className="p-5 md:p-6 flex flex-col flex-1 justify-between min-w-0">
+        <div>
+          {/* Header Row: Title & Rating */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <h3 className="font-heading text-lg md:text-xl font-bold text-foreground-900 leading-snug group-hover:text-primary-600 transition-colors line-clamp-1">
+              {business.name}
+            </h3>
+            <div className="flex items-center gap-1.5 shrink-0 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200/60">
+              <i className="ri-star-fill text-amber-500 text-sm" />
+              <span className="text-sm font-bold text-foreground-900">{business.rating}</span>
+              <span className="text-xs text-foreground-500 font-medium">({business.reviewCount})</span>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p className="text-sm text-foreground-600 leading-relaxed mb-3 line-clamp-2">
+            {business.description}
+          </p>
+
+          {/* Metadata Row: Address & Hours */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-foreground-500 mb-3">
+            <div className="flex items-center gap-1.5 truncate">
+              <i className="ri-map-pin-2-fill text-primary-500 text-sm shrink-0" />
+              <span className="truncate">{business.address}</span>
+            </div>
+            <div className="flex items-center gap-1.5 truncate">
+              <i className="ri-time-fill text-secondary-600 text-sm shrink-0" />
+              <span className="truncate">{business.openingHours}</span>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {business.tags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="px-2.5 py-0.5 rounded-md bg-secondary-50 text-secondary-800 border border-secondary-200/60 text-xs font-medium whitespace-nowrap"
+              >
+                {tag}
+              </span>
+            ))}
+            {business.tags.length > 4 && (
+              <span className="px-2 py-0.5 rounded-md bg-background-100 text-foreground-500 text-xs font-medium whitespace-nowrap">
+                +{business.tags.length - 4} more
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-3">
-          {business.description}
-        </p>
-
-        {/* Address */}
-        <div className="flex items-start gap-2 mb-3">
-          <i className="ri-map-pin-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
-          <span className="text-xs text-foreground-500 leading-relaxed">{business.address}</span>
-        </div>
-
-        {/* Hours */}
-        <div className="flex items-center gap-2 mb-4">
-          <i className="ri-time-line text-foreground-400 text-sm shrink-0"></i>
-          <span className="text-xs text-foreground-500 whitespace-nowrap">{business.openingHours}</span>
-        </div>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-5 mt-auto">
-          {business.tags.slice(0, 4).map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap"
-            >
-              {tag}
-            </span>
-          ))}
-          {business.tags.length > 4 && (
-            <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">
-              +{business.tags.length - 4} more
-            </span>
-          )}
-        </div>
-
-        {/* Contact buttons */}
-        <div className="flex items-center gap-2">
+        {/* Footer Actions */}
+        <div className="flex items-center gap-2 pt-3 border-t border-background-100 mt-auto">
           <a
             href={`tel:${business.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-primary-500 text-white text-xs sm:text-sm font-semibold hover:bg-primary-600 transition-colors shadow-sm whitespace-nowrap cursor-pointer"
           >
-            <i className="ri-phone-line text-sm"></i>
+            <i className="ri-phone-fill text-sm" />
             Call
           </a>
           <a
@@ -157,21 +205,43 @@ export default function BusinessCard({ business, compareMode = false, isCompared
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-foreground-200 text-foreground-700 text-xs sm:text-sm font-medium hover:bg-background-50 hover:text-foreground-900 transition-colors whitespace-nowrap cursor-pointer"
           >
-            <i className="ri-external-link-line text-sm"></i>
+            <i className="ri-external-link-line text-sm" />
             Website
           </a>
+
+          {/* Claim Action Trigger */}
+          {onClaimClick && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClaimClick(business);
+              }}
+              className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl border border-accent-200 bg-accent-50 text-accent-700 text-xs sm:text-sm font-medium hover:bg-accent-100 hover:border-accent-300 transition-colors whitespace-nowrap cursor-pointer"
+              title="Claim this listing as owner"
+            >
+              <i className="ri-shield-user-fill text-sm text-accent-600" />
+              <span>Claim</span>
+            </button>
+          )}
+
+          {/* Favorite Toggle Button */}
           <button
-            onClick={(e) => { e.stopPropagation(); toggleFavorite(business.id); }}
-            className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all cursor-pointer ${
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(business.id);
+            }}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all cursor-pointer shrink-0 ${
               favorited
-                ? "border-accent-300 bg-accent-50 text-accent-500"
-                : "border-foreground-200 text-foreground-500 hover:text-accent-500 hover:border-accent-300"
+                ? "border-accent-300 bg-accent-50 text-accent-500 shadow-sm"
+                : "border-foreground-200 text-foreground-500 hover:text-accent-500 hover:border-accent-300 hover:bg-accent-50/40"
             }`}
             title={favorited ? "Remove from favorites" : "Save to favorites"}
           >
-            <i className={`${favorited ? "ri-heart-fill" : "ri-heart-line"} text-lg`}></i>
+            <i className={`${favorited ? "ri-heart-fill" : "ri-heart-line"} text-base`} />
           </button>
         </div>
       </div>

@@ -46,6 +46,7 @@ export default function Footer() {
       { label: "Beaches & Nature", href: "/category/beaches-nature" },
       { label: "Food & Nightlife", href: "/category/food-nightlife" },
       { label: "Things to Do", href: "/category/things-to-do" },
+      { label: "Gift Cards", href: "/gift-cards" },
       { label: "Expats & Nomads", href: "/category/expats-nomads" },
       { label: "Real Estate", href: "/category/real-estate" },
     ],

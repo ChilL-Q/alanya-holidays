@@ -76,4 +76,36 @@ describe("BusinessCard Component", () => {
       expect(mockedNavigate).toHaveBeenCalledWith("/business/biz-001");
     }
   });
+
+  it("renders evocative TrustBadge on the card", () => {
+    const customBusiness: Business = {
+      ...mockBusiness,
+      trustBadge: "Signature Collection",
+    };
+
+    render(
+      <MemoryRouter>
+        <BusinessCard business={customBusiness} />
+      </MemoryRouter>
+    );
+
+    const badge = screen.getByRole("status");
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveTextContent("Signature Collection");
+  });
+
+  it("hides TrustBadge when compareMode is active", () => {
+    const customBusiness: Business = {
+      ...mockBusiness,
+      trustBadge: "Top Rated Destination Partner",
+    };
+
+    render(
+      <MemoryRouter>
+        <BusinessCard business={customBusiness} compareMode={true} />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole("status")).toBeNull();
+  });
 });

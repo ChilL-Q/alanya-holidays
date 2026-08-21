@@ -396,4 +396,86 @@ export class ProductsRepository {
       message: 'Order placed successfully',
     };
   }
+
+  async getMyOrders(userId: string) {
+    if (!this.isValidUuid(userId)) return [];
+
+    const { data, error } = await this.client
+      .from('order_headers')
+      .select(
+        `
+        id,
+        currency,
+        payment_provider,
+        status,
+        subtotal_items,
+        customer_notes,
+        customer_id,
+        recipient,
+        created_at,
+        updated_at,
+        items:order_items(
+          id,
+          order_id,
+          product_id,
+          product_name,
+          sku_id,
+          sku_label,
+          quantity,
+          unit_price,
+          final_price,
+          subtotal,
+          created_at
+        )
+      `,
+      )
+      .eq('customer_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
+  async getOrderById(orderId: string | number) {
+    const numId = Number(orderId);
+    const queryId = Number.isNaN(numId) ? orderId : numId;
+
+    const { data, error } = await this.client
+      .from('order_headers')
+      .select(
+        `
+        id,
+        currency,
+        payment_provider,
+        status,
+        subtotal_items,
+        customer_notes,
+        customer_id,
+        recipient,
+        created_at,
+        updated_at,
+        items:order_items(
+          id,
+          order_id,
+          product_id,
+          product_name,
+          sku_id,
+          sku_label,
+          quantity,
+          unit_price,
+          final_price,
+          subtotal,
+          created_at
+        )
+      `,
+      )
+      .eq('id', queryId)
+      .maybeSingle();
+
+    if (error) {
+      if (error.code === 'PGRST116' || error.code === '22P02') return null;
+      throw new Error(error.message);
+    }
+    return data;
+  }
 }

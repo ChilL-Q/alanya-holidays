@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminRepository } from './admin.repository';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
@@ -7,6 +8,7 @@ describe('AdminService', () => {
   let service: AdminService;
 
   const mockAdminRepository = {
+    getUserRole: jest.fn(),
     getEnquiries: jest.fn().mockResolvedValue([
       {
         id: 1,
@@ -34,9 +36,12 @@ describe('AdminService', () => {
     submitEnquiry: jest.fn().mockResolvedValue({ id: 101, success: true }),
     updateEnquiryStatus: jest.fn().mockResolvedValue(true),
     assignEnquiry: jest.fn().mockResolvedValue(true),
+    getPlatformAnalytics: jest.fn(),
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
@@ -55,8 +60,17 @@ describe('AdminService', () => {
   });
 
   describe('getEnquiries', () => {
-    it('should return enquiries from repository', async () => {
-      const result = await service.getEnquiries();
+    it('should throw UnauthorizedException if user is not admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('user');
+      await expect(service.getEnquiries('user-123')).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockAdminRepository.getEnquiries).not.toHaveBeenCalled();
+    });
+
+    it('should return enquiries from repository if user is admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('admin');
+      const result = await service.getEnquiries('admin-123');
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Sarah Connor');
       expect(mockAdminRepository.getEnquiries).toHaveBeenCalled();
@@ -96,8 +110,21 @@ describe('AdminService', () => {
   });
 
   describe('updateEnquiryStatus', () => {
-    it('should update status via repository', async () => {
-      const result = await service.updateEnquiryStatus(1, 'responded');
+    it('should throw UnauthorizedException if user is not admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('user');
+      await expect(
+        service.updateEnquiryStatus(1, 'responded', 'user-123'),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(mockAdminRepository.updateEnquiryStatus).not.toHaveBeenCalled();
+    });
+
+    it('should update status via repository if user is admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('admin');
+      const result = await service.updateEnquiryStatus(
+        1,
+        'responded',
+        'admin-123',
+      );
       expect(result).toEqual({ success: true });
       expect(mockAdminRepository.updateEnquiryStatus).toHaveBeenCalledWith(
         1,
@@ -107,8 +134,17 @@ describe('AdminService', () => {
   });
 
   describe('assignEnquiry', () => {
-    it('should assign enquiry via repository', async () => {
-      const result = await service.assignEnquiry(1, 'agent-123');
+    it('should throw UnauthorizedException if user is not admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('user');
+      await expect(
+        service.assignEnquiry(1, 'agent-123', 'user-123'),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(mockAdminRepository.assignEnquiry).not.toHaveBeenCalled();
+    });
+
+    it('should assign enquiry via repository if user is admin', async () => {
+      mockAdminRepository.getUserRole.mockResolvedValue('admin');
+      const result = await service.assignEnquiry(1, 'agent-123', 'admin-123');
       expect(result).toEqual({ success: true });
       expect(mockAdminRepository.assignEnquiry).toHaveBeenCalledWith(
         1,

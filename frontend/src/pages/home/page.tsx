@@ -6,6 +6,7 @@ import WelcomeSection from "./components/WelcomeSection";
 import TrendingThreads from "./components/TrendingThreads";
 import CategoriesGrid from "./components/CategoriesGrid";
 import FeaturedProducts from "./components/FeaturedProducts";
+import RecentlyClaimedSection from "./components/RecentlyClaimedSection";
 import CommunityPulse from "./components/CommunityPulse";
 import PopularMembers from "./components/PopularMembers";
 import Footer from "./components/Footer";
@@ -24,6 +25,7 @@ export default function Home() {
       <main>
         <HeroSection />
         <PopularNow />
+        <RecentlyClaimedSection />
         <WelcomeSection />
         <TrendingThreads />
         <CategoriesGrid />

@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ProductsRepository,
@@ -13,6 +14,7 @@ import {
 } from './products.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
+import { Money } from '../common/domain/value-objects/money.vo';
 
 export interface Product {
   id?: string;
@@ -182,6 +184,64 @@ export class ProductsService {
     dto: CreateProductOrderDto,
     userId?: string,
   ): Promise<CreateOrderResult> {
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException('Order must contain at least one item');
+    }
+
+    const currency = dto.currency || 'EUR';
+    let calculatedSubtotal = Money.zero(currency);
+
+    for (const item of dto.items) {
+      const unitPrice = item.finalPrice ?? item.unitPrice ?? 0;
+      const expectedItemSubtotal = Money.fromDecimal(
+        unitPrice,
+        currency,
+      ).multiply(item.quantity);
+
+      if (item.subtotal !== undefined && item.subtotal !== null) {
+        const providedItemSubtotal = Money.fromDecimal(item.subtotal, currency);
+        if (!providedItemSubtotal.equals(expectedItemSubtotal)) {
+          throw new BadRequestException(
+            `Invalid subtotal for product "${item.productName}": expected ${expectedItemSubtotal.toDatabaseDecimal()}, got ${item.subtotal}`,
+          );
+        }
+      } else {
+        item.subtotal = expectedItemSubtotal.toDatabaseDecimal();
+      }
+
+      calculatedSubtotal = calculatedSubtotal.add(expectedItemSubtotal);
+    }
+
+    if (dto.subtotal !== undefined && dto.subtotal !== null) {
+      const providedSubtotal = Money.fromDecimal(dto.subtotal, currency);
+      if (!providedSubtotal.equals(calculatedSubtotal)) {
+        throw new BadRequestException(
+          `Invalid order subtotal: sum of item totals (${calculatedSubtotal.toDatabaseDecimal()}) does not match provided subtotal (${dto.subtotal})`,
+        );
+      }
+    } else {
+      dto.subtotal = calculatedSubtotal.toDatabaseDecimal();
+    }
+
     return this.productsRepository.createProductOrder(dto, userId);
+  }
+
+  async getMyOrders(userId: string) {
+    return this.productsRepository.getMyOrders(userId);
+  }
+
+  async getOrderById(orderId: string | number, userId: string) {
+    const role = await this.productsRepository.getUserRole(userId);
+    const order = await this.productsRepository.getOrderById(orderId);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.customer_id !== userId && role !== 'admin') {
+      throw new UnauthorizedException('Not authorized to view this order');
+    }
+
+    return order;
   }
 }

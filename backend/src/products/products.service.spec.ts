@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
@@ -24,6 +28,8 @@ describe('ProductsService', () => {
     getFeaturedProducts: jest.Mock;
     getShopProductDetails: jest.Mock;
     createProductOrder: jest.Mock;
+    getMyOrders: jest.Mock;
+    getOrderById: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -56,6 +62,20 @@ describe('ProductsService', () => {
         success: true,
         orderId: 77,
         message: 'Order placed successfully',
+      }),
+      getMyOrders: jest.fn().mockResolvedValue([
+        {
+          id: 77,
+          currency: 'EUR',
+          customer_id: 'user-xyz',
+          items: [],
+        },
+      ]),
+      getOrderById: jest.fn().mockResolvedValue({
+        id: 77,
+        currency: 'EUR',
+        customer_id: 'user-xyz',
+        items: [],
       }),
     };
 
@@ -206,10 +226,135 @@ describe('ProductsService', () => {
       });
     });
 
+    it('createProductOrder should throw BadRequestException if items array is empty', async () => {
+      const dto: CreateProductOrderDto = {
+        currency: 'EUR',
+        subtotal: 0,
+        recipient: {
+          name: 'John Smith',
+          email: 'john@example.com',
+          phone: '+905559876543',
+          contact_method: 'email',
+        },
+        items: [],
+      };
+      await expect(service.createProductOrder(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('createProductOrder should throw BadRequestException if item subtotal does not match unit price * quantity', async () => {
+      const dto: CreateProductOrderDto = {
+        currency: 'EUR',
+        subtotal: 100,
+        recipient: {
+          name: 'John Smith',
+          email: 'john@example.com',
+          phone: '+905559876543',
+          contact_method: 'email',
+        },
+        items: [
+          {
+            productId: 'prod-1',
+            productName: 'Handmade Carpet',
+            quantity: 2,
+            unitPrice: 50,
+            finalPrice: 50,
+            subtotal: 80, // Incorrect! Should be 100
+          },
+        ],
+      };
+      await expect(service.createProductOrder(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('createProductOrder should throw BadRequestException if header subtotal does not match sum of items', async () => {
+      const dto: CreateProductOrderDto = {
+        currency: 'EUR',
+        subtotal: 90, // Incorrect! Sum of items is 100
+        recipient: {
+          name: 'John Smith',
+          email: 'john@example.com',
+          phone: '+905559876543',
+          contact_method: 'email',
+        },
+        items: [
+          {
+            productId: 'prod-1',
+            productName: 'Handmade Carpet',
+            quantity: 2,
+            unitPrice: 50,
+            finalPrice: 50,
+            subtotal: 100,
+          },
+        ],
+      };
+      await expect(service.createProductOrder(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
     it('getFeaturedProducts should query repository with default limit', async () => {
       const res = await service.getFeaturedProducts(6);
       expect(mockRepository.getFeaturedProducts).toHaveBeenCalledWith(6);
       expect(res).toEqual([]);
+    });
+
+    it('getMyOrders should query repository for customer orders', async () => {
+      const res = await service.getMyOrders('user-xyz');
+      expect(mockRepository.getMyOrders).toHaveBeenCalledWith('user-xyz');
+      expect(res).toEqual([
+        {
+          id: 77,
+          currency: 'EUR',
+          customer_id: 'user-xyz',
+          items: [],
+        },
+      ]);
+    });
+
+    it('getOrderById should return order if it belongs to requesting user', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockRepository.getOrderById.mockResolvedValueOnce({
+        id: 77,
+        customer_id: 'user-xyz',
+      });
+
+      const res = await service.getOrderById('77', 'user-xyz');
+      expect(res).toEqual({ id: 77, customer_id: 'user-xyz' });
+    });
+
+    it('getOrderById should return order if requester is admin', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockRepository.getOrderById.mockResolvedValueOnce({
+        id: 77,
+        customer_id: 'different-user',
+      });
+
+      const res = await service.getOrderById('77', 'admin-user');
+      expect(res).toEqual({ id: 77, customer_id: 'different-user' });
+    });
+
+    it('getOrderById should throw NotFoundException if order does not exist', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockRepository.getOrderById.mockResolvedValueOnce(null);
+
+      await expect(service.getOrderById('999', 'user-xyz')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('getOrderById should throw UnauthorizedException if order belongs to another user and requester is not admin', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockRepository.getOrderById.mockResolvedValueOnce({
+        id: 77,
+        customer_id: 'other-user',
+      });
+
+      await expect(service.getOrderById('77', 'user-xyz')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

@@ -121,6 +121,8 @@ describe("CheckoutPage Component", () => {
       expect(createOrderSpy).toHaveBeenCalledWith({
         recipientName: "Selin Yilmaz",
         recipientEmail: "selin@example.com",
+        recipientPhone: "+905550000000",
+        contactMethod: "email",
         senderName: "Murat Demir",
         senderEmail: "murat@example.com",
         giftMessage: "Happy Vacation!",
@@ -128,9 +130,15 @@ describe("CheckoutPage Component", () => {
         currency: "EUR",
         items: [
           {
+            productId: "prod-1",
             productName: "Luxury Yacht Voucher",
+            skuId: undefined,
+            skuLabel: undefined,
             quantity: 1,
             price: "€350.00",
+            unitPrice: 350,
+            finalPrice: 350,
+            subtotal: 350,
           },
         ],
       });

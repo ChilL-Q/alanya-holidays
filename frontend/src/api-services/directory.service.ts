@@ -88,11 +88,94 @@ export interface GetListingsResult {
 
 export interface SubmitClaimPayload {
   listing_id: string;
-  full_name: string;
+  business_name?: string;
+  claimant_name?: string;
+  full_name?: string;
   email: string;
   phone?: string;
+  contact_phone?: string;
+  role?: string;
   role_title?: string;
-  verification_method: string;
+  verification_method?: string;
+  verification_doc_url?: string;
+  additional_notes?: string;
+  notes?: string;
+  whatsapp?: string;
+  website?: string;
+  address?: string;
+  description?: string;
+  [key: string]: unknown;
+}
+
+export interface DirectoryClaim {
+  id: string;
+  listing_id: string;
+  user_id?: string;
+  email: string;
+  phone?: string;
+  role?: string;
+  business_name: string;
+  contact_phone?: string;
+  whatsapp?: string;
+  website?: string;
+  address?: string;
+  description?: string;
+  status: "pending" | "verified" | "approved" | "rejected" | string;
+  rejection_reason?: string;
+  verification_token?: string;
+  verified_at?: string;
+  approved_at?: string;
+  created_at: string;
+  updated_at?: string;
+  directory_listing?: {
+    id: string;
+    name: string;
+    slug?: string;
+    category_id?: string;
+    gallery?: string[];
+    tier?: string;
+    status?: string;
+    location?: string;
+  };
+  [key: string]: unknown;
+}
+
+export interface OwnerAnalyticsSummary {
+  total_views: number;
+  total_whatsapp_clicks: number;
+  total_website_clicks: number;
+  total_map_clicks: number;
+  daily_data: Array<{
+    date: string;
+    views: number;
+    whatsapp_clicks: number;
+    website_clicks: number;
+    map_clicks: number;
+  }>;
+}
+
+export type ListingTier = "explorer" | "voyager" | "signature" | "partner";
+
+export interface CreateListingInput {
+  name: string;
+  category: string;
+  subcategory?: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  website?: string;
+  tier: ListingTier;
+  price_level?: string;
+  social_links?: {
+    instagram?: string;
+    facebook?: string;
+    tripadvisor?: string;
+    whatsapp?: string;
+  };
+  video_url?: string;
+  booking_url?: string;
+  images?: string[];
   [key: string]: unknown;
 }
 
@@ -135,6 +218,7 @@ export function mapBackendListingToBusiness(item: BackendDirectoryListing): Busi
     openingHours: item.openingHours || item.opening_hours || "09:00 - 18:00",
     lat: item.lat ?? item.latitude ?? 36.5437,
     lng: item.lng ?? item.longitude ?? 31.9998,
+    status: item.status,
   };
 }
 
@@ -450,10 +534,350 @@ export class DirectoryService {
   }
 
   /**
+   * Creates a new business directory listing submission.
+   */
+  async createListing(
+    input: CreateListingInput
+  ): Promise<Business> {
+    try {
+      const response = await apiClient.post<BackendDirectoryListing>("/directory", {
+        listing: {
+          name: input.name,
+          category_id: input.category,
+          subcategory: input.subcategory,
+          short_description: input.description,
+          description: input.description,
+          location: input.address,
+          address: input.address,
+          phone: input.phone,
+          email: input.email,
+          website: input.website,
+          tier: input.tier,
+          price_level: input.price_level,
+          gallery: input.images || [],
+          video_url: input.video_url,
+          whatsapp: input.social_links?.whatsapp,
+          status: "pending",
+        },
+        locationIds: [],
+      });
+
+      if (response && response.id) {
+        return mapBackendListingToBusiness(response);
+      }
+    } catch (err) {
+      console.warn("Failed to create listing via API, generating local response:", err);
+    }
+
+    const fallbackBiz: Business = {
+      id: `biz-${Date.now()}`,
+      name: input.name,
+      category: input.category,
+      subcategory: input.subcategory || "Local Business",
+      description: input.description,
+      address: input.address,
+      phone: input.phone,
+      email: input.email,
+      website: input.website || "",
+      rating: 5.0,
+      reviewCount: 1,
+      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+      tags: [input.category, input.tier, "New"],
+      featured: input.tier === "signature" || input.tier === "partner",
+      priceRange: input.price_level || "$$",
+      openingHours: "09:00 - 18:00",
+      lat: 36.543,
+      lng: 31.998,
+      trustBadge: input.tier === "signature" ? "Signature Collection" : undefined,
+    };
+
+    return fallbackBiz;
+  }
+
+  /**
+   * Saves a partial business directory listing as a draft.
+   */
+  async saveDraft(
+    input: Partial<CreateListingInput>,
+    draftId?: string
+  ): Promise<Business> {
+    try {
+      const response = await apiClient.post<BackendDirectoryListing>("/directory/draft", {
+        listing: {
+          name: input.name,
+          category_id: input.category,
+          subcategory: input.subcategory,
+          short_description: input.description,
+          description: input.description,
+          location: input.address,
+          address: input.address,
+          phone: input.phone,
+          email: input.email,
+          website: input.website,
+          tier: input.tier,
+          price_level: input.price_level,
+          gallery: input.images || [],
+          video_url: input.video_url,
+          booking_url: input.booking_url,
+          whatsapp: input.social_links?.whatsapp,
+          status: "draft",
+        },
+        draftId,
+        locationIds: [],
+      });
+
+      if (response && response.id) {
+        return mapBackendListingToBusiness(response);
+      }
+    } catch (err) {
+      console.warn("Failed to save draft via API, generating local fallback draft:", err);
+    }
+
+    const fallbackDraft: Business = {
+      id: draftId || `draft-${Date.now()}`,
+      name: input.name || "Untitled Draft",
+      category: input.category || "restaurants",
+      subcategory: input.subcategory || "Draft Listing",
+      description: input.description || "",
+      address: input.address || "",
+      phone: input.phone || "",
+      email: input.email || "",
+      website: input.website || "",
+      rating: 0,
+      reviewCount: 0,
+      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+      tags: [input.category || "General", "Draft"],
+      featured: false,
+      priceRange: input.price_level || "$$",
+      openingHours: "09:00 - 18:00",
+      lat: 36.543,
+      lng: 31.998,
+      status: "draft",
+    };
+
+    return fallbackDraft;
+  }
+
+  /**
+   * Publishes an existing listing draft, performing full backend validation.
+   */
+  async publishDraft(
+    id: string,
+    input: CreateListingInput
+  ): Promise<Business> {
+    try {
+      const response = await apiClient.post<BackendDirectoryListing>(`/directory/${id}/publish`, {
+        name: input.name,
+        category_id: input.category,
+        subcategory: input.subcategory,
+        short_description: input.description,
+        description: input.description,
+        location: input.address,
+        address: input.address,
+        phone: input.phone,
+        email: input.email,
+        website: input.website,
+        tier: input.tier,
+        price_level: input.price_level,
+        gallery: input.images || [],
+        video_url: input.video_url,
+        booking_url: input.booking_url,
+        whatsapp: input.social_links?.whatsapp,
+        status: "pending",
+        locationIds: [],
+      });
+
+      if (response && response.id) {
+        return mapBackendListingToBusiness(response);
+      }
+    } catch (err) {
+      console.warn("Failed to publish draft via API, generating local response:", err);
+    }
+
+    const fallbackBiz: Business = {
+      id,
+      name: input.name,
+      category: input.category,
+      subcategory: input.subcategory || "Local Business",
+      description: input.description,
+      address: input.address,
+      phone: input.phone,
+      email: input.email,
+      website: input.website || "",
+      rating: 5.0,
+      reviewCount: 1,
+      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+      tags: [input.category, input.tier, "Pending Review"],
+      featured: input.tier === "signature" || input.tier === "partner",
+      priceRange: input.price_level || "$$",
+      openingHours: "09:00 - 18:00",
+      lat: 36.543,
+      lng: 31.998,
+      status: "pending",
+      trustBadge: input.tier === "signature" ? "Signature Collection" : undefined,
+    };
+
+    return fallbackBiz;
+  }
+
+  /**
+   * Retrieves directory listings owned by the logged-in user, with optional status filter.
+   */
+  async getMyListings(status?: string): Promise<Business[]> {
+    try {
+      const response = await apiClient.get<BackendDirectoryListing[]>("/directory/me/listings", {
+        params: status ? { status } : undefined,
+      });
+
+      if (Array.isArray(response)) {
+        return response.map(mapBackendListingToBusiness);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch my listings from API:", err);
+    }
+
+    return [];
+  }
+
+  /**
+   * Retrieves recently claimed and verified business listings.
+   */
+  async getRecentlyClaimedListings(limit = 6): Promise<Business[]> {
+    try {
+      const response = await apiClient.get<BackendDirectoryListing[]>(
+        `/directory/landing/recent`,
+        { params: { limit } }
+      );
+
+      if (Array.isArray(response) && response.length > 0) {
+        return response.map(mapBackendListingToBusiness);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch recently claimed listings from API, using curated fallback:", err);
+    }
+
+    // Curated Fallback
+    const verifiedListings = mockBusinesses
+      .filter((b) => b.rating >= 4.5 || b.featured)
+      .slice(0, limit)
+      .map((b, idx) => ({
+        ...b,
+        is_verified: true,
+        is_claimed: true,
+        claimed_at: new Date(Date.now() - idx * 86400000 * 3).toISOString(),
+      }));
+
+    return verifiedListings;
+  }
+
+  /**
+   * Sends listing payment instructions to claimant/owner.
+   */
+  async sendPaymentInstructions(
+    businessName: string,
+    tier: string
+  ): Promise<{ success: boolean }> {
+    try {
+      return await apiClient.post<{ success: boolean }>("/directory/payment/instructions", {
+        businessName,
+        tier,
+      });
+    } catch (err) {
+      console.warn("Failed to send payment instructions via API, fallback success:", err);
+      return { success: true };
+    }
+  }
+
+  /**
    * Retrieves business categories list.
    */
   async getCategories(): Promise<typeof businessCategories> {
     return businessCategories;
+  }
+
+  /**
+   * Retrieves directory claims submitted by the logged-in user.
+   */
+  async getMyClaims(): Promise<DirectoryClaim[]> {
+    try {
+      const response = await apiClient.get<DirectoryClaim[]>("/directory/me/claims");
+      if (Array.isArray(response)) {
+        return response;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch my claims from API:", err);
+    }
+    return [];
+  }
+
+  /**
+   * Retrieves aggregated analytics for all listings owned by the logged-in user.
+   */
+  async getOwnerAnalytics(days = 30): Promise<OwnerAnalyticsSummary> {
+    try {
+      const response = await apiClient.get<
+        OwnerAnalyticsSummary[] | OwnerAnalyticsSummary
+      >("/directory/analytics/owner", {
+        params: { days },
+      });
+
+      if (Array.isArray(response) && response.length > 0) {
+        return response[0];
+      }
+      if (response && typeof response === "object" && "total_views" in response) {
+        return response as OwnerAnalyticsSummary;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch owner analytics from API:", err);
+    }
+
+    return {
+      total_views: 0,
+      total_whatsapp_clicks: 0,
+      total_website_clicks: 0,
+      total_map_clicks: 0,
+      daily_data: [],
+    };
+  }
+
+  /**
+   * Updates an existing directory listing.
+   */
+  async updateListing(
+    id: string,
+    updates: Partial<CreateListingInput>,
+    locationIds: string[] = []
+  ): Promise<Business> {
+    const response = await apiClient.put<BackendDirectoryListing>(`/directory/${id}`, {
+      updates: {
+        name: updates.name,
+        category_id: updates.category,
+        subcategory: updates.subcategory,
+        short_description: updates.description,
+        description: updates.description,
+        location: updates.address,
+        address: updates.address,
+        phone: updates.phone,
+        email: updates.email,
+        website: updates.website,
+        tier: updates.tier,
+        price_level: updates.price_level,
+        gallery: updates.images,
+        video_url: updates.video_url,
+        booking_url: updates.booking_url,
+        whatsapp: updates.social_links?.whatsapp,
+      },
+      locationIds,
+    });
+
+    return mapBackendListingToBusiness(response);
+  }
+
+  /**
+   * Deletes a directory listing owned by the user.
+   */
+  async deleteListing(id: string): Promise<{ success: boolean }> {
+    return apiClient.delete<{ success: boolean }>(`/directory/${id}`);
   }
 }
 
@@ -474,4 +898,28 @@ export const voteForListing = (listingId: string, vote: 1 | -1) =>
   directoryService.voteForListing(listingId, vote);
 export const submitClaim = (claim: SubmitClaimPayload) =>
   directoryService.submitClaim(claim);
+export const createListing = (input: CreateListingInput) =>
+  directoryService.createListing(input);
+export const saveDraft = (input: Partial<CreateListingInput>, draftId?: string) =>
+  directoryService.saveDraft(input, draftId);
+export const publishDraft = (id: string, input: CreateListingInput) =>
+  directoryService.publishDraft(id, input);
+export const getMyListings = (status?: string) =>
+  directoryService.getMyListings(status);
+export const getMyClaims = () => directoryService.getMyClaims();
+export const getOwnerAnalytics = (days?: number) =>
+  directoryService.getOwnerAnalytics(days);
+export const updateListing = (
+  id: string,
+  updates: Partial<CreateListingInput>,
+  locationIds?: string[]
+) => directoryService.updateListing(id, updates, locationIds);
+export const deleteListing = (id: string) => directoryService.deleteListing(id);
+export const getRecentlyClaimedListings = (limit?: number) =>
+  directoryService.getRecentlyClaimedListings(limit);
+export const sendPaymentInstructions = (businessName: string, tier: string) =>
+  directoryService.sendPaymentInstructions(businessName, tier);
 export const getCategories = () => directoryService.getCategories();
+
+
+

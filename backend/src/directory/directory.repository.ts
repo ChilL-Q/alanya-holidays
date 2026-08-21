@@ -60,6 +60,7 @@ export class DirectoryRepository {
     let query = this.client
       .from('directory_listings')
       .select('*', { count: 'exact' })
+      .eq('status', 'approved')
       .order(orderColumn, { ascending: false });
 
     if (category) query = query.eq('category_id', category);
@@ -115,6 +116,7 @@ export class DirectoryRepository {
       .from('directory_listings')
       .select(LISTING_LOCATIONS_SELECT)
       .eq('category_id', categoryId)
+      .eq('status', 'approved')
       .order('base_score', { ascending: false })
       .order('is_featured', { ascending: false })
       .order('net_votes', { ascending: false, nullsFirst: false })
@@ -169,6 +171,7 @@ export class DirectoryRepository {
       .from('directory_listings')
       .select(LISTING_LOCATIONS_SELECT)
       .eq('is_premium', false)
+      .eq('status', 'approved')
       .order('net_votes', { ascending: false, nullsFirst: false })
       .limit(6);
     if (error) throw new Error(error.message);
@@ -180,6 +183,7 @@ export class DirectoryRepository {
       .from('directory_listings')
       .select(LISTING_LOCATIONS_SELECT)
       .eq('is_premium', true)
+      .eq('status', 'approved')
       .order('base_score', { ascending: false })
       .limit(6);
     if (error) throw new Error(error.message);
@@ -192,6 +196,7 @@ export class DirectoryRepository {
       .select(LISTING_LOCATIONS_SELECT)
       .eq('tier', 'signature')
       .eq('is_premium', true)
+      .eq('status', 'approved')
       .order('base_score', { ascending: false })
       .limit(4);
     if (error) throw new Error(error.message);
@@ -260,12 +265,20 @@ export class DirectoryRepository {
 
   async getMyDirectoryListings(
     userId: string,
+    status?: string,
   ): Promise<DirectoryListingRecord[]> {
-    const { data, error } = await this.client
+    let query = this.client
       .from('directory_listings')
       .select('*')
-      .eq('owner_user_id', userId)
-      .order('created_at', { ascending: false });
+      .eq('owner_user_id', userId);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query.order('created_at', {
+      ascending: false,
+    });
     if (error) throw new Error(error.message);
     return (data as DirectoryListingRecord[]) || [];
   }
@@ -362,6 +375,36 @@ export class DirectoryRepository {
       p_listing_id: listingId,
       p_click_type: clickType,
     });
+  }
+
+  async getDirectoryListingsAdmin(filters?: {
+    status?: string;
+    category?: string;
+    query?: string;
+  }): Promise<DirectoryListingRecord[]> {
+    let query = this.client.from('directory_listings').select('*');
+
+    if (filters?.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.category && filters.category !== 'all') {
+      query = query.eq('category_id', filters.category);
+    }
+    if (filters?.query?.trim()) {
+      const safe = filters.query
+        .trim()
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_')
+        .replace(/,/g, ' ');
+      query = query.or(
+        `name.ilike.%${safe}%,short_description.ilike.%${safe}%,location.ilike.%${safe}%,email.ilike.%${safe}%`,
+      );
+    }
+
+    query = query.order('created_at', { ascending: false });
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return (data as DirectoryListingRecord[]) || [];
   }
 
   async getDirectoryListingsByStatus(
@@ -478,12 +521,44 @@ export class DirectoryRepository {
     try {
       const { data, error } = await this.client
         .from('listing_claims')
-        .select('*')
+        .select(
+          '*, directory_listing:directory_listings(id, name, slug, category_id, gallery, tier, status, location)',
+        )
         .order('created_at', { ascending: false });
       if (error) {
-        return [];
+        const { data: fallbackData, error: fallbackError } = await this.client
+          .from('listing_claims')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (fallbackError) return [];
+        return (fallbackData as unknown as DirectoryClaimRecord[]) || [];
       }
-      return (data as DirectoryClaimRecord[]) || [];
+      return (data as unknown as DirectoryClaimRecord[]) || [];
+    } catch {
+      return [];
+    }
+  }
+
+  async getMyListingClaims(userId: string): Promise<DirectoryClaimRecord[]> {
+    if (!UUID_RE.test(userId)) return [];
+    try {
+      const { data, error } = await this.client
+        .from('listing_claims')
+        .select(
+          '*, directory_listing:directory_listings(id, name, slug, category_id, gallery, tier, status, location)',
+        )
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) {
+        const { data: fallbackData, error: fallbackError } = await this.client
+          .from('listing_claims')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        if (fallbackError) return [];
+        return (fallbackData as unknown as DirectoryClaimRecord[]) || [];
+      }
+      return (data as unknown as DirectoryClaimRecord[]) || [];
     } catch {
       return [];
     }

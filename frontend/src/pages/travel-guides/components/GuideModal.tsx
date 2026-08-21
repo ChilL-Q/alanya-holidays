@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { guideContents, type ChecklistItem, type GuideContent } from "@/mocks/travelGuideContents";
 import { blogService, type BlogPostItem } from "@/api-services/blog.service";
+import { ArticleContentRenderer } from "@/components/article";
 
 interface GuideModalProps {
   guide: BlogPostItem;
@@ -148,12 +149,10 @@ export default function GuideModal({ guide, onClose }: GuideModalProps) {
                 <div className="space-y-8">
                   {content.sections.map((section) => (
                     <article key={section.heading}>
-                      <h3 className="font-heading text-lg text-foreground-900 mb-3">
+                      <h3 className="font-heading text-lg font-bold text-foreground-900 mb-3">
                         {section.heading}
                       </h3>
-                      <p className="text-foreground-600 text-sm md:text-base leading-relaxed">
-                        {section.body}
-                      </p>
+                      <ArticleContentRenderer content={section.body} />
                     </article>
                   ))}
 

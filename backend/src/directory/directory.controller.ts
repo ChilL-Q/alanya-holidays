@@ -13,6 +13,7 @@ import {
 import { DirectoryService } from './directory.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { SubmitClaimDto } from './dto/submit-claim.dto';
+import { SaveListingDraftDto } from './dto/save-listing-draft.dto';
 import {
   AuthenticatedRequest,
   DirectoryListingRecord,
@@ -90,6 +91,22 @@ export class DirectoryController {
   }
 
   // Admin / Moderation
+  @Get('admin/listings')
+  @UseGuards(AuthGuard)
+  async getDirectoryListingsAdmin(
+    @Query('status') status: string | undefined,
+    @Query('category') category: string | undefined,
+    @Query('q') q: string | undefined,
+    @Query('query') query: string | undefined,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const searchQuery = query || q;
+    return this.directoryService.getDirectoryListingsAdmin(
+      { status, category, query: searchQuery },
+      req.user.id,
+    );
+  }
+
   @Get('admin/status/:status')
   @UseGuards(AuthGuard)
   async getDirectoryListingsByStatus(
@@ -269,11 +286,53 @@ export class DirectoryController {
     );
   }
 
-  // User Listings
+  // User Listings & Claims
   @Get('me/listings')
   @UseGuards(AuthGuard)
-  async getMyDirectoryListings(@Req() req: AuthenticatedRequest) {
-    return this.directoryService.getMyDirectoryListings(req.user.id);
+  async getMyDirectoryListings(
+    @Req() req: AuthenticatedRequest,
+    @Query('status') status?: string,
+  ) {
+    return this.directoryService.getMyDirectoryListings(req.user.id, status);
+  }
+
+  @Get('me/claims')
+  @UseGuards(AuthGuard)
+  async getMyListingClaims(@Req() req: AuthenticatedRequest) {
+    return this.directoryService.getMyListingClaims(req.user.id);
+  }
+
+  @Post('draft')
+  @UseGuards(AuthGuard)
+  async saveDraft(
+    @Body() body: SaveListingDraftDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const locationIds = body.locationIds || [];
+    const draftId = body.draftId;
+    return this.directoryService.saveDraft(
+      body,
+      locationIds,
+      req.user.id,
+      draftId,
+    );
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AuthGuard)
+  async publishDraft(
+    @Param('id') id: string,
+    @Body()
+    body: Partial<DirectoryListingRecord> & { locationIds?: string[] },
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const locationIds = body.locationIds || [];
+    return this.directoryService.publishDraft(
+      id,
+      body,
+      locationIds,
+      req.user.id,
+    );
   }
 
   @Get('slug/:slug')

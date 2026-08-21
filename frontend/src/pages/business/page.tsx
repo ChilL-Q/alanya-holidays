@@ -7,6 +7,8 @@ import { getReviewsForBusiness, type BusinessReview } from "@/mocks/business-rev
 import { directoryService } from "@/api-services/directory.service";
 import { useFavorites } from "@/hooks/useFavorites";
 import type { Business } from "@/mocks/businesses";
+import TrustBadge from "@/components/common/TrustBadge";
+import ClaimListingModal from "@/components/feature/ClaimListingModal";
 
 const priceRangeLabel: Record<string, string> = {
   "$": "Budget",
@@ -131,6 +133,7 @@ export default function BusinessDetailPage() {
   const [reviewFormSubmitting, setReviewFormSubmitting] = useState(false);
   const [reviewFormSuccess, setReviewFormSuccess] = useState(false);
   const [reviewFormError, setReviewFormError] = useState("");
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = businessId ? isFavorite(businessId) : false;
 
@@ -236,12 +239,12 @@ export default function BusinessDetailPage() {
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {business.featured && (
-                      <span className="px-2.5 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>
-                        Featured
-                      </span>
-                    )}
+                    <TrustBadge
+                      badge={business.trustBadge}
+                      business={business}
+                      variant="glass"
+                      size="sm"
+                    />
                     <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">
                       <i className={`${categoryIcon} mr-1`}></i>
                       {business.subcategory}
@@ -288,6 +291,15 @@ export default function BusinessDetailPage() {
                     <i className="ri-external-link-line"></i>
                     Visit Website
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => setClaimModalOpen(true)}
+                    className="flex items-center gap-2 px-5 py-3 rounded-full bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer shadow-sm"
+                    title="Claim this listing as the verified owner"
+                  >
+                    <i className="ri-shield-user-fill"></i>
+                    Claim Listing
+                  </button>
                 </div>
               </div>
             </div>
@@ -701,9 +713,9 @@ export default function BusinessDetailPage() {
               </div>
 
               {/* Right Sidebar */}
-              <div className="w-full lg:w-[360px] shrink-0 space-y-6">
+              <div className="w-full lg:w-[360px] shrink-0 space-y-6 self-start lg:sticky lg:top-24">
                 {/* Contact Card */}
-                <div className="bg-white rounded-2xl border border-background-200/70 p-5 sticky top-24">
+                <div className="bg-white rounded-2xl border border-background-200/70 p-5">
                   <h3 className="font-heading text-base text-foreground-900 mb-4">Contact & Location</h3>
                   <div className="space-y-3 mb-5">
                     <a
@@ -848,6 +860,11 @@ export default function BusinessDetailPage() {
           </div>
         </section>
       </main>
+      <ClaimListingModal
+        business={business}
+        isOpen={claimModalOpen}
+        onClose={() => setClaimModalOpen(false)}
+      />
       <Footer />
     </>
   );

@@ -78,7 +78,7 @@ describe('Money Value Object', () => {
 
     it('should return false when comparing to null or undefined', () => {
       const a = new Money(150, 'EUR');
-      expect(a.equals(null as unknown as Money)).toBe(false);
+      expect(a.equals(null)).toBe(false);
       expect(a.equals(undefined as unknown as Money)).toBe(false);
     });
   });

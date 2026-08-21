@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AuthGuard } from '../auth/auth.guard';
+import { SupabaseService } from '../supabase/supabase.service';
+import { AuthenticatedRequest } from '../directory/types/directory.types';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -20,9 +23,18 @@ describe('AdminController', () => {
     ]),
     updateEnquiryStatus: jest.fn().mockResolvedValue({ success: true }),
     assignEnquiry: jest.fn().mockResolvedValue({ success: true }),
+    getPlatformAnalytics: jest.fn().mockResolvedValue({
+      kpiSummary: { totalViews: 100 },
+    }),
   };
 
+  const mockReq = {
+    user: { id: 'admin-uuid-123', role: 'admin' },
+  } as unknown as AuthenticatedRequest;
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
       providers: [
@@ -30,8 +42,15 @@ describe('AdminController', () => {
           provide: AdminService,
           useValue: mockAdminService,
         },
+        {
+          provide: SupabaseService,
+          useValue: {},
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<AdminController>(AdminController);
   });
@@ -41,36 +60,55 @@ describe('AdminController', () => {
   });
 
   describe('getEnquiries', () => {
-    it('should return a list of enquiries', async () => {
-      const result = await controller.getEnquiries();
+    it('should return a list of enquiries with authenticated user id', async () => {
+      const result = await controller.getEnquiries(mockReq);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('John Doe');
-      expect(mockAdminService.getEnquiries).toHaveBeenCalled();
+      expect(mockAdminService.getEnquiries).toHaveBeenCalledWith(
+        'admin-uuid-123',
+      );
     });
   });
 
   describe('updateStatus', () => {
-    it('should update enquiry status', async () => {
-      const result = await controller.updateStatus('1', {
-        status: 'responded',
-      });
+    it('should update enquiry status with authenticated user id', async () => {
+      const result = await controller.updateStatus(
+        '1',
+        { status: 'responded' },
+        mockReq,
+      );
       expect(result).toEqual({ success: true });
       expect(mockAdminService.updateEnquiryStatus).toHaveBeenCalledWith(
         1,
         'responded',
+        'admin-uuid-123',
       );
     });
   });
 
   describe('assignEnquiry', () => {
-    it('should assign enquiry to user', async () => {
-      const result = await controller.assignEnquiry('1', {
-        assigned_to: 'user-uuid-123',
-      });
+    it('should assign enquiry to user with authenticated user id', async () => {
+      const result = await controller.assignEnquiry(
+        '1',
+        { assigned_to: 'user-uuid-123' },
+        mockReq,
+      );
       expect(result).toEqual({ success: true });
       expect(mockAdminService.assignEnquiry).toHaveBeenCalledWith(
         1,
         'user-uuid-123',
+        'admin-uuid-123',
+      );
+    });
+  });
+
+  describe('getAnalytics', () => {
+    it('should call getPlatformAnalytics with parsed days and user id', async () => {
+      const result = await controller.getAnalytics('60', mockReq);
+      expect(result).toEqual({ kpiSummary: { totalViews: 100 } });
+      expect(mockAdminService.getPlatformAnalytics).toHaveBeenCalledWith(
+        60,
+        'admin-uuid-123',
       );
     });
   });

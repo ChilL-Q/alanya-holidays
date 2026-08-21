@@ -365,20 +365,19 @@ describe("services.service", () => {
       expect(result.orderId).toBe(1042);
     });
 
-    it("should generate fallback order ID on API error", async () => {
+    it("should propagate error on API error without fake fallback", async () => {
       vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Order API failed"));
 
-      const result = await createOrder({
-        recipientName: "Jane Doe",
-        recipientEmail: "jane@example.com",
-        senderName: "John Doe",
-        senderEmail: "john@example.com",
-        subtotal: 100,
-        items: [],
-      });
-
-      expect(result.success).toBe(true);
-      expect(typeof result.orderId === "number" || typeof result.orderId === "string").toBe(true);
+      await expect(
+        createOrder({
+          recipientName: "Jane Doe",
+          recipientEmail: "jane@example.com",
+          senderName: "John Doe",
+          senderEmail: "john@example.com",
+          subtotal: 100,
+          items: [],
+        }),
+      ).rejects.toThrow("Order API failed");
     });
   });
 

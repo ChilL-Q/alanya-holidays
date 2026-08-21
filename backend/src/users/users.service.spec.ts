@@ -71,6 +71,27 @@ describe('UsersService', () => {
         full_name: 'New Name',
       });
     });
+
+    it('should preserve bio and company_name when updating profile', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('user');
+
+      const res = await service.updateUserProfile(
+        'usr-1',
+        {
+          full_name: 'New Name',
+          bio: 'Expert local guide in Alanya',
+          company_name: 'Alanya Adventures Ltd',
+        },
+        'usr-1',
+      );
+
+      expect(res).toEqual({ success: true });
+      expect(mockRepository.updateUserProfile).toHaveBeenCalledWith('usr-1', {
+        full_name: 'New Name',
+        bio: 'Expert local guide in Alanya',
+        company_name: 'Alanya Adventures Ltd',
+      });
+    });
   });
 
   describe('getUserProfile', () => {

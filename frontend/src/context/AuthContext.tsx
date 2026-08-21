@@ -40,6 +40,9 @@ export interface AuthContextType {
   updateProfile: (
     updates: Partial<UserProfile>
   ) => Promise<{ profile: UserProfile | null; error: Error | null }>;
+  updatePassword: (
+    newPassword: string
+  ) => Promise<{ error: Error | null }>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -293,6 +296,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [user]
   );
 
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        return { error: new Error(error.message) };
+      }
+
+      return { error: null };
+    } catch (err: unknown) {
+      const errObj =
+        err instanceof Error ? err : new Error("Failed to update password");
+      return { error: errObj };
+    }
+  }, []);
+
   const isAuthenticated = Boolean(user);
   const isAdmin = profile?.role === "admin";
   const isHost = profile?.role === "host" || profile?.role === "admin";
@@ -313,6 +334,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithOAuth,
       refreshProfile,
       updateProfile,
+      updatePassword,
     }),
     [
       user,
@@ -329,6 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signInWithOAuth,
       refreshProfile,
       updateProfile,
+      updatePassword,
     ]
   );
 

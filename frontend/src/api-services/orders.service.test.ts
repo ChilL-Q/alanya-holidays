@@ -47,7 +47,28 @@ describe("orders.service (Clean Architecture)", () => {
 
       const result = await ordersService.createOrder(payload);
 
-      expect(postSpy).toHaveBeenCalledWith("/products/orders", payload);
+      expect(postSpy).toHaveBeenCalledWith(
+        "/products/orders",
+        expect.objectContaining({
+          currency: "EUR",
+          subtotal: 250,
+          customerNotes: "From: Ahmet Yilmaz (ahmet@example.com) - Message: Enjoy your luxury experience!",
+          recipient: expect.objectContaining({
+            name: "Fatma Demir",
+            email: "fatma@example.com",
+            contact_method: "email",
+          }),
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              productName: "Traditional Hammam Spa Voucher",
+              quantity: 2,
+              unitPrice: 125,
+              finalPrice: 125,
+              subtotal: 250,
+            }),
+          ]),
+        }),
+      );
       expect(result).toEqual({
         success: true,
         orderId: 78901,
@@ -77,15 +98,10 @@ describe("orders.service (Clean Architecture)", () => {
       expect(result.orderId).toBe(45678);
     });
 
-    it("should generate a fallback orderId when API request fails", async () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    it("should propagate error when API request fails without fake fallback", async () => {
       vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network offline"));
 
-      const result = await ordersService.createOrder(payload);
-
-      expect(result.success).toBe(true);
-      expect(typeof result.orderId === "number" || typeof result.orderId === "string").toBe(true);
-      expect(warnSpy).toHaveBeenCalled();
+      await expect(ordersService.createOrder(payload)).rejects.toThrow("Network offline");
     });
   });
 

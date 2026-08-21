@@ -18,6 +18,9 @@ describe('DirectoryController', () => {
       getPremiumListings: jest.fn().mockResolvedValue([]),
       getSignatureListings: jest.fn().mockResolvedValue([]),
       getRecentlyClaimedListings: jest.fn().mockResolvedValue([]),
+      getDirectoryListingsAdmin: jest
+        .fn()
+        .mockResolvedValue({ data: [], total: 0 }),
       getDirectoryListingsByStatus: jest.fn().mockResolvedValue([]),
       getPendingDirectoryListings: jest.fn().mockResolvedValue([]),
       approveDirectoryListing: jest.fn().mockResolvedValue({ success: true }),
@@ -48,6 +51,13 @@ describe('DirectoryController', () => {
       createDirectoryListing: jest.fn().mockResolvedValue({ id: 'd1' }),
       updateDirectoryListing: jest.fn().mockResolvedValue({ success: true }),
       deleteDirectoryListing: jest.fn().mockResolvedValue({ success: true }),
+      saveDraft: jest
+        .fn()
+        .mockResolvedValue({ id: 'draft-1', status: 'draft' }),
+      publishDraft: jest
+        .fn()
+        .mockResolvedValue({ id: 'draft-1', status: 'pending' }),
+      getMyListingClaims: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -104,6 +114,69 @@ describe('DirectoryController', () => {
       'dir-9',
       1,
       'usr-88',
+    );
+  });
+
+  it('should handle saveDraft via POST /directory/draft', async () => {
+    const req = { user: { id: 'usr-123' } } as AuthenticatedRequest;
+    const draftPayload = {
+      name: 'Partial Cafe',
+      category: 'restaurants',
+      locationIds: ['loc-1'],
+      draftId: 'draft-99',
+    };
+
+    const res = await controller.saveDraft(draftPayload, req);
+    expect(res).toEqual({ id: 'draft-1', status: 'draft' });
+    expect(mockService.saveDraft).toHaveBeenCalledWith(
+      draftPayload,
+      ['loc-1'],
+      'usr-123',
+      'draft-99',
+    );
+  });
+
+  it('should handle publishDraft via POST /directory/:id/publish', async () => {
+    const req = { user: { id: 'usr-123' } } as AuthenticatedRequest;
+    const publishPayload = {
+      name: 'Complete Cafe',
+      category: 'restaurants',
+      description: 'Fully detailed description.',
+      location: 'Alanya Port',
+      email: 'info@complete.test',
+      locationIds: ['loc-1'],
+    };
+
+    const res = await controller.publishDraft('draft-99', publishPayload, req);
+    expect(res).toEqual({ id: 'draft-1', status: 'pending' });
+    expect(mockService.publishDraft).toHaveBeenCalledWith(
+      'draft-99',
+      publishPayload,
+      ['loc-1'],
+      'usr-123',
+    );
+  });
+
+  it('should pass status query parameter to getMyDirectoryListings', async () => {
+    const req = { user: { id: 'usr-123' } } as AuthenticatedRequest;
+    await controller.getMyDirectoryListings(req, 'draft');
+    expect(mockService.getMyDirectoryListings).toHaveBeenCalledWith(
+      'usr-123',
+      'draft',
+    );
+  });
+
+  it('should pass req.user.id to getMyListingClaims', async () => {
+    const req = { user: { id: 'usr-claimant-1' } } as AuthenticatedRequest;
+    const claims = [
+      { id: 'claim-1', business_name: 'Test Biz', status: 'pending' },
+    ];
+    mockService.getMyListingClaims.mockResolvedValueOnce(claims);
+
+    const result = await controller.getMyListingClaims(req);
+    expect(result).toEqual(claims);
+    expect(mockService.getMyListingClaims).toHaveBeenCalledWith(
+      'usr-claimant-1',
     );
   });
 });

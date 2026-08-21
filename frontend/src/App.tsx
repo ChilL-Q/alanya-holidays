@@ -9,6 +9,7 @@ import { FavoritesProvider } from "./hooks/useFavorites";
 import { CompareProvider } from "./hooks/useCompare";
 import { CartProvider } from "./hooks/useCart";
 import WhatsAppFloatingButton from "./components/feature/WhatsAppFloatingButton";
+import CreatorUgcFloatingWidget from "./components/feature/CreatorUgcFloatingWidget";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
                   <AppRoutes />
                   <BackToTop />
                   <WhatsAppFloatingButton />
+                  <CreatorUgcFloatingWidget />
                 </BrowserRouter>
               </CartProvider>
             </CompareProvider>

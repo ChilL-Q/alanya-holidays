@@ -1,14 +1,15 @@
-import { useState, useRef, useCallback, type FormEvent, useEffect } from "react";
+import { useState, useRef, useCallback, useMemo, type FormEvent, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { useCart } from "@/hooks/useCart";
+import { Money } from "@/domain/money.vo";
 import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
 import { ordersService } from "@/api-services/orders.service";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, clearCart, totalItems } = useCart();
+  const { items, clearCart, totalItems, subtotalMoney } = useCart();
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -25,6 +26,19 @@ export default function CheckoutPage() {
   const [companyAlt, setCompanyAlt] = useState("");
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Compute subtotal via Money VO
+  const computedSubtotalMoney = useMemo(() => {
+    if (subtotalMoney && !subtotalMoney.isZero()) return subtotalMoney;
+    if (items.length === 0) return Money.zero("EUR");
+    const currency = items[0].moneyPrice?.currency || "EUR";
+    return items.reduce((sum, item) => {
+      const itemMoney = item.moneyPrice || Money.parse(item.price, currency);
+      return sum.add(itemMoney.multiply(item.quantity));
+    }, Money.zero(currency));
+  }, [items, subtotalMoney]);
+
+  const subtotal = computedSubtotalMoney.toDatabaseDecimal();
 
   // Redirect if cart is empty (unless success state is showing)
   useEffect(() => {
@@ -51,12 +65,6 @@ export default function CheckoutPage() {
     },
     [dismissToast],
   );
-
-  // Calculate totals
-  const subtotal = items.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace(/[^0-9.]/g, ""));
-    return sum + (isNaN(price) ? 0 : price * item.quantity);
-  }, 0);
 
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -120,16 +128,27 @@ export default function CheckoutPage() {
         const orderResult = await ordersService.createOrder({
           recipientName: recName,
           recipientEmail: recEmail,
+          recipientPhone: "+905550000000",
+          contactMethod: "email",
           senderName: sndName,
           senderEmail: sndEmail,
           giftMessage: gftMessage || undefined,
           subtotal,
-          currency: "EUR",
-          items: items.map((item) => ({
-            productName: item.productName,
-            quantity: item.quantity,
-            price: item.price,
-          })),
+          currency: computedSubtotalMoney.currency,
+          items: items.map((item, idx) => {
+            const itemMoney = item.moneyPrice || Money.parse(item.price, computedSubtotalMoney.currency);
+            return {
+              productId: item.productId || item.id || `gift-item-${idx + 1}`,
+              productName: item.productName,
+              skuId: item.skuId,
+              skuLabel: item.skuLabel,
+              quantity: item.quantity,
+              price: item.price,
+              unitPrice: itemMoney.toDatabaseDecimal(),
+              finalPrice: itemMoney.toDatabaseDecimal(),
+              subtotal: itemMoney.multiply(item.quantity).toDatabaseDecimal(),
+            };
+          }),
         });
 
         if (orderResult.success) {
@@ -156,6 +175,7 @@ export default function CheckoutPage() {
     [
       items,
       subtotal,
+      computedSubtotalMoney,
       clearCart,
       showToast,
       recipientName,
@@ -257,9 +277,8 @@ export default function CheckoutPage() {
 
                   <div className="space-y-3 mb-5 max-h-[360px] overflow-y-auto">
                     {items.map((item) => {
-                      const price = parseFloat(item.price.replace(/[^0-9.]/g, ""));
-                      const unitPrice = isNaN(price) ? 0 : price;
-                      const lineTotal = unitPrice * item.quantity;
+                      const itemMoney = item.moneyPrice || Money.parse(item.price, computedSubtotalMoney.currency);
+                      const lineTotal = itemMoney.multiply(item.quantity);
                       return (
                         <div
                           key={item.productName}
@@ -277,7 +296,7 @@ export default function CheckoutPage() {
                                 {item.quantity}x {item.price}
                               </span>
                               <span className="text-sm font-semibold text-foreground-900 whitespace-nowrap">
-                                €{lineTotal.toFixed(2)}
+                                {lineTotal.format()}
                               </span>
                             </div>
                           </div>
@@ -289,7 +308,7 @@ export default function CheckoutPage() {
                   <div className="border-t border-background-200 pt-4 space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-foreground-500">Subtotal</span>
-                      <span className="text-foreground-900 font-medium">€{subtotal.toFixed(2)}</span>
+                      <span className="text-foreground-900 font-medium">{computedSubtotalMoney.format()}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-foreground-400">Shipping</span>
@@ -297,7 +316,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="border-t border-background-200 pt-2 flex items-center justify-between">
                       <span className="text-base font-semibold text-foreground-900">Total</span>
-                      <span className="text-lg font-bold text-primary-600">€{subtotal.toFixed(2)}</span>
+                      <span className="text-lg font-bold text-primary-600">{computedSubtotalMoney.format()}</span>
                     </div>
                   </div>
 
@@ -466,7 +485,7 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <i className="ri-gift-line"></i>
-                          Send Gift — €{subtotal.toFixed(2)}
+                          Send Gift — {computedSubtotalMoney.format()}
                         </>
                       )}
                     </button>

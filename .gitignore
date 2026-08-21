@@ -99,4 +99,12 @@ shared/types/*.d.ts
 .agents/
 graphify-out/
 
-
+# Database backup archives & manifests
+/backups/
+/tmp/pg_backups/
+*.sql.gz
+*.dump
+*.dump.enc
+*.sql.gz.sha256
+*.sql.gz.meta.json
+*.sql.gz.enc

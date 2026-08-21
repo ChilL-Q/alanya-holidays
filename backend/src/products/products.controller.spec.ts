@@ -22,6 +22,8 @@ describe('ProductsController', () => {
     getFeaturedProducts: jest.Mock;
     getShopProductDetails: jest.Mock;
     createProductOrder: jest.Mock;
+    getMyOrders: jest.Mock;
+    getOrderById: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -49,6 +51,24 @@ describe('ProductsController', () => {
         success: true,
         orderId: 101,
         message: 'Order placed successfully',
+      }),
+      getMyOrders: jest.fn().mockResolvedValue([
+        {
+          id: 101,
+          currency: 'EUR',
+          status: 'pending_payment',
+          subtotal_items: 50,
+          customer_id: 'user-123',
+          items: [],
+        },
+      ]),
+      getOrderById: jest.fn().mockResolvedValue({
+        id: 101,
+        currency: 'EUR',
+        status: 'pending_payment',
+        subtotal_items: 50,
+        customer_id: 'user-123',
+        items: [],
       }),
     };
 
@@ -162,6 +182,36 @@ describe('ProductsController', () => {
       const res = await controller.getFeaturedProducts('4');
       expect(mockService.getFeaturedProducts).toHaveBeenCalledWith(4);
       expect(res).toEqual([]);
+    });
+
+    it('GET /products/orders/my-orders should return current user orders', async () => {
+      const req = { user: { id: 'user-123' } };
+      const res = await controller.getMyOrders(req);
+      expect(mockService.getMyOrders).toHaveBeenCalledWith('user-123');
+      expect(res).toEqual([
+        {
+          id: 101,
+          currency: 'EUR',
+          status: 'pending_payment',
+          subtotal_items: 50,
+          customer_id: 'user-123',
+          items: [],
+        },
+      ]);
+    });
+
+    it('GET /products/orders/:id should return single order for user', async () => {
+      const req = { user: { id: 'user-123' } };
+      const res = await controller.getOrderById('101', req);
+      expect(mockService.getOrderById).toHaveBeenCalledWith('101', 'user-123');
+      expect(res).toEqual({
+        id: 101,
+        currency: 'EUR',
+        status: 'pending_payment',
+        subtotal_items: 50,
+        customer_id: 'user-123',
+        items: [],
+      });
     });
   });
 });

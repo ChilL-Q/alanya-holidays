@@ -206,8 +206,248 @@ export class DirectoryService {
   // Admin / CRUD
   async getMyDirectoryListings(
     userId: string,
+    status?: string,
   ): Promise<DirectoryListingRecord[]> {
-    return this.directoryRepository.getMyDirectoryListings(userId);
+    return this.directoryRepository.getMyDirectoryListings(userId, status);
+  }
+
+  async saveDraft(
+    listing: Partial<DirectoryListingRecord>,
+    locationIds: string[] = [],
+    userId: string,
+    draftId?: string,
+  ): Promise<DirectoryListingRecord> {
+    if (locationIds?.length) validateUUIDs(locationIds);
+
+    const tier = (listing.tier as string) || 'explorer';
+    const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
+    const limit = TIER_LIMITS[tier] ?? 5;
+    if (gallery.length > limit) {
+      throw new Error(
+        `Photo limit exceeded for ${tier} tier: max ${limit} photos`,
+      );
+    }
+
+    const rawName = typeof listing.name === 'string' ? listing.name : '';
+    const rawShortDesc =
+      typeof listing.short_description === 'string'
+        ? listing.short_description
+        : typeof listing.description === 'string'
+          ? listing.description
+          : '';
+    const rawDesc =
+      typeof listing.description === 'string' ? listing.description : null;
+    const rawCategory =
+      typeof listing.category_id === 'string'
+        ? listing.category_id
+        : typeof listing.category === 'string'
+          ? listing.category
+          : null;
+    const rawWebsite =
+      typeof listing.website === 'string'
+        ? listing.website.slice(0, 500)
+        : null;
+    const rawWhatsapp =
+      typeof listing.whatsapp === 'string'
+        ? listing.whatsapp.slice(0, 50)
+        : null;
+    const rawLocation =
+      typeof listing.location === 'string'
+        ? listing.location
+        : typeof listing.address === 'string'
+          ? listing.address
+          : '';
+    const rawGmap =
+      typeof listing.google_map_url === 'string'
+        ? listing.google_map_url.slice(0, 500)
+        : null;
+    const rawVideo =
+      typeof listing.video_url === 'string'
+        ? listing.video_url.slice(0, 500)
+        : null;
+    const rawBooking =
+      typeof listing.booking_url === 'string'
+        ? listing.booking_url.slice(0, 500)
+        : null;
+
+    const safeData: Record<string, unknown> = {
+      name: (rawName.trim() || 'Untitled Draft').slice(0, 200),
+      short_description: rawShortDesc.slice(0, 500),
+      description: rawDesc,
+      category_id: rawCategory,
+      website: rawWebsite,
+      whatsapp: rawWhatsapp,
+      gallery,
+      location: rawLocation.slice(0, 200),
+      google_map_url: rawGmap,
+      video_url: rawVideo,
+      booking_url: rawBooking,
+      is_featured: false,
+      is_verified: false,
+      is_premium: false,
+      tier,
+      base_score: 0,
+      status: 'draft',
+      owner_user_id: userId,
+      ...(listing.price_level !== undefined
+        ? { price_level: listing.price_level }
+        : {}),
+    };
+
+    let data: DirectoryListingRecord;
+
+    if (draftId && UUID_RE.test(draftId)) {
+      const existing =
+        await this.directoryRepository.getDirectoryListingOwner(draftId);
+      if (!existing || existing.owner_user_id !== userId) {
+        throw new UnauthorizedException('Not authorized to update this draft');
+      }
+      data = await this.directoryRepository.updateDirectoryListing(
+        draftId,
+        safeData,
+      );
+    } else {
+      data = await this.directoryRepository.insertDirectoryListing(safeData);
+    }
+
+    const effectiveId = draftId || data.id;
+
+    if (locationIds !== undefined && effectiveId) {
+      if (locationIds.length) {
+        const rows = locationIds.map((lid, i) => ({
+          listing_id: effectiveId,
+          location_id: lid,
+          display_order: i,
+        }));
+        await this.directoryRepository.upsertListingLocations(rows);
+        await this.directoryRepository.deleteListingLocations(
+          effectiveId,
+          locationIds,
+        );
+      } else if (draftId) {
+        await this.directoryRepository.deleteListingLocations(effectiveId);
+      }
+    }
+
+    await this.redisService.delByPattern('directory:*');
+    return data;
+  }
+
+  async publishDraft(
+    id: string,
+    updates: Partial<DirectoryListingRecord>,
+    locationIds: string[] = [],
+    userId: string,
+  ): Promise<DirectoryListingRecord> {
+    if (!UUID_RE.test(id)) {
+      throw new Error(`Invalid UUID: ${id}`);
+    }
+
+    const existing =
+      await this.directoryRepository.getDirectoryListingOwner(id);
+    if (!existing || existing.owner_user_id !== userId) {
+      throw new UnauthorizedException('Not authorized');
+    }
+
+    const rawName = typeof updates.name === 'string' ? updates.name : '';
+    const name = rawName.trim();
+    const rawCategory =
+      typeof updates.category_id === 'string'
+        ? updates.category_id
+        : typeof updates.category === 'string'
+          ? updates.category
+          : '';
+    const category_id = rawCategory.trim();
+    const rawDesc =
+      typeof updates.description === 'string'
+        ? updates.description
+        : typeof updates.short_description === 'string'
+          ? updates.short_description
+          : '';
+    const description = rawDesc.trim();
+    const rawAddress =
+      typeof updates.location === 'string'
+        ? updates.location
+        : typeof updates.address === 'string'
+          ? updates.address
+          : '';
+    const address = rawAddress.trim();
+    const rawEmail = typeof updates.email === 'string' ? updates.email : '';
+    const email = rawEmail.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!name || name.length < 2) {
+      throw new Error('Business name is required to publish');
+    }
+    if (!category_id) {
+      throw new Error('Category is required to publish');
+    }
+    if (!description) {
+      throw new Error('Description is required to publish');
+    }
+    if (!address) {
+      throw new Error('Address is required to publish');
+    }
+    if (!email || !emailRegex.test(email)) {
+      throw new Error('Valid email is required to publish');
+    }
+
+    const tier = (updates.tier as string) || 'explorer';
+    const gallery = Array.isArray(updates.gallery) ? updates.gallery : [];
+    const limit = TIER_LIMITS[tier] ?? 5;
+    if (gallery.length > limit) {
+      throw new Error(
+        `Photo limit exceeded for ${tier} tier: max ${limit} photos`,
+      );
+    }
+
+    if (locationIds?.length) validateUUIDs(locationIds);
+
+    const safeUpdates: Record<string, unknown> = {
+      ...updates,
+      name,
+      category_id,
+      description,
+      short_description: description.slice(0, 500),
+      location: address,
+      email,
+      tier,
+      gallery,
+      status: 'pending',
+      rejection_reason: null,
+    };
+
+    delete safeUpdates.id;
+    delete safeUpdates.created_at;
+    delete safeUpdates.updated_at;
+    delete safeUpdates.is_verified;
+    delete safeUpdates.is_featured;
+    delete safeUpdates.base_score;
+    delete safeUpdates.subscription_id;
+    delete safeUpdates.listing_locations;
+    delete safeUpdates.owner_user_id;
+
+    const data = await this.directoryRepository.updateDirectoryListing(
+      id,
+      safeUpdates,
+    );
+
+    if (locationIds !== undefined) {
+      if (locationIds.length) {
+        const rows = locationIds.map((lid, i) => ({
+          listing_id: id,
+          location_id: lid,
+          display_order: i,
+        }));
+        await this.directoryRepository.upsertListingLocations(rows);
+        await this.directoryRepository.deleteListingLocations(id, locationIds);
+      } else {
+        await this.directoryRepository.deleteListingLocations(id);
+      }
+    }
+
+    await this.redisService.delByPattern('directory:*');
+    return data;
   }
 
   async createDirectoryListing(
@@ -355,6 +595,16 @@ export class DirectoryService {
   }
 
   // Admin / Moderation
+  async getDirectoryListingsAdmin(
+    filters: { status?: string; category?: string; query?: string },
+    userId: string,
+  ): Promise<DirectoryListingRecord[]> {
+    const role = await this.directoryRepository.getUserRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    return this.directoryRepository.getDirectoryListingsAdmin(filters);
+  }
+
   async getDirectoryListingsByStatus(
     status: 'approved' | 'rejected',
     category?: string,
@@ -547,6 +797,11 @@ export class DirectoryService {
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     return this.directoryRepository.getListingClaims();
+  }
+
+  async getMyListingClaims(userId: string): Promise<DirectoryClaimRecord[]> {
+    if (!UUID_RE.test(userId)) return [];
+    return this.directoryRepository.getMyListingClaims(userId);
   }
 
   async approveListingClaim(

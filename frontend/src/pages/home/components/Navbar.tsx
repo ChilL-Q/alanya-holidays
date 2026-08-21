@@ -35,6 +35,11 @@ const communityItems = [
   { label: "Messages", href: "/messages", icon: "ri-message-3-line" },
 ];
 
+const shopItems = [
+  { label: "Shop Marketplace", href: "/shop", icon: "ri-store-2-line" },
+  { label: "Gift Cards", href: "/gift-cards", icon: "ri-gift-line" },
+];
+
 const DARK_HERO_ROUTES = [
   "/",
   "/events",
@@ -55,6 +60,7 @@ const DARK_HERO_ROUTES = [
   "/about",
   "/contact",
   "/shop",
+  "/gift-cards",
   "/categories",
   "/explore",
   "/checkout",
@@ -113,6 +119,10 @@ export default function Navbar() {
     location.pathname.startsWith("/category/") ||
     location.pathname.startsWith("/thread/") ||
     location.pathname.startsWith("/member/");
+  const isShopActive =
+    shopItems.some((item) => isActive(item.href)) ||
+    location.pathname.startsWith("/shop") ||
+    location.pathname.startsWith("/gift-cards");
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -372,7 +382,7 @@ export default function Navbar() {
     { label: "Discover", children: discoverItems },
     { label: "Community", children: communityItems },
     { label: "Luxury Experience", href: "/luxury-experience" },
-    { label: "Shop", href: "/shop" },
+    { label: "Shop", children: shopItems },
   ];
 
   return (
@@ -403,7 +413,12 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-8" ref={desktopDropdownRef}>
             {mainLinks.map((link) => {
               if (link.children) {
-                const parentActive = link.label === "Discover" ? isDiscoverActive : isCommunityActive;
+                const parentActive =
+                  link.label === "Discover"
+                    ? isDiscoverActive
+                    : link.label === "Community"
+                    ? isCommunityActive
+                    : isShopActive;
                 return (
                   <div key={link.label}>
                     {renderDesktopDropdown(link.label, link.children, parentActive)}
@@ -642,19 +657,35 @@ export default function Navbar() {
                     </div>
                     <div className="py-1">
                       <Link
-                        to={`/member/${user.id}`}
+                        to="/settings"
                         onClick={() => setUserDropdownOpen(false)}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                       >
-                        <i className="ri-user-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        My Profile
+                        <i className="ri-user-settings-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
+                        My Profile & Settings
+                      </Link>
+                      <Link
+                        to="/settings?tab=activity"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
+                      >
+                        <i className="ri-bookmark-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
+                        Favorites & Activity
+                      </Link>
+                      <Link
+                        to="/business/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
+                      >
+                        <i className="ri-store-3-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
+                        Merchant Dashboard
                       </Link>
                       <Link
                         to="/events"
                         onClick={() => setUserDropdownOpen(false)}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
                       >
-                        <i className="ri-bookmark-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
+                        <i className="ri-calendar-event-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
                         Events & Activities
                       </Link>
                       <Link
@@ -744,7 +775,12 @@ export default function Navbar() {
           <div className="px-4 py-4 space-y-1">
             {mainLinks.map((link) => {
               if (link.children) {
-                const parentActive = link.label === "Discover" ? isDiscoverActive : isCommunityActive;
+                const parentActive =
+                  link.label === "Discover"
+                    ? isDiscoverActive
+                    : link.label === "Community"
+                    ? isCommunityActive
+                    : isShopActive;
                 return (
                   <div key={link.label}>
                     {renderMobileDropdown(link.label, link.children, parentActive)}
@@ -894,12 +930,28 @@ export default function Navbar() {
                     </div>
                   </div>
                   <Link
-                    to={`/member/${user.id}`}
+                    to="/settings"
                     className="block text-center text-sm font-medium py-2.5 rounded-full border border-foreground-200 text-foreground-700"
                     onClick={closeAllMobile}
                   >
-                    <i className="ri-user-line mr-1.5"></i>
-                    My Profile
+                    <i className="ri-user-settings-line mr-1.5"></i>
+                    My Profile & Settings
+                  </Link>
+                  <Link
+                    to="/settings?tab=activity"
+                    className="block text-center text-sm font-medium py-2.5 rounded-full border border-foreground-200 text-foreground-700"
+                    onClick={closeAllMobile}
+                  >
+                    <i className="ri-bookmark-line mr-1.5"></i>
+                    Favorites & Activity
+                  </Link>
+                  <Link
+                    to="/business/dashboard"
+                    className="block text-center text-sm font-medium py-2.5 rounded-full border border-foreground-200 text-foreground-700"
+                    onClick={closeAllMobile}
+                  >
+                    <i className="ri-store-3-line mr-1.5"></i>
+                    Merchant Dashboard
                   </Link>
                   {profile?.role === "admin" && (
                     <Link

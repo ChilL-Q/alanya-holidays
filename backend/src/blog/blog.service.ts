@@ -350,6 +350,7 @@ export class BlogService {
         slug: uniqueSlug,
         content: submission.content,
         excerpt: generateExcerpt(submission.content),
+        category: submission.category || null,
         video_url: submission.video_url,
         cover_image_url: coverImageUrl,
         author_id: submission.user_id,

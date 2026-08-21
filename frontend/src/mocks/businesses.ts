@@ -1,3 +1,5 @@
+import type { TrustBadgeType } from "@/components/common/TrustBadge";
+
 export interface Business {
   id: string;
   name: string;
@@ -13,10 +15,16 @@ export interface Business {
   image: string;
   tags: string[];
   featured: boolean;
+  trustBadge?: TrustBadgeType;
   priceRange: string;
   openingHours: string;
   lat: number;
   lng: number;
+  is_claimed?: boolean;
+  is_verified?: boolean;
+  claimed_at?: string;
+  status?: string;
+  tier?: string;
 }
 
 export const businessCategories = [
@@ -48,6 +56,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Elegant%20rooftop%20restaurant%20terrace%20with%20panoramic%20Mediterranean%20sea%20view%20at%20sunset%20candlelit%20tables%20white%20tablecloths%20Turkish%20lanterns%20warm%20golden%20atmosphere%20Alanya%20castle%20hill%20background%20editorial%20food%20photography%20high%20detail%20luxurious%20ambiance&width=800&height=600&seq=biz-kale-01&orientation=landscape",
     tags: ["Turkish Cuisine", "Seafood", "Fine Dining", "Rooftop", "Sunset Views", "Romantic"],
     featured: true,
+    trustBadge: "Signature Collection",
     priceRange: "$$$",
     openingHours: "12:00 - 23:00, Closed Mondays",
     lat: 36.5361,
@@ -68,6 +77,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Luxury%20beach%20club%20with%20white%20sun%20loungers%20turquoise%20sea%20golden%20sand%20palm%20trees%20Mediterranean%20coastline%20sunny%20day%20clear%20blue%20sky%20Alanya%20Cleopatra%20beach%20resort%20lifestyle%20editorial%20photography%20vibrant%20colors&width=800&height=600&seq=biz-beachclub-02&orientation=landscape",
     tags: ["Beach Club", "Pizza", "Cocktails", "Water Sports", "Live Music", "Family-Friendly"],
     featured: true,
+    trustBadge: "Top Rated Destination Partner",
     priceRange: "$$",
     openingHours: "09:00 - 01:00, Daily",
     lat: 36.5489,
@@ -88,6 +98,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Charming%20garden%20courtyard%20cafe%20with%20colorful%20flowers%20hanging%20vines%20rustic%20wooden%20tables%20traditional%20Turkish%20breakfast%20spread%20with%20fresh%20bread%20olives%20honey%20and%20tea%20warm%20morning%20sunlight%20cozy%20atmosphere%20editorial%20photography%20high%20detail&width=800&height=600&seq=biz-mezze-03&orientation=landscape",
     tags: ["Turkish Breakfast", "Garden Café", "Gözleme", "Vegetarian-Friendly", "Cozy", "Old Town"],
     featured: true,
+    trustBadge: "Local Favorite",
     priceRange: "$$",
     openingHours: "08:00 - 20:00, Daily",
     lat: 36.5375,
@@ -108,6 +119,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Elegant%20boutique%20hotel%20restored%20Ottoman%20mansion%20white%20stone%20exterior%20blue%20shutters%20bougainvillea%20flowers%20rooftop%20infinity%20pool%20overlooking%20Mediterranean%20harbor%20Alanya%20castle%20background%20luxury%20travel%20photography%20warm%20golden%20hour%20light&width=800&height=600&seq=biz-hotel-04&orientation=landscape",
     tags: ["Boutique Hotel", "Rooftop Pool", "Ottoman Architecture", "Harbor Views", "Adults-Only"],
     featured: true,
+    trustBadge: "Recommended by Travellers",
     priceRange: "$$$",
     openingHours: "24/7 Reception",
     lat: 36.5347,
@@ -128,6 +140,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20resort%20with%20multiple%20pools%20palm%20trees%20tropical%20gardens%20private%20sandy%20beach%20turquoise%20sea%20white%20buildings%20terracotta%20roofs%20aerial%20view%20sunny%20day%20editorial%20travel%20photography%20grand%20scale&width=800&height=600&seq=biz-resort-05&orientation=landscape",
     tags: ["All-Inclusive", "5-Star", "Private Beach", "Spa", "Family Resort", "Kids Club"],
     featured: true,
+    trustBadge: "Trusted by Travellers",
     priceRange: "$$$",
     openingHours: "24/7 Reception",
     lat: 36.5844,
@@ -148,6 +161,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Traditional%20wooden%20pirate-themed%20boat%20with%20colorful%20flags%20sailing%20on%20crystal%20clear%20turquoise%20Mediterranean%20water%20Alanya%20castle%20and%20rocky%20coastline%20in%20background%20sunny%20summer%20day%20adventure%20tourism%20editorial%20photography%20vibrant%20joyful%20atmosphere&width=800&height=600&seq=biz-pirate-06&orientation=landscape",
     tags: ["Boat Tour", "Swimming", "Caves", "Family-Friendly", "Lunch Included", "Full-Day Trip"],
     featured: true,
+    trustBadge: "Curated Experience",
     priceRange: "$$",
     openingHours: "Daily departures 10:00 - 16:00",
     lat: 36.5353,
@@ -168,6 +182,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Off-road%20jeep%20driving%20through%20rugged%20Taurus%20mountains%20pine%20forest%20dusty%20trail%20dramatic%20landscape%20turquoise%20river%20waterfall%20natural%20pool%20adventure%20travel%20photography%20sunny%20day%20outdoor%20exploration%20majestic%20scenery&width=800&height=600&seq=biz-safari-07&orientation=landscape",
     tags: ["4x4 Safari", "Jeep Tour", "Waterfalls", "Swimming", "BBQ Lunch", "Cultural"],
     featured: false,
+    trustBadge: "Curated Experience",
     priceRange: "$$",
     openingHours: "Daily tours 08:30 - 17:30",
     lat: 36.5436,
@@ -188,6 +203,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Luxurious%20traditional%20Turkish%20bath%20interior%20white%20marble%20heated%20stone%20platform%20domed%20ceiling%20with%20star-shaped%20windows%20soft%20steam%20atmospheric%20lighting%20elegant%20spa%20setting%20gold%20accents%20authentic%20Ottoman%20architecture%20editorial%20photography%20serene%20mood&width=800&height=600&seq=biz-hamam-08&orientation=landscape",
     tags: ["Turkish Bath", "Hamam", "Massage", "Spa", "Historical", "Couples-Friendly"],
     featured: false,
+    trustBadge: "Verified Experience",
     priceRange: "$$",
     openingHours: "09:00 - 22:00, Daily",
     lat: 36.5447,
@@ -208,6 +224,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Modern%20bright%20dental%20clinic%20interior%20with%20white%20walls%20clean%20design%20reception%20area%20plants%20comfortable%20seating%20professional%20medical%20environment%20large%20windows%20natural%20light%20welcoming%20atmosphere%20editorial%20photography%20high%20detail&width=800&height=600&seq=biz-dental-09&orientation=landscape",
     tags: ["Dental Clinic", "Cosmetic Dentistry", "Implants", "Medical Tourism", "English-Speaking"],
     featured: false,
+    trustBadge: "Top Rated Destination Partner",
     priceRange: "$$$",
     openingHours: "09:00 - 18:00, Mon-Sat",
     lat: 36.5545,
@@ -228,6 +245,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Modern%20real%20estate%20office%20interior%20with%20large%20window%20displaying%20Mediterranean%20sea%20view%20property%20listings%20on%20screens%20professional%20atmosphere%20clean%20design%20comfortable%20seating%20area%20warm%20lighting%20Alanya%20map%20on%20wall%20editorial%20photography&width=800&height=600&seq=biz-realestate-10&orientation=landscape",
     tags: ["Real Estate", "Property Sales", "Citizenship", "English-Speaking", "Investment"],
     featured: true,
+    trustBadge: "Trusted by Travellers",
     priceRange: "$$$",
     openingHours: "09:00 - 19:00, Mon-Fri; 10:00 - 16:00, Sat",
     lat: 36.5560,
@@ -248,6 +266,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Row%20of%20modern%20clean%20rental%20cars%20parked%20in%20front%20of%20Mediterranean%20coastal%20road%20palm%20trees%20sunny%20day%20professional%20car%20rental%20business%20Alanya%20Turkey%20editorial%20automotive%20photography%20bright%20colors&width=800&height=600&seq=biz-rental-11&orientation=landscape",
     tags: ["Car Rental", "Airport Transfer", "Scooter Rental", "Insurance Included", "24/7 Support"],
     featured: false,
+    trustBadge: "Verified Experience",
     priceRange: "$$",
     openingHours: "08:00 - 22:00, Daily",
     lat: 36.5498,
@@ -268,6 +287,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Elegant%20jewelry%20store%20interior%20with%20glass%20display%20cases%20filled%20with%20gold%20necklaces%20rings%20and%20precious%20stones%20warm%20spotlighting%20luxurious%20atmosphere%20polished%20marble%20floor%20Turkish%20jewelry%20craftsmanship%20editorial%20photography%20rich%20golden%20tones&width=800&height=600&seq=biz-gold-12&orientation=landscape",
     tags: ["Jewelry", "Gold", "Custom Design", "Diamonds", "Certified", "Family Business"],
     featured: false,
+    trustBadge: "Recommended by Travellers",
     priceRange: "$$$",
     openingHours: "10:00 - 20:00, Mon-Sat",
     lat: 36.5455,
@@ -288,6 +308,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Beautifully%20lit%20carpet%20shop%20interior%20with%20colorful%20handwoven%20Turkish%20kilims%20and%20silk%20carpets%20hanging%20on%20walls%20and%20stacked%20on%20floor%20traditional%20patterns%20rich%20reds%20blues%20and%20warm%20tones%20authentic%20atmosphere%20editorial%20photography%20cultural%20craftsmanship&width=800&height=600&seq=biz-carpet-13&orientation=landscape",
     tags: ["Carpets", "Kilims", "Handwoven", "Silk", "Worldwide Shipping", "Authentic"],
     featured: false,
+    trustBadge: "Local Favorite",
     priceRange: "$$$",
     openingHours: "09:30 - 19:30, Daily",
     lat: 36.5438,
@@ -308,6 +329,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Professional%20modern%20law%20office%20interior%20with%20wooden%20desk%20leather%20chairs%20law%20books%20on%20shelf%20Mediterranean%20view%20through%20window%20clean%20organized%20atmosphere%20warm%20lighting%20welcoming%20environment%20editorial%20photography&width=800&height=600&seq=biz-legal-14&orientation=landscape",
     tags: ["Legal Services", "Property Law", "Residence Permit", "Citizenship", "English-Speaking"],
     featured: false,
+    trustBadge: "Trusted by Travellers",
     priceRange: "$$$",
     openingHours: "09:00 - 18:00, Mon-Fri",
     lat: 36.5555,
@@ -328,6 +350,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Modern%20translation%20office%20interior%20with%20world%20map%20on%20wall%20language%20books%20on%20shelves%20professional%20atmosphere%20clean%20desk%20with%20documents%20and%20computer%20natural%20light%20warm%20welcoming%20space%20editorial%20photography%20high%20detail&width=800&height=600&seq=biz-translate-15&orientation=landscape",
     tags: ["Translation", "Interpretation", "Notarized", "Legal Documents", "Medical Translation"],
     featured: false,
+    trustBadge: "Verified Experience",
     priceRange: "$$",
     openingHours: "09:00 - 18:00, Mon-Fri; 10:00 - 14:00, Sat",
     lat: 36.5460,
@@ -348,6 +371,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Stylish%20upscale%20nightclub%20interior%20with%20colorful%20LED%20lighting%20modern%20bar%20design%20DJ%20booth%20dance%20floor%20atmospheric%20purple%20and%20pink%20tones%20sleek%20furniture%20sophisticated%20party%20atmosphere%20editorial%20nightlife%20photography&width=800&height=600&seq=biz-club-16&orientation=landscape",
     tags: ["Nightclub", "DJ", "Cocktails", "VIP Service", "Harbor Location", "Late Night"],
     featured: false,
+    trustBadge: "Signature Collection",
     priceRange: "$$$",
     openingHours: "22:00 - 04:00, Wed-Sun",
     lat: 36.5349,
@@ -368,6 +392,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Luxurious%20rooftop%20cocktail%20bar%20at%20night%20with%20panoramic%20city%20and%20castle%20view%20warm%20ambient%20lighting%20comfortable%20lounge%20seating%20bartender%20preparing%20drinks%20elegant%20atmosphere%20Mediterranean%20evening%20sky%20stars%20editorial%20nightlife%20photography%20sophisticated%20vibe&width=800&height=600&seq=biz-rooftop-17&orientation=landscape",
     tags: ["Rooftop Bar", "Craft Cocktails", "Live Music", "Tapas", "Castle Views", "Upscale"],
     featured: false,
+    trustBadge: "Signature Collection",
     priceRange: "$$$",
     openingHours: "17:00 - 02:00, Daily",
     lat: 36.5520,
@@ -388,6 +413,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Peaceful%20apart%20hotel%20complex%20with%20lush%20tropical%20gardens%20two%20swimming%20pools%20with%20sun%20loungers%20modern%20apartment%20buildings%20with%20balconies%20palm%20trees%20Mediterranean%20residential%20area%20sunny%20day%20comfortable%20family%20accommodation%20editorial%20travel%20photography&width=800&height=600&seq=biz-aparthotel-18&orientation=landscape",
     tags: ["Apart Hotel", "Swimming Pool", "Family-Friendly", "Kitchen", "Long Stay", "Garden"],
     featured: false,
+    trustBadge: "Trusted by Travellers",
     priceRange: "$$",
     openingHours: "24/7 Reception",
     lat: 36.5580,
@@ -408,6 +434,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Luxurious%20spa%20interior%20with%20candlelit%20treatment%20room%20white%20orchids%20wooden%20massage%20table%20soft%20white%20towels%20warm%20ambient%20lighting%20serene%20relaxing%20atmosphere%20zen-inspired%20decor%20water%20feature%20editorial%20wellness%20photography&width=800&height=600&seq=biz-spa-19&orientation=landscape",
     tags: ["Spa", "Massage", "Wellness", "Couples Treatments", "Thai Massage", "Aromatherapy"],
     featured: false,
+    trustBadge: "Signature Collection",
     priceRange: "$$$",
     openingHours: "10:00 - 21:00, Daily",
     lat: 36.5565,
@@ -428,6 +455,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Scuba%20divers%20swimming%20in%20crystal%20clear%20turquoise%20Mediterranean%20water%20exploring%20underwater%20cave%20with%20sunlight%20rays%20penetrating%20blue%20water%20marine%20life%20colorful%20fish%20adventure%20diving%20photography%20high%20detail%20dramatic%20lighting&width=800&height=600&seq=biz-diving-20&orientation=landscape",
     tags: ["Scuba Diving", "PADI Courses", "Shipwrecks", "Caves", "Equipment Included", "Small Groups"],
     featured: false,
+    trustBadge: "Curated Experience",
     priceRange: "$$$",
     openingHours: "08:00 - 18:00, Daily (April-November)",
     lat: 36.5345,
@@ -448,6 +476,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Row%20of%20modern%20colorful%20Vespa%20style%20scooters%20parked%20along%20Mediterranean%20coastal%20street%20palm%20trees%20sunny%20day%20blue%20sky%20Alanya%20Turkey%20rental%20business%20lifestyle%20editorial%20photography%20vibrant%20colors%20clean%20aesthetic&width=800&height=600&seq=biz-scooter-21&orientation=landscape",
     tags: ["Scooter Rental", "Helmet Included", "Free Delivery", "Daily Rental", "Weekly Rental"],
     featured: false,
+    trustBadge: "Local Favorite",
     priceRange: "$",
     openingHours: "09:00 - 19:00, Daily",
     lat: 36.5500,
@@ -468,6 +497,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Colorful%20traditional%20Turkish%20spice%20market%20interior%20with%20piles%20of%20vibrant%20spices%20saffron%20sumac%20paprika%20in%20burlap%20sacks%20dried%20herbs%20hanging%20from%20ceiling%20wooden%20shelves%20warm%20ambient%20lighting%20authentic%20bazaar%20atmosphere%20editorial%20food%20photography%20rich%20colors&width=800&height=600&seq=biz-spice-22&orientation=landscape",
     tags: ["Spices", "Turkish Delight", "Olive Oil", "Tea", "Gourmet", "Gifts"],
     featured: false,
+    trustBadge: "Local Favorite",
     priceRange: "$$",
     openingHours: "09:00 - 20:00, Daily",
     lat: 36.5458,
@@ -488,6 +518,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Tandem%20paraglider%20soaring%20high%20above%20Alanya%20coastline%20with%20panoramic%20view%20of%20castle%20peninsula%20Cleopatra%20beach%20turquoise%20Mediterranean%20sea%20dramatic%20mountains%20blue%20sky%20adventure%20sports%20photography%20stunning%20aerial%20perspective&width=800&height=600&seq=biz-paraglide-23&orientation=landscape",
     tags: ["Paragliding", "Tandem Flight", "GoPro Included", "Adventure", "Coastal Views"],
     featured: false,
+    trustBadge: "Curated Experience",
     priceRange: "$$$",
     openingHours: "Daily flights 09:00 - 18:00 (weather permitting)",
     lat: 36.5380,
@@ -508,6 +539,7 @@ export const businesses: Business[] = [
     image: "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20kebab%20restaurant%20interior%20with%20wooden%20tables%20charcoal%20grill%20visible%20from%20dining%20area%20freshly%20grilled%20Adana%20kebab%20skewers%20on%20plate%20with%20lava%C5%9F%20bread%20and%20grilled%20vegetables%20warm%20casual%20atmosphere%20authentic%20local%20eatery%20editorial%20food%20photography&width=800&height=600&seq=biz-kebab-24&orientation=landscape",
     tags: ["Kebab", "Turkish Cuisine", "Casual Dining", "Local Favorite", "Charcoal Grill", "Affordable"],
     featured: false,
+    trustBadge: "Local Favorite",
     priceRange: "$",
     openingHours: "11:00 - 23:00, Daily",
     lat: 36.5510,

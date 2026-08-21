@@ -52,6 +52,21 @@ export class ProductsController {
     return this.productsService.createProductOrder(dto, req?.user?.id);
   }
 
+  @Get('orders/my-orders')
+  @UseGuards(AuthGuard)
+  async getMyOrders(@Req() req: RequestWithUser & { user: { id: string } }) {
+    return this.productsService.getMyOrders(req.user.id);
+  }
+
+  @Get('orders/:id')
+  @UseGuards(AuthGuard)
+  async getOrderById(
+    @Param('id') id: string,
+    @Req() req: RequestWithUser & { user: { id: string } },
+  ) {
+    return this.productsService.getOrderById(id, req.user.id);
+  }
+
   // --- Products Endpoints ---
 
   @Get()

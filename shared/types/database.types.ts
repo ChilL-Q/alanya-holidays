@@ -24,6 +24,7 @@ export type Database = {
           email: string | null;
           phone: string | null;
           company_name: string | null;
+          bio?: string | null;
           iban: string | null;
           bank_name: string | null;
           bank_account_holder_name: string | null;
@@ -41,6 +42,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           company_name?: string | null;
+          bio?: string | null;
           iban?: string | null;
           bank_name?: string | null;
           bank_account_holder_name?: string | null;
@@ -58,6 +60,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           company_name?: string | null;
+          bio?: string | null;
           iban?: string | null;
           bank_name?: string | null;
           bank_account_holder_name?: string | null;
@@ -630,7 +633,7 @@ export type Database = {
           description: string | null;
           category: string | null;
           tier: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
-          status: 'pending' | 'approved' | 'rejected' | string | null;
+          status: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;
           owner_id: string | null;
           slug: string | null;
           created_at: string | null;
@@ -643,7 +646,7 @@ export type Database = {
           description?: string | null;
           category?: string | null;
           tier?: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
-          status?: 'pending' | 'approved' | 'rejected' | string | null;
+          status?: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;
           owner_id?: string | null;
           slug?: string | null;
           created_at?: string | null;
@@ -656,7 +659,7 @@ export type Database = {
           description?: string | null;
           category?: string | null;
           tier?: 'explorer' | 'voyager' | 'signature' | 'partner' | string | null;
-          status?: 'pending' | 'approved' | 'rejected' | string | null;
+          status?: 'draft' | 'pending' | 'approved' | 'rejected' | string | null;
           owner_id?: string | null;
           slug?: string | null;
           created_at?: string | null;
@@ -710,7 +713,7 @@ export type Database = {
       };
     };
     Enums: {
-      approval_status: 'pending' | 'approved' | 'rejected';
+      approval_status: 'draft' | 'pending' | 'approved' | 'rejected';
       listing_tier: 'explorer' | 'voyager' | 'signature' | 'partner';
       user_role: 'guest' | 'user' | 'host' | 'admin';
       [key: string]: string;

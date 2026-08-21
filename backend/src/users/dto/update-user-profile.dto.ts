@@ -14,6 +14,14 @@ export class UpdateUserProfileDto {
   avatar_url?: string;
 
   @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  company_name?: string;
+
+  @IsOptional()
   @IsObject()
   social_links?: Record<string, string>;
 

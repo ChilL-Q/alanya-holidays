@@ -521,6 +521,42 @@ describe('BlogService', () => {
       expect(mockRepository.invokeEmailFunction).toHaveBeenCalled();
     });
 
+    it('should persist submission category in insertBlogPost during approval', async () => {
+      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
+        id: 'sub-category-1',
+        user_id: 'author-1',
+        title: 'Food Guide Story',
+        content: 'Delicious food in Alanya',
+        category: 'Food & Drink',
+        status: 'pending_review',
+        media_urls: ['https://example.com/food.jpg'],
+      });
+      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([
+        { id: 'sub-category-1' },
+      ]);
+      mockRepository.getSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertBlogPost.mockResolvedValueOnce({
+        id: 'post-food-1',
+        title: 'Food Guide Story',
+        slug: 'food-guide-story',
+        category: 'Food & Drink',
+      });
+      mockRepository.getProfileForNotification.mockResolvedValueOnce({
+        email: 'author@test.com',
+        full_name: 'Foodie Author',
+      });
+
+      await service.approveBlogSubmission('sub-category-1', 'admin-1');
+
+      expect(mockRepository.insertBlogPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Food Guide Story',
+          category: 'Food & Drink',
+        }),
+      );
+    });
+
     it('should rollback submission status if post insertion fails', async () => {
       mockRepository.getUserRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissionById.mockResolvedValueOnce({

@@ -25,8 +25,10 @@ const CommunityHubPage = lazy(() => import("../pages/community-hub/page"));
 const MessagesPage = lazy(() => import("../pages/messages/page"));
 const LuxuryExperiencePage = lazy(() => import("../pages/luxury-experience/page"));
 const ShopPage = lazy(() => import("../pages/shop/page"));
+const GiftCardsPage = lazy(() => import("../pages/gift-cards/page"));
 const ProductDetailPage = lazy(() => import("../pages/product-detail/page"));
 const BusinessDetailPage = lazy(() => import("../pages/business/page"));
+const BusinessDashboardPage = lazy(() => import("../pages/business/dashboard/page"));
 const ComparePage = lazy(() => import("../pages/compare/page"));
 const PlannerPage = lazy(() => import("../pages/planner/page"));
 const ContactPage = lazy(() => import("../pages/contact/page"));
@@ -44,6 +46,7 @@ const PrivateJetsPage = lazy(() => import("../pages/private-jets/page"));
 const PersonalChefsPage = lazy(() => import("../pages/personal-chefs/page"));
 const PersonalDriverPage = lazy(() => import("../pages/personal-driver/page"));
 const PersonalShopperPage = lazy(() => import("../pages/personal-shopper/page"));
+const SettingsPage = lazy(() => import("../pages/settings/page"));
 
 
 const routes: RouteObject[] = [
@@ -140,8 +143,16 @@ const routes: RouteObject[] = [
     element: <LuxuryExperiencePage />,
   },
   {
+    path: "/concierge",
+    element: <LuxuryExperiencePage />,
+  },
+  {
     path: "/shop",
     element: <ShopPage />,
+  },
+  {
+    path: "/gift-cards",
+    element: <GiftCardsPage />,
   },
   {
     path: "/shop/:productId",
@@ -192,6 +203,10 @@ const routes: RouteObject[] = [
     element: <ForgotPasswordPage />,
   },
   {
+    path: "/business/dashboard",
+    element: <BusinessDashboardPage />,
+  },
+  {
     path: "/business/:businessId",
     element: <BusinessDetailPage />,
   },
@@ -214,6 +229,14 @@ const routes: RouteObject[] = [
   {
     path: "/admin",
     element: <AdminDashboardPage />,
+  },
+  {
+    path: "/settings",
+    element: <SettingsPage />,
+  },
+  {
+    path: "/profile",
+    element: <SettingsPage />,
   },
   {
     path: "*",

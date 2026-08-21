@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import type { Business } from "@/mocks/businesses";
 import { businessCategories } from "@/mocks/businesses";
+import TrustBadge from "@/components/common/TrustBadge";
 
 interface MapViewProps {
   businesses: Business[];
@@ -146,12 +147,12 @@ export default function MapView({
                             <span className="text-[11px] text-secondary-700 bg-secondary-100 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
                               {priceRangeLabel[business.priceRange] || business.priceRange}
                             </span>
-                            {business.featured && (
-                              <span className="text-[11px] text-accent-700 bg-accent-100 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
-                                <i className="ri-star-fill text-[9px] mr-0.5"></i>
-                                Featured
-                              </span>
-                            )}
+                            <TrustBadge
+                              badge={business.trustBadge}
+                              business={business}
+                              variant="subtle"
+                              size="xs"
+                            />
                           </div>
                         </div>
                       </div>

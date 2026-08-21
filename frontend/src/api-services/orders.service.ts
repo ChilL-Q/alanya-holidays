@@ -1,9 +1,10 @@
 import { apiClient } from "@/lib/api-client";
+import { Money } from "@/domain/money.vo";
 
 export interface OrderItem {
   productName: string;
   quantity: number;
-  price: string | number;
+  price?: string | number;
   icon?: string;
   productId?: string | number;
   skuId?: string | number | null;
@@ -13,22 +14,26 @@ export interface OrderItem {
   subtotal?: number;
 }
 
+export interface OrderRecipient {
+  name: string;
+  email: string;
+  phone?: string;
+  contact_method?: "whatsapp" | "phone_call" | "email";
+}
+
 export interface CreateOrderPayload {
-  recipientName: string;
-  recipientEmail: string;
-  senderName: string;
-  senderEmail: string;
+  recipientName?: string;
+  recipientEmail?: string;
+  recipientPhone?: string;
+  contactMethod?: "whatsapp" | "phone_call" | "email";
+  senderName?: string;
+  senderEmail?: string;
   giftMessage?: string;
+  customerNotes?: string;
   subtotal: number;
   currency?: string;
   items: OrderItem[];
-  customerNotes?: string;
-  recipient?: {
-    name: string;
-    email: string;
-    phone?: string;
-    contact_method?: "whatsapp" | "phone_call" | "email";
-  };
+  recipient?: OrderRecipient;
 }
 
 export interface CreateOrderResult {
@@ -59,39 +64,97 @@ export class OrdersService {
    * Dispatches POST /products/orders via apiClient.
    */
   async createOrder(payload: CreateOrderPayload): Promise<CreateOrderResult> {
-    try {
-      const result = await apiClient.post<{
-        id?: number | string;
-        order_id?: number | string;
-        orderId?: number | string;
-        success?: boolean;
-        message?: string;
-      }>("/products/orders", payload);
+    const currency = payload.currency || "EUR";
+
+    const recipient: OrderRecipient = payload.recipient || {
+      name: payload.recipientName || "Guest",
+      email: payload.recipientEmail || "guest@example.com",
+      phone: payload.recipientPhone || "+905550000000",
+      contact_method: (payload.contactMethod || "email") as
+        | "whatsapp"
+        | "phone_call"
+        | "email",
+    };
+
+    const notes =
+      payload.customerNotes ||
+      (payload.giftMessage
+        ? `From: ${payload.senderName || ""} (${payload.senderEmail || ""}) - Message: ${payload.giftMessage}`
+        : null);
+
+    const items = payload.items.map((item, index) => {
+      let unitPrice = item.unitPrice;
+      if (unitPrice === undefined) {
+        if (typeof item.price === "number") {
+          unitPrice = item.price;
+        } else if (typeof item.price === "string") {
+          unitPrice = Money.parse(item.price, currency).toDatabaseDecimal();
+        } else {
+          unitPrice = 0;
+        }
+      }
+      const finalPrice =
+        item.finalPrice !== undefined ? item.finalPrice : unitPrice;
+      const subtotal =
+        item.subtotal !== undefined
+          ? item.subtotal
+          : Money.fromDecimal(finalPrice, currency)
+              .multiply(item.quantity)
+              .toDatabaseDecimal();
 
       return {
-        success: result.success ?? true,
-        orderId: result.orderId ?? result.id ?? result.order_id ?? Date.now(),
-        message: result.message,
+        productId:
+          item.productId !== undefined && item.productId !== null
+            ? item.productId
+            : `item-${index + 1}`,
+        productName: item.productName,
+        skuId: item.skuId != null ? item.skuId : null,
+        skuLabel: item.skuLabel || null,
+        quantity: item.quantity,
+        unitPrice,
+        finalPrice,
+        subtotal,
       };
-    } catch (err: unknown) {
-      console.warn("Failed to create order on API, generating fallback confirmation:", err);
-      return {
-        success: true,
-        orderId: Math.floor(100000 + Math.random() * 900000),
-      };
-    }
+    });
+
+    const body = {
+      currency,
+      subtotal: payload.subtotal,
+      customerNotes: notes,
+      recipient,
+      items,
+    };
+
+    const result = await apiClient.post<{
+      id?: number | string;
+      order_id?: number | string;
+      orderId?: number | string;
+      success?: boolean;
+      message?: string;
+    }>("/products/orders", body);
+
+    return {
+      success: result.success ?? true,
+      orderId: result.orderId ?? result.id ?? result.order_id ?? Date.now(),
+      message: result.message,
+    };
   }
 
   /**
    * Retrieves order details by ID.
    * Dispatches GET /products/orders/:id via apiClient.
    */
-  async getOrder(orderId: number | string): Promise<OrderDetailsResponse | null> {
+  async getOrder(
+    orderId: number | string,
+  ): Promise<OrderDetailsResponse | null> {
     try {
       const result = await apiClient.get<OrderDetailsResponse>(
-        `/products/orders/${orderId}`
+        `/products/orders/${orderId}`,
       );
-      if (result && (result.id !== undefined || result.order_id !== undefined)) {
+      if (
+        result &&
+        (result.id !== undefined || result.order_id !== undefined)
+      ) {
         return result;
       }
       return result || null;
@@ -138,5 +201,4 @@ export const createOrder = (payload: CreateOrderPayload) =>
 export const getOrder = (orderId: number | string) =>
   ordersService.getOrder(orderId);
 
-export const getMyOrders = () =>
-  ordersService.getMyOrders();
+export const getMyOrders = () => ordersService.getMyOrders();
