@@ -46,6 +46,7 @@ REVOKE EXECUTE ON FUNCTION public.get_category_analytics_average(TEXT, INT) FROM
 GRANT EXECUTE ON FUNCTION public.get_category_analytics_average(TEXT, INT) TO authenticated;
 
 -- b) Update get_directory_analytics_for_owner — add listing_category_id
+DROP FUNCTION IF EXISTS public.get_directory_analytics_for_owner(UUID, INT);
 CREATE OR REPLACE FUNCTION public.get_directory_analytics_for_owner(
     p_owner_id UUID,
     p_days INT DEFAULT 30
