@@ -84,6 +84,7 @@ jobs:
     - name: Lint Docker Compose Configurations
       run: |
         cp .env.example .env
+        cp .env.example .env.production
         docker compose -f docker-compose.yml config > /dev/null
         docker compose --env-file .env.example -f docker-compose.prod.yml config > /dev/null
         echo "✓ Docker Compose configurations valid."

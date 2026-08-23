@@ -190,6 +190,8 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   item_id uuid,
   check_in date,
   check_out date,
+  start_date date,
+  end_date date,
   guest_count integer DEFAULT 1,
   total_price numeric DEFAULT 0,
   currency text DEFAULT 'EUR',
@@ -218,8 +220,10 @@ CREATE TABLE IF NOT EXISTS public.reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
   booking_id uuid REFERENCES public.bookings(id) ON DELETE SET NULL,
-  item_type text NOT NULL,
-  item_id uuid NOT NULL,
+  property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  service_id uuid REFERENCES public.services(id) ON DELETE SET NULL,
+  item_type text NOT NULL DEFAULT 'property',
+  item_id uuid,
   rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment text,
   created_at timestamptz DEFAULT now()
@@ -230,6 +234,7 @@ CREATE TABLE IF NOT EXISTS public.property_availability (
   property_id uuid REFERENCES public.properties(id) ON DELETE CASCADE,
   date date NOT NULL,
   is_available boolean DEFAULT true,
+  status text DEFAULT 'available',
   price_override numeric,
   created_at timestamptz DEFAULT now()
 );
@@ -250,15 +255,93 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   message text NOT NULL,
   type text DEFAULT 'info',
   is_read boolean DEFAULT false,
+  read boolean DEFAULT false,
   data jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  recipient_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content text NOT NULL,
+  is_read boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.products (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  seller_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  artisan_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  title text NOT NULL,
+  price numeric DEFAULT 0,
+  currency text DEFAULT 'EUR',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_edits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_id uuid REFERENCES public.services(id) ON DELETE CASCADE,
+  provider_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text,
+  description text,
+  price numeric,
+  status text DEFAULT 'pending',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.tickets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  subject text NOT NULL,
+  status text DEFAULT 'open',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.chat_conversations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  conversation_id uuid REFERENCES public.chat_conversations(id) ON DELETE CASCADE,
+  sender_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  content text NOT NULL,
+  is_read boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.chat_reports (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  reported_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  conversation_id uuid REFERENCES public.chat_conversations(id) ON DELETE CASCADE,
+  status text DEFAULT 'pending',
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.directory_listings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  category_id uuid,
+  title text,
+  name text,
+  slug text,
+  is_featured boolean DEFAULT false,
+  is_verified boolean DEFAULT false,
+  status text DEFAULT 'pending',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
-  action text NOT NULL,
-  entity_type text NOT NULL,
+  action text,
+  event_type text,
+  entity_type text,
   entity_id uuid,
   details jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now()
