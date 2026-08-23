@@ -94,7 +94,6 @@ export default function SearchPage() {
         m.fullName.toLowerCase().includes(q) ||
         m.username.toLowerCase().includes(q) ||
         m.bio.toLowerCase().includes(q) ||
-        m.location.toLowerCase().includes(q) ||
         m.role.toLowerCase().includes(q)
     );
 
@@ -284,7 +283,7 @@ export default function SearchPage() {
                           <HighlightMatch text={member.fullName} query={query} />
                         </p>
                         <p className="text-xs text-foreground-500 truncate">@{member.username}</p>
-                        <p className="text-xs text-foreground-400 truncate">{member.role} · {member.reputation.toLocaleString()} rep</p>
+                        <p className="text-xs text-foreground-400 truncate">{member.role}</p>
                       </div>
                     </Link>
                   ))}

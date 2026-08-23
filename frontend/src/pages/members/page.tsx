@@ -24,8 +24,7 @@ export default function MembersPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
-  const [badgeFilter, setBadgeFilter] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState("reputation");
+  const [sortBy, setSortBy] = useState("posts");
 
   const loadMembers = useCallback(async () => {
     setIsLoading(true);
@@ -54,19 +53,12 @@ export default function MembersPage() {
         (m) =>
           m.fullName.toLowerCase().includes(q) ||
           m.username.toLowerCase().includes(q) ||
-          m.bio.toLowerCase().includes(q) ||
-          m.location.toLowerCase().includes(q)
+          m.bio.toLowerCase().includes(q)
       );
     }
-
     // Role filter
     if (roleFilter) {
       result = result.filter((m) => m.role === roleFilter);
-    }
-
-    // Badge filter
-    if (badgeFilter) {
-      result = result.filter((m) => m.badges.includes(badgeFilter));
     }
 
     // Sort
@@ -75,31 +67,17 @@ export default function MembersPage() {
         result.sort((a, b) => b.posts - a.posts);
         break;
       case "newest":
-        result.sort((a, b) => {
-          const months: Record<string, number> = {
-            January: 1, February: 2, March: 3, April: 4,
-            May: 5, June: 6, July: 7, August: 8,
-            September: 9, October: 10, November: 11, December: 12,
-          };
-          const getVal = (m: ForumMember) => {
-            const parts = m.joinDate.split(" ");
-            const y = parseInt(parts[1]) || 2024;
-            const mo = months[parts[0]] || 1;
-            return y * 100 + mo;
-          };
-          return getVal(b) - getVal(a);
-        });
+        result.sort((a, b) => b.joinDate.localeCompare(a.joinDate));
         break;
-      case "reputation":
       default:
-        result.sort((a, b) => b.reputation - a.reputation);
+        break;
     }
     return result;
-  }, [membersList, searchTerm, roleFilter, badgeFilter, sortBy]);
+  }, [membersList, searchTerm, roleFilter, sortBy]);
 
   // Top 3 for leaderboard
   const topMembers = useMemo(() => {
-    return [...membersList].sort((a, b) => b.reputation - a.reputation).slice(0, 3);
+    return [...membersList].sort((a, b) => b.posts - a.posts).slice(0, 3);
   }, [membersList]);
 
   return (
@@ -143,14 +121,8 @@ export default function MembersPage() {
                   </p>
                   <p className="text-xs text-foreground-500">@{member.username}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs font-medium text-primary-500">
-                      {member.reputation >= 1000
-                        ? `${(member.reputation / 1000).toFixed(1)}k`
-                        : member.reputation}{" "}
-                      rep
-                    </span>
                     <span className="text-xs text-foreground-400">
-                      • {member.posts.toLocaleString()} posts
+                      {member.posts.toLocaleString()} posts
                     </span>
                   </div>
                 </div>
@@ -167,8 +139,6 @@ export default function MembersPage() {
               onSearchChange={setSearchTerm}
               roleFilter={roleFilter}
               onRoleChange={setRoleFilter}
-              badgeFilter={badgeFilter}
-              onBadgeChange={setBadgeFilter}
               sortBy={sortBy}
               onSortChange={setSortBy}
             />
@@ -180,7 +150,7 @@ export default function MembersPage() {
               {filteredMembers.length}
             </span>{" "}
             {filteredMembers.length === 1 ? "member" : "members"} found
-            {(roleFilter || badgeFilter || searchTerm) && (
+            {(roleFilter || searchTerm) && (
               <span className="text-foreground-400">
                 {" "}
                 with active filters
@@ -226,7 +196,6 @@ export default function MembersPage() {
                 onClick: () => {
                   setSearchTerm("");
                   setRoleFilter(null);
-                  setBadgeFilter(null);
                 },
                 icon: <i className="ri-refresh-line" />,
               }}

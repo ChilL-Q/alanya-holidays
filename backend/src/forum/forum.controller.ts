@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ForumService } from './forum.service';
+import { UsersService } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -55,7 +56,10 @@ import {
 
 @Controller('forum')
 export class ForumController {
-  constructor(private readonly forumService: ForumService) {}
+  constructor(
+    private readonly forumService: ForumService,
+    private readonly usersService: UsersService,
+  ) {}
 
   // ============================================================
   // Categories (/forum/categories*)
@@ -405,5 +409,29 @@ export class ForumController {
   @Get('stats')
   async getForumStats(): Promise<ForumStatsResponse> {
     return this.forumService.getForumStats();
+  }
+
+  // ============================================================
+  // Members (/forum/members)
+  // ============================================================
+  @Get('members')
+  getForumMembers(
+    @Query() query?: LimitQueryDto | string,
+    @Query('onlineOnly') onlineOnly?: string,
+  ): Promise<Record<string, unknown>[]> {
+    let limit: number | undefined;
+    if (typeof query === 'string') {
+      limit = parseInt(query, 10) || undefined;
+    } else if (query?.limit !== undefined) {
+      limit = Number(query.limit);
+    }
+    return this.usersService.getForumMembers(limit, onlineOnly === 'true');
+  }
+
+  @Get('members/:id')
+  getForumMemberById(
+    @Param('id') id: string,
+  ): Promise<Record<string, unknown>> {
+    return this.usersService.getForumMemberById(id);
   }
 }

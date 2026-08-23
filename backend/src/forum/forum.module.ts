@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
 import { ForumController } from './forum.controller';
 import { ForumModerationController } from './forum-moderation.controller';
 import { ForumService } from './forum.service';
@@ -11,7 +12,7 @@ import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 @Module({
-  imports: [SupabaseModule, AuthModule],
+  imports: [SupabaseModule, AuthModule, UsersModule],
   controllers: [ForumController, ForumModerationController],
   providers: [
     ForumRepository,

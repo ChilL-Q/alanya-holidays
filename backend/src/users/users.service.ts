@@ -118,6 +118,20 @@ export class UsersService {
     return members;
   }
 
+  async getForumMemberById(id: string): Promise<Record<string, unknown>> {
+    const member = await this.usersRepository.getForumMemberById(id);
+    if (!member) throw new NotFoundException('User not found');
+
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const lastSeen = member.last_seen_at as string | null;
+    return {
+      ...member,
+      is_online: lastSeen
+        ? Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS
+        : false,
+    };
+  }
+
   async getOnlineCount() {
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const since = new Date(Date.now() - ONLINE_WINDOW_MS).toISOString();
