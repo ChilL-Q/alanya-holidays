@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { RedisModule } from '../common/redis/redis.module';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
@@ -8,6 +8,7 @@ import { AuthGuard } from './auth.guard';
 import { OptionalAuthGuard } from './optional-auth.guard';
 import { RolesGuard } from './roles.guard';
 
+@Global()
 @Module({
   imports: [RedisModule, SupabaseModule],
   controllers: [AuthController],
