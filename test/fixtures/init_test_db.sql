@@ -388,46 +388,6 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   created_at timestamptz DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS public.blog_posts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
-  title text NOT NULL,
-  slug text UNIQUE,
-  excerpt text,
-  content text,
-  category text,
-  cover_image text,
-  tags text[] DEFAULT ARRAY[]::text[],
-  is_published boolean DEFAULT false,
-  views_count integer DEFAULT 0,
-  published_at timestamptz,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
-  tier text DEFAULT 'explorer',
-  status text DEFAULT 'active',
-  current_period_end timestamptz,
-  stripe_customer_id text,
-  stripe_subscription_id text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS public.testimonials (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  role text,
-  content text NOT NULL,
-  avatar_url text,
-  rating integer DEFAULT 5,
-  is_approved boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
-);
-
 -- Enable RLS on core tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
