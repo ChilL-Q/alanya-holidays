@@ -6,14 +6,10 @@ interface MemberCardProps {
     username: string;
     fullName: string;
     role: string;
-    location: string;
-    joinDate: string;
     posts: number;
-    reputation: number;
     isOnline: boolean;
     avatar: string;
     bio: string;
-    badges: string[];
   };
 }
 
@@ -57,28 +53,10 @@ export default function MemberCard({ member }: MemberCardProps) {
       </div>
 
       {/* Bio */}
-      <p className="text-foreground-500 text-sm leading-relaxed mb-4 line-clamp-2">
-        {member.bio}
-      </p>
-
-      {/* Badges */}
-      {member.badges.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {member.badges.slice(0, 3).map((badge) => (
-            <span
-              key={badge}
-              className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-100/80 text-accent-700 text-xs rounded-full font-medium"
-            >
-              <i className="ri-verified-badge-line text-xs"></i>
-              {badge}
-            </span>
-          ))}
-          {member.badges.length > 3 && (
-            <span className="inline-flex items-center px-2 py-0.5 bg-background-100 text-foreground-400 text-xs rounded-full">
-              +{member.badges.length - 3}
-            </span>
-          )}
-        </div>
+      {member.bio && (
+        <p className="text-foreground-500 text-sm leading-relaxed mb-4 line-clamp-2">
+          {member.bio}
+        </p>
       )}
 
       {/* Stats row */}
@@ -90,20 +68,6 @@ export default function MemberCard({ member }: MemberCardProps) {
             </p>
             <p className="text-xs text-foreground-400">Posts</p>
           </div>
-          <div className="w-px h-6 bg-background-200/70"></div>
-          <div className="text-center">
-            <p className={`text-sm font-semibold ${member.reputation >= 10000 ? "text-primary-500" : member.reputation >= 5000 ? "text-accent-500" : "text-secondary-500"}`}>
-              {member.reputation >= 1000
-                ? `${(member.reputation / 1000).toFixed(1)}k`
-                : member.reputation}
-            </p>
-            <p className="text-xs text-foreground-400">Rep</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <i className="ri-map-pin-line text-foreground-400 text-xs"></i>
-          <span className="text-xs text-foreground-500">{member.location}</span>
         </div>
       </div>
 

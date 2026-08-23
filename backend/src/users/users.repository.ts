@@ -73,6 +73,26 @@ export class UsersRepository {
     return data || [];
   }
 
+  async getForumMemberById(id: string) {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select(
+        'id, full_name, avatar_url, role, bio, created_at, last_seen_at, social_links',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    const { count } = await this.client
+      .from('forum_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', id)
+      .eq('is_removed', false);
+
+    return { ...data, post_count: count ?? 0 };
+  }
+
   async getForumPostsAuthors() {
     const { data, error } = await this.client
       .from('forum_posts')

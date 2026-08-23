@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForumController } from './forum.controller';
 import { ForumService } from './forum.service';
+import { UsersService } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -24,6 +25,7 @@ import { CreateForumCommentDto } from './dto/forum-comments.dto';
 describe('ForumController', () => {
   let controller: ForumController;
   let mockService: Record<string, jest.Mock>;
+  let mockUsersService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockService = {
@@ -61,12 +63,21 @@ describe('ForumController', () => {
       getForumStats: jest.fn().mockResolvedValue({ totalTopics: 5 }),
     };
 
+    mockUsersService = {
+      getForumMembers: jest.fn().mockResolvedValue([]),
+      getForumMemberById: jest.fn().mockResolvedValue({ id: 'member-1' }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ForumController],
       providers: [
         {
           provide: ForumService,
           useValue: mockService,
+        },
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
         },
       ],
     })
@@ -431,6 +442,24 @@ describe('ForumController', () => {
       const res = await controller.getForumStats();
       expect(res).toEqual({ totalTopics: 5 });
       expect(mockService.getForumStats).toHaveBeenCalled();
+    });
+  });
+
+  describe('Members routes', () => {
+    it('should parse limit and onlineOnly and delegate getForumMembers', async () => {
+      await controller.getForumMembers({ limit: 6 });
+      expect(mockUsersService.getForumMembers).toHaveBeenCalledWith(6, false);
+
+      await controller.getForumMembers('10', 'true');
+      expect(mockUsersService.getForumMembers).toHaveBeenCalledWith(10, true);
+    });
+
+    it('should delegate getForumMemberById', async () => {
+      const res = await controller.getForumMemberById('member-1');
+      expect(res).toEqual({ id: 'member-1' });
+      expect(mockUsersService.getForumMemberById).toHaveBeenCalledWith(
+        'member-1',
+      );
     });
   });
 });

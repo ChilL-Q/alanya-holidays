@@ -271,14 +271,6 @@ export default function AboutPage() {
                   </p>
                   <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-background-100">
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-foreground-900">
-                        {leader.reputation >= 1000
-                          ? `${(leader.reputation / 1000).toFixed(1)}k`
-                          : leader.reputation}
-                      </p>
-                      <p className="text-xs text-foreground-400">Rep</p>
-                    </div>
-                    <div className="text-center">
                       <p className="text-sm font-semibold text-foreground-900">{leader.posts.toLocaleString()}</p>
                       <p className="text-xs text-foreground-400">Posts</p>
                     </div>

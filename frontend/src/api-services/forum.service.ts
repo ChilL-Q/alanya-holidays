@@ -92,6 +92,19 @@ export interface ForumMember {
 
 export type Member = ForumMember;
 
+export interface BackendForumMember {
+  id: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  role?: string | null;
+  bio?: string | null;
+  created_at?: string | null;
+  last_seen_at?: string | null;
+  social_links?: Record<string, string> | null;
+  post_count?: number;
+  is_online?: boolean;
+}
+
 export const memberBadges: string[] = [
   "Local Expert",
   "Beach Guide",
@@ -360,8 +373,7 @@ export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
   };
 }
 
-export function mapBackendCommentToReply(comment: ForumBackendComment): ThreadReply {
-  const defaultAvatar =
+export function mapBackendCommentToReply(comment: ForumBackendComment): ThreadReply {  const defaultAvatar =
     "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&seq=reply-avatar&orientation=squarish";
 
   return {
@@ -414,6 +426,30 @@ export function mapBackendPostToThreadDetail(
     isVerified: true,
     replies,
     slug: post.slug,
+  };
+}
+
+export function mapBackendMemberToForumMember(
+  raw: BackendForumMember
+): ForumMember {
+  const defaultAvatar =
+    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20person%20with%20warm%20smile%20clean%20background%20editorial%20photography&width=100&height=100&seq=forum-default-avatar&orientation=squarish";
+
+  const usernameBase = raw.full_name?.trim().toLowerCase().replace(/\s+/g, "_");
+
+  return {
+    id: raw.id,
+    username: usernameBase || `member_${raw.id.slice(0, 6)}`,
+    fullName: raw.full_name || "Alanya Member",
+    role: raw.role || "member",
+    location: "",
+    joinDate: raw.created_at?.slice(0, 10) || "",
+    posts: raw.post_count ?? 0,
+    reputation: 0,
+    isOnline: !!raw.is_online,
+    avatar: raw.avatar_url || defaultAvatar,
+    bio: raw.bio || "",
+    badges: [],
   };
 }
 
@@ -693,16 +729,20 @@ export class ForumService {
       if (role && role !== "all") params.role = role;
       if (limit) params.limit = limit;
 
-      const response = await apiClient.get<ForumMember[] | { data: ForumMember[] }>(
-        "/forum/members",
-        {
-          ...reqConfig,
-          params: { ...reqConfig.params, ...params },
-        }
-      );
-      if (Array.isArray(response)) return response;
-      if (response && Array.isArray((response as { data: ForumMember[] }).data)) {
-        return (response as { data: ForumMember[] }).data;
+      const response = await apiClient.get<
+        BackendForumMember[] | { data: BackendForumMember[] }
+      >("/forum/members", {
+        ...reqConfig,
+        params: { ...reqConfig.params, ...params },
+      });
+      if (Array.isArray(response)) return response.map(mapBackendMemberToForumMember);
+      if (
+        response &&
+        Array.isArray((response as { data: BackendForumMember[] }).data)
+      ) {
+        return (response as { data: BackendForumMember[] }).data.map(
+          mapBackendMemberToForumMember
+        );
       }
       return [];
     } catch (err) {
@@ -719,17 +759,19 @@ export class ForumService {
   async getMemberById(memberId: string, options?: RequestOptions): Promise<ForumMember | null> {
     try {
       const response = options
-        ? await apiClient.get<ForumMember | { data: ForumMember }>(
+        ? await apiClient.get<BackendForumMember | { data: BackendForumMember }>(
             `/forum/members/${encodeURIComponent(memberId)}`,
             options
           )
-        : await apiClient.get<ForumMember | { data: ForumMember }>(
+        : await apiClient.get<BackendForumMember | { data: BackendForumMember }>(
             `/forum/members/${encodeURIComponent(memberId)}`
           );
-      if (response && "data" in response && (response as { data: ForumMember }).data) {
-        return (response as { data: ForumMember }).data;
-      }
-      return response as ForumMember;
+      const raw =
+        response && "data" in response && (response as { data: BackendForumMember }).data
+          ? (response as { data: BackendForumMember }).data
+          : (response as BackendForumMember);
+      if (!raw || !raw.id) return null;
+      return mapBackendMemberToForumMember(raw);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         return null;

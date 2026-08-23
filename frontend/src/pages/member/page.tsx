@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { forumService, badgeDescriptions, type ForumMember, type CategoryThread } from "@/api-services/forum.service";
+import { forumService, type ForumMember, type CategoryThread } from "@/api-services/forum.service";
 import ErrorState from "@/components/base/ErrorState";
 
 export default function MemberProfilePage() {
@@ -93,9 +93,6 @@ export default function MemberProfilePage() {
     );
   }
 
-  const repTier =
-    member.reputation >= 10000 ? "primary" : member.reputation >= 5000 ? "accent" : "secondary";
-
   return (
     <>
       <Navbar />
@@ -157,43 +154,29 @@ export default function MemberProfilePage() {
                     <i className="ri-shield-user-line text-foreground-400"></i>
                     {member.role}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-sm text-foreground-600">
-                    <i className="ri-map-pin-line text-foreground-400"></i>
-                    {member.location}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 text-sm text-foreground-600">
-                    <i className="ri-calendar-line text-foreground-400"></i>
-                    Joined {member.joinDate}
-                  </span>
+                  {member.joinDate && (
+                    <span className="inline-flex items-center gap-1.5 text-sm text-foreground-600">
+                      <i className="ri-calendar-line text-foreground-400"></i>
+                      Joined {member.joinDate}
+                    </span>
+                  )}
                 </div>
 
-                <p className="text-foreground-600 text-sm leading-relaxed max-w-2xl">
-                  {member.bio}
-                </p>
+                {member.bio && (
+                  <p className="text-foreground-600 text-sm leading-relaxed max-w-2xl">
+                    {member.bio}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Stats bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 md:mt-10">
+            <div className="grid grid-cols-2 gap-4 mt-8 md:mt-10">
               <div className="bg-background-100 rounded-xl p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
                   {member.posts.toLocaleString()}
                 </p>
                 <p className="text-xs text-foreground-500 mt-1">Posts</p>
-              </div>
-              <div className="bg-background-100 rounded-xl p-4 text-center">
-                <p className={`text-2xl md:text-3xl font-semibold text-${repTier}-500`}>
-                  {member.reputation >= 1000
-                    ? `${(member.reputation / 1000).toFixed(1)}k`
-                    : member.reputation}
-                </p>
-                <p className="text-xs text-foreground-500 mt-1">Reputation</p>
-              </div>
-              <div className="bg-background-100 rounded-xl p-4 text-center">
-                <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
-                  {member.badges.length}
-                </p>
-                <p className="text-xs text-foreground-500 mt-1">Badges</p>
               </div>
               <div className="bg-background-100 rounded-xl p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
@@ -202,40 +185,6 @@ export default function MemberProfilePage() {
                 <p className="text-xs text-foreground-500 mt-1">Discussions</p>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Badges Section */}
-        <section className="w-full px-4 md:px-8 lg:px-12 py-10 md:py-14">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent-100">
-              <i className="ri-verified-badge-line text-accent-600 text-lg"></i>
-            </div>
-            <div>
-              <h2 className="font-heading text-xl md:text-2xl text-foreground-900">Badges</h2>
-              <p className="text-xs text-foreground-500">Recognition earned through community contributions</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {member.badges.map((badge) => {
-              const info = badgeDescriptions[badge];
-              if (!info) return null;
-              return (
-                <div
-                  key={badge}
-                  className="flex items-start gap-4 bg-background-50 rounded-xl border border-background-200/70 p-5 hover:border-accent-200/60 transition-all"
-                >
-                  <div className={`w-11 h-11 flex items-center justify-center rounded-xl shrink-0 ${info.color.split(" ")[0]} ${info.color.split(" ")[0].replace("text-", "bg-").replace("700", "100")}`}>
-                    <i className={`${info.icon} ${info.color.split(" ")[1]} text-lg`}></i>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground-900 mb-1">{badge}</p>
-                    <p className="text-xs text-foreground-500 leading-relaxed">{info.description}</p>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </section>
 
