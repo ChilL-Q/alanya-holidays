@@ -108,7 +108,8 @@ describe("Tier 5: Adversarial & Stress Testing", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /submit claim/i }));
 
-    // User gets graceful confirmation or fallback notice instead of unhandled crash
-    expect(await screen.findByText(/claim request submitted/i)).toBeInTheDocument();
+    // User gets error feedback banner instead of false success confirmation
+    expect(await screen.findByText(/Server 500 Internal Error/i)).toBeInTheDocument();
+    expect(screen.queryByText(/claim request submitted/i)).not.toBeInTheDocument();
   });
 });

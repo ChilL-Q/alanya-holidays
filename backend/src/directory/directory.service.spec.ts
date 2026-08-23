@@ -432,6 +432,35 @@ describe('DirectoryService', () => {
       );
     });
 
+    it('should include phone and email in safeData when saving a draft', async () => {
+      mockRepository.insertDirectoryListing.mockResolvedValueOnce({
+        id: validDraftId,
+        name: 'Draft With Phone & Email',
+        status: 'draft',
+        owner_user_id: validUserId,
+        phone: '+90 532 111 2233',
+        email: 'draft@alanya.test',
+      });
+
+      await service.saveDraft(
+        {
+          name: 'Draft With Phone & Email',
+          phone: '+90 532 111 2233',
+          email: 'draft@alanya.test',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Draft With Phone & Email',
+          phone: '+90 532 111 2233',
+          email: 'draft@alanya.test',
+        }),
+      );
+    });
+
     it('should update an existing draft when valid draftId is provided and user is owner', async () => {
       mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
         owner_user_id: validUserId,
@@ -477,6 +506,28 @@ describe('DirectoryService', () => {
           validDraftId,
         ),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should normalize price_level string to integer in new draft', async () => {
+      mockRepository.insertDirectoryListing.mockResolvedValueOnce({
+        id: validDraftId,
+        name: 'Price Test Draft',
+        status: 'draft',
+        owner_user_id: validUserId,
+        price_level: 3,
+      });
+
+      await service.saveDraft(
+        { name: 'Price Test Draft', price_level: ' $$$ ' },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          price_level: 3,
+        }),
+      );
     });
 
     it('should throw an error if photo gallery exceeds tier limit', async () => {
@@ -596,6 +647,69 @@ describe('DirectoryService', () => {
       ).rejects.toThrow('Valid email is required to publish');
     });
 
+    it('should normalize string price_level when publishing draft', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        name: 'Valid Name',
+        price_level: 2,
+      });
+
+      await service.publishDraft(
+        validListingId,
+        {
+          name: 'Valid Name',
+          category_id: 'restaurants',
+          description: 'Valid description with enough characters.',
+          address: 'Alanya Beach',
+          email: 'test@example.com',
+          price_level: '$$',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        expect.objectContaining({
+          price_level: 2,
+        }),
+      );
+    });
+
+    it('should omit invalid price_level string when publishing draft', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        name: 'Valid Name',
+      });
+
+      await service.publishDraft(
+        validListingId,
+        {
+          name: 'Valid Name',
+          category_id: 'restaurants',
+          description: 'Valid description with enough characters.',
+          address: 'Alanya Beach',
+          email: 'test@example.com',
+          price_level: '$$$$$',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        expect.not.objectContaining({
+          price_level: expect.anything(),
+        }),
+      );
+    });
+
     it('should throw UnauthorizedException if caller is not the owner', async () => {
       mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
         owner_user_id: 'different-user',
@@ -615,6 +729,126 @@ describe('DirectoryService', () => {
           validUserId,
         ),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('createDirectoryListing', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should include phone and email in safeData when creating a listing', async () => {
+      mockRepository.insertDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        name: 'New Restaurant',
+        phone: '+90 242 555 3344',
+        email: 'info@restaurant.test',
+        status: 'pending',
+      });
+
+      await service.createDirectoryListing(
+        {
+          name: 'New Restaurant',
+          category_id: 'restaurants',
+          description: 'A great new restaurant in Alanya',
+          location: 'Center 1',
+          phone: '+90 242 555 3344',
+          email: 'info@restaurant.test',
+          tier: 'voyager',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'New Restaurant',
+          phone: '+90 242 555 3344',
+          email: 'info@restaurant.test',
+          status: 'pending',
+          tier: 'voyager',
+        }),
+      );
+    });
+
+    it('should set phone and email to null when they are not strings', async () => {
+      mockRepository.insertDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        name: 'New Restaurant Without Contacts',
+        status: 'pending',
+      });
+
+      await service.createDirectoryListing(
+        {
+          name: 'New Restaurant Without Contacts',
+          category_id: 'restaurants',
+          tier: 'explorer',
+        },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'New Restaurant Without Contacts',
+          phone: null,
+          email: null,
+          status: 'pending',
+        }),
+      );
+    });
+  });
+
+  describe('updateDirectoryListing', () => {
+    const validUserId = '223e4567-e89b-12d3-a456-426614174001';
+    const validListingId = '123e4567-e89b-12d3-a456-426614174000';
+
+    it('should normalize string price_level when updating listing', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+        price_level: 4,
+      });
+
+      await service.updateDirectoryListing(
+        validListingId,
+        { price_level: '$$$$' },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        expect.objectContaining({
+          price_level: 4,
+        }),
+      );
+    });
+
+    it('should omit invalid price_level when updating listing', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getDirectoryListingOwner.mockResolvedValueOnce({
+        owner_user_id: validUserId,
+      });
+      mockRepository.updateDirectoryListing.mockResolvedValueOnce({
+        id: validListingId,
+      });
+
+      await service.updateDirectoryListing(
+        validListingId,
+        { price_level: 'invalid_price' },
+        [],
+        validUserId,
+      );
+
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        expect.not.objectContaining({
+          price_level: expect.anything(),
+        }),
+      );
     });
   });
 

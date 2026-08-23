@@ -2,6 +2,14 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import ListBusinessModal from "../ListBusinessModal";
 import { directoryService } from "@/api-services/directory.service";
+import toast from "react-hot-toast";
+
+vi.mock("react-hot-toast", () => ({
+  default: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
   beforeEach(() => {
@@ -319,5 +327,121 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     expect(
       (screen.getByLabelText(/business description/i) as HTMLTextAreaElement).value
     ).toBe("Handcrafted souvenirs and jewelry.");
+  });
+
+  it("does not delete draft from localStorage and displays error toast when createListing API fails", async () => {
+    const createSpy = vi
+      .spyOn(directoryService, "createListing")
+      .mockRejectedValueOnce(new Error("Network submission failed"));
+
+    const onListingCreated = vi.fn();
+
+    render(
+      <ListBusinessModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onListingCreated={onListingCreated}
+      />
+    );
+
+    // Select Explorer
+    fireEvent.click(screen.getByTestId("select-tier-explorer"));
+
+    // Fill form
+    fireEvent.change(screen.getByLabelText(/business name/i), {
+      target: { value: "Failing Listing Cafe" },
+    });
+    fireEvent.change(screen.getByLabelText(/^category/i), {
+      target: { value: "restaurants-cafes" },
+    });
+    fireEvent.change(screen.getByLabelText(/business description/i), {
+      target: { value: "A wonderful cafe with scenic views." },
+    });
+    fireEvent.change(screen.getByLabelText(/address/i), {
+      target: { value: "Kleopatra Cad. 12" },
+    });
+    fireEvent.change(screen.getByLabelText(/contact phone/i), {
+      target: { value: "+90 242 555 1111" },
+    });
+    fireEvent.change(screen.getByLabelText(/business email/i), {
+      target: { value: "contact@failingcafe.test" },
+    });
+
+    const submitBtn = screen.getByRole("button", { name: /submit listing/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(createSpy).toHaveBeenCalled();
+    });
+
+    // Error toast should be triggered
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalled();
+    });
+
+    // Success callback should NOT be called
+    expect(onListingCreated).not.toHaveBeenCalled();
+
+    // Should NOT transition to confirmed step
+    expect(
+      screen.queryByText(/submission confirmation/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/our team will review your submission/i)
+    ).not.toBeInTheDocument();
+
+    // Should still be on the form step with data intact
+    expect(screen.getByLabelText(/business name/i)).toBeInTheDocument();
+    expect(
+      (screen.getByLabelText(/business name/i) as HTMLInputElement).value
+    ).toBe("Failing Listing Cafe");
+
+    // Submitting state should reset
+    expect(screen.getByRole("button", { name: /submit listing/i })).not.toBeDisabled();
+  });
+
+  it("does not delete draft and displays error toast when publishDraft API fails", async () => {
+    const publishSpy = vi
+      .spyOn(directoryService, "publishDraft")
+      .mockRejectedValueOnce(new Error("Publishing draft failed on backend"));
+
+    const onListingCreated = vi.fn();
+
+    render(
+      <ListBusinessModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onListingCreated={onListingCreated}
+        draftId="cloud-draft-999"
+        initialData={{
+          name: "Cloud Draft Business",
+          category: "shopping",
+          description: "A cozy shopping center in Alanya.",
+          address: "Ataturk Cad. 88",
+          phone: "+90 242 555 2222",
+          email: "shop@cloud.test",
+          tier: "explorer",
+        }}
+      />
+    );
+
+    expect(await screen.findByLabelText(/business name/i)).toBeInTheDocument();
+
+    const submitBtn = screen.getByRole("button", { name: /submit listing/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(publishSpy).toHaveBeenCalled();
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalled();
+    });
+
+    expect(onListingCreated).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText(/submission confirmation/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/business name/i)).toBeInTheDocument();
   });
 });

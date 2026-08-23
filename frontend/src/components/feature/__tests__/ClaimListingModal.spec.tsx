@@ -3,6 +3,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import ClaimListingModal from "../ClaimListingModal";
 import { directoryService } from "@/api-services/directory.service";
 import type { Business } from "@/mocks/businesses";
+import toast from "react-hot-toast";
+
+vi.mock("react-hot-toast", () => ({
+  default: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 const mockBusiness: Business = {
   id: "biz-claim-1",
@@ -124,5 +132,64 @@ describe("ClaimListingModal Component (Milestone M4 / R4)", () => {
 
     expect(await screen.findByText(/claim request submitted/i)).toBeInTheDocument();
     expect(screen.getByText(/we have received your ownership claim/i)).toBeInTheDocument();
+  });
+
+  it("displays error feedback, calls toast.error, does not set submitted state, and does not call onClaimSubmitted when API fails", async () => {
+    const submitSpy = vi
+      .spyOn(directoryService, "submitClaim")
+      .mockRejectedValueOnce(new Error("Listing has already been claimed"));
+
+    const handleSubmitted = vi.fn();
+
+    render(
+      <ClaimListingModal
+        business={mockBusiness}
+        isOpen={true}
+        onClose={vi.fn()}
+        onClaimSubmitted={handleSubmitted}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/your full name/i), {
+      target: { value: "Mehmet Demir" },
+    });
+    fireEvent.change(screen.getByLabelText(/official business email/i), {
+      target: { value: "mehmet@demirseafood.test" },
+    });
+    fireEvent.change(screen.getByLabelText(/contact phone/i), {
+      target: { value: "+90 532 111 2233" },
+    });
+    fireEvent.change(screen.getByLabelText(/your role/i), {
+      target: { value: "General Manager" },
+    });
+
+    const agreeCheckbox = screen.getByLabelText(
+      /i confirm that i am an authorized representative/i
+    );
+    fireEvent.click(agreeCheckbox);
+
+    const submitBtn = screen.getByRole("button", { name: /submit claim/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalled();
+    });
+
+    // Error toast must be called
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalled();
+    });
+
+    // Callback must NOT be called
+    expect(handleSubmitted).not.toHaveBeenCalled();
+
+    // Success screen must NOT be displayed
+    expect(screen.queryByText(/claim request submitted/i)).not.toBeInTheDocument();
+
+    // Error UI banner must display error message
+    expect(await screen.findByText(/listing has already been claimed/i)).toBeInTheDocument();
+
+    // Submit button should be enabled again (isSubmitting = false)
+    expect(screen.getByRole("button", { name: /submit claim/i })).not.toBeDisabled();
   });
 });

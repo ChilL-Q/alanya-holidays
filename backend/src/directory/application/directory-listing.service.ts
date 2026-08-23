@@ -14,6 +14,7 @@ import {
   validatePhotoLimit,
   stripProtectedFields,
   normalizeListingInput,
+  normalizePriceLevel,
   DEFAULT_UNPRIVILEGED_LISTING_FLAGS,
 } from '../domain/listing-input.schema';
 
@@ -242,8 +243,10 @@ export class DirectoryListingService {
       base_score: 0,
       status: 'draft',
       owner_user_id: userId,
-      ...(listing.price_level !== undefined
-        ? { price_level: listing.price_level }
+      phone: typeof listing.phone === 'string' ? listing.phone : null,
+      email: typeof listing.email === 'string' ? listing.email : null,
+      ...(normalized.price_level !== undefined
+        ? { price_level: normalized.price_level }
         : {}),
     };
 
@@ -363,6 +366,15 @@ export class DirectoryListingService {
       rejection_reason: null,
     };
 
+    if (safeUpdates.price_level !== undefined) {
+      const normalizedPrice = normalizePriceLevel(safeUpdates.price_level);
+      if (normalizedPrice !== undefined) {
+        safeUpdates.price_level = normalizedPrice;
+      } else {
+        delete safeUpdates.price_level;
+      }
+    }
+
     const data = await this.directoryRepository.updateDirectoryListing(
       id,
       safeUpdates,
@@ -415,6 +427,8 @@ export class DirectoryListingService {
       descriptions: normalized.descriptions ?? {},
       status: 'pending',
       owner_user_id: userId,
+      phone: typeof listing.phone === 'string' ? listing.phone : null,
+      email: typeof listing.email === 'string' ? listing.email : null,
       ...(normalized.slug ? { slug: normalized.slug } : {}),
       ...(normalized.price_level !== undefined
         ? { price_level: normalized.price_level }
@@ -465,6 +479,15 @@ export class DirectoryListingService {
       updates as Record<string, unknown>,
       ['status'],
     );
+
+    if (safeUpdates.price_level !== undefined) {
+      const normalizedPrice = normalizePriceLevel(safeUpdates.price_level);
+      if (normalizedPrice !== undefined) {
+        safeUpdates.price_level = normalizedPrice;
+      } else {
+        delete safeUpdates.price_level;
+      }
+    }
 
     const data = await this.directoryRepository.updateDirectoryListing(
       id,
