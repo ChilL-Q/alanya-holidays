@@ -5,7 +5,6 @@ import {
   validateUUIDs,
   stripProtectedFields,
   getPhotoLimit,
-  TIER_PHOTO_LIMITS,
 } from './listing-input.schema';
 
 describe('listing-input.schema', () => {
