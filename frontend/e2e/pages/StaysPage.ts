@@ -46,7 +46,7 @@ export class StaysPage extends BasePage {
   }
 
   async getCartCount(): Promise<number> {
-    const cartJson = await this.page.evaluate(() => localStorage.getItem('cart'));
+    const cartJson = await this.page.evaluate(() => localStorage.getItem('alanya_cart'));
     const cart = cartJson ? JSON.parse(cartJson) : [];
     return cart.length;
   }

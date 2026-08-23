@@ -127,6 +127,44 @@ export function stripProtectedFields<T extends Record<string, unknown>>(
 }
 
 /**
+ * Normalizes price level values into database-compatible integers (1..4).
+ * Maps:
+ * - "$" -> 1, "$$" -> 2, "$$$" -> 3, "$$$$" -> 4
+ * - Valid integer numbers 1..4 -> as is
+ * - Numeric strings "1", "2", "3", "4" -> Number(value)
+ * - Any invalid, out-of-range, or unrecognized value -> undefined
+ */
+export function normalizePriceLevel(value: unknown): number | undefined {
+  if (typeof value === 'number') {
+    return Number.isInteger(value) && value >= 1 && value <= 4
+      ? value
+      : undefined;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    switch (trimmed) {
+      case '$':
+      case '1':
+        return 1;
+      case '$$':
+      case '2':
+        return 2;
+      case '$$$':
+      case '3':
+        return 3;
+      case '$$$$':
+      case '4':
+        return 4;
+      default:
+        return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Interface representing sanitized and normalized listing input values.
  */
 export interface NormalizedListingInput {
@@ -143,7 +181,7 @@ export interface NormalizedListingInput {
   gallery: string[];
   tier: string;
   slug?: string;
-  price_level?: number | string;
+  price_level?: number;
   certifications?: string[];
   languages_spoken?: string[];
   newsletter_featured?: boolean;
@@ -218,11 +256,9 @@ export function normalizeListingInput(
   if (input?.slug && typeof input.slug === 'string') {
     normalized.slug = slugify(input.slug).slice(0, 200);
   }
-  if (
-    typeof input?.price_level === 'number' ||
-    typeof input?.price_level === 'string'
-  ) {
-    normalized.price_level = input.price_level;
+  const priceLevel = normalizePriceLevel(input?.price_level);
+  if (priceLevel !== undefined) {
+    normalized.price_level = priceLevel;
   }
   if (Array.isArray(input?.certifications)) {
     normalized.certifications = (input.certifications as unknown[]).filter(

@@ -66,11 +66,11 @@ test.describe('Booking Flow', () => {
       await bookBtn.first().click();
       // Wait for cart state to update
       await page.waitForFunction(() => {
-        const cart = localStorage.getItem('cart');
+        const cart = localStorage.getItem('alanya_cart');
         return cart ? JSON.parse(cart).length > 0 : false;
       }, { timeout: 5000 }).catch(() => null);
 
-      const cartJson = await page.evaluate(() => localStorage.getItem('cart'));
+      const cartJson = await page.evaluate(() => localStorage.getItem('alanya_cart'));
       const cart = cartJson ? JSON.parse(cartJson) : [];
       expect(cart.length).toBeGreaterThan(0);
     } else {
@@ -85,17 +85,13 @@ test.describe('Booking Flow', () => {
     await setupAuthMocks(page);
     await mockSupabaseRest(page);
     await page.addInitScript(() => {
-      localStorage.setItem('cart', JSON.stringify([{
-        id: 'test-cart-item',
-        type: 'property',
-        title: 'Test Villa',
-        price: 350,
-        image: '/images/test.jpg',
-        startDate: '2026-07-01',
-        endDate: '2026-07-08',
-        guests: 2,
-        nights: 7,
-        pricePerNight: 50,
+      localStorage.setItem('alanya_cart', JSON.stringify([{
+        productName: 'Test Villa',
+        price: '€350',
+        moneyPrice: { cents: 35000, currency: 'EUR' },
+        icon: 'ri-home-4-line',
+        quantity: 1,
+        productId: 'test-cart-item',
       }]));
     });
 
@@ -103,7 +99,7 @@ test.describe('Booking Flow', () => {
 
     // Cart should be in localStorage
     const cartLen = await page.evaluate(() => {
-      const cart = localStorage.getItem('cart');
+      const cart = localStorage.getItem('alanya_cart');
       return cart ? JSON.parse(cart).length : 0;
     });
     expect(cartLen).toBe(1);

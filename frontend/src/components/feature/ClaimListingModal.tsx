@@ -5,6 +5,7 @@ import {
   type Business,
 } from "@/api-services/directory.service";
 import { logger } from "@/lib/logger";
+import toast from "react-hot-toast";
 
 export interface ClaimListingModalProps {
   business: Business | null;
@@ -109,9 +110,10 @@ export default function ClaimListingModal({
       onClaimSubmitted?.(payload);
     } catch (err) {
       logger.error("Claim submission failed:", err);
-      // Even on API error, provide seamless UX with mock confirmation
-      setSubmitted(true);
-      onClaimSubmitted?.(payload);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to submit claim. Please try again.";
+      setSubmitError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

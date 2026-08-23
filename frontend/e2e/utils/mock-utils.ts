@@ -364,7 +364,7 @@ export async function mockAIProxy(page: Page) {
 /** Seed cart into localStorage before any JS runs */
 export async function seedCartAndWait(page: Page, cart: any[]) {
   await page.addInitScript((cartData) => {
-    localStorage.setItem('cart', JSON.stringify(cartData));
+    localStorage.setItem('alanya_cart', JSON.stringify(cartData));
   }, cart);
 }
 

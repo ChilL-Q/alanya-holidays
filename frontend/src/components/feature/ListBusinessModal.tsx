@@ -7,6 +7,7 @@ import {
 } from "@/api-services/directory.service";
 import { useListingDraft } from "@/hooks/useListingDraft";
 import { logger } from "@/lib/logger";
+import toast from "react-hot-toast";
 
 export interface ListBusinessModalProps {
   isOpen: boolean;
@@ -263,8 +264,9 @@ export default function ListBusinessModal({
       setStep("confirmed");
     } catch (err) {
       logger.error("Failed to submit business listing:", err);
-      clearDraft();
-      setStep("confirmed");
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to submit business listing. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
