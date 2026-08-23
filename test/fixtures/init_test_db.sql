@@ -300,7 +300,21 @@ CREATE TABLE IF NOT EXISTS public.tickets (
 
 CREATE TABLE IF NOT EXISTS public.chat_conversations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  guest_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  host_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
   property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_models (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.property_overrides (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES public.properties(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now()
 );
 
