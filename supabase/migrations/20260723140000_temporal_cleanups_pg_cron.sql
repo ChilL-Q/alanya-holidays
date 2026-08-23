@@ -2,6 +2,7 @@
 -- Description: Move temporal booking cancellations and listing add-on expirations into atomic Postgres functions managed by pg_cron.
 
 -- 1. Function to cancel expired pending bookings
+DROP FUNCTION IF EXISTS cancel_expired_pending_bookings();
 CREATE OR REPLACE FUNCTION cancel_expired_pending_bookings()
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -36,6 +37,7 @@ END;
 $$;
 
 -- 2. Function to expire promotional listing add-ons
+DROP FUNCTION IF EXISTS expire_listing_addons();
 CREATE OR REPLACE FUNCTION expire_listing_addons()
 RETURNS INTEGER
 LANGUAGE plpgsql
