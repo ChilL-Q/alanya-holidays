@@ -3,9 +3,16 @@
 -- Used by CI to validate migrations and RLS policies
 -- ============================================================================
 
+CREATE SCHEMA IF NOT EXISTS extensions;
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+CREATE OR REPLACE FUNCTION extensions.uuid_generate_v4() 
+RETURNS uuid AS $$ 
+  SELECT gen_random_uuid(); 
+$$ LANGUAGE sql IMMUTABLE;
 
 -- Mock Supabase Roles
 DO $$
