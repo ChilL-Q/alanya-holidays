@@ -150,7 +150,7 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     });
   });
 
-  it("renders Shop dropdown with Shop Marketplace and Gift Cards links", () => {
+  it("renders Shop dropdown with Shop Marketplace link", () => {
     mockAuthState = {
       user: null,
       profile: null,
@@ -168,10 +168,6 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     const shopButtons = screen.getAllByRole("button", { name: /Shop/i });
     expect(shopButtons.length).toBeGreaterThan(0);
     fireEvent.click(shopButtons[0]);
-
-    const giftCardsLinks = screen.getAllByRole("link", { name: /Gift Cards/i });
-    expect(giftCardsLinks.length).toBeGreaterThan(0);
-    expect(giftCardsLinks[0]).toHaveAttribute("href", "/gift-cards");
 
     const marketplaceLinks = screen.getAllByRole("link", { name: /Shop Marketplace/i });
     expect(marketplaceLinks.length).toBeGreaterThan(0);

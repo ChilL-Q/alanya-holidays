@@ -68,7 +68,6 @@ Grab lunch at a harbor-side fish restaurant (the grilled sea bass is reliably ex
     ],
     relatedLinks: [
       { label: "Explore Businesses & Restaurants", href: "/explore", icon: "ri-store-2-line" },
-      { label: "Plan Your Itinerary", href: "/planner", icon: "ri-calendar-check-line" },
       { label: "Browse Local Events", href: "/events", icon: "ri-calendar-event-line" },
     ],
     checklistTitle: "Pre-Trip Checklist",
@@ -138,7 +137,6 @@ Rooftop 42 near the Red Tower does Mediterranean fusion with a killer cocktail p
     ],
     relatedLinks: [
       { label: "Explore Restaurants & Cafes", href: "/explore", icon: "ri-store-2-line" },
-      { label: "Plan a Food Tour Day", href: "/planner", icon: "ri-calendar-check-line" },
       { label: "Browse Food Events", href: "/events", icon: "ri-calendar-event-line" },
     ],
   },
@@ -191,7 +189,6 @@ The canyon is managed (small entrance fee, well-maintained paths) so it feels ac
     ],
     relatedLinks: [
       { label: "Browse Adventure Events", href: "/events", icon: "ri-calendar-event-line" },
-      { label: "Plan a Day Trip Itinerary", href: "/planner", icon: "ri-calendar-check-line" },
       { label: "Explore Outdoor Activities", href: "/explore", icon: "ri-store-2-line" },
     ],
   },
@@ -238,7 +235,6 @@ Most landlords want 3-6 months upfront for short-term, or a full year contract. 
     ],
     relatedLinks: [
       { label: "Connect with the Community", href: "/community-hub", icon: "ri-group-line" },
-      { label: "Browse Local Members", href: "/members", icon: "ri-user-star-line" },
       { label: "Explore Neighborhood Businesses", href: "/explore", icon: "ri-store-2-line" },
     ],
     checklistTitle: "Moving Checklist",
@@ -307,7 +303,6 @@ The western end (near Damlataş Cave) is busier and better for families; the eas
     ],
     relatedLinks: [
       { label: "Explore Beach Clubs & Water Sports", href: "/explore", icon: "ri-store-2-line" },
-      { label: "Plan a Beach Day Itinerary", href: "/planner", icon: "ri-calendar-check-line" },
       { label: "Browse Waterfront Events", href: "/events", icon: "ri-calendar-event-line" },
     ],
     checklistTitle: "Beach Day Packing List",
@@ -375,7 +370,6 @@ Luna Garden sits above the eastern harbor with a more intimate, plant-filled ter
     ],
     relatedLinks: [
       { label: "Browse Nightlife Events", href: "/events", icon: "ri-calendar-event-line" },
-      { label: "Explore Luxury Experiences", href: "/luxury-experience", icon: "ri-vip-crown-line" },
       { label: "Explore Bars & Nightclubs", href: "/explore", icon: "ri-store-2-line" },
     ],
   },

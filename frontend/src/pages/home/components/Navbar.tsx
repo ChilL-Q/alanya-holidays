@@ -24,7 +24,6 @@ interface NavDropdown {
 
 const discoverItems = [
   { label: "Explore", href: "/explore", icon: "ri-compass-3-line" },
-  { label: "Insights", href: "/insights", icon: "ri-line-chart-line" },
   { label: "Travel Guides", href: "/travel-guides", icon: "ri-book-open-line" },
 ];
 
@@ -32,22 +31,16 @@ const communityItems = [
   { label: "Community Hub", href: "/community-hub", icon: "ri-community-line" },
   { label: "Categories", href: "/categories", icon: "ri-stack-line" },
   { label: "Events", href: "/events", icon: "ri-calendar-event-line" },
-  { label: "Planner", href: "/planner", icon: "ri-calendar-todo-line" },
-  { label: "Members", href: "/members", icon: "ri-user-3-line" },
-  { label: "Messages", href: "/messages", icon: "ri-message-3-line" },
 ];
 
 const shopItems = [
   { label: "Shop Marketplace", href: "/shop", icon: "ri-store-2-line" },
-  { label: "Gift Cards", href: "/gift-cards", icon: "ri-gift-line" },
 ];
 
 const DARK_HERO_ROUTES = [
   "/",
   "/events",
-  "/members",
   "/community-hub",
-  "/luxury-experience",
   "/yacht-charters",
   "/private-jets",
   "/helicopter-tours",
@@ -62,11 +55,9 @@ const DARK_HERO_ROUTES = [
   "/about",
   "/contact",
   "/shop",
-  "/gift-cards",
   "/categories",
   "/explore",
   "/checkout",
-  "/messages",
 ];
 
 export default function Navbar() {
@@ -119,12 +110,10 @@ export default function Navbar() {
   const isCommunityActive =
     communityItems.some((item) => isActive(item.href)) ||
     location.pathname.startsWith("/category/") ||
-    location.pathname.startsWith("/thread/") ||
-    location.pathname.startsWith("/member/");
+    location.pathname.startsWith("/thread/");
   const isShopActive =
     shopItems.some((item) => isActive(item.href)) ||
-    location.pathname.startsWith("/shop") ||
-    location.pathname.startsWith("/gift-cards");
+    location.pathname.startsWith("/shop");
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -416,7 +405,6 @@ export default function Navbar() {
     { label: "Home", href: "/" },
     { label: "Discover", children: discoverItems },
     { label: "Community", children: communityItems },
-    { label: "Luxury Experience", href: "/luxury-experience" },
     { label: "Shop", children: shopItems },
   ];
 
@@ -725,14 +713,6 @@ export default function Navbar() {
                       >
                         <i className="ri-calendar-event-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
                         Events & Activities
-                      </Link>
-                      <Link
-                        to="/planner"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
-                      >
-                        <i className="ri-calendar-todo-line w-4 h-4 flex items-center justify-center text-foreground-400"></i>
-                        My Planner
                       </Link>
                       {profile?.role === "admin" && (
                         <Link

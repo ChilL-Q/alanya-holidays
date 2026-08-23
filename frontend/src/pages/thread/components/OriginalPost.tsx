@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import type { ThreadDetail } from "@/api-services/forum.service";
 
 interface OriginalPostProps {
@@ -13,7 +12,7 @@ export default function OriginalPost({ thread, onLike, onShare, onScrollToReplie
     <article className="bg-background-50 rounded-xl border border-background-200/70 overflow-hidden">
       {/* Author row */}
       <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 pb-0">
-        <Link to={`/members`} className="shrink-0">
+        <div className="shrink-0">
           <div className="w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden bg-background-200">
             <img
               src={thread.authorAvatar}
@@ -22,15 +21,12 @@ export default function OriginalPost({ thread, onLike, onShare, onScrollToReplie
               loading="lazy"
             />
           </div>
-        </Link>
+        </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to={`/members`}
-              className="font-heading text-sm md:text-base text-foreground-900 font-semibold hover:text-primary-500 transition-colors"
-            >
+            <span className="font-heading text-sm md:text-base text-foreground-900 font-semibold">
               {thread.author}
-            </Link>
+            </span>
             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-background-100 text-foreground-500 text-[10px] md:text-xs rounded-full font-medium">
               {thread.authorRole}
             </span>

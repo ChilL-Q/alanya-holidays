@@ -7,8 +7,6 @@ import { forumService, type ForumStats } from "@/api-services/forum.service";
 const quickLinks = [
   { icon: "ri-discuss-line", title: "Categories", description: "Browse all discussion categories", link: "/categories", color: "primary" },
   { icon: "ri-calendar-event-line", title: "Events", description: "Upcoming meetups and activities", link: "/events", color: "accent" },
-  { icon: "ri-user-3-line", title: "Members", description: "Meet the community", link: "/members", color: "secondary" },
-  { icon: "ri-message-3-line", title: "Messages", description: "Your conversations", link: "/messages", color: "primary" },
 ];
 
 export default function CommunityHubPage() {
@@ -38,20 +36,20 @@ export default function CommunityHubPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/55 via-foreground-950/30 to-foreground-950/75"></div>
 
-          <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
-            <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
-              <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Community Hub</span>
+          <div className="absolute inset-0 flex items-center justify-center text-center px-4">
+            <div>
+              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-white font-bold mb-3 tracking-tight">
+                Community Hub
+              </h1>
+              <p className="text-white/80 text-base md:text-lg max-w-xl mx-auto">
+                Join {totalMembers.toLocaleString()}+ travelers, expats, and locals in Alanya.
+              </p>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Community Hub</h1>
-            <p className="text-white/70 text-sm md:text-base max-w-xl">
-              The heart of Alanya Holidays — {totalMembers.toLocaleString()}+ members sharing, connecting, and exploring together.
-            </p>
           </div>
         </section>
 
-        <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-24 bg-background-50">
+        {/* Quick Access Cards */}
+        <section className="py-14 md:py-20 px-4 md:px-8 lg:px-12 bg-background-50">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
@@ -60,7 +58,7 @@ export default function CommunityHubPage() {
               </div>
               <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">Everything Starts Here</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                Your launchpad into the Alanya Holidays community. Jump into discussions, find events, connect with members, or just explore.
+                Your launchpad into the Alanya Holidays community. Jump into discussions, find events, or just explore.
               </p>
             </div>
 

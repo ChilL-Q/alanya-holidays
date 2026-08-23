@@ -77,22 +77,8 @@ export default function HeroSection() {
           {/* CTA */}
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/planner?quickstart=suggested-1"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-foreground-900 rounded-full font-semibold text-sm hover:bg-white/90 transition-colors"
-            >
-              Quick Start
-              <i className="ri-rocket-2-line"></i>
-            </Link>
-            <Link
-              to="/planner"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/30 rounded-full font-semibold text-sm hover:bg-white/20 transition-colors"
-            >
-              Plan Your Holiday
-              <i className="ri-arrow-right-line"></i>
-            </Link>
-            <Link
               to="/explore"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/30 rounded-full font-semibold text-sm hover:bg-white/20 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-foreground-900 rounded-full font-semibold text-sm hover:bg-white/90 transition-colors"
             >
               Explore Alanya
               <i className="ri-compass-3-line"></i>

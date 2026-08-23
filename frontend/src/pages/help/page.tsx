@@ -138,12 +138,11 @@ export default function HelpPage() {
       <main className="flex-1 w-full">
         {/* Quick links */}
         <section className="w-full px-4 md:px-8 lg:px-12 py-10 md:py-14">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {[
               { icon: "ri-user-add-line", label: "Create Account", href: "/register" },
               { icon: "ri-edit-line", label: "Start Discussion", href: "/new-thread" },
               { icon: "ri-calendar-event-line", label: "Browse Events", href: "/events" },
-              { icon: "ri-group-line", label: "Find Members", href: "/members" },
               { icon: "ri-stack-line", label: "All Categories", href: "/categories" },
               { icon: "ri-information-line", label: "About Us", href: "/about" },
             ].map((link) => (

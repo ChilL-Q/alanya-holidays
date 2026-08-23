@@ -17,7 +17,7 @@ const subjectIcons: Record<string, string> = {
 const subjectLinks: Record<string, { label: string; to: string }> = {
   "Yacht Charter": { label: "Explore more yachts", to: "/yacht-charters" },
   "Villa Stay": { label: "Browse more villas", to: "/villa-stays" },
-  "Luxury Experience": { label: "Explore luxury experiences", to: "/luxury-experience" },
+  "Luxury Experience": { label: "Explore experiences", to: "/explore" },
   "Helicopter Tour": { label: "See more tours", to: "/helicopter-tours" },
   "Wine Tasting": { label: "Discover more tastings", to: "/wine-tastings" },
   "Hammam & Spa": { label: "View more spa experiences", to: "/hammam-spa" },

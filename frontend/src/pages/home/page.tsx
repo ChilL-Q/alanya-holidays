@@ -8,7 +8,6 @@ import CategoriesGrid from "./components/CategoriesGrid";
 import FeaturedProducts from "./components/FeaturedProducts";
 import RecentlyClaimedSection from "./components/RecentlyClaimedSection";
 import CommunityPulse from "./components/CommunityPulse";
-import PopularMembers from "./components/PopularMembers";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 
@@ -31,7 +30,6 @@ export default function Home() {
         <CategoriesGrid />
         <FeaturedProducts />
         <CommunityPulse />
-        <PopularMembers />
       </main>
       <Footer />
     </div>

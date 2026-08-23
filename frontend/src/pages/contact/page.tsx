@@ -772,16 +772,6 @@ export default function ContactPage() {
                       <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
                     </Link>
                     <Link
-                      to="/luxury-experience"
-                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-background-50 hover:bg-accent-50 transition-colors text-sm text-foreground-700 hover:text-foreground-900 group"
-                    >
-                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-100 shrink-0">
-                        <i className="ri-star-line text-accent-600 text-sm"></i>
-                      </div>
-                      Luxury Experiences
-                      <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
-                    </Link>
-                    <Link
                       to="/events"
                       className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-background-50 hover:bg-accent-50 transition-colors text-sm text-foreground-700 hover:text-foreground-900 group"
                     >

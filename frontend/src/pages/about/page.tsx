@@ -278,16 +278,6 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
-
-            <div className="text-center mt-10">
-              <Link
-                to="/members"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary-500 text-background-50 rounded-full text-sm font-medium hover:bg-secondary-600 transition-colors"
-              >
-                View All Members
-                <i className="ri-arrow-right-line"></i>
-              </Link>
-            </div>
           </div>
         </section>
 

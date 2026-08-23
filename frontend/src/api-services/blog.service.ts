@@ -382,7 +382,6 @@ export class BlogService {
           ],
           relatedLinks: [
             { label: "Explore Alanya", href: "/explore", icon: "ri-store-2-line" },
-            { label: "Plan Itinerary", href: "/planner", icon: "ri-calendar-check-line" },
           ],
         };
       }

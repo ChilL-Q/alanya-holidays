@@ -265,10 +265,9 @@ export default function SearchPage() {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {displayedMembers.map((member) => (
-                    <Link
+                    <div
                       key={member.id}
-                      to={`/member/${member.id}`}
-                      className="flex items-center gap-3 bg-background-50 rounded-xl border border-background-200/70 p-4 hover:border-primary-200/60 transition-all group"
+                      className="flex items-center gap-3 bg-background-50 rounded-xl border border-background-200/70 p-4"
                     >
                       <div className="relative shrink-0">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-background-200">
@@ -279,13 +278,13 @@ export default function SearchPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground-900 group-hover:text-primary-500 transition-colors truncate">
+                        <p className="text-sm font-semibold text-foreground-900 truncate">
                           <HighlightMatch text={member.fullName} query={query} />
                         </p>
                         <p className="text-xs text-foreground-500 truncate">@{member.username}</p>
                         <p className="text-xs text-foreground-400 truncate">{member.role}</p>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>

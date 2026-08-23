@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import type { ThreadDetail } from "@/api-services/forum.service";
 
 interface AuthorSidebarProps {
@@ -19,12 +18,9 @@ export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
               loading="lazy"
             />
           </div>
-          <Link
-            to="/members"
-            className="font-heading text-sm text-foreground-900 font-semibold hover:text-primary-500 transition-colors block"
-          >
+          <p className="font-heading text-sm text-foreground-900 font-semibold block">
             {thread.author}
-          </Link>
+          </p>
           <p className="text-xs text-foreground-500 mt-0.5">{thread.authorRole}</p>
         </div>
 
