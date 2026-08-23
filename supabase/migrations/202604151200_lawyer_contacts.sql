@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.lawyer_contacts (
 -- Rate limiting: 1 submission per email per day
 -- Only allow ONE entry per email per day
 CREATE UNIQUE INDEX idx_lawyer_contacts_email_daily
-ON public.lawyer_contacts (email, (created_at::date));
+ON public.lawyer_contacts (email, ((created_at AT TIME ZONE 'UTC')::date));
 
 -- RLS Policies
 ALTER TABLE public.lawyer_contacts ENABLE ROW LEVEL SECURITY;
