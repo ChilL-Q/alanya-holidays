@@ -139,9 +139,9 @@ CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger AS 
 CREATE OR REPLACE FUNCTION public.cancel_expired_bookings() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.cancel_expired_pending_bookings() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.expire_listing_addons() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
-CREATE OR REPLACE FUNCTION public.get_available_properties(date, date) RETURNS SETOF public.properties AS $$ SELECT * FROM public.properties; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.get_available_properties(date, date) RETURNS SETOF record AS $$ SELECT 1 WHERE false; $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.handle_new_chat_message() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
-CREATE OR REPLACE FUNCTION public.get_property_by_ref_id(integer) RETURNS SETOF public.properties AS $$ SELECT * FROM public.properties; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.get_property_by_ref_id(integer) RETURNS SETOF record AS $$ SELECT 1 WHERE false; $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.vote_listing(UUID, SMALLINT, TEXT) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
