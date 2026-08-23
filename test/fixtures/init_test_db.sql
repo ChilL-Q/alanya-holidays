@@ -385,6 +385,8 @@ CREATE TABLE IF NOT EXISTS public.chat_reports (
 CREATE TABLE IF NOT EXISTS public.directory_listings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  owner_user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  subscription_id uuid,
   category_id uuid,
   title text,
   name text,
