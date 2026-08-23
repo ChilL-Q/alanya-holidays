@@ -23,11 +23,11 @@ export class AuthPage extends BasePage {
     this.loginSubmitButton = page.getByRole('button', { name: /Sign In/i });
     this.signupSubmitButton = page.getByRole('button', { name: /Create Account/i });
 
-    // On register page, "Sign In" link switches to login; on login page, "Register" link switches to register
-    this.switchToSignupButton = page.getByRole('link', { name: /Register|Create one/i });
-    this.switchToLoginButton = page.getByRole('link', { name: /Sign In|Sign in/i });
+    // On login page, "Register" tab link switches to register; on register page, "Sign In" tab link switches to login
+    this.switchToSignupButton = page.locator('a[href="/register"]').first();
+    this.switchToLoginButton = page.locator('a[href="/login"]').first();
 
-    this.errorMessage = page.locator('.bg-accent-100\\/70.text-accent-800, .bg-red-50.text-red-600, [role="alert"]').first();
+    this.errorMessage = page.locator('.bg-accent-100\\/70, .bg-red-50, [role="alert"]').first();
     this.otpInput = page.locator('#otp-input');
     this.verifyButton = page.getByRole('button', { name: /Verify/i });
   }
