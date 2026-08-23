@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface ChatMessageDto {
   role: "user" | "model";
@@ -295,7 +296,7 @@ export class AiGuideService {
         return result;
       }
     } catch (err) {
-      console.warn("Failed to reach AI guide backend, using curated fallback:", err);
+      logger.warn("Failed to reach AI guide backend, using curated fallback:", err);
     }
 
     return {
@@ -342,7 +343,7 @@ export class AiGuideService {
         }
       }
     } catch (err) {
-      console.warn("Failed to generate itinerary with backend /ai/itinerary, using curated fallback template:", err);
+      logger.warn("Failed to generate itinerary with backend /ai/itinerary, using curated fallback template:", err);
     }
 
     return this.getCuratedItineraryFallback(params);

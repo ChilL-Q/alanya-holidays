@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { itinerariesService, type SavedItinerary } from '@/api-services/itineraries.service';
+import { logger } from "@/lib/logger";
 
 export interface PlanItem {
   id: string;
@@ -101,7 +102,7 @@ export function usePlanner() {
         });
       }
     } catch (err) {
-      console.warn('Failed to sync plans with cloud:', err);
+      logger.warn('Failed to sync plans with cloud:', err);
     } finally {
       setIsSyncing(false);
     }
@@ -124,7 +125,7 @@ export function usePlanner() {
         });
         return saved;
       } catch (err) {
-        console.warn(`Failed to save plan '${planId}' to cloud:`, err);
+        logger.warn(`Failed to save plan '${planId}' to cloud:`, err);
         return null;
       }
     },

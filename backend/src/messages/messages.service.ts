@@ -17,6 +17,7 @@ import {
   ProfileSummary,
   PropertySummary,
 } from './types/messages.types';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 
 const sanitizeString = (str?: string | null): string => {
   if (!str) return '';
@@ -25,7 +26,10 @@ const sanitizeString = (str?: string | null): string => {
 
 @Injectable()
 export class MessagesService {
-  constructor(private readonly messagesRepository: MessagesRepository) {}
+  constructor(
+    private readonly messagesRepository: MessagesRepository,
+    private readonly emailOutbox: EmailOutboxRepository,
+  ) {}
 
   async getConversations(userId: string): Promise<EnrichedConversation[]> {
     const rawConversations =
@@ -192,7 +196,7 @@ export class MessagesService {
 
     await this.messagesRepository.insertContactMessage(sanitized);
 
-    this.messagesRepository.invokeEmailFunction({
+    await this.emailOutbox.enqueue({
       type: 'admin_contact_message',
       to: 'contact@alanyaholidays.com',
       data: {

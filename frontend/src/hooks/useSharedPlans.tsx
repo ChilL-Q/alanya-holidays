@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import type { PlanItem } from "@/hooks/usePlanner";
 import { itinerariesService, type SavedItinerary } from "@/api-services/itineraries.service";
+import { safeStorage } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 
 export interface SharedPlan {
   shareId: string;
@@ -219,44 +221,26 @@ function seedCommunityPlans(): SharedPlan[] {
 }
 
 function loadSharedPlans(): SharedPlan[] {
-  try {
-    if (typeof localStorage === "undefined") return seedCommunityPlans();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        // Check if seeding is needed
-        const hasSeeded = parsed.some(
-          (p: SharedPlan) =>
-            p.shareId === "community-1" ||
-            p.shareId === "community-2" ||
-            p.shareId === "community-3",
-        );
-        if (!hasSeeded) {
-          const seeded = [...seedCommunityPlans(), ...parsed];
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-          return seeded;
-        }
-        return parsed as SharedPlan[];
-      }
-    }
-  } catch {
-    // corrupted data
-  }
   const seeded = seedCommunityPlans();
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+  const parsed = safeStorage.get<SharedPlan[]>(STORAGE_KEY, seeded);
+
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    const hasSeeded = parsed.some(
+      (p: SharedPlan) =>
+        p.shareId === "community-1" ||
+        p.shareId === "community-2" ||
+        p.shareId === "community-3",
+    );
+    if (!hasSeeded) {
+      return [...seeded, ...parsed];
+    }
+    return parsed;
   }
   return seeded;
 }
 
 function saveSharedPlans(plans: SharedPlan[]): void {
-  try {
-    if (typeof localStorage === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
-  } catch {
-    // storage full
-  }
+  safeStorage.set(STORAGE_KEY, plans);
 }
 
 function mapSavedItineraryToSharedPlan(itin: SavedItinerary): SharedPlan {
@@ -300,7 +284,7 @@ export function useSharedPlans() {
         });
       }
     } catch (err) {
-      console.warn("Failed to fetch community itineraries:", err);
+      logger.warn("Failed to fetch community itineraries:", err);
     } finally {
       setIsLoading(false);
     }

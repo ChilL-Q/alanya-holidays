@@ -1,24 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AdminRepository } from './admin.repository';
 import { DirectoryController } from '../directory/directory.controller';
+import { DirectoryAdminController } from '../directory/presentation/directory-admin.controller';
 import { DirectoryService } from '../directory/directory.service';
+import { DirectoryListingService } from '../directory/application/directory-listing.service';
+import { ListingClaimService } from '../directory/application/listing-claim.service';
 import { DirectoryRepository } from '../directory/directory.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from '../directory/types/directory.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { ROLE_KEY } from '../auth/decorators/require-role.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
-  let adminController: AdminController;
   let adminService: AdminService;
   let adminRepo: AdminRepository;
 
-  let directoryController: DirectoryController;
+  let _directoryController: DirectoryController;
+  let directoryAdminController: DirectoryAdminController;
   let directoryService: DirectoryService;
-  let directoryRepo: DirectoryRepository;
+  let _directoryRepo: DirectoryRepository;
+  let userRolesRepo: UserRolesRepository;
 
   const mockSupabaseClient = {
     from: jest.fn(),
@@ -41,12 +49,22 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AdminController, DirectoryController],
+      controllers: [
+        AdminController,
+        DirectoryController,
+        DirectoryAdminController,
+      ],
       providers: [
         AdminService,
         AdminRepository,
         DirectoryService,
+        DirectoryListingService,
+        ListingClaimService,
         DirectoryRepository,
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn() },
+        },
         {
           provide: RedisService,
           useValue: mockRedis,
@@ -55,102 +73,74 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
           provide: SupabaseService,
           useValue: {
             getClient: () => mockSupabaseClient,
+            getAdminClient: () => mockSupabaseClient,
           },
         },
       ],
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
-    adminController = module.get<AdminController>(AdminController);
     adminService = module.get<AdminService>(AdminService);
     adminRepo = module.get<AdminRepository>(AdminRepository);
 
-    directoryController = module.get<DirectoryController>(DirectoryController);
+    _directoryController = module.get<DirectoryController>(DirectoryController);
+    directoryAdminController = module.get<DirectoryAdminController>(
+      DirectoryAdminController,
+    );
     directoryService = module.get<DirectoryService>(DirectoryService);
-    directoryRepo = module.get<DirectoryRepository>(DirectoryRepository);
+    _directoryRepo = module.get<DirectoryRepository>(DirectoryRepository);
+    userRolesRepo = module.get<UserRolesRepository>(UserRolesRepository);
   });
 
   describe('1. Security Boundary Enforcement (401/403 Rejection)', () => {
+    test('AdminController class is decorated with AuthGuard, RolesGuard, and RequireRole("admin")', () => {
+      const guards = Reflect.getMetadata(
+        GUARDS_METADATA,
+        AdminController,
+      ) as unknown[];
+      expect(guards).toContain(AuthGuard);
+      expect(guards).toContain(RolesGuard);
+      const roles = Reflect.getMetadata(ROLE_KEY, AdminController) as string[];
+      expect(roles).toEqual(['admin']);
+    });
+
+    test('DirectoryAdminController class is decorated with AuthGuard, RolesGuard, and RequireRole("admin")', () => {
+      const guards = Reflect.getMetadata(
+        GUARDS_METADATA,
+        DirectoryAdminController,
+      ) as unknown[];
+      expect(guards).toContain(AuthGuard);
+      expect(guards).toContain(RolesGuard);
+      const roles = Reflect.getMetadata(
+        ROLE_KEY,
+        DirectoryAdminController,
+      ) as string[];
+      expect(roles).toEqual(['admin']);
+    });
+
     const nonAdminRoles = ['user', 'merchant', 'partner', undefined, ''];
-
-    test.each(nonAdminRoles)(
-      'GET /admin/analytics rejects role "%s" with UnauthorizedException',
-      async (role) => {
-        jest.spyOn(adminRepo, 'getUserRole').mockResolvedValue(role);
-
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
-
-        await expect(adminController.getAnalytics('30', req)).rejects.toThrow(
-          UnauthorizedException,
-        );
-      },
-    );
-
-    test.each(nonAdminRoles)(
-      'GET /admin/enquiries rejects role "%s" with UnauthorizedException',
-      async (role) => {
-        jest.spyOn(adminRepo, 'getUserRole').mockResolvedValue(role);
-
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
-
-        await expect(adminController.getEnquiries(req)).rejects.toThrow(
-          UnauthorizedException,
-        );
-      },
-    );
-
-    test.each(nonAdminRoles)(
-      'PATCH /admin/enquiries/:id/status rejects role "%s" with UnauthorizedException',
-      async (role) => {
-        jest.spyOn(adminRepo, 'getUserRole').mockResolvedValue(role);
-
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
-
-        await expect(
-          adminController.updateStatus('1', { status: 'responded' }, req),
-        ).rejects.toThrow(UnauthorizedException);
-      },
-    );
-
-    test.each(nonAdminRoles)(
-      'PATCH /admin/enquiries/:id/assign rejects role "%s" with UnauthorizedException',
-      async (role) => {
-        jest.spyOn(adminRepo, 'getUserRole').mockResolvedValue(role);
-
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
-
-        await expect(
-          adminController.assignEnquiry('1', { assigned_to: 'agent-1' }, req),
-        ).rejects.toThrow(UnauthorizedException);
-      },
-    );
 
     test.each(nonAdminRoles)(
       'GET /directory/admin/listings rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
         await expect(
-          directoryController.getDirectoryListingsAdmin(
+          directoryAdminController.getDirectoryListingsAdmin(
             'all',
             undefined,
             undefined,
             undefined,
-            req,
+            user,
           ),
         ).rejects.toThrow(UnauthorizedException);
       },
@@ -159,14 +149,15 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     test.each(nonAdminRoles)(
       'POST /directory/:id/approve rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
         await expect(
-          directoryController.approveDirectoryListing('list-1', req),
+          directoryAdminController.approveDirectoryListing('list-1', user),
         ).rejects.toThrow(UnauthorizedException);
       },
     );
@@ -174,14 +165,19 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     test.each(nonAdminRoles)(
       'POST /directory/:id/reject rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
         await expect(
-          directoryController.rejectDirectoryListing('list-1', 'Reason', req),
+          directoryAdminController.rejectDirectoryListing(
+            'list-1',
+            'Reason',
+            user,
+          ),
         ).rejects.toThrow(UnauthorizedException);
       },
     );
@@ -189,14 +185,15 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     test.each(nonAdminRoles)(
       'POST /directory/claims/:id/approve rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
         await expect(
-          directoryController.approveListingClaim('claim-1', req),
+          directoryAdminController.approveListingClaim('claim-1', user),
         ).rejects.toThrow(UnauthorizedException);
       },
     );
@@ -204,14 +201,19 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     test.each(nonAdminRoles)(
       'POST /directory/claims/:id/reject rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
         await expect(
-          directoryController.rejectListingClaim('claim-1', 'Invalid', req),
+          directoryAdminController.rejectListingClaim(
+            'claim-1',
+            'Invalid',
+            user,
+          ),
         ).rejects.toThrow(UnauthorizedException);
       },
     );
@@ -219,22 +221,23 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     test.each(nonAdminRoles)(
       'GET /directory/claims rejects role "%s" with UnauthorizedException',
       async (role) => {
-        jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue(role);
+        jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue(role);
 
-        const req = {
-          user: { id: '00000000-0000-0000-0000-000000000001', role },
-        } as AuthenticatedRequest;
+        const user: AuthUser = {
+          id: '00000000-0000-0000-0000-000000000001',
+          role,
+        };
 
-        await expect(directoryController.getListingClaims(req)).rejects.toThrow(
-          UnauthorizedException,
-        );
+        await expect(
+          directoryAdminController.getListingClaims(user),
+        ).rejects.toThrow(UnauthorizedException);
       },
     );
   });
 
   describe('2. Filter Matrix & SQL Injection Safety', () => {
     it('handles all 5 status filters (all, pending, approved, rejected, draft)', async () => {
-      jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue('admin');
+      jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue('admin');
 
       const statuses = ['all', 'pending', 'approved', 'rejected', 'draft'];
 
@@ -259,7 +262,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     });
 
     it('escapes special characters (%, _, commas) in admin search query', async () => {
-      jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue('admin');
+      jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue('admin');
 
       const mockQueryBuilder = {
         select: jest.fn().mockReturnThis(),
@@ -329,7 +332,6 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     });
 
     it('safely normalizes negative or zero days to 30 days', async () => {
-      jest.spyOn(adminRepo, 'getUserRole').mockResolvedValue('admin');
       const spy = jest
         .spyOn(adminRepo, 'getPlatformAnalytics')
         .mockResolvedValue({
@@ -379,7 +381,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
 
   describe('4. Claims Queue Ownership Transfer RPC Integration', () => {
     it('properly propagates RPC failure message when claim approval fails', async () => {
-      jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue('admin');
+      jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue('admin');
       mockSupabaseClient.rpc.mockResolvedValue({
         data: [
           {
@@ -399,7 +401,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     });
 
     it('rejects listing moderation if rejection reason exceeds 1000 characters', async () => {
-      jest.spyOn(directoryRepo, 'getUserRole').mockResolvedValue('admin');
+      jest.spyOn(userRolesRepo, 'getRole').mockResolvedValue('admin');
       const oversizedReason = 'a'.repeat(1001);
 
       await expect(

@@ -128,24 +128,6 @@ describe('DirectoryRepository', () => {
     });
   });
 
-  describe('getUserRole', () => {
-    it('should return undefined immediately for non-UUID userId', async () => {
-      const res = await repository.getUserRole('non-uuid');
-      expect(res).toBeUndefined();
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should return role when valid UUID userId provided', async () => {
-      mockSupabaseClient.single.mockResolvedValueOnce({
-        data: { role: 'admin' },
-        error: null,
-      });
-
-      const res = await repository.getUserRole(validUserId);
-      expect(res).toBe('admin');
-    });
-  });
-
   describe('getDirectoryListingOwner', () => {
     it('should return null immediately for non-UUID id', async () => {
       const res = await repository.getDirectoryListingOwner('non-uuid');

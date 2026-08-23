@@ -54,14 +54,11 @@ export default defineConfig(() => {
               if (id.includes('@react-google-maps') || id.includes('@googlemaps')) return 'vendor-maps';
               if (id.includes('recharts') || id.includes('d3-') || id.includes('/d3/')) return 'vendor-charts';
               if (id.includes('@supabase')) return 'vendor-supabase';
-              if (id.includes('@stripe')) return 'vendor-stripe';
               if (id.includes('@dnd-kit')) return 'vendor-dnd';
               if (id.includes('i18next') || id.includes('react-i18next')) return 'vendor-i18n';
               if (id.includes('lucide-react')) return 'vendor-icons';
-              if (id.includes('react-datepicker') || id.includes('date-fns')) return 'vendor-date-fns';
-              if (id.includes('react-imask')) return 'vendor-imask';
+              if (id.includes('date-fns')) return 'vendor-date-fns';
               if (id.includes('zod')) return 'vendor-validation';
-              if (id.includes('@headlessui/react')) return 'vendor-headlessui';
               if (id.includes('react-hot-toast')) return 'vendor-toast';
               if (id.includes('@sentry/react') || id.includes('@sentry/')) return 'vendor-sentry';
               if (

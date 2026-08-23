@@ -166,24 +166,6 @@ describe('SupabaseReviewsRepository', () => {
     });
   });
 
-  describe('getUserRole', () => {
-    it('should return undefined immediately for non-UUID userId', async () => {
-      const res = await repository.getUserRole('invalid-user');
-      expect(res).toBeUndefined();
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should return role when valid UUID userId provided', async () => {
-      mockSupabaseClient.maybeSingle.mockResolvedValueOnce({
-        data: { role: 'admin' },
-        error: null,
-      });
-
-      const res = await repository.getUserRole(validUserId);
-      expect(res).toBe('admin');
-    });
-  });
-
   describe('insertListingReview', () => {
     it('should return empty object without querying database when listingId or userId is not a valid UUID', async () => {
       const res1 = await repository.insertListingReview(

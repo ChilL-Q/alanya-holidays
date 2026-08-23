@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { yachts, yachtTypes } from "@/mocks/yachts";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type Yacht } from "@/api-services/concierge.service";
+import { conciergeService, yachtTypes, type Yacht } from "@/api-services/concierge.service";
 import { formatAmenity } from "@/utils/format-amenity";
+import { createInquiryState } from "@/lib/inquiry-confirmation";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 const typeIconMap: Record<string, string> = {
   "Gulet": "ri-anchor-line",
@@ -16,6 +18,11 @@ const typeIconMap: Record<string, string> = {
 };
 
 export default function YachtChartersPage() {
+  const navigate = useNavigate();
+  const initialYachts = conciergeService.getYachtsSync();
+  const [yachts, setYachts] = useState<Yacht[]>(initialYachts);
+  const [isLoading, setIsLoading] = useState(initialYachts.length === 0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "capacity">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -23,9 +30,26 @@ export default function YachtChartersPage() {
   const [charterDate, setCharterDate] = useState("");
   const [dateError, setDateError] = useState("");
   const [charterDuration, setCharterDuration] = useState<"half-day" | "full-day" | "multi-day" | null>(null);
+
+  const loadYachts = useCallback(async () => {
+    if (initialYachts.length === 0) {
+      setIsLoading(true);
+    }
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getYachts();
+      setYachts(data);
+    } catch {
+      setFetchError("Failed to load yacht listings. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [initialYachts.length]);
+
+  useEffect(() => {
+    loadYachts();
+  }, [loadYachts]);
   const [formSubmitting, setFormSubmitting] = useState(false);
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [contactMethod, setContactMethod] = useState("email");
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -105,7 +129,7 @@ export default function YachtChartersPage() {
     }
 
     return results;
-  }, [activeType, sortBy]);
+  }, [activeType, sortBy, yachts]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated",
@@ -122,7 +146,6 @@ export default function YachtChartersPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const prefContact = (formData.get("preferred_contact") as string) || "email";
-    setContactMethod(prefContact);
 
     // Validate required fields
     const nameErr = validateBookingField("name", formData.get("name") as string || "");
@@ -134,23 +157,35 @@ export default function YachtChartersPage() {
       return;
     }
 
+    const bookingName = ((formData.get("name") as string) || "").trim();
+    const bookingEmail = ((formData.get("email") as string) || "").trim();
+    const bookingPhone = ((formData.get("phone") as string) || "").trim();
+    const bookingCountryCode = ((formData.get("country_code") as string) || "").trim();
+    const bookingNotes = ((formData.get("notes") as string) || "").trim();
+    const experienceType = (formData.get("experience_type") as string) || "Yacht Charter";
+    const yachtNameVal = (formData.get("yacht_name") as string) || selectedYacht?.name || "Yacht Charter";
+    const dateVal = (formData.get("charter_date") as string) || "";
+    const durationVal = (formData.get("duration") as string) || "";
+    const confirmationMessage = [
+      `Request for ${yachtNameVal}`,
+      dateVal ? `Preferred date: ${dateVal}` : null,
+      durationVal ? `Duration: ${durationVal}` : null,
+      bookingNotes || null,
+    ].filter(Boolean).join("\n");
+    const confirmationState = createInquiryState({
+      name: bookingName,
+      email: bookingEmail,
+      subject: "Yacht Charter",
+      message: confirmationMessage,
+    });
+
     const honeypot = formData.get("website_alt") as string;
     if (honeypot && honeypot.trim() !== "") {
-      setFormSuccess(true);
+      navigate("/booking-confirmation", { state: confirmationState });
       return;
     }
     setFormSubmitting(true);
     try {
-      const bookingName = (formData.get("name") as string || "").trim();
-      const bookingEmail = (formData.get("email") as string || "").trim();
-      const bookingPhone = (formData.get("phone") as string || "").trim();
-      const bookingCountryCode = (formData.get("country_code") as string || "").trim();
-      const bookingNotes = (formData.get("notes") as string || "").trim();
-      const experienceType = (formData.get("experience_type") as string || "Yacht Charter");
-      const yachtNameVal = (formData.get("yacht_name") as string || selectedYacht?.name);
-      const dateVal = (formData.get("charter_date") as string || "");
-      const durationVal = (formData.get("duration") as string || "");
-
       const result = await conciergeService.submitConciergeEnquiry({
         name: bookingName,
         email: bookingEmail,
@@ -167,8 +202,8 @@ export default function YachtChartersPage() {
       });
 
       if (result.success) {
-        setFormSuccess(true);
         form.reset();
+        navigate("/booking-confirmation", { state: confirmationState });
       } else {
         setFormError("Something went wrong. Please try again.");
       }
@@ -184,8 +219,6 @@ export default function YachtChartersPage() {
     setCharterDate("");
     setDateError("");
     setCharterDuration(null);
-    setFormSuccess(false);
-    setContactMethod("email");
     setFormError("");
     setFormSubmitting(false);
   };
@@ -271,117 +304,154 @@ export default function YachtChartersPage() {
         {/* Results Header */}
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">
-              {filteredYachts.length} {filteredYachts.length === 1 ? "yacht" : "yachts"} available for charter
-            </p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">
+                {filteredYachts.length} {filteredYachts.length === 1 ? "yacht" : "yachts"} available for charter
+              </p>
+            )}
           </div>
         </section>
 
         {/* Yacht Cards Grid */}
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredYachts.map((yacht) => (
-                <div
-                  key={yacht.id}
-                  className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all"
-                  onClick={() => { setSelectedYacht(yacht); setCharterDate(""); setDateError(""); setCharterDuration(null); }}
-                >
-                  {/* Image */}
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img
-                      src={yacht.image}
-                      alt={yacht.name}
-                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {yacht.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>
-                        Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className={`${typeIconMap[yacht.type] || "ri-ship-line"} text-[11px]`}></i>
-                      {yacht.type}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">
-                        <i className="ri-map-pin-line text-[10px]"></i>
-                        {yacht.port}
-                      </div>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load yacht charters"
+                message={fetchError}
+                onRetry={loadYachts}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-
-                  {/* Content */}
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-1">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">
-                        {yacht.name}
-                      </h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{yacht.rating}</span>
-                        <span className="text-xs text-foreground-500">({yacht.reviewCount})</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-foreground-400 mb-3 flex items-center gap-1.5">
-                      <i className="ri-building-line text-[10px]"></i>
-                      {yacht.company}
-                    </p>
-
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">
-                      {yacht.description}
-                    </p>
-
-                    {/* Specs */}
-                    <div className="flex items-center gap-4 mb-4 text-xs text-foreground-500">
-                      <div className="flex items-center gap-1.5">
-                        <i className="ri-ruler-line text-foreground-400"></i>
-                        <span>{yacht.length}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <i className="ri-user-line text-foreground-400"></i>
-                        <span>{yacht.capacity} guests</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <i className="ri-hotel-bed-line text-foreground-400"></i>
-                        <span>{yacht.cabins} cabins</span>
-                      </div>
-                    </div>
-
-                    {/* Amenities preview */}
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {yacht.amenities.slice(0, 4).map((amenity) => (
-                        <span key={amenity} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">
-                          {formatAmenity(amenity)}
-                        </span>
-                      ))}
-                      {yacht.amenities.length > 4 && (
-                        <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">
-                          +{yacht.amenities.length - 4} more
-                        </span>
+                ))}
+              </div>
+            ) : filteredYachts.length === 0 ? (
+              <EmptyState
+                title="No yachts found"
+                description="Try selecting a different yacht category or clear your filters."
+                icon="ri-ship-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveType("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredYachts.map((yacht) => (
+                  <div
+                    key={yacht.id}
+                    className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all"
+                    onClick={() => { setSelectedYacht(yacht); setCharterDate(""); setDateError(""); setCharterDuration(null); }}
+                  >
+                    {/* Image */}
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img
+                        src={yacht.image}
+                        alt={yacht.name}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {yacht.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>
+                          Featured
+                        </div>
                       )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className={`${typeIconMap[yacht.type] || "ri-ship-line"} text-[11px]`}></i>
+                        {yacht.type}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">
+                          <i className="ri-map-pin-line text-[10px]"></i>
+                          {yacht.port}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Price & Action */}
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{yacht.pricePerDay.toLocaleString()}</span>
-                        <span className="text-sm text-foreground-500"> / day</span>
+                    {/* Content */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">
+                          {yacht.name}
+                        </h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{yacht.rating}</span>
+                          <span className="text-xs text-foreground-500">({yacht.reviewCount})</span>
+                        </div>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedYacht(yacht); setCharterDate(""); setDateError(""); setCharterDuration(null); }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
-                      >
-                        <i className="ri-ship-line text-sm"></i>
-                        View Details
-                      </button>
+
+                      <p className="text-xs text-foreground-400 mb-3 flex items-center gap-1.5">
+                        <i className="ri-building-line text-[10px]"></i>
+                        {yacht.company}
+                      </p>
+
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">
+                        {yacht.description}
+                      </p>
+
+                      {/* Specs */}
+                      <div className="flex items-center gap-4 mb-4 text-xs text-foreground-500">
+                        <div className="flex items-center gap-1.5">
+                          <i className="ri-ruler-line text-foreground-400"></i>
+                          <span>{yacht.length}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <i className="ri-user-line text-foreground-400"></i>
+                          <span>{yacht.capacity} guests</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <i className="ri-hotel-bed-line text-foreground-400"></i>
+                          <span>{yacht.cabins} cabins</span>
+                        </div>
+                      </div>
+
+                      {/* Amenities preview */}
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {yacht.amenities.slice(0, 4).map((amenity) => (
+                          <span key={amenity} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">
+                            {formatAmenity(amenity)}
+                          </span>
+                        ))}
+                        {yacht.amenities.length > 4 && (
+                          <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">
+                            +{yacht.amenities.length - 4} more
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Price & Action */}
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{yacht.pricePerDay.toLocaleString()}</span>
+                          <span className="text-sm text-foreground-500"> / day</span>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedYacht(yacht); setCharterDate(""); setDateError(""); setCharterDuration(null); }}
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                          <i className="ri-ship-line text-sm"></i>
+                          View Details
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -717,7 +787,7 @@ export default function YachtChartersPage() {
                         <p className="text-xs text-foreground-500">
                           {charterDuration === "half-day" && "4-hour charter"}
                           {charterDuration === "full-day" && "8-hour charter"}
-                          {charterDuration === "multi-day" && "Exact pricing confirmed after booking"}
+                          {charterDuration === "multi-day" && "Exact pricing confirmed after concierge review"}
                         </p>
                       </div>
                     </div>
@@ -732,27 +802,7 @@ export default function YachtChartersPage() {
                 )}
 
                 {/* CTA */}
-                {formSuccess ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-200">
-                      <i className="ri-check-line text-green-600 text-xl shrink-0"></i>
-                      <div>
-                        <p className="text-sm font-semibold text-green-800">Enquiry Sent!</p>
-                        <p className="text-xs text-green-600">
-                        {contactMethod === 'whatsapp' ? (
-                          <>We'll WhatsApp you and confirm availability within a few hours.</>
-                        ) : contactMethod === 'phone_call' ? (
-                          <>We'll call you and confirm availability within a few hours.</>
-                        ) : (
-                          <>We'll email you and confirm availability within a few hours.</>
-                        )}
-                      </p>
-                      </div>
-                    </div>
-                    <button type="button" onClick={handleCloseModal} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                <form onSubmit={handleBookingSubmit} data-readdy-form>
                     <input type="hidden" name="experience_type" value="Yacht Charter" />
                     <input type="hidden" name="yacht_name" value={selectedYacht.name} />
                     <input type="hidden" name="company" value={selectedYacht.company} />
@@ -863,12 +913,19 @@ export default function YachtChartersPage() {
                         ) : charterDate && !dateError ? (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Book{charterDuration ? ` ${charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"}` : ""} for {formatShortDate(charterDate)}
+                            {charterDuration
+                              ? `Request ${charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"} Charter for ${formatShortDate(charterDate)}`
+                              : `Request Availability for ${formatShortDate(charterDate)}`}
+                          </>
+                        ) : charterDuration ? (
+                          <>
+                            <i className="ri-calendar-line text-sm"></i>
+                            Request {charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"} Charter
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-line text-sm"></i>
-                            Check Availability
+                            Request Availability
                           </>
                         )}
                       </button>
@@ -877,7 +934,6 @@ export default function YachtChartersPage() {
                       </button>
                     </div>
                   </form>
-                )}
               </div>
             </div>
           </div>

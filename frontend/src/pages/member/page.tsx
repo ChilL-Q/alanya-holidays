@@ -1,25 +1,70 @@
-import { useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { members } from "@/mocks/members";
-import { memberThreadMap, badgeDescriptions } from "@/mocks/member-activity";
-import { categoryThreads } from "@/mocks/category-threads";
-
-function getAllThreadsFlat() {
-  const flat: Record<string, (typeof categoryThreads)[string][number]> = {};
-  for (const cat of Object.values(categoryThreads)) {
-    for (const thread of cat) {
-      flat[thread.id] = thread;
-    }
-  }
-  return flat;
-}
+import { forumService, badgeDescriptions, type ForumMember, type CategoryThread } from "@/api-services/forum.service";
+import ErrorState from "@/components/base/ErrorState";
 
 export default function MemberProfilePage() {
   const { memberId } = useParams<{ memberId: string }>();
-  const member = members.find((m) => m.id === memberId);
-  const threadsFlat = useCallback(() => getAllThreadsFlat(), [])();
+  const [member, setMember] = useState<ForumMember | null>(null);
+  const [memberThreads, setMemberThreads] = useState<CategoryThread[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const loadMemberData = useCallback(async () => {
+    if (!memberId) return;
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const [fetchedMember, threadsResult] = await Promise.all([
+        forumService.getMemberById(memberId),
+        forumService.getThreads({ limit: 10 }),
+      ]);
+      setMember(fetchedMember);
+      setMemberThreads(threadsResult.threads.slice(0, 4));
+    } catch {
+      setFetchError("Unable to load member profile. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [memberId]);
+
+  useEffect(() => {
+    loadMemberData();
+  }, [loadMemberData]);
+
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center p-8">
+          <div className="max-w-md w-full bg-background-50 rounded-2xl border border-background-200/70 p-8 text-center animate-pulse space-y-4">
+            <div className="w-24 h-24 mx-auto rounded-2xl bg-background-200" />
+            <div className="h-6 bg-background-200 rounded w-1/2 mx-auto" />
+            <div className="h-4 bg-background-100 rounded w-3/4 mx-auto" />
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center p-8">
+          <ErrorState
+            title="Failed to load profile"
+            message={fetchError}
+            onRetry={loadMemberData}
+          />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!member) {
     return (
@@ -47,11 +92,6 @@ export default function MemberProfilePage() {
       </>
     );
   }
-
-  const threadIds = memberThreadMap[member.id] || [];
-  const memberThreads = threadIds
-    .map((tid) => threadsFlat[tid])
-    .filter(Boolean);
 
   const repTier =
     member.reputation >= 10000 ? "primary" : member.reputation >= 5000 ? "accent" : "secondary";
@@ -157,7 +197,7 @@ export default function MemberProfilePage() {
               </div>
               <div className="bg-background-100 rounded-xl p-4 text-center">
                 <p className="text-2xl md:text-3xl font-semibold text-foreground-900">
-                  {threadIds.length}
+                  {memberThreads.length}
                 </p>
                 <p className="text-xs text-foreground-500 mt-1">Discussions</p>
               </div>

@@ -1,8 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { ServicesController } from './services.controller';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from './types/services.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { ROLE_KEY } from '../auth/decorators/require-role.decorator';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('ServicesController', () => {
   let controller: ServicesController;
@@ -31,9 +35,9 @@ describe('ServicesController', () => {
     deleteService: jest.Mock;
   };
 
-  const mockAuthReq: AuthenticatedRequest = {
-    user: { id: 'user-100' },
-  } as unknown as AuthenticatedRequest;
+  const mockUser: AuthUser = {
+    id: 'user-100',
+  };
 
   beforeEach(async () => {
     mockService = {
@@ -70,9 +74,15 @@ describe('ServicesController', () => {
           provide: ServicesService,
           useValue: mockService,
         },
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn().mockResolvedValue('admin') },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -105,7 +115,7 @@ describe('ServicesController', () => {
     const result = await controller.updateServiceModel(
       'model-1',
       { brand: 'BMW' },
-      mockAuthReq,
+      mockUser,
     );
     expect(result).toEqual({ success: true });
     expect(mockService.updateServiceModel).toHaveBeenCalledWith(
@@ -129,7 +139,7 @@ describe('ServicesController', () => {
     await controller.requestServiceUpdate(
       'srv-1',
       { changes: { title: 'New Car' } },
-      mockAuthReq,
+      mockUser,
     );
     expect(mockService.requestServiceUpdate).toHaveBeenCalledWith(
       'srv-1',
@@ -140,7 +150,7 @@ describe('ServicesController', () => {
     await controller.requestServiceUpdate(
       'srv-1',
       { title: 'Direct Title' },
-      mockAuthReq,
+      mockUser,
     );
     expect(mockService.requestServiceUpdate).toHaveBeenCalledWith(
       'srv-1',
@@ -156,7 +166,7 @@ describe('ServicesController', () => {
   });
 
   it('should get my pending edits', async () => {
-    const result = await controller.getMyPendingEdits(mockAuthReq);
+    const result = await controller.getMyPendingEdits(mockUser);
     expect(result).toEqual([]);
     expect(mockService.getMyPendingEdits).toHaveBeenCalledWith('user-100');
   });
@@ -174,7 +184,7 @@ describe('ServicesController', () => {
   });
 
   it('should delete service edit', async () => {
-    const result = await controller.deleteServiceEdit('edit-1', mockAuthReq);
+    const result = await controller.deleteServiceEdit('edit-1', mockUser);
     expect(result).toEqual({ success: true });
     expect(mockService.deleteServiceEdit).toHaveBeenCalledWith(
       'edit-1',
@@ -183,7 +193,7 @@ describe('ServicesController', () => {
   });
 
   it('should approve service edit', async () => {
-    const result = await controller.approveServiceEdit('edit-1', mockAuthReq);
+    const result = await controller.approveServiceEdit('edit-1', mockUser);
     expect(result).toEqual({ success: true });
     expect(mockService.approveServiceEdit).toHaveBeenCalledWith(
       'edit-1',
@@ -195,7 +205,7 @@ describe('ServicesController', () => {
     const result = await controller.rejectServiceEdit(
       'edit-1',
       'Incomplete details',
-      mockAuthReq,
+      mockUser,
     );
     expect(result).toEqual({ success: true });
     expect(mockService.rejectServiceEdit).toHaveBeenCalledWith(
@@ -216,10 +226,7 @@ describe('ServicesController', () => {
   });
 
   it('should create service using req.user.id', async () => {
-    await controller.createService(
-      { title: 'New Car', type: 'car' },
-      mockAuthReq,
-    );
+    await controller.createService({ title: 'New Car', type: 'car' }, mockUser);
     expect(mockService.createService).toHaveBeenCalledWith(
       { title: 'New Car', type: 'car' },
       'user-100',
@@ -252,7 +259,7 @@ describe('ServicesController', () => {
     const result = await controller.updateService(
       'srv-1',
       { title: 'Updated' },
-      mockAuthReq,
+      mockUser,
     );
     expect(result).toEqual({ success: true });
     expect(mockService.updateService).toHaveBeenCalledWith(
@@ -266,7 +273,7 @@ describe('ServicesController', () => {
     const result = await controller.updateServiceStatus(
       'srv-1',
       { status: 'approved' },
-      mockAuthReq,
+      mockUser,
     );
     expect(result).toEqual({ success: true });
     expect(mockService.updateServiceStatus).toHaveBeenCalledWith(
@@ -281,7 +288,7 @@ describe('ServicesController', () => {
     const result = await controller.deleteService(
       'srv-1',
       'Discontinued',
-      mockAuthReq,
+      mockUser,
     );
     expect(result).toEqual({ success: true });
     expect(mockService.deleteService).toHaveBeenCalledWith(
@@ -289,5 +296,17 @@ describe('ServicesController', () => {
       'Discontinued',
       'user-100',
     );
+  });
+
+  it('should protect updateServiceStatus with RolesGuard and RequireRole("admin")', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      ServicesController.prototype,
+      'updateServiceStatus',
+    )?.value as object;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+    expect(guards).toContain(AuthGuard);
+    expect(guards).toContain(RolesGuard);
+    const roles = Reflect.getMetadata(ROLE_KEY, handler) as string[];
+    expect(roles).toEqual(['admin']);
   });
 });

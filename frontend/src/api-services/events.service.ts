@@ -1,9 +1,38 @@
-import { apiClient } from "@/lib/api-client";
-import { events as mockEvents, type ForumEvent } from "@/mocks/events";
+import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
+import { events as domainEvents } from "@/domain/events";
 
-export type { ForumEvent };
+export interface ForumEvent {
+  id: string;
+  title: string;
+  date: string;
+  day: string;
+  month: string;
+  time: string;
+  location: string;
+  category: string;
+  attendees: number;
+  maxAttendees: number;
+  host: string;
+  hostAvatar: string;
+  description: string;
+  image: string;
+  isFeatured: boolean;
+  slug?: string;
+  going_by_me?: boolean;
+}
 
-export interface GetEventsOptions {
+export const eventCategories = [
+  "Digital Nomad Events",
+  "Beach Gatherings",
+  "Language Exchange Events",
+  "Hiking Groups",
+  "Business Networking",
+  "Expat Socials",
+  "Sports Activities",
+  "Traveler Meetups",
+];
+
+export interface GetEventsOptions extends RequestOptions {
   upcomingOnly?: boolean;
   limit?: number;
   includeUnpublished?: boolean;
@@ -88,7 +117,6 @@ export function formatEventDateParts(dateStr?: string | null): {
   try {
     const parsed = new Date(dateStr);
     if (isNaN(parsed.getTime())) {
-      // If it's a simple YYYY-MM-DD or custom string
       const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (match) {
         const monthIndex = parseInt(match[2], 10) - 1;
@@ -107,27 +135,23 @@ export function formatEventDateParts(dateStr?: string | null): {
       };
     }
 
-    const year = parsed.getUTCFullYear();
-    const monthIndex = parsed.getUTCMonth();
-    const dayNum = parsed.getUTCDate();
-    const formattedMonth = MONTH_NAMES[monthIndex] || "JAN";
-    const formattedDay = dayNum < 10 ? `0${dayNum}` : String(dayNum);
-    const dateFormatted = `${year}-${String(monthIndex + 1).padStart(2, "0")}-${formattedDay}`;
+    const year = parsed.getFullYear();
+    const monthNum = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dayNum = String(parsed.getDate()).padStart(2, "0");
+    const month = MONTH_NAMES[parsed.getMonth()] || "JAN";
 
-    // Extract time
-    let hours = parsed.getUTCHours();
-    const minutes = parsed.getUTCMinutes();
+    let hours = parsed.getHours();
+    const minutes = String(parsed.getMinutes()).padStart(2, "0");
     const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     hours = hours ? hours : 12;
-    const minutesStr = minutes < 10 ? `0${minutes}` : String(minutes);
-    const timeFormatted = `${hours}:${minutesStr} ${ampm}`;
+    const time = `${hours}:${minutes} ${ampm}`;
 
     return {
-      date: dateFormatted,
-      day: formattedDay,
-      month: formattedMonth,
-      time: timeFormatted,
+      date: `${year}-${monthNum}-${dayNum}`,
+      day: dayNum,
+      month,
+      time,
     };
   } catch {
     return {
@@ -142,9 +166,9 @@ export function formatEventDateParts(dateStr?: string | null): {
 export function mapBackendEventToForumEvent(event: BackendForumEvent): ForumEvent {
   const dateParts = formatEventDateParts(event.event_date);
   const defaultHostAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20natural%20light&width=100&height=100&seq=event-host-default&orientation=squarish";
+    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=100&height=100&seq=member-default-host&orientation=squarish";
   const defaultEventImage =
-    "https://readdy.ai/api/search-image?query=Group%20of%20people%20gathering%20at%20Mediterranean%20coast%20sunny%20day&width=800&height=500&seq=event-default&orientation=landscape";
+    "https://readdy.ai/api/search-image?query=Group%20of%20diverse%20digital%20nomads%20coworking%20at%20beach%20cafe%20in%20Alanya%20laptops%20coffee%20sunny%20day%20turquoise%20Mediterranean%20sea%20background%20editorial%20travel%20photography&width=800&height=500&seq=event-default&orientation=landscape";
 
   return {
     id: event.id,
@@ -169,65 +193,57 @@ export function mapBackendEventToForumEvent(event: BackendForumEvent): ForumEven
 
 export class EventsService {
   /**
-   * Retrieves events from backend API with mock fallback.
+   * Synchronous lookup for curated domain events.
+   */
+  getEventsSync(): ForumEvent[] {
+    return domainEvents;
+  }
+
+  /**
+   * Retrieves events from live backend API.
    */
   async getEvents(options: GetEventsOptions = {}): Promise<ForumEvent[]> {
-    const { upcomingOnly, limit, includeUnpublished } = options;
+    const { upcomingOnly, limit, includeUnpublished, params: extraParams, ...reqConfig } = options;
 
-    try {
-      const params: Record<string, string | number | boolean | undefined> = {};
-      if (upcomingOnly !== undefined) params.upcomingOnly = upcomingOnly;
-      if (limit !== undefined) params.limit = limit;
-      if (includeUnpublished !== undefined) params.includeUnpublished = includeUnpublished;
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (upcomingOnly !== undefined) params.upcomingOnly = upcomingOnly;
+    if (limit !== undefined) params.limit = limit;
+    if (includeUnpublished !== undefined) params.includeUnpublished = includeUnpublished;
 
-      const data = await apiClient.get<BackendForumEvent[]>("/forum/events", { params });
+    const data = await apiClient.get<BackendForumEvent[]>("/forum/events", {
+      ...reqConfig,
+      params: { ...extraParams, ...params },
+    });
 
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(mapBackendEventToForumEvent);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch events from API, using fallback mock:", err);
+    if (Array.isArray(data)) {
+      return data.map(mapBackendEventToForumEvent);
     }
 
-    // Mock fallback handling
-    let result = [...mockEvents];
-    if (upcomingOnly) {
-      const nowStr = new Date().toISOString().split("T")[0];
-      result = result.filter((e) => e.date >= nowStr);
-      if (result.length === 0) {
-        result = [...mockEvents];
-      }
-    }
-
-    if (limit && limit > 0) {
-      result = result.slice(0, limit);
-    }
-
-    return result;
+    return [];
   }
 
   /**
    * Retrieves a single event by its slug or ID.
    */
-  async getEventBySlug(slugOrId: string): Promise<ForumEvent | null> {
+  async getEventBySlug(slugOrId: string, options?: RequestOptions): Promise<ForumEvent | null> {
     try {
-      const data = await apiClient.get<BackendForumEvent>(`/forum/events/slug/${slugOrId}`);
+      const data = options
+        ? await apiClient.get<BackendForumEvent>(`/forum/events/slug/${slugOrId}`, options)
+        : await apiClient.get<BackendForumEvent>(`/forum/events/slug/${slugOrId}`);
       if (data && data.id) {
         return mapBackendEventToForumEvent(data);
       }
+      const match = domainEvents.find((e) => e.slug === slugOrId || e.id === slugOrId);
+      return match || null;
     } catch (err) {
-      console.warn(`Failed to fetch event '${slugOrId}' from API, searching fallback:`, err);
+      if (err instanceof ApiError && err.status === 404) {
+        const match = domainEvents.find((e) => e.slug === slugOrId || e.id === slugOrId);
+        return match || null;
+      }
+      const match = domainEvents.find((e) => e.slug === slugOrId || e.id === slugOrId);
+      if (match) return match;
+      throw err;
     }
-
-    // Mock fallback search
-    const found = mockEvents.find(
-      (e) =>
-        e.id === slugOrId ||
-        e.slug === slugOrId ||
-        e.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === slugOrId.toLowerCase()
-    );
-
-    return found || null;
   }
 
   /**
@@ -240,104 +256,56 @@ export class EventsService {
         ? `${payload.eventDate}T${payload.eventTime}:00Z`
         : payload.eventDate || new Date().toISOString();
 
-    const maxAttendeesNum =
-      typeof payload.maxAttendees === "number"
-        ? payload.maxAttendees
-        : payload.maxAttendees
-          ? parseInt(payload.maxAttendees, 10)
-          : payload.max_attendees || 50;
-
-    try {
-      const response = await apiClient.post<BackendForumEvent>("/forum/events", {
-        title: payload.title,
-        description: payload.description || null,
-        location: payload.location || null,
-        event_date: combinedDate,
-        image_url: payload.image_url || payload.image || null,
-        category_id: payload.category_id || payload.categoryId || null,
-        is_published: payload.is_published ?? true,
-      });
-
-      if (response && response.id) {
-        return mapBackendEventToForumEvent(response);
-      }
-    } catch (err) {
-      console.warn("Failed to create event on API, generating fallback response:", err);
-    }
-
-    // Fallback response
-    const dateParts = formatEventDateParts(combinedDate);
-    const syntheticId = `ev-${Date.now()}`;
-    const syntheticSlug = payload.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    return {
-      id: syntheticId,
+    const response = await apiClient.post<BackendForumEvent>("/forum/events", {
       title: payload.title,
-      date: dateParts.date || payload.eventDate || "2026-07-01",
-      day: dateParts.day || "01",
-      month: dateParts.month || "JUL",
-      time: payload.eventTime || dateParts.time || "6:00 PM",
-      location: payload.location || "Alanya, Türkiye",
-      category: payload.category || "Expat Socials",
-      attendees: 1,
-      maxAttendees: isNaN(maxAttendeesNum) ? 50 : maxAttendeesNum,
-      host: payload.hostName || "Community Host",
-      hostAvatar:
-        "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20natural%20light&width=100&height=100&seq=event-host-fallback&orientation=squarish",
-      description: payload.description || "",
-      image:
-        payload.image_url ||
-        payload.image ||
-        "https://readdy.ai/api/search-image?query=Group%20of%20people%20gathering%20at%20beach%20warm%20light&width=800&height=500&seq=event-fallback&orientation=landscape",
-      isFeatured: false,
-      slug: syntheticSlug,
-      going_by_me: true,
-    };
+      description: payload.description || null,
+      location: payload.location || null,
+      event_date: combinedDate,
+      image_url: payload.image_url || payload.image || null,
+      category_id: payload.category_id || payload.categoryId || null,
+      is_published: payload.is_published ?? true,
+    });
+
+    return mapBackendEventToForumEvent(response);
   }
 
   /**
    * Toggles user RSVP status for an event.
    */
   async toggleRsvp(eventId: string, contactPhone?: string): Promise<{ going: boolean }> {
-    try {
-      const response = await apiClient.post<{ going: boolean }>(
-        `/forum/events/${eventId}/rsvp`,
-        { contactPhone }
-      );
-      if (response && typeof response.going === "boolean") {
-        return response;
-      }
-    } catch (err) {
-      console.warn(`Failed to toggle RSVP for event '${eventId}', using fallback:`, err);
-    }
-
-    return { going: true };
+    return apiClient.post<{ going: boolean }>(
+      `/forum/events/${eventId}/rsvp`,
+      { contactPhone }
+    );
   }
 
   /**
    * Retrieves the attendees list for an event.
    */
-  async getAttendees(eventId: string): Promise<EventAttendee[]> {
+  async getAttendees(eventId: string, options?: RequestOptions): Promise<EventAttendee[]> {
     try {
-      const data = await apiClient.get<EventAttendee[]>(`/forum/events/${eventId}/attendees`);
+      const data = options
+        ? await apiClient.get<EventAttendee[]>(`/forum/events/${eventId}/attendees`, options)
+        : await apiClient.get<EventAttendee[]>(`/forum/events/${eventId}/attendees`);
       if (Array.isArray(data)) {
         return data;
       }
+      return [];
     } catch (err) {
-      console.warn(`Failed to fetch attendees for event '${eventId}', using fallback:`, err);
+      if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+        return [];
+      }
+      throw err;
     }
-
-    return [];
   }
 }
 
 export const eventsService = new EventsService();
 
 export const getEvents = (options?: GetEventsOptions) => eventsService.getEvents(options);
-export const getEventBySlug = (slug: string) => eventsService.getEventBySlug(slug);
+export const getEventBySlug = (slug: string, options?: RequestOptions) =>
+  eventsService.getEventBySlug(slug, options);
 export const createEvent = (payload: CreateEventPayload) => eventsService.createEvent(payload);
 export const toggleRsvp = (eventId: string, contactPhone?: string) => eventsService.toggleRsvp(eventId, contactPhone);
-export const getAttendees = (eventId: string) => eventsService.getAttendees(eventId);
+export const getAttendees = (eventId: string, options?: RequestOptions) =>
+  eventsService.getAttendees(eventId, options);

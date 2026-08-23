@@ -12,6 +12,7 @@ import {
   ShopCatalogResult,
   CreateOrderResult,
 } from './products.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
 import { Money } from '../common/domain/value-objects/money.vo';
@@ -46,7 +47,10 @@ export interface ShopProductDetailResult {
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly productsRepository: ProductsRepository) {}
+  constructor(
+    private readonly productsRepository: ProductsRepository,
+    private readonly userRolesRepo: UserRolesRepository,
+  ) {}
 
   async createProduct(data: Product, requestUserId: string) {
     const insertData = { ...data, seller_id: requestUserId };
@@ -70,7 +74,7 @@ export class ProductsService {
   }
 
   private async checkOwnership(productId: string, userId: string) {
-    const role = await this.productsRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     const existingProduct =
       await this.productsRepository.getProductOwnership(productId);
 
@@ -189,39 +193,57 @@ export class ProductsService {
     }
 
     const currency = dto.currency || 'EUR';
+
+    // Server-authoritative pricing (audit 2.1): resolve prices from the DB,
+    // never trust client-supplied unitPrice/finalPrice/subtotal.
+    const dbProducts = await this.productsRepository.getOrderableProductsByIds(
+      dto.items.map((item) => item.productId),
+      dto.items
+        .map((item) => item.skuId)
+        .filter((id): id is string | number => id != null),
+    );
+    const dbByProductId = new Map(dbProducts.map((p) => [Number(p.id), p]));
+
     let calculatedSubtotal = Money.zero(currency);
 
     for (const item of dto.items) {
-      const unitPrice = item.finalPrice ?? item.unitPrice ?? 0;
-      const expectedItemSubtotal = Money.fromDecimal(
-        unitPrice,
-        currency,
-      ).multiply(item.quantity);
-
-      if (item.subtotal !== undefined && item.subtotal !== null) {
-        const providedItemSubtotal = Money.fromDecimal(item.subtotal, currency);
-        if (!providedItemSubtotal.equals(expectedItemSubtotal)) {
-          throw new BadRequestException(
-            `Invalid subtotal for product "${item.productName}": expected ${expectedItemSubtotal.toDatabaseDecimal()}, got ${item.subtotal}`,
-          );
-        }
-      } else {
-        item.subtotal = expectedItemSubtotal.toDatabaseDecimal();
-      }
-
-      calculatedSubtotal = calculatedSubtotal.add(expectedItemSubtotal);
-    }
-
-    if (dto.subtotal !== undefined && dto.subtotal !== null) {
-      const providedSubtotal = Money.fromDecimal(dto.subtotal, currency);
-      if (!providedSubtotal.equals(calculatedSubtotal)) {
+      const dbProduct = dbByProductId.get(Number(item.productId));
+      if (!dbProduct) {
         throw new BadRequestException(
-          `Invalid order subtotal: sum of item totals (${calculatedSubtotal.toDatabaseDecimal()}) does not match provided subtotal (${dto.subtotal})`,
+          `Product "${item.productName}" is not available for ordering`,
         );
       }
-    } else {
-      dto.subtotal = calculatedSubtotal.toDatabaseDecimal();
+
+      if (dbProduct.currency.toUpperCase() !== currency.toUpperCase()) {
+        throw new BadRequestException(
+          `Currency mismatch for product "${dbProduct.name}": expected ${currency}, got ${dbProduct.currency}`,
+        );
+      }
+
+      const unitPriceFromDb = dbProduct.sku_price ?? dbProduct.price;
+      const stockFromDb = dbProduct.sku_stock ?? dbProduct.stock;
+      if (stockFromDb < item.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product "${dbProduct.name}": requested ${item.quantity}, available ${stockFromDb}`,
+        );
+      }
+
+      const itemSubtotal = Money.fromDecimal(unitPriceFromDb, currency)
+        .multiply(item.quantity)
+        .toDatabaseDecimal();
+
+      // Overwrite client values with server-resolved ones before persisting.
+      item.productName = dbProduct.name;
+      item.unitPrice = unitPriceFromDb;
+      item.finalPrice = unitPriceFromDb;
+      item.subtotal = itemSubtotal;
+
+      calculatedSubtotal = calculatedSubtotal.add(
+        Money.fromDecimal(itemSubtotal, currency),
+      );
     }
+
+    dto.subtotal = calculatedSubtotal.toDatabaseDecimal();
 
     return this.productsRepository.createProductOrder(dto, userId);
   }
@@ -231,7 +253,7 @@ export class ProductsService {
   }
 
   async getOrderById(orderId: string | number, userId: string) {
-    const role = await this.productsRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     const order = await this.productsRepository.getOrderById(orderId);
 
     if (!order) {

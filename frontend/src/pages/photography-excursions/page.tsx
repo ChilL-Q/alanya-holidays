@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { photographyExcursions, excursionTypes } from "@/mocks/photography-excursions";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type PhotographyExcursion } from "@/api-services/concierge.service";
+import { conciergeService, excursionTypes, type PhotographyExcursion } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function PhotographyExcursionsPage() {
+  const [photographyExcursions, setPhotographyExcursions] = useState<PhotographyExcursion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "duration">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -16,13 +20,30 @@ export default function PhotographyExcursionsPage() {
   const [contactMethod, setContactMethod] = useState("email");
   const [formError, setFormError] = useState("");
 
+  const loadExcursions = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getPhotographyExcursions();
+      setPhotographyExcursions(data);
+    } catch {
+      setFetchError("Failed to load photography excursions. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadExcursions();
+  }, [loadExcursions]);
+
   const filteredExcursions = useMemo(() => {
     let results = photographyExcursions;
     if (activeType !== "all") {
-      if (activeType === "architecture") results = results.filter((e) => e.focus.includes("Architecture") || e.focus.includes("Landscape"));
-      else if (activeType === "nature") results = results.filter((e) => e.focus.includes("Landscape") || e.focus.includes("Aerial"));
-      else if (activeType === "street") results = results.filter((e) => e.focus.includes("Street") || e.focus.includes("Documentary"));
-      else if (activeType === "sunset") results = results.filter((e) => e.bestTime.includes("Golden Hour") || e.name.includes("Sunrise") || e.name.includes("Sunset"));
+      if (activeType === "architecture") results = results.filter((e) => (e.focus || "").includes("Architecture") || (e.focus || "").includes("Landscape"));
+      else if (activeType === "nature") results = results.filter((e) => (e.focus || "").includes("Landscape") || (e.focus || "").includes("Aerial"));
+      else if (activeType === "street") results = results.filter((e) => (e.focus || "").includes("Street") || (e.focus || "").includes("Documentary"));
+      else if (activeType === "sunset") results = results.filter((e) => (e.bestTime || "").includes("Golden Hour") || e.name.includes("Sunrise") || e.name.includes("Sunset"));
     }
     if (sortBy === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
     else if (sortBy === "price-low") results = [...results].sort((a, b) => a.pricePerPerson - b.pricePerPerson);
@@ -31,7 +52,7 @@ export default function PhotographyExcursionsPage() {
       const aH = parseFloat(a.duration); const bH = parseFloat(b.duration); return aH - bH;
     });
     return results;
-  }, [activeType, sortBy]);
+  }, [activeType, sortBy, photographyExcursions]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
@@ -139,44 +160,80 @@ export default function PhotographyExcursionsPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredExcursions.length} {filteredExcursions.length === 1 ? "excursion" : "excursions"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredExcursions.length} {filteredExcursions.length === 1 ? "excursion" : "excursions"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredExcursions.map((excursion) => (
-                <div key={excursion.id} onClick={() => setSelectedExcursion(excursion)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={excursion.image} alt={excursion.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {excursion.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-time-line text-[11px]"></i>{excursion.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">{excursion.skillLevel}</span>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load photography excursions"
+                message={fetchError}
+                onRetry={loadExcursions}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{excursion.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{excursion.rating}</span>
-                        <span className="text-xs text-foreground-500">({excursion.reviewCount})</span>
+                ))}
+              </div>
+            ) : filteredExcursions.length === 0 ? (
+              <EmptyState
+                title="No photography excursions found"
+                description="Try selecting a different category or clear your filters."
+                icon="ri-camera-lens-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveType("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredExcursions.map((excursion) => (
+                  <div key={excursion.id} onClick={() => setSelectedExcursion(excursion)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={excursion.image} alt={excursion.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {excursion.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-time-line text-[11px]"></i>{excursion.duration}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">{excursion.skillLevel}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{excursion.description}</p>
-                    <div className="flex items-center gap-3 mb-3 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{excursion.groupSize}</span>
-                      <span className="flex items-center gap-1"><i className="ri-camera-line text-foreground-400"></i>{excursion.focus}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mb-5 text-xs text-foreground-500">
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{excursion.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{excursion.rating}</span>
+                          <span className="text-xs text-foreground-500">({excursion.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{excursion.description}</p>
+                      <div className="flex items-center gap-3 mb-3 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{excursion.groupSize}</span>
+                        <span className="flex items-center gap-1"><i className="ri-camera-line text-foreground-400"></i>{excursion.focus}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-5 text-xs text-foreground-500">
                       <i className="ri-sun-line text-foreground-400"></i>
                       <span>{excursion.bestTime}</span>
                     </div>
@@ -193,6 +250,7 @@ export default function PhotographyExcursionsPage() {
                 </div>
               ))}
             </div>
+          )}
           </div>
         </section>
 
@@ -256,13 +314,15 @@ export default function PhotographyExcursionsPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-foreground-500 mb-0.5">Private</p>
-                      <p className="text-lg font-semibold text-foreground-700">€{selectedExcursion.privatePrice.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-foreground-700">€{(selectedExcursion.privatePrice ?? 0).toLocaleString()}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-foreground-500">
-                    <i className="ri-sun-line"></i>
-                    <span>Best time: {selectedExcursion.bestTime}</span>
-                  </div>
+                  {selectedExcursion.bestTime && (
+                    <div className="flex items-center gap-2 mt-2 text-xs text-foreground-500">
+                      <i className="ri-sun-line"></i>
+                      <span>Best time: {selectedExcursion.bestTime}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Locations</h4>

@@ -1,127 +1,89 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StripeWebhookService } from './stripe-webhook.service';
-import { SupabaseService } from '../supabase/supabase.service';
-import { BookingsService } from '../bookings/bookings.service';
-import { BookingsRepository } from '../bookings/bookings.repository';
+import { PAYMENT_GATEWAY } from './domain/payment-gateway.interface';
+import { InMemoryPaymentFake } from './adapters/in-memory-payment.fake';
+import { AddonWebhookHandler } from './handlers/addon-webhook.handler';
+import { SubscriptionWebhookHandler } from './handlers/subscription-webhook.handler';
+import { BookingWebhookHandler } from './handlers/booking-webhook.handler';
+import { ProcessedStripeEventsRepository } from './processed-stripe-events.repository';
 import { BadRequestException } from '@nestjs/common';
 import Stripe from 'stripe';
 
 describe('StripeWebhookService', () => {
   let service: StripeWebhookService;
-  let servicePrivate: StripeWebhookServicePrivate;
-  let bookingsService: jest.Mocked<Partial<BookingsService>>;
-  let bookingsRepository: jest.Mocked<Partial<BookingsRepository>>;
-
-  interface StripeWebhookServicePrivate {
-    stripe: Stripe;
-    handleChargeRefunded: (charge: Stripe.Charge) => Promise<void>;
-    handleCheckoutSessionCompleted: (
-      session: Stripe.Checkout.Session,
-    ) => Promise<void>;
-    handleDisputeCreated: (dispute: Stripe.Dispute) => Promise<void>;
-    handlePaymentIntentFailed: (pi: Stripe.PaymentIntent) => Promise<void>;
-    handleSubscriptionCreated: (sub: Stripe.Subscription) => Promise<void>;
-    handleSubscriptionUpdated: (sub: Stripe.Subscription) => Promise<void>;
-    handleSubscriptionDeleted: (sub: Stripe.Subscription) => Promise<void>;
-    handleInvoicePaymentFailed: (inv: Stripe.Invoice) => Promise<void>;
-  }
-
-  interface MockQueryResult {
-    data: unknown;
-    error: unknown;
-  }
-
-  interface TableMock {
-    select: jest.Mock;
-    insert: jest.Mock;
-    update: jest.Mock;
-    delete: jest.Mock;
-    eq: jest.Mock;
-    in: jest.Mock;
-    limit: jest.Mock;
-    maybeSingle: jest.Mock;
-    then: (
-      resolve?: ((value: MockQueryResult) => unknown) | null,
-      reject?: ((reason: unknown) => unknown) | null,
-    ) => Promise<unknown>;
-  }
-
-  let tableMocks: Record<string, TableMock>;
-  let mockSupabaseClient: { from: jest.Mock };
-
-  const createTableMock = (): TableMock => {
-    const mock = {} as TableMock;
-    mock.select = jest.fn().mockReturnValue(mock);
-    mock.insert = jest.fn().mockResolvedValue({ data: null, error: null });
-    mock.update = jest.fn().mockReturnValue(mock);
-    mock.delete = jest.fn().mockReturnValue(mock);
-    mock.eq = jest.fn().mockReturnValue(mock);
-    mock.in = jest.fn().mockReturnValue(mock);
-    mock.limit = jest.fn().mockReturnValue(mock);
-    mock.maybeSingle = jest.fn().mockResolvedValue({ data: null, error: null });
-    // Allow `await supabase.from(...).select(...).eq(...)` to resolve cleanly
-    mock.then = (resolve, reject) =>
-      Promise.resolve({ data: null, error: null }).then(resolve, reject);
-    return mock;
+  let paymentFake: InMemoryPaymentFake;
+  let addonHandler: jest.Mocked<Partial<AddonWebhookHandler>>;
+  let subscriptionHandler: jest.Mocked<Partial<SubscriptionWebhookHandler>>;
+  let bookingHandler: jest.Mocked<Partial<BookingWebhookHandler>>;
+  let processedEvents: {
+    tryClaimEvent: jest.Mock;
+    releaseEvent: jest.Mock;
   };
 
   beforeEach(async () => {
-    process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
-    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_mock';
+    paymentFake = new InMemoryPaymentFake();
 
-    tableMocks = {
-      bookings: createTableMock(),
-      listing_addons: createTableMock(),
-      directory_listings: createTableMock(),
-      notifications: createTableMock(),
-      properties: createTableMock(),
-      services: createTableMock(),
-      profiles: createTableMock(),
-      premium_subscriptions: createTableMock(),
+    addonHandler = {
+      handleCheckoutSession: jest.fn().mockResolvedValue(undefined),
     };
 
-    mockSupabaseClient = {
-      from: jest.fn().mockImplementation((table: string): TableMock => {
-        if (!(table in tableMocks)) {
-          tableMocks[table] = createTableMock();
-        }
-        return tableMocks[table];
-      }),
+    subscriptionHandler = {
+      handleCreated: jest.fn().mockResolvedValue(undefined),
+      handleUpdated: jest.fn().mockResolvedValue(undefined),
+      handleDeleted: jest.fn().mockResolvedValue(undefined),
+      handleInvoicePaymentFailed: jest.fn().mockResolvedValue(undefined),
     };
 
-    bookingsService = {
-      confirmBookingPayment: jest.fn().mockResolvedValue({ confirmedCount: 1 }),
+    bookingHandler = {
+      handleCheckoutSession: jest.fn().mockResolvedValue(undefined),
+      handlePaymentIntentFailed: jest.fn().mockResolvedValue(undefined),
+      handleDisputeCreated: jest.fn().mockResolvedValue(undefined),
+      handleChargeRefunded: jest.fn().mockResolvedValue(undefined),
     };
 
-    bookingsRepository = {
-      unblockDatesForBooking: jest.fn().mockResolvedValue(undefined),
+    const processedEventsMock = {
+      tryClaimEvent: jest.fn().mockResolvedValue(true),
+      releaseEvent: jest.fn().mockResolvedValue(undefined),
     };
+    processedEvents = processedEventsMock;
+
+    let claimCallCount = 0;
+    processedEventsMock.tryClaimEvent.mockImplementation(() => {
+      claimCallCount += 1;
+      return Promise.resolve(claimCallCount === 1);
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StripeWebhookService,
         {
-          provide: SupabaseService,
-          useValue: {
-            getClient: (): typeof mockSupabaseClient => mockSupabaseClient,
-          },
+          provide: PAYMENT_GATEWAY,
+          useValue: paymentFake,
         },
         {
-          provide: BookingsService,
-          useValue: bookingsService,
+          provide: AddonWebhookHandler,
+          useValue: addonHandler,
         },
         {
-          provide: BookingsRepository,
-          useValue: bookingsRepository,
+          provide: SubscriptionWebhookHandler,
+          useValue: subscriptionHandler,
+        },
+        {
+          provide: BookingWebhookHandler,
+          useValue: bookingHandler,
+        },
+        {
+          provide: ProcessedStripeEventsRepository,
+          useValue: processedEventsMock,
         },
       ],
     }).compile();
 
     service = module.get<StripeWebhookService>(StripeWebhookService);
-    servicePrivate = service as unknown as StripeWebhookServicePrivate;
   });
 
   afterEach(() => {
+    paymentFake.clear();
     jest.clearAllMocks();
   });
 
@@ -130,546 +92,328 @@ describe('StripeWebhookService', () => {
   });
 
   describe('processWebhookEvent', () => {
-    it('should throw BadRequestException if STRIPE_WEBHOOK_SECRET is not configured', async () => {
-      delete process.env.STRIPE_WEBHOOK_SECRET;
+    it('should throw BadRequestException if signature is invalid in PaymentGateway', async () => {
+      const rawBody = Buffer.from('raw body');
+      const signature = 'invalid_sig';
 
       await expect(
-        service.processWebhookEvent(Buffer.from('payload'), 'sig'),
-      ).rejects.toThrow(BadRequestException);
-
-      process.env.STRIPE_WEBHOOK_SECRET = 'whsec_mock';
-    });
-
-    it('should throw BadRequestException if signature is invalid', async () => {
-      const rawBody = Buffer.from('invalid payload');
-      const invalidSignature = 't=123,v1=invalid';
-
-      await expect(
-        service.processWebhookEvent(rawBody, invalidSignature),
+        service.processWebhookEvent(rawBody, signature),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should route events properly and return received: true', async () => {
-      const mockEvent: Stripe.Event = {
-        id: 'evt_test_123',
-        object: 'event',
-        type: 'charge.refunded',
-        data: {
-          object: {
-            id: 'ch_1',
-            payment_intent: 'pi_1',
-          } as unknown as Stripe.Charge,
+    it('should route listing_addon checkout session to AddonWebhookHandler', async () => {
+      const session = {
+        id: 'cs_addon_1',
+        metadata: {
+          type: 'listing_addon',
+          listingId: 'l1',
+          addonType: 'verified_badge',
+          userId: 'u1',
         },
-        api_version: '2025-01-27.acacia',
-        created: 123456789,
-        livemode: false,
-        pending_webhooks: 0,
-        request: { id: null, idempotency_key: null },
-      };
+      } as unknown as Stripe.Checkout.Session;
 
-      jest
-        .spyOn(servicePrivate.stripe.webhooks, 'constructEventAsync')
-        .mockResolvedValue(mockEvent);
+      const event = {
+        id: 'evt_cs_addon',
+        type: 'checkout.session.completed',
+        data: { object: session },
+      } as Stripe.Event;
 
-      const refundSpy = jest
-        .spyOn(servicePrivate, 'handleChargeRefunded')
-        .mockResolvedValue(undefined);
+      paymentFake.registerEvent('valid_addon_sig', event);
 
       const result = await service.processWebhookEvent(
         Buffer.from('payload'),
-        'valid_sig',
+        'valid_addon_sig',
       );
 
       expect(result).toEqual({ received: true });
-      expect(refundSpy).toHaveBeenCalledWith(mockEvent.data.object);
+      expect(addonHandler.handleCheckoutSession).toHaveBeenCalledWith(session);
+      expect(bookingHandler.handleCheckoutSession).not.toHaveBeenCalled();
     });
 
-    it('should handle unhandled event types gracefully', async () => {
-      const mockEvent = {
-        id: 'evt_unhandled',
-        object: 'event',
-        type: 'unknown.event',
-        data: {
-          object: { id: 'obj_1' },
-        },
-        api_version: '2025-01-27.acacia',
-        created: 123456789,
-        livemode: false,
-        pending_webhooks: 0,
-        request: { id: null, idempotency_key: null },
-      } as unknown as Stripe.Event;
-
-      jest
-        .spyOn(servicePrivate.stripe.webhooks, 'constructEventAsync')
-        .mockResolvedValue(mockEvent);
-
-      const result = await service.processWebhookEvent(
-        Buffer.from('payload'),
-        'valid_sig',
-      );
-
-      expect(result).toEqual({ received: true });
-    });
-  });
-
-  describe('handleChargeRefunded', () => {
-    it('should do nothing if payment_intent is missing', async () => {
-      const charge = {
-        id: 'ch_1',
-        payment_intent: null,
-      } as Stripe.Charge;
-
-      await servicePrivate.handleChargeRefunded(charge);
-
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-      expect(bookingsRepository.unblockDatesForBooking).not.toHaveBeenCalled();
-    });
-
-    it('should cancel booking, unblock dates, and notify guest and property host', async () => {
-      const charge = {
-        id: 'ch_1',
-        payment_intent: 'pi_refund_100',
-      } as Stripe.Charge;
-
-      const mockBooking = {
-        id: 'b-12345678-abcd',
-        user_id: 'guest-1',
-        item_id: 'prop-1',
-        item_type: 'property',
-        status: 'confirmed',
-        payment_status: 'paid',
-      };
-
-      // Mock bookings query
-      tableMocks.bookings.then = (resolve, reject) =>
-        Promise.resolve({ data: [mockBooking], error: null }).then(
-          resolve,
-          reject,
-        );
-
-      // Mock properties query for host
-      tableMocks.properties.maybeSingle.mockResolvedValueOnce({
-        data: { host_id: 'host-1', title: 'Sunset Villa' },
-        error: null,
-      });
-
-      await servicePrivate.handleChargeRefunded(charge);
-
-      // Verify booking updated to cancelled & refunded
-      expect(tableMocks.bookings.update).toHaveBeenCalledWith({
-        status: 'cancelled',
-        payment_status: 'refunded',
-      });
-      expect(tableMocks.bookings.eq).toHaveBeenCalledWith('id', mockBooking.id);
-
-      // Verify dates unblocked
-      expect(bookingsRepository.unblockDatesForBooking).toHaveBeenCalledWith(
-        mockBooking.id,
-      );
-
-      // Verify notifications sent to guest and host
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'guest-1',
-          title: 'Booking Refunded & Cancelled',
-          type: 'info',
-        }),
-      );
-
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith({
-        user_id: 'host-1',
-        title: 'Booking Refunded & Cancelled',
-        message:
-          'Booking for "Sunset Villa" was cancelled due to a refund. Dates have been reopened.',
-        type: 'warning',
-        link: '/host/bookings',
-      });
-    });
-
-    it('should notify service provider for service booking refunds', async () => {
-      const charge = {
-        id: 'ch_2',
-        payment_intent: 'pi_refund_200',
-      } as Stripe.Charge;
-
-      const mockBooking = {
-        id: 'b-service-999',
-        user_id: 'guest-2',
-        item_id: 'srv-1',
-        item_type: 'service',
-        status: 'confirmed',
-        payment_status: 'paid',
-      };
-
-      tableMocks.bookings.then = (resolve, reject) =>
-        Promise.resolve({ data: [mockBooking], error: null }).then(
-          resolve,
-          reject,
-        );
-
-      tableMocks.services.maybeSingle.mockResolvedValueOnce({
-        data: { provider_id: 'provider-1', title: 'Airport Transfer' },
-        error: null,
-      });
-
-      await servicePrivate.handleChargeRefunded(charge);
-
-      expect(bookingsRepository.unblockDatesForBooking).toHaveBeenCalledWith(
-        mockBooking.id,
-      );
-
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith({
-        user_id: 'provider-1',
-        title: 'Booking Refunded & Cancelled',
-        message:
-          'Booking for "Airport Transfer" was cancelled due to a refund. Dates have been reopened.',
-        type: 'warning',
-        link: '/host/bookings',
-      });
-    });
-  });
-
-  describe('handleCheckoutSessionCompleted', () => {
-    it('should ignore sessions with payment_status !== paid', async () => {
+    it('should route booking checkout session to BookingWebhookHandler', async () => {
       const session = {
-        id: 'cs_unpaid',
-        payment_status: 'unpaid',
-      } as Stripe.Checkout.Session;
-
-      await servicePrivate.handleCheckoutSessionCompleted(session);
-
-      expect(bookingsService.confirmBookingPayment).not.toHaveBeenCalled();
-      expect(mockSupabaseClient.from).not.toHaveBeenCalled();
-    });
-
-    it('should process booking checkout and call confirmBookingPayment', async () => {
-      const session = {
-        id: 'cs_booking_paid',
-        payment_status: 'paid',
-        payment_intent: 'pi_book_1',
+        id: 'cs_booking_1',
         metadata: {
           bookingIds: 'b1,b2',
-          userId: 'user-123',
+          userId: 'u1',
         },
       } as unknown as Stripe.Checkout.Session;
 
-      await servicePrivate.handleCheckoutSessionCompleted(session);
+      const event = {
+        id: 'evt_cs_booking',
+        type: 'checkout.session.completed',
+        data: { object: session },
+      } as Stripe.Event;
 
-      expect(bookingsService.confirmBookingPayment).toHaveBeenCalledWith(
-        ['b1', 'b2'],
-        'user-123',
-        'cs_booking_paid',
-        'pi_book_1',
+      paymentFake.registerEvent('valid_booking_sig', event);
+
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'valid_booking_sig',
       );
+
+      expect(result).toEqual({ received: true });
+      expect(bookingHandler.handleCheckoutSession).toHaveBeenCalledWith(
+        session,
+      );
+      expect(addonHandler.handleCheckoutSession).not.toHaveBeenCalled();
     });
 
-    it('should skip duplicate listing add-on webhook if already recorded (idempotency)', async () => {
+    it('should ignore duplicate Stripe events with the same event id', async () => {
       const session = {
-        id: 'cs_addon_dup',
-        payment_status: 'paid',
-        payment_intent: 'pi_addon_dup',
+        id: 'cs_booking_duplicate',
         metadata: {
-          type: 'listing_addon',
-          userId: 'host-1',
-          listingId: 'list-1',
-          addonType: 'verified_badge',
+          bookingIds: 'b1,b2',
+          userId: 'u1',
         },
       } as unknown as Stripe.Checkout.Session;
 
-      tableMocks.listing_addons.maybeSingle.mockResolvedValueOnce({
-        data: { id: 'la-existing' },
-        error: null,
-      });
+      const event = {
+        id: 'evt_duplicate_booking',
+        type: 'checkout.session.completed',
+        data: { object: session },
+      } as Stripe.Event;
 
-      await servicePrivate.handleCheckoutSessionCompleted(session);
+      paymentFake.registerEvent('duplicate_sig', event);
 
-      expect(tableMocks.listing_addons.insert).not.toHaveBeenCalled();
-      expect(tableMocks.directory_listings.update).not.toHaveBeenCalled();
-    });
-
-    it('should insert listing addon and patch directory listing for verified_badge', async () => {
-      const session = {
-        id: 'cs_addon_vb',
-        payment_status: 'paid',
-        payment_intent: 'pi_addon_vb',
-        metadata: {
-          type: 'listing_addon',
-          userId: 'host-1',
-          listingId: 'list-1',
-          addonType: 'verified_badge',
-        },
-      } as unknown as Stripe.Checkout.Session;
-
-      tableMocks.listing_addons.maybeSingle.mockResolvedValueOnce({
-        data: null,
-        error: null,
-      });
-
-      await servicePrivate.handleCheckoutSessionCompleted(session);
-
-      expect(tableMocks.listing_addons.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          listing_id: 'list-1',
-          addon_type: 'verified_badge',
-          status: 'active',
-          stripe_payment_id: 'pi_addon_vb',
-        }),
+      await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'duplicate_sig',
+      );
+      await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'duplicate_sig',
       );
 
-      expect(tableMocks.directory_listings.update).toHaveBeenCalledWith({
-        is_verified: true,
-      });
-      expect(tableMocks.directory_listings.eq).toHaveBeenCalledWith(
-        'id',
-        'list-1',
+      expect(bookingHandler.handleCheckoutSession).toHaveBeenCalledTimes(1);
+      expect(bookingHandler.handleCheckoutSession).toHaveBeenCalledWith(
+        session,
       );
     });
 
-    it('should insert seasonal_placement with 90 day expiry and patch is_featured', async () => {
-      const session = {
-        id: 'cs_addon_sp',
-        payment_status: 'paid',
-        payment_intent: 'pi_addon_sp',
-        metadata: {
-          type: 'listing_addon',
-          userId: 'host-2',
-          listingId: 'list-2',
-          addonType: 'seasonal_placement',
-        },
-      } as unknown as Stripe.Checkout.Session;
-
-      tableMocks.listing_addons.maybeSingle.mockResolvedValueOnce({
-        data: null,
-        error: null,
-      });
-
-      await servicePrivate.handleCheckoutSessionCompleted(session);
-
-      expect(tableMocks.listing_addons.insert).toHaveBeenCalledTimes(1);
-      const calls = tableMocks.listing_addons.insert.mock
-        .calls as unknown as Array<[Record<string, unknown>]>;
-      const insertedAddon = calls[0][0];
-      expect(insertedAddon.listing_id).toBe('list-2');
-      expect(insertedAddon.addon_type).toBe('seasonal_placement');
-      expect(insertedAddon.status).toBe('active');
-      expect(typeof insertedAddon.expires_at).toBe('string');
-
-      expect(tableMocks.directory_listings.update).toHaveBeenCalledWith({
-        is_featured: true,
-      });
-    });
-  });
-
-  describe('handleDisputeCreated', () => {
-    it('should mark booking as failed and notify all admins', async () => {
-      const dispute = {
-        id: 'dp_123',
-        amount: 25000,
-        currency: 'eur',
-        reason: 'fraudulent',
-        status: 'needs_response',
-        payment_intent: 'pi_dispute_1',
-      } as unknown as Stripe.Dispute;
-
-      tableMocks.bookings.then = (resolve, reject) =>
-        Promise.resolve({
-          data: [{ id: 'b-dispute-1', user_id: 'guest-10' }],
-          error: null,
-        }).then(resolve, reject);
-
-      tableMocks.profiles.then = (resolve, reject) =>
-        Promise.resolve({
-          data: [{ id: 'admin-1' }, { id: 'admin-2' }],
-          error: null,
-        }).then(resolve, reject);
-
-      await servicePrivate.handleDisputeCreated(dispute);
-
-      expect(tableMocks.bookings.update).toHaveBeenCalledWith({
-        payment_status: 'failed',
-      });
-      expect(tableMocks.bookings.in).toHaveBeenCalledWith('id', [
-        'b-dispute-1',
-      ]);
-
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith([
-        expect.objectContaining({
-          user_id: 'admin-1',
-          title: 'Charge Dispute Filed',
-          type: 'warning',
-          link: '/admin/bookings',
-        }),
-        expect.objectContaining({
-          user_id: 'admin-2',
-          title: 'Charge Dispute Filed',
-          type: 'warning',
-          link: '/admin/bookings',
-        }),
-      ]);
-    });
-  });
-
-  describe('handlePaymentIntentFailed', () => {
-    it('should mark booking payment_status to failed and send notification', async () => {
-      const paymentIntent = {
-        id: 'pi_failed_1',
-        last_payment_error: { message: 'Card declined' },
-      } as unknown as Stripe.PaymentIntent;
-
-      tableMocks.bookings.then = (resolve, reject) =>
-        Promise.resolve({
-          data: [{ id: 'b-fail-1', user_id: 'guest-99' }],
-          error: null,
-        }).then(resolve, reject);
-
-      await servicePrivate.handlePaymentIntentFailed(paymentIntent);
-
-      expect(tableMocks.bookings.update).toHaveBeenCalledWith({
-        payment_status: 'failed',
-      });
-      expect(tableMocks.bookings.eq).toHaveBeenCalledWith('id', 'b-fail-1');
-
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'guest-99',
-          title: '⚠️ Payment Failed',
-          type: 'error',
-        }),
-      );
-    });
-  });
-
-  describe('Subscription lifecycle handlers', () => {
-    it('handleSubscriptionCreated should insert active premium subscription and notify user', async () => {
+    it('should route customer.subscription.created to SubscriptionWebhookHandler', async () => {
       const subscription = {
-        id: 'sub_123',
-        customer: 'cus_123',
-        status: 'active',
-        current_period_end: 1770000000,
-        cancel_at_period_end: false,
-        metadata: {
-          userId: 'user-sub-1',
-          plan: 'annual',
-          tier: 'voyager',
-        },
-      } as unknown as Stripe.Subscription;
+        id: 'sub_create_1',
+      } as Stripe.Subscription;
 
-      tableMocks.premium_subscriptions.maybeSingle.mockResolvedValueOnce({
-        data: null,
-        error: null,
-      });
+      const event = {
+        id: 'evt_sub_create',
+        type: 'customer.subscription.created',
+        data: { object: subscription },
+      } as Stripe.Event;
 
-      await servicePrivate.handleSubscriptionCreated(subscription);
+      paymentFake.registerEvent('sub_create_sig', event);
 
-      expect(tableMocks.premium_subscriptions.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-sub-1',
-          plan: 'annual',
-          tier: 'voyager',
-          status: 'active',
-          stripe_subscription_id: 'sub_123',
-          stripe_customer_id: 'cus_123',
-        }),
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'sub_create_sig',
       );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-sub-1',
-          title: '🎉 Welcome to Premium!',
-          type: 'success',
-        }),
+      expect(result).toEqual({ received: true });
+      expect(subscriptionHandler.handleCreated).toHaveBeenCalledWith(
+        subscription,
       );
     });
 
-    it('handleSubscriptionCreated should skip duplicate subscriptions (idempotency)', async () => {
+    it('should route customer.subscription.updated to SubscriptionWebhookHandler', async () => {
       const subscription = {
-        id: 'sub_dup',
-        customer: 'cus_dup',
-        status: 'active',
-        metadata: { userId: 'user-1', plan: 'monthly' },
-      } as unknown as Stripe.Subscription;
+        id: 'sub_upd_1',
+      } as Stripe.Subscription;
 
-      tableMocks.premium_subscriptions.maybeSingle.mockResolvedValueOnce({
-        data: { id: 'sub-existing' },
-        error: null,
-      });
+      const event = {
+        id: 'evt_sub_upd',
+        type: 'customer.subscription.updated',
+        data: { object: subscription },
+      } as Stripe.Event;
 
-      await servicePrivate.handleSubscriptionCreated(subscription);
+      paymentFake.registerEvent('sub_upd_sig', event);
 
-      expect(tableMocks.premium_subscriptions.insert).not.toHaveBeenCalled();
-    });
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'sub_upd_sig',
+      );
 
-    it('handleSubscriptionUpdated should update status and current_period_end', async () => {
-      const subscription = {
-        id: 'sub_update_1',
-        status: 'past_due',
-        current_period_end: 1780000000,
-        cancel_at_period_end: true,
-      } as unknown as Stripe.Subscription;
-
-      tableMocks.premium_subscriptions.maybeSingle.mockResolvedValueOnce({
-        data: { id: 'rec-1', user_id: 'user-1', status: 'active' },
-        error: null,
-      });
-
-      await servicePrivate.handleSubscriptionUpdated(subscription);
-
-      expect(tableMocks.premium_subscriptions.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: 'past_due',
-          cancel_at_period_end: true,
-        }),
+      expect(result).toEqual({ received: true });
+      expect(subscriptionHandler.handleUpdated).toHaveBeenCalledWith(
+        subscription,
       );
     });
 
-    it('handleSubscriptionDeleted should mark subscription as cancelled and notify user', async () => {
+    it('should route customer.subscription.deleted to SubscriptionWebhookHandler', async () => {
       const subscription = {
         id: 'sub_del_1',
-      } as unknown as Stripe.Subscription;
+      } as Stripe.Subscription;
 
-      tableMocks.premium_subscriptions.maybeSingle.mockResolvedValueOnce({
-        data: { id: 'rec-2', user_id: 'user-2' },
-        error: null,
-      });
+      const event = {
+        id: 'evt_sub_del',
+        type: 'customer.subscription.deleted',
+        data: { object: subscription },
+      } as Stripe.Event;
 
-      await servicePrivate.handleSubscriptionDeleted(subscription);
+      paymentFake.registerEvent('sub_del_sig', event);
 
-      expect(tableMocks.premium_subscriptions.update).toHaveBeenCalledWith({
-        status: 'cancelled',
-      });
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'sub_del_sig',
+      );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-2',
-          title: 'Subscription Cancelled',
-          type: 'info',
-        }),
+      expect(result).toEqual({ received: true });
+      expect(subscriptionHandler.handleDeleted).toHaveBeenCalledWith(
+        subscription,
       );
     });
 
-    it('handleInvoicePaymentFailed should mark subscription as past_due and notify user', async () => {
+    it('should route invoice.payment_failed to SubscriptionWebhookHandler', async () => {
       const invoice = {
-        customer: 'cus_fail_1',
-      } as unknown as Stripe.Invoice;
+        id: 'inv_1',
+      } as Stripe.Invoice;
 
-      tableMocks.premium_subscriptions.maybeSingle.mockResolvedValueOnce({
-        data: { id: 'rec-3', user_id: 'user-3' },
-        error: null,
-      });
+      const event = {
+        id: 'evt_inv_fail',
+        type: 'invoice.payment_failed',
+        data: { object: invoice },
+      } as Stripe.Event;
 
-      await servicePrivate.handleInvoicePaymentFailed(invoice);
+      paymentFake.registerEvent('inv_fail_sig', event);
 
-      expect(tableMocks.premium_subscriptions.update).toHaveBeenCalledWith({
-        status: 'past_due',
-      });
-
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'user-3',
-          title: '⚠️ Payment Failed',
-          type: 'error',
-        }),
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'inv_fail_sig',
       );
+
+      expect(result).toEqual({ received: true });
+      expect(
+        subscriptionHandler.handleInvoicePaymentFailed,
+      ).toHaveBeenCalledWith(invoice);
+    });
+
+    it('should route payment_intent.payment_failed to BookingWebhookHandler', async () => {
+      const pi = {
+        id: 'pi_fail_1',
+      } as Stripe.PaymentIntent;
+
+      const event = {
+        id: 'evt_pi_fail',
+        type: 'payment_intent.payment_failed',
+        data: { object: pi },
+      } as Stripe.Event;
+
+      paymentFake.registerEvent('pi_fail_sig', event);
+
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'pi_fail_sig',
+      );
+
+      expect(result).toEqual({ received: true });
+      expect(bookingHandler.handlePaymentIntentFailed).toHaveBeenCalledWith(pi);
+    });
+
+    it('should route charge.refunded to BookingWebhookHandler', async () => {
+      const charge = {
+        id: 'ch_ref_1',
+      } as Stripe.Charge;
+
+      const event = {
+        id: 'evt_ch_ref',
+        type: 'charge.refunded',
+        data: { object: charge },
+      } as Stripe.Event;
+
+      paymentFake.registerEvent('ch_ref_sig', event);
+
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'ch_ref_sig',
+      );
+
+      expect(result).toEqual({ received: true });
+      expect(bookingHandler.handleChargeRefunded).toHaveBeenCalledWith(charge);
+    });
+
+    it('should route charge.dispute.created to BookingWebhookHandler', async () => {
+      const dispute = {
+        id: 'dp_1',
+      } as Stripe.Dispute;
+
+      const event = {
+        id: 'evt_dp_1',
+        type: 'charge.dispute.created',
+        data: { object: dispute },
+      } as Stripe.Event;
+
+      paymentFake.registerEvent('dp_sig', event);
+
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'dp_sig',
+      );
+
+      expect(result).toEqual({ received: true });
+      expect(bookingHandler.handleDisputeCreated).toHaveBeenCalledWith(dispute);
+    });
+
+    it('should release the event claim when a handler fails so Stripe retries are processed', async () => {
+      const session = {
+        id: 'cs_handler_fail',
+        metadata: {
+          bookingIds: 'b1',
+          userId: 'u1',
+        },
+      } as unknown as Stripe.Checkout.Session;
+
+      const event = {
+        id: 'evt_handler_fail',
+        type: 'checkout.session.completed',
+        data: { object: session },
+      } as Stripe.Event;
+
+      paymentFake.registerEvent('handler_fail_sig', event);
+      const checkoutSessionMock =
+        bookingHandler.handleCheckoutSession as jest.Mock;
+      checkoutSessionMock.mockRejectedValueOnce(
+        new Error('DB connection error'),
+      );
+
+      await expect(
+        service.processWebhookEvent(Buffer.from('payload'), 'handler_fail_sig'),
+      ).rejects.toThrow('DB connection error');
+
+      expect(processedEvents.releaseEvent).toHaveBeenCalledWith(
+        'evt_handler_fail',
+      );
+
+      // Retry delivery after the claim was released is processed again.
+      checkoutSessionMock.mockResolvedValueOnce(undefined);
+      processedEvents.tryClaimEvent.mockResolvedValueOnce(true);
+
+      const retry = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'handler_fail_sig',
+      );
+
+      expect(retry).toEqual({ received: true });
+      expect(bookingHandler.handleCheckoutSession).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle unhandled event types gracefully and return received: true', async () => {
+      const event = {
+        id: 'evt_unhandled',
+        type: 'unknown.event.type',
+        data: { object: {} },
+      } as unknown as Stripe.Event;
+
+      paymentFake.registerEvent('unhandled_sig', event);
+
+      const result = await service.processWebhookEvent(
+        Buffer.from('payload'),
+        'unhandled_sig',
+      );
+
+      expect(result).toEqual({ received: true });
+      expect(addonHandler.handleCheckoutSession).not.toHaveBeenCalled();
+      expect(bookingHandler.handleCheckoutSession).not.toHaveBeenCalled();
+      expect(subscriptionHandler.handleCreated).not.toHaveBeenCalled();
     });
   });
 });

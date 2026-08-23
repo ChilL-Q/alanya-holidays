@@ -14,26 +14,26 @@ import { Type } from 'class-transformer';
 export class OrderRecipientDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  phone: string;
+  phone!: string;
 
   @IsIn(['whatsapp', 'phone_call', 'email'])
-  contact_method: 'whatsapp' | 'phone_call' | 'email';
+  contact_method!: 'whatsapp' | 'phone_call' | 'email';
 }
 
 export class CreateOrderItemDto {
   @IsNotEmpty()
-  productId: string | number;
+  productId!: string | number;
 
   @IsString()
   @IsNotEmpty()
-  productName: string;
+  productName!: string;
 
   @IsOptional()
   skuId?: string | number | null;
@@ -44,29 +44,29 @@ export class CreateOrderItemDto {
 
   @IsNumber()
   @Min(1)
-  quantity: number;
+  quantity!: number;
 
   @IsNumber()
   @Min(0)
-  unitPrice: number;
+  unitPrice!: number;
 
   @IsNumber()
   @Min(0)
-  finalPrice: number;
+  finalPrice!: number;
 
   @IsNumber()
   @Min(0)
-  subtotal: number;
+  subtotal!: number;
 }
 
 export class CreateProductOrderDto {
   @IsString()
   @IsNotEmpty()
-  currency: string;
+  currency!: string;
 
   @IsNumber()
   @Min(0)
-  subtotal: number;
+  subtotal!: number;
 
   @IsOptional()
   @IsString()
@@ -74,10 +74,10 @@ export class CreateProductOrderDto {
 
   @ValidateNested()
   @Type(() => OrderRecipientDto)
-  recipient: OrderRecipientDto;
+  recipient!: OrderRecipientDto;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
-  items: CreateOrderItemDto[];
+  items!: CreateOrderItemDto[];
 }

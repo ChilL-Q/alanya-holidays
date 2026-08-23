@@ -4,24 +4,23 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import GuideModal from "@/pages/travel-guides/components/GuideModal";
 import SubmitGuideModal from "@/pages/travel-guides/components/SubmitGuideModal";
-import { guideContents } from "@/mocks/travelGuideContents";
 import {
   blogService,
   mockTravelGuides,
-  mockBlogTags,
   type BlogPostItem,
   type BlogTag,
 } from "@/api-services/blog.service";
+import { logger } from "@/lib/logger";
 
 export default function TravelGuidesPage() {
-  const [guides, setGuides] = useState<BlogPostItem[]>(mockTravelGuides);
-  const [tags, setTags] = useState<BlogTag[]>(mockBlogTags);
+  const [guides, setGuides] = useState<BlogPostItem[]>([]);
+  const [tags, setTags] = useState<BlogTag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedGuide, setSelectedGuide] = useState<BlogPostItem | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isPrintingAll, setIsPrintingAll] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch tags on mount
   useEffect(() => {
@@ -34,7 +33,7 @@ export default function TravelGuidesPage() {
         }
       })
       .catch((err) => {
-        console.warn("Failed to fetch blog tags:", err);
+        logger.warn("Failed to fetch blog tags:", err);
       });
 
     return () => {
@@ -68,7 +67,7 @@ export default function TravelGuidesPage() {
         }
       })
       .catch((err) => {
-        console.warn("Failed to fetch guides:", err);
+        logger.warn("Failed to fetch guides:", err);
         if (isMounted) {
           setIsLoading(false);
         }
@@ -298,9 +297,7 @@ export default function TravelGuidesPage() {
           </div>
 
           {guides.map((guide, idx) => {
-            const content = guideContents[guide.title];
             const heroImage =
-              content?.heroImage ||
               guide.cover_image_url ||
               "https://readdy.ai/api/search-image?query=Alanya%20castle%20and%20Mediterranean%20coast&width=1200&height=512&seq=print-fallback&orientation=landscape";
             const readTime = guide.readTime || "8 min read";
@@ -321,14 +318,9 @@ export default function TravelGuidesPage() {
                   <span className="text-sm font-normal text-foreground-400">— {readTime}</span>
                 </h2>
                 <p className="text-sm text-foreground-500 mb-4 italic">{description}</p>
-                {content?.sections?.map((section) => (
-                  <div key={section.heading} className="mb-4">
-                    <h3 className="font-heading text-base text-foreground-900 mb-1">
-                      {section.heading}
-                    </h3>
-                    <p className="text-sm text-foreground-700 leading-relaxed">{section.body}</p>
-                  </div>
-                ))}
+                {guide.content && (
+                  <p className="text-sm text-foreground-700 leading-relaxed whitespace-pre-line">{guide.content}</p>
+                )}
               </div>
             );
           })}

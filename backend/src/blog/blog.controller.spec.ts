@@ -7,13 +7,14 @@ jest.mock('sanitize-html', () => {
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import {
-  AuthenticatedRequest,
   BlogPost,
   BlogPostSummary,
   BlogSubmission,
   BlogTag,
-  OptionalAuthenticatedRequest,
 } from './types/blog.types';
 import {
   CreateBlogPostDto,
@@ -75,8 +76,9 @@ describe('BlogController', () => {
     created_at: new Date().toISOString(),
   };
 
-  const mockAuthReq: AuthenticatedRequest = {
-    user: { id: 'user-1', email: 'user@test.com' },
+  const mockUser: AuthUser = {
+    id: 'user-1',
+    email: 'user@test.com',
   };
 
   beforeEach(async () => {
@@ -112,9 +114,15 @@ describe('BlogController', () => {
           provide: BlogService,
           useValue: mockService,
         },
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn().mockResolvedValue('admin') },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -124,11 +132,19 @@ describe('BlogController', () => {
   describe('GET /blog endpoints', () => {
     it('should delegate getBlogPosts call to service with optional user ID', async () => {
       const query: GetBlogQueryDto = { category: 'news', page: 1, limit: 10 };
-      const req: OptionalAuthenticatedRequest = { user: { id: 'user-1' } };
-      const res = await controller.getBlogPosts(query, req);
+      const user: AuthUser = { id: 'user-1' };
+      const res = await controller.getBlogPosts(query, user);
 
       expect(res.total).toBe(1);
       expect(mockService.getBlogPosts).toHaveBeenCalledWith(query, 'user-1');
+    });
+
+    it('should delegate getBlogPosts call to service with undefined user when unauthenticated', async () => {
+      const query: GetBlogQueryDto = { category: 'news', page: 1, limit: 10 };
+      const res = await controller.getBlogPosts(query, undefined);
+
+      expect(res.total).toBe(1);
+      expect(mockService.getBlogPosts).toHaveBeenCalledWith(query, undefined);
     });
 
     it('should delegate getFeaturedBlogPosts with limit parameter', async () => {
@@ -163,7 +179,7 @@ describe('BlogController', () => {
 
     it('should delegate createBlogTag with DTO', async () => {
       const dto: CreateBlogTagDto = { name: 'New Tag' };
-      const res = await controller.createBlogTag(dto, mockAuthReq);
+      const res = await controller.createBlogTag(dto, mockUser);
       expect(res.name).toBe('Alanya Castle');
       expect(mockService.createBlogTag).toHaveBeenCalledWith(
         'New Tag',
@@ -172,20 +188,20 @@ describe('BlogController', () => {
     });
 
     it('should delegate deleteBlogTag', async () => {
-      const res = await controller.deleteBlogTag('tag-1', mockAuthReq);
+      const res = await controller.deleteBlogTag('tag-1', mockUser);
       expect(res.success).toBe(true);
       expect(mockService.deleteBlogTag).toHaveBeenCalledWith('tag-1', 'user-1');
     });
 
     it('should delegate addTagToPost and removeTagFromPost', async () => {
-      await controller.addTagToPost('post-1', 'tag-1', mockAuthReq);
+      await controller.addTagToPost('post-1', 'tag-1', mockUser);
       expect(mockService.addTagToPost).toHaveBeenCalledWith(
         'post-1',
         'tag-1',
         'user-1',
       );
 
-      await controller.removeTagFromPost('post-1', 'tag-1', mockAuthReq);
+      await controller.removeTagFromPost('post-1', 'tag-1', mockUser);
       expect(mockService.removeTagFromPost).toHaveBeenCalledWith(
         'post-1',
         'tag-1',
@@ -202,7 +218,7 @@ describe('BlogController', () => {
         author_name: 'Author',
         author_email: 'author@test.com',
       };
-      const res = await controller.createBlogSubmission(dto, mockAuthReq);
+      const res = await controller.createBlogSubmission(dto, mockUser);
       expect(res.submissionId).toBe('sub-1');
       expect(mockService.createBlogSubmission).toHaveBeenCalledWith(
         dto,
@@ -212,7 +228,7 @@ describe('BlogController', () => {
 
     it('should delegate getBlogSubmissions for admin', async () => {
       const query: GetBlogSubmissionsQueryDto = { status: 'pending_review' };
-      const res = await controller.getBlogSubmissions(query, mockAuthReq);
+      const res = await controller.getBlogSubmissions(query, mockUser);
       expect(res).toHaveLength(1);
       expect(mockService.getBlogSubmissions).toHaveBeenCalledWith(
         query,
@@ -221,13 +237,13 @@ describe('BlogController', () => {
     });
 
     it('should delegate getUserBlogSubmissions for current user', async () => {
-      const res = await controller.getUserBlogSubmissions(mockAuthReq);
+      const res = await controller.getUserBlogSubmissions(mockUser);
       expect(res).toHaveLength(1);
       expect(mockService.getUserBlogSubmissions).toHaveBeenCalledWith('user-1');
     });
 
     it('should delegate approveBlogSubmission', async () => {
-      const res = await controller.approveBlogSubmission('sub-1', mockAuthReq);
+      const res = await controller.approveBlogSubmission('sub-1', mockUser);
       expect(res.id).toBe('post-1');
       expect(mockService.approveBlogSubmission).toHaveBeenCalledWith(
         'sub-1',
@@ -239,11 +255,7 @@ describe('BlogController', () => {
       const dto: RejectBlogSubmissionDto = {
         reason: 'Content does not meet guidelines',
       };
-      const res = await controller.rejectBlogSubmission(
-        'sub-1',
-        dto,
-        mockAuthReq,
-      );
+      const res = await controller.rejectBlogSubmission('sub-1', dto, mockUser);
       expect(res.success).toBe(true);
       expect(mockService.rejectBlogSubmission).toHaveBeenCalledWith(
         'sub-1',
@@ -259,7 +271,7 @@ describe('BlogController', () => {
         title: 'Post Title',
         content: 'Post Content',
       };
-      const res = await controller.createBlogPost(dto, mockAuthReq);
+      const res = await controller.createBlogPost(dto, mockUser);
       expect(res.id).toBe('post-1');
       expect(mockService.createBlogPost).toHaveBeenCalledWith(dto, 'user-1');
     });
@@ -268,7 +280,7 @@ describe('BlogController', () => {
       const dto: UpdateBlogPostDto = {
         title: 'Updated Title',
       };
-      const res = await controller.updateBlogPost('post-1', dto, mockAuthReq);
+      const res = await controller.updateBlogPost('post-1', dto, mockUser);
       expect(res.id).toBe('post-1');
       expect(mockService.updateBlogPost).toHaveBeenCalledWith(
         'post-1',
@@ -278,7 +290,7 @@ describe('BlogController', () => {
     });
 
     it('should delegate deleteBlogPost', async () => {
-      const res = await controller.deleteBlogPost('post-1', mockAuthReq);
+      const res = await controller.deleteBlogPost('post-1', mockUser);
       expect(res.success).toBe(true);
       expect(mockService.deleteBlogPost).toHaveBeenCalledWith(
         'post-1',

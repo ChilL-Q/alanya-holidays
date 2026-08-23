@@ -1,4 +1,4 @@
-import { apiClient, ApiError } from "@/lib/api-client";
+import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
 
 export type NotificationType = "booking" | "message" | "community" | "system";
 
@@ -50,47 +50,6 @@ export function normalizeNotificationType(rawType?: string): NotificationType {
   }
   return "system";
 }
-
-export const mockNotifications: AppNotification[] = [
-  {
-    id: "notif-1",
-    title: "Booking Confirmed",
-    message: "Your reservation for Cleopatra Luxury Villa is confirmed.",
-    type: "booking",
-    read: false,
-    link: "/planner",
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
-  },
-  {
-    id: "notif-2",
-    title: "New Message",
-    message: "Captain Mehmet sent you a message regarding Sunset Yacht Tour.",
-    type: "message",
-    read: false,
-    link: "/messages",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-  },
-  {
-    id: "notif-3",
-    title: "Upcoming Community Event",
-    message: "Beach Volleyball Tournament starts tomorrow at 10:00 AM.",
-    type: "community",
-    read: true,
-    link: "/events",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-  },
-  {
-    id: "notif-4",
-    title: "Welcome to Alanya Holidays",
-    message: "Explore luxury experiences, boat trips, and private villas.",
-    type: "system",
-    read: true,
-    link: "/explore",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-  },
-];
-
-let fallbackNotificationsState: AppNotification[] = [...mockNotifications];
 
 export function formatNotificationTime(dateStr?: string | null): string {
   if (!dateStr) return "";
@@ -147,86 +106,57 @@ export function mapRawNotificationToApp(raw: RawBackendNotification): AppNotific
 export class NotificationsService {
   /**
    * Retrieves notifications for a user or current authenticated session.
-   * Gracefully falls back to mock notifications if offline or backend is unavailable.
    */
-  async getNotifications(userId?: string): Promise<AppNotification[]> {
+  async getNotifications(userId?: string, options?: RequestOptions): Promise<AppNotification[]> {
     try {
-      const params = userId ? { userId } : undefined;
+      const params = options?.params ?? (userId ? { userId } : undefined);
       const data = await apiClient.get<RawBackendNotification[]>("/notifications", {
+        ...options,
         params,
       });
 
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         return data.map(mapRawNotificationToApp);
       }
+      return [];
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        return [...fallbackNotificationsState];
+      if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+        return [];
       }
-      console.warn("Failed to fetch notifications from API, using fallback:", err);
+      throw err;
     }
-
-    return [...fallbackNotificationsState];
   }
 
   /**
    * Marks a notification as read.
    */
   async markAsRead(id: string): Promise<boolean> {
-    fallbackNotificationsState = fallbackNotificationsState.map((item) =>
-      item.id === id ? { ...item, read: true } : item
-    );
-
-    try {
-      await apiClient.patch(`/notifications/${id}/read`);
-      return true;
-    } catch (err) {
-      console.warn(`Failed to mark notification ${id} as read on API:`, err);
-      return true;
-    }
+    await apiClient.patch(`/notifications/${id}/read`);
+    return true;
   }
 
   /**
    * Marks all notifications as read.
    */
   async markAllAsRead(userId?: string): Promise<boolean> {
-    fallbackNotificationsState = fallbackNotificationsState.map((item) => ({
-      ...item,
-      read: true,
-    }));
-
-    try {
-      const body = userId ? { userId } : undefined;
-      await apiClient.patch("/notifications/read-all", body);
-      return true;
-    } catch (err) {
-      console.warn("Failed to mark all notifications as read on API:", err);
-      return true;
-    }
+    const body = userId ? { userId } : undefined;
+    await apiClient.patch("/notifications/read-all", body);
+    return true;
   }
 
   /**
    * Deletes / dismisses a single notification.
    */
   async deleteNotification(id: string): Promise<boolean> {
-    fallbackNotificationsState = fallbackNotificationsState.filter(
-      (item) => item.id !== id
-    );
-
-    try {
-      await apiClient.delete(`/notifications/${id}`);
-      return true;
-    } catch (err) {
-      console.warn(`Failed to delete notification ${id} on API:`, err);
-      return true;
-    }
+    await apiClient.delete(`/notifications/${id}`);
+    return true;
   }
 }
 
 export const notificationsService = new NotificationsService();
 
-export const getNotifications = (userId?: string) =>
-  notificationsService.getNotifications(userId);
+export const getNotifications = (userId?: string, options?: RequestOptions) =>
+  notificationsService.getNotifications(userId, options);
 
 export const markAsRead = (id: string) =>
   notificationsService.markAsRead(id);
@@ -236,3 +166,4 @@ export const markAllAsRead = (userId?: string) =>
 
 export const deleteNotification = (id: string) =>
   notificationsService.deleteNotification(id);
+

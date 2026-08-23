@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { guideContents, type ChecklistItem, type GuideContent } from "@/mocks/travelGuideContents";
-import { blogService, type BlogPostItem } from "@/api-services/blog.service";
+import { blogService, type BlogPostItem, type GuideContent, type ChecklistItem } from "@/api-services/blog.service";
+import { guideContents } from "@/domain/guide-contents";
 import { ArticleContentRenderer } from "@/components/article";
 
 interface GuideModalProps {
@@ -10,10 +10,9 @@ interface GuideModalProps {
 }
 
 export default function GuideModal({ guide, onClose }: GuideModalProps) {
-  const [content, setContent] = useState<GuideContent | null>(() => {
-    return guideContents[guide.title] || null;
-  });
-  const [isLoadingContent, setIsLoadingContent] = useState(!guideContents[guide.title]);
+  const initialContent = guideContents[guide.title] || (guide.slug ? guideContents[guide.slug] : null) || null;
+  const [content, setContent] = useState<GuideContent | null>(initialContent);
+  const [isLoadingContent, setIsLoadingContent] = useState(!initialContent);
 
   const storageKey = `guide-checklist-${guide.title}`;
 
@@ -29,25 +28,26 @@ export default function GuideModal({ guide, onClose }: GuideModalProps) {
 
   useEffect(() => {
     let isMounted = true;
-    if (!guideContents[guide.title]) {
-      setIsLoadingContent(true);
-      blogService
-        .getGuideContent(guide.slug || guide.title)
-        .then((res) => {
-          if (isMounted) {
-            setContent(res);
-            setIsLoadingContent(false);
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setIsLoadingContent(false);
-          }
-        });
-    } else {
-      setContent(guideContents[guide.title]);
+    const staticRes = guideContents[guide.title] || (guide.slug ? guideContents[guide.slug] : null);
+    if (staticRes) {
+      setContent(staticRes);
       setIsLoadingContent(false);
+      return;
     }
+    setIsLoadingContent(true);
+    blogService
+      .getGuideContent(guide.slug || guide.title)
+      .then((res) => {
+        if (isMounted) {
+          setContent(res);
+          setIsLoadingContent(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsLoadingContent(false);
+        }
+      });
 
     return () => {
       isMounted = false;

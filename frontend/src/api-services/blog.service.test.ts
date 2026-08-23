@@ -7,12 +7,8 @@ import {
   getTags,
   submitGuide,
   getGuideContent,
-  calculateReadTime,
-  getCategoryIcon,
-  mockTravelGuides,
-  mockBlogTags,
 } from "./blog.service";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("blog.service", () => {
   beforeEach(() => {
@@ -21,33 +17,6 @@ describe("blog.service", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-  });
-
-  describe("calculateReadTime", () => {
-    it("should calculate correct read time from word count", () => {
-      const shortText = "Word ".repeat(100);
-      expect(calculateReadTime(shortText)).toBe("1 min read");
-
-      const longText = "Word ".repeat(600);
-      expect(calculateReadTime(longText)).toBe("3 min read");
-    });
-
-    it("should handle empty or HTML content", () => {
-      expect(calculateReadTime("")).toBe("1 min read");
-      expect(calculateReadTime("<p>Hello world</p>")).toBe("1 min read");
-    });
-  });
-
-  describe("getCategoryIcon", () => {
-    it("should return correct RemixIcon classes based on category", () => {
-      expect(getCategoryIcon("Food & Drink")).toBe("ri-restaurant-2-line");
-      expect(getCategoryIcon("Adventure")).toBe("ri-riding-line");
-      expect(getCategoryIcon("Expats")).toBe("ri-home-5-line");
-      expect(getCategoryIcon("Beaches")).toBe("ri-sun-line");
-      expect(getCategoryIcon("Nightlife")).toBe("ri-moon-clear-line");
-      expect(getCategoryIcon("Essential")).toBe("ri-anchor-line");
-      expect(getCategoryIcon("Other")).toBe("ri-book-open-line");
-    });
   });
 
   describe("getPosts", () => {
@@ -74,7 +43,7 @@ describe("blog.service", () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockBackendResponse);
 
       const result = await blogService.getPosts({ category: "Adventure", limit: 5 });
-      expect(apiClient.get).toHaveBeenCalledWith("/blog", {
+      expect(apiClient.get).toHaveBeenCalledWith("/blog/posts", {
         params: { category: "Adventure", limit: 5 },
       });
       expect(result.total).toBe(1);
@@ -82,7 +51,6 @@ describe("blog.service", () => {
       expect(result.posts[0].id).toBe("post-101");
       expect(result.posts[0].title).toBe("Exploring Damlatas Cave");
       expect(result.posts[0].tag).toBe("Adventure");
-      expect(result.posts[0].icon).toBe("ri-riding-line");
     });
 
     it("should return mapped posts when API returns an array", async () => {
@@ -107,29 +75,12 @@ describe("blog.service", () => {
       expect(result.posts[0].tag).toBe("Nightlife");
     });
 
-    it("should fall back to mock travel guides when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
-      const result = await getPosts();
-      expect(result.posts).toHaveLength(mockTravelGuides.length);
-      expect(result.total).toBe(mockTravelGuides.length);
-      expect(result.posts[0].title).toBe("Alanya First-Timer's Guide");
-    });
-
-    it("should filter mock guides by category in offline fallback", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
-
-      const result = await getPosts({ category: "Food & Drink" });
-      expect(result.posts).toHaveLength(1);
-      expect(result.posts[0].title).toBe("The Ultimate Food Lover's Alanya");
-    });
-
-    it("should filter mock guides by search keyword in offline fallback", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
-
-      const result = await getPosts({ search: "beach" });
-      expect(result.posts.length).toBeGreaterThanOrEqual(1);
-      expect(result.posts.some((p) => p.title.includes("Beach"))).toBe(true);
+      await expect(getPosts()).rejects.toThrow(ApiError);
     });
   });
 
@@ -161,20 +112,21 @@ describe("blog.service", () => {
       expect(result?.author?.full_name).toBe("Tarik Kaya");
     });
 
-    it("should fall back to mock guides when API fails and slug matches mock", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Post not found"));
-
-      const result = await getPostBySlug("alanya-first-timers-guide");
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe("Alanya First-Timer's Guide");
-      expect(result?.content).toBeDefined();
-    });
-
-    it("should return null if not found in backend or mocks", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Post not found", 404, "Not Found")
+      );
 
       const result = await getPostBySlug("non-existent-article-xyz-999");
       expect(result).toBeNull();
+    });
+
+    it("should propagate ApiError when 500 occurs", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Internal error", 500, "Internal Server Error")
+      );
+
+      await expect(getPostBySlug("error-slug")).rejects.toThrow(ApiError);
     });
   });
 
@@ -200,12 +152,12 @@ describe("blog.service", () => {
       expect(result[0].title).toBe("Featured 1");
     });
 
-    it("should fall back to featured mock guides when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Network failure", 500, "Internal Server Error")
+      );
 
-      const result = await getFeaturedPosts(2);
-      expect(result.length).toBeLessThanOrEqual(2);
-      expect(result.length).toBeGreaterThan(0);
+      await expect(getFeaturedPosts(2)).rejects.toThrow(ApiError);
     });
   });
 
@@ -223,11 +175,12 @@ describe("blog.service", () => {
       expect(result).toEqual(mockTags);
     });
 
-    it("should fall back to mock tags when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Tags service offline"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Tags service offline", 500, "Internal Server Error")
+      );
 
-      const result = await getTags();
-      expect(result).toEqual(mockBlogTags);
+      await expect(getTags()).rejects.toThrow(ApiError);
     });
   });
 
@@ -250,8 +203,10 @@ describe("blog.service", () => {
       expect(result.id).toBe("sub-12345");
     });
 
-    it("should return graceful fallback on submission error", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("API offline"));
+    it("should throw ApiError on submission error", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
       const payload = {
         title: "Offline Guide Submission",
@@ -259,27 +214,12 @@ describe("blog.service", () => {
         category: "Expats",
       };
 
-      const result = await submitGuide(payload);
-      expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      await expect(submitGuide(payload)).rejects.toThrow(ApiError);
     });
   });
 
   describe("getGuideContent", () => {
-    it("should return content from mock dictionary by exact title", async () => {
-      const content = await blogService.getGuideContent("Alanya First-Timer's Guide");
-      expect(content).not.toBeNull();
-      expect(content?.sections.length).toBeGreaterThan(0);
-      expect(content?.heroImage).toBeDefined();
-    });
-
-    it("should return content from mock dictionary by slugified title", async () => {
-      const content = await getGuideContent("the-ultimate-food-lovers-alanya");
-      expect(content).not.toBeNull();
-      expect(content?.sections.length).toBeGreaterThan(0);
-    });
-
-    it("should return dynamic guide content synthesized from post if not in mock dictionary", async () => {
+    it("should return dynamic guide content synthesized from post", async () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce({
         id: "p-dyn",
         title: "Dynamic Local Secret",
@@ -295,7 +235,9 @@ describe("blog.service", () => {
     });
 
     it("should return null for non-existent guide", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const content = await getGuideContent("completely-unknown-guide-slug");
       expect(content).toBeNull();

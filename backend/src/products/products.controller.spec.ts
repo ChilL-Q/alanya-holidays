@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
+import { ProductDraftsService } from './product-drafts.service';
 import { ProductsService } from './products.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
 
@@ -21,10 +23,14 @@ describe('ProductsController', () => {
     getShopCatalog: jest.Mock;
     getFeaturedProducts: jest.Mock;
     getShopProductDetails: jest.Mock;
+    getOrderableProductsByIds: jest.Mock;
     createProductOrder: jest.Mock;
     getMyOrders: jest.Mock;
     getOrderById: jest.Mock;
   };
+
+  const mockUser: AuthUser = { id: 'seller-1' };
+  const mockCustomer: AuthUser = { id: 'user-123' };
 
   beforeEach(async () => {
     mockService = {
@@ -47,6 +53,7 @@ describe('ProductsController', () => {
       getShopProductDetails: jest
         .fn()
         .mockResolvedValue({ product: { id: 1 }, variants: [], skus: [] }),
+      getOrderableProductsByIds: jest.fn().mockResolvedValue([]),
       createProductOrder: jest.fn().mockResolvedValue({
         success: true,
         orderId: 101,
@@ -79,6 +86,13 @@ describe('ProductsController', () => {
           provide: ProductsService,
           useValue: mockService,
         },
+        {
+          provide: ProductDraftsService,
+          useValue: {
+            saveProductDraft: jest.fn().mockResolvedValue({ id: 'draft-1' }),
+            publishProductDraft: jest.fn().mockResolvedValue({ success: true }),
+          },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
@@ -95,7 +109,6 @@ describe('ProductsController', () => {
     });
 
     it('should pass req.user.id to createProduct', async () => {
-      const req = { user: { id: 'seller-1' } };
       const dto = {
         title: 'Product 1',
         description: '',
@@ -104,14 +117,13 @@ describe('ProductsController', () => {
         category: 'food',
         images: [],
       };
-      await controller.createProduct(dto, req);
+      await controller.createProduct(dto, mockUser);
 
       expect(mockService.createProduct).toHaveBeenCalledWith(dto, 'seller-1');
     });
 
     it('should pass variantId and req.user.id to deleteProductVariant', async () => {
-      const req = { user: { id: 'seller-1' } };
-      await controller.deleteProductVariant('var-99', req);
+      await controller.deleteProductVariant('var-99', mockUser);
 
       expect(mockService.deleteProductVariant).toHaveBeenCalledWith(
         'var-99',
@@ -165,8 +177,7 @@ describe('ProductsController', () => {
           },
         ],
       };
-      const req = { user: { id: 'user-123' } };
-      const res = await controller.createProductOrder(dto, req);
+      const res = await controller.createProductOrder(dto, mockCustomer);
       expect(mockService.createProductOrder).toHaveBeenCalledWith(
         dto,
         'user-123',
@@ -185,8 +196,7 @@ describe('ProductsController', () => {
     });
 
     it('GET /products/orders/my-orders should return current user orders', async () => {
-      const req = { user: { id: 'user-123' } };
-      const res = await controller.getMyOrders(req);
+      const res = await controller.getMyOrders(mockCustomer);
       expect(mockService.getMyOrders).toHaveBeenCalledWith('user-123');
       expect(res).toEqual([
         {
@@ -201,8 +211,7 @@ describe('ProductsController', () => {
     });
 
     it('GET /products/orders/:id should return single order for user', async () => {
-      const req = { user: { id: 'user-123' } };
-      const res = await controller.getOrderById('101', req);
+      const res = await controller.getOrderById('101', mockCustomer);
       expect(mockService.getOrderById).toHaveBeenCalledWith('101', 'user-123');
       expect(res).toEqual({
         id: 101,

@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PersonalShopperForm from "@/pages/shop/components/PersonalShopperForm";
 import RecentEnquiriesSidebar from "@/pages/shop/components/RecentEnquiriesSidebar";
 import { useCart } from "@/hooks/useCart";
-import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
+import { useToast } from "@/hooks/useToast";
 import {
   productsService,
   type ShopProduct,
@@ -14,8 +14,7 @@ import {
 
 export default function ShopPage() {
   const { addToCart } = useCart();
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const { showToast, ToastContainer } = useToast();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
@@ -79,22 +78,6 @@ export default function ShopPage() {
     return "ri-store-2-line";
   };
 
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-    const timer = toastTimersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      toastTimersRef.current.delete(id);
-    }
-  }, []);
-
-  const showToast = useCallback((productName: string) => {
-    const toast = createToast("Added to cart", productName, "success");
-    setToasts((prev) => [...prev, toast]);
-    const timer = setTimeout(() => dismissToast(toast.id), 3500);
-    toastTimersRef.current.set(toast.id, timer);
-  }, [dismissToast]);
-
   const handleAddToCart = useCallback(
     (product: ShopProduct) => {
       addToCart({
@@ -102,7 +85,7 @@ export default function ShopPage() {
         price: formatPrice(product),
         icon: getCategoryIcon(product),
       });
-      showToast(product.name);
+      showToast("Added to cart", product.name, "success");
     },
     [addToCart, showToast],
   );
@@ -315,7 +298,7 @@ export default function ShopPage() {
         <PersonalShopperForm />
       </main>
       <Footer />
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer />
     </>
   );
 }

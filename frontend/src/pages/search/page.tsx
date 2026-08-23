@@ -1,18 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { categoryThreads } from "@/mocks/category-threads";
-import type { CategoryThread } from "@/mocks/threads";
-import { members } from "@/mocks/members";
-import { events } from "@/mocks/events";
-import type { ForumEvent } from "@/mocks/events";
+import { forumService, type CategoryThread, type ForumMember } from "@/api-services/forum.service";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
 
 type ResultTab = "all" | "threads" | "members" | "events";
 
 interface SearchResult {
   threads: CategoryThread[];
-  members: typeof members;
+  members: ForumMember[];
   events: ForumEvent[];
 }
 
@@ -42,6 +39,37 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState<ResultTab>("all");
+  const [allThreads, setAllThreads] = useState<CategoryThread[]>([]);
+  const [allMembers, setAllMembers] = useState<ForumMember[]>([]);
+  const [allEvents, setAllEvents] = useState<ForumEvent[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    forumService
+      .getThreads({ limit: 100 })
+      .then((res) => {
+        if (isMounted && res.threads) setAllThreads(res.threads);
+      })
+      .catch(() => {});
+
+    forumService
+      .getMembers({ limit: 100 })
+      .then((res) => {
+        if (isMounted && res) setAllMembers(res);
+      })
+      .catch(() => {});
+
+    eventsService
+      .getEvents()
+      .then((evts) => {
+        if (isMounted && evts) setAllEvents(evts);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const results = useMemo<SearchResult>(() => {
     if (!query.trim()) {
@@ -51,10 +79,6 @@ export default function SearchPage() {
     const q = query.toLowerCase();
 
     // Search threads
-    const allThreads: CategoryThread[] = [];
-    Object.values(categoryThreads).forEach((list) => {
-      list.forEach((t) => allThreads.push(t));
-    });
     const matchedThreads = allThreads.filter(
       (t) =>
         t.title.toLowerCase().includes(q) ||
@@ -65,7 +89,7 @@ export default function SearchPage() {
     );
 
     // Search members
-    const matchedMembers = members.filter(
+    const matchedMembers = allMembers.filter(
       (m) =>
         m.fullName.toLowerCase().includes(q) ||
         m.username.toLowerCase().includes(q) ||
@@ -75,7 +99,7 @@ export default function SearchPage() {
     );
 
     // Search events
-    const matchedEvents = events.filter(
+    const matchedEvents = allEvents.filter(
       (e) =>
         e.title.toLowerCase().includes(q) ||
         e.description.toLowerCase().includes(q) ||
@@ -85,7 +109,7 @@ export default function SearchPage() {
     );
 
     return { threads: matchedThreads, members: matchedMembers, events: matchedEvents };
-  }, [query]);
+  }, [query, allThreads, allMembers, allEvents]);
 
   const totalResults = results.threads.length + results.members.length + results.events.length;
 

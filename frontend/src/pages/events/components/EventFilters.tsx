@@ -1,4 +1,4 @@
-import { eventCategories } from "@/mocks/events";
+import { eventCategories } from "@/api-services/events.service";
 
 interface EventFiltersProps {
   activeCategory: string | null;

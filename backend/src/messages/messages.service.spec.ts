@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { MessagesRepository } from './messages.repository';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { ReportChatDto } from './dto/report-chat.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
@@ -39,6 +40,10 @@ describe('MessagesService', () => {
         {
           provide: MessagesRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: EmailOutboxRepository,
+          useValue: { enqueue: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -387,7 +392,23 @@ describe('MessagesService', () => {
   });
 
   describe('sendContactMessage', () => {
-    it('should sanitize input HTML tags, insert contact message, and invoke email function', async () => {
+    it('should sanitize input HTML tags, insert contact message, and enqueue email into the outbox', async () => {
+      const outboxEnqueue = jest.fn().mockResolvedValue(undefined);
+      // Rebuild service with a spy-able outbox for this test.
+      const { EmailOutboxRepository: OutboxRepo } =
+        await import('../bookings/email-outbox.repository');
+      const module2: TestingModule = await Test.createTestingModule({
+        providers: [
+          MessagesService,
+          { provide: MessagesRepository, useValue: mockRepository },
+          {
+            provide: OutboxRepo,
+            useValue: { enqueue: outboxEnqueue },
+          },
+        ],
+      }).compile();
+      const svc = module2.get<MessagesService>(MessagesService);
+
       const dto: CreateContactMessageDto = {
         name: '<b>John Doe</b>',
         email: 'john@example.com',
@@ -395,7 +416,7 @@ describe('MessagesService', () => {
         message: '<p>Hello Alanya!</p>',
       };
 
-      const result = await service.sendContactMessage(dto);
+      const result = await svc.sendContactMessage(dto);
 
       expect(result).toEqual({ success: true });
       expect(mockRepository.insertContactMessage).toHaveBeenCalledWith({
@@ -406,7 +427,7 @@ describe('MessagesService', () => {
         visa_type: null,
         phone: null,
       });
-      expect(mockRepository.invokeEmailFunction).toHaveBeenCalledWith(
+      expect(outboxEnqueue).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'admin_contact_message',
           to: 'contact@alanyaholidays.com',

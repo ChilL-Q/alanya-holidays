@@ -7,10 +7,8 @@ describe('CreateBookingDto validation', () => {
 
   const valid = {
     item_id: '11111111-1111-4111-8111-111111111111',
-    user_id: '22222222-2222-4222-8222-222222222222',
     check_in: '2026-08-01',
     check_out: '2026-08-05',
-    total_price: 100,
     guests: 2,
   };
 
@@ -29,12 +27,21 @@ describe('CreateBookingDto validation', () => {
 
   it('accepts a valid body and strips unknown fields', async () => {
     const out = (await pipe.transform(
-      { ...valid, hackerField: 'x' },
+      {
+        ...valid,
+        hackerField: 'x',
+        user_id: '22222222-2222-4222-8222-222222222222',
+        total_price: 100,
+      },
       meta,
     )) as CreateBookingDto;
     expect(out).toBeInstanceOf(CreateBookingDto);
     expect(
       (out as unknown as Record<string, unknown>).hackerField,
+    ).toBeUndefined();
+    expect((out as unknown as Record<string, unknown>).user_id).toBeUndefined();
+    expect(
+      (out as unknown as Record<string, unknown>).total_price,
     ).toBeUndefined();
   });
 });

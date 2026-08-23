@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { helicopterTours, tourDurations } from "@/mocks/helicopter-tours";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type HelicopterTour } from "@/api-services/concierge.service";
+import { conciergeService, tourDurations, type HelicopterTour } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function HelicopterToursPage() {
+  const [helicopterTours, setHelicopterTours] = useState<HelicopterTour[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeDuration, setActiveDuration] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "duration">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -15,6 +19,23 @@ export default function HelicopterToursPage() {
   const [formSuccess, setFormSuccess] = useState(false);
   const [contactMethod, setContactMethod] = useState("email");
   const [formError, setFormError] = useState("");
+
+  const loadTours = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getHelicopterTours();
+      setHelicopterTours(data);
+    } catch {
+      setFetchError("Failed to load helicopter tours. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTours();
+  }, [loadTours]);
 
   const filteredTours = useMemo(() => {
     let results = helicopterTours;
@@ -28,7 +49,7 @@ export default function HelicopterToursPage() {
     else if (sortBy === "price-high") results = [...results].sort((a, b) => b.pricePerPerson - a.pricePerPerson);
     else if (sortBy === "duration") results = [...results].sort((a, b) => Number.parseInt(a.duration) - Number.parseInt(b.duration));
     return results;
-  }, [activeDuration, sortBy]);
+  }, [activeDuration, sortBy, helicopterTours]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
@@ -136,60 +157,97 @@ export default function HelicopterToursPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredTours.map((tour) => (
-                <div key={tour.id} onClick={() => setSelectedTour(tour)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={tour.image} alt={tour.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {tour.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-flight-takeoff-line text-[11px]"></i>{tour.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                        <i className="ri-user-line text-[10px]"></i>Up to {tour.maxPassengers}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{tour.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{tour.rating}</span>
-                        <span className="text-xs text-foreground-500">({tour.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{tour.description}</p>
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {tour.highlights.slice(0, 3).map((h) => (
-                        <span key={h} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{h}</span>
-                      ))}
-                      {tour.highlights.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{tour.highlights.length - 3} more</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{tour.pricePerPerson}</span>
-                        <span className="text-sm text-foreground-500"> / person</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedTour(tour); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-flight-takeoff-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load helicopter tours"
+                message={fetchError}
+                onRetry={loadTours}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredTours.length === 0 ? (
+              <EmptyState
+                title="No helicopter tours found"
+                description="Try selecting a different tour duration or clear your filters."
+                icon="ri-flight-takeoff-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveDuration("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredTours.map((tour) => (
+                  <div key={tour.id} onClick={() => setSelectedTour(tour)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={tour.image} alt={tour.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {tour.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-flight-takeoff-line text-[11px]"></i>{tour.duration}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                          <i className="ri-user-line text-[10px]"></i>Up to {tour.maxPassengers}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{tour.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{tour.rating}</span>
+                          <span className="text-xs text-foreground-500">({tour.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{tour.description}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {tour.highlights.slice(0, 3).map((h) => (
+                          <span key={h} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{h}</span>
+                        ))}
+                        {tour.highlights.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{tour.highlights.length - 3} more</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{tour.pricePerPerson}</span>
+                          <span className="text-sm text-foreground-500"> / person</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedTour(tour); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-flight-takeoff-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

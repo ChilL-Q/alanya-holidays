@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bookmark, Star, MapPin, Trash2, ChevronRight, ExternalLink } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
-import { directoryService } from "@/api-services/directory.service";
-import { businesses as mockBusinesses, type Business } from "@/mocks/businesses";
+import { directoryService, type Business } from "@/api-services/directory.service";
+import { logger } from "@/lib/logger";
 
 export function FavoritesList() {
   const { favorites, toggleFavorite, favoriteCount } = useFavorites();
-  const [allListings, setAllListings] = useState<Business[]>(mockBusinesses);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [allListings, setAllListings] = useState<Business[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -20,7 +20,7 @@ export function FavoritesList() {
           setAllListings(res.data);
         }
       } catch (err) {
-        console.warn("Failed to load listings for favorites, using local mock:", err);
+        logger.warn("Failed to load listings for favorites, using local mock:", err);
       } finally {
         if (isMounted) setLoading(false);
       }

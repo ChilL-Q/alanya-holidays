@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { DirectoryService } from './directory.service';
 import { DirectoryRepository } from './directory.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 
 describe('DirectoryService', () => {
   let service: DirectoryService;
+  let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: {
     getDirectoryListings: jest.Mock;
     searchDirectoryListings: jest.Mock;
@@ -15,7 +17,6 @@ describe('DirectoryService', () => {
     getRecentlyClaimedListings: jest.Mock;
     getDirectoryListingBySlug: jest.Mock;
     getDirectoryListingById: jest.Mock;
-    getUserRole: jest.Mock;
     updateListingStatus: jest.Mock;
     insertDirectoryListing: jest.Mock;
     updateDirectoryListing: jest.Mock;
@@ -39,6 +40,9 @@ describe('DirectoryService', () => {
   };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       getDirectoryListings: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       searchDirectoryListings: jest
@@ -50,7 +54,6 @@ describe('DirectoryService', () => {
       getRecentlyClaimedListings: jest.fn().mockResolvedValue([]),
       getDirectoryListingBySlug: jest.fn(),
       getDirectoryListingById: jest.fn(),
-      getUserRole: jest.fn(),
       updateListingStatus: jest.fn(),
       insertDirectoryListing: jest.fn(),
       updateDirectoryListing: jest.fn(),
@@ -79,6 +82,10 @@ describe('DirectoryService', () => {
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
         {
           provide: RedisService,
@@ -156,7 +163,7 @@ describe('DirectoryService', () => {
 
   describe('approveDirectoryListing', () => {
     it('should throw UnauthorizedException if non-admin attempts approval', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.approveDirectoryListing('dir-1', 'user-1'),
@@ -164,7 +171,7 @@ describe('DirectoryService', () => {
     });
 
     it('should call repository updateListingStatus when user is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.updateListingStatus.mockResolvedValueOnce({
         id: 'dir-1',
         name: 'Cafe Alanya',
@@ -279,7 +286,7 @@ describe('DirectoryService', () => {
 
   describe('approveListingClaim', () => {
     it('should throw UnauthorizedException if non-admin attempts claim approval', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.approveListingClaim('claim-1', 'user-1'),
@@ -287,7 +294,7 @@ describe('DirectoryService', () => {
     });
 
     it('should approve claim and dispatch email notification when successful', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.callApproveListingClaimRpc.mockResolvedValueOnce({
         data: [{ success: true, message: 'Claim approved' }],
         error: null,
@@ -318,7 +325,7 @@ describe('DirectoryService', () => {
     });
 
     it('should throw error when RPC returns failure', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.callApproveListingClaimRpc.mockResolvedValueOnce({
         data: [{ success: false, message: 'Claim not found or invalid' }],
         error: null,
@@ -332,7 +339,7 @@ describe('DirectoryService', () => {
 
   describe('rejectListingClaim', () => {
     it('should throw UnauthorizedException if non-admin attempts claim rejection', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.rejectListingClaim('claim-1', 'Invalid documents', 'user-1'),
@@ -340,7 +347,7 @@ describe('DirectoryService', () => {
     });
 
     it('should reject claim and dispatch email notification when successful', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.callRejectListingClaimRpc.mockResolvedValueOnce({
         data: [{ success: true, message: 'Claim rejected' }],
         error: null,
@@ -377,7 +384,7 @@ describe('DirectoryService', () => {
     });
 
     it('should throw error when RPC returns failure', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.callRejectListingClaimRpc.mockResolvedValueOnce({
         data: [{ success: false, message: 'Claim not found or invalid' }],
         error: null,
@@ -489,7 +496,7 @@ describe('DirectoryService', () => {
     const validListingId = '123e4567-e89b-12d3-a456-426614174000';
 
     it('should validate required fields, update status from draft to pending, and save', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getDirectoryListingOwner.mockResolvedValue({
         owner_user_id: validUserId,
       });

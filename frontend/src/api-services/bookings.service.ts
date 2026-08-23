@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface BookingPropertySummary {
   id: string;
@@ -79,7 +80,7 @@ export class BookingsService {
 
       return [];
     } catch (err: unknown) {
-      console.warn("Failed to fetch user bookings from API:", err);
+      logger.warn("Failed to fetch user bookings from API:", err);
       return [];
     }
   }

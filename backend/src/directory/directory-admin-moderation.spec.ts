@@ -1,20 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { DirectoryController } from './directory.controller';
+import { DirectoryAdminController } from './presentation/directory-admin.controller';
 import { DirectoryService } from './directory.service';
+import { DirectoryListingService } from './application/directory-listing.service';
+import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import {
-  AuthenticatedRequest,
   DirectoryListingRecord,
   DirectoryClaimRecord,
 } from './types/directory.types';
 
 describe('Directory Admin Moderation & Claims TDD Suite', () => {
-  let controller: DirectoryController;
+  let controller: DirectoryAdminController;
   let service: DirectoryService;
+  let mockUserRolesRepo: { getRole: jest.Mock };
 
   const mockListings: DirectoryListingRecord[] = [
     {
@@ -68,7 +73,6 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
   ];
 
   const mockDirectoryRepository = {
-    getUserRole: jest.fn(),
     getDirectoryListingsAdmin: jest.fn(),
     getListingClaims: jest.fn(),
     callApproveListingClaimRpc: jest.fn(),
@@ -84,18 +88,29 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
     set: jest.fn(),
     del: jest.fn(),
     delByPattern: jest.fn(),
+    getJson: jest.fn(),
+    setJson: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [DirectoryController],
+      controllers: [DirectoryAdminController],
       providers: [
         DirectoryService,
+        DirectoryListingService,
+        ListingClaimService,
         {
           provide: DirectoryRepository,
           useValue: mockDirectoryRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
         {
           provide: RedisService,
@@ -109,30 +124,30 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<DirectoryController>(DirectoryController);
+    controller = module.get<DirectoryAdminController>(DirectoryAdminController);
     service = module.get<DirectoryService>(DirectoryService);
   });
 
   describe('DirectoryService.getDirectoryListingsAdmin', () => {
     it('should throw UnauthorizedException if non-admin calls getDirectoryListingsAdmin', async () => {
-      mockDirectoryRepository.getUserRole.mockResolvedValue('user');
+      mockUserRolesRepo.getRole.mockResolvedValue('user');
 
       await expect(
         service.getDirectoryListingsAdmin({ status: 'all' }, 'user-uuid-1'),
       ).rejects.toThrow(UnauthorizedException);
 
-      expect(mockDirectoryRepository.getUserRole).toHaveBeenCalledWith(
-        'user-uuid-1',
-      );
+      expect(mockUserRolesRepo.getRole).toHaveBeenCalledWith('user-uuid-1');
       expect(
         mockDirectoryRepository.getDirectoryListingsAdmin,
       ).not.toHaveBeenCalled();
     });
 
     it('should query repository with filter matrix when user is admin', async () => {
-      mockDirectoryRepository.getUserRole.mockResolvedValue('admin');
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.getDirectoryListingsAdmin.mockResolvedValue(
         mockListings,
       );
@@ -147,9 +162,7 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
         'admin-uuid-1',
       );
 
-      expect(mockDirectoryRepository.getUserRole).toHaveBeenCalledWith(
-        'admin-uuid-1',
-      );
+      expect(mockUserRolesRepo.getRole).toHaveBeenCalledWith('admin-uuid-1');
       expect(
         mockDirectoryRepository.getDirectoryListingsAdmin,
       ).toHaveBeenCalledWith(filters);
@@ -157,23 +170,21 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
     });
   });
 
-  describe('DirectoryController.getDirectoryListingsAdmin', () => {
+  describe('DirectoryAdminController.getDirectoryListingsAdmin', () => {
     it('should delegate GET /directory/admin/listings with query filters to service', async () => {
-      mockDirectoryRepository.getUserRole.mockResolvedValue('admin');
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.getDirectoryListingsAdmin.mockResolvedValue(
         mockListings,
       );
 
-      const req = {
-        user: { id: 'admin-uuid-1', role: 'admin' },
-      } as AuthenticatedRequest;
+      const user: AuthUser = { id: 'admin-uuid-1', role: 'admin' };
 
       const result = await controller.getDirectoryListingsAdmin(
         'pending',
         'restaurants',
         'sunset',
         undefined,
-        req,
+        user,
       );
 
       expect(
@@ -189,7 +200,7 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
 
   describe('DirectoryService.getListingClaims with enriched metadata', () => {
     it('should return claims including directory_listing metadata for admin', async () => {
-      mockDirectoryRepository.getUserRole.mockResolvedValue('admin');
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.getListingClaims.mockResolvedValue(mockClaims);
 
       const result = await service.getListingClaims('admin-uuid-1');

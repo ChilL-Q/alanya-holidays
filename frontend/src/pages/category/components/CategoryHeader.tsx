@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Category } from "@/mocks/categories";
+import type { Category } from "@/api-services/forum.service";
 
 interface CategoryHeaderProps {
   category: Category;

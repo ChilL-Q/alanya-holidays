@@ -4,16 +4,24 @@ import { ServicesService } from './services.service';
 import { ServicesRepository } from './services.repository';
 import { SERVICES_REPOSITORY } from './domain';
 import { RedisService } from '../common/redis/redis.service';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('ServicesService', () => {
   let service: ServicesService;
+  let mockRedisService: {
+    getJson: jest.Mock;
+    setJson: jest.Mock;
+    delByPattern: jest.Mock;
+  };
+  let mockUserRolesRepo: {
+    getRole: jest.Mock;
+  };
   let mockRepository: {
     insertService: jest.Mock;
     getServices: jest.Mock;
     getServicesByProvider: jest.Mock;
     getServiceByIdOrRef: jest.Mock;
     getServiceOwnershipInfo: jest.Mock;
-    getUserRole: jest.Mock;
     updateService: jest.Mock;
     deleteService: jest.Mock;
     getAdminServices: jest.Mock;
@@ -34,13 +42,21 @@ describe('ServicesService', () => {
   };
 
   beforeEach(async () => {
+    mockRedisService = {
+      getJson: jest.fn().mockResolvedValue(null),
+      setJson: jest.fn().mockResolvedValue(undefined),
+      delByPattern: jest.fn().mockResolvedValue(undefined),
+    };
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
+
     mockRepository = {
       insertService: jest.fn(),
       getServices: jest.fn(),
       getServicesByProvider: jest.fn(),
       getServiceByIdOrRef: jest.fn(),
       getServiceOwnershipInfo: jest.fn(),
-      getUserRole: jest.fn(),
       updateService: jest.fn(),
       deleteService: jest.fn(),
       getAdminServices: jest.fn(),
@@ -73,11 +89,11 @@ describe('ServicesService', () => {
         },
         {
           provide: RedisService,
-          useValue: {
-            getJson: jest.fn().mockResolvedValue(null),
-            setJson: jest.fn().mockResolvedValue(undefined),
-            delByPattern: jest.fn().mockResolvedValue(undefined),
-          },
+          useValue: mockRedisService,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
       ],
     }).compile();
@@ -172,7 +188,7 @@ describe('ServicesService', () => {
         title: 'Title',
         type: 'car',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.updateService('srv-1', { title: 'New' }, 'other-user'),
@@ -185,7 +201,7 @@ describe('ServicesService', () => {
         title: 'Title',
         type: 'car',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.updateService.mockResolvedValueOnce(undefined);
 
       const result = await service.updateService(
@@ -216,7 +232,7 @@ describe('ServicesService', () => {
         title: 'Title',
         type: 'car',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.deleteService.mockResolvedValueOnce(undefined);
 
       const result = await service.deleteService(
@@ -230,16 +246,7 @@ describe('ServicesService', () => {
   });
 
   describe('updateServiceStatus', () => {
-    it('should throw UnauthorizedException if non-admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
-
-      await expect(
-        service.updateServiceStatus('srv-1', 'approved', undefined, 'user-1'),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should update status when admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+    it('should update status and rejection reason when rejected', async () => {
       mockRepository.updateService.mockResolvedValueOnce(undefined);
 
       const result = await service.updateServiceStatus(
@@ -248,11 +255,31 @@ describe('ServicesService', () => {
         'Incomplete docs',
         'admin-1',
       );
+
       expect(result).toEqual({ success: true });
       expect(mockRepository.updateService).toHaveBeenCalledWith('srv-1', {
         status: 'rejected',
         rejection_reason: 'Incomplete docs',
       });
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith('services:*');
+    });
+
+    it('should clear rejection reason when approved', async () => {
+      mockRepository.updateService.mockResolvedValueOnce(undefined);
+
+      const result = await service.updateServiceStatus(
+        'srv-1',
+        'approved',
+        undefined,
+        'admin-1',
+      );
+
+      expect(result).toEqual({ success: true });
+      expect(mockRepository.updateService).toHaveBeenCalledWith('srv-1', {
+        status: 'approved',
+        rejection_reason: null,
+      });
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith('services:*');
     });
   });
 
@@ -300,7 +327,7 @@ describe('ServicesService', () => {
     });
 
     it('should update service model when admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.updateServiceModel.mockResolvedValueOnce(undefined);
 
       const result = await service.updateServiceModel(
@@ -319,7 +346,7 @@ describe('ServicesService', () => {
         title: 'Title',
         type: 'car',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.insertServiceEdit.mockResolvedValueOnce(undefined);
 
       const result = await service.requestServiceUpdate(
@@ -336,7 +363,7 @@ describe('ServicesService', () => {
     });
 
     it('should throw UnauthorizedException on approveServiceEdit if not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.approveServiceEdit('edit-1', 'user-1'),
@@ -344,7 +371,7 @@ describe('ServicesService', () => {
     });
 
     it('should filter immutable fields and update service on approveServiceEdit', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getServiceEditById.mockResolvedValueOnce({
         data: {
           id: 'edit-1',
@@ -374,7 +401,7 @@ describe('ServicesService', () => {
     });
 
     it('should reject service edit when admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.updateServiceEdit.mockResolvedValueOnce(undefined);
 
       const result = await service.rejectServiceEdit(
@@ -387,6 +414,90 @@ describe('ServicesService', () => {
         status: 'rejected',
         rejection_reason: 'Invalid updates',
       });
+    });
+  });
+  describe('service drafts', () => {
+    it('creates a draft with immutable fields stripped and status forced to draft', async () => {
+      mockRepository.insertService.mockResolvedValue({ id: 'svc-1' });
+
+      const result = await service.saveServiceDraft(
+        {
+          title: 'Boat Tour',
+          type: 'tour',
+          provider_id: 'attacker',
+          status: 'approved',
+        },
+        'user-1',
+      );
+
+      expect(result).toEqual({ id: 'svc-1' });
+      const payload = (
+        mockRepository.insertService.mock.calls[0] as [Record<string, unknown>]
+      )[0];
+      expect(payload.status).toBe('draft');
+      expect(payload.provider_id).toBe('user-1');
+    });
+
+    it('defaults an empty title to Untitled Draft', async () => {
+      mockRepository.insertService.mockResolvedValue({ id: 'svc-2' });
+
+      await service.saveServiceDraft({}, 'user-1');
+
+      expect(
+        (
+          mockRepository.insertService.mock.calls[0] as [
+            Record<string, unknown>,
+          ]
+        )[0].title,
+      ).toBe('Untitled Draft');
+    });
+
+    it('rejects saving over a foreign draft', async () => {
+      mockRepository.getServiceOwnershipInfo.mockResolvedValue({
+        provider_id: 'owner-1',
+      });
+
+      await expect(
+        service.saveServiceDraft({ draftId: 'd-1' }, 'user-2'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('publishes only with required fields and transitions draft -> pending', async () => {
+      mockRepository.getServiceOwnershipInfo.mockResolvedValue({
+        provider_id: 'user-1',
+      });
+
+      const outcome = await service
+        .publishServiceDraft(
+          '550e8400-e29b-41d4-a716-446655440002',
+          { title: '' },
+          'user-1',
+        )
+        .then(
+          () => 'resolved',
+          () => 'rejected',
+        );
+      expect(outcome).toBe('rejected');
+    });
+
+    it('publishes with required fields and transitions draft -> pending', async () => {
+      mockRepository.getServiceOwnershipInfo.mockResolvedValue({
+        provider_id: 'user-1',
+      });
+
+      await service.publishServiceDraft(
+        '550e8400-e29b-41d4-a716-446655440002',
+        { title: 'Sunset Cruise', type: 'tour', status: 'approved' },
+        'user-1',
+      );
+      const updates = (
+        mockRepository.updateService.mock.calls[0] as [
+          string,
+          Record<string, unknown>,
+        ]
+      )[1];
+      expect(updates.status).toBe('pending');
+      expect(updates.provider_id).toBeUndefined();
     });
   });
 });

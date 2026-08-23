@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { personalDrivers, driverTypes } from "@/mocks/personal-drivers";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type PersonalDriver } from "@/api-services/concierge.service";
+import { conciergeService, driverTypes, type PersonalDriver } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function PersonalDriverPage() {
+  const [personalDrivers, setPersonalDrivers] = useState<PersonalDriver[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "capacity">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -17,6 +21,23 @@ export default function PersonalDriverPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadDrivers = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getPersonalDrivers();
+      setPersonalDrivers(data);
+    } catch {
+      setFetchError("Failed to load personal drivers. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDrivers();
+  }, [loadDrivers]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -51,11 +72,11 @@ export default function PersonalDriverPage() {
       results = results.filter((d) => d.vehicleType === typeMap[activeType]);
     }
     if (sortBy === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
-    else if (sortBy === "price-low") results = [...results].sort((a, b) => a.pricePerDay - b.pricePerDay);
-    else if (sortBy === "price-high") results = [...results].sort((a, b) => b.pricePerDay - a.pricePerDay);
-    else if (sortBy === "capacity") results = [...results].sort((a, b) => b.capacity - a.capacity);
+    else if (sortBy === "price-low") results = [...results].sort((a, b) => (a.pricePerDay || a.dailyRate || 0) - (b.pricePerDay || b.dailyRate || 0));
+    else if (sortBy === "price-high") results = [...results].sort((a, b) => (b.pricePerDay || b.dailyRate || 0) - (a.pricePerDay || a.dailyRate || 0));
+    else if (sortBy === "capacity") results = [...results].sort((a, b) => (b.capacity || b.vehicleCapacity || 0) - (a.capacity || a.vehicleCapacity || 0));
     return results;
-  }, [activeType, sortBy]);
+  }, [personalDrivers, activeType, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
     rating: "Top Rated",
@@ -179,52 +200,88 @@ export default function PersonalDriverPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredDrivers.length} {filteredDrivers.length === 1 ? "driver" : "drivers"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredDrivers.length} {filteredDrivers.length === 1 ? "driver" : "drivers"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredDrivers.map((driver) => (
-                <div key={driver.id} onClick={() => setSelectedDriver(driver)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={driver.image} alt={driver.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {driver.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-car-line text-[11px]"></i>{driver.vehicleType}
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load personal drivers"
+                message={fetchError}
+                onRetry={loadDrivers}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{driver.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{driver.rating}</span>
-                        <span className="text-xs text-foreground-500">({driver.reviewCount})</span>
+                ))}
+              </div>
+            ) : filteredDrivers.length === 0 ? (
+              <EmptyState
+                title="No personal drivers found"
+                description="Try selecting a different vehicle category or clear your filters."
+                icon="ri-car-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveType("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredDrivers.map((driver) => (
+                  <div key={driver.id} onClick={() => setSelectedDriver(driver)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={driver.image} alt={driver.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {driver.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-car-line text-[11px]"></i>{driver.vehicleType}
                       </div>
                     </div>
-                    <p className="text-xs text-foreground-400 mb-2 flex items-center gap-1.5">
-                      <i className="ri-car-line text-[10px]"></i>{driver.vehicle}
-                    </p>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{driver.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{driver.company}</span>
-                      <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{driver.capacity} pax</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {driver.includes.slice(0, 3).map((inc) => (
-                        <span key={inc} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{inc}</span>
-                      ))}
-                      {driver.includes.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{driver.includes.length - 3}</span>}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{driver.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{driver.rating}</span>
+                          <span className="text-xs text-foreground-500">({driver.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-foreground-400 mb-2 flex items-center gap-1.5">
+                        <i className="ri-car-line text-[10px]"></i>{driver.vehicle}
+                      </p>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{driver.description}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{driver.company}</span>
+                        <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{driver.capacity} pax</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {(driver.includes || []).slice(0, 3).map((inc) => (
+                          <span key={inc} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{inc}</span>
+                        ))}
+                      {(driver.includes?.length ?? 0) > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{(driver.includes?.length ?? 0) - 3}</span>}
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                       <div>
-                        <span className="text-lg font-bold text-foreground-900">€{driver.pricePerDay}</span>
+                        <span className="text-lg font-bold text-foreground-900">€{driver.pricePerDay || driver.dailyRate || 0}</span>
                         <span className="text-sm text-foreground-500"> / day</span>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
@@ -235,6 +292,7 @@ export default function PersonalDriverPage() {
                 </div>
               ))}
             </div>
+          )}
           </div>
         </section>
 
@@ -261,7 +319,7 @@ export default function PersonalDriverPage() {
                     </span>
                     <h2 className="font-heading text-2xl text-foreground-900">{selectedDriver.name}</h2>
                     <p className="text-sm text-foreground-400 mt-0.5 flex items-center gap-1.5">
-                      <i className="ri-building-line text-[12px]"></i>{selectedDriver.company} — {selectedDriver.vehicle}
+                      <i className="ri-building-line text-[12px]"></i>{selectedDriver.company || selectedDriver.name} — {selectedDriver.vehicle}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0 mt-1">
@@ -270,7 +328,7 @@ export default function PersonalDriverPage() {
                     <span className="text-sm text-foreground-500">({selectedDriver.reviewCount} reviews)</span>
                   </div>
                 </div>
-                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedDriver.description}</p>
+                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedDriver.description || selectedDriver.bio}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-car-line text-foreground-500 text-lg mb-1 block"></i>
@@ -280,35 +338,35 @@ export default function PersonalDriverPage() {
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-user-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Capacity</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedDriver.capacity} pax</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedDriver.capacity || selectedDriver.vehicleCapacity || 4} pax</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Base</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedDriver.base}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedDriver.base || selectedDriver.location || "Alanya"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-global-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Languages</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedDriver.languages.join(", ")}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{(selectedDriver.languages || []).join(", ")}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-foreground-500 mb-0.5">Full Day (8 hours)</p>
-                      <p className="text-2xl font-bold text-foreground-900">€{selectedDriver.pricePerDay.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-foreground-900">€{(selectedDriver.pricePerDay || selectedDriver.dailyRate || 0).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-foreground-500 mb-0.5">Per Hour</p>
-                      <p className="text-lg font-semibold text-foreground-700">€{selectedDriver.pricePerHour.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-foreground-700">€{(selectedDriver.pricePerHour || selectedDriver.hourlyRate || 0).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-6">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedDriver.includes.map((inc) => (
+                    {(selectedDriver.includes || selectedDriver.amenities || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-check-line text-green-500 text-[11px]"></i>{inc}
                       </span>

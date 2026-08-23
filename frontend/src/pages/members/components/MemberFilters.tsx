@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { memberRoles, memberBadges } from "@/mocks/members";
+import { memberRoles, memberBadges } from "@/api-services/forum.service";
 
 interface MemberFiltersProps {
   searchTerm: string;

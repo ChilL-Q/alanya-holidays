@@ -1,19 +1,30 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { events } from "@/mocks/events";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
 
 export default function PopularNow() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [allEvents, setAllEvents] = useState<ForumEvent[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollStateRef = useRef({ left: false, right: true });
 
+  useEffect(() => {
+    let mounted = true;
+    eventsService.getEvents().then((data) => {
+      if (mounted && data) setAllEvents(data);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const popularEvents = useMemo(() => {
-    return [...events]
+    return [...allEvents]
       .sort((a, b) => b.attendees - a.attendees)
       .slice(0, 8);
-  }, []);
+  }, [allEvents]);
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -206,7 +217,7 @@ export default function PopularNow() {
                 <i className="ri-calendar-event-line text-primary-500 text-sm"></i>
               </div>
               <p className="text-foreground-700 text-xs font-medium">View All Events</p>
-              <p className="text-foreground-400 text-[10px]">{events.length} upcoming</p>
+              <p className="text-foreground-400 text-[10px]">{allEvents.length} upcoming</p>
             </Link>
           </div>
         </div>

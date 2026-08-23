@@ -1,16 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { PropertiesController } from './properties.controller';
 import { PropertiesService } from './properties.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from './types/property.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { ROLE_KEY } from '../auth/decorators/require-role.decorator';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('PropertiesController', () => {
   let controller: PropertiesController;
   let mockService: jest.Mocked<Partial<PropertiesService>>;
 
-  const mockAuthReq: AuthenticatedRequest = {
-    user: { id: 'user-1', email: 'user@example.com', role: 'user' },
-  } as unknown as AuthenticatedRequest;
+  const mockUser: AuthUser = {
+    id: 'user-1',
+    email: 'user@example.com',
+    role: 'user',
+  };
 
   beforeEach(async () => {
     mockService = {
@@ -58,9 +64,15 @@ describe('PropertiesController', () => {
           provide: PropertiesService,
           useValue: mockService,
         },
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn().mockResolvedValue('admin') },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -89,10 +101,8 @@ describe('PropertiesController', () => {
   });
 
   it('should pass req.user.id to updateProperty', async () => {
-    const req = {
-      user: { id: 'host-1' },
-    } as unknown as AuthenticatedRequest;
-    await controller.updateProperty('prop-10', { title: 'Updated' }, req);
+    const user: AuthUser = { id: 'host-1' };
+    await controller.updateProperty('prop-10', { title: 'Updated' }, user);
 
     expect(mockService.updateProperty).toHaveBeenCalledWith(
       'prop-10',
@@ -108,7 +118,7 @@ describe('PropertiesController', () => {
       location: 'Center',
       price_per_night: 100,
     };
-    await controller.createProperty(payload, mockAuthReq);
+    await controller.createProperty(payload, mockUser);
 
     expect(mockService.createProperty).toHaveBeenCalledWith(payload, 'user-1');
   });
@@ -118,7 +128,7 @@ describe('PropertiesController', () => {
       'prop-1',
       'Booking.com',
       'https://example.com/ical',
-      mockAuthReq,
+      mockUser,
     );
 
     expect(mockService.addICalFeed).toHaveBeenCalledWith(
@@ -133,12 +143,40 @@ describe('PropertiesController', () => {
     await controller.addReview(
       'prop-1',
       { rating: 5, comment: 'Great place!' },
-      mockAuthReq,
+      mockUser,
     );
 
     expect(mockService.addReview).toHaveBeenCalledWith(
       { property_id: 'prop-1', rating: 5, comment: 'Great place!' },
       'user-1',
     );
+  });
+
+  it('should pass req.user.id and body to updatePropertyStatus', async () => {
+    const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
+    await controller.updatePropertyStatus(
+      'prop-1',
+      { status: 'approved' },
+      adminUser,
+    );
+
+    expect(mockService.updatePropertyStatus).toHaveBeenCalledWith(
+      'prop-1',
+      'approved',
+      undefined,
+      'admin-1',
+    );
+  });
+
+  it('should protect updatePropertyStatus with RolesGuard and RequireRole("admin")', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      PropertiesController.prototype,
+      'updatePropertyStatus',
+    )?.value as object;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+    expect(guards).toContain(AuthGuard);
+    expect(guards).toContain(RolesGuard);
+    const roles = Reflect.getMetadata(ROLE_KEY, handler) as string[];
+    expect(roles).toEqual(['admin']);
   });
 });

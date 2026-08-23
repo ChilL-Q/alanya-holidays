@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   AdminRepository,
   ConciergeEnquiryRecord,
@@ -25,23 +25,15 @@ export class AdminService {
     return this.adminRepository.getRecentEnquiries(limit);
   }
 
-  async getEnquiries(userId: string): Promise<ConciergeEnquiryRecord[]> {
-    const role = await this.adminRepository.getUserRole(userId);
-    if (role !== 'admin') {
-      throw new UnauthorizedException('Not authorized');
-    }
+  async getEnquiries(_userId?: string): Promise<ConciergeEnquiryRecord[]> {
     return this.adminRepository.getEnquiries();
   }
 
   async updateEnquiryStatus(
     id: number,
     status: string,
-    userId: string,
+    _userId?: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.adminRepository.getUserRole(userId);
-    if (role !== 'admin') {
-      throw new UnauthorizedException('Not authorized');
-    }
     const success = await this.adminRepository.updateEnquiryStatus(id, status);
     return { success };
   }
@@ -49,24 +41,16 @@ export class AdminService {
   async assignEnquiry(
     id: number,
     assignedTo: string | null,
-    userId: string,
+    _userId?: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.adminRepository.getUserRole(userId);
-    if (role !== 'admin') {
-      throw new UnauthorizedException('Not authorized');
-    }
     const success = await this.adminRepository.assignEnquiry(id, assignedTo);
     return { success };
   }
 
   async getPlatformAnalytics(
     days: number,
-    userId: string,
+    _userId?: string,
   ): Promise<PlatformAnalyticsData> {
-    const role = await this.adminRepository.getUserRole(userId);
-    if (role !== 'admin') {
-      throw new UnauthorizedException('Not authorized');
-    }
     const safeDays = Number.isInteger(days) && days > 0 ? days : 30;
     return await this.adminRepository.getPlatformAnalytics(safeDays);
   }

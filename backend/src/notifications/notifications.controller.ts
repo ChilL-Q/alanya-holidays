@@ -4,7 +4,6 @@ import {
   Patch,
   Delete,
   Param,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -12,18 +11,8 @@ import {
   LiveNotification,
 } from './notifications.service';
 import { AuthGuard } from '../auth/auth.guard';
-
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest {
-  user: AuthenticatedUser;
-  [key: string]: unknown;
-}
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 @Controller('notifications')
 @UseGuards(AuthGuard)
@@ -31,37 +20,34 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  getUserNotifications(@Req() req: AuthenticatedRequest): LiveNotification[] {
-    return this.notificationsService.getUserNotifications(req.user.id);
+  getUserNotifications(@CurrentUser() user: AuthUser): LiveNotification[] {
+    return this.notificationsService.getUserNotifications(user.id);
   }
 
   @Patch('read-all')
-  markAllAsRead(@Req() req: AuthenticatedRequest): {
+  markAllAsRead(@CurrentUser() user: AuthUser): {
     success: boolean;
     count: number;
   } {
-    const count = this.notificationsService.markAllAsRead(req.user.id);
+    const count = this.notificationsService.markAllAsRead(user.id);
     return { success: true, count };
   }
 
   @Patch(':id/read')
   markAsRead(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): { success: boolean } {
-    const success = this.notificationsService.markAsRead(req.user.id, id);
+    const success = this.notificationsService.markAsRead(user.id, id);
     return { success };
   }
 
   @Delete(':id')
   deleteNotification(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): { success: boolean } {
-    const success = this.notificationsService.deleteNotification(
-      req.user.id,
-      id,
-    );
+    const success = this.notificationsService.deleteNotification(user.id, id);
     return { success };
   }
 }

@@ -154,10 +154,10 @@ export const ClaimTrackerTab: React.FC<ClaimTrackerTabProps> = ({ claims, loadin
                   <Mail className="w-3.5 h-3.5 text-secondary-400" />
                   <span className="truncate">{claim.email}</span>
                 </div>
-                {claim.phone && (
+                {(claim.phone || claim.contact_phone) && (
                   <div className="flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5 text-secondary-400" />
-                    <span>{claim.phone}</span>
+                    <span>{claim.phone || claim.contact_phone}</span>
                   </div>
                 )}
                 {claim.role && (

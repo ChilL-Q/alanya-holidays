@@ -75,6 +75,7 @@ describe("CheckoutPage Component", () => {
     expect(screen.getByText("Gift Details")).toBeInTheDocument();
     expect(screen.getByLabelText(/Recipient Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Recipient Email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Recipient Phone/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Your Name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Your Email/i)).toBeInTheDocument();
   });
@@ -104,12 +105,14 @@ describe("CheckoutPage Component", () => {
 
     const recipientNameInput = screen.getByLabelText(/Recipient Name/i);
     const recipientEmailInput = screen.getByLabelText(/Recipient Email/i);
+    const recipientPhoneInput = screen.getByLabelText(/Recipient Phone/i);
     const senderNameInput = screen.getByLabelText(/Your Name/i);
     const senderEmailInput = screen.getByLabelText(/Your Email/i);
     const giftMessageInput = screen.getByLabelText(/Gift Message/i);
 
     fireEvent.change(recipientNameInput, { target: { value: "Selin Yilmaz" } });
     fireEvent.change(recipientEmailInput, { target: { value: "selin@example.com" } });
+    fireEvent.change(recipientPhoneInput, { target: { value: "+905551234567" } });
     fireEvent.change(senderNameInput, { target: { value: "Murat Demir" } });
     fireEvent.change(senderEmailInput, { target: { value: "murat@example.com" } });
     fireEvent.change(giftMessageInput, { target: { value: "Happy Vacation!" } });
@@ -121,7 +124,7 @@ describe("CheckoutPage Component", () => {
       expect(createOrderSpy).toHaveBeenCalledWith({
         recipientName: "Selin Yilmaz",
         recipientEmail: "selin@example.com",
-        recipientPhone: "+905550000000",
+        recipientPhone: "+905551234567",
         contactMethod: "email",
         senderName: "Murat Demir",
         senderEmail: "murat@example.com",
@@ -164,11 +167,13 @@ describe("CheckoutPage Component", () => {
 
     const recipientNameInput = screen.getByLabelText(/Recipient Name/i);
     const recipientEmailInput = screen.getByLabelText(/Recipient Email/i);
+    const recipientPhoneInput = screen.getByLabelText(/Recipient Phone/i);
     const senderNameInput = screen.getByLabelText(/Your Name/i);
     const senderEmailInput = screen.getByLabelText(/Your Email/i);
 
     fireEvent.change(recipientNameInput, { target: { value: "Selin Yilmaz" } });
     fireEvent.change(recipientEmailInput, { target: { value: "selin@example.com" } });
+    fireEvent.change(recipientPhoneInput, { target: { value: "+905551234567" } });
     fireEvent.change(senderNameInput, { target: { value: "Murat Demir" } });
     fireEvent.change(senderEmailInput, { target: { value: "murat@example.com" } });
 

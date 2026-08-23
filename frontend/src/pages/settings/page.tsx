@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
+import { useToast } from "@/hooks/useToast";
 import { useAuth } from "@/context/AuthContext";
 import { SettingsHero, type SettingsTabId } from "./components/SettingsHero";
 import { ProfileTab } from "./components/ProfileTab";
@@ -14,28 +14,7 @@ export default function SettingsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-    const timer = toastTimersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      toastTimersRef.current.delete(id);
-    }
-  }, []);
-
-  const showToast = useCallback(
-    (message: string, subMessage?: string, type: "success" | "info" | "error" = "success") => {
-      const toast = createToast(message, subMessage, type);
-      setToasts((prev) => [...prev, toast]);
-      const timer = setTimeout(() => dismissToast(toast.id), 4000);
-      toastTimersRef.current.set(toast.id, timer);
-    },
-    [dismissToast]
-  );
+  const { showToast, ToastContainer } = useToast();
 
   // Authentication Guard
   useEffect(() => {
@@ -120,7 +99,7 @@ export default function SettingsPage() {
       </main>
 
       <Footer />
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { events as mockEvents } from "@/mocks/events";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
@@ -11,7 +10,9 @@ import EventSearch from "./components/EventSearch";
 import ViewToggle from "./components/ViewToggle";
 import MapView from "./components/MapView";
 import HostEventModal from "./components/HostEventModal";
-import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
+import { useToast } from "@/hooks/useToast";
+import ErrorState from "@/components/base/ErrorState";
+import { logger } from "@/lib/logger";
 
 function loadSavedEvents(): Set<string> {
   try {
@@ -35,7 +36,9 @@ function saveSavedEvents(saved: Set<string>) {
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<ForumEvent[]>(() => mockEvents);
+  const [events, setEvents] = useState<ForumEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showFeatured, setShowFeatured] = useState(false);
@@ -43,65 +46,75 @@ export default function EventsPage() {
   const [showHostModal, setShowHostModal] = useState(false);
   const [rsvpdEvents, setRsvpdEvents] = useState<Set<string>>(new Set());
   const [savedEvents, setSavedEvents] = useState<Set<string>>(() => loadSavedEvents());
-  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const { showToast, ToastContainer } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchEvents() {
-      try {
-        const data = await eventsService.getEvents();
-        if (isMounted && data.length > 0) {
-          setEvents(data);
-          const myRsvps = new Set<string>();
-          data.forEach((e) => {
-            if (e.going_by_me) {
-              myRsvps.add(e.id);
-            }
-          });
-          if (myRsvps.size > 0) {
-            setRsvpdEvents((prev) => new Set([...prev, ...myRsvps]));
-          }
+  const loadEvents = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await eventsService.getEvents();
+      setEvents(data);
+      const myRsvps = new Set<string>();
+      data.forEach((e) => {
+        if (e.going_by_me) {
+          myRsvps.add(e.id);
         }
-      } catch (err) {
-        console.warn("Failed to load events from service:", err);
+      });
+      if (myRsvps.size > 0) {
+        setRsvpdEvents((prev) => new Set([...prev, ...myRsvps]));
       }
+    } catch {
+      setFetchError("Failed to load community events. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    fetchEvents();
-    return () => {
-      isMounted = false;
-    };
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   useEffect(() => {
     saveSavedEvents(savedEvents);
   }, [savedEvents]);
 
   const handleRsvp = useCallback(async (eventId: string) => {
-    setRsvpdEvents((prev) => {
-      const next = new Set(prev);
-      next.add(eventId);
-      return next;
-    });
+    setRsvpdEvents((prev) => new Set([...prev, eventId]));
     setEvents((prev) =>
       prev.map((e) =>
         e.id === eventId ? { ...e, attendees: e.attendees + 1, going_by_me: true } : e
       )
     );
+
     try {
       await eventsService.toggleRsvp(eventId);
+      const evt = events.find((e) => e.id === eventId);
+      showToast(
+        "You're going!",
+        evt ? `${evt.title} — ${evt.month} ${evt.day} at ${evt.time}` : "See you there!",
+        "success"
+      );
     } catch (err) {
-      console.warn("Failed to dispatch RSVP on server:", err);
+      logger.warn("Failed to dispatch RSVP on server, rolling back:", err);
+      setRsvpdEvents((prev) => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === eventId ? { ...e, attendees: Math.max(0, e.attendees - 1), going_by_me: false } : e
+        )
+      );
+      showToast(
+        "RSVP Failed",
+        "Could not confirm your attendance. Please try again.",
+        "error"
+      );
     }
-    const evt = events.find((e) => e.id === eventId);
-    const toast = createToast(
-      "You're going!",
-      evt ? `${evt.title} — ${evt.month} ${evt.day} at ${evt.time}` : "See you there!",
-      "success"
-    );
-    setToasts((prev) => [...prev, toast]);
-  }, [events]);
+  }, [events, showToast]);
 
   const handleCancelRsvp = useCallback(async (eventId: string) => {
     setRsvpdEvents((prev) => {
@@ -116,40 +129,49 @@ export default function EventsPage() {
           : e
       )
     );
+
     try {
       await eventsService.toggleRsvp(eventId);
+      const evt = events.find((e) => e.id === eventId);
+      showToast(
+        "RSVP cancelled",
+        evt ? `You're no longer attending ${evt.title}` : "Maybe next time!",
+        "info"
+      );
     } catch (err) {
-      console.warn("Failed to dispatch cancel RSVP on server:", err);
+      logger.warn("Failed to dispatch cancel RSVP on server, rolling back:", err);
+      setRsvpdEvents((prev) => new Set([...prev, eventId]));
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === eventId ? { ...e, attendees: e.attendees + 1, going_by_me: true } : e
+        )
+      );
+      showToast(
+        "Cancellation Failed",
+        "Could not cancel RSVP. Please try again.",
+        "error"
+      );
     }
-    const evt = events.find((e) => e.id === eventId);
-    const toast = createToast(
-      "RSVP cancelled",
-      evt ? `You're no longer attending ${evt.title}` : "Maybe next time!",
-      "info"
-    );
-    setToasts((prev) => [...prev, toast]);
-  }, [events]);
+  }, [events, showToast]);
 
   const handleEventCreated = useCallback((newEvent: ForumEvent) => {
     setEvents((prev) => [newEvent, ...prev]);
-    const toast = createToast(
+    showToast(
       "Event created!",
       `${newEvent.title} has been submitted successfully`,
       "success"
     );
-    setToasts((prev) => [...prev, toast]);
-  }, []);
+  }, [showToast]);
 
   const handleSave = useCallback((eventId: string) => {
     setSavedEvents((prev) => new Set([...prev, eventId]));
     const evt = events.find((e) => e.id === eventId);
-    const toast = createToast(
+    showToast(
       "Event saved!",
       evt ? `${evt.title} added to your saved events` : "Event bookmarked!",
       "success"
     );
-    setToasts((prev) => [...prev, toast]);
-  }, [events]);
+  }, [events, showToast]);
 
   const handleUnsave = useCallback((eventId: string) => {
     setSavedEvents((prev) => {
@@ -157,17 +179,12 @@ export default function EventsPage() {
       next.delete(eventId);
       return next;
     });
-    const toast = createToast(
+    showToast(
       "Removed",
       "Event removed from your saved list",
       "info"
     );
-    setToasts((prev) => [...prev, toast]);
-  }, []);
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  }, [showToast]);
 
   const filteredEvents = useMemo(() => {
     let result = [...events];
@@ -411,7 +428,26 @@ export default function EventsPage() {
                             : "Upcoming Events"}
                 </h2>
 
-                {filteredEvents.length > 0 ? (
+                {fetchError ? (
+                  <ErrorState
+                    title="Unable to load events"
+                    message={fetchError}
+                    onRetry={loadEvents}
+                  />
+                ) : isLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                      <div key={n} className="bg-background-50 rounded-xl border border-background-200/70 overflow-hidden animate-pulse">
+                        <div className="w-full h-44 bg-background-200" />
+                        <div className="p-4 space-y-3">
+                          <div className="h-4 bg-background-200 rounded w-3/4" />
+                          <div className="h-3 bg-background-100 rounded w-1/2" />
+                          <div className="h-8 bg-background-100 rounded w-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredEvents.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                     {filteredEvents.map((event) => (
                       <EventCard
@@ -483,7 +519,7 @@ export default function EventsPage() {
         onClose={() => setShowHostModal(false)}
         onEventCreated={handleEventCreated}
       />
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer />
     </>
   );
 }

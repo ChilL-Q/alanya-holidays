@@ -7,10 +7,12 @@ import {
 import { PropertiesService } from './properties.service';
 import { PROPERTIES_REPOSITORY } from './domain';
 import { RedisService } from '../common/redis/redis.service';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('PropertiesService', () => {
   let service: PropertiesService;
   let mockRepository: Record<string, jest.Mock>;
+  let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRedisService: {
     getJson: jest.Mock;
     setJson: jest.Mock;
@@ -18,6 +20,9 @@ describe('PropertiesService', () => {
   };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       findById: jest.fn(),
       save: jest.fn(),
@@ -31,7 +36,6 @@ describe('PropertiesService', () => {
       getPropertiesByHost: jest.fn().mockResolvedValue([]),
       getAdminProperties: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       getPropertyHostId: jest.fn(),
-      getUserRole: jest.fn(),
       updateProperty: jest.fn().mockResolvedValue(undefined),
       deletePropertyCascading: jest.fn().mockResolvedValue(undefined),
       getPropertyTypes: jest.fn().mockResolvedValue(['apartment', 'villa']),
@@ -74,6 +78,10 @@ describe('PropertiesService', () => {
         {
           provide: PROPERTIES_REPOSITORY,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
         {
           provide: RedisService,
@@ -184,7 +192,7 @@ describe('PropertiesService', () => {
         host_id: 'owner-host',
         title: 'Villa',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.updateProperty('prop-1', { title: 'New' }, 'other-user'),
@@ -196,7 +204,7 @@ describe('PropertiesService', () => {
         host_id: 'owner-host',
         title: 'Villa',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       const res = await service.updateProperty(
         'prop-1',
@@ -219,17 +227,7 @@ describe('PropertiesService', () => {
   });
 
   describe('updatePropertyStatus', () => {
-    it('should throw UnauthorizedException if user is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
-
-      await expect(
-        service.updatePropertyStatus('prop-1', 'approved', undefined, 'user-1'),
-      ).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should update status and rejection reason when rejected by admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
-
+    it('should update status and rejection reason when rejected', async () => {
       const res = await service.updatePropertyStatus(
         'prop-1',
         'rejected',
@@ -241,6 +239,24 @@ describe('PropertiesService', () => {
       expect(mockRepository.updateProperty).toHaveBeenCalledWith('prop-1', {
         status: 'rejected',
         rejection_reason: 'Incomplete photos',
+      });
+      expect(mockRedisService.delByPattern).toHaveBeenCalledWith(
+        'properties:*',
+      );
+    });
+
+    it('should clear rejection reason when approved', async () => {
+      const res = await service.updatePropertyStatus(
+        'prop-1',
+        'approved',
+        undefined,
+        'admin-1',
+      );
+
+      expect(res).toEqual({ success: true });
+      expect(mockRepository.updateProperty).toHaveBeenCalledWith('prop-1', {
+        status: 'approved',
+        rejection_reason: null,
       });
       expect(mockRedisService.delByPattern).toHaveBeenCalledWith(
         'properties:*',
@@ -262,7 +278,7 @@ describe('PropertiesService', () => {
         host_id: 'owner-1',
         title: 'Apartment',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.deleteProperty('prop-1', undefined, 'user-2'),
@@ -274,7 +290,7 @@ describe('PropertiesService', () => {
         host_id: 'owner-1',
         title: 'Apartment',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('owner-1');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('owner-1');
       mockRepository.deletePropertyCascading.mockRejectedValueOnce(
         new Error('Foreign key violation'),
       );
@@ -296,7 +312,7 @@ describe('PropertiesService', () => {
         host_id: 'host-1',
         title: 'Villa',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('host');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('host');
 
       const res = await service.addICalFeed(
         'prop-1',
@@ -318,7 +334,7 @@ describe('PropertiesService', () => {
         host_id: 'host-1',
         title: 'Villa',
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('host');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('host');
       mockRepository.getICalFeeds.mockResolvedValueOnce([
         { id: 'feed-1' },
         { id: 'feed-2' },
@@ -392,6 +408,106 @@ describe('PropertiesService', () => {
           link: 'https://alanyaholidays.com/property/prop-1',
         },
       });
+    });
+  });
+  describe('property drafts', () => {
+    it('creates a draft with protected fields stripped and status forced to draft', async () => {
+      mockRepository.insertProperty.mockResolvedValue({ id: 'prop-1' });
+
+      const result = await service.savePropertyDraft(
+        {
+          title: 'Sea Villa',
+          type: 'villa',
+          location: 'Mahmutlar',
+          price_per_night: 100,
+          // Attempted protected-field injection
+          host_id: 'attacker',
+          is_featured: true,
+          rejection_reason: 'x',
+        },
+        'user-1',
+      );
+
+      expect(result).toEqual({ id: 'prop-1' });
+      const [payload] = mockRepository.insertProperty.mock.calls[0] as [
+        Record<string, unknown>,
+        string,
+      ];
+      expect(payload.status).toBe('draft');
+      // host_id is stamped by the repository from the authenticated user
+      expect(
+        (mockRepository.insertProperty.mock.calls[0] as [unknown, string])[1],
+      ).toBe('user-1');
+      expect(payload.host_id).toBeUndefined();
+      expect(payload.is_featured).toBeUndefined();
+      expect(payload.rejection_reason).toBeUndefined();
+    });
+
+    it('defaults an empty title to Untitled Draft', async () => {
+      mockRepository.insertProperty.mockResolvedValue({ id: 'prop-2' });
+
+      await service.savePropertyDraft({}, 'user-1');
+
+      expect(
+        (
+          mockRepository.insertProperty.mock.calls[0] as [
+            Record<string, unknown>,
+          ]
+        )[0].title,
+      ).toBe('Untitled Draft');
+    });
+
+    it('rejects saving over a foreign draft', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValue({
+        host_id: 'owner-1',
+        title: 'X',
+      });
+
+      await expect(
+        service.savePropertyDraft({ draftId: 'd-1' }, 'user-2'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('publishes only with all required fields and transitions draft -> pending', async () => {
+      mockRepository.getPropertyHostId.mockResolvedValue({
+        host_id: 'user-1',
+        title: 'Old',
+      });
+
+      await expect(
+        service.publishPropertyDraft(
+          '550e8400-e29b-41d4-a716-446655440001',
+          { title: '', type: 'villa' },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.publishPropertyDraft(
+          '550e8400-e29b-41d4-a716-446655440001',
+          { title: 'Nice Villa', type: 'villa', location: 'Oba' },
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+
+      await service.publishPropertyDraft(
+        '550e8400-e29b-41d4-a716-446655440001',
+        {
+          title: 'Nice Villa',
+          type: 'villa',
+          location: 'Oba',
+          price_per_night: 90,
+        },
+        'user-1',
+      );
+      const updates = (
+        mockRepository.updateProperty.mock.calls[0] as [
+          string,
+          Record<string, unknown>,
+        ]
+      )[1];
+      expect(updates.status).toBe('pending');
+      expect(updates.rejection_reason).toBeNull();
     });
   });
 });

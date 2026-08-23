@@ -1,21 +1,34 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { events } from "@/mocks/events";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
+
+const TODAY_WINDOW_START = new Date("2026-06-05");
+const TODAY_WINDOW_END = new Date("2026-06-12");
 
 export default function UpcomingEventsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [allEvents, setAllEvents] = useState<ForumEvent[]>(() => eventsService.getEventsSync());
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  const today = new Date("2026-06-05");
-  const nextWeek = new Date("2026-06-12");
+  useEffect(() => {
+    let mounted = true;
+    eventsService.getEvents().then((data) => {
+      if (mounted && data) setAllEvents(data);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const thisWeekEvents = events
-    .filter((e) => {
-      const eventDate = new Date(e.date + "T00:00:00");
-      return eventDate >= today && eventDate < nextWeek;
-    })
-    .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime());
+  const thisWeekEvents = useMemo(() => {
+    return allEvents
+      .filter((e) => {
+        const eventDate = new Date(e.date + "T00:00:00");
+        return eventDate >= TODAY_WINDOW_START && eventDate < TODAY_WINDOW_END;
+      })
+      .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime());
+  }, [allEvents]);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -184,7 +197,7 @@ export default function UpcomingEventsCarousel() {
             </div>
             <p className="text-white/80 text-sm font-medium mb-1">Browse All Events</p>
             <p className="text-white/40 text-xs">
-              {events.length} upcoming
+              {allEvents.length} upcoming
             </p>
           </Link>
         </div>

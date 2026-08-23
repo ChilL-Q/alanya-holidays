@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import type { ForumEvent } from "@/mocks/events";
+import type { ForumEvent } from "@/api-services/events.service";
 import { generateGoogleCalendarUrl, downloadIcalFile } from "../calendarExport";
 import { copyEventLink, shareViaWhatsapp, shareViaTelegram } from "../shareUtils";
 

@@ -2,16 +2,21 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    @Optional() private readonly userRolesRepo?: UserRolesRepository,
+  ) {}
 
   async getAllUsers(page = 1, limit = 20, requestUserId: string) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+    const role = await this.userRolesRepo?.getRole(requestUserId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const { data, count } = await this.usersRepository.getAllUsers(page, limit);
@@ -38,7 +43,7 @@ export class UsersService {
     updates: UpdateUserProfileDto,
     requestUserId: string,
   ) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+    const role = await this.userRolesRepo?.getRole(requestUserId);
 
     if (requestUserId !== id && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
@@ -59,7 +64,7 @@ export class UsersService {
     limit = 20,
     requestUserId: string,
   ) {
-    const role = await this.usersRepository.getUserRole(requestUserId);
+    const role = await this.userRolesRepo?.getRole(requestUserId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const { data, count } = await this.usersRepository.getUsersByRole(

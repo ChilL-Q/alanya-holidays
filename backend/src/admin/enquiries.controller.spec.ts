@@ -78,14 +78,9 @@ describe('EnquiriesController', () => {
       expect(mockAdminService.getRecentEnquiries).toHaveBeenCalledWith(8);
     });
 
-    it('should parse limit query parameter correctly', async () => {
-      await controller.getRecent('5');
+    it('should pass limit from LimitQueryDto correctly', async () => {
+      await controller.getRecent({ limit: 5 });
       expect(mockAdminService.getRecentEnquiries).toHaveBeenCalledWith(5);
-    });
-
-    it('should sanitize negative or zero limit to default or min', async () => {
-      await controller.getRecent('-1');
-      expect(mockAdminService.getRecentEnquiries).toHaveBeenCalledWith(1);
     });
   });
 });

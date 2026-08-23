@@ -1,21 +1,3 @@
-import { Request } from 'express';
-import type { User } from '@supabase/supabase-js';
-
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser & User;
-}
-
-export interface OptionalAuthenticatedRequest extends Request {
-  user?: (AuthenticatedUser & User) | null;
-}
-
 export interface ForumCategory {
   id: string;
   name: string;

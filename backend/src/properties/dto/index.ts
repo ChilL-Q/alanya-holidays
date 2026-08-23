@@ -5,3 +5,5 @@ export * from './update-property.dto';
 export * from './property-availability.dto';
 export * from './ical-feed.dto';
 export * from './property-review.dto';
+export * from './update-property-status.dto';
+export * from './save-property-draft.dto';

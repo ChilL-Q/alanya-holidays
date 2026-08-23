@@ -9,20 +9,22 @@ import {
   Param,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { UpdateStatusDto } from '../common/dto/update-status.dto';
-import {
-  AuthenticatedRequest,
-  ServiceListResponse,
-} from './types/services.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { ServiceListResponse } from './types/services.types';
 import {
   CreateServiceDto,
   UpdateServiceDto,
   UpdateServiceModelDto,
+  UpdateServiceStatusDto,
+  SaveServiceDraftDto,
 } from './dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -64,9 +66,9 @@ export class ServicesController {
   async updateServiceModel(
     @Param('id') id: string,
     @Body() updates: UpdateServiceModelDto | Record<string, unknown>,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.updateServiceModel(id, updates, req.user.id);
+    return this.servicesService.updateServiceModel(id, updates, user.id);
   }
 
   @Get('by-model/:type/:brand/:model')
@@ -87,7 +89,7 @@ export class ServicesController {
   async requestServiceUpdate(
     @Param('serviceId') serviceId: string,
     @Body() body: Record<string, unknown>,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     const changes =
       body &&
@@ -101,7 +103,7 @@ export class ServicesController {
     return this.servicesService.requestServiceUpdate(
       serviceId,
       changes,
-      req.user.id,
+      user.id,
     );
   }
 
@@ -114,9 +116,9 @@ export class ServicesController {
   @Get('edits/my-pending')
   @UseGuards(AuthGuard)
   async getMyPendingEdits(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>[]> {
-    return this.servicesService.getMyPendingEdits(req.user.id);
+    return this.servicesService.getMyPendingEdits(user.id);
   }
 
   @Get('edits/service/:serviceId')
@@ -139,18 +141,18 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async deleteServiceEdit(
     @Param('editId') editId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.deleteServiceEdit(editId, req.user.id);
+    return this.servicesService.deleteServiceEdit(editId, user.id);
   }
 
   @Post('edits/:editId/approve')
   @UseGuards(AuthGuard)
   async approveServiceEdit(
     @Param('editId') editId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.approveServiceEdit(editId, req.user.id);
+    return this.servicesService.approveServiceEdit(editId, user.id);
   }
 
   @Post('edits/:editId/reject')
@@ -158,9 +160,9 @@ export class ServicesController {
   async rejectServiceEdit(
     @Param('editId') editId: string,
     @Body('reason') reason: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.rejectServiceEdit(editId, reason, req.user.id);
+    return this.servicesService.rejectServiceEdit(editId, reason, user.id);
   }
 
   // ============================================
@@ -171,22 +173,40 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async createService(
     @Body() data: CreateServiceDto | Record<string, unknown>,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>> {
-    return this.servicesService.createService(data, request.user.id);
+    return this.servicesService.createService(data, user.id);
+  }
+
+  @Post('draft')
+  @UseGuards(AuthGuard)
+  async saveServiceDraft(
+    @Body() data: SaveServiceDraftDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ id: string }> {
+    return this.servicesService.saveServiceDraft(data, user.id);
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AuthGuard)
+  async publishServiceDraft(
+    @Param('id') id: string,
+    @Body() updates: Record<string, unknown>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.servicesService.publishServiceDraft(id, updates, user.id);
   }
 
   @Get()
   async getServices(
     @Query('type') type?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<ServiceListResponse> {
-    return this.servicesService.getServices(
-      type,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    return this.servicesService.getServices(type, page, limit);
   }
 
   @Get('provider/:providerId')
@@ -201,8 +221,9 @@ export class ServicesController {
   async getAdminServices(
     @Query('statusFilter') statusFilter?: string,
     @Query('typesFilter') typesFilter?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number }> {
     let parsedTypes: string[] | undefined;
     if (typesFilter) {
@@ -212,11 +233,13 @@ export class ServicesController {
         parsedTypes = [typesFilter];
       }
     }
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
     return this.servicesService.getAdminServices(
       statusFilter,
       parsedTypes,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 50,
+      page,
+      limit,
     );
   }
 
@@ -230,23 +253,24 @@ export class ServicesController {
   async updateService(
     @Param('id') id: string,
     @Body() updates: UpdateServiceDto | Record<string, unknown>,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.updateService(id, updates, request.user.id);
+    return this.servicesService.updateService(id, updates, user.id);
   }
 
   @Patch(':id/status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async updateServiceStatus(
     @Param('id') id: string,
-    @Body() data: UpdateStatusDto,
-    @Req() request: AuthenticatedRequest,
+    @Body() data: UpdateServiceStatusDto,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return this.servicesService.updateServiceStatus(
       id,
       data.status,
       data.reason,
-      request.user.id,
+      user.id,
     );
   }
 
@@ -255,8 +279,8 @@ export class ServicesController {
   async deleteService(
     @Param('id') id: string,
     @Query('reason') reason: string,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.servicesService.deleteService(id, reason, request.user.id);
+    return this.servicesService.deleteService(id, reason, user.id);
   }
 }

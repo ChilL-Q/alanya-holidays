@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Package, Calendar, AlertCircle, RefreshCw, ChevronRight } from "lucide-react";
 import { ordersService, type OrderDetailsResponse, type OrderItem } from "@/api-services/orders.service";
+import { logger } from "@/lib/logger";
 
 export function OrdersList() {
   const [orders, setOrders] = useState<OrderDetailsResponse[]>([]);
@@ -15,7 +16,7 @@ export function OrdersList() {
       const data = await ordersService.getMyOrders();
       setOrders(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      console.error("Failed to load user orders:", err);
+      logger.error("Failed to load user orders:", err);
       setError("Unable to load orders. Please check your connection and try again.");
     } finally {
       setLoading(false);

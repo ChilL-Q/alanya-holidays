@@ -3,6 +3,7 @@ import {
   IReviewsRepository,
   REVIEWS_REPOSITORY,
 } from './domain/repositories/reviews.repository.interface';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import {
   PaginatedReviewsResponse,
   ReviewOperationResult,
@@ -16,6 +17,7 @@ export class ReviewsService {
   constructor(
     @Inject(REVIEWS_REPOSITORY)
     private readonly reviewsRepository: IReviewsRepository,
+    private readonly userRolesRepo: UserRolesRepository,
   ) {}
 
   async getListingReviews(
@@ -68,7 +70,7 @@ export class ReviewsService {
   }
 
   private async checkAdmin(userId: string): Promise<void> {
-    const role = await this.reviewsRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Admin only');
   }
 

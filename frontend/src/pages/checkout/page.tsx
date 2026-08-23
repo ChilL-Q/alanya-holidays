@@ -3,23 +3,24 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { useCart } from "@/hooks/useCart";
+import { useToast } from "@/hooks/useToast";
 import { Money } from "@/domain/money.vo";
-import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
 import { ordersService } from "@/api-services/orders.service";
+import { checkoutSchema } from "@/lib/validation/checkout.schemas";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, clearCart, totalItems, subtotalMoney } = useCart();
+  const { showToast, ToastContainer } = useToast();
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState<number | string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [giftMessage, setGiftMessage] = useState("");
@@ -46,25 +47,6 @@ export default function CheckoutPage() {
       navigate("/shop", { replace: true });
     }
   }, [items, success, navigate]);
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-    const timer = toastTimersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      toastTimersRef.current.delete(id);
-    }
-  }, []);
-
-  const showToast = useCallback(
-    (title: string, msg: string, type: "success" | "error" = "success") => {
-      const toast = createToast(title, msg, type);
-      setToasts((prev) => [...prev, toast]);
-      const timer = setTimeout(() => dismissToast(toast.id), 5000);
-      toastTimersRef.current.set(toast.id, timer);
-    },
-    [dismissToast],
-  );
 
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -100,24 +82,23 @@ export default function CheckoutPage() {
 
       const recName = getVal("recipient_name", recipientName);
       const recEmail = getVal("recipient_email", recipientEmail);
+      const recPhone = getVal("recipient_phone", recipientPhone);
       const sndName = getVal("sender_name", senderName);
       const sndEmail = getVal("email", senderEmail);
       const gftMessage = getVal("gift_message", giftMessage);
 
-      if (!recName) {
-        setCheckoutError("Please enter the recipient's name.");
-        return;
-      }
-      if (!recEmail) {
-        setCheckoutError("Please enter the recipient's email address.");
-        return;
-      }
-      if (!sndName) {
-        setCheckoutError("Please enter your name.");
-        return;
-      }
-      if (!sndEmail) {
-        setCheckoutError("Please enter your email address.");
+      const validationResult = checkoutSchema.safeParse({
+        recipientName: recName,
+        recipientEmail: recEmail,
+        recipientPhone: recPhone,
+        senderName: sndName,
+        senderEmail: sndEmail,
+        giftMessage: gftMessage,
+      });
+
+      if (!validationResult.success) {
+        const firstError = validationResult.error.issues[0]?.message || "Please check your form details.";
+        setCheckoutError(firstError);
         return;
       }
 
@@ -128,7 +109,7 @@ export default function CheckoutPage() {
         const orderResult = await ordersService.createOrder({
           recipientName: recName,
           recipientEmail: recEmail,
-          recipientPhone: "+905550000000",
+          recipientPhone: recPhone,
           contactMethod: "email",
           senderName: sndName,
           senderEmail: sndEmail,
@@ -180,6 +161,7 @@ export default function CheckoutPage() {
       showToast,
       recipientName,
       recipientEmail,
+      recipientPhone,
       senderName,
       senderEmail,
       giftMessage,
@@ -405,6 +387,23 @@ export default function CheckoutPage() {
                           />
                           <p className="text-xs text-foreground-400 mt-1">We'll send the gift card to this email address.</p>
                         </div>
+
+                        <div>
+                          <label htmlFor="recipient-phone" className="block text-sm font-medium text-foreground-700 mb-1.5">
+                            Recipient Phone *
+                          </label>
+                          <input
+                            id="recipient-phone"
+                            name="recipient_phone"
+                            type="tel"
+                            required
+                            value={recipientPhone}
+                            onChange={(e) => setRecipientPhone(e.target.value)}
+                            placeholder="+90 555 123 45 67"
+                            className="w-full px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-colors"
+                          />
+                          <p className="text-xs text-foreground-400 mt-1">Used if we need delivery or redemption coordination.</p>
+                        </div>
                       </div>
                     </div>
 
@@ -504,7 +503,7 @@ export default function CheckoutPage() {
       </section>
 
       <Footer />
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer />
     </div>
   );
 }

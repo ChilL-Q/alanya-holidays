@@ -6,16 +6,17 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendChatMessageDto } from './dto/send-chat-message.dto';
 import { ReportChatDto } from './dto/report-chat.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
-import { AuthenticatedRequest } from './types/messages.types';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('messages')
 export class MessagesController {
@@ -23,34 +24,41 @@ export class MessagesController {
 
   @Get('conversations')
   @UseGuards(AuthGuard)
-  async getConversations(@Req() req: AuthenticatedRequest) {
-    return this.messagesService.getConversations(req.user.id);
+  async getConversations(@CurrentUser() user: AuthUser) {
+    return this.messagesService.getConversations(user.id);
   }
 
   @Post('conversations')
   @UseGuards(AuthGuard)
   async createConversation(
     @Body() dto: CreateConversationDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.messagesService.createOrGetConversation(req.user.id, dto);
+    return this.messagesService.createOrGetConversation(user.id, dto);
   }
 
   @Get('conversations/:id/messages')
   @UseGuards(AuthGuard)
   async getConversationMessages(
     @Param('id') conversationId: string,
-    @Query('limit') limit: string | undefined,
-    @Query('offset') offset: string | undefined,
-    @Req() req: AuthenticatedRequest,
+    @Query('limit') limitStr: string | undefined,
+    @Query('offset') offsetStr: string | undefined,
+    @CurrentUser() user: AuthUser,
+    @Query() pagination?: PaginationDto,
   ) {
-    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
-    const parsedOffset = offset ? parseInt(offset, 10) : undefined;
+    let limit = pagination?.limit;
+    if (limitStr !== undefined) {
+      limit = parseInt(limitStr, 10);
+    }
+    let offset = pagination?.offset;
+    if (offsetStr !== undefined) {
+      offset = parseInt(offsetStr, 10);
+    }
     return this.messagesService.getConversationMessages(
-      req.user.id,
+      user.id,
       conversationId,
-      parsedLimit,
-      parsedOffset,
+      limit,
+      offset,
     );
   }
 
@@ -59,34 +67,24 @@ export class MessagesController {
   async sendChatMessage(
     @Param('id') conversationId: string,
     @Body() dto: SendChatMessageDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.messagesService.sendChatMessage(
-      req.user.id,
-      conversationId,
-      dto,
-    );
+    return this.messagesService.sendChatMessage(user.id, conversationId, dto);
   }
 
   @Patch('conversations/:id/read')
   @UseGuards(AuthGuard)
   async markConversationAsRead(
     @Param('id') conversationId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.messagesService.markConversationAsRead(
-      req.user.id,
-      conversationId,
-    );
+    return this.messagesService.markConversationAsRead(user.id, conversationId);
   }
 
   @Post('reports')
   @UseGuards(AuthGuard)
-  async reportChat(
-    @Body() dto: ReportChatDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.messagesService.reportChat(req.user.id, dto);
+  async reportChat(@Body() dto: ReportChatDto, @CurrentUser() user: AuthUser) {
+    return this.messagesService.reportChat(user.id, dto);
   }
 
   @Post('contact')

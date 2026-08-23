@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { Money } from "@/domain/money.vo";
+import { logger } from "@/lib/logger";
 
 export interface OrderItem {
   productName: string;
@@ -69,7 +70,7 @@ export class OrdersService {
     const recipient: OrderRecipient = payload.recipient || {
       name: payload.recipientName || "Guest",
       email: payload.recipientEmail || "guest@example.com",
-      phone: payload.recipientPhone || "+905550000000",
+      phone: payload.recipientPhone,
       contact_method: (payload.contactMethod || "email") as
         | "whatsapp"
         | "phone_call"
@@ -159,7 +160,7 @@ export class OrdersService {
       }
       return result || null;
     } catch (err: unknown) {
-      console.warn(`Failed to fetch order ${orderId} from API:`, err);
+      logger.warn(`Failed to fetch order ${orderId} from API:`, err);
       return null;
     }
   }
@@ -187,7 +188,7 @@ export class OrdersService {
       }
       return [];
     } catch (err: unknown) {
-      console.warn("Failed to fetch my orders from API:", err);
+      logger.warn("Failed to fetch my orders from API:", err);
       return [];
     }
   }

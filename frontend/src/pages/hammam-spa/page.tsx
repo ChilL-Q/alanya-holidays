@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { hammamSpaExperiences, spaTypes } from "@/mocks/hammam-spa";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type HammamSpa } from "@/api-services/concierge.service";
+import { conciergeService, spaTypes, type HammamSpaExperience as HammamSpa } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function HammamSpaPage() {
+  const [hammamSpaExperiences, setHammamSpaExperiences] = useState<HammamSpa[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "duration">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -17,6 +21,23 @@ export default function HammamSpaPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadSpas = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getHammamSpaExperiences();
+      setHammamSpaExperiences(data);
+    } catch {
+      setFetchError("Failed to load hammam & spa experiences. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSpas();
+  }, [loadSpas]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -54,7 +75,7 @@ export default function HammamSpaPage() {
       const aM = parseInt(a.duration); const bM = parseInt(b.duration); return aM - bM;
     });
     return results;
-  }, [activeType, sortBy]);
+  }, [activeType, sortBy, hammamSpaExperiences]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
@@ -176,62 +197,99 @@ export default function HammamSpaPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredSpas.length} {filteredSpas.length === 1 ? "experience" : "experiences"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredSpas.length} {filteredSpas.length === 1 ? "experience" : "experiences"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredSpas.map((spa) => (
-                <div key={spa.id} onClick={() => setSelectedSpa(spa)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={spa.image} alt={spa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {spa.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-time-line text-[11px]"></i>{spa.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">{spa.type}</span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{spa.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{spa.rating}</span>
-                        <span className="text-xs text-foreground-500">({spa.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{spa.description}</p>
-                    <div className="flex items-center gap-1.5 mb-4 text-xs text-foreground-500">
-                      <i className="ri-map-pin-line text-foreground-400"></i>
-                      <span>{spa.location}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {spa.treatments.slice(0, 3).map((t) => (
-                        <span key={t} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{t}</span>
-                      ))}
-                      {spa.treatments.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{spa.treatments.length - 3}</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{spa.pricePerPerson}</span>
-                        <span className="text-sm text-foreground-500"> / person</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedSpa(spa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-heart-pulse-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load spa experiences"
+                message={fetchError}
+                onRetry={loadSpas}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredSpas.length === 0 ? (
+              <EmptyState
+                title="No spa experiences found"
+                description="Try selecting a different experience type or clear your filters."
+                icon="ri-heart-pulse-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveType("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredSpas.map((spa) => (
+                  <div key={spa.id} onClick={() => setSelectedSpa(spa)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={spa.image} alt={spa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {spa.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-time-line text-[11px]"></i>{spa.duration}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap">{spa.type}</span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{spa.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{spa.rating}</span>
+                          <span className="text-xs text-foreground-500">({spa.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{spa.description}</p>
+                      <div className="flex items-center gap-1.5 mb-4 text-xs text-foreground-500">
+                        <i className="ri-map-pin-line text-foreground-400"></i>
+                        <span>{spa.location || spa.venue || "Alanya"}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {(spa.treatments || spa.includes || []).slice(0, 3).map((t) => (
+                          <span key={t} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{t}</span>
+                        ))}
+                        {(spa.treatments?.length || spa.includes?.length || 0) > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{(spa.treatments?.length || spa.includes?.length || 0) - 3}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{spa.pricePerPerson}</span>
+                          <span className="text-sm text-foreground-500"> / person</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedSpa(spa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-heart-pulse-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -274,17 +332,17 @@ export default function HammamSpaPage() {
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Location</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.location}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.location || selectedSpa.venue || "Alanya"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-calendar-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Hours</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.openingHours}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.openingHours || "09:00 - 22:00"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-hearts-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Couples</p>
-                    <p className="font-semibold text-foreground-900 text-sm">€{selectedSpa.couplesPrice}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">€{selectedSpa.couplesPrice || Math.round(selectedSpa.pricePerPerson * 1.8)}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
@@ -295,14 +353,14 @@ export default function HammamSpaPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-foreground-500 mb-0.5">Couples Price</p>
-                      <p className="text-lg font-semibold text-foreground-700">€{selectedSpa.couplesPrice.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-foreground-700">€{(selectedSpa.couplesPrice || Math.round(selectedSpa.pricePerPerson * 1.8)).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Treatments Included</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedSpa.treatments.map((t) => (
+                    {(selectedSpa.treatments || selectedSpa.includes || []).map((t) => (
                       <span key={t} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{t}</span>
                     ))}
                   </div>
@@ -310,7 +368,7 @@ export default function HammamSpaPage() {
                 <div className="mb-6">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Facilities</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedSpa.facilities.map((f) => (
+                    {(selectedSpa.facilities || selectedSpa.oils || []).map((f) => (
                       <span key={f} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-check-line text-green-500 text-[11px]"></i>{f}
                       </span>

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../../supabase/supabase.service';
 import { Database } from '../../../../../shared/types/database.types';
 import {
@@ -16,6 +16,8 @@ type ICalFeedInsert =
 
 @Injectable()
 export class SupabasePropertiesRepository implements IPropertiesRepository {
+  private readonly logger = new Logger(SupabasePropertiesRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -480,7 +482,10 @@ export class SupabasePropertiesRepository implements IPropertiesRepository {
       .eq('user_id', userId)
       .maybeSingle();
     if (error) {
-      console.error('getExistingReview error:', error);
+      this.logger.error(
+        'getExistingReview error:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
     }
     return data;
   }
@@ -581,18 +586,14 @@ export class SupabasePropertiesRepository implements IPropertiesRepository {
     return data;
   }
 
-  async getUserRole(userId: string): Promise<string | undefined> {
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return data?.role ?? undefined;
-  }
-
   invokeEmailFunction(payload: Record<string, unknown>): void {
     this.client.functions
       .invoke('send-email', { body: payload })
-      .catch((err: unknown) => console.error(err));
+      .catch((err: unknown) => {
+        this.logger.error(
+          'Failed to invoke send-email function',
+          err instanceof Error ? err.stack : undefined,
+        );
+      });
   }
 }

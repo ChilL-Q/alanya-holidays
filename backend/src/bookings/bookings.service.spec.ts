@@ -6,13 +6,20 @@ import {
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingsRepository } from './bookings.repository';
+import { EmailOutboxRepository } from './email-outbox.repository';
 import { NotificationsService } from '../notifications/notifications.service';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('BookingsService', () => {
   let service: BookingsService;
   let mockRepository: Record<string, jest.Mock>;
+  let mockUserRolesRepo: { getRole: jest.Mock };
+  let mockEmailOutbox: { enqueue: jest.Mock };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       findOverlappingBookings: jest.fn().mockResolvedValue([]),
       checkPropertyAvailabilityBlocks: jest.fn().mockResolvedValue([]),
@@ -24,7 +31,6 @@ describe('BookingsService', () => {
       getProfile: jest.fn(),
       invokeEmailFunction: jest.fn(),
       getUserBookings: jest.fn(),
-      getUserRole: jest.fn(),
       getAdminBookings: jest.fn(),
       getPropertiesByHost: jest.fn(),
       getBookingsByPropertyIds: jest.fn(),
@@ -34,9 +40,24 @@ describe('BookingsService', () => {
       getBookingById: jest.fn(),
       unblockDatesForBooking: jest.fn(),
       updateBookingStatus: jest.fn(),
+      transitionStatus: jest.fn().mockResolvedValue({
+        id: 'b1',
+        oldStatus: 'pending',
+        newStatus: 'confirmed',
+        unblockedDatesCount: 0,
+        itemId: 'prop-1',
+        itemType: 'property',
+        userId: 'user1',
+        checkIn: '2026-08-01',
+        checkOut: '2026-08-05',
+        totalPrice: 400,
+      }),
       getBookingForCancellation: jest.fn(),
       updatePayoutStatus: jest.fn(),
+      getPayoutStatus: jest.fn().mockResolvedValue('pending'),
     };
+
+    mockEmailOutbox = { enqueue: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,6 +65,14 @@ describe('BookingsService', () => {
         {
           provide: BookingsRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
+        },
+        {
+          provide: EmailOutboxRepository,
+          useValue: mockEmailOutbox,
         },
         {
           provide: NotificationsService,
@@ -99,15 +128,16 @@ describe('BookingsService', () => {
       mockRepository.getProperty.mockResolvedValueOnce(null);
 
       await expect(
-        service.createBooking({
-          item_id: 'p999',
-          user_id: 'u1',
-          check_in: '2026-08-01',
-          check_out: '2026-08-05',
-          total_price: 500,
-          guests: 2,
-          item_type: 'property',
-        }),
+        service.createBooking(
+          {
+            item_id: 'p999',
+            check_in: '2026-08-01',
+            check_out: '2026-08-05',
+            guests: 2,
+            item_type: 'property',
+          },
+          'u1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -117,39 +147,47 @@ describe('BookingsService', () => {
         status: 'approved',
         host_id: 'u1',
         title: 'Villa',
+        price_per_night: 150,
+        cleaning_fee: 50,
+        currency: 'EUR',
       });
 
       await expect(
-        service.createBooking({
-          item_id: 'p1',
-          user_id: 'u1',
-          check_in: '2026-08-01',
-          check_out: '2026-08-05',
-          total_price: 500,
-          guests: 2,
-          item_type: 'property',
-        }),
+        service.createBooking(
+          {
+            item_id: 'p1',
+            check_in: '2026-08-01',
+            check_out: '2026-08-05',
+            guests: 2,
+            item_type: 'property',
+          },
+          'u1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should create booking via atomic RPC', async () => {
+    it('should create booking via atomic RPC with server-calculated property price', async () => {
       mockRepository.getProperty.mockResolvedValueOnce({
         id: 'p1',
         status: 'approved',
         host_id: 'host1',
         title: 'Villa',
+        price_per_night: 150,
+        cleaning_fee: 25,
+        currency: 'EUR',
       });
       mockRepository.createBookingRpc.mockResolvedValueOnce('b-100');
 
-      const result = await service.createBooking({
-        item_id: 'p1',
-        user_id: 'user2',
-        check_in: '2026-08-01',
-        check_out: '2026-08-03',
-        total_price: 300,
-        guests: 2,
-        item_type: 'property',
-      });
+      const result = await service.createBooking(
+        {
+          item_id: 'p1',
+          check_in: '2026-08-01',
+          check_out: '2026-08-03',
+          guests: 2,
+          item_type: 'property',
+        },
+        'user2',
+      );
 
       expect(result).toBe('b-100');
       expect(mockRepository.createBookingRpc).toHaveBeenCalledWith(
@@ -158,7 +196,7 @@ describe('BookingsService', () => {
           userId: 'user2',
           checkIn: '2026-08-01',
           checkOut: '2026-08-03',
-          totalPrice: 300,
+          totalPrice: 325,
           guests: 2,
           itemType: 'property',
         }),
@@ -166,7 +204,7 @@ describe('BookingsService', () => {
     });
   });
 
-  describe('updateBookingStatus', () => {
+  describe('updateBookingStatus (Atomic Transitions & Error Handling)', () => {
     it('should throw NotFoundException if booking does not exist', async () => {
       mockRepository.getBookingById.mockResolvedValueOnce(null);
 
@@ -187,14 +225,14 @@ describe('BookingsService', () => {
         status: 'pending',
         property: { host_id: 'host1' },
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.updateBookingStatus('b1', 'confirmed', undefined, 'other-user'),
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should update status and unblock dates if cancelled', async () => {
+    it('should atomically transition status and trigger rejection email on pending cancellation', async () => {
       mockRepository.getBookingById.mockResolvedValueOnce({
         id: 'b1',
         user_id: 'user1',
@@ -206,21 +244,89 @@ describe('BookingsService', () => {
         total_price: 400,
         property: { host_id: 'host1', title: 'Villa' },
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.transitionStatus.mockResolvedValueOnce({
+        id: 'b1',
+        oldStatus: 'pending',
+        newStatus: 'cancelled',
+        unblockedDatesCount: 4,
+        itemId: 'prop-1',
+        itemType: 'property',
+        userId: 'user1',
+        checkIn: '2026-08-01',
+        checkOut: '2026-08-05',
+        totalPrice: 400,
+      });
 
       const result = await service.updateBookingStatus(
         'b1',
         'cancelled',
-        'Reason',
+        'Host rejected application',
+        'host1',
+      );
+
+      expect(mockRepository.transitionStatus).toHaveBeenCalledWith({
+        bookingId: 'b1',
+        newStatus: 'cancelled',
+        userId: 'host1',
+        reason: 'Host rejected application',
+      });
+      expect(result.success).toBe(true);
+      expect(result.transition.unblockedDatesCount).toBe(4);
+      expect(mockEmailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'booking_rejected',
+          userId: 'user1',
+        }),
+      );
+    });
+
+    it('should trigger booking_cancelled and booking_cancelled_host when confirmed booking is cancelled', async () => {
+      mockRepository.getBookingById.mockResolvedValueOnce({
+        id: 'b1',
+        user_id: 'user1',
+        item_id: 'prop-1',
+        item_type: 'property',
+        status: 'confirmed',
+        check_in: '2026-08-01',
+        check_out: '2026-08-05',
+        total_price: 400,
+        property: { host_id: 'host1', title: 'Villa' },
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.transitionStatus.mockResolvedValueOnce({
+        id: 'b1',
+        oldStatus: 'confirmed',
+        newStatus: 'cancelled',
+        unblockedDatesCount: 4,
+        itemId: 'prop-1',
+        itemType: 'property',
+        userId: 'user1',
+        checkIn: '2026-08-01',
+        checkOut: '2026-08-05',
+        totalPrice: 400,
+      });
+
+      const result = await service.updateBookingStatus(
+        'b1',
+        'cancelled',
+        'Guest cancelled',
         'user1',
       );
 
-      expect(mockRepository.unblockDatesForBooking).toHaveBeenCalledWith('b1');
-      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith(
-        'b1',
-        'cancelled',
+      expect(result.success).toBe(true);
+      expect(mockEmailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'booking_cancelled',
+          userId: 'user1',
+        }),
       );
-      expect(result).toEqual({ success: true });
+      expect(mockEmailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'booking_cancelled_host',
+          userId: 'host1',
+        }),
+      );
     });
   });
 
@@ -244,7 +350,7 @@ describe('BookingsService', () => {
     });
 
     it('Host/Vendor workflow: should fetch host bookings and allow host to confirm booking', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getPropertiesByHost.mockResolvedValueOnce([
         { id: 'p-10', title: 'Luxury Penthouse' },
       ]);
@@ -283,7 +389,19 @@ describe('BookingsService', () => {
         status: 'pending',
         property: { host_id: 'host-123', title: 'Luxury Penthouse' },
       });
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.transitionStatus.mockResolvedValueOnce({
+        id: 'b-20',
+        oldStatus: 'pending',
+        newStatus: 'confirmed',
+        unblockedDatesCount: 0,
+        itemId: 'p-10',
+        itemType: 'property',
+        userId: 'client-5',
+        checkIn: '2026-08-10',
+        checkOut: '2026-08-15',
+        totalPrice: 500,
+      });
 
       const confirmResult = await service.updateBookingStatus(
         'b-20',
@@ -291,15 +409,17 @@ describe('BookingsService', () => {
         undefined,
         'host-123',
       );
-      expect(confirmResult).toEqual({ success: true });
-      expect(mockRepository.updateBookingStatus).toHaveBeenCalledWith(
-        'b-20',
-        'confirmed',
-      );
+      expect(confirmResult.success).toBe(true);
+      expect(mockRepository.transitionStatus).toHaveBeenCalledWith({
+        bookingId: 'b-20',
+        newStatus: 'confirmed',
+        userId: 'host-123',
+        reason: undefined,
+      });
     });
 
     it('Admin workflow: should allow admin to view all bookings and update payout status', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getAdminBookings.mockResolvedValueOnce([
         { id: 'b-100', status: 'pending', user: { full_name: 'Alice' } },
       ]);
@@ -311,16 +431,16 @@ describe('BookingsService', () => {
       expect(adminBookings).toHaveLength(1);
       expect(mockRepository.getAdminBookings).toHaveBeenCalledWith('pending');
 
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       const payoutResult = await service.updatePayoutStatus(
         'b-100',
-        'completed',
+        'paid',
         'admin-id',
       );
       expect(payoutResult).toEqual({ success: true });
       expect(mockRepository.updatePayoutStatus).toHaveBeenCalledWith(
         'b-100',
-        'completed',
+        'paid',
       );
     });
   });

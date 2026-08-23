@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { registerSchema } from "@/lib/validation/auth.schemas";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -20,23 +21,19 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    const cleanName = name.trim();
-    const cleanEmail = email.trim();
+    const validation = registerSchema.safeParse({
+      name,
+      email,
+      password,
+      confirmPassword,
+    });
 
-    if (!cleanName || !cleanEmail || !password.trim() || !confirmPassword.trim()) {
-      setError("Please fill in all fields.");
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message || "Please fill in all fields.");
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords don't match.");
-      return;
-    }
+    const { name: cleanName, email: cleanEmail } = validation.data;
 
     setIsSubmitting(true);
 

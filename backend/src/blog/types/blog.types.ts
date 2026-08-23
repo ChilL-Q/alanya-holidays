@@ -170,25 +170,6 @@ export interface EmailNotificationPayload {
   data: Record<string, unknown>;
 }
 
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest {
-  user: AuthenticatedUser;
-  headers?: Record<string, string | string[] | undefined>;
-  [key: string]: unknown;
-}
-
-export interface OptionalAuthenticatedRequest {
-  user?: AuthenticatedUser;
-  headers?: Record<string, string | string[] | undefined>;
-  [key: string]: unknown;
-}
-
 export interface SuccessResponse {
   success: boolean;
 }

@@ -1,8 +1,25 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { forumStats } from "@/mocks/stats";
+import { forumService, type ForumStats } from "@/api-services/forum.service";
 import UpcomingEventsCarousel from "./UpcomingEventsCarousel";
 
 export default function HeroSection() {
+  const [stats, setStats] = useState<ForumStats | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService.getForumStats().then((data) => {
+      if (mounted) setStats(data);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 12450;
+  const totalThreads = stats?.totalDiscussions ?? stats?.totalPosts ?? 3820;
+  const questionsAnswered = stats?.questionsAnswered ?? 9400;
+  const localExperts = stats?.localExperts ?? 142;
   return (
     <section className="relative min-h-screen flex items-center">
       {/* Background Image */}
@@ -39,7 +56,7 @@ export default function HeroSection() {
               />
             </div>
             <span className="text-white/90 text-sm font-medium">
-              {forumStats.totalMembers.toLocaleString()} travelers discovering Alanya
+              {totalMembers.toLocaleString()} travelers discovering Alanya
             </span>
           </div>
 
@@ -91,27 +108,27 @@ export default function HeroSection() {
           <div className="flex flex-wrap gap-6 md:gap-10">
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {forumStats.totalMembers.toLocaleString()}
+                {totalMembers.toLocaleString()}
               </p>
               <p className="text-white/60 text-sm">Travelers</p>
             </div>
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {forumStats.totalThreads.toLocaleString()}
+                {totalThreads.toLocaleString()}
               </p>
               <p className="text-white/60 text-sm">Experiences</p>
             </div>
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {forumStats.totalReplies.toLocaleString()}
+                {questionsAnswered.toLocaleString()}
               </p>
               <p className="text-white/60 text-sm">Reviews</p>
             </div>
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {forumStats.onlineNow.toLocaleString()}
+                {localExperts.toLocaleString()}
               </p>
-              <p className="text-white/60 text-sm">Exploring Now</p>
+              <p className="text-white/60 text-sm">Local Experts</p>
             </div>
           </div>
         </div>

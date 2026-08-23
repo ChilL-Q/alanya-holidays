@@ -24,17 +24,7 @@ import {
   type ConciergeEnquiryPayload,
   type CreateConciergeBookingPayload,
 } from "./concierge.service";
-import { apiClient } from "@/lib/api-client";
-import { yachts as mockYachts } from "@/mocks/yachts";
-import { privateJets as mockJets } from "@/mocks/private-jets";
-import { helicopterTours as mockHelicopterTours } from "@/mocks/helicopter-tours";
-import { personalChefs as mockChefs } from "@/mocks/personal-chefs";
-import { personalDrivers as mockDrivers } from "@/mocks/personal-drivers";
-import { personalShoppers as mockShoppers } from "@/mocks/personal-shoppers";
-import { wineTastings as mockWineTastings } from "@/mocks/wine-tastings";
-import { hammamSpaExperiences as mockHammamSpa } from "@/mocks/hammam-spa";
-import { golfVacations as mockGolf } from "@/mocks/golf-vacations";
-import { photographyExcursions as mockPhotography } from "@/mocks/photography-excursions";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("ConciergeService", () => {
   beforeEach(() => {
@@ -96,101 +86,10 @@ describe("ConciergeService", () => {
       expect(result[0].id).toBe("srv-jet-1");
     });
 
-    it("should fall back to category mock items when API fails for yacht", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should propagate ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("Network Error", 500, "Internal Server Error"));
 
-      const result = await getConciergeOfferings("yacht-charters");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockYachts[0].name);
-      expect(result[0].type).toBe("yacht");
-    });
-
-    it("should fall back to category mock items when API fails for private-jet", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("private-jets");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockJets[0].name);
-      expect(result[0].type).toBe("private-jet");
-    });
-
-    it("should fall back to category mock items for helicopter tours", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("helicopter-tours");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockHelicopterTours[0].name);
-      expect(result[0].type).toBe("helicopter");
-    });
-
-    it("should fall back to category mock items for personal chefs", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("personal-chefs");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockChefs[0].name);
-      expect(result[0].type).toBe("personal-chef");
-    });
-
-    it("should fall back to category mock items for personal drivers", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("personal-driver");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockDrivers[0].name);
-      expect(result[0].type).toBe("personal-driver");
-    });
-
-    it("should fall back to category mock items for personal shoppers", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("personal-shopper");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockShoppers[0].name);
-      expect(result[0].type).toBe("personal-shopper");
-    });
-
-    it("should fall back to category mock items for wine tastings", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("wine-tastings");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockWineTastings[0].name);
-      expect(result[0].type).toBe("wine-tasting");
-    });
-
-    it("should fall back to category mock items for hammam spa", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("hammam-spa");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockHammamSpa[0].name);
-      expect(result[0].type).toBe("hammam-spa");
-    });
-
-    it("should fall back to category mock items for golf vacations", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("golf-vacations");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockGolf[0].name);
-      expect(result[0].type).toBe("golf");
-    });
-
-    it("should fall back to category mock items for photography", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings("photography-excursions");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockPhotography[0].name);
-      expect(result[0].type).toBe("photography");
-    });
-
-    it("should return all combined mock items when category is empty or undefined", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await getConciergeOfferings();
-      expect(result.length).toBeGreaterThan(20);
+      await expect(getConciergeOfferings("yacht")).rejects.toThrow(ApiError);
     });
   });
 
@@ -210,31 +109,17 @@ describe("ConciergeService", () => {
       expect(result).toEqual(mockService);
     });
 
-    it("should fall back to mock item if API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const targetYacht = mockYachts[0];
-      const result = await getServiceById(targetYacht.id);
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe(targetYacht.name);
-      expect(result?.type).toBe("yacht");
-    });
-
-    it("should find mock item with categoryHint", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const targetJet = mockJets[0];
-      const result = await getServiceById(targetJet.id, "private-jet");
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe(targetJet.name);
-      expect(result?.type).toBe("private-jet");
-    });
-
-    it("should return null if service ID is not found in API or mock data", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null if service ID returns 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("Not found", 404, "Not Found"));
 
       const result = await getServiceById("non-existent-service-id-9999");
       expect(result).toBeNull();
+    });
+
+    it("should propagate ApiError on 500 error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("Server Error", 500, "Internal Server Error"));
+
+      await expect(getServiceById("err-id")).rejects.toThrow(ApiError);
     });
   });
 
@@ -250,18 +135,10 @@ describe("ConciergeService", () => {
       expect(result).toEqual(mockCustomJets);
     });
 
-    it("should fall back to specific mock category arrays when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API error"));
+    it("should propagate ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("API error", 500, "Internal Server Error"));
 
-      const yachts = await getOfferingsByCategory("yachts");
-      expect(yachts).toEqual(mockYachts);
-    });
-
-    it("should fall back to jet mock array for private jets", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API error"));
-
-      const jets = await getOfferingsByCategory("private-jets");
-      expect(jets).toEqual(mockJets);
+      await expect(getOfferingsByCategory("yachts")).rejects.toThrow(ApiError);
     });
   });
 
@@ -301,8 +178,8 @@ describe("ConciergeService", () => {
       expect(result.id).toBe("enq-12345");
     });
 
-    it("should fall back gracefully if API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network down"));
+    it("should propagate ApiError when enquiry API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new ApiError("Server error", 500, "Internal Server Error"));
 
       const payload: ConciergeEnquiryPayload = {
         name: "Elena Rostova",
@@ -310,29 +187,7 @@ describe("ConciergeService", () => {
         experience_type: "Helicopter Tour",
       };
 
-      const result = await submitConciergeEnquiry(payload);
-      expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
-    });
-
-    it("should post to form_endpoint fallback if provided and API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("API down"));
-      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("OK"));
-
-      const payload: ConciergeEnquiryPayload = {
-        name: "Test User",
-        email: "test@example.com",
-        form_endpoint: "https://formspree.io/f/example",
-      };
-
-      const result = await createEnquiry(payload);
-      expect(fetchSpy).toHaveBeenCalledWith(
-        "https://formspree.io/f/example",
-        expect.objectContaining({
-          method: "POST",
-        })
-      );
-      expect(result.success).toBe(true);
+      await expect(submitConciergeEnquiry(payload)).rejects.toThrow(ApiError);
     });
   });
 
@@ -346,7 +201,6 @@ describe("ConciergeService", () => {
 
       const payload: CreateConciergeBookingPayload = {
         item_id: "yacht-001",
-        user_id: "usr-42",
         service_type: "yacht",
         total_price: 1500,
         currency: "EUR",
@@ -355,78 +209,119 @@ describe("ConciergeService", () => {
       };
 
       const result = await createBooking(payload);
-      expect(apiClient.post).toHaveBeenCalledWith("/bookings", payload);
+      expect(apiClient.post).toHaveBeenCalledWith("/bookings", {
+        item_id: "yacht-001",
+        check_in: "2026-09-10",
+        check_out: "2026-09-11",
+        guests: 6,
+        item_type: "service",
+        message: undefined,
+        payment_method: undefined,
+      });
       expect(result.success).toBe(true);
       expect(result.bookingId).toBe("bk-999");
       expect(result.id).toBe("bk-999");
     });
 
-    it("should fall back gracefully on API error and generate a booking ID", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Booking service unavailable"));
+    it("should propagate ApiError on booking API failure without synthesizing fake IDs", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new ApiError("Booking unavailable", 500, "Internal Server Error"));
 
       const payload: CreateConciergeBookingPayload = {
         item_id: "jet-001",
         total_price: 5000,
       };
 
-      const result = await createBooking(payload);
-      expect(result.success).toBe(true);
-      expect(result.bookingId).toMatch(/^bk-/);
+      await expect(createBooking(payload)).rejects.toThrow(ApiError);
     });
   });
 
   describe("Category Convenience Getters", () => {
-    it("getYachts should return mock yachts and filter by type if provided", async () => {
+    it("getYachts should call API for yachts and filter by type if provided", async () => {
+      const mockYachtsList = [
+        { id: "y-1", name: "Gulet 1", type: "Gulet" },
+        { id: "y-2", name: "Motor 1", type: "Motor Yacht" },
+      ];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockYachtsList);
+
       const allYachts = await getYachts();
-      expect(allYachts.length).toBe(mockYachts.length);
+      expect(allYachts).toHaveLength(2);
 
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockYachtsList);
       const motorYachts = await getYachts("Motor Yacht");
-      expect(motorYachts.every((y) => y.type.toLowerCase() === "motor yacht")).toBe(true);
+      expect(motorYachts).toHaveLength(1);
+      expect(motorYachts[0].id).toBe("y-2");
     });
 
-    it("getPrivateJets should return mock jets", async () => {
+    it("getPrivateJets should call API for private jets", async () => {
+      const mockJetsList = [{ id: "j-1", name: "Jet 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockJetsList);
+
       const jets = await getPrivateJets();
-      expect(jets).toEqual(mockJets);
+      expect(jets).toHaveLength(1);
     });
 
-    it("getHelicopterTours should return mock helicopter tours", async () => {
+    it("getHelicopterTours should call API for helicopter tours", async () => {
+      const mockToursList = [{ id: "h-1", name: "Heli 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockToursList);
+
       const tours = await getHelicopterTours();
-      expect(tours).toEqual(mockHelicopterTours);
+      expect(tours).toHaveLength(1);
     });
 
-    it("getPersonalChefs should return mock chefs", async () => {
+    it("getPersonalChefs should call API for personal chefs", async () => {
+      const mockChefsList = [{ id: "c-1", name: "Chef 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockChefsList);
+
       const chefs = await getPersonalChefs();
-      expect(chefs).toEqual(mockChefs);
+      expect(chefs).toHaveLength(1);
     });
 
-    it("getPersonalDrivers should return mock drivers", async () => {
+    it("getPersonalDrivers should call API for drivers", async () => {
+      const mockDriversList = [{ id: "d-1", name: "Driver 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockDriversList);
+
       const drivers = await getPersonalDrivers();
-      expect(drivers).toEqual(mockDrivers);
+      expect(drivers).toHaveLength(1);
     });
 
-    it("getPersonalShoppers should return mock shoppers", async () => {
+    it("getPersonalShoppers should call API for shoppers", async () => {
+      const mockShoppersList = [{ id: "s-1", name: "Shopper 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockShoppersList);
+
       const shoppers = await getPersonalShoppers();
-      expect(shoppers).toEqual(mockShoppers);
+      expect(shoppers).toHaveLength(1);
     });
 
-    it("getWineTastings should return mock wine tastings", async () => {
+    it("getWineTastings should call API for wine tastings", async () => {
+      const mockTastingsList = [{ id: "w-1", name: "Wine 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockTastingsList);
+
       const tastings = await getWineTastings();
-      expect(tastings).toEqual(mockWineTastings);
+      expect(tastings).toHaveLength(1);
     });
 
-    it("getHammamSpaExperiences should return mock hammam spas", async () => {
+    it("getHammamSpaExperiences should call API for hammam spas", async () => {
+      const mockSpaList = [{ id: "spa-1", name: "Hammam 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockSpaList);
+
       const spa = await getHammamSpaExperiences();
-      expect(spa).toEqual(mockHammamSpa);
+      expect(spa).toHaveLength(1);
     });
 
-    it("getGolfVacations should return mock golf vacations", async () => {
+    it("getGolfVacations should call API for golf vacations", async () => {
+      const mockGolfList = [{ id: "g-1", name: "Golf 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockGolfList);
+
       const golf = await getGolfVacations();
-      expect(golf).toEqual(mockGolf);
+      expect(golf).toHaveLength(1);
     });
 
-    it("getPhotographyExcursions should return mock photography excursions", async () => {
+    it("getPhotographyExcursions should call API for photography excursions", async () => {
+      const mockPhotoList = [{ id: "p-1", name: "Photo 1" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockPhotoList);
+
       const photo = await getPhotographyExcursions();
-      expect(photo).toEqual(mockPhotography);
+      expect(photo).toHaveLength(1);
     });
 
     it("getLuxuryExperiences should return luxury experiences list", () => {

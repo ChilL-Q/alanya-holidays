@@ -2,14 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { DirectoryService } from './directory.service';
 import { DirectoryRepository } from './directory.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { DirectoryController } from './directory.controller';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from './types/directory.types';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('Empirical Adversarial Verification: Directory Listing Drafts System', () => {
   let service: DirectoryService;
   let controller: DirectoryController;
+  let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: {
     getDirectoryListings: jest.Mock;
     searchDirectoryListings: jest.Mock;
@@ -20,7 +22,6 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
     getDirectoryListingBySlug: jest.Mock;
     getDirectoryListingById: jest.Mock;
     getDirectoryListingsByCategory: jest.Mock;
-    getUserRole: jest.Mock;
     updateListingStatus: jest.Mock;
     insertDirectoryListing: jest.Mock;
     updateDirectoryListing: jest.Mock;
@@ -49,6 +50,9 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
   const locId2 = '55555555-5555-4555-a555-555555555555';
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       getDirectoryListings: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       searchDirectoryListings: jest
@@ -61,7 +65,6 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
       getDirectoryListingBySlug: jest.fn(),
       getDirectoryListingById: jest.fn(),
       getDirectoryListingsByCategory: jest.fn().mockResolvedValue([]),
-      getUserRole: jest.fn(),
       updateListingStatus: jest.fn(),
       insertDirectoryListing: jest.fn(),
       updateDirectoryListing: jest.fn(),
@@ -90,6 +93,10 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
         {
           provide: RedisService,
@@ -587,7 +594,7 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
 
   describe('Controller Contract Verification', () => {
     it('POST /directory/draft delegates to service.saveDraft with auth user', async () => {
-      const req = { user: { id: userA } } as AuthenticatedRequest;
+      const user: AuthUser = { id: userA };
       const draftDto = {
         name: 'Controller Draft',
         category: 'hotels',
@@ -604,7 +611,7 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
         status: 'draft',
       });
 
-      const res = await controller.saveDraft(draftDto, req);
+      const res = await controller.saveDraft(draftDto, user);
       expect(res).toEqual(
         expect.objectContaining({
           id: draftId1,
@@ -615,7 +622,7 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
     });
 
     it('POST /directory/:id/publish delegates to service.publishDraft with auth user', async () => {
-      const req = { user: { id: userA } } as AuthenticatedRequest;
+      const user: AuthUser = { id: userA };
       const publishBody = {
         name: 'Controller Complete',
         category: 'hotels',
@@ -634,7 +641,7 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
         status: 'pending',
       });
 
-      const res = await controller.publishDraft(draftId1, publishBody, req);
+      const res = await controller.publishDraft(draftId1, publishBody, user);
       expect(res).toEqual(
         expect.objectContaining({
           id: draftId1,
@@ -644,12 +651,12 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
     });
 
     it('GET /directory/me/listings?status=draft passes filter to service', async () => {
-      const req = { user: { id: userA } } as AuthenticatedRequest;
+      const user: AuthUser = { id: userA };
       mockRepository.getMyDirectoryListings.mockResolvedValueOnce([
         { id: draftId1, status: 'draft', owner_user_id: userA },
       ]);
 
-      const res = await controller.getMyDirectoryListings(req, 'draft');
+      const res = await controller.getMyDirectoryListings(user, 'draft');
       expect(res).toEqual([
         expect.objectContaining({ id: draftId1, status: 'draft' }),
       ]);

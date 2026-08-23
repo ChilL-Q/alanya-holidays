@@ -14,7 +14,6 @@ export interface ReviewListResult {
 export interface IReviewsRepository {
   findById(id: string): Promise<ReviewEntity | null>;
   save(review: ReviewEntity): Promise<ReviewEntity>;
-  getUserRole(userId: string): Promise<string | undefined>;
   getListingReviews(
     listingId: string,
     from: number,

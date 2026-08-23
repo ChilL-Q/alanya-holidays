@@ -1,4 +1,4 @@
-import type { ForumEvent } from "@/mocks/events";
+import type { ForumEvent } from "@/api-services/events.service";
 
 interface CalendarStripProps {
   events: ForumEvent[];

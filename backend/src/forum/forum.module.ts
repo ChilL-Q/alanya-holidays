@@ -1,51 +1,32 @@
 import { Module } from '@nestjs/common';
 import { SupabaseModule } from '../supabase/supabase.module';
-import { ForumCategoriesController } from './controllers/forum-categories.controller';
-import { ForumPostsController } from './controllers/forum-posts.controller';
-import { ForumCommentsController } from './controllers/forum-comments.controller';
-import { ForumEventsController } from './controllers/forum-events.controller';
-import { ForumReportsController } from './controllers/forum-reports.controller';
-import { ForumStatsController } from './controllers/forum-stats.controller';
-
-import { ForumCategoriesService } from './services/forum-categories.service';
-import { ForumCategoriesRepository } from './repositories/forum-categories.repository';
-import { ForumPostsService } from './services/forum-posts.service';
-import { ForumPostsRepository } from './repositories/forum-posts.repository';
-import { ForumEventsService } from './services/forum-events.service';
-import { ForumEventsRepository } from './repositories/forum-events.repository';
-import { ForumReportsService } from './services/forum-reports.service';
-import { ForumReportsRepository } from './repositories/forum-reports.repository';
-import { ForumStatsService } from './services/forum-stats.service';
-import { ForumStatsRepository } from './repositories/forum-stats.repository';
+import { AuthModule } from '../auth/auth.module';
+import { ForumController } from './forum.controller';
+import { ForumModerationController } from './forum-moderation.controller';
+import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumEventService } from './application/forum-event.service';
+import { ForumReportService } from './application/forum-report.service';
+import { ForumRepository } from './forum.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 @Module({
-  imports: [SupabaseModule],
-  controllers: [
-    ForumCategoriesController,
-    ForumPostsController,
-    ForumCommentsController,
-    ForumEventsController,
-    ForumReportsController,
-    ForumStatsController,
-  ],
+  imports: [SupabaseModule, AuthModule],
+  controllers: [ForumController, ForumModerationController],
   providers: [
-    ForumCategoriesService,
-    ForumCategoriesRepository,
-    ForumPostsService,
-    ForumPostsRepository,
-    ForumEventsService,
-    ForumEventsRepository,
-    ForumReportsService,
-    ForumReportsRepository,
-    ForumStatsService,
-    ForumStatsRepository,
+    ForumRepository,
+    UserRolesRepository,
+    ForumDiscussionService,
+    ForumEventService,
+    ForumReportService,
+    ForumService,
   ],
   exports: [
-    ForumCategoriesService,
-    ForumPostsService,
-    ForumEventsService,
-    ForumReportsService,
-    ForumStatsService,
+    ForumRepository,
+    ForumDiscussionService,
+    ForumEventService,
+    ForumReportService,
+    ForumService,
   ],
 })
 export class ForumModule {}

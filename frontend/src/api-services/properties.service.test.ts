@@ -9,9 +9,30 @@ import {
   createBooking,
   mapBackendPropertyToPropertyItem,
   mapVillaToPropertyItem,
+  type Villa,
 } from "./properties.service";
-import { apiClient } from "@/lib/api-client";
-import { villas as mockVillas } from "@/mocks/villas";
+import { apiClient, ApiError } from "@/lib/api-client";
+
+const sampleVilla: Villa = {
+  id: "villa-001",
+  name: "Cleopatra Luxury Villa",
+  location: "Cleopatra Beach, Alanya",
+  bedrooms: 5,
+  bathrooms: 4,
+  maxGuests: 10,
+  pricePerNight: 450,
+  currency: "EUR",
+  hasPool: true,
+  hasSeaView: true,
+  image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914",
+  description: "Stunning cliffside luxury villa with private infinity pool.",
+  amenities: ["Infinity Pool", "Jacuzzi", "High-Speed WiFi", "Air Conditioning"],
+  rating: 4.9,
+  reviewCount: 38,
+  featured: true,
+  minStay: 3,
+  distanceToBeach: "150m",
+};
 
 describe("properties.service", () => {
   beforeEach(() => {
@@ -65,10 +86,10 @@ describe("properties.service", () => {
     it("should handle missing or fallback fields gracefully", () => {
       const mapped = mapBackendPropertyToPropertyItem({});
       expect(mapped.id).toBe("");
-      expect(mapped.title).toBe("Property");
+      expect(mapped.title).toBe("Alanya Property");
       expect(mapped.pricePerNight).toBe(0);
       expect(mapped.currency).toBe("EUR");
-      expect(mapped.maxGuests).toBe(1);
+      expect(mapped.maxGuests).toBe(2);
       expect(mapped.hasPool).toBe(false);
       expect(mapped.hasSeaView).toBe(false);
       expect(mapped.images).toEqual([]);
@@ -78,27 +99,26 @@ describe("properties.service", () => {
   });
 
   describe("mapVillaToPropertyItem", () => {
-    it("should map mock villa to PropertyItem format", () => {
-      const sample = mockVillas[0];
-      const mapped = mapVillaToPropertyItem(sample);
+    it("should map villa to PropertyItem format", () => {
+      const mapped = mapVillaToPropertyItem(sampleVilla);
 
-      expect(mapped.id).toBe(sample.id);
-      expect(mapped.title).toBe(sample.name);
-      expect(mapped.name).toBe(sample.name);
-      expect(mapped.location).toBe(sample.location);
-      expect(mapped.pricePerNight).toBe(sample.pricePerNight);
-      expect(mapped.bedrooms).toBe(sample.bedrooms);
-      expect(mapped.bathrooms).toBe(sample.bathrooms);
-      expect(mapped.maxGuests).toBe(sample.maxGuests);
-      expect(mapped.hasPool).toBe(sample.hasPool);
-      expect(mapped.hasSeaView).toBe(sample.hasSeaView);
-      expect(mapped.image).toBe(sample.image);
-      expect(mapped.amenities).toEqual(sample.amenities);
-      expect(mapped.rating).toBe(sample.rating);
-      expect(mapped.reviewCount).toBe(sample.reviewCount);
-      expect(mapped.featured).toBe(sample.featured);
-      expect(mapped.minStay).toBe(sample.minStay);
-      expect(mapped.distanceToBeach).toBe(sample.distanceToBeach);
+      expect(mapped.id).toBe(sampleVilla.id);
+      expect(mapped.title).toBe(sampleVilla.name);
+      expect(mapped.name).toBe(sampleVilla.name);
+      expect(mapped.location).toBe(sampleVilla.location);
+      expect(mapped.pricePerNight).toBe(sampleVilla.pricePerNight);
+      expect(mapped.bedrooms).toBe(sampleVilla.bedrooms);
+      expect(mapped.bathrooms).toBe(sampleVilla.bathrooms);
+      expect(mapped.maxGuests).toBe(sampleVilla.maxGuests);
+      expect(mapped.hasPool).toBe(sampleVilla.hasPool);
+      expect(mapped.hasSeaView).toBe(sampleVilla.hasSeaView);
+      expect(mapped.image).toBe(sampleVilla.image);
+      expect(mapped.amenities).toEqual(sampleVilla.amenities);
+      expect(mapped.rating).toBe(sampleVilla.rating);
+      expect(mapped.reviewCount).toBe(sampleVilla.reviewCount);
+      expect(mapped.featured).toBe(sampleVilla.featured);
+      expect(mapped.minStay).toBe(sampleVilla.minStay);
+      expect(mapped.distanceToBeach).toBe(sampleVilla.distanceToBeach);
     });
   });
 
@@ -155,40 +175,12 @@ describe("properties.service", () => {
       expect(result.total).toBe(1);
     });
 
-    it("should fall back to mock villas when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Connection error"));
+    it("should propagate ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Connection error", 500, "Internal Server Error")
+      );
 
-      const result = await getProperties();
-      expect(result.data).toHaveLength(mockVillas.length);
-      expect(result.total).toBe(mockVillas.length);
-      expect(result.data[0].id).toBe(mockVillas[0].id);
-    });
-
-    it("should filter mock fallback by location, price, bedrooms, and amenities", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
-
-      const result = await getProperties({
-        location: "Mahmutlar",
-        minPrice: 400,
-        bedrooms: 4,
-        hasPool: true,
-      });
-
-      expect(result.data.length).toBeGreaterThan(0);
-      expect(result.data.every((p) => p.location?.includes("Mahmutlar"))).toBe(true);
-      expect(result.data.every((p) => (p.pricePerNight ?? 0) >= 400)).toBe(true);
-      expect(result.data.every((p) => (p.bedrooms ?? 0) >= 4)).toBe(true);
-      expect(result.data.every((p) => p.hasPool === true)).toBe(true);
-      expect(result.total).toBe(result.data.length);
-    });
-
-    it("should support pagination in fallback mode", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
-
-      const result = await getProperties({ page: 2, limit: 3 });
-      expect(result.data).toHaveLength(3);
-      expect(result.total).toBe(mockVillas.length);
-      expect(result.data[0].id).toBe(mockVillas[3].id);
+      await expect(getProperties()).rejects.toThrow(ApiError);
     });
   });
 
@@ -212,20 +204,21 @@ describe("properties.service", () => {
       expect(result?.pricePerNight).toBe(1200);
     });
 
-    it("should fall back to mock villa by ID when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const result = await getProperty("villa-001");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("villa-001");
-      expect(result?.title).toBe(mockVillas[0].name);
-    });
-
-    it("should return null if not found in mock fallback", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const result = await getProperty("non-existent-id");
       expect(result).toBeNull();
+    });
+
+    it("should propagate ApiError on 500", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Server error", 500, "Internal Server Error")
+      );
+
+      await expect(getProperty("err-id")).rejects.toThrow(ApiError);
     });
   });
 
@@ -250,12 +243,12 @@ describe("properties.service", () => {
       expect(result[0].id).toBe("prop-avail-1");
     });
 
-    it("should fall back to mock villas when POST /properties/available fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("API Error"));
+    it("should throw ApiError when POST /properties/available fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("API Error", 500, "Internal Server Error")
+      );
 
-      const result = await getAvailableProperties("2026-07-01", "2026-07-07");
-      expect(result).toHaveLength(mockVillas.length);
-      expect(result[0].id).toBe(mockVillas[0].id);
+      await expect(getAvailableProperties("2026-07-01", "2026-07-07")).rejects.toThrow(ApiError);
     });
   });
 
@@ -281,24 +274,6 @@ describe("properties.service", () => {
       const available = await checkAvailability("villa-001", "2026-07-01", "2026-07-03");
       expect(available).toBe(false);
     });
-
-    it("should try /bookings/conflict when /properties/:id/availability fails and return conflict status", async () => {
-      vi.spyOn(apiClient, "get")
-        .mockRejectedValueOnce(new Error("404 Not Found"))
-        .mockResolvedValueOnce({ has_conflict: true });
-
-      const available = await checkAvailability("villa-001", "2026-07-01", "2026-07-03");
-      expect(available).toBe(false);
-    });
-
-    it("should gracefully default to true when all availability APIs fail", async () => {
-      vi.spyOn(apiClient, "get")
-        .mockRejectedValueOnce(new Error("Failed 1"))
-        .mockRejectedValueOnce(new Error("Failed 2"));
-
-      const available = await checkAvailability("villa-001", "2026-07-01", "2026-07-03");
-      expect(available).toBe(true);
-    });
   });
 
   describe("getPropertyTypes", () => {
@@ -311,8 +286,10 @@ describe("properties.service", () => {
       expect(types).toEqual(mockTypes);
     });
 
-    it("should fall back to default types list when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
+    it("should return default types when API returns 404", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const types = await getPropertyTypes();
       expect(types).toContain("villa");
@@ -345,7 +322,6 @@ describe("properties.service", () => {
         item_id: "villa-001",
         check_in: "2026-08-01",
         check_out: "2026-08-07",
-        total_price: 2520,
         guests: 4,
         item_type: "property",
       }));
@@ -353,8 +329,10 @@ describe("properties.service", () => {
       expect(result.bookingId).toBe("bk-999");
     });
 
-    it("should generate a fallback booking confirmation when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Booking service offline"));
+    it("should throw ApiError when createBooking fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Booking service offline", 500, "Internal Server Error")
+      );
 
       const payload = {
         propertyId: "villa-002",
@@ -363,9 +341,7 @@ describe("properties.service", () => {
         totalPrice: 1120,
       };
 
-      const result = await createBooking(payload);
-      expect(result.success).toBe(true);
-      expect(result.bookingId).toMatch(/^bk-\d+/);
+      await expect(createBooking(payload)).rejects.toThrow(ApiError);
     });
   });
 });

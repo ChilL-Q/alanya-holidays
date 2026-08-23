@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Compass, Calendar, Users, MapPin, AlertCircle, RefreshCw, ChevronRight, XCircle, CheckCircle2, Clock } from "lucide-react";
 import { bookingsService, type BookingItem } from "@/api-services/bookings.service";
+import { logger } from "@/lib/logger";
 
 export function BookingsList() {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
@@ -17,7 +18,7 @@ export function BookingsList() {
       const data = await bookingsService.getUserBookings();
       setBookings(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      console.error("Failed to load user bookings:", err);
+      logger.error("Failed to load user bookings:", err);
       setError("Unable to load bookings. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ export function BookingsList() {
         setActionMessage({ text: res.message || "Could not cancel booking.", type: "error" });
       }
     } catch (err: unknown) {
-      console.error("Cancel booking error:", err);
+      logger.error("Cancel booking error:", err);
       setActionMessage({ text: "An error occurred while cancelling the booking.", type: "error" });
     } finally {
       setCancellingId(null);

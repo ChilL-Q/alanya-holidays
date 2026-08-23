@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../../supabase/supabase.service';
 import {
   IReviewsRepository,
@@ -12,6 +12,8 @@ const UUID_RE =
 
 @Injectable()
 export class SupabaseReviewsRepository implements IReviewsRepository {
+  private readonly logger = new Logger(SupabaseReviewsRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -74,23 +76,6 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
   // ============================================
   // Query & Direct Persistence Methods
   // ============================================
-
-  async getUserRole(userId: string): Promise<string | undefined> {
-    if (!UUID_RE.test(userId)) {
-      return undefined;
-    }
-
-    const { data, error } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error && error.code !== 'PGRST116' && error.code !== '22P02') {
-      console.error('getUserRole error:', error);
-    }
-    return (data?.role as string) || undefined;
-  }
 
   async getListingReviews(
     listingId: string,
@@ -162,7 +147,10 @@ export class SupabaseReviewsRepository implements IReviewsRepository {
       .maybeSingle();
 
     if (error && error.code !== 'PGRST116' && error.code !== '22P02') {
-      console.error('getUserReviewForListing error:', error);
+      this.logger.error(
+        'getUserReviewForListing error:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
     }
     return data || null;
   }

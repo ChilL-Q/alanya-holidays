@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
   ChatConversationEntity,
@@ -10,6 +10,8 @@ import {
 
 @Injectable()
 export class MessagesRepository {
+  private readonly logger = new Logger(MessagesRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -198,6 +200,64 @@ export class MessagesRepository {
   > {
     if (!conversationIds.length) return {};
 
+    const result: Record<
+      string,
+      { last_message: ChatMessageEntity | null; unread_count: number }
+    > = {};
+    for (const id of conversationIds) {
+      result[id] = { last_message: null, unread_count: 0 };
+    }
+
+    // Fast Path: Single-query RPC using DISTINCT ON & COUNT FILTER (O(1) network transfer)
+    try {
+      interface ChatRpcRow {
+        conversation_id: string;
+        last_message_id: string | null;
+        last_message_sender_id: string | null;
+        last_message_content: string | null;
+        last_message_is_read: boolean | null;
+        last_message_created_at: string | null;
+        unread_count: number | string | null;
+      }
+
+      const response = (await this.client.rpc(
+        'get_conversations_last_and_unread',
+        {
+          p_conversation_ids: conversationIds,
+          p_user_id: currentUserId,
+        },
+      )) as {
+        data: ChatRpcRow[] | null;
+        error: { message: string } | null;
+      };
+
+      if (
+        !response.error &&
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
+        for (const row of response.data) {
+          result[row.conversation_id] = {
+            last_message: row.last_message_id
+              ? {
+                  id: row.last_message_id,
+                  conversation_id: row.conversation_id,
+                  sender_id: row.last_message_sender_id || '',
+                  content: row.last_message_content || '',
+                  is_read: Boolean(row.last_message_is_read),
+                  created_at: row.last_message_created_at || '',
+                }
+              : null,
+            unread_count: Number(row.unread_count) || 0,
+          };
+        }
+        return result;
+      }
+    } catch {
+      // Graceful fallback for mock environments or legacy replicas
+    }
+
+    // Fallback: Batched dual queries
     const [messagesRes, unreadRes] = await Promise.all([
       this.client
         .from('chat_messages')
@@ -211,14 +271,6 @@ export class MessagesRepository {
         .neq('sender_id', currentUserId)
         .eq('is_read', false),
     ]);
-
-    const result: Record<
-      string,
-      { last_message: ChatMessageEntity | null; unread_count: number }
-    > = {};
-    for (const id of conversationIds) {
-      result[id] = { last_message: null, unread_count: 0 };
-    }
 
     if (messagesRes.data) {
       for (const msg of messagesRes.data as unknown as ChatMessageEntity[]) {
@@ -256,6 +308,11 @@ export class MessagesRepository {
   invokeEmailFunction(payload: Record<string, unknown>): void {
     this.client.functions
       .invoke('send-email', { body: payload })
-      .catch((err: unknown) => console.error('Failed to send email:', err));
+      .catch((err: unknown) => {
+        this.logger.error(
+          'Failed to send email',
+          err instanceof Error ? err.stack : undefined,
+        );
+      });
   }
 }

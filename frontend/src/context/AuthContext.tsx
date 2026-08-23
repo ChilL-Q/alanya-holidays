@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 import type { User, Session, AuthError, Provider } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { apiClient } from "../lib/api-client";
 import type { Tables } from "@alanya-holidays/shared";
+import { logger } from "@/lib/logger";
 
 export type UserProfile = Tables<"profiles">;
 
@@ -86,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (error) {
-        console.warn("Could not fetch user profile from Supabase:", error.message);
+        logger.warn("Could not fetch user profile from Supabase:", error.message);
       }
 
       if (data) {
@@ -99,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return null;
     } catch (err: unknown) {
-      console.warn("Unexpected error fetching profile:", err);
+      logger.warn("Unexpected error fetching profile:", err);
       if (authUser) {
         return createFallbackProfile(authUser);
       }
@@ -123,7 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data, error } = await supabase.auth.getSession();
         if (error) {
-          console.warn("Error getting initial Supabase session:", error.message);
+          logger.warn("Error getting initial Supabase session:", error.message);
         }
 
         if (!isMounted) return;
@@ -141,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(null);
         }
       } catch (err: unknown) {
-        console.error("Auth initialization failed:", err);
+        logger.error("Auth initialization failed:", err);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -226,6 +228,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const signOut = useCallback(async () => {
+    // Best-effort: purge the server-side token cache (audit 1.6) before the
+    // Supabase session is destroyed. Logout must succeed even if the API is down.
+    try {
+      await apiClient.post("/auth/logout");
+    } catch {
+      // ignore — local sign-out proceeds regardless
+    }
     const { error } = await supabase.auth.signOut();
     setSession(null);
     setUser(null);

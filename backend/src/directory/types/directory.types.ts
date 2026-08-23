@@ -1,17 +1,3 @@
-import { Request } from 'express';
-
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser;
-  [key: string]: unknown;
-}
-
 export interface DirectoryListingRecord {
   id: string;
   name?: string;

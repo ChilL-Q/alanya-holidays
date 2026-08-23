@@ -2,29 +2,34 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { REVIEWS_REPOSITORY } from './domain/repositories/reviews.repository.interface';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('ReviewsService', () => {
   let service: ReviewsService;
+  let mockUserRolesRepo: {
+    getRole: jest.Mock;
+  };
   let mockRepository: {
     findById: jest.Mock;
     save: jest.Mock;
     getListingReviews: jest.Mock;
     insertListingReview: jest.Mock;
     getUserReviewForListing: jest.Mock;
-    getUserRole: jest.Mock;
     getReviewsByStatus: jest.Mock;
     updateReviewStatus: jest.Mock;
     deleteReview: jest.Mock;
   };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       findById: jest.fn(),
       save: jest.fn(),
       getListingReviews: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       insertListingReview: jest.fn().mockResolvedValue({ id: 'r-1' }),
       getUserReviewForListing: jest.fn().mockResolvedValue(null),
-      getUserRole: jest.fn(),
       getReviewsByStatus: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       updateReviewStatus: jest.fn().mockResolvedValue(undefined),
       deleteReview: jest.fn().mockResolvedValue(undefined),
@@ -36,6 +41,10 @@ describe('ReviewsService', () => {
         {
           provide: REVIEWS_REPOSITORY,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
       ],
     }).compile();
@@ -176,7 +185,7 @@ describe('ReviewsService', () => {
 
   describe('getPendingReviews', () => {
     it('should throw UnauthorizedException if caller is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(service.getPendingReviews(1, 50, 'user-1')).rejects.toThrow(
         UnauthorizedException,
@@ -184,7 +193,7 @@ describe('ReviewsService', () => {
     });
 
     it('should fetch pending reviews if caller is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getReviewsByStatus.mockResolvedValueOnce({
         data: [{ id: 'p1' }],
         count: 1,
@@ -203,7 +212,7 @@ describe('ReviewsService', () => {
 
   describe('getReviewsByStatus', () => {
     it('should throw UnauthorizedException if caller is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.getReviewsByStatus('approved', 1, 50, 'user-1'),
@@ -211,7 +220,7 @@ describe('ReviewsService', () => {
     });
 
     it('should fetch reviews by status if caller is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getReviewsByStatus.mockResolvedValueOnce({
         data: [{ id: 'a1' }],
         count: 1,
@@ -238,7 +247,7 @@ describe('ReviewsService', () => {
     const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
 
     it('should throw UnauthorizedException if caller is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.approveReview(validReviewId, 'user-1'),
@@ -246,7 +255,7 @@ describe('ReviewsService', () => {
     });
 
     it('should call repository updateReviewStatus when caller is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.approveReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
@@ -257,7 +266,7 @@ describe('ReviewsService', () => {
     });
 
     it('should return success false without calling repository when review id is not a valid UUID', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.approveReview('invalid-rev-id', validAdminId);
       expect(res).toEqual({ success: false });
@@ -270,7 +279,7 @@ describe('ReviewsService', () => {
     const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
 
     it('should throw UnauthorizedException if caller is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.rejectReview(validReviewId, 'user-1'),
@@ -278,7 +287,7 @@ describe('ReviewsService', () => {
     });
 
     it('should call repository updateReviewStatus with rejected when caller is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.rejectReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
@@ -289,7 +298,7 @@ describe('ReviewsService', () => {
     });
 
     it('should return success false without calling repository when review id is not a valid UUID', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.rejectReview('invalid-rev-id', validAdminId);
       expect(res).toEqual({ success: false });
@@ -302,7 +311,7 @@ describe('ReviewsService', () => {
     const validAdminId = '223e4567-e89b-12d3-a456-426614174001';
 
     it('should throw UnauthorizedException if caller is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.deleteReview(validReviewId, 'user-1'),
@@ -310,7 +319,7 @@ describe('ReviewsService', () => {
     });
 
     it('should call repository deleteReview when caller is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.deleteReview(validReviewId, validAdminId);
       expect(res).toEqual({ success: true });
@@ -318,7 +327,7 @@ describe('ReviewsService', () => {
     });
 
     it('should return success false without calling repository when review id is not a valid UUID', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const res = await service.deleteReview('invalid-rev-id', validAdminId);
       expect(res).toEqual({ success: false });

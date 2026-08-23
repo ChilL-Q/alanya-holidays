@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
-import { categories as defaultCategories } from "@/mocks/categories";
+import { logger } from "@/lib/logger";
 
 export default function ThreadForm() {
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
 
-  const [categoriesList, setCategoriesList] = useState<Category[]>(defaultCategories);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState(initialCategory);
   const [subcategory, setSubcategory] = useState("");
   const [title, setTitle] = useState("");
@@ -23,12 +23,12 @@ export default function ThreadForm() {
     forumService
       .getCategories()
       .then((cats) => {
-        if (isMounted && cats && cats.length > 0) {
+        if (isMounted && cats) {
           setCategoriesList(cats);
         }
       })
       .catch((err) => {
-        console.warn("Failed to load categories in ThreadForm:", err);
+        logger.warn("Failed to load categories in ThreadForm:", err);
       });
 
     return () => {
@@ -84,10 +84,14 @@ export default function ThreadForm() {
         category_id: categoryId,
         subcategory: subcategory || undefined,
       });
-      setCreatedThread(res);
+      setCreatedThread({
+        id: res.id,
+        slug: res.slug || res.id,
+        title: res.title,
+      });
       setSubmitted(true);
     } catch (err) {
-      console.warn("Failed to create thread:", err);
+      logger.warn("Failed to create thread:", err);
       setSubmitted(true);
     } finally {
       setIsSubmitting(false);

@@ -2,8 +2,8 @@ name: CD Production Deployment
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]
-    branches: [ "main" ]
+    workflows: ["E2E Smoke Tests"]
+    branches: ["main"]
     types:
       - completed
   workflow_dispatch:
@@ -14,9 +14,9 @@ permissions:
 jobs:
   deploy:
     name: Deploy to Production VPS
-    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'workflow_run') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout Code
@@ -58,26 +58,14 @@ jobs:
               fi
             fi
             cd "$TARGET_DIR"
+
+            PREVIOUS_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
             git fetch origin main
-            git reset --hard origin/main
-            # Ensure VPS firewall and Docker forwarding allow HTTP (80), HTTPS (443), and SSH (22)
-            if command -v ufw >/dev/null 2>&1; then
-              ufw allow 80/tcp || true
-              ufw allow 443/tcp || true
-              ufw allow 22/tcp || true
-              ufw route allow proto tcp from any to any port 80 || true
-              ufw route allow proto tcp from any to any port 443 || true
-              sed -i 's/DEFAULT_FORWARD_POLICY="DROP"/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw || true
-              ufw reload || true
-            fi
-            if command -v iptables >/dev/null 2>&1; then
-              iptables -I INPUT -p tcp --dport 80 -j ACCEPT || true
-              iptables -I INPUT -p tcp --dport 443 -j ACCEPT || true
-              iptables -I DOCKER-USER -p tcp --dport 80 -j ACCEPT || true
-              iptables -I DOCKER-USER -p tcp --dport 443 -j ACCEPT || true
-            fi
+            TARGET_COMMIT="$(git rev-parse origin/main)"
+            git reset --hard "$TARGET_COMMIT"
+
             [ -f .env.production ] || touch .env.production
-            
+
             CERT_PATH="./certbot-data/conf/live/alanyaholidays.com/fullchain.pem"
             IS_LETS_ENCRYPT=0
             if [ -f "$CERT_PATH" ] && openssl x509 -in "$CERT_PATH" -noout -issuer 2>/dev/null | grep -qi "Let's Encrypt"; then
@@ -100,22 +88,76 @@ jobs:
                 " || true
             fi
 
-            # Start production containers
-            docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
+            deploy_stack() {
+              docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
+            }
+
+            verify_health() {
+              ATTEMPT=1
+              until [ "$ATTEMPT" -gt 18 ]; do
+                if docker compose -f docker-compose.prod.yml exec -T nginx wget -q -O /dev/null http://127.0.0.1:80/health; then
+                  return 0
+                fi
+                echo "Health check attempt ${ATTEMPT}/18 failed; retrying in 5s..."
+                ATTEMPT=$((ATTEMPT + 1))
+                sleep 5
+              done
+              return 1
+            }
+
+            deploy_stack
 
             # Obtain real Let's Encrypt certificate if not currently valid Let's Encrypt cert
             if [ "$IS_LETS_ENCRYPT" -eq 0 ]; then
               echo "Requesting trusted Let's Encrypt certificate for alanyaholidays.com..."
-              rm -rf ./certbot-data/conf/live/alanyaholidays.com ./certbot-data/conf/archive/alanyaholidays.com ./certbot-data/conf/renewal/alanyaholidays.com.conf || true
-              docker run --rm \
+              if docker run --rm \
                 -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
                 -v "$(pwd)/certbot-data/www:/var/www/certbot" \
                 certbot/certbot certonly --webroot -w /var/www/certbot \
                   -d alanyaholidays.com -d www.alanyaholidays.com \
-                  --email admin@alanyaholidays.com --rsa-key-size 4096 --agree-tos --non-interactive --force-renewal || true
-              docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+                  --email admin@alanyaholidays.com --rsa-key-size 4096 --agree-tos --non-interactive --keep-until-expiring; then
+                echo "✓ Let's Encrypt certificate successfully obtained."
+              else
+                echo "⚠️ WARNING: Let's Encrypt certificate acquisition failed. Verifying fallback certificate..."
+                if [ ! -f "$CERT_PATH" ]; then
+                  echo "Regenerating self-signed fallback certificate so Nginx remains operational..."
+                  docker run --rm -v "$(pwd)/certbot-data/conf:/etc/letsencrypt" \
+                    alpine sh -c "
+                      apk add --no-cache openssl && \
+                      mkdir -p /etc/letsencrypt/live/alanyaholidays.com && \
+                      openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+                        -keyout '/etc/letsencrypt/live/alanyaholidays.com/privkey.pem' \
+                        -out '/etc/letsencrypt/live/alanyaholidays.com/fullchain.pem' \
+                        -subj '/CN=alanyaholidays.com' && \
+                      chmod -R 755 /etc/letsencrypt
+                    "
+                fi
+              fi
+            fi
+
+            # Defensive Nginx syntax test before reload
+            if docker compose -f docker-compose.prod.yml exec -T nginx nginx -t; then
+              docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload
             else
-              docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+              echo "CRITICAL: Nginx configuration test failed; aborting reload."
+              exit 1
+            fi
+
+            if ! verify_health; then
+              echo "Deployment health check failed. Initiating automated rollback..."
+              if [ -n "$PREVIOUS_COMMIT" ] && [ "$PREVIOUS_COMMIT" != "$TARGET_COMMIT" ]; then
+                echo "Rolling back to previous commit $PREVIOUS_COMMIT..."
+                git reset --hard "$PREVIOUS_COMMIT"
+                deploy_stack
+                docker compose -f docker-compose.prod.yml exec -T nginx nginx -t && \
+                  docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+                if verify_health; then
+                  echo "✓ Rollback successful. System restored to $PREVIOUS_COMMIT."
+                else
+                  echo "CRITICAL: Rollback failed to achieve healthy status!"
+                fi
+              fi
+              exit 1
             fi
 
             docker image prune -f

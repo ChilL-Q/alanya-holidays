@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface ConciergeEnquiry {
   id: number;
@@ -172,7 +173,7 @@ class AdminService {
       }
       return [];
     } catch (err) {
-      console.warn("Failed to fetch enquiries from API:", err);
+      logger.warn("Failed to fetch enquiries from API:", err);
       return [];
     }
   }
@@ -185,7 +186,7 @@ class AdminService {
       await apiClient.patch(`/admin/enquiries/${id}/status`, { status });
       return true;
     } catch (err) {
-      console.error("Failed to update enquiry status:", err);
+      logger.error("Failed to update enquiry status:", err);
       return false;
     }
   }
@@ -198,7 +199,7 @@ class AdminService {
       await apiClient.patch(`/admin/enquiries/${id}/assign`, { assigned_to: assignedTo });
       return true;
     } catch (err) {
-      console.error("Failed to assign enquiry:", err);
+      logger.error("Failed to assign enquiry:", err);
       return false;
     }
   }
@@ -230,7 +231,7 @@ class AdminService {
         message: res?.message || "Enquiry submitted successfully",
       };
     } catch (err) {
-      console.warn("Failed to submit enquiry via API, using fallback:", err);
+      logger.warn("Failed to submit enquiry via API, using fallback:", err);
       return {
         success: true,
         id: Date.now(),
@@ -270,7 +271,7 @@ class AdminService {
       }
       return [];
     } catch (err) {
-      console.warn("Failed to fetch moderation listings:", err);
+      logger.warn("Failed to fetch moderation listings:", err);
       return [];
     }
   }
@@ -283,7 +284,7 @@ class AdminService {
       await apiClient.post(`/directory/${id}/approve`);
       return true;
     } catch (err) {
-      console.error("Failed to approve listing:", err);
+      logger.error("Failed to approve listing:", err);
       return false;
     }
   }
@@ -296,7 +297,7 @@ class AdminService {
       await apiClient.post(`/directory/${id}/reject`, { reason });
       return true;
     } catch (err) {
-      console.error("Failed to reject listing:", err);
+      logger.error("Failed to reject listing:", err);
       return false;
     }
   }
@@ -309,7 +310,7 @@ class AdminService {
       await apiClient.delete(`/directory/${id}`);
       return true;
     } catch (err) {
-      console.error("Failed to delete listing:", err);
+      logger.error("Failed to delete listing:", err);
       return false;
     }
   }
@@ -337,7 +338,7 @@ class AdminService {
       }
       return list;
     } catch (err) {
-      console.warn("Failed to fetch claims queue:", err);
+      logger.warn("Failed to fetch claims queue:", err);
       return [];
     }
   }
@@ -350,7 +351,7 @@ class AdminService {
       await apiClient.post(`/directory/claims/${claimId}/approve`);
       return true;
     } catch (err) {
-      console.error("Failed to approve claim:", err);
+      logger.error("Failed to approve claim:", err);
       return false;
     }
   }
@@ -363,7 +364,7 @@ class AdminService {
       await apiClient.post(`/directory/claims/${claimId}/reject`, { reason });
       return true;
     } catch (err) {
-      console.error("Failed to reject claim:", err);
+      logger.error("Failed to reject claim:", err);
       return false;
     }
   }
@@ -381,7 +382,7 @@ class AdminService {
       }
       throw new Error("Invalid analytics payload format");
     } catch (err) {
-      console.warn("Failed to fetch platform analytics, using fallback:", err);
+      logger.warn("Failed to fetch platform analytics, using fallback:", err);
       return {
         kpiSummary: {
           totalViews: 0,
@@ -440,7 +441,7 @@ class AdminService {
       }
       return [];
     } catch (err) {
-      console.warn("Failed to fetch content submissions, using fallback:", err);
+      logger.warn("Failed to fetch content submissions, using fallback:", err);
       return [];
     }
   }
@@ -453,7 +454,7 @@ class AdminService {
       await apiClient.patch(`/blog/submissions/${id}/approve`);
       return true;
     } catch (err) {
-      console.error("Failed to approve content submission:", err);
+      logger.error("Failed to approve content submission:", err);
       return false;
     }
   }
@@ -466,7 +467,7 @@ class AdminService {
       await apiClient.patch(`/blog/submissions/${id}/reject`, { reason });
       return true;
     } catch (err) {
-      console.error("Failed to reject content submission:", err);
+      logger.error("Failed to reject content submission:", err);
       return false;
     }
   }

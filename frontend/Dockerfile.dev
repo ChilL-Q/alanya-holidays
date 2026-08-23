@@ -1,7 +1,11 @@
 FROM node:20-alpine
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json shared/
+COPY frontend/package.json frontend/
+RUN pnpm install --filter @alanya-holidays/frontend... --no-frozen-lockfile
 COPY . .
 EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host"]
+WORKDIR /app/frontend
+CMD ["pnpm", "run", "dev", "--", "--host"]

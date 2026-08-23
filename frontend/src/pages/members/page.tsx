@@ -1,21 +1,51 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { members } from "@/mocks/members";
-import { forumStats } from "@/mocks/stats";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import MemberHero from "./components/MemberHero";
 import MemberCard from "./components/MemberCard";
 import MemberFilters from "./components/MemberFilters";
+import { forumService, type ForumMember } from "@/api-services/forum.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
+
+const topCountries = [
+  { name: "Germany", count: 4120 },
+  { name: "United Kingdom", count: 3280 },
+  { name: "Netherlands", count: 2150 },
+  { name: "Sweden", count: 1840 },
+  { name: "Norway", count: 1620 },
+  { name: "Türkiye", count: 3890 },
+];
 
 export default function MembersPage() {
+  const [membersList, setMembersList] = useState<ForumMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [badgeFilter, setBadgeFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("reputation");
 
+  const loadMembers = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await forumService.getMembers();
+      setMembersList(data);
+    } catch {
+      setFetchError("Failed to load community members. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
   const filteredMembers = useMemo(() => {
-    let result = [...members];
+    let result = [...membersList];
 
     // Search
     if (searchTerm.trim()) {
@@ -51,7 +81,7 @@ export default function MembersPage() {
             May: 5, June: 6, July: 7, August: 8,
             September: 9, October: 10, November: 11, December: 12,
           };
-          const getVal = (m: typeof members[0]) => {
+          const getVal = (m: ForumMember) => {
             const parts = m.joinDate.split(" ");
             const y = parseInt(parts[1]) || 2024;
             const mo = months[parts[0]] || 1;
@@ -63,16 +93,14 @@ export default function MembersPage() {
       case "reputation":
       default:
         result.sort((a, b) => b.reputation - a.reputation);
-        break;
     }
-
     return result;
-  }, [searchTerm, roleFilter, badgeFilter, sortBy]);
+  }, [membersList, searchTerm, roleFilter, badgeFilter, sortBy]);
 
   // Top 3 for leaderboard
   const topMembers = useMemo(() => {
-    return [...members].sort((a, b) => b.reputation - a.reputation).slice(0, 3);
-  }, []);
+    return [...membersList].sort((a, b) => b.reputation - a.reputation).slice(0, 3);
+  }, [membersList]);
 
   return (
     <>
@@ -161,35 +189,48 @@ export default function MembersPage() {
           </p>
 
           {/* Members grid */}
-          {filteredMembers.length > 0 ? (
+          {fetchError ? (
+            <ErrorState
+              title="Unable to load community members"
+              message={fetchError}
+              onRetry={loadMembers}
+            />
+          ) : isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <div key={n} className="bg-background-50 rounded-xl border border-background-200/70 p-5 animate-pulse space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-background-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="h-10 bg-background-100 rounded w-full" />
+                </div>
+              ))}
+            </div>
+          ) : filteredMembers.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
               {filteredMembers.map((member) => (
                 <MemberCard key={member.id} member={member} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 mx-auto flex items-center justify-center rounded-full bg-background-100 mb-4">
-                <i className="ri-user-search-line text-foreground-400 text-2xl"></i>
-              </div>
-              <h3 className="font-heading text-lg text-foreground-900 mb-2">
-                No members found
-              </h3>
-              <p className="text-foreground-500 text-sm mb-6">
-                Try adjusting your search or filters to find who you are looking for.
-              </p>
-              <button
-                onClick={() => {
+            <EmptyState
+              icon={<i className="ri-user-search-line text-2xl" />}
+              title="No members found"
+              description="Try adjusting your search or filters to find who you are looking for."
+              action={{
+                label: "Reset Filters",
+                onClick: () => {
                   setSearchTerm("");
                   setRoleFilter(null);
                   setBadgeFilter(null);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-background-100 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-200 transition-colors cursor-pointer"
-              >
-                <i className="ri-refresh-line"></i>
-                Reset Filters
-              </button>
-            </div>
+                },
+                icon: <i className="ri-refresh-line" />,
+              }}
+            />
           )}
 
           {/* Country breakdown */}
@@ -204,7 +245,7 @@ export default function MembersPage() {
               Our members come from everywhere
             </h2>
             <div className="flex flex-wrap gap-3">
-              {forumStats.topCountries.map((country) => (
+              {topCountries.map((country) => (
                 <div
                   key={country.name}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-background-50 rounded-xl border border-background-200/70"

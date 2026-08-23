@@ -5,6 +5,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { BlogRepository } from './blog.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { slugify, generateUniqueSlug } from '../utils/slugify';
 import sanitizeHtml from 'sanitize-html';
 import {
   BlogPost,
@@ -24,16 +26,6 @@ import {
   UpdateBlogPostDto,
 } from './dto';
 
-const slugify = (text: string): string =>
-  text
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
-
 const generateExcerpt = (
   content: string | null,
   maxLength = 200,
@@ -46,23 +38,20 @@ const generateExcerpt = (
 
 @Injectable()
 export class BlogService {
-  constructor(private readonly blogRepository: BlogRepository) {}
+  constructor(
+    private readonly blogRepository: BlogRepository,
+    private readonly userRolesRepo: UserRolesRepository,
+  ) {}
 
   private async checkAdmin(userId: string): Promise<void> {
-    const role = await this.blogRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Admin only');
   }
 
   private async resolveSlug(baseSlug: string): Promise<string> {
-    const existingSlugs = await this.blogRepository.getSlugs(baseSlug);
-    if (!existingSlugs.includes(baseSlug)) return baseSlug;
-    let counter = 1;
-    let newSlug = `${baseSlug}-${counter}`;
-    while (existingSlugs.includes(newSlug)) {
-      counter++;
-      newSlug = `${baseSlug}-${counter}`;
-    }
-    return newSlug;
+    const seed = slugify(baseSlug) || 'post';
+    const existingSlugs = await this.blogRepository.getSlugs(seed);
+    return generateUniqueSlug(seed, existingSlugs);
   }
 
   async getBlogPosts(
@@ -71,7 +60,7 @@ export class BlogService {
   ): Promise<BlogPostsListResult> {
     let role = 'anon';
     if (requestUserId) {
-      const userRole = await this.blogRepository.getUserRole(requestUserId);
+      const userRole = await this.userRolesRepo.getRole(requestUserId);
       if (userRole) role = userRole;
     }
 
@@ -133,7 +122,7 @@ export class BlogService {
     data: CreateBlogPostDto,
     userId: string,
   ): Promise<BlogPost> {
-    const role = await this.blogRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
 
     const baseSlug = data.slug || slugify(data.title);
     const uniqueSlug = await this.resolveSlug(baseSlug);
@@ -270,7 +259,7 @@ export class BlogService {
     role: string | undefined;
     existing: { author_id: string; status: string; slug: string };
   }> {
-    const role = await this.blogRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     const existing = await this.blogRepository.getBlogPostById(postId);
     if (!existing) throw new NotFoundException('Blog post not found');
     if (existing.author_id !== userId && role !== 'admin')

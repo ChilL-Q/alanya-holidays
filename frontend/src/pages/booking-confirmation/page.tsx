@@ -2,18 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-
-interface InquiryState {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  timestamp: string;
-}
+import type { InquiryState } from "@/lib/inquiry-confirmation";
 
 const subjectIcons: Record<string, string> = {
   "Yacht Charter": "ri-sailboat-line",
   "Villa Stay": "ri-hotel-line",
+  "Luxury Experience": "ri-vip-crown-line",
   "Helicopter Tour": "ri-flight-takeoff-line",
   "Wine Tasting": "ri-goblet-line",
   "Hammam & Spa": "ri-heart-pulse-line",
@@ -23,6 +17,7 @@ const subjectIcons: Record<string, string> = {
 const subjectLinks: Record<string, { label: string; to: string }> = {
   "Yacht Charter": { label: "Explore more yachts", to: "/yacht-charters" },
   "Villa Stay": { label: "Browse more villas", to: "/villa-stays" },
+  "Luxury Experience": { label: "Explore luxury experiences", to: "/luxury-experience" },
   "Helicopter Tour": { label: "See more tours", to: "/helicopter-tours" },
   "Wine Tasting": { label: "Discover more tastings", to: "/wine-tastings" },
   "Hammam & Spa": { label: "View more spa experiences", to: "/hammam-spa" },

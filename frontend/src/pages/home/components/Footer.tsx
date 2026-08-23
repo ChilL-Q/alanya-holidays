@@ -1,15 +1,25 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleNewsletterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email.trim()) return;
 
     setSubmitStatus("loading");
+    if (timerRef.current) clearTimeout(timerRef.current);
 
     try {
       const formData = new URLSearchParams();
@@ -29,14 +39,14 @@ export default function Footer() {
       if (response.ok) {
         setSubmitStatus("success");
         setEmail("");
-        setTimeout(() => setSubmitStatus("idle"), 4000);
+        timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
       } else {
         setSubmitStatus("error");
-        setTimeout(() => setSubmitStatus("idle"), 4000);
+        timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
       }
     } catch {
       setSubmitStatus("error");
-      setTimeout(() => setSubmitStatus("idle"), 4000);
+      timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
     }
   };
 

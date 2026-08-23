@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   nginx:
     image: nginx:alpine
@@ -20,20 +18,21 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: frontend/Dockerfile.dev
     env_file:
       - .env
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app/frontend
+      - ./shared:/app/shared
+      - /app/frontend/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -43,17 +42,17 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: backend/Dockerfile.dev
     env_file:
       - .env
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
-      - ./backend:/app
-      - ./shared:/shared
-      - /app/node_modules
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+      - /app/backend/node_modules
     depends_on:
       redis:
         condition: service_healthy
@@ -62,4 +61,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-

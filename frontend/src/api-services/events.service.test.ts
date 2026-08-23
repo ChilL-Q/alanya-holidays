@@ -8,8 +8,7 @@ import {
   getAttendees,
   formatEventDateParts,
 } from "./events.service";
-import { apiClient } from "@/lib/api-client";
-import { events as mockEvents } from "@/mocks/events";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("events.service", () => {
   beforeEach(() => {
@@ -88,19 +87,12 @@ describe("events.service", () => {
       expect(result[0].going_by_me).toBe(true);
     });
 
-    it("should fall back to mock events when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network error"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Network error", 500, "Internal Server Error")
+      );
 
-      const result = await getEvents();
-      expect(result).toHaveLength(mockEvents.length);
-      expect(result[0].id).toBe(mockEvents[0].id);
-    });
-
-    it("should respect upcomingOnly and limit in mock fallback", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network error"));
-
-      const result = await getEvents({ limit: 3 });
-      expect(result).toHaveLength(3);
+      await expect(getEvents()).rejects.toThrow(ApiError);
     });
   });
 
@@ -139,13 +131,21 @@ describe("events.service", () => {
       expect(result?.host).toBe("Mark Stevenson");
     });
 
-    it("should fall back to mock event by ID or slug when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
-      const result = await getEventBySlug("e1");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("e1");
-      expect(result?.title).toBe(mockEvents[0].title);
+      const result = await getEventBySlug("missing-event-slug");
+      expect(result).toBeNull();
+    });
+
+    it("should throw ApiError on 500", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
+
+      await expect(getEventBySlug("err-event")).rejects.toThrow(ApiError);
     });
   });
 
@@ -184,8 +184,10 @@ describe("events.service", () => {
       expect(result.title).toBe("Sunset Kayak Meetup");
     });
 
-    it("should return fallback event when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("API offline"));
+    it("should throw ApiError when createEvent API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
       const payload = {
         title: "Fallback Event",
@@ -194,15 +196,9 @@ describe("events.service", () => {
         eventTime: "19:00",
         location: "Alanya Center",
         description: "A fun gathering for expats.",
-        maxAttendees: 15,
-        hostName: "Sarah",
       };
 
-      const result = await createEvent(payload);
-      expect(result.title).toBe("Fallback Event");
-      expect(result.id).toBeDefined();
-      expect(result.day).toBe("01");
-      expect(result.month).toBe("AUG");
+      await expect(createEvent(payload)).rejects.toThrow(ApiError);
     });
   });
 
@@ -217,11 +213,12 @@ describe("events.service", () => {
       expect(result.going).toBe(true);
     });
 
-    it("should return fallback response when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
+    it("should throw ApiError when RSVP fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
 
-      const result = await toggleRsvp("ev-1");
-      expect(result.going).toBe(true);
+      await expect(toggleRsvp("ev-1")).rejects.toThrow(ApiError);
     });
   });
 
@@ -245,11 +242,21 @@ describe("events.service", () => {
       expect(result[0].full_name).toBe("Alice Smith");
     });
 
-    it("should return empty array or fallback when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Offline"));
+    it("should return empty array on 401/404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Unauthorized", 401, "Unauthorized")
+      );
 
       const result = await getAttendees("ev-1");
-      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([]);
+    });
+
+    it("should throw ApiError on 500 error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Internal Error", 500, "Internal Server Error")
+      );
+
+      await expect(getAttendees("ev-1")).rejects.toThrow(ApiError);
     });
   });
 });

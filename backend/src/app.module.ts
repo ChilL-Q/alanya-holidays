@@ -16,6 +16,7 @@ import { ProductsModule } from './products/products.module';
 import { ForumModule } from './forum/forum.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { RedisModule } from './common/redis/redis.module';
+import { CommonModule } from './common/common.module';
 import { AiModule } from './ai/ai.module';
 import { MediaModule } from './media/media.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -24,6 +25,7 @@ import { ItinerariesModule } from './itineraries/itineraries.module';
 
 @Module({
   imports: [
+    CommonModule,
     RedisModule,
     SupabaseModule,
     BookingsModule,

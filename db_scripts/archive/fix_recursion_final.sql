@@ -1,3 +1,4 @@
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- 1. Сначала отключаем RLS чтобы можно было все починить даже если мы заблокированы
 ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE properties DISABLE ROW LEVEL SECURITY;

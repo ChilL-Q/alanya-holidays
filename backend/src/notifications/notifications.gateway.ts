@@ -11,14 +11,11 @@ import { NotificationsService } from './notifications.service';
 import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
-  cors: {
-    origin: '*',
-  },
   namespace: '/ws/notifications',
 })
 export class NotificationsGateway implements OnGatewayInit {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(NotificationsGateway.name);
 

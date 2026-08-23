@@ -229,7 +229,7 @@ export default function ListingDetailPreviewModal({
                   <a
                     href={listing.website}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="text-accent-600 dark:text-accent-400 hover:underline truncate"
                   >
                     {listing.website}
@@ -242,7 +242,7 @@ export default function ListingDetailPreviewModal({
                   <a
                     href={listing.google_map_url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="text-accent-600 dark:text-accent-400 hover:underline truncate text-xs"
                   >
                     {listing.google_map_url}

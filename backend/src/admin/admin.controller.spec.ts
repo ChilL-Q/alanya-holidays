@@ -2,8 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { SupabaseService } from '../supabase/supabase.service';
-import { AuthenticatedRequest } from '../directory/types/directory.types';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -28,9 +29,10 @@ describe('AdminController', () => {
     }),
   };
 
-  const mockReq = {
-    user: { id: 'admin-uuid-123', role: 'admin' },
-  } as unknown as AuthenticatedRequest;
+  const mockUser: AuthUser = {
+    id: 'admin-uuid-123',
+    role: 'admin',
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -45,6 +47,10 @@ describe('AdminController', () => {
         {
           provide: SupabaseService,
           useValue: {},
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn().mockResolvedValue('admin') },
         },
       ],
     })
@@ -61,7 +67,7 @@ describe('AdminController', () => {
 
   describe('getEnquiries', () => {
     it('should return a list of enquiries with authenticated user id', async () => {
-      const result = await controller.getEnquiries(mockReq);
+      const result = await controller.getEnquiries(mockUser);
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('John Doe');
       expect(mockAdminService.getEnquiries).toHaveBeenCalledWith(
@@ -75,7 +81,7 @@ describe('AdminController', () => {
       const result = await controller.updateStatus(
         '1',
         { status: 'responded' },
-        mockReq,
+        mockUser,
       );
       expect(result).toEqual({ success: true });
       expect(mockAdminService.updateEnquiryStatus).toHaveBeenCalledWith(
@@ -91,7 +97,7 @@ describe('AdminController', () => {
       const result = await controller.assignEnquiry(
         '1',
         { assigned_to: 'user-uuid-123' },
-        mockReq,
+        mockUser,
       );
       expect(result).toEqual({ success: true });
       expect(mockAdminService.assignEnquiry).toHaveBeenCalledWith(
@@ -104,7 +110,7 @@ describe('AdminController', () => {
 
   describe('getAnalytics', () => {
     it('should call getPlatformAnalytics with parsed days and user id', async () => {
-      const result = await controller.getAnalytics('60', mockReq);
+      const result = await controller.getAnalytics({ days: 60 }, mockUser);
       expect(result).toEqual({ kpiSummary: { totalViews: 100 } });
       expect(mockAdminService.getPlatformAnalytics).toHaveBeenCalledWith(
         60,

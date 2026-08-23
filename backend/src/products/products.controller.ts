@@ -8,24 +8,23 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { ProductDraftsService } from './product-drafts.service';
 import type { Product, ProductVariant } from './products.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
-
-interface RequestWithUser {
-  user?: {
-    id: string;
-    role?: string;
-  };
-}
+import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly productDraftsService: ProductDraftsService,
+  ) {}
 
   // --- Shop Catalog & Orders Endpoints ---
 
@@ -47,24 +46,21 @@ export class ProductsController {
   @Post('orders')
   async createProductOrder(
     @Body() dto: CreateProductOrderDto,
-    @Req() req?: RequestWithUser,
+    @CurrentUser() user?: AuthUser,
   ) {
-    return this.productsService.createProductOrder(dto, req?.user?.id);
+    return this.productsService.createProductOrder(dto, user?.id);
   }
 
   @Get('orders/my-orders')
   @UseGuards(AuthGuard)
-  async getMyOrders(@Req() req: RequestWithUser & { user: { id: string } }) {
-    return this.productsService.getMyOrders(req.user.id);
+  async getMyOrders(@CurrentUser() user: AuthUser) {
+    return this.productsService.getMyOrders(user.id);
   }
 
   @Get('orders/:id')
   @UseGuards(AuthGuard)
-  async getOrderById(
-    @Param('id') id: string,
-    @Req() req: RequestWithUser & { user: { id: string } },
-  ) {
-    return this.productsService.getOrderById(id, req.user.id);
+  async getOrderById(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.productsService.getOrderById(id, user.id);
   }
 
   // --- Products Endpoints ---
@@ -75,11 +71,15 @@ export class ProductsController {
   }
 
   @Get('featured')
-  async getFeaturedProducts(@Query('limit') limit?: string) {
-    const parsedLimit = limit ? Number.parseInt(limit, 10) : 8;
-    return this.productsService.getFeaturedProducts(
-      Number.isNaN(parsedLimit) ? 8 : parsedLimit,
-    );
+  async getFeaturedProducts(@Query() query?: LimitQueryDto | string) {
+    let limit = 8;
+    if (typeof query === 'string') {
+      const parsed = Number.parseInt(query, 10);
+      limit = Number.isNaN(parsed) ? 8 : parsed;
+    } else if (query?.limit !== undefined) {
+      limit = Number(query.limit) || 8;
+    }
+    return this.productsService.getFeaturedProducts(limit);
   }
 
   @Get(':id')
@@ -89,11 +89,27 @@ export class ProductsController {
 
   @Post()
   @UseGuards(AuthGuard)
-  async createProduct(
-    @Body() data: Product,
-    @Req() req: RequestWithUser & { user: { id: string } },
-  ) {
-    return this.productsService.createProduct(data, req.user.id);
+  async createProduct(@Body() data: Product, @CurrentUser() user: AuthUser) {
+    return this.productsService.createProduct(data, user.id);
+  }
+
+  @Post('draft')
+  @UseGuards(AuthGuard)
+  async saveProductDraft(
+    @Body() data: Partial<Product> & { draftId?: string },
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ id: string }> {
+    return this.productDraftsService.saveProductDraft(data, user.id);
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AuthGuard)
+  async publishProductDraft(
+    @Param('id') id: string,
+    @Body() updates: Partial<Product>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.productDraftsService.publishProductDraft(id, updates, user.id);
   }
 
   @Put(':id')
@@ -101,18 +117,15 @@ export class ProductsController {
   async updateProduct(
     @Param('id') id: string,
     @Body() updates: Partial<Product>,
-    @Req() req: RequestWithUser & { user: { id: string } },
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.updateProduct(id, updates, req.user.id);
+    return this.productsService.updateProduct(id, updates, user.id);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async deleteProduct(
-    @Param('id') id: string,
-    @Req() req: RequestWithUser & { user: { id: string } },
-  ) {
-    return this.productsService.deleteProduct(id, req.user.id);
+  async deleteProduct(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.productsService.deleteProduct(id, user.id);
   }
 
   // --- Variants Endpoints ---
@@ -127,9 +140,9 @@ export class ProductsController {
   async createProductVariant(
     @Param('id') id: string,
     @Body() data: Omit<ProductVariant, 'id' | 'product_id' | 'created_at'>,
-    @Req() req: RequestWithUser & { user: { id: string } },
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.createProductVariant(id, data, req.user.id);
+    return this.productsService.createProductVariant(id, data, user.id);
   }
 
   @Put('variants/:variantId')
@@ -137,12 +150,12 @@ export class ProductsController {
   async updateProductVariant(
     @Param('variantId') variantId: string,
     @Body() updates: Partial<ProductVariant>,
-    @Req() req: RequestWithUser & { user: { id: string } },
+    @CurrentUser() user: AuthUser,
   ) {
     return this.productsService.updateProductVariant(
       variantId,
       updates,
-      req.user.id,
+      user.id,
     );
   }
 
@@ -150,8 +163,8 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   async deleteProductVariant(
     @Param('variantId') variantId: string,
-    @Req() req: RequestWithUser & { user: { id: string } },
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.deleteProductVariant(variantId, req.user.id);
+    return this.productsService.deleteProductVariant(variantId, user.id);
   }
 }

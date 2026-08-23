@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { MessageSquare, Eye, ThumbsUp, MessageCircle, AlertCircle, RefreshCw, ChevronRight, Flame } from "lucide-react";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
+import { logger } from "@/lib/logger";
 
 export function ForumActivityList() {
   const [threads, setThreads] = useState<CategoryThread[]>([]);
@@ -15,7 +16,7 @@ export function ForumActivityList() {
       const res = await forumService.getThreads();
       setThreads(res && Array.isArray(res.threads) ? res.threads : []);
     } catch (err: unknown) {
-      console.error("Failed to load forum activity:", err);
+      logger.error("Failed to load forum activity:", err);
       setError("Unable to load forum activity. Please try again.");
     } finally {
       setLoading(false);

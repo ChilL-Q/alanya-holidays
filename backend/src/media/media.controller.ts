@@ -15,7 +15,7 @@ import {
 } from './media-processing.service';
 
 export class UploadMediaDto {
-  bucket: string;
+  bucket!: string;
   folder?: string;
 }
 

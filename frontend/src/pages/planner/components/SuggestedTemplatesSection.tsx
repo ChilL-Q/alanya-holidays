@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { SuggestedPlan } from "@/mocks/suggestedPlans";
+import type { SuggestedPlan } from "@/domain/itinerary-templates";
 
 interface SuggestedTemplatesSectionProps {
   suggestedPlans: SuggestedPlan[];

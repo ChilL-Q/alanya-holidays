@@ -6,10 +6,9 @@ import {
   markAllAsRead,
   deleteNotification,
   formatNotificationTime,
-  mockNotifications,
   type AppNotification,
 } from "./notifications.service";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("notifications.service", () => {
   beforeEach(() => {
@@ -88,14 +87,17 @@ describe("notifications.service", () => {
       });
     });
 
-    it("should fallback to mock notifications when API call fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should return empty array when API returns 401 or 404", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("Unauthorized", 401, "Unauthorized"));
 
       const result = await getNotifications();
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].id).toBe(mockNotifications[0].id);
-      expect(result[0].title).toBe(mockNotifications[0].title);
-      expect(result[0]).toHaveProperty("type");
+      expect(result).toEqual([]);
+    });
+
+    it("should reject with ApiError when 500 occurs", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new ApiError("Internal Error", 500, "Internal Server Error"));
+
+      await expect(getNotifications()).rejects.toThrow(ApiError);
     });
 
     it("should normalize backend notification payload formats", async () => {
@@ -129,11 +131,10 @@ describe("notifications.service", () => {
       expect(success).toBe(true);
     });
 
-    it("should gracefully update mock state when API fails", async () => {
-      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new Error("Offline"));
+    it("should reject when API fails", async () => {
+      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new ApiError("Server Error", 500, "Internal Server Error"));
 
-      const success = await markAsRead("notif-1");
-      expect(success).toBe(true);
+      await expect(markAsRead("notif-1")).rejects.toThrow(ApiError);
     });
   });
 
@@ -148,11 +149,10 @@ describe("notifications.service", () => {
       expect(success).toBe(true);
     });
 
-    it("should gracefully update mock state when API fails", async () => {
-      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new Error("Offline"));
+    it("should reject when API fails", async () => {
+      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new ApiError("Server Error", 500, "Internal Server Error"));
 
-      const success = await markAllAsRead();
-      expect(success).toBe(true);
+      await expect(markAllAsRead()).rejects.toThrow(ApiError);
     });
   });
 
@@ -165,11 +165,11 @@ describe("notifications.service", () => {
       expect(success).toBe(true);
     });
 
-    it("should gracefully remove from mock state when API fails", async () => {
-      vi.spyOn(apiClient, "delete").mockRejectedValueOnce(new Error("Offline"));
+    it("should reject when API fails", async () => {
+      vi.spyOn(apiClient, "delete").mockRejectedValueOnce(new ApiError("Server Error", 500, "Internal Server Error"));
 
-      const success = await deleteNotification("notif-2");
-      expect(success).toBe(true);
+      await expect(deleteNotification("notif-2")).rejects.toThrow(ApiError);
     });
   });
 });
+

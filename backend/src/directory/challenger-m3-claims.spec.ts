@@ -2,10 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DirectoryController } from './directory.controller';
 import { DirectoryService } from './directory.service';
 import { AuthGuard } from '../auth/auth.guard';
-import {
-  AuthenticatedRequest,
-  DirectoryClaimRecord,
-} from './types/directory.types';
+import { AuthUser } from '../auth/types/auth-user.interface';
+import { DirectoryClaimRecord } from './types/directory.types';
 
 describe('Challenger M3 Adversarial Tests: Claims Security & Isolation', () => {
   let controller: DirectoryController;
@@ -68,14 +66,14 @@ describe('Challenger M3 Adversarial Tests: Claims Security & Isolation', () => {
       });
 
       // Execute request as User A
-      const reqA = { user: { id: userAId } } as AuthenticatedRequest;
-      const resA = await controller.getMyListingClaims(reqA);
+      const userA: AuthUser = { id: userAId };
+      const resA = await controller.getMyListingClaims(userA);
       expect(resA).toEqual(userAClaims);
       expect(mockService.getMyListingClaims).toHaveBeenCalledWith(userAId);
 
       // Execute request as User B
-      const reqB = { user: { id: userBId } } as AuthenticatedRequest;
-      const resB = await controller.getMyListingClaims(reqB);
+      const userB: AuthUser = { id: userBId };
+      const resB = await controller.getMyListingClaims(userB);
       expect(resB).toEqual([]);
       expect(mockService.getMyListingClaims).toHaveBeenCalledWith(userBId);
     });
@@ -136,8 +134,8 @@ describe('Challenger M3 Adversarial Tests: Claims Security & Isolation', () => {
 
       mockService.getMyListingClaims.mockResolvedValueOnce(multiStatusClaims);
 
-      const req = { user: { id: userId } } as AuthenticatedRequest;
-      const res = await controller.getMyListingClaims(req);
+      const user: AuthUser = { id: userId };
+      const res = await controller.getMyListingClaims(user);
 
       expect(res).toHaveLength(4);
       expect(res.map((c) => c.status)).toEqual([
@@ -156,10 +154,8 @@ describe('Challenger M3 Adversarial Tests: Claims Security & Isolation', () => {
         new Error('Database connectivity error'),
       );
 
-      const req = {
-        user: { id: 'd4444444-4444-4444-4444-444444444444' },
-      } as AuthenticatedRequest;
-      await expect(controller.getMyListingClaims(req)).rejects.toThrow(
+      const user: AuthUser = { id: 'd4444444-4444-4444-4444-444444444444' };
+      await expect(controller.getMyListingClaims(user)).rejects.toThrow(
         'Database connectivity error',
       );
     });

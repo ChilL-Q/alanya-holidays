@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
+import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('enquiries')
 export class EnquiriesController {
@@ -12,10 +13,8 @@ export class EnquiriesController {
   }
 
   @Get('recent')
-  async getRecent(@Query('limit') limit?: string) {
-    const parsedLimit = limit
-      ? Math.max(1, Math.min(100, parseInt(limit, 10) || 8))
-      : 8;
-    return this.adminService.getRecentEnquiries(parsedLimit);
+  async getRecent(@Query() query?: LimitQueryDto) {
+    const limit = query?.limit ?? 8;
+    return this.adminService.getRecentEnquiries(limit);
   }
 }

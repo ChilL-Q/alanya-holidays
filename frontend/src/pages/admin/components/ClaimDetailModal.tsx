@@ -156,7 +156,7 @@ export default function ClaimDetailModal({
                   <a
                     href={`/directory/${claim.directory_listing.slug}`}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="text-xs font-semibold text-accent-600 dark:text-accent-400 hover:text-accent-700 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-accent-200 dark:border-accent-800 shadow-2xs"
                   >
                     View Listing <i className="ri-external-link-line ml-1" />

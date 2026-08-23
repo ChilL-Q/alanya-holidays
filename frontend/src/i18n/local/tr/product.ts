@@ -1,0 +1,18 @@
+export default {
+  "product.addToCart": "Sepete Ekle",
+  "product.buyNow": "Hemen Satın Al",
+  "product.inStock": "Stokta Var",
+  "product.outOfStock": "Tükendi",
+  "product.options": "Seçenekler",
+  "product.quantity": "Adet",
+  "product.tourMapPdf": "Tur Haritasını PDF İndir",
+  "product.sendToPhone": "Haritayı Telefonuma Gönder",
+  "product.shareTour": "Turu Paylaş",
+  "product.orderConfirmed": "Sipariş Onaylandı",
+  "product.howItWorks": "Tur Nasıl Çalışır",
+  "product.pairingPhotos": "Kahve & Tatlı İkilileri",
+  "product.favoriteCafes": "Favori Kafelerim",
+  "product.saved": "kaydedildi",
+  "product.walkingDirections": "Yürüme rotası",
+  "product.totalWalking": "toplam yürüme",
+};

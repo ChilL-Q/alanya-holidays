@@ -56,7 +56,7 @@ export class GetForumPostsQueryDto {
 export class CreateForumPostDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsOptional()
   @IsString()
@@ -96,10 +96,10 @@ export class UpdateForumPostDto {
 
 export class SetPinnedDto {
   @IsBoolean()
-  pinned: boolean;
+  pinned!: boolean;
 }
 
 export class SetRemovedDto {
   @IsBoolean()
-  removed: boolean;
+  removed!: boolean;
 }

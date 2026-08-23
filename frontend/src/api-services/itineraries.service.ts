@@ -1,7 +1,9 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, type RequestOptions } from "@/lib/api-client";
 import type { Plan, PlanItem } from "@/hooks/usePlanner";
 import type { SharedPlan } from "@/hooks/useSharedPlans";
-import { suggestedPlans, type SuggestedPlan } from "@/mocks/suggestedPlans";
+import { itineraryTemplates, type SuggestedPlan } from "@/domain/itinerary-templates";
+
+export type { SuggestedPlan };
 
 export interface SavedItinerary<P = Record<string, unknown>, I = PlanItem[]> {
   id: string;
@@ -25,7 +27,7 @@ export interface UpdateItineraryInput<P = Record<string, unknown>, I = PlanItem[
   itinerary?: I;
 }
 
-export interface GetCommunityItinerariesOptions {
+export interface GetCommunityItinerariesOptions extends RequestOptions {
   category?: string;
   limit?: number;
   offset?: number;
@@ -100,10 +102,10 @@ function mapSharedPlanToSavedItinerary(shared: SharedPlan): SavedItinerary {
     title: shared.name,
     params: {
       description: shared.description,
-      authorName: shared.authorName,
+      sharedBy: shared.authorName,
       category: shared.category,
-      copyCount: shared.copyCount,
-      originalPlanId: shared.originalPlanId,
+      likes: shared.copyCount,
+      forks: shared.copyCount,
     },
     itinerary: itemsWithIds,
     created_at: shared.sharedAt,
@@ -113,7 +115,7 @@ function mapSharedPlanToSavedItinerary(shared: SharedPlan): SavedItinerary {
 function mapSuggestedPlanToSavedItinerary(suggested: SuggestedPlan): SavedItinerary {
   const itemsWithIds: PlanItem[] = suggested.items.map((item, index) => ({
     ...item,
-    id: `suggested-item-${suggested.id}-${index}`,
+    id: `template-item-${suggested.id}-${index}`,
   }));
 
   return {
@@ -122,16 +124,16 @@ function mapSuggestedPlanToSavedItinerary(suggested: SuggestedPlan): SavedItiner
     params: {
       description: suggested.description,
       category: suggested.category,
+      isSuggestedTemplate: true,
     },
     itinerary: itemsWithIds,
-    created_at: new Date().toISOString(),
+    created_at: "2026-06-01T00:00:00Z",
   };
 }
 
 export class ItinerariesService {
   /**
-   * Saves a user's generated or custom itinerary.
-   * If offline or API fails, saves locally and returns fallback SavedItinerary.
+   * Saves a new itinerary to the backend or local storage if unauthenticated.
    */
   async saveItinerary<P = Record<string, unknown>, I = PlanItem[]>(
     input: CreateItineraryInput<P, I>
@@ -141,72 +143,67 @@ export class ItinerariesService {
       if (response && response.id) {
         return response;
       }
-    } catch (err) {
-      console.warn("Failed to save itinerary to API, falling back to local storage:", err);
+    } catch {
+      // Unauthenticated or offline fallback to localStorage
     }
 
-    // Local fallback
+    const localId = generateLocalId();
     const now = new Date().toISOString();
-    const id = generateLocalId();
-    const fallbackItinerary: SavedItinerary<P, I> = {
-      id,
-      title: input.title,
-      params: input.params,
-      itinerary: input.itinerary,
-      created_at: now,
-      updated_at: now,
+    const localPlan: Plan = {
+      id: localId,
+      name: input.title,
+      description:
+        input.params && typeof input.params === "object" && "description" in input.params
+          ? String(input.params.description)
+          : "",
+      items: input.itinerary as unknown as PlanItem[],
+      createdAt: now,
+      updatedAt: now,
     };
 
-    // If items match PlanItem structure, persist to local plans
-    if (Array.isArray(input.itinerary)) {
-      const localPlans = loadLocalPlans();
-      const newPlan: Plan = {
-        id,
-        name: input.title,
-        description:
-          input.params && typeof input.params === "object" && "description" in input.params
-            ? String(input.params.description)
-            : "",
-        createdAt: now,
-        updatedAt: now,
-        items: input.itinerary as unknown as PlanItem[],
-      };
-      localPlans.push(newPlan);
-      saveLocalPlans(localPlans);
-    }
+    const existingPlans = loadLocalPlans();
+    existingPlans.unshift(localPlan);
+    saveLocalPlans(existingPlans);
 
-    return fallbackItinerary;
+    return mapPlanToSavedItinerary(localPlan) as unknown as SavedItinerary<P, I>;
   }
 
   /**
-   * Lists all itineraries owned by the authenticated user.
-   * Falls back to local plans stored in localStorage.
+   * Retrieves all saved itineraries for the authenticated user (and local drafts).
    */
-  async getMyItineraries(): Promise<SavedItinerary[]> {
+  async getMyItineraries(options?: RequestOptions): Promise<SavedItinerary[]> {
+    let apiItineraries: SavedItinerary[] = [];
     try {
-      const data = await apiClient.get<SavedItinerary[]>("/itineraries/me");
+      const data = options
+        ? await apiClient.get<SavedItinerary[]>("/itineraries/me", options)
+        : await apiClient.get<SavedItinerary[]>("/itineraries/me");
       if (Array.isArray(data)) {
-        return data;
+        apiItineraries = data;
       }
-    } catch (err) {
-      console.warn("Failed to fetch itineraries from API, falling back to local plans:", err);
+    } catch {
+      // Unauthenticated or offline
     }
 
-    const localPlans = loadLocalPlans();
-    return localPlans.map(mapPlanToSavedItinerary);
+    const localPlans = loadLocalPlans().map(mapPlanToSavedItinerary);
+    const existingIds = new Set(apiItineraries.map((it) => it.id));
+    const uniqueLocal = localPlans.filter((p) => !existingIds.has(p.id));
+
+    return [...apiItineraries, ...uniqueLocal];
   }
 
   /**
-   * Retrieves a single itinerary by UUID or local ID.
+   * Retrieves a single itinerary by UUID, local ID, or starter template ID.
    */
-  async getItineraryById(id: string): Promise<SavedItinerary | null> {
+  async getItineraryById(id: string, options?: RequestOptions): Promise<SavedItinerary | null> {
     try {
-      const data = await apiClient.get<SavedItinerary>(`/itineraries/${id}`);
+      const data = options
+        ? await apiClient.get<SavedItinerary>(`/itineraries/${id}`, options)
+        : await apiClient.get<SavedItinerary>(`/itineraries/${id}`);
       if (data && data.id) {
         return data;
       }
-    } catch (err) {
-      console.warn(`Failed to fetch itinerary '${id}' from API, searching local storage:`, err);
+    } catch {
+      // check local or template
     }
 
     // Search local plans
@@ -223,10 +220,10 @@ export class ItinerariesService {
       return mapSharedPlanToSavedItinerary(foundShared);
     }
 
-    // Search suggested plans
-    const foundSuggested = suggestedPlans.find((sp) => sp.id === id);
-    if (foundSuggested) {
-      return mapSuggestedPlanToSavedItinerary(foundSuggested);
+    // Search starter template presets
+    const foundTemplate = itineraryTemplates.find((sp) => sp.id === id);
+    if (foundTemplate) {
+      return mapSuggestedPlanToSavedItinerary(foundTemplate);
     }
 
     return null;
@@ -244,11 +241,10 @@ export class ItinerariesService {
       if (response && response.id) {
         return response;
       }
-    } catch (err) {
-      console.warn(`Failed to update itinerary '${id}' via API, falling back to local storage:`, err);
+    } catch {
+      // Update local storage fallback
     }
 
-    // Update local plans fallback
     const localPlans = loadLocalPlans();
     const index = localPlans.findIndex((p) => p.id === id);
     if (index !== -1) {
@@ -277,21 +273,11 @@ export class ItinerariesService {
    */
   async deleteItinerary(id: string): Promise<boolean> {
     try {
-      const result = await apiClient.delete<{ success?: boolean } | boolean>(`/itineraries/${id}`);
-      if (result === true || (result && typeof result === "object" && result.success !== false)) {
-        // Also clean up local plan if present
-        const localPlans = loadLocalPlans();
-        const filtered = localPlans.filter((p) => p.id !== id);
-        if (filtered.length !== localPlans.length) {
-          saveLocalPlans(filtered);
-        }
-        return true;
-      }
-    } catch (err) {
-      console.warn(`Failed to delete itinerary '${id}' from API, removing from local storage:`, err);
+      await apiClient.delete<{ success?: boolean } | boolean>(`/itineraries/${id}`);
+    } catch {
+      // clean up local plan
     }
 
-    // Local fallback deletion
     const localPlans = loadLocalPlans();
     const filtered = localPlans.filter((p) => p.id !== id);
     saveLocalPlans(filtered);
@@ -303,24 +289,28 @@ export class ItinerariesService {
    */
   async getCommunityItineraries(options: GetCommunityItinerariesOptions = {}): Promise<SavedItinerary[]> {
     try {
+      const { category, limit, offset, params: extraParams, ...reqConfig } = options;
       const params: Record<string, string | number | undefined> = {};
-      if (options.category) params.category = options.category;
-      if (options.limit !== undefined) params.limit = options.limit;
-      if (options.offset !== undefined) params.offset = options.offset;
+      if (category && category !== "All") params.category = category;
+      if (limit !== undefined) params.limit = limit;
+      if (offset !== undefined) params.offset = offset;
 
-      const data = await apiClient.get<SavedItinerary[]>("/itineraries/community", { params });
+      const data = await apiClient.get<SavedItinerary[]>("/itineraries/community", {
+        ...reqConfig,
+        params: { ...extraParams, ...params },
+      });
       if (Array.isArray(data) && data.length > 0) {
         return data;
       }
-    } catch (err) {
-      console.warn("Failed to fetch community itineraries from API, using fallback templates:", err);
+    } catch {
+      // Fall back to starter domain templates
     }
 
     const localCommunity = loadLocalCommunityPlans();
     let result =
       localCommunity.length > 0
         ? localCommunity.map(mapSharedPlanToSavedItinerary)
-        : suggestedPlans.map(mapSuggestedPlanToSavedItinerary);
+        : itineraryTemplates.map(mapSuggestedPlanToSavedItinerary);
 
     if (options.category && options.category !== "All") {
       result = result.filter(
@@ -347,9 +337,11 @@ export const saveItinerary = <P = Record<string, unknown>, I = PlanItem[]>(
   input: CreateItineraryInput<P, I>
 ) => itinerariesService.saveItinerary(input);
 
-export const getMyItineraries = () => itinerariesService.getMyItineraries();
+export const getMyItineraries = (options?: RequestOptions) =>
+  itinerariesService.getMyItineraries(options);
 
-export const getItineraryById = (id: string) => itinerariesService.getItineraryById(id);
+export const getItineraryById = (id: string, options?: RequestOptions) =>
+  itinerariesService.getItineraryById(id, options);
 
 export const updateItinerary = <P = Record<string, unknown>, I = PlanItem[]>(
   id: string,

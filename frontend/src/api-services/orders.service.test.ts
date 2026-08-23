@@ -22,6 +22,7 @@ describe("orders.service (Clean Architecture)", () => {
     const payload: CreateOrderPayload = {
       recipientName: "Fatma Demir",
       recipientEmail: "fatma@example.com",
+      recipientPhone: "+905551234567",
       senderName: "Ahmet Yilmaz",
       senderEmail: "ahmet@example.com",
       giftMessage: "Enjoy your luxury experience!",
@@ -56,6 +57,7 @@ describe("orders.service (Clean Architecture)", () => {
           recipient: expect.objectContaining({
             name: "Fatma Demir",
             email: "fatma@example.com",
+            phone: "+905551234567",
             contact_method: "email",
           }),
           items: expect.arrayContaining([

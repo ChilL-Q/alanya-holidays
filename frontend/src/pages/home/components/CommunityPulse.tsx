@@ -1,8 +1,29 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { events } from "@/mocks/events";
-import { forumStats } from "@/mocks/stats";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
+import { forumService, type ForumStats } from "@/api-services/forum.service";
 
 export default function CommunityPulse() {
+  const [pulseEvents, setPulseEvents] = useState<ForumEvent[]>([]);
+  const [stats, setStats] = useState<ForumStats | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    eventsService.getEvents({ limit: 3 }).then((data) => {
+      if (mounted) setPulseEvents(data);
+    }).catch(() => {});
+
+    forumService.getForumStats().then((data) => {
+      if (mounted) setStats(data);
+    }).catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const activeCount = stats?.activeMembers ?? 1240;
+
   return (
     <section id="events" className="py-16 md:py-24">
       <div className="flex flex-col lg:flex-row">
@@ -34,14 +55,14 @@ export default function CommunityPulse() {
           </h3>
 
           <p className="text-foreground-600 text-sm md:text-base leading-relaxed mb-8">
-            {forumStats.activeThisWeek.toLocaleString()} members were active this
+            {activeCount.toLocaleString()} members were active this
             week. Join the conversations, attend meetups, and be part of the
             growing Alanya community.
           </p>
 
           {/* Events List */}
           <div className="space-y-4">
-            {events.slice(0, 3).map((event) => (
+            {pulseEvents.slice(0, 3).map((event) => (
               <Link
                 key={event.id}
                 to="/events"

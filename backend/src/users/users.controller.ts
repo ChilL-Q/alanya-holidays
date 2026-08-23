@@ -6,12 +6,15 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from '../forum/types/forum.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { PaginationDto, LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -19,13 +22,17 @@ export class UsersController {
 
   @Get('forum/members')
   async getForumMembers(
-    @Query('limit') limit?: string,
+    @Query('limit') limitStr?: string,
     @Query('onlineOnly') onlineOnly?: string,
+    @Query() query?: LimitQueryDto,
   ) {
-    return this.usersService.getForumMembers(
-      limit ? parseInt(limit) : undefined,
-      onlineOnly === 'true',
-    );
+    let limit: number | undefined;
+    if (query?.limit !== undefined) {
+      limit = Number(query.limit);
+    } else if (limitStr !== undefined) {
+      limit = parseInt(limitStr, 10);
+    }
+    return this.usersService.getForumMembers(limit, onlineOnly === 'true');
   }
 
   @Get('forum/online-count')
@@ -35,38 +42,37 @@ export class UsersController {
 
   @Put('presence/touch')
   @UseGuards(AuthGuard)
-  async touchPresence(@Req() req: AuthenticatedRequest) {
-    return this.usersService.touchPresence(req.user.id);
+  async touchPresence(@CurrentUser() user: AuthUser) {
+    return this.usersService.touchPresence(user.id);
   }
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getAllUsers(
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: AuthenticatedRequest,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @CurrentUser() user?: AuthUser,
+    @Query() pagination?: PaginationDto,
   ) {
-    return this.usersService.getAllUsers(
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-      req.user.id,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    return this.usersService.getAllUsers(page, limit, user?.id ?? '');
   }
 
   @Get('role/:role')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getUsersByRole(
     @Param('role') role: string,
-    @Query('page') page: string,
-    @Query('limit') limit: string,
-    @Req() req: AuthenticatedRequest,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @CurrentUser() user?: AuthUser,
+    @Query() pagination?: PaginationDto,
   ) {
-    return this.usersService.getUsersByRole(
-      role,
-      page ? parseInt(page) : 1,
-      limit ? parseInt(limit) : 20,
-      req.user.id,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    return this.usersService.getUsersByRole(role, page, limit, user?.id ?? '');
   }
 
   @Get(':id')
@@ -79,8 +85,8 @@ export class UsersController {
   async updateUserProfile(
     @Param('id') id: string,
     @Body() updates: UpdateUserProfileDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.usersService.updateUserProfile(id, updates, req.user.id);
+    return this.usersService.updateUserProfile(id, updates, user.id);
   }
 }

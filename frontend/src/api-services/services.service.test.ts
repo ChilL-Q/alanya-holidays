@@ -5,17 +5,12 @@ import {
   getProperties,
   getPropertyById,
   getServiceById,
-  checkAvailability,
   createBooking,
   submitConciergeEnquiry,
   createOrder,
   luxuryExperiences,
 } from "./services.service";
 import { apiClient, ApiError } from "@/lib/api-client";
-import { villas as mockVillas } from "@/mocks/villas";
-import { yachts as mockYachts } from "@/mocks/yachts";
-import { helicopterTours as mockHelicopterTours } from "@/mocks/helicopter-tours";
-import { wineTastings as mockWineTastings } from "@/mocks/wine-tastings";
 
 describe("services.service", () => {
   beforeEach(() => {
@@ -67,37 +62,12 @@ describe("services.service", () => {
       expect(result[0].id).toBe("srv-002");
     });
 
-    it("should gracefully fall back to yacht showcase items when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Network failure", 500, "Internal Server Error")
+      );
 
-      const result = await getServices("yacht-charters");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockYachts[0].name);
-      expect(result[0].type).toBe("yacht");
-    });
-
-    it("should gracefully fall back to helicopter tours when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
-
-      const result = await getServices("helicopter-tours");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockHelicopterTours[0].name);
-      expect(result[0].type).toBe("helicopter");
-    });
-
-    it("should gracefully fall back to wine tastings when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
-
-      const result = await getServices("wine-tastings");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].title).toBe(mockWineTastings[0].name);
-    });
-
-    it("should fall back to combined showcase items when category is not specified", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network failure"));
-
-      const result = await getServices();
-      expect(result.length).toBeGreaterThan(20);
+      await expect(getServices("yacht-charters")).rejects.toThrow(ApiError);
     });
   });
 
@@ -123,13 +93,12 @@ describe("services.service", () => {
       expect(result[0].pricePerNight).toBe(500);
     });
 
-    it("should gracefully fall back to mock villas when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
-      const result = await getProperties();
-      expect(result.length).toBe(mockVillas.length);
-      expect(result[0].title).toBe(mockVillas[0].name);
-      expect(result[0].price_per_night).toBe(mockVillas[0].pricePerNight);
+      await expect(getProperties()).rejects.toThrow(ApiError);
     });
   });
 
@@ -151,18 +120,12 @@ describe("services.service", () => {
       expect(result?.pricePerNight).toBe(400);
     });
 
-    it("should fall back to mock villas matching id when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
-      const result = await getPropertyById(mockVillas[0].id);
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe(mockVillas[0].name);
-    });
-
-    it("should return null when property is not in API or mock data", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const result = await getPropertyById("non-existent-id-999");
+      const result = await getPropertyById("missing-id");
       expect(result).toBeNull();
     });
   });
@@ -182,16 +145,10 @@ describe("services.service", () => {
       expect(result).toEqual(mockService);
     });
 
-    it("should fall back to showcase items matching id when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const result = await getServiceById(mockYachts[0].id);
-      expect(result).not.toBeNull();
-      expect(result?.title).toBe(mockYachts[0].name);
-    });
-
-    it("should return null when service is not in API or mock data", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const result = await getServiceById("non-existent-service-999");
       expect(result).toBeNull();
@@ -224,39 +181,6 @@ describe("services.service", () => {
       });
       expect(result).toEqual(mockConflictResult);
     });
-
-    it("should fall back to /bookings/conflict on 404", async () => {
-      const mockConflictResult = {
-        has_conflict: true,
-        message: "Dates are already booked",
-      };
-
-      vi.spyOn(apiClient, "get")
-        .mockRejectedValueOnce(new ApiError("Not Found", 404, "NotFound", null, "/bookings/check-conflict"))
-        .mockResolvedValueOnce(mockConflictResult);
-
-      const result = await checkAvailability(
-        "villa-002",
-        "property",
-        "2026-09-01",
-        "2026-09-05"
-      );
-
-      expect(result).toEqual(mockConflictResult);
-    });
-
-    it("should return available when API call fails completely", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network down"));
-
-      const result = await checkAvailability(
-        "villa-001",
-        "property",
-        "2026-09-01",
-        "2026-09-07"
-      );
-
-      expect(result).toEqual({ has_conflict: false, message: "Available" });
-    });
   });
 
   describe("createBooking", () => {
@@ -267,7 +191,6 @@ describe("services.service", () => {
 
       const payload = {
         item_id: "00000000-0000-0000-0000-000000000001",
-        user_id: "00000000-0000-0000-0000-000000000002",
         check_in: "2026-09-01",
         check_out: "2026-09-05",
         total_price: 1200,
@@ -277,26 +200,33 @@ describe("services.service", () => {
       };
 
       const result = await servicesService.createBooking(payload);
-      expect(apiClient.post).toHaveBeenCalledWith("/bookings", payload);
+      expect(apiClient.post).toHaveBeenCalledWith("/bookings", {
+        item_id: "00000000-0000-0000-0000-000000000001",
+        check_in: "2026-09-01",
+        check_out: "2026-09-05",
+        guests: 4,
+        payment_method: "card",
+        item_type: "property",
+        message: undefined,
+      });
       expect(result.id).toBe("bk-uuid-12345");
       expect(result.success).toBe(true);
     });
 
-    it("should return fallback booking confirmation if API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Server error"));
+    it("should throw ApiError on booking API failure", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Server error", 500, "Internal Server Error")
+      );
 
       const payload = {
         item_id: "villa-001",
-        user_id: "user-001",
         check_in: "2026-09-01",
         check_out: "2026-09-05",
         total_price: 800,
         guests: 2,
       };
 
-      const result = await createBooking(payload);
-      expect(result.success).toBe(true);
-      expect(result.id).toMatch(/^bk-/);
+      await expect(createBooking(payload)).rejects.toThrow(ApiError);
     });
   });
 
@@ -328,17 +258,18 @@ describe("services.service", () => {
       expect(result.id).toBe("enq-999");
     });
 
-    it("should succeed gracefully when /enquiries endpoint fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Service unavailable"));
+    it("should throw ApiError when /enquiries endpoint fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Service unavailable", 500, "Internal Server Error")
+      );
 
-      const result = await submitConciergeEnquiry({
+      const payload = {
         name: "John Doe",
         email: "john@example.com",
         experience_type: "Wine Tasting",
-      });
+      };
 
-      expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      await expect(submitConciergeEnquiry(payload)).rejects.toThrow(ApiError);
     });
   });
 
@@ -349,6 +280,7 @@ describe("services.service", () => {
       const result = await createOrder({
         recipientName: "Jane Doe",
         recipientEmail: "jane@example.com",
+        recipientPhone: "+905551112233",
         senderName: "John Doe",
         senderEmail: "john@example.com",
         subtotal: 150,
@@ -372,6 +304,7 @@ describe("services.service", () => {
         createOrder({
           recipientName: "Jane Doe",
           recipientEmail: "jane@example.com",
+          recipientPhone: "+905551112233",
           senderName: "John Doe",
           senderEmail: "john@example.com",
           subtotal: 100,
@@ -382,19 +315,6 @@ describe("services.service", () => {
   });
 
   describe("Convenience Getters", () => {
-    it("should return villas filtered by location", async () => {
-      const allVillas = await servicesService.getVillas();
-      expect(allVillas.length).toBe(mockVillas.length);
-
-      const mahmutlarVillas = await servicesService.getVillas("Mahmutlar");
-      expect(mahmutlarVillas.every((v) => v.location === "Mahmutlar")).toBe(true);
-    });
-
-    it("should return yachts filtered by type", async () => {
-      const gulets = await servicesService.getYachts("Gulet");
-      expect(gulets.every((y) => y.type === "Gulet")).toBe(true);
-    });
-
     it("should return luxury experiences list", () => {
       const experiences = servicesService.getLuxuryExperiences();
       expect(experiences).toEqual(luxuryExperiences);

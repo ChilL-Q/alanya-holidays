@@ -1,24 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class UsersRepository {
+  private readonly logger = new Logger(UsersRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
     return this.supabaseService.getClient();
-  }
-
-  async getUserRole(userId: string) {
-    const { data, error } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    if (error && error.code !== 'PGRST116') {
-      console.error('getUserRole error:', error);
-    }
-    return data?.role;
   }
 
   async getAllUsers(page = 1, limit = 20) {
@@ -100,7 +90,10 @@ export class UsersRepository {
       .gte('last_seen_at', since);
 
     if (error) {
-      console.error('getOnlineCount error:', error);
+      this.logger.error(
+        'getOnlineCount error:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
       return 0;
     }
     return count ?? 0;
@@ -111,6 +104,11 @@ export class UsersRepository {
       .from('profiles')
       .update({ last_seen_at: new Date().toISOString() })
       .eq('id', userId);
-    if (error) console.error('Failed to update presence:', error);
+    if (error) {
+      this.logger.error(
+        'Failed to update presence:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
+    }
   }
 }

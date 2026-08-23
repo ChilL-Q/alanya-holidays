@@ -1,29 +1,36 @@
-import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { villas as defaultVillas, villaLocations } from "@/mocks/villas";
-import { propertiesService, type Villa, type PropertyItem } from "@/api-services/properties.service";
+import { propertiesService, villaLocations, type Villa, type PropertyItem } from "@/api-services/properties.service";
 import { conciergeService } from "@/api-services/concierge.service";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { formatAmenity } from "@/utils/format-amenity";
+import { createInquiryState } from "@/lib/inquiry-confirmation";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function VillaStaysPage() {
-  const [allVillas, setAllVillas] = useState<Villa[]>(defaultVillas);
+  const navigate = useNavigate();
+  const initialVillas = propertiesService.getVillasSync();
+  const [allVillas, setAllVillas] = useState<Villa[]>(initialVillas);
+  const [isLoading, setIsLoading] = useState(initialVillas.length === 0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeLocation, setActiveLocation] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "guests">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [selectedVilla, setSelectedVilla] = useState<Villa | null>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [contactMethod, setContactMethod] = useState("email");
   const [formError, setFormError] = useState("");
 
-  useEffect(() => {
-    let mounted = true;
-    propertiesService.getProperties().then((res) => {
+  const loadVillas = useCallback(async () => {
+    if (initialVillas.length === 0) {
+      setIsLoading(true);
+    }
+    setFetchError(null);
+    try {
+      const res = await propertiesService.getProperties({ type: "villa" });
       const data: PropertyItem[] = res.data;
-      if (!mounted) return;
       if (Array.isArray(data) && data.length > 0) {
         const mapped: Villa[] = data.map((p) => ({
           id: p.id,
@@ -36,7 +43,7 @@ export default function VillaStaysPage() {
           currency: p.currency || "EUR",
           hasPool: p.hasPool ?? p.has_pool ?? true,
           hasSeaView: p.hasSeaView ?? p.has_sea_view ?? false,
-          image: p.image || p.image_url || (Array.isArray(p.images) && p.images[0]) || defaultVillas[0].image,
+          image: p.image || p.image_url || (Array.isArray(p.images) && p.images[0]) || "https://images.unsplash.com/photo-1580587771525-78b9dba3b914",
           description: p.description || "",
           amenities: p.amenities || ["Air Conditioning", "WiFi", "Pool"],
           rating: p.rating || 4.8,
@@ -46,14 +53,19 @@ export default function VillaStaysPage() {
           distanceToBeach: p.distanceToBeach || p.distance_to_beach || "500m",
         }));
         setAllVillas(mapped);
+      } else {
+        setAllVillas(initialVillas);
       }
-    }).catch(() => {
-      // Keep default mock fallback
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    } catch {
+      setAllVillas(initialVillas);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [initialVillas]);
+
+  useEffect(() => {
+    loadVillas();
+  }, [loadVillas]);
 
   const filteredVillas = useMemo(() => {
     let results = allVillas;
@@ -84,20 +96,25 @@ export default function VillaStaysPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const prefContact = (formData.get("preferred_contact") as string) || "email";
-    setContactMethod(prefContact);
+    const bookingName = ((formData.get("name") as string) || "").trim();
+    const bookingEmail = ((formData.get("email") as string) || "").trim();
+    const bookingPhone = ((formData.get("phone") as string) || "").trim();
+    const bookingCountryCode = ((formData.get("country_code") as string) || "").trim();
+    const bookingNotes = ((formData.get("notes") as string) || "").trim();
+    const confirmationState = createInquiryState({
+      name: bookingName,
+      email: bookingEmail,
+      subject: "Villa Stay",
+      message: bookingNotes || `Enquiry for ${selectedVilla?.name ?? "Villa Stay"}`,
+    });
+
     const honeypot = formData.get("website_alt") as string;
     if (honeypot && honeypot.trim() !== "") {
-      setFormSuccess(true);
+      navigate("/booking-confirmation", { state: confirmationState });
       return;
     }
     setFormSubmitting(true);
     try {
-      const bookingName = (formData.get("name") as string || "").trim();
-      const bookingEmail = (formData.get("email") as string || "").trim();
-      const bookingPhone = (formData.get("phone") as string || "").trim();
-      const bookingCountryCode = (formData.get("country_code") as string || "").trim();
-      const bookingNotes = (formData.get("notes") as string || "").trim();
-
       const result = await conciergeService.submitConciergeEnquiry({
         name: bookingName,
         email: bookingEmail,
@@ -112,8 +129,8 @@ export default function VillaStaysPage() {
       });
 
       if (result.success) {
-        setFormSuccess(true);
         form.reset();
+        navigate("/booking-confirmation", { state: confirmationState });
       } else {
         setFormError("Something went wrong. Please try again.");
       }
@@ -189,64 +206,101 @@ export default function VillaStaysPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredVillas.length} {filteredVillas.length === 1 ? "villa" : "villas"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredVillas.length} {filteredVillas.length === 1 ? "villa" : "villas"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredVillas.map((villa) => (
-                <div key={villa.id} onClick={() => setSelectedVilla(villa)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={villa.image} alt={villa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {villa.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-map-pin-line text-[11px]"></i>{villa.location}
-                    </div>
-                    <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                      {villa.hasPool && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-drop-line text-[9px]"></i>Pool</span>}
-                      {villa.hasSeaView && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-eye-line text-[9px]"></i>Sea View</span>}
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{villa.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{villa.rating}</span>
-                        <span className="text-xs text-foreground-500">({villa.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{villa.description}</p>
-                    <div className="flex items-center gap-4 mb-4 text-xs text-foreground-500">
-                      <div className="flex items-center gap-1.5"><i className="ri-hotel-bed-line text-foreground-400"></i><span>{villa.bedrooms} BR</span></div>
-                      <div className="flex items-center gap-1.5"><i className="ri-user-line text-foreground-400"></i><span>{villa.maxGuests} guests</span></div>
-                      <div className="flex items-center gap-1.5"><i className="ri-walk-line text-foreground-400"></i><span>{villa.distanceToBeach}</span></div>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {villa.amenities.slice(0, 4).map((a) => (
-                        <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
-                      ))}
-                      {villa.amenities.length > 4 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{villa.amenities.length - 4} more</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{villa.pricePerNight}</span>
-                        <span className="text-sm text-foreground-500"> / night</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedVilla(villa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-hotel-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load villas"
+                message={fetchError}
+                onRetry={loadVillas}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredVillas.length === 0 ? (
+              <EmptyState
+                title="No villas found"
+                description="Try selecting a different location or clearing filters."
+                icon="ri-home-4-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveLocation("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredVillas.map((villa) => (
+                  <div key={villa.id} onClick={() => setSelectedVilla(villa)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={villa.image} alt={villa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {villa.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-map-pin-line text-[11px]"></i>{villa.location}
+                      </div>
+                      <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+                        {villa.hasPool && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-drop-line text-[9px]"></i>Pool</span>}
+                        {villa.hasSeaView && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-eye-line text-[9px]"></i>Sea View</span>}
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{villa.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{villa.rating}</span>
+                          <span className="text-xs text-foreground-500">({villa.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{villa.description}</p>
+                      <div className="flex items-center gap-4 mb-4 text-xs text-foreground-500">
+                        <div className="flex items-center gap-1.5"><i className="ri-hotel-bed-line text-foreground-400"></i><span>{villa.bedrooms} BR</span></div>
+                        <div className="flex items-center gap-1.5"><i className="ri-user-line text-foreground-400"></i><span>{villa.maxGuests} guests</span></div>
+                        <div className="flex items-center gap-1.5"><i className="ri-walk-line text-foreground-400"></i><span>{villa.distanceToBeach}</span></div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {villa.amenities.slice(0, 4).map((a) => (
+                          <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
+                        ))}
+                        {villa.amenities.length > 4 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{villa.amenities.length - 4} more</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{villa.pricePerNight}</span>
+                          <span className="text-sm text-foreground-500"> / night</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedVilla(villa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-hotel-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -322,24 +376,7 @@ export default function VillaStaysPage() {
                     ))}
                   </div>
                 </div>
-                {formSuccess ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
-                      <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
-                      <span className="text-sm font-medium text-green-700">
-                        {contactMethod === 'whatsapp' ? (
-                          <>Enquiry sent! We'll WhatsApp you soon.</>
-                        ) : contactMethod === 'phone_call' ? (
-                          <>Enquiry sent! We'll call you soon.</>
-                        ) : (
-                          <>Enquiry sent! We'll email you soon.</>
-                        )}
-                      </span>
-                    </div>
-                    <button onClick={() => setSelectedVilla(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                <form onSubmit={handleBookingSubmit} data-readdy-form>
                     <input type="hidden" name="experience_type" value="Villa Stay" />
                     <input type="hidden" name="villa_name" value={selectedVilla.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -409,14 +446,13 @@ export default function VillaStaysPage() {
                         ) : (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Book Now
+                            Request Availability
                           </>
                         )}
                       </button>
                       <button type="button" onClick={() => setSelectedVilla(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                     </div>
                   </form>
-                )}
               </div>
             </div>
           </div>

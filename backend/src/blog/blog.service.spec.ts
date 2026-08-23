@@ -13,10 +13,12 @@ jest.mock('sanitize-html', () => {
 
 import { BlogService } from './blog.service';
 import { BlogRepository } from './blog.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import {
   BlogPost,
   BlogPostSummary,
   BlogTag,
+  InsertBlogPostPayload,
   RawBlogPostRow,
 } from './types/blog.types';
 import {
@@ -34,6 +36,7 @@ type MockRepositoryType = {
 describe('BlogService', () => {
   let service: BlogService;
   let mockRepository: MockRepositoryType;
+  let mockUserRolesRepo: { getRole: jest.Mock };
 
   const mockBlogPost: BlogPost = {
     id: 'post-1',
@@ -71,8 +74,11 @@ describe('BlogService', () => {
   };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
+
     mockRepository = {
-      getUserRole: jest.fn(),
       getSlugs: jest.fn().mockResolvedValue([]),
       getBlogPosts: jest.fn(),
       getFeaturedBlogPosts: jest.fn(),
@@ -108,6 +114,10 @@ describe('BlogService', () => {
           provide: BlogRepository,
           useValue: mockRepository,
         },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
+        },
       ],
     }).compile();
 
@@ -116,7 +126,7 @@ describe('BlogService', () => {
 
   describe('getBlogPosts', () => {
     it('should query posts with pagination and flatten tags', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getBlogPosts.mockResolvedValueOnce({
         data: [mockRawRow],
         count: 1,
@@ -222,7 +232,7 @@ describe('BlogService', () => {
 
   describe('createBlogPost', () => {
     it('should generate unique slug and insert post with tags', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getSlugs.mockResolvedValueOnce([]);
       mockRepository.insertBlogPost.mockResolvedValueOnce(mockBlogPost);
 
@@ -251,7 +261,7 @@ describe('BlogService', () => {
     });
 
     it('should resolve conflicting slug by incrementing counter', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getSlugs.mockResolvedValueOnce([
         'test-post',
         'test-post-1',
@@ -277,11 +287,38 @@ describe('BlogService', () => {
         }),
       );
     });
+
+    it('should correctly transliterate Turkish diacritics into ASCII without stripping characters', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertBlogPost.mockImplementationOnce(
+        (payload: InsertBlogPostPayload) =>
+          Promise.resolve({
+            ...mockBlogPost,
+            title: payload.title,
+            slug: payload.slug,
+          }),
+      );
+
+      const dto: CreateBlogPostDto = {
+        title: 'İstanbul Çeşme & Şile Rehberi',
+        content: '<p>Gezi rehberi</p>',
+        status: 'published',
+      };
+
+      const result = await service.createBlogPost(dto, 'user-1');
+      expect(result.slug).toBe('istanbul-cesme-sile-rehberi');
+      expect(mockRepository.insertBlogPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: 'istanbul-cesme-sile-rehberi',
+        }),
+      );
+    });
   });
 
   describe('updateBlogPost', () => {
     it('should throw NotFoundException if post not found', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getBlogPostById.mockResolvedValueOnce(null);
 
       const dto: UpdateBlogPostDto = { title: 'Updated' };
@@ -291,7 +328,7 @@ describe('BlogService', () => {
     });
 
     it('should throw UnauthorizedException if not owner or admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getBlogPostById.mockResolvedValueOnce({
         author_id: 'other-user',
         status: 'published',
@@ -305,7 +342,7 @@ describe('BlogService', () => {
     });
 
     it('should allow admin to update post, featured status and update tags', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogPostById.mockResolvedValueOnce({
         author_id: 'other-user',
         status: 'draft',
@@ -344,14 +381,14 @@ describe('BlogService', () => {
 
   describe('deleteBlogPost', () => {
     it('should throw UnauthorizedException if non-admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       await expect(service.deleteBlogPost('post-1', 'user-1')).rejects.toThrow(
         UnauthorizedException,
       );
     });
 
     it('should delete post when admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       const res = await service.deleteBlogPost('post-1', 'admin-1');
       expect(res).toEqual({ success: true });
       expect(mockRepository.deleteBlogPost).toHaveBeenCalledWith('post-1');
@@ -368,7 +405,7 @@ describe('BlogService', () => {
     });
 
     it('should create tag if admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.insertBlogTag.mockResolvedValueOnce({
         id: 'tag-2',
         name: 'Historic Sites',
@@ -380,14 +417,14 @@ describe('BlogService', () => {
     });
 
     it('should delete tag if admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       const res = await service.deleteBlogTag('tag-2', 'admin-1');
       expect(res.success).toBe(true);
       expect(mockRepository.deleteBlogTag).toHaveBeenCalledWith('tag-2');
     });
 
     it('should add and remove tag to post when owner', async () => {
-      mockRepository.getUserRole.mockResolvedValue('user');
+      mockUserRolesRepo.getRole.mockResolvedValue('user');
       mockRepository.getBlogPostById.mockResolvedValue({
         author_id: 'user-1',
         status: 'draft',
@@ -457,7 +494,7 @@ describe('BlogService', () => {
 
   describe('getBlogSubmissions', () => {
     it('should query submissions if admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissions.mockResolvedValueOnce([]);
 
       const query: GetBlogSubmissionsQueryDto = { status: 'pending_review' };
@@ -478,7 +515,7 @@ describe('BlogService', () => {
 
   describe('approveBlogSubmission', () => {
     it('should throw UnauthorizedException if non-admin attempts approval', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(
         service.approveBlogSubmission('sub-1', 'user-1'),
@@ -486,7 +523,7 @@ describe('BlogService', () => {
     });
 
     it('should approve submission, create post, and send notification', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
         id: 'sub-1',
         user_id: 'author-1',
@@ -522,7 +559,7 @@ describe('BlogService', () => {
     });
 
     it('should persist submission category in insertBlogPost during approval', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
         id: 'sub-category-1',
         user_id: 'author-1',
@@ -558,7 +595,7 @@ describe('BlogService', () => {
     });
 
     it('should rollback submission status if post insertion fails', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
         id: 'sub-1',
         user_id: 'author-1',
@@ -588,7 +625,7 @@ describe('BlogService', () => {
 
   describe('rejectBlogSubmission', () => {
     it('should throw BadRequestException if reason is too short', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       await expect(
         service.rejectBlogSubmission('sub-1', 'short', 'admin-1'),
@@ -596,7 +633,7 @@ describe('BlogService', () => {
     });
 
     it('should reject submission, update status, and send notification', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
         id: 'sub-1',
         user_id: 'author-1',

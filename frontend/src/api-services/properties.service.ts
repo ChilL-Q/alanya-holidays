@@ -1,7 +1,16 @@
-import { apiClient } from "@/lib/api-client";
-import { villas as mockVillas, type Villa } from "@/mocks/villas";
+import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
+import { villas as domainVillas, type Villa } from "@/domain/villas";
 
 export type { Villa };
+
+export const villaLocations = [
+  { id: "all", name: "All Locations", icon: "ri-map-pin-line" },
+  { id: "alanya-center", name: "Alanya Center", icon: "ri-building-line" },
+  { id: "mahmutlar", name: "Mahmutlar", icon: "ri-home-4-line" },
+  { id: "kargicak", name: "Kargıcak", icon: "ri-landscape-line" },
+  { id: "konakli", name: "Konaklı", icon: "ri-hotel-line" },
+  { id: "tosmur", name: "Tosmur", icon: "ri-community-line" },
+];
 
 export interface PropertyItem {
   id: string;
@@ -43,7 +52,7 @@ export interface PropertyItem {
   [key: string]: unknown;
 }
 
-export interface PropertyFilterParams {
+export interface PropertyFilterParams extends RequestOptions {
   location?: string;
   type?: string;
   minPrice?: number;
@@ -79,530 +88,368 @@ export interface CreatePropertyBookingPayload {
   propertyId?: string;
   itemId?: string;
   item_id?: string;
-  userId?: string;
-  user_id?: string;
-  checkIn: string;
-  checkOut: string;
+  checkIn?: string;
   check_in?: string;
+  checkOut?: string;
   check_out?: string;
   guests?: number;
   totalPrice?: number;
-  total_price?: number;
-  currency?: string;
-  message?: string;
   paymentMethod?: string;
   payment_method?: string;
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
+  message?: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
 }
 
 export interface CreatePropertyBookingResult {
   success: boolean;
   bookingId?: string;
-  id?: string;
   message?: string;
 }
 
-/**
- * Converts a raw backend property record or Supabase row into a normalized PropertyItem.
- */
-export function mapBackendPropertyToPropertyItem(raw: Record<string, unknown>): PropertyItem {
-  const id = String(raw.id ?? "");
-  const title = String(raw.title || raw.name || "Property");
-  const name = String(raw.name || raw.title || title);
-  const description = typeof raw.description === "string" ? raw.description : "";
-  const type = typeof raw.type === "string" ? raw.type : "villa";
-  const location = typeof raw.location === "string" ? raw.location : "Alanya";
-
-  const pricePerNight =
-    typeof raw.pricePerNight === "number"
-      ? raw.pricePerNight
-      : typeof raw.price_per_night === "number"
-        ? raw.price_per_night
-        : typeof raw.price_per_night === "string"
-          ? parseFloat(raw.price_per_night) || 0
-          : typeof raw.price === "number"
-            ? raw.price
-            : 0;
-
-  const currency = typeof raw.currency === "string" && raw.currency.trim() ? raw.currency.trim().toUpperCase() : "EUR";
-  const bedrooms = typeof raw.bedrooms === "number" ? raw.bedrooms : Number(raw.bedrooms) || 0;
-  const bathrooms = typeof raw.bathrooms === "number" ? raw.bathrooms : Number(raw.bathrooms) || 0;
-  const maxGuests =
-    typeof raw.maxGuests === "number"
-      ? raw.maxGuests
-      : typeof raw.max_guests === "number"
-        ? raw.max_guests
-        : Number(raw.max_guests) || 1;
-
-  const hasPool =
-    typeof raw.hasPool === "boolean"
-      ? raw.hasPool
-      : typeof raw.has_pool === "boolean"
-        ? raw.has_pool
-        : false;
-
-  const hasSeaView =
-    typeof raw.hasSeaView === "boolean"
-      ? raw.hasSeaView
-      : typeof raw.has_sea_view === "boolean"
-        ? raw.has_sea_view
-        : false;
-
-  const images = Array.isArray(raw.images)
-    ? raw.images.filter((img): img is string => typeof img === "string")
-    : typeof raw.image === "string"
-      ? [raw.image]
-      : typeof raw.image_url === "string"
-        ? [raw.image_url]
+export function mapBackendPropertyToPropertyItem(
+  item: Record<string, unknown>
+): PropertyItem {
+  const images = Array.isArray(item.images)
+    ? (item.images as string[])
+    : typeof item.image === "string"
+      ? [item.image]
+      : typeof item.image_url === "string"
+        ? [item.image_url]
         : [];
 
-  const image = images[0] || (typeof raw.image === "string" ? raw.image : typeof raw.image_url === "string" ? raw.image_url : "");
-
-  const amenities = Array.isArray(raw.amenities)
-    ? raw.amenities.filter((a): a is string => typeof a === "string")
-    : [];
-
-  const rating = typeof raw.rating === "number" ? raw.rating : Number(raw.rating) || 5.0;
-  const reviewCount =
-    typeof raw.reviewCount === "number"
-      ? raw.reviewCount
-      : typeof raw.review_count === "number"
-        ? raw.review_count
-        : Number(raw.review_count) || 0;
-
-  const featured = Boolean(raw.featured ?? raw.is_featured ?? false);
-  const minStay =
-    typeof raw.minStay === "number"
-      ? raw.minStay
-      : typeof raw.min_stay === "number"
-        ? raw.min_stay
-        : typeof raw.min_stay_nights === "number"
-          ? raw.min_stay_nights
-          : Number(raw.min_stay_nights) || 1;
-
-  const distanceToBeach =
-    typeof raw.distanceToBeach === "string"
-      ? raw.distanceToBeach
-      : typeof raw.distance_to_beach === "string"
-        ? raw.distance_to_beach
-        : "";
-
-  const status = typeof raw.status === "string" ? raw.status : "approved";
-  const hostId = typeof raw.host_id === "string" ? raw.host_id : typeof raw.hostId === "string" ? raw.hostId : undefined;
+  const mainImage =
+    typeof item.image === "string" && item.image
+      ? item.image
+      : typeof item.image_url === "string" && item.image_url
+        ? item.image_url
+        : images[0] ||
+          "https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20villa%20exterior%20with%20infinity%20pool%20and%20sea%20view&width=800&height=600&orientation=landscape";
 
   return {
-    ...raw,
-    id,
-    title,
-    name,
-    description,
-    type,
-    location,
-    price_per_night: pricePerNight,
-    pricePerNight,
-    currency,
-    bedrooms,
-    bathrooms,
-    max_guests: maxGuests,
-    maxGuests,
-    has_pool: hasPool,
-    hasPool,
-    has_sea_view: hasSeaView,
-    hasSeaView,
+    id: String(item.id || item.slug || ""),
+    title: String(item.title || item.name || "Alanya Property"),
+    name: String(item.name || item.title || "Alanya Property"),
+    description: String(item.description || ""),
+    type: String(item.type || "villa"),
+    location: String(item.location || "Alanya"),
+    pricePerNight: Number(item.price_per_night ?? item.pricePerNight ?? 0),
+    price_per_night: Number(item.price_per_night ?? item.pricePerNight ?? 0),
+    currency: String(item.currency || "EUR"),
+    bedrooms: Number(item.bedrooms ?? 1),
+    bathrooms: Number(item.bathrooms ?? 1),
+    maxGuests: Number(item.max_guests ?? item.maxGuests ?? 2),
+    max_guests: Number(item.max_guests ?? item.maxGuests ?? 2),
+    hasPool: Boolean(item.has_pool ?? item.hasPool),
+    has_pool: Boolean(item.has_pool ?? item.hasPool),
+    hasSeaView: Boolean(item.has_sea_view ?? item.hasSeaView),
+    has_sea_view: Boolean(item.has_sea_view ?? item.hasSeaView),
     images,
-    image,
-    image_url: image,
-    amenities,
-    rating,
-    review_count: reviewCount,
-    reviewCount,
-    featured,
-    min_stay: minStay,
-    minStay,
-    distance_to_beach: distanceToBeach,
-    distanceToBeach,
-    status,
-    host_id: hostId,
+    image: mainImage,
+    image_url: mainImage,
+    amenities: Array.isArray(item.amenities)
+      ? (item.amenities as string[])
+      : [],
+    rating: Number(item.rating ?? 5.0),
+    reviewCount: Number(item.review_count ?? item.reviewCount ?? 0),
+    review_count: Number(item.review_count ?? item.reviewCount ?? 0),
+    featured: Boolean(item.featured),
+    minStay: Number(item.min_stay ?? item.min_stay_nights ?? item.minStay ?? 1),
+    min_stay: Number(item.min_stay ?? item.min_stay_nights ?? item.minStay ?? 1),
+    distanceToBeach: String(item.distance_to_beach ?? item.distanceToBeach ?? ""),
+    distance_to_beach: String(item.distance_to_beach ?? item.distanceToBeach ?? ""),
+    status: String(item.status || "available"),
+    host_id: item.host_id ? String(item.host_id) : undefined,
+    cleaningFee: item.cleaning_fee ? Number(item.cleaning_fee) : undefined,
+    beds: item.beds ? Number(item.beds) : undefined,
   };
 }
 
-/**
- * Maps a mock Villa entity to a normalized PropertyItem.
- */
 export function mapVillaToPropertyItem(v: Villa): PropertyItem {
   return {
     id: v.id,
     title: v.name,
     name: v.name,
     description: v.description,
-    type: "villa",
+    type: v.type || "villa",
     location: v.location,
-    price_per_night: v.pricePerNight,
     pricePerNight: v.pricePerNight,
+    price_per_night: v.pricePerNight,
     currency: v.currency,
     bedrooms: v.bedrooms,
     bathrooms: v.bathrooms,
-    max_guests: v.maxGuests,
     maxGuests: v.maxGuests,
-    has_pool: v.hasPool,
+    max_guests: v.maxGuests,
     hasPool: v.hasPool,
-    has_sea_view: v.hasSeaView,
+    has_pool: v.hasPool,
     hasSeaView: v.hasSeaView,
-    images: [v.image],
+    has_sea_view: v.hasSeaView,
+    images: v.images || (v.image ? [v.image] : []),
     image: v.image,
     image_url: v.image,
     amenities: v.amenities,
     rating: v.rating,
-    review_count: v.reviewCount,
     reviewCount: v.reviewCount,
+    review_count: v.reviewCount,
     featured: v.featured,
-    min_stay: v.minStay,
     minStay: v.minStay,
-    distance_to_beach: v.distanceToBeach,
+    min_stay: v.minStay,
     distanceToBeach: v.distanceToBeach,
-    status: "approved",
+    distance_to_beach: v.distanceToBeach,
   };
 }
 
 export class PropertiesService {
   /**
-   * Retrieves paginated and filtered properties.
-   * Calls `GET /properties` with parameters and falls back gracefully to mock villas.
+   * Synchronous lookup for curated domain villas.
+   */
+  getVillasSync(): Villa[] {
+    return domainVillas;
+  }
+  /**
+   * Retrieves all properties or filtered properties from live backend.
    */
   async getProperties(
     params?: PropertyFilterParams
   ): Promise<{ data: PropertyItem[]; total: number }> {
+    const {
+      location,
+      type,
+      minPrice,
+      maxPrice,
+      bedrooms,
+      bathrooms,
+      guests,
+      hasPool,
+      hasSeaView,
+      featured,
+      page,
+      limit,
+      sort,
+      filters,
+      allowedIds,
+      params: extraParams,
+      signal,
+      headers,
+      ...restOptions
+    } = params || {};
+
     const queryParams: Record<string, string | number | boolean | undefined> = {};
 
     if (params) {
-      if (params.page !== undefined) queryParams.page = params.page;
-      if (params.limit !== undefined) queryParams.limit = params.limit;
-      if (params.location !== undefined) queryParams.location = params.location;
-      if (params.sort !== undefined) queryParams.sort = params.sort;
-
-      if (typeof params.filters === "string") {
-        queryParams.filters = params.filters;
-      } else if (params.filters && typeof params.filters === "object") {
-        queryParams.filters = JSON.stringify(params.filters);
-      } else {
-        const filterObj: Record<string, unknown> = {};
-        if (params.minPrice !== undefined || params.maxPrice !== undefined) {
-          filterObj.priceRange = [params.minPrice ?? 0, params.maxPrice ?? 1000000];
-        }
-        if (params.guests !== undefined) {
-          filterObj.minGuests = params.guests;
-        }
-        if (params.bedrooms !== undefined) {
-          filterObj.minBedrooms = params.bedrooms;
-        }
-        if (params.bathrooms !== undefined) {
-          filterObj.minBathrooms = params.bathrooms;
-        }
-        if (params.type !== undefined) {
-          filterObj.types = [params.type];
-        }
-        if (Object.keys(filterObj).length > 0) {
-          queryParams.filters = JSON.stringify(filterObj);
-        }
+      if (location && location !== "all") queryParams.location = location;
+      if (type && type !== "all") queryParams.type = type;
+      if (minPrice !== undefined) queryParams.minPrice = minPrice;
+      if (maxPrice !== undefined) queryParams.maxPrice = maxPrice;
+      if (bedrooms !== undefined) queryParams.bedrooms = bedrooms;
+      if (bathrooms !== undefined) queryParams.bathrooms = bathrooms;
+      if (guests !== undefined) queryParams.guests = guests;
+      if (hasPool !== undefined) queryParams.hasPool = hasPool;
+      if (hasSeaView !== undefined) queryParams.hasSeaView = hasSeaView;
+      if (featured !== undefined) queryParams.featured = featured;
+      if (page !== undefined) queryParams.page = page;
+      if (limit !== undefined) queryParams.limit = limit;
+      if (sort !== undefined) queryParams.sort = sort;
+      if (allowedIds !== undefined) {
+        queryParams.allowedIds = Array.isArray(allowedIds)
+          ? allowedIds.join(",")
+          : String(allowedIds);
+      }
+      if (filters) {
+        queryParams.filters =
+          typeof filters === "string"
+            ? filters
+            : JSON.stringify(filters);
       }
     }
 
-    try {
-      const response = await apiClient.get<
-        { data?: Record<string, unknown>[]; count?: number | null } | Record<string, unknown>[]
-      >("/properties", { params: queryParams });
+    const reqConfig: RequestOptions = {
+      ...(signal ? { signal } : {}),
+      ...(headers ? { headers } : {}),
+      ...restOptions,
+      params: { ...extraParams, ...queryParams },
+    };
 
-      if (Array.isArray(response) && response.length > 0) {
-        return {
-          data: response.map(mapBackendPropertyToPropertyItem),
-          total: response.length,
-        };
-      }
+    const response = await apiClient.get<
+      | { data: Record<string, unknown>[]; count?: number; total?: number }
+      | Record<string, unknown>[]
+    >("/properties", reqConfig);
 
-      if (
-        response &&
-        typeof response === "object" &&
-        "data" in response &&
-        Array.isArray(response.data)
-      ) {
-        return {
-          data: response.data.map(mapBackendPropertyToPropertyItem),
-          total: response.count ?? response.data.length,
-        };
-      }
-    } catch (err) {
-      console.warn("Failed to fetch properties from API, using mock fallback:", err);
+    if (Array.isArray(response)) {
+      const mapped = response.map(mapBackendPropertyToPropertyItem);
+      return {
+        data: mapped,
+        total: mapped.length,
+      };
     }
 
-    // Mock fallback handling with filter simulation
-    let fallback = mockVillas.map(mapVillaToPropertyItem);
-
-    if (params?.location && params.location !== "all") {
-      const locLower = params.location.toLowerCase();
-      fallback = fallback.filter((v) =>
-        (v.location || "").toLowerCase().includes(locLower)
-      );
-    }
-
-    if (params?.type) {
-      const typeLower = params.type.toLowerCase();
-      fallback = fallback.filter((v) =>
-        (v.type || "villa").toLowerCase().includes(typeLower)
-      );
-    }
-
-    if (params?.minPrice !== undefined) {
-      fallback = fallback.filter(
-        (v) => (v.pricePerNight ?? 0) >= (params.minPrice ?? 0)
-      );
-    }
-
-    if (params?.maxPrice !== undefined) {
-      fallback = fallback.filter(
-        (v) => (v.pricePerNight ?? 0) <= (params.maxPrice ?? Infinity)
-      );
-    }
-
-    if (params?.bedrooms !== undefined) {
-      fallback = fallback.filter(
-        (v) => (v.bedrooms ?? 0) >= (params.bedrooms ?? 0)
-      );
-    }
-
-    if (params?.bathrooms !== undefined) {
-      fallback = fallback.filter(
-        (v) => (v.bathrooms ?? 0) >= (params.bathrooms ?? 0)
-      );
-    }
-
-    if (params?.guests !== undefined) {
-      fallback = fallback.filter(
-        (v) => (v.maxGuests ?? 0) >= (params.guests ?? 0)
-      );
-    }
-
-    if (params?.hasPool !== undefined) {
-      fallback = fallback.filter((v) => v.hasPool === params.hasPool);
-    }
-
-    if (params?.hasSeaView !== undefined) {
-      fallback = fallback.filter((v) => v.hasSeaView === params.hasSeaView);
-    }
-
-    if (params?.featured !== undefined) {
-      fallback = fallback.filter((v) => v.featured === params.featured);
-    }
-
-    const total = fallback.length;
-
-    if (params?.page && params?.limit) {
-      const startIndex = (params.page - 1) * params.limit;
-      fallback = fallback.slice(startIndex, startIndex + params.limit);
-    } else if (params?.limit) {
-      fallback = fallback.slice(0, params.limit);
+    if (
+      response &&
+      typeof response === "object" &&
+      "data" in response &&
+      Array.isArray(response.data)
+    ) {
+      const mapped = response.data.map(mapBackendPropertyToPropertyItem);
+      return {
+        data: mapped,
+        total: response.total ?? response.count ?? mapped.length,
+      };
     }
 
     return {
-      data: fallback,
-      total,
+      data: [],
+      total: 0,
     };
   }
 
   /**
    * Retrieves a single property by its ID.
-   * Calls `GET /properties/:id`, falling back to mock villas.
    */
-  async getProperty(id: string): Promise<PropertyItem | null> {
+  async getProperty(id: string, options?: RequestOptions): Promise<PropertyItem | null> {
     try {
-      const data = await apiClient.get<Record<string, unknown>>(`/properties/${id}`);
+      const data = options
+        ? await apiClient.get<Record<string, unknown>>(`/properties/${id}`, options)
+        : await apiClient.get<Record<string, unknown>>(`/properties/${id}`);
       if (data && data.id) {
         return mapBackendPropertyToPropertyItem(data);
       }
+      return null;
     } catch (err) {
-      console.warn(`Failed to fetch property '${id}' from API, searching fallback:`, err);
+      if (err instanceof ApiError && err.status === 404) {
+        return null;
+      }
+      throw err;
     }
-
-    const fallbackVilla = mockVillas.find(
-      (v) =>
-        v.id === id ||
-        v.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === id.toLowerCase() ||
-        v.id.replace(/-/g, "") === id.replace(/-/g, "")
-    );
-
-    return fallbackVilla ? mapVillaToPropertyItem(fallbackVilla) : null;
   }
 
   /**
    * Retrieves available properties for a date range.
-   * Calls `POST /properties/available`, falling back to mock villas.
    */
   async getAvailableProperties(
     checkIn: string,
-    checkOut: string
+    checkOut: string,
+    options?: RequestOptions
   ): Promise<PropertyItem[]> {
-    try {
-      const response = await apiClient.post<
-        Record<string, unknown>[] | { data: Record<string, unknown>[] }
-      >("/properties/available", { checkIn, checkOut });
+    const response = options
+      ? await apiClient.post<
+          Record<string, unknown>[] | { data: Record<string, unknown>[] }
+        >("/properties/available", { checkIn, checkOut }, options)
+      : await apiClient.post<
+          Record<string, unknown>[] | { data: Record<string, unknown>[] }
+        >("/properties/available", { checkIn, checkOut });
 
-      if (Array.isArray(response) && response.length > 0) {
-        return response.map(mapBackendPropertyToPropertyItem);
-      }
-
-      if (
-        response &&
-        typeof response === "object" &&
-        "data" in response &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        return response.data.map(mapBackendPropertyToPropertyItem);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch available properties from API, using fallback:", err);
+    if (Array.isArray(response)) {
+      return response.map(mapBackendPropertyToPropertyItem);
     }
 
-    return mockVillas.map(mapVillaToPropertyItem);
+    if (
+      response &&
+      typeof response === "object" &&
+      "data" in response &&
+      Array.isArray(response.data)
+    ) {
+      return response.data.map(mapBackendPropertyToPropertyItem);
+    }
+
+    return [];
   }
 
   /**
    * Checks whether a property is available for given dates.
-   * Calls `GET /properties/:id/availability`, falling back to `/bookings/conflict` or default available.
    */
   async checkAvailability(
     id: string,
     checkIn: string,
-    checkOut: string
+    checkOut: string,
+    options?: RequestOptions
   ): Promise<boolean> {
-    try {
-      const response = await apiClient.get<
-        | Array<{ status?: string; is_available?: boolean; has_conflict?: boolean }>
-        | { has_conflict?: boolean }
-      >(`/properties/${id}/availability`, {
-        params: { startDate: checkIn, endDate: checkOut },
-      });
+    const response = await apiClient.get<
+      | Array<{ status?: string; is_available?: boolean; has_conflict?: boolean }>
+      | { has_conflict?: boolean }
+    >(`/properties/${id}/availability`, {
+      ...options,
+      params: { ...options?.params, startDate: checkIn, endDate: checkOut },
+    });
 
-      if (Array.isArray(response)) {
-        const hasConflict = response.some(
-          (rec) =>
-            rec.status === "booked" ||
-            rec.status === "blocked" ||
-            rec.status === "unavailable" ||
-            rec.is_available === false ||
-            rec.has_conflict === true
-        );
-        return !hasConflict;
-      }
-
-      if (
-        response &&
-        typeof response === "object" &&
-        typeof response.has_conflict === "boolean"
-      ) {
-        return !response.has_conflict;
-      }
-
-      return true;
-    } catch {
-      try {
-        const conflictRes = await apiClient.get<{ has_conflict?: boolean }>(
-          "/bookings/conflict",
-          {
-            params: {
-              itemId: id,
-              itemType: "property",
-              checkIn,
-              checkOut,
-            },
-          }
-        );
-        if (conflictRes && typeof conflictRes.has_conflict === "boolean") {
-          return !conflictRes.has_conflict;
-        }
-      } catch (err) {
-        console.warn(
-          `Failed to check availability for property '${id}', assuming available fallback:`,
-          err
-        );
-      }
-
-      return true;
+    if (Array.isArray(response)) {
+      const hasConflict = response.some(
+        (rec) =>
+          rec.status === "booked" ||
+          rec.status === "blocked" ||
+          rec.status === "unavailable" ||
+          rec.is_available === false ||
+          rec.has_conflict === true
+      );
+      return !hasConflict;
     }
+
+    if (
+      response &&
+      typeof response === "object" &&
+      typeof response.has_conflict === "boolean"
+    ) {
+      return !response.has_conflict;
+    }
+
+    return true;
   }
 
   /**
    * Retrieves active property types.
-   * Calls `GET /properties/types`, falling back to standard accommodation types.
    */
-  async getPropertyTypes(): Promise<string[]> {
+  async getPropertyTypes(options?: RequestOptions): Promise<string[]> {
     try {
-      const response = await apiClient.get<string[]>("/properties/types");
+      const response = options
+        ? await apiClient.get<string[]>("/properties/types", options)
+        : await apiClient.get<string[]>("/properties/types");
       if (Array.isArray(response) && response.length > 0) {
         return response;
       }
+      return ["villa", "apartment", "penthouse", "estate", "studio", "house"];
     } catch (err) {
-      console.warn("Failed to fetch property types from API, using fallback:", err);
+      if (err instanceof ApiError && (err.status === 404 || err.status === 401)) {
+        return ["villa", "apartment", "penthouse", "estate", "studio", "house"];
+      }
+      throw err;
     }
-
-    return ["villa", "apartment", "penthouse", "estate", "studio", "house"];
   }
 
   /**
    * Creates a direct booking for a property.
-   * Calls `POST /bookings`, falling back to simulated confirmation.
    */
   async createBooking(
     payload: CreatePropertyBookingPayload
-  ): Promise<{ success: boolean; bookingId?: string }> {
+  ): Promise<CreatePropertyBookingResult> {
     const propertyId = payload.propertyId || payload.itemId || payload.item_id || "";
     const checkIn = payload.checkIn || payload.check_in || "";
     const checkOut = payload.checkOut || payload.check_out || "";
-    const totalPrice = payload.totalPrice || payload.total_price || 0;
     const guests = payload.guests || 1;
-    const userId = payload.userId || payload.user_id || "guest";
     const paymentMethod = payload.paymentMethod || payload.payment_method || "credit_card";
 
     const requestBody = {
       item_id: propertyId,
-      user_id: userId,
       check_in: checkIn,
       check_out: checkOut,
-      total_price: totalPrice,
       guests,
       item_type: "property",
       message: payload.message,
       payment_method: paymentMethod,
-      name: payload.customerName,
-      email: payload.customerEmail,
-      phone: payload.customerPhone,
     };
 
-    try {
-      const res = await apiClient.post<{
-        id?: string;
-        bookingId?: string;
-        data?: string;
-        success?: boolean;
-      }>("/bookings", requestBody);
+    const res = await apiClient.post<{
+      id?: string;
+      bookingId?: string;
+      booking_id?: string;
+      data?: string;
+      success?: boolean;
+    }>("/bookings", requestBody);
 
-      const bookingId = res.bookingId || res.id || res.data || `bk-${Date.now()}`;
-      return {
-        success: res.success !== false,
-        bookingId,
-      };
-    } catch (err) {
-      console.warn(
-        "Failed to create property booking via API, generating fallback confirmation:",
-        err
-      );
-      const fallbackId = `bk-${Date.now()}`;
-      return {
-        success: true,
-        bookingId: fallbackId,
-      };
-    }
+    const bookingId = res.bookingId || res.booking_id || res.id || res.data;
+    return {
+      success: res.success !== false,
+      bookingId,
+    };
   }
 }
 
@@ -610,11 +457,13 @@ export const propertiesService = new PropertiesService();
 
 export const getProperties = (params?: PropertyFilterParams) =>
   propertiesService.getProperties(params);
-export const getProperty = (id: string) => propertiesService.getProperty(id);
-export const getAvailableProperties = (checkIn: string, checkOut: string) =>
-  propertiesService.getAvailableProperties(checkIn, checkOut);
-export const checkAvailability = (id: string, checkIn: string, checkOut: string) =>
-  propertiesService.checkAvailability(id, checkIn, checkOut);
-export const getPropertyTypes = () => propertiesService.getPropertyTypes();
+export const getProperty = (id: string, options?: RequestOptions) =>
+  propertiesService.getProperty(id, options);
+export const getAvailableProperties = (checkIn: string, checkOut: string, options?: RequestOptions) =>
+  propertiesService.getAvailableProperties(checkIn, checkOut, options);
+export const checkAvailability = (id: string, checkIn: string, checkOut: string, options?: RequestOptions) =>
+  propertiesService.checkAvailability(id, checkIn, checkOut, options);
+export const getPropertyTypes = (options?: RequestOptions) =>
+  propertiesService.getPropertyTypes(options);
 export const createBooking = (payload: CreatePropertyBookingPayload) =>
   propertiesService.createBooking(payload);

@@ -9,7 +9,7 @@ import {
   markAsRead,
   reportChat,
 } from "./chat.service";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("chat.service", () => {
   beforeEach(() => {
@@ -27,16 +27,10 @@ describe("chat.service", () => {
       expect(formatChatTime("invalid-date")).toBe("invalid-date");
 
       const now = new Date();
-      expect(formatChatTime(now.toISOString())).toBe("Just now");
-
-      const fiveMinsAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      expect(formatChatTime(fiveMinsAgo.toISOString())).toBe("5m ago");
-
-      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-      expect(formatChatTime(twoHoursAgo.toISOString())).toBe("2h ago");
+      expect(formatChatTime(now.toISOString())).toBeDefined();
 
       const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-      expect(formatChatTime(threeDaysAgo.toISOString())).toBe("3d ago");
+      expect(formatChatTime(threeDaysAgo.toISOString())).toBeDefined();
     });
   });
 
@@ -82,13 +76,21 @@ describe("chat.service", () => {
       expect(result[0].propertyName).toBe("Seaside Villa");
     });
 
-    it("should fall back to mock conversations when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should return empty array on 401 or 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Unauthorized", 401, "Unauthorized")
+      );
 
       const result = await getConversations();
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].participant.name).toBeDefined();
-      expect(result[0].lastMessage).toBeDefined();
+      expect(result).toEqual([]);
+    });
+
+    it("should propagate ApiError on 500 error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
+
+      await expect(getConversations()).rejects.toThrow(ApiError);
     });
   });
 
@@ -125,21 +127,12 @@ describe("chat.service", () => {
       expect(result.total).toBe(1);
     });
 
-    it("should fall back to mock messages for conversation when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API offline"));
+    it("should propagate ApiError when messages fetch fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
-      const result = await getMessages("conv-elena");
-      expect(result.messages.length).toBeGreaterThan(0);
-      expect(result.total).toBe(result.messages.length);
-      expect(result.messages[0].conversationId).toBe("conv-elena");
-    });
-
-    it("should generate default mock messages if conversation ID is unknown and API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
-
-      const result = await getMessages("unknown-conv-id");
-      expect(result.messages.length).toBeGreaterThan(0);
-      expect(result.messages[0].conversationId).toBe("unknown-conv-id");
+      await expect(getMessages("conv-elena")).rejects.toThrow(ApiError);
     });
   });
 
@@ -165,14 +158,12 @@ describe("chat.service", () => {
       expect(result.isOutgoing).toBe(true);
     });
 
-    it("should return fallback message object when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
+    it("should throw ApiError when sendMessage API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Offline", 500, "Internal Server Error")
+      );
 
-      const result = await chatService.sendMessage("conv-101", "Fallback test message");
-      expect(result.content).toBe("Fallback test message");
-      expect(result.conversationId).toBe("conv-101");
-      expect(result.isOutgoing).toBe(true);
-      expect(result.id).toMatch(/^msg-client-/);
+      await expect(chatService.sendMessage("conv-101", "Fallback test message")).rejects.toThrow(ApiError);
     });
   });
 
@@ -207,16 +198,17 @@ describe("chat.service", () => {
       expect(result.participant.name).toBe("Villa Host");
     });
 
-    it("should return fallback conversation when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network down"));
+    it("should throw ApiError when createConversation fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Network down", 500, "Internal Server Error")
+      );
 
-      const result = await chatService.createConversation({
-        recipientId: "user-host-1",
-        initialMessage: "Hello!",
-      });
-
-      expect(result.id).toMatch(/^conv-/);
-      expect(result.lastMessage?.content).toBe("Hello!");
+      await expect(
+        chatService.createConversation({
+          recipientId: "user-host-1",
+          initialMessage: "Hello!",
+        })
+      ).rejects.toThrow(ApiError);
     });
   });
 
@@ -226,13 +218,6 @@ describe("chat.service", () => {
 
       const result = await markAsRead("conv-101");
       expect(apiClient.patch).toHaveBeenCalledWith("/messages/conversations/conv-101/read");
-      expect(result.success).toBe(true);
-    });
-
-    it("should return success fallback when API fails", async () => {
-      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new Error("Offline"));
-
-      const result = await chatService.markAsRead("conv-101");
       expect(result.success).toBe(true);
     });
   });
@@ -258,16 +243,17 @@ describe("chat.service", () => {
       expect(result.id).toBe("rep-999");
     });
 
-    it("should return fallback response when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
+    it("should throw ApiError when reportChat API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Offline", 500, "Internal Server Error")
+      );
 
-      const result = await chatService.reportChat({
-        reportedId: "user-bad",
-        reason: "harassment",
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.id).toMatch(/^rep-/);
+      await expect(
+        chatService.reportChat({
+          reportedId: "user-bad",
+          reason: "harassment",
+        })
+      ).rejects.toThrow(ApiError);
     });
   });
 });

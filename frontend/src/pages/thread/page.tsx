@@ -1,49 +1,77 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { forumService, type ThreadDetail, type ThreadReply } from "@/api-services/forum.service";
-import { threadDetails } from "@/mocks/thread-details";
 import ThreadHero from "./components/ThreadHero";
 import OriginalPost from "./components/OriginalPost";
 import ReplyCard from "./components/ReplyCard";
 import ReplyInput from "./components/ReplyInput";
 import AuthorSidebar from "./components/AuthorSidebar";
+import ErrorState from "@/components/base/ErrorState";
+import { logger } from "@/lib/logger";
 
 export default function ThreadPage() {
   const { threadId } = useParams<{ threadId: string }>();
-  const initialThread = threadId ? threadDetails[threadId] ?? null : null;
 
-  const [thread, setThread] = useState<ThreadDetail | null>(initialThread);
-  const [liked, setLiked] = useState(initialThread?.isLiked ?? false);
-  const [likeCount, setLikeCount] = useState(initialThread?.likes ?? 0);
-  const [replies, setReplies] = useState<ThreadReply[]>(initialThread?.replies ?? []);
+  const [thread, setThread] = useState<ThreadDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [replies, setReplies] = useState<ThreadReply[]>([]);
   const [replyTarget, setReplyTarget] = useState<{ id: string; author: string } | null>(null);
   const [shareToast, setShareToast] = useState(false);
   const replySectionRef = useRef<HTMLDivElement>(null);
 
-  // Load thread from API
-  useEffect(() => {
+  const loadThread = useCallback(async () => {
     if (!threadId) return;
-    let isMounted = true;
+    setIsLoading(true);
+    setFetchError(null);
 
-    forumService
-      .getThreadById(threadId)
-      .then((data) => {
-        if (isMounted && data) {
-          setThread(data);
-          setLiked(data.isLiked);
-          setLikeCount(data.likes);
-          setReplies(data.replies || []);
-          forumService.incrementPostView(data.id);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to load thread details:", err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    try {
+      const data = await forumService.getThreadById(threadId);
+      if (data) {
+        setThread(data);
+        setLiked(data.isLiked);
+        setLikeCount(data.likes);
+        setReplies(data.replies || []);
+        forumService.incrementPostView(data.id);
+      } else {
+        setThread(null);
+      }
+    } catch {
+      setFetchError("Unable to load discussion. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [threadId]);
+
+  useEffect(() => {
+    loadThread();
+  }, [loadThread]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background-50 flex flex-col items-center justify-center p-8">
+        <div className="w-full max-w-2xl bg-white rounded-2xl border border-background-200/70 p-8 text-center animate-pulse space-y-4">
+          <div className="h-6 bg-background-200 rounded w-2/3 mx-auto" />
+          <div className="h-4 bg-background-100 rounded w-1/3 mx-auto" />
+          <div className="h-32 bg-background-100 rounded w-full mt-4" />
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-background-50 flex flex-col items-center justify-center p-8">
+        <ErrorState
+          title="Failed to load thread"
+          message={fetchError}
+          onRetry={loadThread}
+        />
+      </div>
+    );
+  }
 
   if (!thread) {
     return (
@@ -71,6 +99,8 @@ export default function ThreadPage() {
   }
 
   const handleLikePost = async () => {
+    const prevLiked = liked;
+    const prevCount = likeCount;
     const nextLiked = !liked;
     setLiked(nextLiked);
     setLikeCount((c) => (nextLiked ? c + 1 : Math.max(0, c - 1)));
@@ -78,11 +108,14 @@ export default function ThreadPage() {
     try {
       await forumService.toggleLike("post", thread.id);
     } catch (err) {
-      console.warn("Failed to toggle post like:", err);
+      logger.warn("Failed to toggle post like, rolling back:", err);
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
     }
   };
 
   const handleLikeReply = async (replyId: string) => {
+    const prevReplies = replies;
     const updateReplyLikes = (repliesList: ThreadReply[]): ThreadReply[] =>
       repliesList.map((r) => {
         if (r.id === replyId) {
@@ -92,18 +125,19 @@ export default function ThreadPage() {
             likes: r.isLiked ? Math.max(0, r.likes - 1) : r.likes + 1,
           };
         }
-        if (r.replies.length > 0) {
+        if (r.replies && r.replies.length > 0) {
           return { ...r, replies: updateReplyLikes(r.replies) };
         }
         return r;
       });
 
-    setReplies(updateReplyLikes);
+    setReplies(updateReplyLikes(replies));
 
     try {
       await forumService.toggleLike("comment", replyId);
     } catch (err) {
-      console.warn("Failed to toggle reply like:", err);
+      logger.warn("Failed to toggle reply like, rolling back:", err);
+      setReplies(prevReplies);
     }
   };
 
@@ -111,7 +145,7 @@ export default function ThreadPage() {
     const findReply = (list: ThreadReply[]): ThreadReply | null => {
       for (const r of list) {
         if (r.id === replyId) return r;
-        const found = findReply(r.replies);
+        const found = findReply(r.replies || []);
         if (found) return found;
       }
       return null;
@@ -128,16 +162,16 @@ export default function ThreadPage() {
 
   const handleSubmitReply = async (content: string, parentId: string | null) => {
     try {
-      const newReply = await forumService.createComment(thread.id, content);
+      const newReply = await forumService.createComment(thread.id, content, parentId);
       newReply.parentId = parentId;
 
       if (parentId) {
         const addNestedReply = (list: ThreadReply[]): ThreadReply[] =>
           list.map((r) => {
             if (r.id === parentId) {
-              return { ...r, replies: [...r.replies, newReply] };
+              return { ...r, replies: [...(r.replies || []), newReply] };
             }
-            if (r.replies.length > 0) {
+            if (r.replies && r.replies.length > 0) {
               return { ...r, replies: addNestedReply(r.replies) };
             }
             return r;
@@ -147,7 +181,7 @@ export default function ThreadPage() {
         setReplies((prev) => [...prev, newReply]);
       }
     } catch (err) {
-      console.warn("Failed to submit reply:", err);
+      logger.warn("Failed to submit reply:", err);
     } finally {
       setReplyTarget(null);
     }

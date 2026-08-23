@@ -1,62 +1,52 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { forumService, type Category, type CategoryThread } from "@/api-services/forum.service";
-import { categories as defaultCategories } from "@/mocks/categories";
-import { categoryThreads as defaultCategoryThreads } from "@/mocks/category-threads";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import CategoryHeader from "./components/CategoryHeader";
 import SubcategorySidebar from "./components/SubcategorySidebar";
 import ThreadCard from "./components/ThreadCard";
 import ThreadFilters from "./components/ThreadFilters";
+import ErrorState from "@/components/base/ErrorState";
+import { logger } from "@/lib/logger";
 
 export default function CategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
 
   // Category state
-  const initialCategory = defaultCategories.find((c) => c.id === categoryId) ?? null;
-  const [category, setCategory] = useState<Category | null>(initialCategory);
-  const [allCategories, setAllCategories] = useState<Category[]>(defaultCategories);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(true);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   // Threads state
-  const initialThreads = categoryId && defaultCategoryThreads[categoryId] ? defaultCategoryThreads[categoryId] : [];
-  const [fetchedThreads, setFetchedThreads] = useState<CategoryThread[]>(initialThreads);
+  const [fetchedThreads, setFetchedThreads] = useState<CategoryThread[]>([]);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("latest");
   const [visibleCount, setVisibleCount] = useState(5);
   const ITEMS_PER_LOAD = 5;
 
-  // Load category and all categories
-  useEffect(() => {
+  const loadCategory = useCallback(async () => {
     if (!categoryId) return;
-    let isMounted = true;
-
-    forumService
-      .getCategoryById(categoryId)
-      .then((cat) => {
-        if (isMounted && cat) {
-          setCategory(cat);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to fetch category:", err);
-      });
-
-    forumService
-      .getCategories()
-      .then((cats) => {
-        if (isMounted && cats && cats.length > 0) {
-          setAllCategories(cats);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to fetch all categories:", err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    setCategoryLoading(true);
+    setCategoryError(null);
+    try {
+      const [cat, cats] = await Promise.all([
+        forumService.getCategoryById(categoryId),
+        forumService.getCategories(),
+      ]);
+      setCategory(cat);
+      if (cats) setAllCategories(cats);
+    } catch {
+      setCategoryError("Unable to load category details. Please try again.");
+    } finally {
+      setCategoryLoading(false);
+    }
   }, [categoryId]);
+
+  useEffect(() => {
+    loadCategory();
+  }, [loadCategory]);
 
   // Load threads
   useEffect(() => {
@@ -76,7 +66,7 @@ export default function CategoryPage() {
         }
       })
       .catch((err) => {
-        console.warn("Failed to fetch threads:", err);
+        logger.warn("Failed to fetch threads:", err);
       });
 
     return () => {
@@ -120,6 +110,37 @@ export default function CategoryPage() {
   useEffect(() => {
     setVisibleCount(5);
   }, [category?.id, activeSubcategory, sortBy]);
+
+  if (categoryLoading) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-[60vh] flex flex-col items-center justify-center p-8">
+          <div className="w-full max-w-md bg-background-50 rounded-2xl border border-background-200/70 p-8 text-center animate-pulse space-y-4">
+            <div className="h-6 bg-background-200 rounded w-1/2 mx-auto" />
+            <div className="h-4 bg-background-100 rounded w-3/4 mx-auto" />
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (categoryError) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-[60vh] flex flex-col items-center justify-center p-8">
+          <ErrorState
+            title="Failed to load category"
+            message={categoryError}
+            onRetry={loadCategory}
+          />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!category) {
     return (

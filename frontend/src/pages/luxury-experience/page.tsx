@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { conciergeService } from "@/api-services/concierge.service";
+import { createInquiryState } from "@/lib/inquiry-confirmation";
 
 function formatViews(views: number): string {
   if (views >= 1000) return `${(views / 1000).toFixed(1)}k`;
@@ -14,8 +15,6 @@ export default function LuxuryExperiencePage() {
   const experiences = conciergeService.getLuxuryExperiences();
   const maxViews = Math.max(...experiences.map((e) => e.weeklyViews));
   const [formSubmitting, setFormSubmitting] = useState(false);
-  const [formSuccess, setFormSuccess] = useState(false);
-  const [contactMethod, setContactMethod] = useState("email");
   const [formError, setFormError] = useState("");
 
   const handleConciergeSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,21 +23,26 @@ export default function LuxuryExperiencePage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const prefContact = (formData.get("preferred_contact") as string) || "email";
-    setContactMethod(prefContact);
+    const bookingName = ((formData.get("name") as string) || "").trim();
+    const bookingEmail = ((formData.get("email") as string) || "").trim();
+    const bookingPhone = ((formData.get("phone") as string) || "").trim();
+    const bookingCountryCode = ((formData.get("country_code") as string) || "").trim();
+    const bookingNotes = ((formData.get("notes") as string) || "").trim();
+    const experienceInterest = (formData.get("experience_interest") as string) || "General Concierge Request";
+    const confirmationState = createInquiryState({
+      name: bookingName,
+      email: bookingEmail,
+      subject: experienceInterest === "General Concierge Request" ? "Luxury Experience" : experienceInterest,
+      message: bookingNotes || "General concierge request for a bespoke luxury experience.",
+    });
+
     const honeypot = formData.get("website_alt") as string;
     if (honeypot && honeypot.trim() !== "") {
-      setFormSuccess(true);
+      navigate("/booking-confirmation", { state: confirmationState });
       return;
     }
     setFormSubmitting(true);
     try {
-      const bookingName = (formData.get("name") as string || "").trim();
-      const bookingEmail = (formData.get("email") as string || "").trim();
-      const bookingPhone = (formData.get("phone") as string || "").trim();
-      const bookingCountryCode = (formData.get("country_code") as string || "").trim();
-      const bookingNotes = (formData.get("notes") as string || "").trim();
-      const experienceInterest = (formData.get("experience_interest") as string || "General Concierge Request");
-
       const result = await conciergeService.submitConciergeEnquiry({
         name: bookingName,
         email: bookingEmail,
@@ -51,8 +55,8 @@ export default function LuxuryExperiencePage() {
       });
 
       if (result.success) {
-        setFormSuccess(true);
         form.reset();
+        navigate("/booking-confirmation", { state: confirmationState });
       } else {
         setFormError("Something went wrong. Please try again.");
       }
@@ -154,21 +158,7 @@ export default function LuxuryExperiencePage() {
             <p className="text-foreground-500 text-sm md:text-base mb-8">
               Our community concierge team can arrange custom experiences — surprise proposals, private dinners on the beach, or a tailored itinerary for your entire stay.
             </p>
-            {formSuccess ? (
-              <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-green-50 border border-green-200">
-                <i className="ri-check-line text-green-600 text-xl"></i>
-                <span className="text-sm font-semibold text-green-700">
-                  {contactMethod === 'whatsapp' ? (
-                    <>Message sent! We'll WhatsApp you shortly.</>
-                  ) : contactMethod === 'phone_call' ? (
-                    <>Message sent! We'll call you shortly.</>
-                  ) : (
-                    <>Message sent! Our concierge team will email you shortly.</>
-                  )}
-                </span>
-              </div>
-            ) : (
-              <form onSubmit={handleConciergeSubmit} data-readdy-form className="max-w-md mx-auto">
+            <form onSubmit={handleConciergeSubmit} data-readdy-form className="max-w-md mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <input name="name" type="text" placeholder="Your full name" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                   <input name="email" type="email" placeholder="Your email address" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
@@ -240,7 +230,6 @@ export default function LuxuryExperiencePage() {
                   )}
                 </button>
               </form>
-            )}
           </div>
         </section>
       </main>

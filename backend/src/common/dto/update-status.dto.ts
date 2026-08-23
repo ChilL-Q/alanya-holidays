@@ -1,11 +1,13 @@
 import { IsString, IsOptional } from 'class-validator';
 
 /**
- * Shared body DTO for the admin `PATCH :id/status` endpoints on bookings,
- * properties, and services. The concrete allowed status values differ per
- * entity and are enforced downstream (service/DB), so here we only guarantee
- * `status` is a string (blocks object/array injection) and `reason` is an
- * optional string.
+ * @deprecated Use entity-specific status DTOs with strict `@IsIn(...)` whitelist validation:
+ * - `UpdateBookingStatusDto` from `bookings/dto/update-booking-status.dto`
+ * - `UpdatePropertyStatusDto` from `properties/dto/update-property-status.dto`
+ * - `UpdateServiceStatusDto` from `services/dto/update-service-status.dto`
+ * - `UpdateEnquiryStatusDto` from `admin/dto/update-enquiry-status.dto`
+ * - `UpdateListingStatusDto` from `directory/dto/update-listing-status.dto`
+ * - `UpdateClaimStatusDto` from `directory/dto/update-claim-status.dto`
  */
 export class UpdateStatusDto {
   @IsString()

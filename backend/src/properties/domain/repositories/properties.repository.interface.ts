@@ -124,6 +124,5 @@ export interface IPropertiesRepository {
 
   // Profiles & Auth queries
   getProfile(userId: string): Promise<Record<string, unknown> | null>;
-  getUserRole(userId: string): Promise<string | undefined>;
   invokeEmailFunction(payload: Record<string, unknown>): void;
 }

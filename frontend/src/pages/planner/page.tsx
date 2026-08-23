@@ -4,9 +4,9 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { usePlanner, type Plan, type PlanItem } from "@/hooks/usePlanner";
 import { useSharedPlans, type SharedPlan } from "@/hooks/useSharedPlans";
-import { businesses } from "@/mocks/businesses";
-import { events } from "@/mocks/events";
-import { suggestedPlans } from "@/mocks/suggestedPlans";
+import { itineraryTemplates as suggestedPlans } from "@/domain/itinerary-templates";
+import { directoryService, type Business } from "@/api-services/directory.service";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import AddItemModal from "./components/AddItemModal";
 import AiPlannerAssistantModal from "./components/AiPlannerAssistantModal";
 import { PlannerHeader } from "./components/PlannerHeader";
@@ -32,16 +32,8 @@ function formatDate(iso: string): string {
   });
 }
 
-function getBusinessName(id: string): string {
-  return businesses.find((b) => b.id === id)?.name || "Unknown Business";
-}
-
 function getBusinessUrl(id: string): string {
   return `/business/${id}`;
-}
-
-function getEventName(id: string): string {
-  return events.find((e) => e.id === id)?.title || "Unknown Event";
 }
 
 function getEventUrl(_id: string): string {
@@ -91,6 +83,30 @@ export default function PlannerPage() {
   const [activeDay, setActiveDay] = useState("Day 1");
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [businessesList, setBusinessesList] = useState<Business[]>([]);
+  const [eventsList, setEventsList] = useState<ForumEvent[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    directoryService.getListings({ limit: 100 }).then((res) => {
+      if (isMounted && res.data) setBusinessesList(res.data);
+    }).catch(() => {});
+    eventsService.getEvents().then((evts) => {
+      if (isMounted && evts) setEventsList(evts);
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  function getBusinessName(id: string): string {
+    return businessesList.find((b) => b.id === id)?.name || "Alanya Venue";
+  }
+
+  function getEventName(id: string): string {
+    return eventsList.find((e) => e.id === id)?.title || "Community Event";
+  }
 
   // Suggested plans category filter
   const [activeCategory, setActiveCategory] = useState<string>("All");

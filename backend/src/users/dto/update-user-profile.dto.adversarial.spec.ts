@@ -3,10 +3,11 @@ import { plainToInstance } from 'class-transformer';
 import { UpdateUserProfileDto } from './update-user-profile.dto';
 import { UsersService } from '../users.service';
 import { UsersRepository } from '../users.repository';
+import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 
-describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () => {
+describe('Adversarial Security & Validation Suite: UpdateUserProfileDto', () => {
   describe('DTO Validation Stress Tests', () => {
     it('should pass validation with complete valid profile update payload', async () => {
       const payload = {
@@ -132,14 +133,16 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
 
   describe('UsersService Authorization & Privilege Escalation Challenges', () => {
     let service: UsersService;
+    let mockUserRolesRepo: { getRole: jest.Mock };
     let mockRepository: {
-      getUserRole: jest.Mock;
       updateUserProfile: jest.Mock;
     };
 
     beforeEach(async () => {
+      mockUserRolesRepo = {
+        getRole: jest.fn(),
+      };
       mockRepository = {
-        getUserRole: jest.fn(),
         updateUserProfile: jest.fn().mockResolvedValue({}),
       };
 
@@ -150,6 +153,10 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
             provide: UsersRepository,
             useValue: mockRepository,
           },
+          {
+            provide: UserRolesRepository,
+            useValue: mockUserRolesRepo,
+          },
         ],
       }).compile();
 
@@ -157,7 +164,7 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
     });
 
     it('should strictly strip role escalation attempt when non-admin submits role="admin"', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       const dto: UpdateUserProfileDto = {
         full_name: 'Attacker User',
@@ -179,7 +186,7 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
     });
 
     it('should preserve role update when an admin updates a user profile', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const dto: UpdateUserProfileDto = {
         full_name: 'Promoted User',
@@ -196,7 +203,7 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
     });
 
     it('should throw UnauthorizedException when a regular user attempts to update another user profile', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       const dto: UpdateUserProfileDto = {
         full_name: 'Victim User Hacked Name',
@@ -210,7 +217,7 @@ describe('UpdateUserProfileDto & UsersService - Adversarial Stress Tests', () =>
     });
 
     it('should allow admin to update any user profile', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
 
       const dto: UpdateUserProfileDto = {
         full_name: 'Admin Corrected Name',

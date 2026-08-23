@@ -33,7 +33,7 @@ export class GetForumEventsQueryDto {
 export class CreateForumEventDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsOptional()
   @IsString()
@@ -45,7 +45,7 @@ export class CreateForumEventDto {
 
   @IsString()
   @IsNotEmpty()
-  event_date: string;
+  event_date!: string;
 
   @IsOptional()
   @IsString()

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../../../supabase/supabase.service';
 import {
   IServicesRepository,
@@ -9,6 +9,8 @@ import { ServiceOfferingMapper } from '../mappers/service-offering.mapper';
 
 @Injectable()
 export class SupabaseServicesRepository implements IServicesRepository {
+  private readonly logger = new Logger(SupabaseServicesRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -141,18 +143,6 @@ export class SupabaseServicesRepository implements IServicesRepository {
     return { data: data, error };
   }
 
-  async getUserRole(userId: string): Promise<string | undefined> {
-    const { data, error } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    if (error && error.code !== 'PGRST116') {
-      console.error('getUserRole error:', error);
-    }
-    return data?.role as string | undefined;
-  }
-
   async getServiceOwnershipInfo(
     id: string,
   ): Promise<ServiceOwnershipInfo | null> {
@@ -162,7 +152,10 @@ export class SupabaseServicesRepository implements IServicesRepository {
       .eq('id', id)
       .single();
     if (error && error.code !== 'PGRST116') {
-      console.error('getServiceOwnershipInfo error:', error);
+      this.logger.error(
+        'getServiceOwnershipInfo error:',
+        error instanceof Error ? error.stack : JSON.stringify(error),
+      );
     }
     return data ? data : null;
   }

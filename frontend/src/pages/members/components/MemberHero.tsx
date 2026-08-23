@@ -1,6 +1,24 @@
-import { forumStats } from "@/mocks/stats";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { forumService, type ForumStats } from "@/api-services/forum.service";
 
 export default function MemberHero() {
+  const [stats, setStats] = useState<ForumStats | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService.getForumStats().then((data) => {
+      if (mounted && data) setStats(data);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 18400;
+  const onlineNow = stats?.localExperts ?? 142;
+  const activeThisWeek = stats?.activeMembers ?? 1240;
+
   return (
     <section className="relative w-full h-[280px] md:h-[340px] overflow-hidden">
       <img
@@ -13,9 +31,9 @@ export default function MemberHero() {
       <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-4">
-          <a href="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
+          <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
             Home
-          </a>
+          </Link>
           <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
           <span className="text-white/90 text-sm">Members</span>
         </div>
@@ -35,7 +53,7 @@ export default function MemberHero() {
           <div className="flex items-center gap-5 md:gap-8 shrink-0">
             <div className="text-center">
               <p className="text-white text-xl md:text-2xl font-semibold">
-                {forumStats.totalMembers.toLocaleString()}
+                {totalMembers.toLocaleString()}
               </p>
               <p className="text-white/50 text-xs">Members</p>
             </div>
@@ -44,7 +62,7 @@ export default function MemberHero() {
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse"></span>
                 <p className="text-white text-xl md:text-2xl font-semibold">
-                  {forumStats.onlineNow.toLocaleString()}
+                  {onlineNow.toLocaleString()}
                 </p>
               </div>
               <p className="text-white/50 text-xs">Online Now</p>
@@ -52,7 +70,7 @@ export default function MemberHero() {
             <div className="w-px h-8 bg-white/20"></div>
             <div className="text-center">
               <p className="text-white text-xl md:text-2xl font-semibold">
-                {forumStats.activeThisWeek.toLocaleString()}
+                {activeThisWeek.toLocaleString()}
               </p>
               <p className="text-white/50 text-xs">Active This Week</p>
             </div>

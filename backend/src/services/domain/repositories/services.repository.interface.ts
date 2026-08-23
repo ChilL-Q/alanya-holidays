@@ -53,7 +53,6 @@ export interface IServicesRepository {
   getServiceByIdOrRef(
     id: string,
   ): Promise<{ data: Record<string, unknown> | null; error: unknown }>;
-  getUserRole(userId: string): Promise<string | undefined>;
   getServiceOwnershipInfo(id: string): Promise<ServiceOwnershipInfo | null>;
   updateService(id: string, updates: Record<string, unknown>): Promise<void>;
   deleteService(id: string): Promise<void>;

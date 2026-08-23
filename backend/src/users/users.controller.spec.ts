@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from '../forum/types/forum.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -30,6 +31,8 @@ describe('UsersController', () => {
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -41,9 +44,32 @@ describe('UsersController', () => {
   });
 
   it('should pass req.user.id to touchPresence', async () => {
-    const req = { user: { id: 'usr-55' } } as unknown as AuthenticatedRequest;
-    await controller.touchPresence(req);
+    const user: AuthUser = { id: 'usr-55' };
+    await controller.touchPresence(user);
     expect(mockService.touchPresence).toHaveBeenCalledWith('usr-55');
+  });
+
+  it('should delegate getOnlineCount', async () => {
+    const count = await controller.getOnlineCount();
+    expect(count).toBe(10);
+    expect(mockService.getOnlineCount).toHaveBeenCalled();
+  });
+
+  it('should pass pagination and req.user.id to getAllUsers', async () => {
+    const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
+    await controller.getAllUsers('2', '10', adminUser);
+    expect(mockService.getAllUsers).toHaveBeenCalledWith(2, 10, 'admin-1');
+  });
+
+  it('should pass role, pagination, and req.user.id to getUsersByRole', async () => {
+    const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
+    await controller.getUsersByRole('business_owner', '1', '20', adminUser);
+    expect(mockService.getUsersByRole).toHaveBeenCalledWith(
+      'business_owner',
+      1,
+      20,
+      'admin-1',
+    );
   });
 
   it('should delegate getUserProfile by ID', async () => {
@@ -53,13 +79,13 @@ describe('UsersController', () => {
   });
 
   it('should delegate updateUserProfile with bio and company_name', async () => {
-    const req = { user: { id: 'usr-55' } } as unknown as AuthenticatedRequest;
+    const user: AuthUser = { id: 'usr-55' };
     const dto = {
       full_name: 'Jane Doe',
       bio: 'Travel enthusiast',
       company_name: 'Holiday Homes LLC',
     };
-    const res = await controller.updateUserProfile('usr-55', dto, req);
+    const res = await controller.updateUserProfile('usr-55', dto, user);
     expect(res).toEqual({ success: true });
     expect(mockService.updateUserProfile).toHaveBeenCalledWith(
       'usr-55',

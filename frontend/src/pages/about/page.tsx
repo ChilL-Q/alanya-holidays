@@ -1,8 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { forumStats } from "@/mocks/stats";
-import { members } from "@/mocks/members";
+import { forumService, type ForumStats, type ForumMember } from "@/api-services/forum.service";
 
 const values = [
   {
@@ -46,7 +46,7 @@ const milestones = [
   },
   {
     year: "2025",
-    title: "Growing Fast",
+    title: "Growth",
     description:
       "The community hits 15,000 members. Weekly meetups, language exchanges, and hiking groups become a regular fixture. The first Community Leader program launches.",
   },
@@ -54,15 +54,39 @@ const milestones = [
     year: "2026",
     title: "Thriving",
     description:
-      `Now ${forumStats.totalMembers.toLocaleString()}+ members strong with ${(forumStats.totalThreads / 1000).toFixed(1)}k discussions spanning every corner of Alanya life. And we are just getting started.`,
+      "Now 18,000+ members strong with 3.8k discussions spanning every corner of Alanya life. And we are just getting started.",
   },
 ];
 
-const communityLeaders = members
-  .filter((m) => m.role === "Community Leader" || m.role === "Top Contributor" || m.role === "Cultural Ambassador")
-  .slice(0, 4);
-
 export default function AboutPage() {
+  const [stats, setStats] = useState<ForumStats | null>(null);
+  const [communityLeaders, setCommunityLeaders] = useState<ForumMember[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService.getForumStats().then((data) => {
+      if (mounted && data) setStats(data);
+    }).catch(() => {});
+
+    forumService.getMembers().then((membersList) => {
+      if (mounted && membersList) {
+        const leaders = membersList
+          .filter((m) => m.role === "Community Leader" || m.role === "Top Contributor" || m.role === "Cultural Ambassador")
+          .slice(0, 4);
+        setCommunityLeaders(leaders.length > 0 ? leaders : membersList.slice(0, 4));
+      }
+    }).catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 18420;
+  const totalThreads = stats?.totalDiscussions ?? stats?.totalPosts ?? 3820;
+  const totalReplies = stats?.questionsAnswered ?? 9420;
+  const onlineNow = stats?.localExperts ?? 142;
+
   return (
     <>
       <Navbar />
@@ -101,21 +125,21 @@ export default function AboutPage() {
               <div className="flex items-center gap-5 md:gap-8 shrink-0">
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">
-                    {forumStats.totalMembers.toLocaleString()}
+                    {totalMembers.toLocaleString()}
                   </p>
                   <p className="text-white/50 text-xs">Members</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">
-                    {(forumStats.totalThreads / 1000).toFixed(1)}k
+                    {(totalThreads / 1000).toFixed(1)}k
                   </p>
                   <p className="text-white/50 text-xs">Discussions</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">
-                    {forumStats.onlineNow.toLocaleString()}
+                    {onlineNow.toLocaleString()}
                   </p>
                   <p className="text-white/50 text-xs">Online Now</p>
                 </div>
@@ -154,10 +178,10 @@ export default function AboutPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-20 bg-background-100">
           <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {[
-              { value: forumStats.totalMembers.toLocaleString(), label: "Members", icon: "ri-user-3-line" },
-              { value: forumStats.totalThreads.toLocaleString(), label: "Threads", icon: "ri-discuss-line" },
-              { value: forumStats.totalReplies.toLocaleString(), label: "Replies", icon: "ri-chat-3-line" },
-              { value: forumStats.onlineNow.toLocaleString(), label: "Online Now", icon: "ri-flashlight-line" },
+              { value: totalMembers.toLocaleString(), label: "Members", icon: "ri-user-3-line" },
+              { value: totalThreads.toLocaleString(), label: "Threads", icon: "ri-discuss-line" },
+              { value: totalReplies.toLocaleString(), label: "Replies", icon: "ri-chat-3-line" },
+              { value: onlineNow.toLocaleString(), label: "Online Now", icon: "ri-flashlight-line" },
             ].map((stat) => (
               <div key={stat.label} className="text-center p-6 rounded-2xl bg-white">
                 <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-full bg-accent-100 mb-4">
@@ -328,7 +352,7 @@ export default function AboutPage() {
               Ready to become part of the story?
             </h2>
             <p className="text-white/80 text-sm md:text-base mb-8">
-              Join {forumStats.totalMembers.toLocaleString()}+ members who are already sharing,
+              Join {totalMembers.toLocaleString()}+ members who are already sharing,
               discovering, and connecting on Alanya Holidays. It is free and takes less than a minute.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

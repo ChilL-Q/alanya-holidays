@@ -77,9 +77,6 @@ export interface PlatformAnalyticsData {
   topListings: TopListingPerformance[];
 }
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 @Injectable()
 export class AdminRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -253,26 +250,38 @@ export class AdminRepository {
     }
   }
 
-  async getUserRole(userId: string): Promise<string | undefined> {
-    if (!UUID_RE.test(userId)) return undefined;
-    try {
-      const { data, error } = await this.client
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single<{ role: string }>();
-      if (error && (error.code === 'PGRST116' || error.code === '22P02')) {
-        return undefined;
-      }
-      return data?.role ?? undefined;
-    } catch {
-      return undefined;
-    }
-  }
-
   async getPlatformAnalytics(days = 30): Promise<PlatformAnalyticsData> {
     const validDays = Number.isInteger(days) && days > 0 ? days : 30;
-    const cutoffDate = new Date(Date.now() - validDays * 24 * 60 * 60 * 1000)
+
+    // Fast Path: High-performance database-side aggregation RPC (O(1) network transfer)
+    try {
+      const response = (await this.client.rpc('get_platform_analytics', {
+        p_days: validDays,
+      })) as {
+        data: PlatformAnalyticsData | null;
+        error: { message: string } | null;
+      };
+
+      if (
+        !response.error &&
+        response.data &&
+        typeof response.data === 'object' &&
+        'kpiSummary' in response.data
+      ) {
+        return response.data;
+      }
+    } catch {
+      // Graceful fallback for mock environments or legacy database replicas
+    }
+
+    // Fallback: In-memory aggregation
+    return this.getPlatformAnalyticsFallback(validDays);
+  }
+
+  private async getPlatformAnalyticsFallback(
+    days: number,
+  ): Promise<PlatformAnalyticsData> {
+    const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
       .toISOString()
       .split('T')[0];
 

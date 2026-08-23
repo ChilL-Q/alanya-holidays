@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { wineTastings, tastingStyles } from "@/mocks/wine-tastings";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type WineTasting } from "@/api-services/concierge.service";
+import { conciergeService, tastingStyles, type WineTasting } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function WineTastingsPage() {
+  const [wineTastings, setWineTastings] = useState<WineTasting[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeStyle, setActiveStyle] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "duration">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -17,6 +21,23 @@ export default function WineTastingsPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadTastings = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getWineTastings();
+      setWineTastings(data);
+    } catch {
+      setFetchError("Failed to load wine tasting experiences. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTastings();
+  }, [loadTastings]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -55,7 +76,7 @@ export default function WineTastingsPage() {
       return aH - bH;
     });
     return results;
-  }, [activeStyle, sortBy]);
+  }, [activeStyle, sortBy, wineTastings]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
@@ -177,64 +198,101 @@ export default function WineTastingsPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredTastings.length} {filteredTastings.length === 1 ? "tasting" : "tastings"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredTastings.length} {filteredTastings.length === 1 ? "tasting" : "tastings"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredTastings.map((tasting) => (
-                <div key={tasting.id} onClick={() => setSelectedTasting(tasting)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={tasting.image} alt={tasting.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {tasting.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-time-line text-[11px]"></i>{tasting.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                        <i className="ri-cup-line text-[10px]"></i>{tasting.winesIncluded}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{tasting.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{tasting.rating}</span>
-                        <span className="text-xs text-foreground-500">({tasting.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{tasting.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{tasting.venue}</span>
-                      <span className="flex items-center gap-1"><i className="ri-group-line text-foreground-400"></i>{tasting.groupSize}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {tasting.wineTypes.slice(0, 3).map((w) => (
-                        <span key={w} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{w}</span>
-                      ))}
-                      {tasting.wineTypes.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{tasting.wineTypes.length - 3}</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{tasting.pricePerPerson}</span>
-                        <span className="text-sm text-foreground-500"> / person</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedTasting(tasting); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-cup-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load wine tastings"
+                message={fetchError}
+                onRetry={loadTastings}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredTastings.length === 0 ? (
+              <EmptyState
+                title="No wine tastings found"
+                description="Try selecting a different tasting style or clear your filters."
+                icon="ri-cup-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveStyle("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredTastings.map((tasting) => (
+                  <div key={tasting.id} onClick={() => setSelectedTasting(tasting)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={tasting.image} alt={tasting.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {tasting.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-time-line text-[11px]"></i>{tasting.duration}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                          <i className="ri-cup-line text-[10px]"></i>{tasting.winesIncluded}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{tasting.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{tasting.rating}</span>
+                          <span className="text-xs text-foreground-500">({tasting.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{tasting.description}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{tasting.venue}</span>
+                        <span className="flex items-center gap-1"><i className="ri-group-line text-foreground-400"></i>{tasting.groupSize}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {tasting.wineTypes.slice(0, 3).map((w) => (
+                          <span key={w} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{w}</span>
+                        ))}
+                        {tasting.wineTypes.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{tasting.wineTypes.length - 3}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{tasting.pricePerPerson}</span>
+                          <span className="text-sm text-foreground-500"> / person</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedTasting(tasting); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-cup-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

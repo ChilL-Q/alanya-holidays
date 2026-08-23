@@ -4,8 +4,10 @@ import { ReviewsController } from './reviews.controller';
 import { ReviewsRepository } from './reviews.repository';
 import { SupabaseReviewsRepository } from './infrastructure/repositories/supabase-reviews.repository';
 import { REVIEWS_REPOSITORY } from './domain/repositories/reviews.repository.interface';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   providers: [
     ReviewsService,
     ReviewsRepository,

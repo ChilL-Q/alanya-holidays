@@ -10,11 +10,13 @@ import {
   PROPERTIES_REPOSITORY,
   PropertyQueryOptions,
 } from './domain';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import {
   CreatePropertyDto,
   UpdatePropertyDto,
   CreatePropertyReviewDto,
+  SavePropertyDraftDto,
 } from './dto';
 import { ICalSyncResult } from './types/property.types';
 
@@ -24,6 +26,7 @@ export class PropertiesService {
     @Inject(PROPERTIES_REPOSITORY)
     private readonly propertiesRepository: IPropertiesRepository,
     private readonly redisService: RedisService,
+    private readonly userRolesRepo: UserRolesRepository,
   ) {}
 
   // ============================================
@@ -126,7 +129,7 @@ export class PropertiesService {
     userId: string,
   ): Promise<{ success: boolean }> {
     const existingProp = await this.propertiesRepository.getPropertyHostId(id);
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
 
     if (
       !existingProp ||
@@ -150,12 +153,9 @@ export class PropertiesService {
   async updatePropertyStatus(
     id: string,
     status: string,
-    reason: string | undefined,
-    userId: string,
+    reason?: string,
+    _userId?: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.propertiesRepository.getUserRole(userId);
-    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
-
     const updates: Record<string, unknown> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
     if (status === 'approved') updates.rejection_reason = null;
@@ -173,7 +173,7 @@ export class PropertiesService {
     const property = await this.propertiesRepository.getPropertyHostId(id);
     if (!property) throw new NotFoundException('Property not found');
 
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (property.host_id !== userId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
 
@@ -186,6 +186,113 @@ export class PropertiesService {
         location: 'Archived',
       });
     }
+    await this.redisService.delByPattern('properties:*');
+    return { success: true };
+  }
+
+  // ============================================
+  // Property Drafts
+  // ============================================
+
+  /** Fields a draft owner may never set directly. */
+  private static readonly PROTECTED_PROPERTY_FIELDS = [
+    'id',
+    'host_id',
+    'status',
+    'rejection_reason',
+    'is_featured',
+    'is_verified',
+    'ical_token',
+    'ical_url',
+    'last_synced_at',
+    'created_at',
+    'updated_at',
+  ] as const;
+
+  async savePropertyDraft(
+    data: SavePropertyDraftDto,
+    userId: string,
+  ): Promise<{ id: string }> {
+    const { draftId, ...raw } = data;
+    const safeData: Record<string, unknown> = { ...raw };
+    for (const field of PropertiesService.PROTECTED_PROPERTY_FIELDS) {
+      delete safeData[field];
+    }
+    if (typeof safeData.title !== 'string' || safeData.title.trim() === '') {
+      safeData.title = 'Untitled Draft';
+    }
+
+    let propertyId: string;
+    if (draftId) {
+      const owner = await this.propertiesRepository.getPropertyHostId(draftId);
+      if (!owner || owner.host_id !== userId) {
+        throw new UnauthorizedException('Not authorized');
+      }
+      await this.propertiesRepository.updateProperty(draftId, {
+        ...safeData,
+        status: 'draft',
+      });
+      propertyId = draftId;
+    } else {
+      const inserted = await this.propertiesRepository.insertProperty(
+        { ...safeData, status: 'draft' },
+        userId,
+      );
+      propertyId =
+        typeof inserted.id === 'string' ? inserted.id : String(inserted.id);
+    }
+
+    await this.redisService.delByPattern('properties:*');
+    return { id: propertyId };
+  }
+
+  async publishPropertyDraft(
+    id: string,
+    updates: Partial<CreatePropertyDto>,
+    userId: string,
+  ): Promise<{ success: boolean }> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      )
+    ) {
+      throw new BadRequestException('Invalid property id');
+    }
+
+    const owner = await this.propertiesRepository.getPropertyHostId(id);
+    if (!owner || owner.host_id !== userId) {
+      throw new UnauthorizedException('Not authorized');
+    }
+
+    const title = updates.title?.trim();
+    if (!title || title.length < 3) {
+      throw new BadRequestException(
+        'Title is required (minimum 3 characters) to publish',
+      );
+    }
+    if (!updates.type?.trim()) {
+      throw new BadRequestException('Property type is required to publish');
+    }
+    if (!updates.location?.trim()) {
+      throw new BadRequestException('Location is required to publish');
+    }
+    if (
+      typeof updates.price_per_night !== 'number' ||
+      updates.price_per_night <= 0
+    ) {
+      throw new BadRequestException(
+        'A positive price per night is required to publish',
+      );
+    }
+
+    const safeUpdates: Record<string, unknown> = { ...updates };
+    for (const field of PropertiesService.PROTECTED_PROPERTY_FIELDS) {
+      delete safeUpdates[field];
+    }
+    safeUpdates.status = 'pending';
+    safeUpdates.rejection_reason = null;
+
+    await this.propertiesRepository.updateProperty(id, safeUpdates);
     await this.redisService.delByPattern('properties:*');
     return { success: true };
   }
@@ -231,7 +338,7 @@ export class PropertiesService {
     userId: string,
   ): Promise<Record<string, unknown>> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
       throw new UnauthorizedException('Not authorized');
 
@@ -243,7 +350,7 @@ export class PropertiesService {
     userId: string,
   ): Promise<ICalSyncResult[]> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
       throw new UnauthorizedException('Not authorized');
 
@@ -277,7 +384,7 @@ export class PropertiesService {
       await this.propertiesRepository.getICalFeedPropertyId(id);
     if (!propertyId) throw new NotFoundException('iCal feed not found');
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
       throw new UnauthorizedException('Not authorized');
 
@@ -309,7 +416,7 @@ export class PropertiesService {
     userId: string,
   ): Promise<{ success: boolean }> {
     const prop = await this.propertiesRepository.getPropertyHostId(propertyId);
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (!prop || (prop.host_id !== userId && role !== 'admin'))
       throw new UnauthorizedException('Not authorized');
 
@@ -415,7 +522,7 @@ export class PropertiesService {
     const review = await this.propertiesRepository.getReviewUserId(reviewId);
     if (!review) throw new NotFoundException('Review not found');
 
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (review.user_id !== userId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
 
@@ -440,7 +547,7 @@ export class PropertiesService {
     reviewId: string,
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     await this.propertiesRepository.updateReviewFlag(reviewId, false, false);
@@ -452,7 +559,7 @@ export class PropertiesService {
     limit = 20,
     userId: string,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     const from = (page - 1) * limit;
@@ -465,7 +572,7 @@ export class PropertiesService {
     reviewIds: string[],
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.propertiesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     await this.propertiesRepository.bulkDeleteReviews(reviewIds);

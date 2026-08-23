@@ -288,7 +288,9 @@ describe('Empirical Challenge: AuthContext State Reactivity & Resilience', () =>
         </AuthProvider>
       );
 
-      expect(await screen.findByTestId('editor-bio')).toHaveTextContent('Original bio');
+      await waitFor(() => {
+        expect(screen.getByTestId('editor-bio')).toHaveTextContent('Original bio');
+      });
 
       await act(async () => {
         screen.getByTestId('btn-update-bio').click();

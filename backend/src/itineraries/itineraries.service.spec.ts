@@ -7,10 +7,13 @@ import {
 } from './itineraries.repository';
 import { CreateItineraryDto } from './dto/create-itinerary.dto';
 import { UpdateItineraryDto } from './dto/update-itinerary.dto';
+import { AiGuideService } from '../ai/ai-guide.service';
+import { GenerateItineraryDto } from '../ai/dto/generate-itinerary.dto';
 
 describe('ItinerariesService', () => {
   let service: ItinerariesService;
   let mockRepository: jest.Mocked<Partial<ItinerariesRepository>>;
+  let mockAiGuideService: jest.Mocked<Partial<AiGuideService>>;
 
   const mockItinerary: SavedItineraryRow = {
     id: 'itin-123',
@@ -34,12 +37,25 @@ describe('ItinerariesService', () => {
       deleteItinerary: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockAiGuideService = {
+      generateItinerary: jest.fn().mockResolvedValue({
+        title: 'AI Generated 3-Day Alanya Itinerary',
+        description: 'Great plan',
+        district: 'Alanya',
+        days: [{ day: 1, items: [] }],
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ItinerariesService,
         {
           provide: ItinerariesRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: AiGuideService,
+          useValue: mockAiGuideService,
         },
       ],
     }).compile();
@@ -62,6 +78,33 @@ describe('ItinerariesService', () => {
         'user-1',
         dto,
       );
+    });
+  });
+
+  describe('generateAndSaveItinerary', () => {
+    it('should invoke AiGuideService and persist generated itinerary to repository', async () => {
+      const dto: GenerateItineraryDto = {
+        days: 3,
+        district: 'Alanya',
+        interests: ['beaches'],
+      };
+
+      const result = await service.generateAndSaveItinerary('user-1', dto);
+
+      expect(result).toEqual(mockItinerary);
+      expect(mockAiGuideService.generateItinerary).toHaveBeenCalledWith(dto);
+      expect(mockRepository.createItinerary).toHaveBeenCalledWith('user-1', {
+        title: 'AI Generated 3-Day Alanya Itinerary',
+        params: {
+          days: 3,
+          district: 'Alanya',
+          interests: ['beaches'],
+          pace: 'moderate',
+          budget: 'standard',
+          companion: '',
+        },
+        itinerary: [{ day: 1, items: [] }],
+      });
     });
   });
 

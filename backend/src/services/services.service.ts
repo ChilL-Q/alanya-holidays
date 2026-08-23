@@ -3,12 +3,14 @@ import {
   Inject,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   IServicesRepository,
   SERVICES_REPOSITORY,
 } from './domain/repositories/services.repository.interface';
 import { RedisService } from '../common/redis/redis.service';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { ServiceListResponse } from './types/services.types';
 
 const IMMUTABLE_SERVICE_FIELDS = new Set([
@@ -25,6 +27,7 @@ export class ServicesService {
     @Inject(SERVICES_REPOSITORY)
     private readonly servicesRepository: IServicesRepository,
     private readonly redisService: RedisService,
+    private readonly userRolesRepo: UserRolesRepository,
   ) {}
 
   // ============================================
@@ -42,6 +45,88 @@ export class ServicesService {
     const service = await this.servicesRepository.insertService(insertData);
     await this.redisService.delByPattern('services:*');
     return service;
+  }
+
+  // ============================================
+  // Service Drafts
+  // ============================================
+
+  async saveServiceDraft(
+    data: Record<string, unknown> & { draftId?: string },
+    userId: string,
+  ): Promise<{ id: string }> {
+    const { draftId, ...raw } = data;
+    const safeData: Record<string, unknown> = { ...raw };
+    for (const field of IMMUTABLE_SERVICE_FIELDS) {
+      delete safeData[field];
+    }
+    if (typeof safeData.title !== 'string' || safeData.title.trim() === '') {
+      safeData.title = 'Untitled Draft';
+    }
+
+    let serviceId: string;
+    if (draftId) {
+      const owner =
+        await this.servicesRepository.getServiceOwnershipInfo(draftId);
+      if (!owner || owner.provider_id !== userId) {
+        throw new UnauthorizedException('Not authorized');
+      }
+      await this.servicesRepository.updateService(draftId, {
+        ...safeData,
+        status: 'draft',
+      });
+      serviceId = draftId;
+    } else {
+      const inserted = await this.servicesRepository.insertService({
+        ...safeData,
+        provider_id: userId,
+        status: 'draft',
+      });
+      serviceId =
+        typeof inserted.id === 'string' ? inserted.id : String(inserted.id);
+    }
+
+    await this.redisService.delByPattern('services:*');
+    return { id: serviceId };
+  }
+
+  async publishServiceDraft(
+    id: string,
+    updates: Record<string, unknown>,
+    userId: string,
+  ): Promise<{ success: boolean }> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        id,
+      )
+    ) {
+      throw new BadRequestException('Invalid service id');
+    }
+
+    const owner = await this.servicesRepository.getServiceOwnershipInfo(id);
+    if (!owner || owner.provider_id !== userId) {
+      throw new UnauthorizedException('Not authorized');
+    }
+
+    const title = typeof updates.title === 'string' ? updates.title.trim() : '';
+    if (!title || title.length < 3) {
+      throw new BadRequestException(
+        'Title is required (minimum 3 characters) to publish',
+      );
+    }
+    if (typeof updates.type !== 'string' || updates.type.trim() === '') {
+      throw new BadRequestException('Service type is required to publish');
+    }
+
+    const safeUpdates: Record<string, unknown> = { ...updates };
+    for (const field of IMMUTABLE_SERVICE_FIELDS) {
+      delete safeUpdates[field];
+    }
+    safeUpdates.status = 'pending';
+
+    await this.servicesRepository.updateService(id, safeUpdates);
+    await this.redisService.delByPattern('services:*');
+    return { success: true };
   }
 
   async getServices(
@@ -108,7 +193,7 @@ export class ServicesService {
   ): Promise<{ success: boolean }> {
     const existingService =
       await this.servicesRepository.getServiceOwnershipInfo(id);
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
 
     if (
       !existingService ||
@@ -137,7 +222,7 @@ export class ServicesService {
     const service = await this.servicesRepository.getServiceOwnershipInfo(id);
     if (!service) throw new NotFoundException('Service not found');
 
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (service.provider_id !== userId && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
     }
@@ -150,16 +235,9 @@ export class ServicesService {
   async updateServiceStatus(
     id: string,
     status: string,
-    reason: string | undefined,
-    userId: string,
+    reason?: string,
+    _userId?: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.servicesRepository.getUserRole(userId);
-    if (role !== 'admin') {
-      throw new UnauthorizedException(
-        'Not authorized: only admins can change service status',
-      );
-    }
-
     const updates: Record<string, unknown> = { status };
     if (status === 'rejected' && reason) updates.rejection_reason = reason;
     if (status === 'approved') updates.rejection_reason = null;
@@ -234,7 +312,7 @@ export class ServicesService {
     updates: Record<string, unknown>,
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') throw new UnauthorizedException('Not authorized');
 
     await this.servicesRepository.updateServiceModel(id, updates);
@@ -262,7 +340,7 @@ export class ServicesService {
       await this.servicesRepository.getServiceOwnershipInfo(serviceId);
     if (!service) throw new NotFoundException('Service not found');
 
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (service.provider_id !== userId && role !== 'admin') {
       throw new UnauthorizedException('Not authorized');
     }
@@ -300,7 +378,7 @@ export class ServicesService {
     editId: string,
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
     }
@@ -313,7 +391,7 @@ export class ServicesService {
     editId: string,
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
     }
@@ -350,7 +428,7 @@ export class ServicesService {
     reason: string | undefined,
     userId: string,
   ): Promise<{ success: boolean }> {
-    const role = await this.servicesRepository.getUserRole(userId);
+    const role = await this.userRolesRepo.getRole(userId);
     if (role !== 'admin') {
       throw new UnauthorizedException('Admin access required');
     }

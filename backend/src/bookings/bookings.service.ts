@@ -1,25 +1,44 @@
 import {
   Injectable,
+  Logger,
   BadRequestException,
   UnauthorizedException,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { BookingsRepository } from './bookings.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { ConfirmedBookingDetails } from './dto/booking-notification.dto';
-import { BookingEntity, BookingItemType, Money, StayPeriod } from './domain';
+import {
+  BookingEntity,
+  BookingItemType,
+  BookingStatus,
+  Money,
+  StayPeriod,
+} from './domain';
 import { BookingMapper } from './infrastructure/booking.mapper';
 import {
   PropertySummaryRow,
   ServiceSummaryRow,
 } from './dto/booking-repository.dto';
+import { EmailOutboxRepository } from './email-outbox.repository';
+import {
+  PAYOUT_STATUSES,
+  PAYOUT_STATUS_TRANSITIONS,
+  PayoutStatus,
+} from './dto/update-payout-status.dto';
 
 @Injectable()
 export class BookingsService {
+  private readonly logger = new Logger(BookingsService.name);
+
   constructor(
     private readonly bookingsRepository: BookingsRepository,
-    private readonly notificationsService?: NotificationsService,
+    private readonly emailOutbox: EmailOutboxRepository,
+    private readonly notificationsService: NotificationsService,
+    @Optional() private readonly userRolesRepo?: UserRolesRepository,
   ) {}
 
   async checkConflict(
@@ -61,21 +80,33 @@ export class BookingsService {
     return { has_conflict: false, message: 'Available' };
   }
 
-  async createBooking(dto: CreateBookingDto) {
+  async createBooking(dto: CreateBookingDto, guestId: string) {
     const itemType = (dto.item_type || 'property') as BookingItemType;
 
     // Validate domain invariants through Value Objects and BookingEntity factory
     let stayPeriod: StayPeriod;
-    let totalPrice: Money;
     let bookingEntity: BookingEntity;
 
     try {
       stayPeriod = new StayPeriod(dto.check_in, dto.check_out);
-      totalPrice = new Money(dto.total_price, 'EUR');
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Invalid booking details';
+      throw new BadRequestException(msg);
+    }
+
+    const { hostId, itemTitle, totalPrice } = await this.resolveBookingContext(
+      dto,
+      guestId,
+      itemType,
+      stayPeriod,
+    );
+
+    try {
       bookingEntity = BookingEntity.create({
         itemId: dto.item_id,
         itemType,
-        guestId: dto.user_id,
+        guestId,
         stayPeriod,
         totalPrice,
         guestsCount: dto.guests,
@@ -86,34 +117,6 @@ export class BookingsService {
       const msg =
         err instanceof Error ? err.message : 'Invalid booking details';
       throw new BadRequestException(msg);
-    }
-
-    let hostId: string | null = null;
-    let propertyTitle = 'Item';
-
-    // Pre-fetch item title/host and perform early validation
-    if (bookingEntity.itemType === 'property') {
-      const property = await this.bookingsRepository.getProperty(
-        bookingEntity.itemId,
-      );
-      if (!property) throw new BadRequestException('Property not found');
-      if (property.status !== 'approved')
-        throw new BadRequestException('Property is not available');
-      if (property.host_id === bookingEntity.guestId)
-        throw new BadRequestException('Cannot book your own property');
-      hostId = property.host_id;
-      propertyTitle = property.title;
-    } else if (bookingEntity.itemType === 'service') {
-      const service = await this.bookingsRepository.getService(
-        bookingEntity.itemId,
-      );
-      if (!service) throw new BadRequestException('Service not found');
-      if (service.status !== 'approved')
-        throw new BadRequestException('Service is not available');
-      if (service.provider_id === bookingEntity.guestId)
-        throw new BadRequestException('Cannot book your own service');
-      hostId = service.provider_id;
-      propertyTitle = service.title;
     }
 
     // Execute atomic RPC (validations, advisory locking, overlap check & date series blocking in 1 DB RTT)
@@ -149,7 +152,7 @@ export class BookingsService {
       bookingInfo,
       bookingEntity.guestId,
       hostId,
-      propertyTitle,
+      itemTitle,
       bookingEntity.itemType,
     );
 
@@ -157,7 +160,7 @@ export class BookingsService {
       this.notificationsService.notifyUser(hostId, {
         type: 'NEW_BOOKING',
         title: 'Новое бронирование!',
-        message: `Новая заявка на "${propertyTitle}" с ${bookingEntity.stayPeriod.checkIn} по ${bookingEntity.stayPeriod.checkOut}`,
+        message: `Новая заявка на "${itemTitle}" с ${bookingEntity.stayPeriod.checkIn} по ${bookingEntity.stayPeriod.checkOut}`,
         data: {
           bookingId,
           itemId: bookingEntity.itemId,
@@ -169,6 +172,76 @@ export class BookingsService {
     }
 
     return bookingId;
+  }
+
+  private async resolveBookingContext(
+    dto: CreateBookingDto,
+    guestId: string,
+    itemType: BookingItemType,
+    stayPeriod: StayPeriod,
+  ): Promise<{
+    hostId: string | null;
+    itemTitle: string;
+    totalPrice: Money;
+  }> {
+    if (itemType === 'property') {
+      const property = await this.bookingsRepository.getProperty(dto.item_id);
+      if (!property) throw new BadRequestException('Property not found');
+      if (property.status !== 'approved') {
+        throw new BadRequestException('Property is not available');
+      }
+      if (property.host_id === guestId) {
+        throw new BadRequestException('Cannot book your own property');
+      }
+
+      const currency = property.currency ?? 'EUR';
+      const nightlyPrice = new Money(property.price_per_night ?? 0, currency);
+      const nights = stayPeriod.getNightsCount();
+      let totalPrice = nightlyPrice.multiply(nights);
+
+      if (
+        property.cleaning_fee !== null &&
+        property.cleaning_fee !== undefined
+      ) {
+        totalPrice = totalPrice.add(new Money(property.cleaning_fee, currency));
+      }
+
+      return {
+        hostId: property.host_id,
+        itemTitle: property.title,
+        totalPrice,
+      };
+    }
+
+    if (itemType === 'service') {
+      const service = await this.bookingsRepository.getService(dto.item_id);
+      if (!service) throw new BadRequestException('Service not found');
+      if (service.status !== 'approved') {
+        throw new BadRequestException('Service is not available');
+      }
+      if (service.provider_id === guestId) {
+        throw new BadRequestException('Cannot book your own service');
+      }
+
+      const currency = service.currency ?? 'EUR';
+      const unitPrice = new Money(service.price ?? 0, currency);
+      const normalizedPriceUnit = service.price_unit?.toLowerCase();
+      const units =
+        normalizedPriceUnit === 'per_person'
+          ? dto.guests
+          : normalizedPriceUnit === 'per_day' ||
+              normalizedPriceUnit === 'per_night'
+            ? stayPeriod.getNightsCount()
+            : 1;
+
+      return {
+        hostId: service.provider_id,
+        itemTitle: service.title,
+        totalPrice: unitPrice.multiply(units),
+      };
+    }
+
+    throw new BadRequestException('Unsupported booking item type');
   }
 
   private async sendEmails(
@@ -189,7 +262,7 @@ export class BookingsService {
       const profile = await this.bookingsRepository.getProfile(userId);
       const guestName = profile?.full_name || 'Guest';
 
-      await this.invokeEmailWithRetry({
+      await this.emailOutbox.enqueue({
         type: 'booking_created',
         userId: userId,
         data: {
@@ -205,7 +278,7 @@ export class BookingsService {
       });
 
       if (hostId) {
-        await this.invokeEmailWithRetry({
+        await this.emailOutbox.enqueue({
           type: 'booking_request_host',
           userId: hostId,
           data: {
@@ -222,29 +295,10 @@ export class BookingsService {
         });
       }
     } catch (e) {
-      console.error('Failed to send emails', e);
-    }
-  }
-
-  private async invokeEmailWithRetry(
-    payload: Record<string, unknown>,
-    maxRetries = 3,
-  ) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await this.bookingsRepository.invokeEmailFunction(payload);
-        return;
-      } catch (err) {
-        if (attempt === maxRetries) {
-          console.error(
-            `Email delivery failed after ${maxRetries} attempts:`,
-            err,
-          );
-        } else {
-          const delay = Math.pow(2, attempt) * 100 + Math.random() * 50;
-          await new Promise((res) => setTimeout(res, delay));
-        }
-      }
+      this.logger.error(
+        'Failed to send emails',
+        e instanceof Error ? e.stack : undefined,
+      );
     }
   }
 
@@ -259,12 +313,8 @@ export class BookingsService {
 
   async getAdminBookings(
     statusFilter: string | undefined,
-    requestUserId: string,
+    _requestUserId?: string,
   ) {
-    const role = await this.bookingsRepository.getUserRole(requestUserId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Admin access required');
-
     const bookings =
       await this.bookingsRepository.getAdminBookings(statusFilter);
     return bookings || [];
@@ -276,7 +326,9 @@ export class BookingsService {
     dateTo?: string,
     requestUserId?: string,
   ): Promise<Record<string, unknown>[]> {
-    const role = await this.bookingsRepository.getUserRole(requestUserId!);
+    const role = requestUserId
+      ? await this.userRolesRepo?.getRole(requestUserId)
+      : undefined;
     if (requestUserId !== hostId && role !== 'admin')
       throw new UnauthorizedException('Not authorized');
 
@@ -341,7 +393,7 @@ export class BookingsService {
     const isPropertyHost = propertyObj?.host_id === userId;
     const isServiceProvider = serviceObj?.provider_id === userId;
 
-    const role = await this.bookingsRepository.getUserRole(userId);
+    const role = await this.userRolesRepo?.getRole(userId);
     const isAdmin = role === 'admin';
 
     if (!isBookingOwner && !isPropertyHost && !isServiceProvider && !isAdmin) {
@@ -356,10 +408,15 @@ export class BookingsService {
           );
         }
       }
-      await this.bookingsRepository.unblockDatesForBooking(id);
     }
 
-    await this.bookingsRepository.updateBookingStatus(id, status);
+    // Execute atomic DB RPC (Locks row, verifies transition, deletes dates atomically, updates status)
+    const transition = await this.bookingsRepository.transitionStatus({
+      bookingId: id,
+      newStatus: status as BookingStatus,
+      userId,
+      reason,
+    });
 
     // Logging & Emails
     const typeLabel = propertyObj
@@ -373,12 +430,13 @@ export class BookingsService {
     let emailType: string | null = null;
     if (status === 'confirmed') emailType = 'booking_confirmed';
     else if (status === 'cancelled')
-      emailType = domainBooking.isPending()
-        ? 'booking_rejected'
-        : 'booking_cancelled';
+      emailType =
+        transition.oldStatus === 'pending' || domainBooking.isPending()
+          ? 'booking_rejected'
+          : 'booking_cancelled';
 
     if (emailType) {
-      void this.bookingsRepository.invokeEmailFunction({
+      await this.emailOutbox.enqueue({
         type: emailType,
         userId: domainBooking.guestId,
         data: {
@@ -392,7 +450,7 @@ export class BookingsService {
       });
 
       if (status === 'cancelled' && hostId) {
-        void this.bookingsRepository.invokeEmailFunction({
+        await this.emailOutbox.enqueue({
           type: 'booking_cancelled_host',
           userId: hostId,
           data: {
@@ -406,7 +464,7 @@ export class BookingsService {
         });
       }
     }
-    return { success: true };
+    return { success: true, transition };
   }
 
   async cancelBooking(id: string, userId: string) {
@@ -421,12 +479,31 @@ export class BookingsService {
     );
   }
 
-  async updatePayoutStatus(id: string, payoutStatus: string, userId: string) {
-    const role = await this.bookingsRepository.getUserRole(userId);
-    if (role !== 'admin')
-      throw new UnauthorizedException('Admin access required');
+  async updatePayoutStatus(id: string, payoutStatus: string, _userId?: string) {
+    // Defense-in-depth: whitelist against DB enum public.payout_status
+    if (!PAYOUT_STATUSES.includes(payoutStatus as PayoutStatus))
+      throw new BadRequestException(
+        `payoutStatus must be one of: ${PAYOUT_STATUSES.join(', ')}`,
+      );
 
-    await this.bookingsRepository.updatePayoutStatus(id, payoutStatus);
+    const nextStatus = payoutStatus as PayoutStatus;
+    const currentStatus = await this.bookingsRepository.getPayoutStatus(id);
+    if (currentStatus === null)
+      throw new NotFoundException('Booking not found');
+
+    // Enforce the payout state machine; same-value writes stay idempotent.
+    const allowedTransitions =
+      PAYOUT_STATUS_TRANSITIONS[currentStatus as PayoutStatus];
+    if (
+      currentStatus !== nextStatus &&
+      !allowedTransitions?.includes(nextStatus)
+    ) {
+      throw new BadRequestException(
+        `Invalid payout status transition: ${currentStatus} -> ${nextStatus}`,
+      );
+    }
+
+    await this.bookingsRepository.updatePayoutStatus(id, nextStatus);
     return { success: true };
   }
 
@@ -448,15 +525,24 @@ export class BookingsService {
     }
 
     const confirmedIds = updatedRows.map((r: { id: string }) => r.id);
-    const bookings =
-      await this.bookingsRepository.getConfirmedBookingsDetails(confirmedIds);
 
-    for (const booking of bookings as ConfirmedBookingDetails[]) {
+    // If details were already returned by atomic RPC (fast path)
+    const hasJoinedDetails = updatedRows.some(
+      (r) => r.property || r.service || r.profile,
+    );
+
+    const bookings: ConfirmedBookingDetails[] = hasJoinedDetails
+      ? updatedRows
+      : ((await this.bookingsRepository.getConfirmedBookingsDetails(
+          confirmedIds,
+        )) as ConfirmedBookingDetails[]);
+
+    for (const booking of bookings) {
       const itemTitle =
         booking.property?.title ?? booking.service?.title ?? 'Booking';
       const guestEmail = booking.profile?.email;
       if (guestEmail) {
-        void this.bookingsRepository.invokeEmailFunction({
+        await this.emailOutbox.enqueue({
           to: guestEmail,
           type: 'booking_confirmed',
           data: {

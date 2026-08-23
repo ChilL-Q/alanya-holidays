@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { forgotPasswordSchema } from "@/lib/validation/auth.schemas";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -14,11 +15,13 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      setError("Please enter your email address.");
+    const validation = forgotPasswordSchema.safeParse({ email });
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message || "Please enter your email address.");
       return;
     }
+
+    const cleanEmail = validation.data.email;
 
     setIsSubmitting(true);
 

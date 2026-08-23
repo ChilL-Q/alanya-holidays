@@ -50,14 +50,3 @@ export interface EnrichedConversation extends ChatConversationEntity {
   last_message?: ChatMessageEntity | null;
   unread_count: number;
 }
-
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest {
-  user: AuthenticatedUser;
-}

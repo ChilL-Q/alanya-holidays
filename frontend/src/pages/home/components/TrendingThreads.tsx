@@ -1,23 +1,23 @@
 import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
-import { trendingThreads as defaultThreads } from "@/mocks/threads";
+import { logger } from "@/lib/logger";
 
 export default function TrendingThreads() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [threads, setThreads] = useState<CategoryThread[]>(defaultThreads);
+  const [threads, setThreads] = useState<CategoryThread[]>([]);
 
   useEffect(() => {
     let isMounted = true;
     forumService
       .getTrendingThreads(8)
       .then((data) => {
-        if (isMounted && data && data.length > 0) {
+        if (isMounted && data) {
           setThreads(data);
         }
       })
       .catch((err) => {
-        console.warn("Failed to load trending threads:", err);
+        logger.warn("Failed to load trending threads:", err);
       });
 
     return () => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { eventCategories } from "@/mocks/events";
-import { eventsService, type ForumEvent } from "@/api-services/events.service";
+import { eventsService, eventCategories, type ForumEvent } from "@/api-services/events.service";
+import { logger } from "@/lib/logger";
 
 interface HostEventModalProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
       onEventCreated?.(newEvent);
       setSubmitted(true);
     } catch (err) {
-      console.warn("Failed to create event:", err);
+      logger.warn("Failed to create event:", err);
       setSubmitted(true);
     } finally {
       setIsSubmitting(false);

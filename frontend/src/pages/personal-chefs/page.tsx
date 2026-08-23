@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { personalChefs, chefStyles } from "@/mocks/personal-chefs";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type PersonalChef } from "@/api-services/concierge.service";
+import { conciergeService, chefStyles, type PersonalChef } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function PersonalChefsPage() {
+  const [personalChefs, setPersonalChefs] = useState<PersonalChef[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeStyle, setActiveStyle] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -17,6 +21,23 @@ export default function PersonalChefsPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadChefs = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getPersonalChefs();
+      setPersonalChefs(data);
+    } catch {
+      setFetchError("Failed to load personal chefs. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadChefs();
+  }, [loadChefs]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -42,16 +63,23 @@ export default function PersonalChefsPage() {
   const filteredChefs = useMemo(() => {
     let results = personalChefs;
     if (activeStyle !== "all") {
-      if (activeStyle === "turkish") results = results.filter((c) => c.specialty.toLowerCase().includes("turkish") || c.specialty.toLowerCase().includes("anatolian"));
-      else if (activeStyle === "mediterranean") results = results.filter((c) => c.cuisines.some((cu) => cu.toLowerCase().includes("mediterranean") || cu.toLowerCase().includes("aegean") || cu.toLowerCase().includes("greek") || cu.toLowerCase().includes("italian")));
-      else if (activeStyle === "fusion") results = results.filter((c) => c.specialty.toLowerCase().includes("fusion") || c.menuStyle.includes("Tasting") || c.experience.includes("Le Cordon Bleu"));
-      else if (activeStyle === "private-dinner") results = results.filter((c) => c.menuStyle.toLowerCase().includes("dinner") || c.menuStyle.toLowerCase().includes("feast"));
+      results = results.filter((c) => {
+        const spec = (c.specialty || (Array.isArray(c.specialties) ? c.specialties.join(" ") : "")).toLowerCase();
+        const cuisines = (c.cuisines || c.cuisine || []).map((cu) => cu.toLowerCase());
+        const menu = (c.menuStyle || "").toLowerCase();
+        const exp = (c.experience || "").toLowerCase();
+        if (activeStyle === "turkish") return spec.includes("turkish") || spec.includes("anatolian");
+        if (activeStyle === "mediterranean") return cuisines.some((cu) => cu.includes("mediterranean") || cu.includes("aegean") || cu.includes("greek") || cu.includes("italian"));
+        if (activeStyle === "fusion") return spec.includes("fusion") || menu.includes("tasting") || exp.includes("le cordon bleu");
+        if (activeStyle === "private-dinner") return menu.includes("dinner") || menu.includes("feast");
+        return true;
+      });
     }
     if (sortBy === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
-    else if (sortBy === "price-low") results = [...results].sort((a, b) => a.pricePerPerson - b.pricePerPerson);
-    else if (sortBy === "price-high") results = [...results].sort((a, b) => b.pricePerPerson - a.pricePerPerson);
+    else if (sortBy === "price-low") results = [...results].sort((a, b) => (a.pricePerPerson || a.pricePerEvent || 0) - (b.pricePerPerson || b.pricePerEvent || 0));
+    else if (sortBy === "price-high") results = [...results].sort((a, b) => (b.pricePerPerson || b.pricePerEvent || 0) - (a.pricePerPerson || a.pricePerEvent || 0));
     return results;
-  }, [activeStyle, sortBy]);
+  }, [personalChefs, activeStyle, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
     rating: "Top Rated",
@@ -174,49 +202,85 @@ export default function PersonalChefsPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredChefs.length} {filteredChefs.length === 1 ? "chef" : "chefs"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredChefs.length} {filteredChefs.length === 1 ? "chef" : "chefs"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredChefs.map((chef) => (
-                <div key={chef.id} onClick={() => setSelectedChef(chef)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={chef.image} alt={chef.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {chef.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-restaurant-2-line text-[11px]"></i>{chef.specialty}
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load personal chefs"
+                message={fetchError}
+                onRetry={loadChefs}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{chef.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{chef.rating}</span>
-                        <span className="text-xs text-foreground-500">({chef.reviewCount})</span>
+                ))}
+              </div>
+            ) : filteredChefs.length === 0 ? (
+              <EmptyState
+                title="No personal chefs found"
+                description="Try selecting a different cuisine style or clear your filters."
+                icon="ri-restaurant-2-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveStyle("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredChefs.map((chef) => (
+                  <div key={chef.id} onClick={() => setSelectedChef(chef)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={chef.image} alt={chef.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {chef.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-restaurant-2-line text-[11px]"></i>{chef.specialty}
                       </div>
                     </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{chef.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-map-pin-line text-foreground-400"></i>{chef.location}</span>
-                      <span className="flex items-center gap-1"><i className="ri-briefcase-line text-foreground-400"></i>{chef.experience}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {chef.cuisines.slice(0, 3).map((cu) => (
-                        <span key={cu} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{cu}</span>
-                      ))}
-                      {chef.cuisines.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{chef.cuisines.length - 3}</span>}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{chef.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{chef.rating}</span>
+                          <span className="text-xs text-foreground-500">({chef.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{chef.description || chef.bio}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-map-pin-line text-foreground-400"></i>{chef.location || "Alanya"}</span>
+                        <span className="flex items-center gap-1"><i className="ri-briefcase-line text-foreground-400"></i>{chef.experience || `${chef.experienceYears || 5}+ years`}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {(chef.cuisines || chef.cuisine || []).slice(0, 3).map((cu) => (
+                          <span key={cu} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{cu}</span>
+                        ))}
+                      {(chef.cuisines?.length || chef.cuisine?.length || 0) > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{(chef.cuisines?.length || chef.cuisine?.length || 0) - 3}</span>}
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                       <div>
-                        <span className="text-lg font-bold text-foreground-900">€{chef.pricePerPerson}</span>
+                        <span className="text-lg font-bold text-foreground-900">€{chef.pricePerPerson || chef.pricePerEvent || 0}</span>
                         <span className="text-sm text-foreground-500"> / person</span>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedChef(chef); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
@@ -227,6 +291,7 @@ export default function PersonalChefsPage() {
                 </div>
               ))}
             </div>
+          )}
           </div>
         </section>
 
@@ -249,7 +314,7 @@ export default function PersonalChefsPage() {
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-medium mb-2">
-                      <i className="ri-restaurant-2-line text-[11px]"></i>{selectedChef.specialty}
+                      <i className="ri-restaurant-2-line text-[11px]"></i>{selectedChef.specialty || (Array.isArray(selectedChef.specialties) ? selectedChef.specialties.join(", ") : "") || "Gourmet Chef"}
                     </span>
                     <h2 className="font-heading text-2xl text-foreground-900">{selectedChef.name}</h2>
                   </div>
@@ -259,39 +324,39 @@ export default function PersonalChefsPage() {
                     <span className="text-sm text-foreground-500">({selectedChef.reviewCount} reviews)</span>
                   </div>
                 </div>
-                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedChef.description}</p>
+                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedChef.description || selectedChef.bio}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-restaurant-2-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Menu Style</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedChef.menuStyle}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedChef.menuStyle || "Fine Dining"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Duration</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedChef.duration}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedChef.duration || "3-4 hours"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-group-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Group Size</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedChef.groupSize}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedChef.groupSize || "2-12 guests"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-briefcase-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Experience</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedChef.experience}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedChef.experience || `${selectedChef.experienceYears || 5}+ years`}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
-                      <p className="text-2xl font-bold text-foreground-900">€{selectedChef.pricePerPerson}</p>
+                      <p className="text-2xl font-bold text-foreground-900">€{selectedChef.pricePerPerson || selectedChef.pricePerEvent || 0}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-foreground-500 mb-0.5">Languages</p>
                       <div className="flex gap-1 flex-wrap justify-end">
-                        {selectedChef.language.map((l) => (
+                        {(selectedChef.language || selectedChef.languages || []).map((l) => (
                           <span key={l} className="px-2 py-0.5 rounded-full bg-accent-100 text-accent-700 text-xs font-medium whitespace-nowrap">{l}</span>
                         ))}
                       </div>
@@ -301,7 +366,7 @@ export default function PersonalChefsPage() {
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">Cuisines</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedChef.cuisines.map((cu) => (
+                    {(selectedChef.cuisines || selectedChef.cuisine || []).map((cu) => (
                       <span key={cu} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
                         <i className="ri-restaurant-line text-[11px]"></i>{cu}
                       </span>
@@ -311,7 +376,7 @@ export default function PersonalChefsPage() {
                 <div className="mb-6">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedChef.priceIncludes.map((inc) => (
+                    {(selectedChef.priceIncludes || selectedChef.servicesOffered || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-check-line text-green-500 text-[11px]"></i>{inc}
                       </span>

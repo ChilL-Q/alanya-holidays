@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { forumStats } from "@/mocks/stats";
+import { forumService, type ForumStats } from "@/api-services/forum.service";
 
 const quickLinks = [
   { icon: "ri-discuss-line", title: "Categories", description: "Browse all discussion categories", link: "/categories", color: "primary" },
@@ -11,6 +12,20 @@ const quickLinks = [
 ];
 
 export default function CommunityHubPage() {
+  const [stats, setStats] = useState<ForumStats | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService.getForumStats().then((data) => {
+      if (mounted && data) setStats(data);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 18400;
+
   return (
     <>
       <Navbar />
@@ -31,7 +46,7 @@ export default function CommunityHubPage() {
             </div>
             <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Community Hub</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              The heart of Alanya Holidays — {forumStats.totalMembers.toLocaleString()}+ members sharing, connecting, and exploring together.
+              The heart of Alanya Holidays — {totalMembers.toLocaleString()}+ members sharing, connecting, and exploring together.
             </p>
           </div>
         </section>

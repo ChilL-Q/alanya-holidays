@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { logger } from "@/lib/logger";
 
 export const API_BASE_URL: string =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ||
@@ -9,13 +10,15 @@ export class ApiError extends Error {
   readonly statusText: string;
   readonly data: unknown;
   readonly endpoint: string;
+  readonly isAborted?: boolean;
 
   constructor(
     message: string,
     status: number,
     statusText: string,
     data?: unknown,
-    endpoint: string = ""
+    endpoint: string = "",
+    isAborted?: boolean
   ) {
     super(message);
     this.name = "ApiError";
@@ -23,12 +26,33 @@ export class ApiError extends Error {
     this.statusText = statusText;
     this.data = data;
     this.endpoint = endpoint;
+    this.isAborted = isAborted;
   }
 }
 
 export interface RequestOptions extends Omit<RequestInit, "body"> {
   params?: Record<string, string | number | boolean | undefined | null>;
   skipAuth?: boolean;
+}
+
+export function isAbortError(err: unknown): boolean {
+  if (!err) return false;
+  if (typeof DOMException !== "undefined" && err instanceof DOMException && err.name === "AbortError") return true;
+  if (err instanceof Error && (err.name === "AbortError" || err.message.toLowerCase().includes("aborted"))) return true;
+  if (err instanceof ApiError && (err.statusText === "AbortError" || err.isAborted === true)) return true;
+  return false;
+}
+
+export function shouldUseOfflineFallback(err: unknown): boolean {
+  if (!err) return false;
+  if (isAbortError(err)) return false;
+  if (err instanceof ApiError) {
+    return err.status >= 500 || err.status === 0;
+  }
+  if (err instanceof Error) {
+    return true;
+  }
+  return false;
 }
 
 export class ApiClient {
@@ -42,29 +66,22 @@ export class ApiClient {
     const isAbsolute =
       endpoint.startsWith("http://") || endpoint.startsWith("https://");
     const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    const base = isAbsolute ? endpoint : `${this.baseUrl}${cleanEndpoint}`;
+    let urlString = isAbsolute ? endpoint : `${this.baseUrl}${cleanEndpoint}`;
 
-    if (!params) {
-      return base;
-    }
-
-    const url = new URL(
-      base,
-      typeof window !== "undefined"
-        ? window.location.origin
-        : "http://localhost"
-    );
-
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value));
+    if (params) {
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        urlString += (urlString.includes("?") ? "&" : "?") + queryString;
       }
-    });
-
-    if (isAbsolute) {
-      return url.toString();
     }
-    return url.pathname + url.search;
+
+    return urlString;
   }
 
   private async getAuthHeader(): Promise<Record<string, string>> {
@@ -75,7 +92,7 @@ export class ApiClient {
         return { Authorization: `Bearer ${token}` };
       }
     } catch (err: unknown) {
-      console.warn("Failed to retrieve Supabase auth session for API request:", err);
+      logger.warn("Failed to retrieve Supabase auth session for API request:", err);
     }
     return {};
   }
@@ -124,6 +141,12 @@ export class ApiClient {
         body: serializedBody,
       });
     } catch (err: unknown) {
+      if (
+        (err instanceof Error && (err.name === "AbortError" || err.message.toLowerCase().includes("aborted"))) ||
+        (customConfig.signal && customConfig.signal.aborted)
+      ) {
+        throw err;
+      }
       const message =
         err instanceof Error ? err.message : "Network request failed";
       throw new ApiError(message, 0, "NetworkError", null, endpoint);

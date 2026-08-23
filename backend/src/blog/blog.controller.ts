@@ -8,19 +8,20 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
   Patch,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import {
   BlogPost,
   BlogPostSummary,
   BlogPostsListResult,
   BlogSubmission,
   BlogTag,
-  AuthenticatedRequest,
-  OptionalAuthenticatedRequest,
   SubmissionCreatedResponse,
   SuccessResponse,
 } from './types/blog.types';
@@ -33,6 +34,7 @@ import {
   RejectBlogSubmissionDto,
   UpdateBlogPostDto,
 } from './dto';
+import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('blog')
 export class BlogController {
@@ -41,18 +43,22 @@ export class BlogController {
   @Get()
   async getBlogPosts(
     @Query() query: GetBlogQueryDto,
-    @Req() req: OptionalAuthenticatedRequest,
+    @CurrentUser() user?: AuthUser,
   ): Promise<BlogPostsListResult> {
-    return this.blogService.getBlogPosts(query, req?.user?.id);
+    return this.blogService.getBlogPosts(query, user?.id);
   }
 
   @Get('featured')
   async getFeaturedBlogPosts(
-    @Query('limit') limit?: string,
+    @Query() query?: LimitQueryDto | string,
   ): Promise<BlogPostSummary[]> {
-    return this.blogService.getFeaturedBlogPosts(
-      limit ? parseInt(limit, 10) : 3,
-    );
+    let limit = 3;
+    if (typeof query === 'string') {
+      limit = parseInt(query, 10) || 3;
+    } else if (query?.limit !== undefined) {
+      limit = Number(query.limit) || 3;
+    }
+    return this.blogService.getFeaturedBlogPosts(limit);
   }
 
   @Get('tags')
@@ -61,74 +67,79 @@ export class BlogController {
   }
 
   @Post('tags')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async createBlogTag(
     @Body() body: CreateBlogTagDto | { name: string },
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogTag> {
     const tagName =
       typeof body === 'object' && body !== null && 'name' in body
         ? body.name
         : '';
-    return this.blogService.createBlogTag(tagName, req.user.id);
+    return this.blogService.createBlogTag(tagName, user.id);
   }
 
   @Delete('tags/:id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async deleteBlogTag(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
-    return this.blogService.deleteBlogTag(id, req.user.id);
+    return this.blogService.deleteBlogTag(id, user.id);
   }
 
   @Get('submissions/admin')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getBlogSubmissions(
     @Query() query: GetBlogSubmissionsQueryDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogSubmission[]> {
-    return this.blogService.getBlogSubmissions(query, req.user.id);
+    return this.blogService.getBlogSubmissions(query, user.id);
   }
 
   @Get('submissions/me')
   @UseGuards(AuthGuard)
   async getUserBlogSubmissions(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogSubmission[]> {
-    return this.blogService.getUserBlogSubmissions(req.user.id);
+    return this.blogService.getUserBlogSubmissions(user.id);
   }
 
   @Post('submissions')
   @UseGuards(AuthGuard)
   async createBlogSubmission(
     @Body() body: CreateBlogSubmissionDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SubmissionCreatedResponse> {
-    return this.blogService.createBlogSubmission(body, req.user.id);
+    return this.blogService.createBlogSubmission(body, user.id);
   }
 
   @Patch('submissions/:id/approve')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async approveBlogSubmission(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogPost> {
-    return this.blogService.approveBlogSubmission(id, req.user.id);
+    return this.blogService.approveBlogSubmission(id, user.id);
   }
 
   @Patch('submissions/:id/reject')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async rejectBlogSubmission(
     @Param('id') id: string,
     @Body() body: RejectBlogSubmissionDto | { reason: string },
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
     const reason =
       typeof body === 'object' && body !== null && 'reason' in body
         ? body.reason
         : '';
-    return this.blogService.rejectBlogSubmission(id, reason, req.user.id);
+    return this.blogService.rejectBlogSubmission(id, reason, user.id);
   }
 
   @Get('post/:slug')
@@ -143,22 +154,24 @@ export class BlogController {
   async getRelatedPosts(
     @Param('id') id: string,
     @Query('category') category?: string,
-    @Query('limit') limit?: string,
+    @Query() query?: LimitQueryDto | string,
   ): Promise<BlogPostSummary[]> {
-    return this.blogService.getRelatedPosts(
-      id,
-      category || '',
-      limit ? parseInt(limit, 10) : 3,
-    );
+    let limit = 3;
+    if (typeof query === 'string') {
+      limit = parseInt(query, 10) || 3;
+    } else if (query?.limit !== undefined) {
+      limit = Number(query.limit) || 3;
+    }
+    return this.blogService.getRelatedPosts(id, category || '', limit);
   }
 
   @Post()
   @UseGuards(AuthGuard)
   async createBlogPost(
     @Body() body: CreateBlogPostDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogPost> {
-    return this.blogService.createBlogPost(body, req.user.id);
+    return this.blogService.createBlogPost(body, user.id);
   }
 
   @Put(':id')
@@ -166,18 +179,18 @@ export class BlogController {
   async updateBlogPost(
     @Param('id') id: string,
     @Body() body: UpdateBlogPostDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<BlogPost> {
-    return this.blogService.updateBlogPost(id, body, req.user.id);
+    return this.blogService.updateBlogPost(id, body, user.id);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
   async deleteBlogPost(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
-    return this.blogService.deleteBlogPost(id, req.user.id);
+    return this.blogService.deleteBlogPost(id, user.id);
   }
 
   @Post(':id/tags/:tagId')
@@ -185,9 +198,9 @@ export class BlogController {
   async addTagToPost(
     @Param('id') id: string,
     @Param('tagId') tagId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
-    return this.blogService.addTagToPost(id, tagId, req.user.id);
+    return this.blogService.addTagToPost(id, tagId, user.id);
   }
 
   @Delete(':id/tags/:tagId')
@@ -195,8 +208,8 @@ export class BlogController {
   async removeTagFromPost(
     @Param('id') id: string,
     @Param('tagId') tagId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
-    return this.blogService.removeTagFromPost(id, tagId, req.user.id);
+    return this.blogService.removeTagFromPost(id, tagId, user.id);
   }
 }

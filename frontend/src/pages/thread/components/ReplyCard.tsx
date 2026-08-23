@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ThreadReply } from "@/mocks/thread-details";
+import type { ThreadReply } from "@/api-services/forum.service";
 
 interface ReplyCardProps {
   reply: ThreadReply;
@@ -77,7 +77,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply }: ReplyCa
       </div>
 
       {/* Nested replies */}
-      {reply.replies.length > 0 && depth < maxDepth && (
+      {(reply.replies?.length ?? 0) > 0 && depth < maxDepth && (
         <div className="mb-2">
           {!showReplies ? (
             <button
@@ -85,11 +85,11 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply }: ReplyCa
               className="flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-600 font-medium py-1.5 px-3 transition-colors"
             >
               <i className="ri-arrow-down-s-line"></i>
-              Show {reply.replies.length} {reply.replies.length === 1 ? "reply" : "replies"}
+              Show {reply.replies?.length} {reply.replies?.length === 1 ? "reply" : "replies"}
             </button>
           ) : (
             <>
-              {reply.replies.map((nested) => (
+              {reply.replies?.map((nested) => (
                 <ReplyCard
                   key={nested.id}
                   reply={nested}

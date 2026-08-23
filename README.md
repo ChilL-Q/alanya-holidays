@@ -1,47 +1,210 @@
 # Alanya Holidays 🌴
 
-**Unforgettable Alanya awaits.**
+Alanya Holidays — full-stack travel and booking platform for rentals, local experiences, concierge services, merchant listings, and AI-assisted trip planning in Alanya, Turkey.
 
-This project is a modern travel platform designed to connect travelers with premium rentals and unique experiences in Alanya, Turkey.
+## Current architecture
 
-## What is this?
+This repository is a **pnpm monorepo** with three main parts:
 
-Alanya Holidays is a concept booking platform that removes the middleman. Unlike major booking sites that charge high service fees, this platform connects guests directly with verified local hosts.
+- `frontend/` — React 19 + Vite + TypeScript
+- `backend/` — NestJS + TypeScript
+- `shared/` — shared types and cross-package utilities
 
-It's not just about booking a place to stay; it's about experiencing the local culture. The platform features an **AI Local Guide** that can answer questions about Alanya, recommend hidden gems, and help plan your perfect trip in English, Russian, or Turkish.
+Supporting infrastructure:
 
-## Key Features
+- `supabase/` — database migrations, policies, functions, local Supabase config
+- `nginx/` — reverse proxy configuration
+- `docker-compose.yml` — local/dev containers
+- `docker-compose.prod.yml` — production container stack
+- `docs/` — infrastructure and engineering docs
 
--   **Zero Guest Fees**: Direct booking model saves money for travelers.
--   **AI Travel Assistant**: Built-in AI guide to help you explore the city.
--   **Curated Listings**: Only high-quality, verified properties.
--   **Multilingual**: Fully translated for international visitors (EN, RU, TR).
+## Main features
 
-## Tech Stack
+- Direct property and experience booking
+- Merchant / business listing management
+- Admin moderation and analytics hub
+- Stripe webhook processing
+- AI local guide and itinerary generation
+- Notifications and messaging
+- Supabase-backed PostgreSQL with RLS and RPC workflows
 
-Built with modern web technologies:
--   React 19 & TypeScript
--   Vite
--   Tailwind CSS
--   Google Gemini AI
+## Tech stack
 
-## Running the Project
+### Frontend
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS
+- Vitest + Playwright
 
-To run this on your machine:
+### Backend
+- NestJS
+- TypeScript
+- Supabase JS client
+- Stripe
+- Redis
+- Jest
 
-1.  Clone the repository.
-2.  Install dependencies: `npm install`
-3.  Start the server: `npm run dev`
-4.  Open `http://localhost:3000`
+### Infrastructure
+- Supabase / PostgreSQL
+- Docker Compose
+- Nginx
+- GitHub Actions CI/CD
 
-## Cron Jobs
+## Prerequisites
 
-The platform uses scheduled jobs for maintenance, such as cleaning up expired "pending" bookings.
+Recommended local toolchain:
 
-### Cleanup Pending Bookings
-- **Function**: `cleanup-bookings`
-- **URL**: `https://mdmizeyjabyvhkuijyjg.supabase.co/functions/v1/cleanup-bookings`
-- **Interval**: Every 5 minutes (via cron-job.org)
+- Node.js 22+
+- `pnpm` (repo uses `pnpm@11`)
+- Docker + Docker Compose
+- Supabase CLI (for local database / edge-function workflows)
 
-> [!IMPORTANT]
-> Always use **HTTPS** for Supabase Edge Functions. Using HTTP will result in a `301 Moved Permanently` error.
+## Install
+
+From the repository root:
+
+```bash
+pnpm install
+```
+
+## Workspace scripts
+
+Run from the repository root:
+
+```bash
+pnpm dev
+pnpm build
+pnpm lint
+pnpm type-check
+pnpm test
+```
+
+These commands are orchestrated through Turborepo.
+
+## Local development
+
+### Option 1 — app packages directly
+
+Run frontend and backend in parallel:
+
+```bash
+pnpm dev
+```
+
+Typical package-level commands:
+
+```bash
+pnpm --filter @alanya-holidays/frontend dev
+pnpm --filter @alanya-holidays/backend dev
+```
+
+### Option 2 — Docker Compose
+
+Start the local stack:
+
+```bash
+docker compose up --build
+```
+
+Use this when you want the reverse proxy / Redis / multi-container flow.
+
+## Environment configuration
+
+Environment files are **not committed**.
+Use the provided examples as templates:
+
+- `.env.example`
+- `.env.test.example`
+
+At minimum, the app commonly expects configuration for:
+
+- Supabase URL / keys
+- Stripe keys / webhook secret
+- Redis connection settings
+- App/base URLs
+- Sentry DSN (optional)
+- CORS allowed origins
+
+## Tests and validation
+
+### Monorepo
+
+```bash
+pnpm type-check
+pnpm lint
+pnpm test
+```
+
+### Backend only
+
+```bash
+pnpm --filter @alanya-holidays/backend test
+pnpm --filter @alanya-holidays/backend type-check
+pnpm --filter @alanya-holidays/backend lint
+```
+
+### Frontend only
+
+```bash
+pnpm --filter @alanya-holidays/frontend test
+pnpm --filter @alanya-holidays/frontend test:integration
+pnpm --filter @alanya-holidays/frontend test:e2e
+pnpm --filter @alanya-holidays/frontend type-check
+pnpm --filter @alanya-holidays/frontend lint
+```
+
+## Supabase workflows
+
+Examples:
+
+```bash
+pnpm --filter @alanya-holidays/frontend supabase:start
+pnpm --filter @alanya-holidays/frontend supabase:reset
+pnpm --filter @alanya-holidays/frontend types:generate
+```
+
+Database changes live in:
+
+- `supabase/migrations/`
+
+## Health and runtime
+
+Backend health endpoint:
+
+```text
+GET /api/health
+```
+
+It checks both:
+
+- database connectivity
+- Redis connectivity
+
+## Project docs
+
+Useful docs in this repo:
+
+- `PROJECT.md` — feature/milestone snapshot
+- `CONTEXT.md` — domain model / ubiquitous language
+- `TEST_INFRA.md` — testing strategy and coverage model
+- `docs/INFRASTRUCTURE.md` — VPS / Docker / operational notes
+- `docs/MAINTENANCE_STRATEGY.md` — engineering and maintenance strategy
+- `docs/TODO_ANALYSIS.md` — prioritized remediation backlog from project audit
+
+## CI/CD
+
+GitHub Actions currently handle:
+
+- lint
+- type-check
+- backend/frontend tests
+- build
+- smoke E2E
+- production deployment workflow
+
+## Notes
+
+- Booking creation is now authenticated on the backend; clients should rely on the active auth session rather than passing a user id manually.
+- Stripe webhook handling depends on raw request body support and valid Stripe env configuration.
+- Production deployment uses `docker-compose.prod.yml` and Nginx as the public entrypoint.

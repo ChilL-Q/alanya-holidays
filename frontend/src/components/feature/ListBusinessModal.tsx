@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   directoryService,
+  businessCategories,
   type ListingTier,
   type CreateListingInput,
 } from "@/api-services/directory.service";
-import { businessCategories } from "@/mocks/businesses";
 import { useListingDraft } from "@/hooks/useListingDraft";
+import { logger } from "@/lib/logger";
 
 export interface ListBusinessModalProps {
   isOpen: boolean;
@@ -144,6 +145,15 @@ export default function ListBusinessModal({
   const [draftNotice, setDraftNotice] = useState<string | null>(null);
   const [copiedBank, setCopiedBank] = useState(false);
   const [refCode] = useState(() => `ALN-${Math.floor(100000 + Math.random() * 900000)}`);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bankTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+      if (bankTimerRef.current) clearTimeout(bankTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -193,16 +203,17 @@ export default function ListBusinessModal({
   };
 
   const handleSaveDraft = async () => {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     try {
       const saved = await saveToCloud();
       setDraftNotice("Draft saved successfully to your account & device.");
       onDraftSaved?.(draft, saved?.id || activeDraftId || undefined);
-      setTimeout(() => setDraftNotice(null), 4000);
+      noticeTimerRef.current = setTimeout(() => setDraftNotice(null), 4000);
     } catch (err) {
-      console.warn("Failed to save cloud draft, saved locally:", err);
+      logger.warn("Failed to save cloud draft, saved locally:", err);
       setDraftNotice("Draft saved locally on this device.");
       onDraftSaved?.(draft, activeDraftId || undefined);
-      setTimeout(() => setDraftNotice(null), 4000);
+      noticeTimerRef.current = setTimeout(() => setDraftNotice(null), 4000);
     }
   };
 
@@ -251,7 +262,7 @@ export default function ListBusinessModal({
       onListingCreated?.(inputPayload);
       setStep("confirmed");
     } catch (err) {
-      console.error("Failed to submit business listing:", err);
+      logger.error("Failed to submit business listing:", err);
       clearDraft();
       setStep("confirmed");
     } finally {
@@ -260,13 +271,16 @@ export default function ListBusinessModal({
   };
 
   const handleCopyBank = () => {
+    if (bankTimerRef.current) clearTimeout(bankTimerRef.current);
     const text = `Bank: Ziraat Bankası\nAccount: Alanya Holidays Turizm Ltd. Şti.\nIBAN: TR89 0001 0000 1234 5678 9012 34\nSWIFT: TCZBTR2A\nReference: ${refCode}\nAmount: ${currentTierObj.price}`;
     navigator.clipboard?.writeText(text);
     setCopiedBank(true);
-    setTimeout(() => setCopiedBank(false), 3000);
+    bankTimerRef.current = setTimeout(() => setCopiedBank(false), 3000);
   };
 
   const handleClose = () => {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    if (bankTimerRef.current) clearTimeout(bankTimerRef.current);
     setStep(propInitialData || propDraftId ? "form" : "tier");
     setErrors({});
     setDraftNotice(null);

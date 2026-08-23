@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { ThreadDetail } from "@/mocks/thread-details";
+import type { ThreadDetail } from "@/api-services/forum.service";
 
 interface AuthorSidebarProps {
   thread: ThreadDetail;

@@ -9,6 +9,7 @@ import {
   type ChatConversation,
   type ChatMessage,
 } from "@/api-services/chat.service";
+import { logger } from "@/lib/logger";
 
 export default function MessagesPage() {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -50,7 +51,7 @@ export default function MessagesPage() {
           }
         }
       } catch (err) {
-        console.error("Failed to load conversations:", err);
+        logger.error("Failed to load conversations:", err);
       } finally {
         if (mounted) {
           setIsLoadingConversations(false);
@@ -67,21 +68,26 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!activeConvId) return;
 
+    const conversationId = activeConvId;
     let mounted = true;
     async function loadMessages() {
       setIsLoadingMessages(true);
       try {
-        const data = await chatService.getMessages(activeConvId);
+        const data = await chatService.getMessages(conversationId);
         if (mounted) {
           setMessages(data.messages);
           // Mark conversation as read locally and via API
-          chatService.markAsRead(activeConvId);
+          try {
+            await chatService.markAsRead(conversationId);
+          } catch (readErr) {
+            logger.warn("Failed to mark conversation as read on backend:", readErr);
+          }
           setConversations((prev) =>
-            prev.map((c) => (c.id === activeConvId ? { ...c, unreadCount: 0 } : c))
+            prev.map((c) => (c.id === conversationId ? { ...c, unreadCount: 0 } : c))
           );
         }
       } catch (err) {
-        console.error("Failed to load messages:", err);
+        logger.error("Failed to load messages:", err);
       } finally {
         if (mounted) {
           setIsLoadingMessages(false);
@@ -120,17 +126,19 @@ export default function MessagesPage() {
     setMobileView("chat");
   };
 
-  // Handle send message
-  const handleSendMessage = async (e?: React.FormEvent) => {
+  // Handle send message with optimistic update and failure rollback / retry support
+  const handleSendMessage = async (e?: React.FormEvent, retryMessage?: ChatMessage) => {
     if (e) e.preventDefault();
-    if (!inputText.trim() || !activeConvId || isSending) return;
+    const messageContent = retryMessage ? retryMessage.content : inputText.trim();
+    if (!messageContent || !activeConvId || isSending) return;
 
-    const messageContent = inputText.trim();
-    setInputText("");
+    if (!retryMessage) {
+      setInputText("");
+    }
     setIsSending(true);
 
     // Optimistic UI message
-    const tempId = `msg-optimistic-${Date.now()}`;
+    const tempId = retryMessage ? retryMessage.id : `msg-optimistic-${Date.now()}`;
     const optimisticMessage: ChatMessage = {
       id: tempId,
       conversationId: activeConvId,
@@ -138,12 +146,18 @@ export default function MessagesPage() {
       senderName: "You",
       content: messageContent,
       isRead: false,
-      createdAt: new Date().toISOString(),
+      createdAt: retryMessage ? retryMessage.createdAt : new Date().toISOString(),
       isOutgoing: true,
+      status: "sending",
     };
 
-    setMessages((prev) => [...prev, optimisticMessage]);
+    if (retryMessage) {
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? optimisticMessage : m)));
+    } else {
+      setMessages((prev) => [...prev, optimisticMessage]);
+    }
 
+    const previousConversations = conversations;
     // Update conversation last message in list
     setConversations((prev) =>
       prev.map((c) =>
@@ -165,10 +179,19 @@ export default function MessagesPage() {
     try {
       const deliveredMessage = await chatService.sendMessage(activeConvId, messageContent);
       setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...deliveredMessage, isOutgoing: true } : m))
+        prev.map((m) =>
+          m.id === tempId
+            ? { ...deliveredMessage, isOutgoing: true, status: "delivered" }
+            : m
+        )
       );
     } catch (err) {
-      console.error("Failed to send message:", err);
+      logger.error("Failed to send message:", err);
+      // Mark optimistic message as failed and rollback conversation preview
+      setMessages((prev) =>
+        prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
+      );
+      setConversations(previousConversations);
     } finally {
       setIsSending(false);
     }
@@ -194,7 +217,7 @@ export default function MessagesPage() {
         setReportDescription("");
       }, 1500);
     } catch (err) {
-      console.error("Failed to report chat:", err);
+      logger.error("Failed to report chat:", err);
     } finally {
       setIsSubmittingReport(false);
     }
@@ -219,7 +242,7 @@ export default function MessagesPage() {
       setNewInitialMessage("");
       setMobileView("chat");
     } catch (err) {
-      console.error("Failed to create new conversation:", err);
+      logger.error("Failed to create new conversation:", err);
     }
   };
 

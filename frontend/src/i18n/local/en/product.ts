@@ -1,0 +1,18 @@
+export default {
+  "product.addToCart": "Add to Cart",
+  "product.buyNow": "Buy Now",
+  "product.inStock": "In Stock",
+  "product.outOfStock": "Out of Stock",
+  "product.options": "Options",
+  "product.quantity": "Quantity",
+  "product.tourMapPdf": "Download Tour Map PDF",
+  "product.sendToPhone": "Send Tour Map to My Phone",
+  "product.shareTour": "Share This Tour",
+  "product.orderConfirmed": "Order Confirmed",
+  "product.howItWorks": "How the Tour Works",
+  "product.pairingPhotos": "Coffee & Dessert Pairings",
+  "product.favoriteCafes": "My Favorite Cafes",
+  "product.saved": "saved",
+  "product.walkingDirections": "Walking directions",
+  "product.totalWalking": "total walking",
+};

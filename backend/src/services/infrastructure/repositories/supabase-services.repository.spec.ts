@@ -172,22 +172,6 @@ describe('SupabaseServicesRepository', () => {
     });
   });
 
-  describe('getUserRole', () => {
-    it('should return role for existing user', async () => {
-      const chain = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        single: jest
-          .fn()
-          .mockResolvedValue({ data: { role: 'admin' }, error: null }),
-      };
-      mockClient.from.mockReturnValue(chain);
-
-      const role = await repository.getUserRole('user-1');
-      expect(role).toBe('admin');
-    });
-  });
-
   describe('getServiceOwnershipInfo', () => {
     it('should return ownership info', async () => {
       const chain = {

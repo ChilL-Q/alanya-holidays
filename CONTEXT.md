@@ -14,6 +14,8 @@ Verified holiday rental listings located across Alanya's districts (e.g., Mahmut
 Curated directory of local businesses, attractions, services, and consultants.
 - **Listing Addon**: Paid promotional badge or placement boost for directory entries.
 - **Claimed Listing**: Business owner verification of a directory entry.
+- **Listing Moderation**: The admin *role* over directory listings (approve/reject), not a separate domain. See ADR-0001.
+- **Protected Fields**: Listing attributes only the platform may set (verification, featuring, scoring); never writable by owners.
 
 ### 3. Booking Request & Workflow (Бронирование)
 Direct guest booking flow without commission markup.

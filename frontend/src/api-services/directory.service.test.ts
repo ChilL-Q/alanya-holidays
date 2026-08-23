@@ -5,12 +5,12 @@ import {
   mapBackendReviewToBusinessReview,
   getListings,
   getCategories,
+  businessCategories,
   type BackendDirectoryListing,
   type BackendReview,
   type SubmitClaimPayload,
 } from "./directory.service";
-import { apiClient } from "@/lib/api-client";
-import { businessCategories } from "@/mocks/businesses";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("directory.service", () => {
   beforeEach(() => {
@@ -154,23 +154,12 @@ describe("directory.service", () => {
       expect(result.total).toBe(1);
     });
 
-    it("should gracefully fallback to mock businesses on API error", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should propagate ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Network Error", 500, "Internal Server Error")
+      );
 
-      const result = await directoryService.getListings({ category: "restaurants-cafes" });
-
-      expect(result.data.length).toBeGreaterThan(0);
-      expect(result.data.every((b) => b.category === "restaurants-cafes")).toBe(true);
-      expect(result.total).toBe(result.data.length);
-    });
-
-    it("should sort mock businesses properly on fallback", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await directoryService.getListings({ sortBy: "rating" });
-      for (let i = 0; i < result.data.length - 1; i++) {
-        expect(result.data[i].rating).toBeGreaterThanOrEqual(result.data[i + 1].rating);
-      }
+      await expect(directoryService.getListings({ category: "restaurants-cafes" })).rejects.toThrow(ApiError);
     });
   });
 
@@ -207,13 +196,12 @@ describe("directory.service", () => {
       expect(result.data[0].name).toBe("Search Hit Cafe");
     });
 
-    it("should fallback to filtering mock businesses on search API error", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Offline"));
+    it("should propagate ApiError on search API error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Offline", 500, "Internal Server Error")
+      );
 
-      const result = await directoryService.searchListings("Panorama");
-
-      expect(result.data.length).toBeGreaterThan(0);
-      expect(result.data.some((b) => b.name.includes("Panorama"))).toBe(true);
+      await expect(directoryService.searchListings("Panorama")).rejects.toThrow(ApiError);
     });
   });
 
@@ -235,21 +223,21 @@ describe("directory.service", () => {
       expect(result?.name).toBe("Direct API Business");
     });
 
-    it("should fallback to mock businesses if API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API Down"));
-
-      const result = await directoryService.getListingById("biz-001");
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("biz-001");
-      expect(result?.name).toBe("Kale Panorama Restaurant");
-    });
-
-    it("should return null if business not found in API or mock", async () => {
-      vi.spyOn(apiClient, "get").mockResolvedValueOnce(null);
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not Found", 404, "Not Found")
+      );
 
       const result = await directoryService.getListingById("non-existent-biz-id");
       expect(result).toBeNull();
+    });
+
+    it("should propagate ApiError on 500 error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
+
+      await expect(directoryService.getListingById("biz-500")).rejects.toThrow(ApiError);
     });
   });
 
@@ -269,13 +257,13 @@ describe("directory.service", () => {
       expect(result?.name).toBe("Cleopatra Beach Club");
     });
 
-    it("should fallback to mock businesses matching id or slug name", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("API Down"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not Found", 404, "Not Found")
+      );
 
-      const result = await directoryService.getListingBySlug("biz-002");
-
-      expect(result).not.toBeNull();
-      expect(result?.name).toBe("Cleopatra Beach Club");
+      const result = await directoryService.getListingBySlug("missing-slug");
+      expect(result).toBeNull();
     });
   });
 
@@ -307,20 +295,21 @@ describe("directory.service", () => {
       expect(reviews[0].content).toBe("Loved the food!");
     });
 
-    it("should fallback to mock reviews when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should return empty array on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not Found", 404, "Not Found")
+      );
 
-      const reviews = await directoryService.getListingReviews("biz-001");
-
-      expect(reviews.length).toBeGreaterThan(0);
-      expect(reviews[0].businessId).toBe("biz-001");
+      const reviews = await directoryService.getListingReviews("biz-404");
+      expect(reviews).toEqual([]);
     });
 
-    it("should return empty array if no mock reviews exist for business", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should propagate ApiError on 500", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Internal Error", 500, "Internal Server Error")
+      );
 
-      const reviews = await directoryService.getListingReviews("biz-999-unknown");
-      expect(reviews).toEqual([]);
+      await expect(directoryService.getListingReviews("biz-500")).rejects.toThrow(ApiError);
     });
   });
 
@@ -345,15 +334,12 @@ describe("directory.service", () => {
       expect(result.rating).toBe(5);
     });
 
-    it("should create local fallback review if API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Unauthorized or Offline"));
+    it("should throw ApiError if submitReview fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
 
-      const result = await directoryService.submitReview("biz-001", 4, "Good ambience");
-
-      expect(result.businessId).toBe("biz-001");
-      expect(result.rating).toBe(4);
-      expect(result.content).toBe("Good ambience");
-      expect(result.reviewerName).toBe("Verified Guest");
+      await expect(directoryService.submitReview("biz-001", 4, "Good ambience")).rejects.toThrow(ApiError);
     });
   });
 
@@ -366,14 +352,6 @@ describe("directory.service", () => {
 
       expect(apiClient.post).toHaveBeenCalledWith("/directory/biz-001/vote", { vote: 1 });
       expect(result).toEqual(mockVoteRes);
-    });
-
-    it("should return fallback vote response if API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
-
-      const result = await directoryService.voteForListing("biz-001", -1);
-
-      expect(result).toEqual({ success: true, local: true, vote: -1 });
     });
   });
 
@@ -458,19 +436,6 @@ describe("directory.service", () => {
         locationIds: [],
       });
       expect(result.id).toBe("draft-456");
-    });
-
-    it("should provide fallback Business with status draft if API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network Error"));
-
-      const result = await directoryService.saveDraft({
-        name: "Offline Draft",
-        category: "bars",
-      });
-
-      expect(result.name).toBe("Offline Draft");
-      expect(result.status).toBe("draft");
-      expect(result.id).toBeDefined();
     });
   });
 
@@ -559,8 +524,10 @@ describe("directory.service", () => {
       expect(result[0].status).toBe("pending");
     });
 
-    it("should return empty array on API failure", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network Error"));
+    it("should return empty array on 401/404 API error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Unauthorized", 401, "Unauthorized")
+      );
 
       const result = await directoryService.getMyClaims();
       expect(result).toEqual([]);
@@ -599,8 +566,10 @@ describe("directory.service", () => {
       expect(result.daily_data).toHaveLength(1);
     });
 
-    it("should return fallback empty structure when API returns empty or fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Analytics API Offline"));
+    it("should return empty structure on 401/404 API error", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Unauthorized", 401, "Unauthorized")
+      );
 
       const result = await directoryService.getOwnerAnalytics(7);
 

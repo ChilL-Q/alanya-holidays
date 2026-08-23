@@ -1,4 +1,5 @@
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isAbortError, type RequestOptions } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface ProductCategory {
   id: number;
@@ -38,7 +39,7 @@ export interface ProductSku {
   id: number;
   product_id: number;
   label: string;
-  options: Record<string, string>;
+  options: Record<string, string> | string[];
   price: number;
   stock: number;
 }
@@ -104,22 +105,27 @@ class ProductsService {
   /**
    * Fetches featured products and bestsellers for homepage/showcase.
    */
-  async getFeaturedProducts(): Promise<ShopProduct[]> {
+  async getFeaturedProducts(options?: RequestOptions): Promise<ShopProduct[]> {
     try {
-      const response = await apiClient.get<ShopProduct[]>("/products/featured");
+      const response = options
+        ? await apiClient.get<ShopProduct[]>("/products/featured", options)
+        : await apiClient.get<ShopProduct[]>("/products/featured");
       if (Array.isArray(response) && response.length > 0) {
         return response;
       }
-    } catch {
+    } catch (err: unknown) {
+      if (isAbortError(err)) throw err;
       try {
         const response = await apiClient.get<ShopProduct[]>("/products", {
-          params: { featured: true },
+          ...options,
+          params: { ...options?.params, featured: true },
         });
         if (Array.isArray(response) && response.length > 0) {
           return response;
         }
-      } catch (err: unknown) {
-        console.warn("Failed to fetch featured products via API:", err);
+      } catch (innerErr: unknown) {
+        if (isAbortError(innerErr)) throw innerErr;
+        logger.warn("Failed to fetch featured products via API:", innerErr);
       }
     }
 
@@ -129,14 +135,17 @@ class ProductsService {
   /**
    * Fetches catalog products and categories for the shop page.
    */
-  async getShopCatalog(): Promise<ShopCatalogResponse> {
+  async getShopCatalog(options?: RequestOptions): Promise<ShopCatalogResponse> {
     try {
-      const response = await apiClient.get<ShopCatalogResponse>("/products/catalog");
+      const response = options
+        ? await apiClient.get<ShopCatalogResponse>("/products/catalog", options)
+        : await apiClient.get<ShopCatalogResponse>("/products/catalog");
       if (response && Array.isArray(response.products) && Array.isArray(response.categories)) {
         return response;
       }
     } catch (err: unknown) {
-      console.warn("Failed to fetch shop catalog via API:", err);
+      if (isAbortError(err)) throw err;
+      logger.warn("Failed to fetch shop catalog via API:", err);
     }
 
     return { products: [], categories: [] };
@@ -145,14 +154,17 @@ class ProductsService {
   /**
    * Fetches active product categories.
    */
-  async getProductCategories(): Promise<ProductCategory[]> {
+  async getProductCategories(options?: RequestOptions): Promise<ProductCategory[]> {
     try {
-      const response = await apiClient.get<ProductCategory[]>("/products/categories");
+      const response = options
+        ? await apiClient.get<ProductCategory[]>("/products/categories", options)
+        : await apiClient.get<ProductCategory[]>("/products/categories");
       if (Array.isArray(response)) {
         return response;
       }
     } catch (err: unknown) {
-      console.warn("Failed to fetch product categories via API:", err);
+      if (isAbortError(err)) throw err;
+      logger.warn("Failed to fetch product categories via API:", err);
     }
 
     return [];
@@ -161,11 +173,14 @@ class ProductsService {
   /**
    * Fetches single product details with variants and SKUs.
    */
-  async getProductDetails(productId: number | string): Promise<ProductDetailResponse> {
+  async getProductDetails(
+    productId: number | string,
+    options?: RequestOptions
+  ): Promise<ProductDetailResponse> {
     try {
-      const response = await apiClient.get<ProductDetailResponse>(
-        `/products/items/${productId}`
-      );
+      const response = options
+        ? await apiClient.get<ProductDetailResponse>(`/products/items/${productId}`, options)
+        : await apiClient.get<ProductDetailResponse>(`/products/items/${productId}`);
       if (response) {
         return {
           product: response.product || null,
@@ -174,7 +189,8 @@ class ProductsService {
         };
       }
     } catch (err: unknown) {
-      console.warn(`Failed to fetch product details for ${productId} via API:`, err);
+      if (isAbortError(err)) throw err;
+      logger.warn(`Failed to fetch product details for ${productId} via API:`, err);
     }
 
     return { product: null, variants: [], skus: [] };
@@ -191,7 +207,7 @@ class ProductsService {
       );
       return response;
     } catch (err: unknown) {
-      console.error("Failed to create product order via API:", err);
+      logger.error("Failed to create product order via API:", err);
       throw err;
     }
   }
@@ -199,16 +215,18 @@ class ProductsService {
   /**
    * Fetches recent concierge enquiries for sidebar feeds.
    */
-  async getRecentEnquiries(limit: number = 8): Promise<ConciergeEnquiryEntry[]> {
+  async getRecentEnquiries(limit: number = 8, options?: RequestOptions): Promise<ConciergeEnquiryEntry[]> {
     try {
       const response = await apiClient.get<ConciergeEnquiryEntry[]>("/enquiries/recent", {
-        params: { limit },
+        ...options,
+        params: { ...options?.params, limit },
       });
       if (Array.isArray(response)) {
         return response;
       }
     } catch (err: unknown) {
-      console.warn("Failed to fetch recent enquiries via API:", err);
+      if (isAbortError(err)) throw err;
+      logger.warn("Failed to fetch recent enquiries via API:", err);
     }
 
     return [];

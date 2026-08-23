@@ -1,12 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { personalShoppers, shopperStyles } from "@/mocks/personal-shoppers";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type PersonalShopper } from "@/api-services/concierge.service";
+import { conciergeService, shopperStyles, type PersonalShopper } from "@/api-services/concierge.service";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function PersonalShopperPage() {
+  const [personalShoppers, setPersonalShoppers] = useState<PersonalShopper[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeStyle, setActiveStyle] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -17,6 +21,23 @@ export default function PersonalShopperPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadShoppers = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getPersonalShoppers();
+      setPersonalShoppers(data);
+    } catch {
+      setFetchError("Failed to load personal shoppers. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadShoppers();
+  }, [loadShoppers]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -42,16 +63,22 @@ export default function PersonalShopperPage() {
   const filteredShoppers = useMemo(() => {
     let results = personalShoppers;
     if (activeStyle !== "all") {
-      if (activeStyle === "fashion") results = results.filter((s) => s.specialty.toLowerCase().includes("fashion") || s.areas.some((a) => a.toLowerCase().includes("fashion") || a.toLowerCase().includes("resort") || a.toLowerCase().includes("accessorie")));
-      else if (activeStyle === "artisan") results = results.filter((s) => s.specialty.toLowerCase().includes("carpet") || s.specialty.toLowerCase().includes("artisan") || s.areas.some((a) => a.toLowerCase().includes("carpet") || a.toLowerCase().includes("ceramic") || a.toLowerCase().includes("kilim")));
-      else if (activeStyle === "luxury") results = results.filter((s) => s.specialty.toLowerCase().includes("luxury") || s.specialty.toLowerCase().includes("jewellery") || s.style.toLowerCase().includes("luxury") || s.areas.some((a) => a.toLowerCase().includes("designer") || a.toLowerCase().includes("gold")));
-      else if (activeStyle === "home") results = results.filter((s) => s.specialty.toLowerCase().includes("home") || s.specialty.toLowerCase().includes("interior") || s.areas.some((a) => a.toLowerCase().includes("ceramic") || a.toLowerCase().includes("tile") || a.toLowerCase().includes("furniture") || a.toLowerCase().includes("textile")));
+      results = results.filter((s) => {
+        const spec = Array.isArray(s.specialty) ? s.specialty.join(" ").toLowerCase() : (s.specialty || "").toLowerCase();
+        const areas = (s.areas || []).map((a) => a.toLowerCase());
+        const style = (s.style || "").toLowerCase();
+        if (activeStyle === "fashion") return spec.includes("fashion") || areas.some((a) => a.includes("fashion") || a.includes("resort") || a.includes("accessorie"));
+        if (activeStyle === "artisan") return spec.includes("carpet") || spec.includes("artisan") || areas.some((a) => a.includes("carpet") || a.includes("ceramic") || a.includes("kilim"));
+        if (activeStyle === "luxury") return spec.includes("luxury") || spec.includes("jewellery") || style.includes("luxury") || areas.some((a) => a.includes("designer") || a.includes("gold"));
+        if (activeStyle === "home") return spec.includes("home") || spec.includes("interior") || areas.some((a) => a.includes("ceramic") || a.includes("tile") || a.includes("furniture") || a.includes("textile"));
+        return true;
+      });
     }
     if (sortBy === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
-    else if (sortBy === "price-low") results = [...results].sort((a, b) => a.pricePerHour - b.pricePerHour);
-    else if (sortBy === "price-high") results = [...results].sort((a, b) => b.pricePerHour - a.pricePerHour);
+    else if (sortBy === "price-low") results = [...results].sort((a, b) => (a.pricePerHour || a.hourlyRate || a.pricePerPerson || 0) - (b.pricePerHour || b.hourlyRate || b.pricePerPerson || 0));
+    else if (sortBy === "price-high") results = [...results].sort((a, b) => (b.pricePerHour || b.hourlyRate || b.pricePerPerson || 0) - (a.pricePerHour || a.hourlyRate || a.pricePerPerson || 0));
     return results;
-  }, [activeStyle, sortBy]);
+  }, [personalShoppers, activeStyle, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
     rating: "Top Rated",
@@ -174,49 +201,85 @@ export default function PersonalShopperPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredShoppers.length} {filteredShoppers.length === 1 ? "shopper" : "shoppers"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredShoppers.length} {filteredShoppers.length === 1 ? "shopper" : "shoppers"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredShoppers.map((shopper) => (
-                <div key={shopper.id} onClick={() => setSelectedShopper(shopper)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={shopper.image} alt={shopper.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {shopper.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-shopping-bag-3-line text-[11px]"></i>{shopper.specialty}
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load personal shoppers"
+                message={fetchError}
+                onRetry={loadShoppers}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{shopper.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{shopper.rating}</span>
-                        <span className="text-xs text-foreground-500">({shopper.reviewCount})</span>
+                ))}
+              </div>
+            ) : filteredShoppers.length === 0 ? (
+              <EmptyState
+                title="No personal shoppers found"
+                description="Try selecting a different shopping style or clear your filters."
+                icon="ri-shopping-bag-3-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveStyle("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredShoppers.map((shopper) => (
+                  <div key={shopper.id} onClick={() => setSelectedShopper(shopper)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={shopper.image} alt={shopper.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {shopper.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-shopping-bag-3-line text-[11px]"></i>{shopper.specialty}
                       </div>
                     </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{shopper.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-paint-brush-line text-foreground-400"></i>{shopper.style}</span>
-                      <span className="flex items-center gap-1"><i className="ri-time-line text-foreground-400"></i>Min {shopper.minHours}h</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {shopper.areas.slice(0, 3).map((a) => (
-                        <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{a}</span>
-                      ))}
-                      {shopper.areas.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{shopper.areas.length - 3}</span>}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{shopper.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{shopper.rating}</span>
+                          <span className="text-xs text-foreground-500">({shopper.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{shopper.description || shopper.bio}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-paint-brush-line text-foreground-400"></i>{shopper.style || (Array.isArray(shopper.specialty) ? shopper.specialty[0] : shopper.specialty) || "Styling"}</span>
+                        <span className="flex items-center gap-1"><i className="ri-time-line text-foreground-400"></i>Min {shopper.minHours || 2}h</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {(shopper.areas || (Array.isArray(shopper.specialty) ? shopper.specialty : [])).slice(0, 3).map((a) => (
+                          <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{a}</span>
+                        ))}
+                      {(shopper.areas?.length ?? 0) > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{(shopper.areas?.length ?? 0) - 3}</span>}
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                       <div>
-                        <span className="text-lg font-bold text-foreground-900">€{shopper.pricePerHour}</span>
+                        <span className="text-lg font-bold text-foreground-900">€{shopper.pricePerHour || shopper.hourlyRate || shopper.pricePerPerson || 0}</span>
                         <span className="text-sm text-foreground-500"> / hour</span>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedShopper(shopper); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
@@ -227,6 +290,7 @@ export default function PersonalShopperPage() {
                 </div>
               ))}
             </div>
+          )}
           </div>
         </section>
 
@@ -249,7 +313,7 @@ export default function PersonalShopperPage() {
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-medium mb-2">
-                      <i className="ri-shopping-bag-3-line text-[11px]"></i>{selectedShopper.specialty}
+                      <i className="ri-shopping-bag-3-line text-[11px]"></i>{Array.isArray(selectedShopper.specialty) ? selectedShopper.specialty.join(", ") : selectedShopper.specialty}
                     </span>
                     <h2 className="font-heading text-2xl text-foreground-900">{selectedShopper.name}</h2>
                   </div>
@@ -259,42 +323,42 @@ export default function PersonalShopperPage() {
                     <span className="text-sm text-foreground-500">({selectedShopper.reviewCount} reviews)</span>
                   </div>
                 </div>
-                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedShopper.description}</p>
+                <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedShopper.description || selectedShopper.bio}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-paint-brush-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Style</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedShopper.style}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedShopper.style || "Personal Styling"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Min Duration</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedShopper.minHours} hours</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedShopper.minHours || 2} hours</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-global-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Languages</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedShopper.languages.join(", ")}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{(selectedShopper.languages || []).join(", ")}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-stack-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Areas</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedShopper.areas.length} categories</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{(selectedShopper.areas || []).length} categories</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-foreground-500 mb-0.5">Per Hour</p>
-                      <p className="text-2xl font-bold text-foreground-900">€{selectedShopper.pricePerHour}</p>
-                      <p className="text-xs text-foreground-500 mt-0.5">Minimum {selectedShopper.minHours} hours</p>
+                      <p className="text-2xl font-bold text-foreground-900">€{selectedShopper.pricePerHour || selectedShopper.hourlyRate || selectedShopper.pricePerPerson || 0}</p>
+                      <p className="text-xs text-foreground-500 mt-0.5">Minimum {selectedShopper.minHours || 2} hours</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">Shopping Areas</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedShopper.areas.map((a) => (
+                    {(selectedShopper.areas || []).map((a) => (
                       <span key={a} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
                         <i className="ri-price-tag-3-line text-[11px]"></i>{a}
                       </span>
@@ -304,7 +368,7 @@ export default function PersonalShopperPage() {
                 <div className="mb-6">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedShopper.includes.map((inc) => (
+                    {(selectedShopper.includes || selectedShopper.exclusivePerks || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-check-line text-green-500 text-[11px]"></i>{inc}
                       </span>

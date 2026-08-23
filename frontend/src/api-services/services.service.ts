@@ -27,7 +27,6 @@ import {
   type CreateOrderResult,
 } from "./orders.service";
 import { apiClient, ApiError } from "@/lib/api-client";
-import { villas as mockVillas } from "@/mocks/villas";
 
 export type {
   Villa,
@@ -59,26 +58,26 @@ export interface CheckAvailabilityResult {
 
 export interface CreateBookingPayload {
   item_id: string;
-  user_id: string;
   check_in: string;
   check_out: string;
-  total_price: number;
   guests: number;
   message?: string;
   payment_method?: string;
   item_type?: "property" | "service" | string;
+  total_price?: number;
   [key: string]: unknown;
 }
 
 export interface CreateBookingResult {
-  id: string;
+  id?: string;
   data?: string;
+  bookingId?: string;
   success: boolean;
+  message?: string;
   [key: string]: unknown;
 }
 
 export { luxuryExperiences };
-
 
 export class ServicesService {
   /**
@@ -133,46 +132,46 @@ export class ServicesService {
     checkOut: string
   ): Promise<CheckAvailabilityResult> {
     try {
-      try {
-        return await apiClient.get<CheckAvailabilityResult>("/bookings/check-conflict", {
+      return await apiClient.get<CheckAvailabilityResult>("/bookings/check-conflict", {
+        params: { itemId, itemType, checkIn, checkOut },
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await apiClient.get<CheckAvailabilityResult>("/bookings/conflict", {
           params: { itemId, itemType, checkIn, checkOut },
         });
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
-          return await apiClient.get<CheckAvailabilityResult>("/bookings/conflict", {
-            params: { itemId, itemType, checkIn, checkOut },
-          });
-        }
-        throw err;
       }
-    } catch (err) {
-      console.warn("Failed to check booking conflict on API, assuming available:", err);
-      return { has_conflict: false, message: "Available" };
+      throw err;
     }
   }
 
   /**
-   * Creates a direct booking.
-   * Calls `POST /api/bookings`.
+   * Creates a direct booking on the live backend.
    */
   async createBooking(payload: CreateBookingPayload): Promise<CreateBookingResult> {
-    try {
-      const res = await apiClient.post<{ id?: string; data?: string }>("/bookings", payload);
-      const generatedOrReceivedId = res.id || res.data || `bk-${Date.now()}`;
-      return {
-        id: generatedOrReceivedId,
-        data: res.data || generatedOrReceivedId,
-        success: true,
-      };
-    } catch (err) {
-      console.warn("Failed to create booking on API, generating fallback confirmation:", err);
-      const fallbackId = `bk-${Date.now()}`;
-      return {
-        id: fallbackId,
-        data: fallbackId,
-        success: true,
-      };
-    }
+    const requestBody = {
+      item_id: payload.item_id,
+      check_in: payload.check_in,
+      check_out: payload.check_out,
+      guests: payload.guests,
+      message: payload.message,
+      payment_method: payload.payment_method,
+      item_type: payload.item_type || "service",
+    };
+
+    const res = await apiClient.post<{ id?: string; data?: string; booking_id?: string; bookingId?: string }>(
+      "/bookings",
+      requestBody
+    );
+
+    const bookingId = res.booking_id || res.bookingId || res.id || res.data;
+    return {
+      id: bookingId,
+      bookingId,
+      data: res.data || bookingId,
+      success: true,
+      message: "Booking created successfully",
+    };
   }
 
   /**
@@ -198,12 +197,11 @@ export class ServicesService {
   // ============================================
 
   async getVillas(location?: string): Promise<Villa[]> {
-    if (!location || location === "all") {
-      return mockVillas;
-    }
-    return mockVillas.filter(
-      (v) => v.location.toLowerCase() === location.toLowerCase()
-    );
+    const res = await propertiesService.getProperties({
+      type: "villa",
+      location: location && location !== "all" ? location : undefined,
+    });
+    return res.data as unknown as Villa[];
   }
 
   async getYachts(type?: string): Promise<Yacht[]> {

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import type { Business } from "@/mocks/businesses";
-import { businessCategories } from "@/mocks/businesses";
+import type { Business } from "@/api-services/directory.service";
+import { businessCategories } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
 
 interface MapViewProps {

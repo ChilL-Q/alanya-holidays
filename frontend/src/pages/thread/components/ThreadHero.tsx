@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import type { ThreadDetail } from "@/mocks/thread-details";
+import type { ThreadDetail } from "@/api-services/forum.service";
 
 interface ThreadHeroProps {
   thread: ThreadDetail;

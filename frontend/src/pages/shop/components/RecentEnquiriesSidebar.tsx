@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { productsService, type ConciergeEnquiryEntry as RecentEnquiry } from "@/api-services/products.service";
 
-function parseCategory(subject?: string): string {
+function parseCategory(subject?: string | null): string {
   if (!subject) return "General Enquiry";
   const match = subject.match(/Personal Shopper Request\s*[—–-]\s*(.+)/i);
   return match ? match[1].trim() : "General Enquiry";

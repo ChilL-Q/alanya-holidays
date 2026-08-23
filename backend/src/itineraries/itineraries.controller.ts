@@ -3,25 +3,21 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ItinerariesService } from './itineraries.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateItineraryDto } from './dto/create-itinerary.dto';
 import { UpdateItineraryDto } from './dto/update-itinerary.dto';
-
-interface RequestWithUser {
-  user: {
-    id: string;
-    [key: string]: unknown;
-  };
-}
+import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('itineraries')
 export class ItinerariesController {
@@ -31,24 +27,26 @@ export class ItinerariesController {
   @UseGuards(AuthGuard)
   async createItinerary(
     @Body() createItineraryDto: CreateItineraryDto,
-    @Req() req: RequestWithUser,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.itinerariesService.createItinerary(
-      req.user.id,
-      createItineraryDto,
-    );
+    return this.itinerariesService.createItinerary(user.id, createItineraryDto);
   }
 
-  @Get('me')
+  @Get(['me', 'my'])
   @UseGuards(AuthGuard)
-  async getMyItineraries(@Req() req: RequestWithUser) {
-    return this.itinerariesService.getMyItineraries(req.user.id);
+  async getMyItineraries(@CurrentUser() user: AuthUser) {
+    return this.itinerariesService.getMyItineraries(user.id);
   }
 
   @Get('community')
-  async getCommunityItineraries(@Query('limit') limit?: string) {
-    const parsedLimit = limit ? parseInt(limit, 10) : 20;
-    return this.itinerariesService.getCommunityItineraries(parsedLimit);
+  async getCommunityItineraries(@Query() query?: LimitQueryDto | string) {
+    let limit = 20;
+    if (typeof query === 'string') {
+      limit = parseInt(query, 10) || 20;
+    } else if (query?.limit !== undefined) {
+      limit = Number(query.limit) || 20;
+    }
+    return this.itinerariesService.getCommunityItineraries(limit);
   }
 
   @Get(':id')
@@ -62,18 +60,35 @@ export class ItinerariesController {
   async updateItinerary(
     @Param('id') id: string,
     @Body() updateItineraryDto: UpdateItineraryDto,
-    @Req() req: RequestWithUser,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.itinerariesService.updateItinerary(
       id,
       updateItineraryDto,
-      req.user.id,
+      user.id,
+    );
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard)
+  async patchItinerary(
+    @Param('id') id: string,
+    @Body() updateItineraryDto: UpdateItineraryDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.itinerariesService.updateItinerary(
+      id,
+      updateItineraryDto,
+      user.id,
     );
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard)
-  async deleteItinerary(@Param('id') id: string, @Req() req: RequestWithUser) {
-    return this.itinerariesService.deleteItinerary(id, req.user.id);
+  async deleteItinerary(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.itinerariesService.deleteItinerary(id, user.id);
   }
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
-import type { Business } from "@/mocks/businesses";
+import type { Business } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
 
 export interface BusinessCardProps {

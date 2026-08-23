@@ -1,4 +1,5 @@
 import { apiClient, ApiError } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface FavoriteActionResponse {
   success: boolean;
@@ -32,7 +33,7 @@ export class FavoritesService {
       if (err instanceof ApiError && err.status === 401) {
         return [];
       }
-      console.warn("Failed to fetch favorites from cloud API:", err);
+      logger.warn("Failed to fetch favorites from cloud API:", err);
     }
     return [];
   }
@@ -50,7 +51,7 @@ export class FavoritesService {
       if (err instanceof ApiError && err.status === 401) {
         return { success: true };
       }
-      console.warn(`Failed to add favorite ${itemId} to cloud:`, err);
+      logger.warn(`Failed to add favorite ${itemId} to cloud:`, err);
       return { success: false };
     }
   }
@@ -68,7 +69,7 @@ export class FavoritesService {
       if (err instanceof ApiError && err.status === 401) {
         return { success: true };
       }
-      console.warn(`Failed to remove favorite ${itemId} from cloud:`, err);
+      logger.warn(`Failed to remove favorite ${itemId} from cloud:`, err);
       return { success: false };
     }
   }
@@ -93,7 +94,7 @@ export class FavoritesService {
       if (err instanceof ApiError && err.status === 401) {
         return itemIds;
       }
-      console.warn("Failed to sync favorites with cloud API:", err);
+      logger.warn("Failed to sync favorites with cloud API:", err);
     }
     // Fallback to locally provided items if network or unauthenticated
     return itemIds;

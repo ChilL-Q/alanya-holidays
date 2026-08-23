@@ -1,12 +1,66 @@
-import { apiClient } from "@/lib/api-client";
-import { businesses as mockBusinesses, businessCategories, type Business } from "@/mocks/businesses";
-import {
-  businessReviews as mockBusinessReviews,
-  getReviewsForBusiness,
-  type BusinessReview,
-} from "@/mocks/business-reviews";
+import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
+import type { TrustBadgeType } from "@/components/common/TrustBadge";
+import { businesses as domainBusinesses } from "@/domain/directory-businesses";
 
-export type { Business, BusinessReview };
+export interface BusinessCategory {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export type TaxonomyCategory = BusinessCategory;
+
+export interface Business {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  tags: string[];
+  featured: boolean;
+  trustBadge?: TrustBadgeType;
+  priceRange: string;
+  openingHours: string;
+  lat: number;
+  lng: number;
+  is_claimed?: boolean;
+  is_verified?: boolean;
+  claimed_at?: string;
+  status?: string;
+  tier?: string;
+}
+
+export interface BusinessReview {
+  id: string;
+  businessId: string;
+  reviewerName: string;
+  reviewerAvatar: string;
+  rating: number;
+  date: string;
+  title: string;
+  content: string;
+  visitType: string;
+}
+
+export const businessCategories: BusinessCategory[] = [
+  { id: "all", name: "All Businesses", icon: "ri-store-2-line" },
+  { id: "restaurants-cafes", name: "Restaurants & Cafés", icon: "ri-restaurant-2-line" },
+  { id: "hotels-accommodation", name: "Hotels & Accommodation", icon: "ri-hotel-line" },
+  { id: "tours-activities", name: "Tours & Activities", icon: "ri-ship-line" },
+  { id: "real-estate", name: "Real Estate", icon: "ri-home-4-line" },
+  { id: "car-rental", name: "Car & Scooter Rental", icon: "ri-car-line" },
+  { id: "health-wellness", name: "Health & Wellness", icon: "ri-heart-pulse-line" },
+  { id: "shopping", name: "Shopping", icon: "ri-shopping-bag-3-line" },
+  { id: "services", name: "Professional Services", icon: "ri-briefcase-line" },
+  { id: "nightlife", name: "Nightlife & Bars", icon: "ri-goblet-line" },
+];
 
 export interface BackendDirectoryListing {
   id: string;
@@ -41,6 +95,10 @@ export interface BackendDirectoryListing {
   longitude?: number;
   lng?: number;
   status?: string;
+  tier?: string;
+  is_verified?: boolean;
+  is_claimed?: boolean;
+  claimed_at?: string;
   created_at?: string;
   updated_at?: string;
   [key: string]: unknown;
@@ -64,14 +122,14 @@ export interface BackendReview {
   [key: string]: unknown;
 }
 
-export interface GetListingsOptions {
+export interface GetListingsOptions extends RequestOptions {
   page?: number;
   limit?: number;
   category?: string;
   sortBy?: "rating" | "reviews" | "name" | "base_score" | string;
 }
 
-export interface SearchListingsOptions {
+export interface SearchListingsOptions extends RequestOptions {
   category?: string;
   location?: string;
   page?: number;
@@ -97,13 +155,15 @@ export interface SubmitClaimPayload {
   role?: string;
   role_title?: string;
   verification_method?: string;
-  verification_doc_url?: string;
-  additional_notes?: string;
-  notes?: string;
-  whatsapp?: string;
   website?: string;
+  whatsapp?: string;
   address?: string;
-  description?: string;
+  notes?: string;
+  additional_notes?: string;
+  id_document_url?: string;
+  utility_bill_url?: string;
+  business_license_url?: string;
+  document_urls?: string[];
   [key: string]: unknown;
 }
 
@@ -111,20 +171,13 @@ export interface DirectoryClaim {
   id: string;
   listing_id: string;
   user_id?: string;
-  email: string;
-  phone?: string;
-  role?: string;
   business_name: string;
   contact_phone?: string;
-  whatsapp?: string;
-  website?: string;
-  address?: string;
-  description?: string;
-  status: "pending" | "verified" | "approved" | "rejected" | string;
+  phone?: string;
+  email: string;
+  role?: string;
+  status: "pending" | "approved" | "rejected" | "verified" | string;
   rejection_reason?: string;
-  verification_token?: string;
-  verified_at?: string;
-  approved_at?: string;
   created_at: string;
   updated_at?: string;
   directory_listing?: {
@@ -219,6 +272,11 @@ export function mapBackendListingToBusiness(item: BackendDirectoryListing): Busi
     lat: item.lat ?? item.latitude ?? 36.5437,
     lng: item.lng ?? item.longitude ?? 31.9998,
     status: item.status,
+    is_claimed: item.is_claimed,
+    is_verified: item.is_verified,
+    claimed_at: item.claimed_at,
+    tier: item.tier,
+    trustBadge: item.tier === "signature" ? "Signature Collection" : undefined,
   };
 }
 
@@ -246,75 +304,55 @@ export function mapBackendReviewToBusinessReview(
 export class DirectoryService {
   /**
    * Retrieves business listings with optional pagination, category filtering, and sorting.
-   * Falls back gracefully to mock businesses when offline or on API failure.
+   * Directly dispatches to API and cleanly propagates errors or results.
    */
   async getListings(options: GetListingsOptions = {}): Promise<GetListingsResult> {
-    const { page = 1, limit = 20, category, sortBy } = options;
+    const { page = 1, limit = 20, category, sortBy, params: extraParams, ...reqConfig } = options;
 
-    try {
-      const response = await apiClient.get<
-        | { data: BackendDirectoryListing[]; pagination?: { total?: number; totalPages?: number } }
-        | BackendDirectoryListing[]
-      >("/directory", {
-        params: {
-          page,
-          limit,
-          category,
-          sortBy,
-        },
-      });
+    const response = await apiClient.get<
+      | { data: BackendDirectoryListing[]; pagination?: { total?: number; totalPages?: number } }
+      | BackendDirectoryListing[]
+    >("/directory", {
+      ...reqConfig,
+      params: {
+        ...extraParams,
+        page,
+        limit,
+        category: category && category !== "all" ? category : undefined,
+        sortBy,
+      },
+    });
 
-      if (response && "data" in response && Array.isArray(response.data)) {
-        const mapped = response.data.map(mapBackendListingToBusiness);
-        const total = response.pagination?.total ?? mapped.length;
-        const totalPages = response.pagination?.totalPages ?? Math.ceil(total / limit);
-        return {
-          data: mapped,
-          total,
-          page,
-          limit,
-          totalPages,
-        };
-      }
-
-      if (Array.isArray(response)) {
-        const mapped = response.map(mapBackendListingToBusiness);
-        return {
-          data: mapped,
-          total: mapped.length,
-          page,
-          limit,
-          totalPages: Math.ceil(mapped.length / limit),
-        };
-      }
-    } catch (err) {
-      console.warn("Failed to fetch directory listings from API, using fallback mock:", err);
+    if (response && "data" in response && Array.isArray(response.data)) {
+      const mapped = response.data.map(mapBackendListingToBusiness);
+      const total = response.pagination?.total ?? mapped.length;
+      const totalPages = response.pagination?.totalPages ?? Math.max(1, Math.ceil(total / limit));
+      return {
+        data: mapped,
+        total,
+        page,
+        limit,
+        totalPages,
+      };
     }
 
-    // Mock Fallback
-    let fallback = [...mockBusinesses];
-    if (category && category !== "all") {
-      fallback = fallback.filter((b) => b.category === category);
+    if (Array.isArray(response)) {
+      const mapped = response.map(mapBackendListingToBusiness);
+      return {
+        data: mapped,
+        total: mapped.length,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(mapped.length / limit)),
+      };
     }
-
-    if (sortBy === "rating") {
-      fallback.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "reviews") {
-      fallback.sort((a, b) => b.reviewCount - a.reviewCount);
-    } else if (sortBy === "name") {
-      fallback.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    const total = fallback.length;
-    const startIndex = (page - 1) * limit;
-    const paginated = fallback.slice(startIndex, startIndex + limit);
 
     return {
-      data: paginated,
-      total,
+      data: [],
+      total: 0,
       page,
       limit,
-      totalPages: Math.max(1, Math.ceil(total / limit)),
+      totalPages: 1,
     };
   }
 
@@ -325,113 +363,103 @@ export class DirectoryService {
     query: string,
     options: SearchListingsOptions = {}
   ): Promise<GetListingsResult> {
-    const { category, location, page = 1, limit = 40 } = options;
+    const { category, location, page = 1, limit = 40, params: extraParams, ...reqConfig } = options;
 
-    try {
-      const response = await apiClient.get<
-        | { data: BackendDirectoryListing[]; total?: number; count?: number }
-        | BackendDirectoryListing[]
-      >("/directory/search", {
-        params: {
-          query,
-          category,
-          location,
-          page,
-          limit,
-        },
-      });
-
-      if (response && "data" in response && Array.isArray(response.data)) {
-        const mapped = response.data.map(mapBackendListingToBusiness);
-        const total = response.total ?? response.count ?? mapped.length;
-        return {
-          data: mapped,
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        };
-      }
-
-      if (Array.isArray(response)) {
-        const mapped = response.map(mapBackendListingToBusiness);
-        return {
-          data: mapped,
-          total: mapped.length,
-          page,
-          limit,
-          totalPages: Math.ceil(mapped.length / limit),
-        };
-      }
-    } catch (err) {
-      console.warn(`Failed to search directory for '${query}', using fallback search:`, err);
-    }
-
-    // Mock Search Fallback
-    const q = query.toLowerCase().trim();
-    const fallback = mockBusinesses.filter((b) => {
-      const matchesQuery =
-        !q ||
-        b.name.toLowerCase().includes(q) ||
-        b.description.toLowerCase().includes(q) ||
-        b.subcategory.toLowerCase().includes(q) ||
-        b.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-        b.address.toLowerCase().includes(q);
-
-      const matchesCat = !category || category === "all" || b.category === category;
-      return matchesQuery && matchesCat;
+    const response = await apiClient.get<
+      | { data: BackendDirectoryListing[]; total?: number; count?: number }
+      | BackendDirectoryListing[]
+    >("/directory/search", {
+      ...reqConfig,
+      params: {
+        ...extraParams,
+        query,
+        category: category && category !== "all" ? category : undefined,
+        location,
+        page,
+        limit,
+      },
     });
 
-    const total = fallback.length;
-    const startIndex = (page - 1) * limit;
-    const paginated = fallback.slice(startIndex, startIndex + limit);
+    if (response && "data" in response && Array.isArray(response.data)) {
+      const mapped = response.data.map(mapBackendListingToBusiness);
+      const total = response.total ?? response.count ?? mapped.length;
+      return {
+        data: mapped,
+        total,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      };
+    }
+
+    if (Array.isArray(response)) {
+      const mapped = response.map(mapBackendListingToBusiness);
+      return {
+        data: mapped,
+        total: mapped.length,
+        page,
+        limit,
+        totalPages: Math.max(1, Math.ceil(mapped.length / limit)),
+      };
+    }
 
     return {
-      data: paginated,
-      total,
+      data: [],
+      total: 0,
       page,
       limit,
-      totalPages: Math.max(1, Math.ceil(total / limit)),
+      totalPages: 1,
     };
+  }
+
+  /**
+   * Synchronous lookup for curated domain listings.
+   */
+  getListingByIdSync(id: string): Business | null {
+    const found = domainBusinesses.find((b) => b.id === id);
+    return found ? (found as Business) : null;
   }
 
   /**
    * Retrieves a single business listing by its ID.
    */
-  async getListingById(id: string): Promise<Business | null> {
+  async getListingById(id: string, options?: RequestOptions): Promise<Business | null> {
     try {
-      const data = await apiClient.get<BackendDirectoryListing>(`/directory/${id}`);
+      const data = options
+        ? await apiClient.get<BackendDirectoryListing>(`/directory/${id}`, options)
+        : await apiClient.get<BackendDirectoryListing>(`/directory/${id}`);
       if (data && data.id) {
         return mapBackendListingToBusiness(data);
       }
+      return this.getListingByIdSync(id);
     } catch (err) {
-      console.warn(`Failed to fetch listing '${id}' from API, searching fallback:`, err);
+      if (err instanceof ApiError && err.status === 404) {
+        return this.getListingByIdSync(id);
+      }
+      const fallback = this.getListingByIdSync(id);
+      if (fallback) return fallback;
+      throw err;
     }
-
-    const fallback = mockBusinesses.find((b) => b.id === id);
-    return fallback || null;
   }
 
   /**
    * Retrieves a single business listing by its slug.
    */
-  async getListingBySlug(slug: string): Promise<Business | null> {
+  async getListingBySlug(slug: string, options?: RequestOptions): Promise<Business | null> {
     try {
-      const data = await apiClient.get<BackendDirectoryListing>(`/directory/slug/${slug}`);
+      const data = options
+        ? await apiClient.get<BackendDirectoryListing>(`/directory/slug/${slug}`, options)
+        : await apiClient.get<BackendDirectoryListing>(`/directory/slug/${slug}`);
       if (data && (data.id || data.slug)) {
         return mapBackendListingToBusiness(data);
       }
+      return null;
     } catch (err) {
-      console.warn(`Failed to fetch listing slug '${slug}' from API, searching fallback:`, err);
+      if (err instanceof ApiError && err.status === 404) {
+        return null;
+      }
+      throw err;
     }
-
-    const fallback = mockBusinesses.find(
-      (b) =>
-        b.id === slug ||
-        b.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") === slug.toLowerCase() ||
-        b.name.toLowerCase() === slug.toLowerCase()
-    );
-    return fallback || null;
   }
 
   /**
@@ -440,13 +468,15 @@ export class DirectoryService {
   async getListingReviews(
     listingId: string,
     page = 1,
-    limit = 20
+    limit = 20,
+    options?: RequestOptions
   ): Promise<BusinessReview[]> {
     try {
       const response = await apiClient.get<
         { data: BackendReview[]; count?: number } | BackendReview[]
       >(`/reviews/listing/${listingId}`, {
-        params: { page, limit },
+        ...options,
+        params: { ...options?.params, page, limit },
       });
 
       if (response && "data" in response && Array.isArray(response.data)) {
@@ -456,12 +486,14 @@ export class DirectoryService {
       if (Array.isArray(response)) {
         return response.map((r) => mapBackendReviewToBusinessReview(r, listingId));
       }
-    } catch (err) {
-      console.warn(`Failed to fetch reviews for listing '${listingId}', using fallback:`, err);
-    }
 
-    const fallback = getReviewsForBusiness(listingId) || mockBusinessReviews[listingId];
-    return fallback || [];
+      return [];
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return [];
+      }
+      throw err;
+    }
   }
 
   /**
@@ -472,34 +504,16 @@ export class DirectoryService {
     rating: number,
     comment: string
   ): Promise<BusinessReview> {
-    try {
-      const response = await apiClient.post<BackendReview>(`/reviews/listing/${listingId}`, {
-        rating,
-        comment,
-      });
+    const response = await apiClient.post<BackendReview>(`/reviews/listing/${listingId}`, {
+      rating,
+      comment,
+    });
 
-      if (response && response.id) {
-        return mapBackendReviewToBusinessReview(response, listingId);
-      }
-    } catch (err) {
-      console.warn(`Failed to submit review via API, generating local fallback review:`, err);
+    if (response && response.id) {
+      return mapBackendReviewToBusinessReview(response, listingId);
     }
 
-    // Local fallback review
-    const localReview: BusinessReview = {
-      id: `rev-local-${Date.now()}`,
-      businessId: listingId,
-      reviewerName: "Verified Guest",
-      reviewerAvatar:
-        "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&orientation=squarish",
-      rating,
-      date: new Date().toISOString().split("T")[0],
-      title: rating >= 4 ? "Great Experience" : "Review",
-      content: comment,
-      visitType: "Traveler",
-    };
-
-    return localReview;
+    throw new ApiError("Failed to submit review", 500, "Internal Server Error");
   }
 
   /**
@@ -509,16 +523,10 @@ export class DirectoryService {
     listingId: string,
     vote: 1 | -1
   ): Promise<{ success: boolean; netVotes?: number; [key: string]: unknown }> {
-    try {
-      const res = await apiClient.post<{ success: boolean; netVotes?: number; [key: string]: unknown }>(
-        `/directory/${listingId}/vote`,
-        { vote }
-      );
-      return res;
-    } catch (err) {
-      console.warn(`Failed to vote for listing '${listingId}', using fallback:`, err);
-      return { success: true, local: true, vote };
-    }
+    return apiClient.post<{ success: boolean; netVotes?: number; [key: string]: unknown }>(
+      `/directory/${listingId}/vote`,
+      { vote }
+    );
   }
 
   /**
@@ -536,62 +544,30 @@ export class DirectoryService {
   /**
    * Creates a new business directory listing submission.
    */
-  async createListing(
-    input: CreateListingInput
-  ): Promise<Business> {
-    try {
-      const response = await apiClient.post<BackendDirectoryListing>("/directory", {
-        listing: {
-          name: input.name,
-          category_id: input.category,
-          subcategory: input.subcategory,
-          short_description: input.description,
-          description: input.description,
-          location: input.address,
-          address: input.address,
-          phone: input.phone,
-          email: input.email,
-          website: input.website,
-          tier: input.tier,
-          price_level: input.price_level,
-          gallery: input.images || [],
-          video_url: input.video_url,
-          whatsapp: input.social_links?.whatsapp,
-          status: "pending",
-        },
-        locationIds: [],
-      });
+  async createListing(input: CreateListingInput): Promise<Business> {
+    const response = await apiClient.post<BackendDirectoryListing>("/directory", {
+      listing: {
+        name: input.name,
+        category_id: input.category,
+        subcategory: input.subcategory,
+        short_description: input.description,
+        description: input.description,
+        location: input.address,
+        address: input.address,
+        phone: input.phone,
+        email: input.email,
+        website: input.website,
+        tier: input.tier,
+        price_level: input.price_level,
+        gallery: input.images || [],
+        video_url: input.video_url,
+        whatsapp: input.social_links?.whatsapp,
+        status: "pending",
+      },
+      locationIds: [],
+    });
 
-      if (response && response.id) {
-        return mapBackendListingToBusiness(response);
-      }
-    } catch (err) {
-      console.warn("Failed to create listing via API, generating local response:", err);
-    }
-
-    const fallbackBiz: Business = {
-      id: `biz-${Date.now()}`,
-      name: input.name,
-      category: input.category,
-      subcategory: input.subcategory || "Local Business",
-      description: input.description,
-      address: input.address,
-      phone: input.phone,
-      email: input.email,
-      website: input.website || "",
-      rating: 5.0,
-      reviewCount: 1,
-      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-      tags: [input.category, input.tier, "New"],
-      featured: input.tier === "signature" || input.tier === "partner",
-      priceRange: input.price_level || "$$",
-      openingHours: "09:00 - 18:00",
-      lat: 36.543,
-      lng: 31.998,
-      trustBadge: input.tier === "signature" ? "Signature Collection" : undefined,
-    };
-
-    return fallbackBiz;
+    return mapBackendListingToBusiness(response);
   }
 
   /**
@@ -601,72 +577,8 @@ export class DirectoryService {
     input: Partial<CreateListingInput>,
     draftId?: string
   ): Promise<Business> {
-    try {
-      const response = await apiClient.post<BackendDirectoryListing>("/directory/draft", {
-        listing: {
-          name: input.name,
-          category_id: input.category,
-          subcategory: input.subcategory,
-          short_description: input.description,
-          description: input.description,
-          location: input.address,
-          address: input.address,
-          phone: input.phone,
-          email: input.email,
-          website: input.website,
-          tier: input.tier,
-          price_level: input.price_level,
-          gallery: input.images || [],
-          video_url: input.video_url,
-          booking_url: input.booking_url,
-          whatsapp: input.social_links?.whatsapp,
-          status: "draft",
-        },
-        draftId,
-        locationIds: [],
-      });
-
-      if (response && response.id) {
-        return mapBackendListingToBusiness(response);
-      }
-    } catch (err) {
-      console.warn("Failed to save draft via API, generating local fallback draft:", err);
-    }
-
-    const fallbackDraft: Business = {
-      id: draftId || `draft-${Date.now()}`,
-      name: input.name || "Untitled Draft",
-      category: input.category || "restaurants",
-      subcategory: input.subcategory || "Draft Listing",
-      description: input.description || "",
-      address: input.address || "",
-      phone: input.phone || "",
-      email: input.email || "",
-      website: input.website || "",
-      rating: 0,
-      reviewCount: 0,
-      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-      tags: [input.category || "General", "Draft"],
-      featured: false,
-      priceRange: input.price_level || "$$",
-      openingHours: "09:00 - 18:00",
-      lat: 36.543,
-      lng: 31.998,
-      status: "draft",
-    };
-
-    return fallbackDraft;
-  }
-
-  /**
-   * Publishes an existing listing draft, performing full backend validation.
-   */
-  async publishDraft(
-    id: string,
-    input: CreateListingInput
-  ): Promise<Business> {
-    try {
-      const response = await apiClient.post<BackendDirectoryListing>(`/directory/${id}/publish`, {
+    const response = await apiClient.post<BackendDirectoryListing>("/directory/draft", {
+      listing: {
         name: input.name,
         category_id: input.category,
         subcategory: input.subcategory,
@@ -683,45 +595,48 @@ export class DirectoryService {
         video_url: input.video_url,
         booking_url: input.booking_url,
         whatsapp: input.social_links?.whatsapp,
-        status: "pending",
-        locationIds: [],
-      });
+        status: "draft",
+      },
+      draftId,
+      locationIds: [],
+    });
 
-      if (response && response.id) {
-        return mapBackendListingToBusiness(response);
-      }
-    } catch (err) {
-      console.warn("Failed to publish draft via API, generating local response:", err);
-    }
-
-    const fallbackBiz: Business = {
-      id,
-      name: input.name,
-      category: input.category,
-      subcategory: input.subcategory || "Local Business",
-      description: input.description,
-      address: input.address,
-      phone: input.phone,
-      email: input.email,
-      website: input.website || "",
-      rating: 5.0,
-      reviewCount: 1,
-      image: input.images?.[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
-      tags: [input.category, input.tier, "Pending Review"],
-      featured: input.tier === "signature" || input.tier === "partner",
-      priceRange: input.price_level || "$$",
-      openingHours: "09:00 - 18:00",
-      lat: 36.543,
-      lng: 31.998,
-      status: "pending",
-      trustBadge: input.tier === "signature" ? "Signature Collection" : undefined,
-    };
-
-    return fallbackBiz;
+    return mapBackendListingToBusiness(response);
   }
 
   /**
-   * Retrieves directory listings owned by the logged-in user, with optional status filter.
+   * Publishes an existing listing draft.
+   */
+  async publishDraft(
+    id: string,
+    input: CreateListingInput
+  ): Promise<Business> {
+    const response = await apiClient.post<BackendDirectoryListing>(`/directory/${id}/publish`, {
+      name: input.name,
+      category_id: input.category,
+      subcategory: input.subcategory,
+      short_description: input.description,
+      description: input.description,
+      location: input.address,
+      address: input.address,
+      phone: input.phone,
+      email: input.email,
+      website: input.website,
+      tier: input.tier,
+      price_level: input.price_level,
+      gallery: input.images || [],
+      video_url: input.video_url,
+      booking_url: input.booking_url,
+      whatsapp: input.social_links?.whatsapp,
+      status: "pending",
+      locationIds: [],
+    });
+
+    return mapBackendListingToBusiness(response);
+  }
+
+  /**
+   * Retrieves directory listings owned by the logged-in user.
    */
   async getMyListings(status?: string): Promise<Business[]> {
     try {
@@ -732,11 +647,13 @@ export class DirectoryService {
       if (Array.isArray(response)) {
         return response.map(mapBackendListingToBusiness);
       }
+      return [];
     } catch (err) {
-      console.warn("Failed to fetch my listings from API:", err);
+      if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+        return [];
+      }
+      throw err;
     }
-
-    return [];
   }
 
   /**
@@ -752,22 +669,13 @@ export class DirectoryService {
       if (Array.isArray(response) && response.length > 0) {
         return response.map(mapBackendListingToBusiness);
       }
+      return [];
     } catch (err) {
-      console.warn("Failed to fetch recently claimed listings from API, using curated fallback:", err);
+      if (err instanceof ApiError && (err.status === 404 || err.status === 500)) {
+        return [];
+      }
+      throw err;
     }
-
-    // Curated Fallback
-    const verifiedListings = mockBusinesses
-      .filter((b) => b.rating >= 4.5 || b.featured)
-      .slice(0, limit)
-      .map((b, idx) => ({
-        ...b,
-        is_verified: true,
-        is_claimed: true,
-        claimed_at: new Date(Date.now() - idx * 86400000 * 3).toISOString(),
-      }));
-
-    return verifiedListings;
   }
 
   /**
@@ -777,15 +685,10 @@ export class DirectoryService {
     businessName: string,
     tier: string
   ): Promise<{ success: boolean }> {
-    try {
-      return await apiClient.post<{ success: boolean }>("/directory/payment/instructions", {
-        businessName,
-        tier,
-      });
-    } catch (err) {
-      console.warn("Failed to send payment instructions via API, fallback success:", err);
-      return { success: true };
-    }
+    return apiClient.post<{ success: boolean }>("/directory/payment/instructions", {
+      businessName,
+      tier,
+    });
   }
 
   /**
@@ -804,10 +707,13 @@ export class DirectoryService {
       if (Array.isArray(response)) {
         return response;
       }
+      return [];
     } catch (err) {
-      console.warn("Failed to fetch my claims from API:", err);
+      if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+        return [];
+      }
+      throw err;
     }
-    return [];
   }
 
   /**
@@ -827,17 +733,25 @@ export class DirectoryService {
       if (response && typeof response === "object" && "total_views" in response) {
         return response as OwnerAnalyticsSummary;
       }
+      return {
+        total_views: 0,
+        total_whatsapp_clicks: 0,
+        total_website_clicks: 0,
+        total_map_clicks: 0,
+        daily_data: [],
+      };
     } catch (err) {
-      console.warn("Failed to fetch owner analytics from API:", err);
+      if (err instanceof ApiError && (err.status === 401 || err.status === 404)) {
+        return {
+          total_views: 0,
+          total_whatsapp_clicks: 0,
+          total_website_clicks: 0,
+          total_map_clicks: 0,
+          daily_data: [],
+        };
+      }
+      throw err;
     }
-
-    return {
-      total_views: 0,
-      total_whatsapp_clicks: 0,
-      total_website_clicks: 0,
-      total_map_clicks: 0,
-      daily_data: [],
-    };
   }
 
   /**
@@ -887,11 +801,17 @@ export const getListings = (options?: GetListingsOptions) =>
   directoryService.getListings(options);
 export const searchListings = (query: string, options?: SearchListingsOptions) =>
   directoryService.searchListings(query, options);
-export const getListingById = (id: string) => directoryService.getListingById(id);
-export const getListingBySlug = (slug: string) =>
-  directoryService.getListingBySlug(slug);
-export const getListingReviews = (listingId: string, page?: number, limit?: number) =>
-  directoryService.getListingReviews(listingId, page, limit);
+export const getListingById = (id: string, options?: RequestOptions) =>
+  directoryService.getListingById(id, options);
+export const getListingByIdSync = (id: string) => directoryService.getListingByIdSync(id);
+export const getListingBySlug = (slug: string, options?: RequestOptions) =>
+  directoryService.getListingBySlug(slug, options);
+export const getListingReviews = (
+  listingId: string,
+  page?: number,
+  limit?: number,
+  options?: RequestOptions
+) => directoryService.getListingReviews(listingId, page, limit, options);
 export const submitReview = (listingId: string, rating: number, comment: string) =>
   directoryService.submitReview(listingId, rating, comment);
 export const voteForListing = (listingId: string, vote: 1 | -1) =>
@@ -920,6 +840,3 @@ export const getRecentlyClaimedListings = (limit?: number) =>
 export const sendPaymentInstructions = (businessName: string, tier: string) =>
   directoryService.sendPaymentInstructions(businessName, tier);
 export const getCategories = () => directoryService.getCategories();
-
-
-

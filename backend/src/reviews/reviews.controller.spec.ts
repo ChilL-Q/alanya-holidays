@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReviewsController } from './reviews.controller';
 import { ReviewsService } from './reviews.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from './types/review.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { SubmitReviewDto } from './dto/submit-review.dto';
 
 describe('ReviewsController', () => {
@@ -18,10 +19,10 @@ describe('ReviewsController', () => {
     deleteReview: jest.Mock;
   };
 
-  const createMockReq = (userId = 'u100'): AuthenticatedRequest =>
-    ({
-      user: { id: userId, email: 'user@example.com' },
-    }) as unknown as AuthenticatedRequest;
+  const createMockUser = (userId = 'u100'): AuthUser => ({
+    id: userId,
+    email: 'user@example.com',
+  });
 
   beforeEach(async () => {
     mockService = {
@@ -46,6 +47,8 @@ describe('ReviewsController', () => {
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<ReviewsController>(ReviewsController);
@@ -62,10 +65,10 @@ describe('ReviewsController', () => {
   });
 
   it('should pass req.user.id and DTO to submitListingReview', async () => {
-    const req = createMockReq('u100');
+    const user = createMockUser('u100');
     const dto: SubmitReviewDto = { rating: 5, comment: 'Great!' };
 
-    await controller.submitListingReview('list-1', dto, req);
+    await controller.submitListingReview('list-1', dto, user);
     expect(mockService.submitListingReview).toHaveBeenCalledWith(
       'list-1',
       5,
@@ -75,8 +78,8 @@ describe('ReviewsController', () => {
   });
 
   it('should pass req.user.id to getUserReviewForListing', async () => {
-    const req = createMockReq('u100');
-    await controller.getUserReviewForListing('list-1', req);
+    const user = createMockUser('u100');
+    await controller.getUserReviewForListing('list-1', user);
     expect(mockService.getUserReviewForListing).toHaveBeenCalledWith(
       'list-1',
       'u100',
@@ -84,8 +87,8 @@ describe('ReviewsController', () => {
   });
 
   it('should pass req.user.id and pagination to getPendingReviews', async () => {
-    const req = createMockReq('admin-1');
-    await controller.getPendingReviews(req, '2', '25');
+    const user = createMockUser('admin-1');
+    await controller.getPendingReviews(user, '2', '25');
     expect(mockService.getPendingReviews).toHaveBeenCalledWith(
       2,
       25,
@@ -94,8 +97,8 @@ describe('ReviewsController', () => {
   });
 
   it('should pass req.user.id and query params to getReviewsByStatus', async () => {
-    const req = createMockReq('admin-1');
-    await controller.getReviewsByStatus('approved', req, '3', '10');
+    const user = createMockUser('admin-1');
+    await controller.getReviewsByStatus('approved', user, '3', '10');
     expect(mockService.getReviewsByStatus).toHaveBeenCalledWith(
       'approved',
       3,
@@ -105,20 +108,20 @@ describe('ReviewsController', () => {
   });
 
   it('should pass req.user.id to approveReview', async () => {
-    const req = createMockReq('admin-1');
-    await controller.approveReview('rev-99', req);
+    const user = createMockUser('admin-1');
+    await controller.approveReview('rev-99', user);
     expect(mockService.approveReview).toHaveBeenCalledWith('rev-99', 'admin-1');
   });
 
   it('should pass req.user.id to rejectReview', async () => {
-    const req = createMockReq('admin-1');
-    await controller.rejectReview('rev-99', req);
+    const user = createMockUser('admin-1');
+    await controller.rejectReview('rev-99', user);
     expect(mockService.rejectReview).toHaveBeenCalledWith('rev-99', 'admin-1');
   });
 
   it('should pass req.user.id to deleteReview', async () => {
-    const req = createMockReq('admin-1');
-    await controller.deleteReview('rev-99', req);
+    const user = createMockUser('admin-1');
+    await controller.deleteReview('rev-99', user);
     expect(mockService.deleteReview).toHaveBeenCalledWith('rev-99', 'admin-1');
   });
 });

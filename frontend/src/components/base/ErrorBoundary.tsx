@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import * as Sentry from '@sentry/react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { logger } from "@/lib/logger";
 
 export interface ErrorBoundaryFallbackProps {
   error: Error;
@@ -54,7 +55,7 @@ export class ErrorBoundary extends Component<
     }
 
     if (import.meta.env.DEV) {
-      console.error('[ErrorBoundary caught error]:', error, errorInfo);
+      logger.error('[ErrorBoundary caught error]:', error, errorInfo);
     }
   }
 

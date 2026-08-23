@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { CategoryThread } from "@/mocks/threads";
+import type { CategoryThread } from "@/api-services/forum.service";
 
 interface ThreadCardProps {
   thread: CategoryThread;

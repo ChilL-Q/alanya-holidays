@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import UpcomingEventsCarousel from "./UpcomingEventsCarousel";
-import * as eventsModule from "@/mocks/events";
+import { eventsService } from "@/api-services/events.service";
 
 describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
   const originalScrollBy = Element.prototype.scrollBy;
@@ -21,7 +21,8 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
 
   describe("Edge Case 1: 0 events in date window", () => {
     it("renders null and attaches no DOM listeners when event list is empty", () => {
-      vi.spyOn(eventsModule, "events", "get").mockReturnValue([]);
+      vi.spyOn(eventsService, "getEventsSync").mockReturnValue([]);
+      vi.spyOn(eventsService, "getEvents").mockResolvedValue([]);
 
       const windowAddListenerSpy = vi.spyOn(window, "addEventListener");
 
@@ -37,7 +38,7 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
     });
 
     it("renders null when all events fall outside the target week (2026-06-05 to 2026-06-12)", () => {
-      vi.spyOn(eventsModule, "events", "get").mockReturnValue([
+      const outsideEvents = [
         {
           id: "past-1",
           title: "Past Event",
@@ -72,7 +73,10 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
           description: "Future beach volleyball meetup.",
           isFeatured: false,
         },
-      ]);
+      ];
+
+      vi.spyOn(eventsService, "getEventsSync").mockReturnValue(outsideEvents);
+      vi.spyOn(eventsService, "getEvents").mockResolvedValue(outsideEvents);
 
       const { container } = render(
         <MemoryRouter>
@@ -86,7 +90,7 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
 
   describe("Edge Case 2: 1 event on wide desktop container", () => {
     it("renders heading and cards but hides both left and right scroll buttons on 1440px viewport", () => {
-      vi.spyOn(eventsModule, "events", "get").mockReturnValue([
+      const singleEvent = [
         {
           id: "single-1",
           title: "Sole Weekly Event",
@@ -104,7 +108,10 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
           description: "Single event description",
           isFeatured: true,
         },
-      ]);
+      ];
+
+      vi.spyOn(eventsService, "getEventsSync").mockReturnValue(singleEvent);
+      vi.spyOn(eventsService, "getEvents").mockResolvedValue(singleEvent);
 
       vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1440);
       vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(560);

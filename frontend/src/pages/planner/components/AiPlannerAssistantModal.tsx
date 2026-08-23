@@ -5,6 +5,7 @@ import {
   type ChatMessageDto,
 } from "@/api-services/ai-guide.service";
 import { type Plan } from "@/hooks/usePlanner";
+import { logger } from "@/lib/logger";
 
 interface AiPlannerAssistantModalProps {
   isOpen: boolean;
@@ -114,7 +115,7 @@ export default function AiPlannerAssistantModal({
       });
       setGeneratedResult(result);
     } catch (err) {
-      console.error("Itinerary generation error:", err);
+      logger.error("Itinerary generation error:", err);
       // aiGuideService handles fallbacks internally
       const fallback = aiGuideService.getCuratedItineraryFallback({
         days,

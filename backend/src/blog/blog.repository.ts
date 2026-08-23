@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
   BlogPost,
@@ -18,19 +18,12 @@ import {
 
 @Injectable()
 export class BlogRepository {
+  private readonly logger = new Logger(BlogRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
     return this.supabaseService.getClient();
-  }
-
-  async getUserRole(userId: string): Promise<string | undefined> {
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return (data as { role?: string } | null)?.role;
   }
 
   async getSlugs(seed: string): Promise<string[]> {
@@ -132,7 +125,10 @@ export class BlogRepository {
     try {
       await this.client.rpc('increment_blog_views', { p_post_id: postId });
     } catch (error) {
-      console.error('Failed to increment blog views:', postId, error);
+      this.logger.error(
+        `Failed to increment blog views: ${postId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
@@ -159,12 +155,15 @@ export class BlogRepository {
 
         if (!res.error && res.data) return res.data as BlogPostSummary[];
         if (res.error) {
-          console.warn('get_related_posts RPC warning:', res.error.message);
+          this.logger.warn(
+            `get_related_posts RPC warning: ${res.error.message}`,
+          );
         }
       } catch (err: unknown) {
-        console.warn(
-          'get_related_posts RPC failed, using fallback query:',
-          err,
+        this.logger.warn(
+          `get_related_posts RPC failed, using fallback query: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
         );
       }
     }
@@ -387,13 +386,21 @@ export class BlogRepository {
     try {
       await this.client.from('notifications').insert(notificationData);
     } catch (error) {
-      console.error('Failed to insert notification:', error);
+      this.logger.error(
+        'Failed to insert notification',
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
   async invokeEmailFunction(payload: EmailNotificationPayload): Promise<void> {
     await this.client.functions
       .invoke('send-email', { body: payload })
-      .catch(console.error);
+      .catch((err: unknown) => {
+        this.logger.error(
+          'Failed to invoke send-email function',
+          err instanceof Error ? err.stack : undefined,
+        );
+      });
   }
 }

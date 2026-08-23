@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import EmbeddedVenueCard from "./EmbeddedVenueCard";
-import type { Business } from "@/mocks/businesses";
+import type { Business } from "@/api-services/directory.service";
 
 const mockBusiness: Business = {
   id: "biz-001",

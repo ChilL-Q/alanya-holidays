@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { favoritesService } from "@/api-services/favorites.service";
 import { AuthContext } from "@/context/AuthContext";
+import { logger } from "@/lib/logger";
 
 export interface FavoritesContextValue {
   favorites: Set<string>;
@@ -64,7 +65,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (err: unknown) {
-      console.warn("Background favorites cloud sync failed:", err);
+      logger.warn("Background favorites cloud sync failed:", err);
     }
   }, [isAuthenticated]);
 
@@ -84,7 +85,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           });
         }
       } catch (err: unknown) {
-        console.warn("Initial favorites cloud sync error:", err);
+        logger.warn("Initial favorites cloud sync error:", err);
       }
     };
 
@@ -109,14 +110,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         next.delete(businessId);
         if (isAuthenticated) {
           favoritesService.removeFavorite(businessId).catch((err: unknown) => {
-            console.warn("Background remove favorite failed:", err);
+            logger.warn("Background remove favorite failed:", err);
           });
         }
       } else {
         next.add(businessId);
         if (isAuthenticated) {
           favoritesService.addFavorite(businessId).catch((err: unknown) => {
-            console.warn("Background add favorite failed:", err);
+            logger.warn("Background add favorite failed:", err);
           });
         }
       }

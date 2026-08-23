@@ -1,10 +1,15 @@
 name: E2E Smoke Tests
 
 on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    branches: ["main"]
+    types:
+      - completed
   push:
-    branches: [ "main", "feat/**", "fix/**" ]
+    branches: ["feat/**", "fix/**"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 # Cancel previous runs on the same branch when new commits are pushed
@@ -18,6 +23,7 @@ permissions:
 jobs:
   e2e-smoke:
     name: E2E Critical Flows
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
@@ -30,25 +36,25 @@ jobs:
       HOME: /root
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-    - name: Install Dependencies
-      working-directory: frontend
-      run: npm ci
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
 
-    - name: Install Playwright Chromium Browser
-      working-directory: frontend
-      run: npx playwright install chromium
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
-    - name: Run E2E Smoke Tests
-      working-directory: frontend
-      run: npx playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --config=playwright.config.ts --project=chromium
+      - name: Install Playwright Chromium Browser
+        working-directory: frontend
+        run: pnpm exec playwright install chromium
 
+      - name: Run E2E Smoke Tests
+        working-directory: frontend
+        run: pnpm exec playwright test e2e/auth.spec.ts e2e/booking.spec.ts e2e/checkout.spec.ts --config=playwright.config.ts --project=chromium

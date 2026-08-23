@@ -6,11 +6,13 @@ import BusinessCard from "@/pages/explore/components/BusinessCard";
 import MapView from "@/pages/explore/components/MapView";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
-import { businesses as initialBusinesses, businessCategories } from "@/mocks/businesses";
-import { directoryService } from "@/api-services/directory.service";
+import { directoryService, businessCategories, type Business } from "@/api-services/directory.service";
+import { isAbortError } from "@/lib/api-client";
+import { ErrorState } from "@/components/base/ErrorState";
+import { EmptyState } from "@/components/base/EmptyState";
+import LoadingSpinner from "@/components/base/LoadingSpinner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare } from "@/hooks/useCompare";
-import type { Business } from "@/mocks/businesses";
 
 export default function ExplorePage() {
   const [searchParams] = useSearchParams();
@@ -21,7 +23,9 @@ export default function ExplorePage() {
   const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("list");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
-  const [allBusinesses, setAllBusinesses] = useState<Business[]>(initialBusinesses);
+  const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [claimBusiness, setClaimBusiness] = useState<Business | null>(null);
   const [listModalOpen, setListModalOpen] = useState(false);
 
@@ -38,33 +42,61 @@ export default function ExplorePage() {
     }
   }, [searchParams]);
 
-  // Load businesses via directoryService
-  useEffect(() => {
-    let isMounted = true;
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = searchQuery.trim()
+        ? await directoryService.searchListings(searchQuery.trim(), {
+            category: activeCategory !== "all" ? activeCategory : undefined,
+          })
+        : await directoryService.getListings({
+            category: activeCategory !== "all" ? activeCategory : undefined,
+            sortBy,
+          });
 
-    const loadData = async () => {
+      setAllBusinesses(res?.data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load directory listings");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load businesses via directoryService with AbortController
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const executeLoad = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const res = searchQuery.trim()
           ? await directoryService.searchListings(searchQuery.trim(), {
               category: activeCategory !== "all" ? activeCategory : undefined,
+              signal: controller.signal,
             })
           : await directoryService.getListings({
               category: activeCategory !== "all" ? activeCategory : undefined,
               sortBy,
+              signal: controller.signal,
             });
 
-        if (isMounted && res && res.data) {
-          setAllBusinesses(res.data);
-        }
+        setAllBusinesses(res?.data || []);
       } catch (err) {
-        console.warn("Failed to load listings via directoryService:", err);
+        if (isAbortError(err)) return;
+        setError(err instanceof Error ? err.message : "Failed to load directory listings");
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    loadData();
+    executeLoad();
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [activeCategory, searchQuery, sortBy]);
 
@@ -357,7 +389,11 @@ export default function ExplorePage() {
         {viewMode === "list" ? (
           <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
             <div className="max-w-7xl mx-auto">
-              {filteredBusinesses.length > 0 ? (
+              {error ? (
+                <ErrorState message={error} onRetry={loadData} className="my-12" />
+              ) : isLoading ? (
+                <LoadingSpinner size="lg" className="my-20" />
+              ) : filteredBusinesses.length > 0 ? (
                 <div className="flex flex-col gap-5">
                   {filteredBusinesses.map((business) => (
                     <BusinessCard
@@ -373,30 +409,32 @@ export default function ExplorePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20">
-                  <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-accent-100">
-                    <i className="ri-search-line text-accent-500 text-2xl" />
-                  </div>
-                  <h3 className="font-heading text-xl text-foreground-900 mb-2">No businesses found</h3>
-                  <p className="text-sm text-foreground-500 max-w-md mx-auto mb-6">
-                    Try adjusting your search or filters. We couldn&apos;t find any businesses matching your criteria.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => { setSearchQuery(""); setActiveCategory("all"); setShowFavoritesOnly(false); }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
-                  >
-                    <i className="ri-refresh-line text-sm" />
-                    Reset Filters
-                  </button>
-                </div>
+                <EmptyState
+                  icon="ri-search-line"
+                  title="No businesses found"
+                  description="Try adjusting your search or filters. We couldn't find any businesses matching your criteria."
+                  action={{
+                    label: "Reset Filters",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setActiveCategory("all");
+                      setShowFavoritesOnly(false);
+                    },
+                    icon: <i className="ri-refresh-line text-sm" />,
+                  }}
+                  className="my-12"
+                />
               )}
             </div>
           </section>
         ) : viewMode === "grid" ? (
           <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
             <div className="max-w-7xl mx-auto">
-              {filteredBusinesses.length > 0 ? (
+              {error ? (
+                <ErrorState message={error} onRetry={loadData} className="my-12" />
+              ) : isLoading ? (
+                <LoadingSpinner size="lg" className="my-20" />
+              ) : filteredBusinesses.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                   {filteredBusinesses.map((business) => (
                     <BusinessCard
@@ -412,33 +450,42 @@ export default function ExplorePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20">
-                  <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-accent-100">
-                    <i className="ri-search-line text-accent-500 text-2xl" />
-                  </div>
-                  <h3 className="font-heading text-xl text-foreground-900 mb-2">No businesses found</h3>
-                  <button
-                    type="button"
-                    onClick={() => { setSearchQuery(""); setActiveCategory("all"); setShowFavoritesOnly(false); }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
-                  >
-                    <i className="ri-refresh-line text-sm" />
-                    Reset Filters
-                  </button>
-                </div>
+                <EmptyState
+                  icon="ri-search-line"
+                  title="No businesses found"
+                  description="Try adjusting your search or filters. We couldn't find any businesses matching your criteria."
+                  action={{
+                    label: "Reset Filters",
+                    onClick: () => {
+                      setSearchQuery("");
+                      setActiveCategory("all");
+                      setShowFavoritesOnly(false);
+                    },
+                    icon: <i className="ri-refresh-line text-sm" />,
+                  }}
+                  className="my-12"
+                />
               )}
             </div>
           </section>
         ) : (
           /* Map View */
           <section className="w-full pb-20 bg-background-50">
-            <MapView
-              businesses={filteredBusinesses}
-              searchQuery={searchQuery}
-              activeCategory={activeCategory}
-              onSearchChange={setSearchQuery}
-              onCategoryChange={setActiveCategory}
-            />
+            {error ? (
+              <div className="max-w-7xl mx-auto px-4">
+                <ErrorState message={error} onRetry={loadData} className="my-12" />
+              </div>
+            ) : isLoading ? (
+              <LoadingSpinner size="lg" className="my-20" />
+            ) : (
+              <MapView
+                businesses={filteredBusinesses}
+                searchQuery={searchQuery}
+                activeCategory={activeCategory}
+                onSearchChange={setSearchQuery}
+                onCategoryChange={setActiveCategory}
+              />
+            )}
           </section>
         )}
 

@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendChatMessageDto } from './dto/send-chat-message.dto';
 import { ReportChatDto } from './dto/report-chat.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
-import { AuthenticatedRequest } from './types/messages.types';
 
 describe('MessagesController', () => {
   let controller: MessagesController;
@@ -21,11 +21,9 @@ describe('MessagesController', () => {
     sendContactMessage: jest.fn(),
   };
 
-  const mockReq: AuthenticatedRequest = {
-    user: {
-      id: 'user-123',
-      email: 'user@example.com',
-    },
+  const mockUser: AuthUser = {
+    id: 'user-123',
+    email: 'user@example.com',
   };
 
   beforeEach(async () => {
@@ -51,7 +49,7 @@ describe('MessagesController', () => {
     it('should delegate getConversations call to MessagesService with user id', async () => {
       mockService.getConversations.mockResolvedValue([]);
 
-      const res = await controller.getConversations(mockReq);
+      const res = await controller.getConversations(mockUser);
 
       expect(res).toEqual([]);
       expect(mockService.getConversations).toHaveBeenCalledWith('user-123');
@@ -67,7 +65,7 @@ describe('MessagesController', () => {
       };
       mockService.createOrGetConversation.mockResolvedValue({ id: 'conv-1' });
 
-      const res = await controller.createConversation(dto, mockReq);
+      const res = await controller.createConversation(dto, mockUser);
 
       expect(res).toEqual({ id: 'conv-1' });
       expect(mockService.createOrGetConversation).toHaveBeenCalledWith(
@@ -85,7 +83,7 @@ describe('MessagesController', () => {
         'conv-1',
         '20',
         '0',
-        mockReq,
+        mockUser,
       );
 
       expect(res).toEqual([]);
@@ -106,7 +104,7 @@ describe('MessagesController', () => {
         content: 'Hello!',
       });
 
-      const res = await controller.sendChatMessage('conv-1', dto, mockReq);
+      const res = await controller.sendChatMessage('conv-1', dto, mockUser);
 
       expect(res).toEqual({ id: 'msg-1', content: 'Hello!' });
       expect(mockService.sendChatMessage).toHaveBeenCalledWith(
@@ -124,7 +122,7 @@ describe('MessagesController', () => {
         updated: true,
       });
 
-      const res = await controller.markConversationAsRead('conv-1', mockReq);
+      const res = await controller.markConversationAsRead('conv-1', mockUser);
 
       expect(res).toEqual({ success: true, updated: true });
       expect(mockService.markConversationAsRead).toHaveBeenCalledWith(
@@ -142,7 +140,7 @@ describe('MessagesController', () => {
       };
       mockService.reportChat.mockResolvedValue({ id: 'rep-1' });
 
-      const res = await controller.reportChat(dto, mockReq);
+      const res = await controller.reportChat(dto, mockUser);
 
       expect(res).toEqual({ id: 'rep-1' });
       expect(mockService.reportChat).toHaveBeenCalledWith('user-123', dto);

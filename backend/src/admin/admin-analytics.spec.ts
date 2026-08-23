@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AdminRepository } from './admin.repository';
 import { AdminController } from './admin.controller';
-import { AuthenticatedRequest } from '../directory/types/directory.types';
-
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { SupabaseService } from '../supabase/supabase.service';
 
 describe('Admin Analytics & Hub TDD Suite', () => {
@@ -89,7 +89,6 @@ describe('Admin Analytics & Hub TDD Suite', () => {
   };
 
   const mockAdminRepository = {
-    getUserRole: jest.fn(),
     getPlatformAnalytics: jest.fn(),
     getEnquiries: jest.fn(),
     updateEnquiryStatus: jest.fn(),
@@ -111,9 +110,15 @@ describe('Admin Analytics & Hub TDD Suite', () => {
           provide: SupabaseService,
           useValue: {},
         },
+        {
+          provide: UserRolesRepository,
+          useValue: { getRole: jest.fn().mockResolvedValue('admin') },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -122,30 +127,13 @@ describe('Admin Analytics & Hub TDD Suite', () => {
   });
 
   describe('AdminService.getPlatformAnalytics', () => {
-    it('should throw UnauthorizedException if user is not admin', async () => {
-      mockAdminRepository.getUserRole.mockResolvedValue('user');
-
-      await expect(
-        service.getPlatformAnalytics(30, 'user-uuid-1'),
-      ).rejects.toThrow(UnauthorizedException);
-
-      expect(mockAdminRepository.getUserRole).toHaveBeenCalledWith(
-        'user-uuid-1',
-      );
-      expect(mockAdminRepository.getPlatformAnalytics).not.toHaveBeenCalled();
-    });
-
-    it('should return aggregated platform analytics if user is admin', async () => {
-      mockAdminRepository.getUserRole.mockResolvedValue('admin');
+    it('should return aggregated platform analytics', async () => {
       mockAdminRepository.getPlatformAnalytics.mockResolvedValue(
         mockAnalyticsData,
       );
 
       const result = await service.getPlatformAnalytics(30, 'admin-uuid-1');
 
-      expect(mockAdminRepository.getUserRole).toHaveBeenCalledWith(
-        'admin-uuid-1',
-      );
       expect(mockAdminRepository.getPlatformAnalytics).toHaveBeenCalledWith(30);
       expect(result).toEqual(mockAnalyticsData);
       expect(result.kpiSummary.totalViews).toBe(1250);
@@ -153,7 +141,6 @@ describe('Admin Analytics & Hub TDD Suite', () => {
     });
 
     it('should fallback to 30 days if days param is invalid or omitted', async () => {
-      mockAdminRepository.getUserRole.mockResolvedValue('admin');
       mockAdminRepository.getPlatformAnalytics.mockResolvedValue(
         mockAnalyticsData,
       );
@@ -165,16 +152,13 @@ describe('Admin Analytics & Hub TDD Suite', () => {
 
   describe('AdminController.getAnalytics', () => {
     it('should delegate getAnalytics to AdminService with authenticated user id and days query', async () => {
-      mockAdminRepository.getUserRole.mockResolvedValue('admin');
       mockAdminRepository.getPlatformAnalytics.mockResolvedValue(
         mockAnalyticsData,
       );
 
-      const req = {
-        user: { id: 'admin-uuid-1', role: 'admin' },
-      } as AuthenticatedRequest;
+      const mockUser: AuthUser = { id: 'admin-uuid-1', role: 'admin' };
 
-      const result = await controller.getAnalytics('90', req);
+      const result = await controller.getAnalytics('90', mockUser);
 
       expect(result).toEqual(mockAnalyticsData);
       expect(mockAdminRepository.getPlatformAnalytics).toHaveBeenCalledWith(90);
@@ -282,6 +266,30 @@ describe('Admin Analytics & Hub TDD Suite', () => {
       expect(analytics.topListings).toHaveLength(1);
       expect(analytics.topListings[0].id).toBe('l1');
       expect(analytics.topListings[0].name).toBe('Resort A');
+    });
+
+    it('uses get_platform_analytics RPC fast-path when available', async () => {
+      const mockRpc = jest.fn().mockResolvedValue({
+        data: mockAnalyticsData,
+        error: null,
+      });
+
+      const mockSupabase = {
+        rpc: mockRpc,
+        from: jest.fn(),
+      };
+
+      const realRepo = new AdminRepository({
+        getClient: () => mockSupabase,
+      } as unknown as SupabaseService);
+
+      const analytics = await realRepo.getPlatformAnalytics(60);
+
+      expect(mockRpc).toHaveBeenCalledWith('get_platform_analytics', {
+        p_days: 60,
+      });
+      expect(analytics).toEqual(mockAnalyticsData);
+      expect(mockSupabase.from).not.toHaveBeenCalled();
     });
   });
 });

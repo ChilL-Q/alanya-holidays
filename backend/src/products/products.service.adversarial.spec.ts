@@ -2,22 +2,27 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { SupabaseService } from '../supabase/supabase.service';
 
 describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () => {
   describe('ProductsService Order Retrieval & Authorization Boundary Challenges', () => {
     let service: ProductsService;
+    let mockUserRolesRepo: {
+      getRole: jest.Mock;
+    };
     let mockRepository: {
       getMyOrders: jest.Mock;
       getOrderById: jest.Mock;
-      getUserRole: jest.Mock;
     };
 
     beforeEach(async () => {
+      mockUserRolesRepo = {
+        getRole: jest.fn(),
+      };
       mockRepository = {
         getMyOrders: jest.fn(),
         getOrderById: jest.fn(),
-        getUserRole: jest.fn(),
       };
 
       const module: TestingModule = await Test.createTestingModule({
@@ -26,6 +31,10 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           {
             provide: ProductsRepository,
             useValue: mockRepository,
+          },
+          {
+            provide: UserRolesRepository,
+            useValue: mockUserRolesRepo,
           },
         ],
       }).compile();
@@ -118,7 +127,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
 
     describe('getOrderById', () => {
       it('should throw NotFoundException if order does not exist in database', async () => {
-        mockRepository.getUserRole.mockResolvedValueOnce('user');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         mockRepository.getOrderById.mockResolvedValueOnce(null);
 
         await expect(
@@ -135,7 +144,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           items: [{ product_name: 'Olive Oil', quantity: 1 }],
         };
 
-        mockRepository.getUserRole.mockResolvedValueOnce('user');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         mockRepository.getOrderById.mockResolvedValueOnce(orderData);
 
         const result = await service.getOrderById(55, 'legit-user-id');
@@ -153,7 +162,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           items: [{ product_name: 'VIP Yacht Charter Package', quantity: 1 }],
         };
 
-        mockRepository.getUserRole.mockResolvedValueOnce('user');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         mockRepository.getOrderById.mockResolvedValueOnce(victimOrder);
 
         await expect(
@@ -170,7 +179,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           items: [{ product_name: 'Handcrafted Ceramic Bowl', quantity: 3 }],
         };
 
-        mockRepository.getUserRole.mockResolvedValueOnce('admin');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
         mockRepository.getOrderById.mockResolvedValueOnce(customerOrder);
 
         const result = await service.getOrderById(888, 'admin-user-id');
@@ -187,7 +196,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           items: [],
         };
 
-        mockRepository.getUserRole.mockResolvedValueOnce('user');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         mockRepository.getOrderById.mockResolvedValueOnce(guestOrder);
 
         await expect(
@@ -204,7 +213,7 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           items: [],
         };
 
-        mockRepository.getUserRole.mockResolvedValueOnce('admin');
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
         mockRepository.getOrderById.mockResolvedValueOnce(guestOrder);
 
         const result = await service.getOrderById(999, 'admin-user-id');

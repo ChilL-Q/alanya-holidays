@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -270,16 +270,17 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
 
-    const initialNameEl = await screen.findByTestId('profile-name');
-    expect(initialNameEl.textContent).toBe('Alex Rivera');
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-name')).toHaveTextContent('Alex Rivera');
+    });
 
     await act(async () => {
       screen.getByText('Update Profile').click();
     });
 
-    const nameEl = await screen.findByTestId('profile-name');
-    expect(nameEl.textContent).toBe('Alex Rivera Updated');
-    const bioEl = screen.getByTestId('profile-bio');
-    expect(bioEl.textContent).toBe('Living in Alanya');
+    await waitFor(() => {
+      expect(screen.getByTestId('profile-name')).toHaveTextContent('Alex Rivera Updated');
+      expect(screen.getByTestId('profile-bio')).toHaveTextContent('Living in Alanya');
+    });
   });
 });

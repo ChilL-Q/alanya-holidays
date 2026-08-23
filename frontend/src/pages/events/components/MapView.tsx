@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { type ForumEvent } from "@/mocks/events";
+import type { ForumEvent } from "@/api-services/events.service";
 
 interface MapViewProps {
   events: ForumEvent[];

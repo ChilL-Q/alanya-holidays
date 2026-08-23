@@ -17,16 +17,18 @@ import {
   type DirectoryClaim,
   type OwnerAnalyticsSummary,
   type CreateListingInput,
+  type Business,
 } from "@/api-services/directory.service";
-import type { Business } from "@/mocks/businesses";
 import { MerchantHero } from "./components/MerchantHero";
 import { MyListingsTab } from "./components/MyListingsTab";
 import { PerformanceAnalyticsTab } from "./components/PerformanceAnalyticsTab";
 import { ClaimTrackerTab } from "./components/ClaimTrackerTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
+import UpgradesAddonsShowcase from "@/components/feature/UpgradesAddonsShowcase";
+import { logger } from "@/lib/logger";
 
-export type DashboardTab = "listings" | "analytics" | "claims";
+export type DashboardTab = "listings" | "analytics" | "claims" | "upgrades";
 
 export default function MerchantDashboardPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
@@ -63,7 +65,7 @@ export default function MerchantDashboardPage() {
       setClaims(fetchedClaims);
       setAnalytics(fetchedAnalytics);
     } catch (err) {
-      console.error("Failed to load merchant dashboard data:", err);
+      logger.error("Failed to load merchant dashboard data:", err);
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
       setLoading(false);
@@ -156,7 +158,7 @@ export default function MerchantDashboardPage() {
       await directoryService.deleteListing(id);
       setListings((prev) => prev.filter((item) => item.id !== id));
     } catch (err) {
-      console.error("Failed to delete listing:", err);
+      logger.error("Failed to delete listing:", err);
       alert("Failed to delete listing. Please try again.");
     }
   };
@@ -276,6 +278,11 @@ export default function MerchantDashboardPage() {
               icon: <ShieldCheck className="w-4 h-4" />,
               count: claims.length,
             },
+            {
+              id: "upgrades" as DashboardTab,
+              label: "Upgrades & Add-Ons",
+              icon: <TrendingUp className="w-4 h-4" />,
+            },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -354,6 +361,12 @@ export default function MerchantDashboardPage() {
 
           {activeTab === "claims" && (
             <ClaimTrackerTab claims={claims} loading={loading} />
+          )}
+
+          {activeTab === "upgrades" && (
+            <UpgradesAddonsShowcase
+              onUpgradeSelect={() => handleOpenUpgrade()}
+            />
           )}
         </div>
       </div>

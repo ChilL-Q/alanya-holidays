@@ -7,6 +7,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import {
+  EntityNotFoundException,
+  BookingConflictException,
+  InvalidStatusTransitionException,
+  ForbiddenDomainException,
+  DatabaseException,
+} from '../domain/exceptions';
 
 interface FilterErrorResponse {
   success: boolean;
@@ -153,17 +160,26 @@ describe('GlobalHttpExceptionFilter', () => {
     expect(captureExceptionMock).toHaveBeenCalledWith(exception);
   });
 
-  it('should catch unhandled runtime Error, log to Logger.error, and capture in Sentry when SENTRY_DSN is set', () => {
+  it('should catch unhandled runtime Error, log to Logger.error, sanitize 500 message, and capture in Sentry when SENTRY_DSN is set', () => {
     process.env.SENTRY_DSN = 'https://mock@sentry.io/123';
     const loggerErrorSpy = jest
       .spyOn(Logger.prototype, 'error')
       .mockImplementation(() => {});
-    const exception = new Error('Unexpected panic');
+    const exception = new Error(
+      'SELECT * FROM users WHERE password_hash = "secret"',
+    );
 
     filter.catch(exception, mockArgumentsHost);
 
     expect(lastStatus).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
-    expect(loggerErrorSpy).toHaveBeenCalled();
+    expect(lastJsonPayload?.error.message).toBe(
+      'An internal server error occurred. Please try again later.',
+    );
+    expect(lastJsonPayload?.error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      'Unhandled Exception: SELECT * FROM users WHERE password_hash = "secret"',
+      exception.stack,
+    );
     expect(captureExceptionMock).toHaveBeenCalledWith(exception);
   });
 
@@ -195,5 +211,187 @@ describe('GlobalHttpExceptionFilter', () => {
 
     expect(lastStatus).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
     expect(lastJsonPayload?.success).toBe(false);
+  });
+
+  describe('Domain Exception Hierarchy Mapping', () => {
+    it('should map EntityNotFoundException to 404 with ENTITY_NOT_FOUND code', () => {
+      const exception = new EntityNotFoundException('Booking', 'b-123');
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.NOT_FOUND);
+      expect(lastJsonPayload?.error.code).toBe('ENTITY_NOT_FOUND');
+      expect(lastJsonPayload?.error.message).toBe(
+        'Booking with id "b-123" was not found.',
+      );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
+    });
+
+    it('should map BookingConflictException to 409 with BOOKING_CONFLICT code', () => {
+      const exception = new BookingConflictException();
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.CONFLICT);
+      expect(lastJsonPayload?.error.code).toBe('BOOKING_CONFLICT');
+      expect(lastJsonPayload?.error.message).toBe(
+        'The requested booking dates conflict with an existing reservation.',
+      );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
+    });
+
+    it('should map InvalidStatusTransitionException to 400 with INVALID_STATUS_TRANSITION code', () => {
+      const exception = new InvalidStatusTransitionException(
+        'Invalid status transition from "cancelled" to "confirmed"',
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.BAD_REQUEST);
+      expect(lastJsonPayload?.error.code).toBe('INVALID_STATUS_TRANSITION');
+      expect(lastJsonPayload?.error.message).toBe(
+        'Invalid status transition from "cancelled" to "confirmed"',
+      );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
+    });
+
+    it('should map ForbiddenDomainException to 403 with FORBIDDEN code', () => {
+      const exception = new ForbiddenDomainException(
+        'Not authorized to update this booking',
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.FORBIDDEN);
+      expect(lastJsonPayload?.error.code).toBe('FORBIDDEN');
+      expect(lastJsonPayload?.error.message).toBe(
+        'Not authorized to update this booking',
+      );
+      expect(captureExceptionMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('PostgreSQL & Database Error Shielding', () => {
+    let loggerErrorSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      loggerErrorSpy = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => {});
+    });
+
+    it('should shield unique_violation (23505) and return 409 Conflict', () => {
+      const dbErr = new DatabaseException(
+        'Key (email)=(test@example.com) already exists in table users',
+        null,
+        '23505',
+      );
+
+      filter.catch(dbErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.CONFLICT);
+      expect(lastJsonPayload?.error.code).toBe('RESOURCE_ALREADY_EXISTS');
+      expect(lastJsonPayload?.error.message).toBe(
+        'A record with the specified details already exists.',
+      );
+      expect(loggerErrorSpy).toHaveBeenCalled();
+    });
+
+    it('should shield foreign_key_violation (23503) and return 400 Bad Request', () => {
+      const rawPostgresErr = {
+        code: '23503',
+        message:
+          'insert or update on table "bookings" violates foreign key constraint "bookings_item_id_fkey"',
+      };
+
+      filter.catch(rawPostgresErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.BAD_REQUEST);
+      expect(lastJsonPayload?.error.code).toBe('FOREIGN_KEY_VIOLATION');
+      expect(lastJsonPayload?.error.message).toBe(
+        'The referenced entity does not exist.',
+      );
+    });
+
+    it('should shield check_violation (23514) and return 400 Bad Request', () => {
+      const dbErr = new DatabaseException(
+        'check constraint violation',
+        null,
+        '23514',
+      );
+
+      filter.catch(dbErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.BAD_REQUEST);
+      expect(lastJsonPayload?.error.code).toBe('CHECK_VIOLATION');
+      expect(lastJsonPayload?.error.message).toBe(
+        'The provided data violates business constraints.',
+      );
+    });
+
+    it('should shield insufficient_privilege / RLS (42501) and return 403 Forbidden', () => {
+      const rawPostgresErr = {
+        code: '42501',
+        message:
+          'new row violates row-level security policy for table "properties"',
+      };
+
+      filter.catch(rawPostgresErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.FORBIDDEN);
+      expect(lastJsonPayload?.error.code).toBe('PERMISSION_DENIED');
+      expect(lastJsonPayload?.error.message).toBe(
+        'You do not have permission to perform this database operation.',
+      );
+    });
+
+    it('should shield serialization_failure (40001) and return 409 Conflict', () => {
+      const dbErr = new DatabaseException(
+        'could not serialize access due to read/write dependencies',
+        null,
+        '40001',
+      );
+
+      filter.catch(dbErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.CONFLICT);
+      expect(lastJsonPayload?.error.code).toBe('CONCURRENCY_CONFLICT');
+      expect(lastJsonPayload?.error.message).toBe(
+        'A concurrent database conflict occurred. Please retry your request.',
+      );
+    });
+
+    it('should shield PGRST116 and return 404 Entity Not Found', () => {
+      const rawPostgrestErr = {
+        code: 'PGRST116',
+        message: 'JSON object requested, multiple (or no) rows returned',
+      };
+
+      filter.catch(rawPostgrestErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.NOT_FOUND);
+      expect(lastJsonPayload?.error.code).toBe('ENTITY_NOT_FOUND');
+      expect(lastJsonPayload?.error.message).toBe(
+        'The requested resource was not found.',
+      );
+    });
+
+    it('should shield unmapped database errors and return generic 500 without leaking SQL internals', () => {
+      process.env.SENTRY_DSN = 'https://mock@sentry.io/123';
+      const rawDbErr = {
+        code: 'XX000',
+        message:
+          'Internal DB engine crash: corrupted page 0x44 in table orders',
+      };
+
+      filter.catch(rawDbErr, mockArgumentsHost);
+
+      expect(lastStatus).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect(lastJsonPayload?.error.code).toBe('INTERNAL_SERVER_ERROR');
+      expect(lastJsonPayload?.error.message).toBe(
+        'An internal server error occurred. Please try again later.',
+      );
+      expect(captureExceptionMock).toHaveBeenCalledWith(rawDbErr);
+    });
   });
 });

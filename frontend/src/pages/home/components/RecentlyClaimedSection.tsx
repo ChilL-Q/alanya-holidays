@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { directoryService } from "@/api-services/directory.service";
+import { directoryService, type Business } from "@/api-services/directory.service";
 import TrustBadge from "@/components/common/TrustBadge";
-import type { Business } from "@/mocks/businesses";
+import { logger } from "@/lib/logger";
 
 export interface RecentlyClaimedSectionProps {
   onClaimClick?: (business: Business) => void;
@@ -27,7 +27,7 @@ export default function RecentlyClaimedSection({ onClaimClick }: RecentlyClaimed
           }
         }
       } catch (err) {
-        console.warn("Failed to load recently claimed listings:", err);
+        logger.warn("Failed to load recently claimed listings:", err);
       } finally {
         if (isMounted) setLoading(false);
       }

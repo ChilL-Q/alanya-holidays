@@ -2,14 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersRepository } from './users.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('UsersService', () => {
   let service: UsersService;
   let mockRepository: Record<string, jest.Mock>;
+  let mockUserRolesRepo: { getRole: jest.Mock };
 
   beforeEach(async () => {
     mockRepository = {
-      getUserRole: jest.fn(),
       getAllUsers: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       getUserProfile: jest.fn(),
       updateUserProfile: jest.fn().mockResolvedValue({}),
@@ -19,6 +20,9 @@ describe('UsersService', () => {
       getOnlineCount: jest.fn().mockResolvedValue(5),
       updatePresence: jest.fn().mockResolvedValue({}),
     };
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,6 +30,10 @@ describe('UsersService', () => {
         {
           provide: UsersRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
       ],
     }).compile();
@@ -35,7 +43,7 @@ describe('UsersService', () => {
 
   describe('getAllUsers', () => {
     it('should throw UnauthorizedException if requester is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       await expect(service.getAllUsers(1, 20, 'usr-1')).rejects.toThrow(
         UnauthorizedException,
@@ -43,7 +51,7 @@ describe('UsersService', () => {
     });
 
     it('should return paginated user data when requester is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getAllUsers.mockResolvedValueOnce({
         data: [{ id: 'usr-2', full_name: 'Bob' }],
         count: 1,
@@ -58,7 +66,7 @@ describe('UsersService', () => {
 
   describe('updateUserProfile', () => {
     it('should strip role field if updating user is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       const res = await service.updateUserProfile(
         'usr-1',
@@ -73,7 +81,7 @@ describe('UsersService', () => {
     });
 
     it('should preserve bio and company_name when updating profile', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
 
       const res = await service.updateUserProfile(
         'usr-1',

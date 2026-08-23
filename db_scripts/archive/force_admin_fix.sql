@@ -1,3 +1,4 @@
+-- ⚠️ DANGER: HISTORICAL ARCHIVE ONLY. DO NOT EXECUTE IN PRODUCTION OR CI ENVIRONMENTS.
 -- FORCE ADMIN SCRIPT
 -- Этот скрипт принудительно создает профиль (если его нет) и делает его админом.
 -- This script forcibly creates a profile (if missing) and makes it an admin.

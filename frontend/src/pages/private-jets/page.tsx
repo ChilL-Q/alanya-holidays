@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { privateJets, jetTypes } from "@/mocks/private-jets";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type PrivateJet } from "@/api-services/concierge.service";
+import { conciergeService, jetTypes, type PrivateJet } from "@/api-services/concierge.service";
 import { formatAmenity } from "@/utils/format-amenity";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 const typeIconMap: Record<string, string> = {
   "Light Jet": "ri-flight-takeoff-line",
@@ -15,6 +16,9 @@ const typeIconMap: Record<string, string> = {
 };
 
 export default function PrivateJetsPage() {
+  const [privateJets, setPrivateJets] = useState<PrivateJet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "range">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -25,6 +29,23 @@ export default function PrivateJetsPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadJets = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getPrivateJets();
+      setPrivateJets(data);
+    } catch {
+      setFetchError("Failed to load private jet listings. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadJets();
+  }, [loadJets]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -69,7 +90,7 @@ export default function PrivateJetsPage() {
       });
     }
     return results;
-  }, [activeType, sortBy]);
+  }, [activeType, sortBy, privateJets]);
 
   const sortLabelMap: Record<string, string> = {
     rating: "Top Rated",
@@ -193,65 +214,102 @@ export default function PrivateJetsPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredJets.length} {filteredJets.length === 1 ? "aircraft" : "aircraft"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredJets.length} {filteredJets.length === 1 ? "aircraft" : "aircraft"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredJets.map((jet) => (
-                <div key={jet.id} onClick={() => setSelectedJet(jet)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={jet.image} alt={jet.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {jet.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className={`${typeIconMap[jet.type] || "ri-plane-line"} text-[11px]`}></i>{jet.type}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                        <i className="ri-pin-distance-line text-[10px]"></i>{jet.range}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{jet.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{jet.rating}</span>
-                        <span className="text-xs text-foreground-500">({jet.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{jet.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{jet.company}</span>
-                      <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{jet.capacity} pax</span>
-                      <span className="flex items-center gap-1"><i className="ri-speed-up-line text-foreground-400"></i>{jet.speed}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {jet.amenities.slice(0, 3).map((a) => (
-                        <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
-                      ))}
-                      {jet.amenities.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{jet.amenities.length - 3}</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{jet.pricePerHour.toLocaleString()}</span>
-                        <span className="text-sm text-foreground-500"> / hour</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedJet(jet); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-plane-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load private jets"
+                message={fetchError}
+                onRetry={loadJets}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredJets.length === 0 ? (
+              <EmptyState
+                title="No private jets found"
+                description="Try selecting a different aircraft category or clear your filters."
+                icon="ri-plane-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveType("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredJets.map((jet) => (
+                  <div key={jet.id} onClick={() => setSelectedJet(jet)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={jet.image} alt={jet.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {jet.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className={`${typeIconMap[jet.type] || "ri-plane-line"} text-[11px]`}></i>{jet.type}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                          <i className="ri-pin-distance-line text-[10px]"></i>{jet.range}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{jet.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{jet.rating}</span>
+                          <span className="text-xs text-foreground-500">({jet.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{jet.description}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{jet.company}</span>
+                        <span className="flex items-center gap-1"><i className="ri-user-line text-foreground-400"></i>{jet.capacity} pax</span>
+                        <span className="flex items-center gap-1"><i className="ri-speed-up-line text-foreground-400"></i>{jet.speed}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {jet.amenities.slice(0, 3).map((a) => (
+                          <span key={a} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
+                        ))}
+                        {jet.amenities.length > 3 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{jet.amenities.length - 3}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{jet.pricePerHour.toLocaleString()}</span>
+                          <span className="text-sm text-foreground-500"> / hour</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedJet(jet); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-plane-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

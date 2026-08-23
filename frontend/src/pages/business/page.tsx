@@ -2,11 +2,15 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { businesses as initialBusinesses, businessCategories } from "@/mocks/businesses";
-import { getReviewsForBusiness, type BusinessReview } from "@/mocks/business-reviews";
-import { directoryService } from "@/api-services/directory.service";
+import {
+  directoryService,
+  businessCategories,
+  type Business,
+  type BusinessReview,
+} from "@/api-services/directory.service";
+import { ErrorState } from "@/components/base/ErrorState";
+import LoadingSpinner from "@/components/base/LoadingSpinner";
 import { useFavorites } from "@/hooks/useFavorites";
-import type { Business } from "@/mocks/businesses";
 import TrustBadge from "@/components/common/TrustBadge";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
 
@@ -35,7 +39,7 @@ const businessGalleryImages: Record<string, string[]> = {
   ],
   "biz-005": [
     "https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20resort%20with%20multiple%20pools%20palm%20trees%20tropical%20gardens%20private%20sandy%20beach%20turquoise%20sea%20white%20buildings%20terracotta%20roofs%20aerial%20view%20sunny%20day%20editorial%20travel%20photography%20grand%20scale&width=800&height=600&seq=biz-gal-005-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Family%20friendly%20resort%20pool%20area%20with%20water%20slides%20splash%20park%20children%20playing%20parents%20relaxing%20sun%20loungers%20palm%20trees%20Mediterranean%20resort%20Alanya%20Turkey%20sunny%20day&width=800&height=600&seq=biz-gal-005-3&orientation=landscape",
+    "https://readdy.ai/api/family-friendly-resort-pool-area-with-water-slides-splash-park-children-playing-parents-relaxing-sun-loungers-palm-trees-mediterranean-resort-alanya-turkey-sunny-day",
   ],
   "biz-006": [
     "https://readdy.ai/api/search-image?query=Traditional%20wooden%20pirate-themed%20boat%20with%20colorful%20flags%20sailing%20on%20crystal%20clear%20turquoise%20Mediterranean%20water%20Alanya%20castle%20and%20rocky%20coastline%20in%20background%20sunny%20summer%20day%20adventure%20tourism%20editorial%20photography%20vibrant%20joyful%20atmosphere&width=800&height=600&seq=biz-gal-006-2&orientation=landscape",
@@ -58,8 +62,8 @@ const businessGalleryImages: Record<string, string[]> = {
     "https://readdy.ai/api/search-image?query=Luxury%20modern%20apartment%20with%20panoramic%20Mediterranean%20sea%20view%20balcony%20Alanya%20Turkey%20white%20interior%20design%20bright%20natural%20light%20real%20estate%20property%20photography&width=800&height=600&seq=biz-gal-010-3&orientation=landscape",
   ],
   "biz-011": [
-    "https://readdy.ai/api/search-image?query=Row%20of%20modern%20clean%20rental%20cars%20parked%20in%20front%20of%20Mediterranean%20coastal%20road%20palm%20trees%20sunny%20day%20professional%20car%20rental%20business%20Alanya%20Turkey%20editorial%20automotive%20photography%20bright%20colors&width=800&height=600&seq=biz-gal-011-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Happy%20couple%20driving%20convertible%20car%20along%20scenic%20Mediterranean%20coastal%20road%20Alanya%20Turkey%20sunny%20day%20palm%20trees%20turquoise%20sea%20in%20background%20travel%20lifestyle%20photography&width=800&height=600&seq=biz-gal-011-3&orientation=landscape",
+    "https://readdy.ai/api/search-image?query=Fleet%20of%20modern%20rental%20cars%20parked%20outside%20clean%20office%20building%20Mediterranean%20palm%20trees%20sunny%20day%20compact%20cars%20and%20SUVs%20professional%20car%20rental%20service%20Alanya%20editorial%20photography&width=800&height=600&seq=biz-gal-011-2&orientation=landscape",
+    "https://readdy.ai/api/search-image?query=Open%20top%20convertible%20car%20driving%20along%20scenic%20Mediterranean%20coastal%20highway%20with%20turquoise%20sea%20and%20dramatic%20cliffs%20Alanya%20Antalya%20road%20trip%20travel%20photography%20sunny%20day&width=800&height=600&seq=biz-gal-011-3&orientation=landscape",
   ],
   "biz-012": [
     "https://readdy.ai/api/search-image?query=Elegant%20jewelry%20store%20interior%20with%20glass%20display%20cases%20filled%20with%20gold%20necklaces%20rings%20and%20precious%20stones%20warm%20spotlighting%20luxurious%20atmosphere%20polished%20marble%20floor%20Turkish%20jewelry%20craftsmanship%20editorial%20photography%20rich%20golden%20tones&width=800&height=600&seq=biz-gal-012-2&orientation=landscape",
@@ -101,13 +105,6 @@ function getCategoryIcon(categoryId: string): string {
   return cat?.icon || "ri-store-2-line";
 }
 
-function getSimilarBusinesses(current: Business): Business[] {
-  return initialBusinesses
-    .filter((b) => b.id !== current.id && b.category === current.category)
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 4);
-}
-
 function buildMapUrl(business: Business): string {
   const query = encodeURIComponent(`${business.name}, ${business.address}`);
   return `https://maps.google.com/maps?q=${query}&z=16&output=embed`;
@@ -122,11 +119,13 @@ function getGalleryForBusiness(businessId: string): string[] {
 
 export default function BusinessDetailPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const initialBusiness = businessId ? initialBusinesses.find((b) => b.id === businessId) || null : null;
-  const initialReviews = businessId ? getReviewsForBusiness(businessId) : [];
 
+  const initialBusiness = businessId ? directoryService.getListingByIdSync(businessId) : null;
   const [business, setBusiness] = useState<Business | null>(initialBusiness);
-  const [reviews, setReviews] = useState<BusinessReview[]>(initialReviews);
+  const [reviews, setReviews] = useState<BusinessReview[]>([]);
+  const [similarBusinesses, setSimilarBusinesses] = useState<Business[]>([]);
+  const [isLoading, setIsLoading] = useState(!initialBusiness);
+  const [error, setError] = useState<string | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
@@ -138,27 +137,55 @@ export default function BusinessDetailPage() {
   const favorited = businessId ? isFavorite(businessId) : false;
 
   useEffect(() => {
-    if (!businessId) return;
+    if (!businessId) {
+      setIsLoading(false);
+      return;
+    }
     let isMounted = true;
     const loadData = async () => {
+      if (!initialBusiness) {
+        setIsLoading(true);
+      }
+      setError(null);
       try {
         const [fetchedBiz, fetchedReviews] = await Promise.all([
           directoryService.getListingById(businessId),
           directoryService.getListingReviews(businessId),
         ]);
         if (isMounted) {
-          if (fetchedBiz) setBusiness(fetchedBiz);
-          if (fetchedReviews && fetchedReviews.length > 0) setReviews(fetchedReviews);
+          if (fetchedBiz) {
+            setBusiness(fetchedBiz);
+            try {
+              const similarRes = await directoryService.getListings({
+                category: fetchedBiz.category,
+                limit: 5,
+              });
+              if (isMounted && similarRes?.data) {
+                setSimilarBusinesses(
+                  similarRes.data.filter((b) => b.id !== fetchedBiz.id).slice(0, 4)
+                );
+              }
+            } catch {
+              // ignore similar fetch error
+            }
+          }
+          if (fetchedReviews) setReviews(fetchedReviews);
         }
       } catch (err) {
-        console.warn("Failed to load business details via directoryService:", err);
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : "Failed to load business details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
     loadData();
     return () => {
       isMounted = false;
     };
-  }, [businessId]);
+  }, [businessId, initialBusiness]);
 
   const reviewStats = useMemo(() => {
     if (!reviews.length) {
@@ -175,11 +202,29 @@ export default function BusinessDetailPage() {
     return { average, total, distribution };
   }, [reviews]);
 
-  const similarBusinesses = useMemo(() => {
-    return business ? getSimilarBusinesses(business) : [];
-  }, [business]);
-
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 4);
+
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <LoadingSpinner size="full" />
+        <Footer />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-[60vh] bg-background-50 flex items-center justify-center p-6">
+          <ErrorState message={error} onRetry={() => window.location.reload()} />
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (!business) {
     return (

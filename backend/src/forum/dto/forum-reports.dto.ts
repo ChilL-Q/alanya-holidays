@@ -9,15 +9,15 @@ import {
 
 export class CreateForumReportDto {
   @IsIn(['post', 'comment'])
-  target_type: 'post' | 'comment';
+  target_type!: 'post' | 'comment';
 
   @IsString()
   @IsNotEmpty()
-  target_id: string;
+  target_id!: string;
 
   @IsString()
   @IsNotEmpty()
-  reason: string;
+  reason!: string;
 }
 
 export class GetForumReportsQueryDto {

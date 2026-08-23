@@ -1,11 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
   BookingEntity,
   BookingStatus,
+  BookingTransitionResult,
   IBookingsRepository,
   StayPeriod,
 } from './domain';
+import {
+  DatabaseException,
+  EntityNotFoundException,
+  InvalidStatusTransitionException,
+  BookingConflictException,
+} from '../common/domain/exceptions';
 import { BookingMapper } from './infrastructure/booking.mapper';
 import {
   PropertySummaryRow,
@@ -16,6 +23,8 @@ import {
 
 @Injectable()
 export class BookingsRepository implements IBookingsRepository {
+  private readonly logger = new Logger(BookingsRepository.name);
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -112,6 +121,85 @@ export class BookingsRepository implements IBookingsRepository {
       .update({ status })
       .eq('id', id);
     if (error) throw new Error(error.message);
+  }
+
+  /**
+   * Atomic booking status transition via PostgreSQL RPC with row-level locking (SELECT ... FOR UPDATE).
+   */
+  async transitionStatus(params: {
+    bookingId: string;
+    newStatus: BookingStatus;
+    userId?: string;
+    reason?: string;
+    paymentStatus?: string;
+  }): Promise<BookingTransitionResult> {
+    const { data, error } = (await this.client.rpc(
+      'transition_booking_status',
+      {
+        p_booking_id: params.bookingId,
+        p_new_status: params.newStatus,
+        p_user_id: params.userId || null,
+        p_reason: params.reason || null,
+        p_payment_status: params.paymentStatus || null,
+      },
+    )) as {
+      data: unknown;
+      error: { message: string; code?: string } | null;
+    };
+
+    if (error) {
+      throw new DatabaseException(
+        `Failed to transition booking status: ${error.message}`,
+        error,
+        error.code,
+      );
+    }
+
+    const result = data as {
+      success: boolean;
+      code: string;
+      error?: string;
+      data?: {
+        id: string;
+        old_status: BookingStatus;
+        new_status: BookingStatus;
+        unblocked_dates_count: number;
+        item_id: string;
+        item_type: string;
+        user_id: string;
+        check_in: string;
+        check_out: string;
+        total_price: number;
+      };
+    } | null;
+
+    if (!result || !result.success) {
+      if (result?.code === 'NOT_FOUND') {
+        throw new EntityNotFoundException('Booking', params.bookingId);
+      }
+      if (result?.code === 'INVALID_STATUS_TRANSITION') {
+        throw new InvalidStatusTransitionException(
+          result.error || 'Invalid status transition',
+        );
+      }
+      throw new BookingConflictException(
+        result?.error || 'Booking transition failed',
+      );
+    }
+
+    const payload = result.data!;
+    return {
+      id: payload.id,
+      oldStatus: payload.old_status,
+      newStatus: payload.new_status,
+      unblockedDatesCount: payload.unblocked_dates_count,
+      itemId: payload.item_id,
+      itemType: payload.item_type,
+      userId: payload.user_id,
+      checkIn: payload.check_in,
+      checkOut: payload.check_out,
+      totalPrice: payload.total_price,
+    };
   }
 
   // =========================================================================
@@ -334,20 +422,26 @@ export class BookingsRepository implements IBookingsRepository {
     return data;
   }
 
-  async updateBookingStatus(id: string, status: string) {
-    const { error } = await this.client
-      .from('bookings')
-      .update({ status })
-      .eq('id', id);
-    if (error) throw new Error(error.message);
-  }
-
   async unblockDatesForBooking(id: string) {
     try {
       await this.client.rpc('unblock_dates_for_booking', { p_booking_id: id });
     } catch (e) {
-      console.error(e);
+      this.logger.error(
+        `Failed to unblock dates for booking ${id}`,
+        e instanceof Error ? e.stack : undefined,
+      );
     }
+  }
+
+  async getPayoutStatus(id: string): Promise<string | null> {
+    const { data, error } = await this.client
+      .from('bookings')
+      .select('payout_status')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+    return (data.payout_status as string) ?? null;
   }
 
   async updatePayoutStatus(id: string, payoutStatus: string) {
@@ -364,10 +458,13 @@ export class BookingsRepository implements IBookingsRepository {
     status: string | null;
     host_id: string | null;
     title: string;
+    price_per_night: number | null;
+    cleaning_fee: number | null;
+    currency: string | null;
   } | null> {
     const { data } = await this.client
       .from('properties')
-      .select('status, host_id, title')
+      .select('status, host_id, title, price_per_night, cleaning_fee, currency')
       .eq('id', id)
       .single();
     return data;
@@ -377,10 +474,13 @@ export class BookingsRepository implements IBookingsRepository {
     status: string | null;
     provider_id: string | null;
     title: string;
+    price: number | null;
+    currency: string | null;
+    price_unit: string | null;
   } | null> {
     const { data } = await this.client
       .from('services')
-      .select('status, provider_id, title')
+      .select('status, provider_id, title, price, currency, price_unit')
       .eq('id', id)
       .single();
     return data;
@@ -407,15 +507,6 @@ export class BookingsRepository implements IBookingsRepository {
       .select('id, full_name, email, avatar_url, phone')
       .in('id', userIds);
     return data || [];
-  }
-
-  async getUserRole(userId: string) {
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return data?.role;
   }
 
   async getPropertiesByHost(hostId: string) {
@@ -445,7 +536,12 @@ export class BookingsRepository implements IBookingsRepository {
   async invokeEmailFunction(payload: Record<string, unknown>): Promise<void> {
     await this.client.functions
       .invoke('send-email', { body: payload })
-      .catch((err: unknown) => console.error(err));
+      .catch((err: unknown) => {
+        this.logger.error(
+          'Failed to invoke send-email function',
+          err instanceof Error ? err.stack : undefined,
+        );
+      });
   }
 
   async confirmBookingsFromStripe(
@@ -453,7 +549,67 @@ export class BookingsRepository implements IBookingsRepository {
     userId: string,
     sessionId: string,
     paymentIntentId?: string | null,
-  ) {
+  ): Promise<
+    Array<{
+      id: string;
+      status?: string;
+      payment_status?: string;
+      check_in?: string;
+      check_out?: string;
+      guests?: number;
+      property?: { title?: string } | null;
+      service?: { title?: string } | null;
+      profile?: { email?: string } | null;
+    }>
+  > {
+    if (!bookingIds.length) return [];
+
+    // Fast Path: Atomic RPC with row locking, ownership check & joined details (1 RTT)
+    try {
+      interface BookingRpcRow {
+        id: string;
+        status: string;
+        payment_status: string;
+        check_in?: string | null;
+        check_out?: string | null;
+        guests?: number | string | null;
+        property_title?: string | null;
+        service_title?: string | null;
+        guest_email?: string | null;
+      }
+
+      const response = (await this.client.rpc('confirm_bookings_from_stripe', {
+        p_booking_ids: bookingIds,
+        p_user_id: userId,
+        p_session_id: sessionId,
+        p_payment_intent_id: paymentIntentId || null,
+      })) as {
+        data: BookingRpcRow[] | null;
+        error: { message: string } | null;
+      };
+
+      if (!response.error && Array.isArray(response.data)) {
+        return response.data.map((row) => ({
+          id: String(row.id),
+          status: String(row.status),
+          payment_status: String(row.payment_status),
+          check_in: row.check_in ? String(row.check_in) : undefined,
+          check_out: row.check_out ? String(row.check_out) : undefined,
+          guests: Number(row.guests) || 1,
+          property: row.property_title
+            ? { title: String(row.property_title) }
+            : null,
+          service: row.service_title
+            ? { title: String(row.service_title) }
+            : null,
+          profile: row.guest_email ? { email: String(row.guest_email) } : null,
+        }));
+      }
+    } catch {
+      // Graceful fallback for mock environments or legacy database replicas
+    }
+
+    // Fallback: 3 RTT legacy flow
     const { data: ownedBookings, error: ownerCheckError } = await this.client
       .from('bookings')
       .select('id')

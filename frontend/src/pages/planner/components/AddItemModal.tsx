@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { businesses } from "@/mocks/businesses";
-import { events } from "@/mocks/events";
+import { useState, useMemo, useEffect } from "react";
+import { directoryService, type Business } from "@/api-services/directory.service";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { aiGuideService, type ItineraryActivity } from "@/api-services/ai-guide.service";
 
 interface AddItemModalProps {
@@ -101,6 +101,8 @@ export default function AddItemModal({
   currentDayLabel,
   onDayLabelChange,
 }: AddItemModalProps) {
+  const [businessesList, setBusinessesList] = useState<Business[]>([]);
+  const [eventsList, setEventsList] = useState<ForumEvent[]>([]);
   const [sourceTab, setSourceTab] = useState<SourceTab>("favorites");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState(currentDayLabel);
@@ -115,16 +117,29 @@ export default function AddItemModal({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponseText, setAiResponseText] = useState<string | null>(null);
 
+  useEffect(() => {
+    let isMounted = true;
+    directoryService.getListings({ limit: 50 }).then((res) => {
+      if (isMounted && res.data) setBusinessesList(res.data);
+    }).catch(() => {});
+    eventsService.getEvents().then((evts) => {
+      if (isMounted && evts) setEventsList(evts);
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const favoriteIds = useMemo(() => getFavoritedBusinessIds(), []);
   const favoriteBusinesses = useMemo(
-    () => businesses.filter((b) => favoriteIds.includes(b.id)),
-    [favoriteIds],
+    () => businessesList.filter((b) => favoriteIds.includes(b.id)),
+    [businessesList, favoriteIds],
   );
 
   const filteredBusinesses = useMemo(() => {
-    if (!searchQuery.trim()) return businesses.slice(0, 20);
+    if (!searchQuery.trim()) return businessesList.slice(0, 20);
     const q = searchQuery.toLowerCase();
-    return businesses
+    return businessesList
       .filter(
         (b) =>
           b.name.toLowerCase().includes(q) ||
@@ -132,11 +147,11 @@ export default function AddItemModal({
           b.tags.some((t) => t.toLowerCase().includes(q)),
       )
       .slice(0, 20);
-  }, [searchQuery]);
+  }, [businessesList, searchQuery]);
 
   const filteredEvents = useMemo(() => {
     const now = new Date();
-    const upcoming = events.filter((e) => new Date(e.date) >= now);
+    const upcoming = eventsList.filter((e) => new Date(e.date) >= now);
     if (!searchQuery.trim()) return upcoming.slice(0, 20);
     const q = searchQuery.toLowerCase();
     return upcoming
@@ -147,9 +162,9 @@ export default function AddItemModal({
           e.category.toLowerCase().includes(q),
       )
       .slice(0, 20);
-  }, [searchQuery]);
+  }, [eventsList, searchQuery]);
 
-  function handleAddBusiness(biz: (typeof businesses)[number]) {
+  function handleAddBusiness(biz: Business) {
     onAdd({
       type: "business",
       referenceId: biz.id,
@@ -165,7 +180,7 @@ export default function AddItemModal({
     onClose();
   }
 
-  function handleAddEvent(evt: (typeof events)[number]) {
+  function handleAddEvent(evt: ForumEvent) {
     onAdd({
       type: "event",
       referenceId: evt.id,

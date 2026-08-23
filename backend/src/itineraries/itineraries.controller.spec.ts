@@ -3,6 +3,7 @@ import { ItinerariesController } from './itineraries.controller';
 import { ItinerariesService } from './itineraries.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateItineraryDto } from './dto/create-itinerary.dto';
 import { UpdateItineraryDto } from './dto/update-itinerary.dto';
 import { SavedItineraryRow } from './itineraries.repository';
@@ -19,6 +20,8 @@ describe('ItinerariesController', () => {
     itinerary: [{ day: 1, activities: ['Castle visit'] }],
     created_at: '2026-08-19T00:00:00.000Z',
   };
+
+  const mockUser: AuthUser = { id: 'user-1' };
 
   beforeEach(async () => {
     mockService = {
@@ -53,14 +56,13 @@ describe('ItinerariesController', () => {
 
   describe('createItinerary', () => {
     it('should delegate createItinerary to service with req.user.id', async () => {
-      const req = { user: { id: 'user-1' } };
       const dto: CreateItineraryDto = {
         title: '3 Days in Alanya',
         params: { days: 3 },
         itinerary: [{ day: 1 }],
       };
 
-      const result = await controller.createItinerary(dto, req);
+      const result = await controller.createItinerary(dto, mockUser);
 
       expect(result).toEqual(mockItinerary);
       expect(mockService.createItinerary).toHaveBeenCalledWith('user-1', dto);
@@ -69,9 +71,7 @@ describe('ItinerariesController', () => {
 
   describe('getMyItineraries', () => {
     it('should delegate getMyItineraries to service with req.user.id', async () => {
-      const req = { user: { id: 'user-1' } };
-
-      const result = await controller.getMyItineraries(req);
+      const result = await controller.getMyItineraries(mockUser);
 
       expect(result).toEqual([mockItinerary]);
       expect(mockService.getMyItineraries).toHaveBeenCalledWith('user-1');
@@ -103,12 +103,28 @@ describe('ItinerariesController', () => {
     });
   });
 
-  describe('updateItinerary', () => {
-    it('should delegate updateItinerary to service with id, dto, req.user.id', async () => {
-      const req = { user: { id: 'user-1' } };
+  describe('updateItinerary and patchItinerary', () => {
+    it('should delegate updateItinerary (PUT) to service with id, dto, req.user.id', async () => {
       const dto: UpdateItineraryDto = { title: 'Updated Title' };
 
-      const result = await controller.updateItinerary('itin-123', dto, req);
+      const result = await controller.updateItinerary(
+        'itin-123',
+        dto,
+        mockUser,
+      );
+
+      expect(result).toEqual({ ...mockItinerary, title: 'Updated Title' });
+      expect(mockService.updateItinerary).toHaveBeenCalledWith(
+        'itin-123',
+        dto,
+        'user-1',
+      );
+    });
+
+    it('should delegate patchItinerary (PATCH) to service with id, dto, req.user.id', async () => {
+      const dto: UpdateItineraryDto = { title: 'Patched Title' };
+
+      const result = await controller.patchItinerary('itin-123', dto, mockUser);
 
       expect(result).toEqual({ ...mockItinerary, title: 'Updated Title' });
       expect(mockService.updateItinerary).toHaveBeenCalledWith(
@@ -121,9 +137,7 @@ describe('ItinerariesController', () => {
 
   describe('deleteItinerary', () => {
     it('should delegate deleteItinerary to service with id, req.user.id', async () => {
-      const req = { user: { id: 'user-1' } };
-
-      const result = await controller.deleteItinerary('itin-123', req);
+      const result = await controller.deleteItinerary('itin-123', mockUser);
 
       expect(result).toEqual({ success: true });
       expect(mockService.deleteItinerary).toHaveBeenCalledWith(

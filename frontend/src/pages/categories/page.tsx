@@ -1,32 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
-import { categories as defaultCategories } from "@/mocks/categories";
+import { isAbortError } from "@/lib/api-client";
+import { ErrorState } from "@/components/base/ErrorState";
+import { EmptyState } from "@/components/base/EmptyState";
+import LoadingSpinner from "@/components/base/LoadingSpinner";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 
 export default function CategoriesPage() {
-  const [categoriesList, setCategoriesList] = useState<Category[]>(defaultCategories);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCategories = useCallback(async (signal?: AbortSignal) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await forumService.getCategories({ signal });
+      setCategoriesList(data || []);
+    } catch (err) {
+      if (isAbortError(err)) return;
+      setError(err instanceof Error ? err.message : "Failed to load forum categories");
+    } finally {
+      if (!signal?.aborted) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     document.title = "Browse All Categories | Alanya Holidays";
-
-    let isMounted = true;
-    forumService
-      .getCategories()
-      .then((data) => {
-        if (isMounted && data && data.length > 0) {
-          setCategoriesList(data);
-        }
-      })
-      .catch((err) => {
-        console.warn("Failed to load forum categories:", err);
-      });
-
+    const controller = new AbortController();
+    fetchCategories(controller.signal);
     return () => {
-      isMounted = false;
+      controller.abort();
     };
-  }, []);
+  }, [fetchCategories]);
 
   return (
     <div className="min-h-screen bg-background-50">
@@ -122,71 +132,84 @@ export default function CategoriesPage() {
           </div>
 
           {/* Category Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
-            {categoriesList.map((category) => (
-              <Link
-                key={category.id}
-                to={`/category/${category.id}`}
-                className="group bg-background-50 rounded-xl border border-background-200/70 overflow-hidden hover:border-primary-200/60 transition-all duration-300 flex flex-col"
-              >
-                {/* Card Image */}
-                <div className="relative h-44 overflow-hidden">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+          {error ? (
+            <ErrorState message={error} onRetry={fetchCategories} className="my-12" />
+          ) : isLoading ? (
+            <LoadingSpinner size="lg" className="my-20" />
+          ) : categoriesList.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
+              {categoriesList.map((category) => (
+                <Link
+                  key={category.id}
+                  to={`/category/${category.id}`}
+                  className="group bg-background-50 rounded-xl border border-background-200/70 overflow-hidden hover:border-primary-200/60 transition-all duration-300 flex flex-col"
+                >
+                  {/* Card Image */}
+                  <div className="relative h-44 overflow-hidden">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
 
-                  {/* Icon badge */}
-                  <div className="absolute bottom-3 left-3 w-10 h-10 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-lg">
-                    <i className={`${category.icon} text-white text-lg`}></i>
+                    {/* Icon badge */}
+                    <div className="absolute bottom-3 left-3 w-10 h-10 flex items-center justify-center bg-white/20 backdrop-blur-sm rounded-lg">
+                      <i className={`${category.icon} text-white text-lg`}></i>
+                    </div>
+
+                    {/* Topic count badge */}
+                    <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 bg-black/40 backdrop-blur-sm text-white text-xs rounded-full">
+                      <i className="ri-price-tag-3-line text-xs"></i>
+                      {category.subcategories?.length || 0}
+                    </span>
                   </div>
 
-                  {/* Topic count badge */}
-                  <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 bg-black/40 backdrop-blur-sm text-white text-xs rounded-full">
-                    <i className="ri-price-tag-3-line text-xs"></i>
-                    {category.subcategories.length}
-                  </span>
-                </div>
+                  {/* Card Body */}
+                  <div className="p-4 md:p-5 flex-1 flex flex-col">
+                    <h3 className="font-heading text-lg text-foreground-900 group-hover:text-primary-500 transition-colors mb-2 leading-tight">
+                      {category.name}
+                    </h3>
+                    <p className="text-foreground-500 text-xs md:text-sm leading-relaxed mb-4 flex-1">
+                      {category.description}
+                    </p>
 
-                {/* Card Body */}
-                <div className="p-4 md:p-5 flex-1 flex flex-col">
-                  <h3 className="font-heading text-lg text-foreground-900 group-hover:text-primary-500 transition-colors mb-2 leading-tight">
-                    {category.name}
-                  </h3>
-                  <p className="text-foreground-500 text-xs md:text-sm leading-relaxed mb-4 flex-1">
-                    {category.description}
-                  </p>
-
-                  {/* Stats row */}
-                  <div className="flex items-center gap-4 pt-3 border-t border-background-100">
-                    <div className="flex items-center gap-1.5 text-xs text-foreground-400">
-                      <i className="ri-chat-3-line text-sm"></i>
-                      <span className="font-medium text-foreground-700">
-                        {category.threadCount.toLocaleString()}
-                      </span>
-                      <span className="hidden sm:inline">threads</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-foreground-400">
-                      <i className="ri-group-line text-sm"></i>
-                      <span className="font-medium text-foreground-700">
-                        {category.memberCount.toLocaleString()}
-                      </span>
-                      <span className="hidden sm:inline">members</span>
-                    </div>
-                    <div className="ml-auto">
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-500 group-hover:translate-x-0.5 transition-transform">
-                        Browse
-                        <i className="ri-arrow-right-line text-sm"></i>
-                      </span>
+                    {/* Stats row */}
+                    <div className="flex items-center gap-4 pt-3 border-t border-background-100">
+                      <div className="flex items-center gap-1.5 text-xs text-foreground-400">
+                        <i className="ri-chat-3-line text-sm"></i>
+                        <span className="font-medium text-foreground-700">
+                          {category.threadCount.toLocaleString()}
+                        </span>
+                        <span className="hidden sm:inline">threads</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-foreground-400">
+                        <i className="ri-group-line text-sm"></i>
+                        <span className="font-medium text-foreground-700">
+                          {category.memberCount.toLocaleString()}
+                        </span>
+                        <span className="hidden sm:inline">members</span>
+                      </div>
+                      <div className="ml-auto">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-500 group-hover:translate-x-0.5 transition-transform">
+                          Browse
+                          <i className="ri-arrow-right-line text-sm"></i>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon="ri-stack-line"
+              title="No categories found"
+              description="Forum categories will appear here once configured."
+              className="my-12"
+            />
+          )}
         </section>
 
         {/* Bottom CTA — Start a Discussion */}

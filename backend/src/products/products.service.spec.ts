@@ -6,15 +6,18 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
+import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 
 describe('ProductsService', () => {
   let service: ProductsService;
+  let mockUserRolesRepo: {
+    getRole: jest.Mock;
+  };
   let mockRepository: {
     insertProduct: jest.Mock;
     getProducts: jest.Mock;
     getProductById: jest.Mock;
-    getUserRole: jest.Mock;
     getProductOwnership: jest.Mock;
     updateProduct: jest.Mock;
     deleteProduct: jest.Mock;
@@ -27,17 +30,20 @@ describe('ProductsService', () => {
     getShopCatalog: jest.Mock;
     getFeaturedProducts: jest.Mock;
     getShopProductDetails: jest.Mock;
+    getOrderableProductsByIds: jest.Mock;
     createProductOrder: jest.Mock;
     getMyOrders: jest.Mock;
     getOrderById: jest.Mock;
   };
 
   beforeEach(async () => {
+    mockUserRolesRepo = {
+      getRole: jest.fn(),
+    };
     mockRepository = {
       insertProduct: jest.fn(),
       getProducts: jest.fn().mockResolvedValue([]),
       getProductById: jest.fn(),
-      getUserRole: jest.fn(),
       getProductOwnership: jest.fn(),
       updateProduct: jest.fn().mockResolvedValue({}),
       deleteProduct: jest.fn().mockResolvedValue({}),
@@ -58,6 +64,7 @@ describe('ProductsService', () => {
         variants: [],
         skus: [],
       }),
+      getOrderableProductsByIds: jest.fn().mockResolvedValue([]),
       createProductOrder: jest.fn().mockResolvedValue({
         success: true,
         orderId: 77,
@@ -85,6 +92,10 @@ describe('ProductsService', () => {
         {
           provide: ProductsRepository,
           useValue: mockRepository,
+        },
+        {
+          provide: UserRolesRepository,
+          useValue: mockUserRolesRepo,
         },
       ],
     }).compile();
@@ -128,7 +139,7 @@ describe('ProductsService', () => {
 
   describe('updateProduct', () => {
     it('should throw UnauthorizedException if user is not seller, artisan, or admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getProductOwnership.mockResolvedValueOnce({
         seller_id: 'owner-user',
       });
@@ -139,7 +150,7 @@ describe('ProductsService', () => {
     });
 
     it('should update product if caller is owner', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getProductOwnership.mockResolvedValueOnce({
         seller_id: 'owner-user',
       });
@@ -193,6 +204,20 @@ describe('ProductsService', () => {
     });
 
     it('createProductOrder should call repository to persist order headers and items', async () => {
+      mockRepository.getOrderableProductsByIds.mockResolvedValueOnce([
+        {
+          id: 1,
+          name: 'Handmade Carpet',
+          price: 100,
+          currency: 'EUR',
+          stock: 10,
+          status: 'active',
+          sku_id: null,
+          sku_price: null,
+          sku_stock: null,
+          sku_label: null,
+        },
+      ]);
       const dto: CreateProductOrderDto = {
         currency: 'EUR',
         subtotal: 100,
@@ -205,7 +230,7 @@ describe('ProductsService', () => {
         },
         items: [
           {
-            productId: 'prod-1',
+            productId: 1,
             productName: 'Handmade Carpet',
             quantity: 1,
             unitPrice: 100,
@@ -215,8 +240,22 @@ describe('ProductsService', () => {
         ],
       };
       const res = await service.createProductOrder(dto, 'user-xyz');
+      expect(mockRepository.getOrderableProductsByIds).toHaveBeenCalledWith(
+        [1],
+        [],
+      );
+      // Prices must be server-resolved from the DB, not taken from the DTO.
       expect(mockRepository.createProductOrder).toHaveBeenCalledWith(
-        dto,
+        expect.objectContaining({
+          subtotal: 100,
+          items: [
+            expect.objectContaining({
+              unitPrice: 100,
+              finalPrice: 100,
+              subtotal: 100,
+            }),
+          ],
+        }),
         'user-xyz',
       );
       expect(res).toEqual({
@@ -315,7 +354,7 @@ describe('ProductsService', () => {
     });
 
     it('getOrderById should return order if it belongs to requesting user', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getOrderById.mockResolvedValueOnce({
         id: 77,
         customer_id: 'user-xyz',
@@ -326,7 +365,7 @@ describe('ProductsService', () => {
     });
 
     it('getOrderById should return order if requester is admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('admin');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getOrderById.mockResolvedValueOnce({
         id: 77,
         customer_id: 'different-user',
@@ -337,7 +376,7 @@ describe('ProductsService', () => {
     });
 
     it('getOrderById should throw NotFoundException if order does not exist', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getOrderById.mockResolvedValueOnce(null);
 
       await expect(service.getOrderById('999', 'user-xyz')).rejects.toThrow(
@@ -346,7 +385,7 @@ describe('ProductsService', () => {
     });
 
     it('getOrderById should throw UnauthorizedException if order belongs to another user and requester is not admin', async () => {
-      mockRepository.getUserRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
       mockRepository.getOrderById.mockResolvedValueOnce({
         id: 77,
         customer_id: 'other-user',

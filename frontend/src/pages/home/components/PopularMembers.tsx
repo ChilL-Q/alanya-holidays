@@ -1,7 +1,24 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { members } from "@/mocks/members";
+import { forumService, type ForumMember } from "@/api-services/forum.service";
 
 export default function PopularMembers() {
+  const [membersList, setMembersList] = useState<ForumMember[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    forumService
+      .getMembers({ limit: 6 })
+      .then((data) => {
+        if (mounted && data) {
+          setMembersList(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
   return (
     <section id="members" className="py-16 md:py-24 bg-background-100">
       <div className="w-full px-4 md:px-8 lg:px-12">
@@ -24,7 +41,7 @@ export default function PopularMembers() {
 
         {/* Members Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {members.map((member, index) => (
+          {membersList.map((member, index) => (
             <div
               key={member.id}
               className={`bg-white rounded-xl p-5 md:p-6 hover:shadow-lg transition-all duration-300 ${

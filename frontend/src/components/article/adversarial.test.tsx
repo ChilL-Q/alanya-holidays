@@ -6,7 +6,29 @@ import ArticleContentRenderer from "./ArticleContentRenderer";
 import EmbeddedVenueCard from "./EmbeddedVenueCard";
 import EmbeddedDirectoryCta from "./EmbeddedDirectoryCta";
 import type { ArticleBlockNode } from "./types";
-import type { Business } from "@/mocks/businesses";
+import { directoryService, type Business } from "@/api-services/directory.service";
+import { vi } from "vitest";
+
+const sampleVenue: Business = {
+  id: "biz-001",
+  name: "Kale Panorama Restaurant",
+  category: "restaurants-cafes",
+  subcategory: "Turkish Cuisine",
+  description: "Mediterranean dining with stunning castle and harbor views.",
+  address: "Tophane Mah. Kale Cad. No: 12",
+  phone: "+90 242 513 1234",
+  email: "info@kalepanorama.com",
+  website: "https://kalepanorama.com",
+  rating: 4.8,
+  reviewCount: 245,
+  image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+  tags: ["Romantic", "Sunset View", "Seafood"],
+  featured: true,
+  priceRange: "$$$",
+  openingHours: "12:00 - 00:00",
+  lat: 36.535,
+  lng: 31.995,
+};
 
 describe("Article Subsystem Adversarial & Stress Testing", () => {
   // =========================================================================
@@ -325,7 +347,7 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
     it("safely handles onClick without throwing if onClick prop is omitted", () => {
       render(
         <MemoryRouter>
-          <EmbeddedVenueCard venueId="biz-001" />
+          <EmbeddedVenueCard venue={sampleVenue} />
         </MemoryRouter>
       );
 
@@ -458,6 +480,7 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
     });
 
     it("renders 25 concurrent ArticleContentRenderer instances simultaneously on the same screen", () => {
+      vi.spyOn(directoryService, "getListingByIdSync").mockReturnValue(sampleVenue);
       const instances = Array.from({ length: 25 }, (_, i) => ({
         id: i,
         content: `## Article ${i}\n\n[venue id="biz-001" layout="compact"]\n\n[cta category="restaurants-cafes" label="CTA ${i}"]`,

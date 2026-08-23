@@ -1,16 +1,3 @@
-import { Request } from 'express';
-
-export interface AuthenticatedUser {
-  id: string;
-  email?: string;
-  role?: string;
-  [key: string]: unknown;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser;
-}
-
 export interface ServiceOfferingData {
   id?: string;
   title: string;

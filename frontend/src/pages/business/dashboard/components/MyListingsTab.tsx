@@ -19,7 +19,7 @@ import {
   X,
   Compass,
 } from "lucide-react";
-import type { Business } from "@/mocks/businesses";
+import type { Business } from "@/api-services/directory.service";
 
 export interface MyListingsTabProps {
   listings: Business[];

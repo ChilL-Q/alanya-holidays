@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { directoryService, type SubmitClaimPayload } from "@/api-services/directory.service";
-import type { Business } from "@/mocks/businesses";
+import {
+  directoryService,
+  type SubmitClaimPayload,
+  type Business,
+} from "@/api-services/directory.service";
+import { logger } from "@/lib/logger";
 
 export interface ClaimListingModalProps {
   business: Business | null;
@@ -104,7 +108,7 @@ export default function ClaimListingModal({
       setSubmitted(true);
       onClaimSubmitted?.(payload);
     } catch (err) {
-      console.error("Claim submission failed:", err);
+      logger.error("Claim submission failed:", err);
       // Even on API error, provide seamless UX with mock confirmation
       setSubmitted(true);
       onClaimSubmitted?.(payload);

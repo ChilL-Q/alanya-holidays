@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import CreatorUgcFloatingWidget from "./CreatorUgcFloatingWidget";
 import SubmitContentModal from "./SubmitContentModal";
 import toast from "react-hot-toast";
+import { blogService } from "@/api-services/blog.service";
 
 vi.mock("react-hot-toast", () => ({
   default: {
@@ -14,6 +15,7 @@ vi.mock("react-hot-toast", () => ({
 describe("CreatorUgcFloatingWidget Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(blogService, "submitGuide").mockResolvedValue({ success: true, id: "ugc-101" });
   });
 
   it("renders collapsed trigger pill initially with reward badge and smooth micro-interaction classes", () => {
@@ -67,6 +69,7 @@ describe("SubmitContentModal Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(blogService, "submitGuide").mockResolvedValue({ success: true, id: "ugc-101" });
   });
 
   it("does not render when isOpen is false", () => {

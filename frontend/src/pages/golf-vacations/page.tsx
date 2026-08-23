@@ -1,13 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { golfVacations, golfStyles } from "@/mocks/golf-vacations";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
-import { conciergeService, type GolfVacation } from "@/api-services/concierge.service";
+import { conciergeService, golfStyles, type GolfVacation } from "@/api-services/concierge.service";
 import { formatAmenity } from "@/utils/format-amenity";
+import ErrorState from "@/components/base/ErrorState";
+import EmptyState from "@/components/base/EmptyState";
 
 export default function GolfVacationsPage() {
+  const [golfVacations, setGolfVacations] = useState<GolfVacation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeStyle, setActiveStyle] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "duration">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -18,6 +22,23 @@ export default function GolfVacationsPage() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const loadVacations = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const data = await conciergeService.getGolfVacations();
+      setGolfVacations(data);
+    } catch {
+      setFetchError("Failed to load golf vacations. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadVacations();
+  }, [loadVacations]);
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
@@ -43,20 +64,29 @@ export default function GolfVacationsPage() {
   const filteredVacations = useMemo(() => {
     let results = golfVacations;
     if (activeStyle !== "all") {
-      if (activeStyle === "championship") results = results.filter((g) => g.holes >= 27 || g.name.includes("PGA") || g.name.includes("Links"));
-      else if (activeStyle === "all-inclusive") results = results.filter((g) => g.name.includes("All-Inclusive") || g.priceIncludes.some((p) => p.toLowerCase().includes("all-inclusive") || p.toLowerCase().includes("open bar")));
-      else if (activeStyle === "weekend") results = results.filter((g) => g.duration.startsWith("2") || g.duration.startsWith("3"));
-      else if (activeStyle === "beginner") results = results.filter((g) => g.difficulty === "Beginner Friendly" || g.difficulty === "All Levels");
+      results = results.filter((g) => {
+        const name = (g.name || "").toLowerCase();
+        const priceIncludes = (g.priceIncludes || g.includes || []).map((p) => p.toLowerCase());
+        const dur = (g.duration || "").toLowerCase();
+        const diff = (g.difficulty || "").toLowerCase();
+        const holes = g.holes ?? 18;
+        if (activeStyle === "championship") return holes >= 27 || name.includes("pga") || name.includes("links") || name.includes("championship");
+        if (activeStyle === "all-inclusive") return name.includes("all-inclusive") || priceIncludes.some((p) => p.includes("all-inclusive") || p.includes("open bar"));
+        if (activeStyle === "weekend") return dur.startsWith("2") || dur.startsWith("3");
+        if (activeStyle === "beginner") return diff.includes("beginner") || diff.includes("all levels");
+        return true;
+      });
     }
-    if (sortBy === "rating") results = [...results].sort((a, b) => b.rating - a.rating);
-    else if (sortBy === "price-low") results = [...results].sort((a, b) => a.pricePerPerson - b.pricePerPerson);
-    else if (sortBy === "price-high") results = [...results].sort((a, b) => b.pricePerPerson - a.pricePerPerson);
+    if (sortBy === "rating") results = [...results].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    else if (sortBy === "price-low") results = [...results].sort((a, b) => (a.pricePerPerson || a.packagePrice || 0) - (b.pricePerPerson || b.packagePrice || 0));
+    else if (sortBy === "price-high") results = [...results].sort((a, b) => (b.pricePerPerson || b.packagePrice || 0) - (a.pricePerPerson || a.packagePrice || 0));
     else if (sortBy === "duration") results = [...results].sort((a, b) => {
-      const aD = parseInt(a.duration); const bD = parseInt(b.duration);
+      const aD = parseInt(String(a.duration || "1"), 10) || 1;
+      const bD = parseInt(String(b.duration || "1"), 10) || 1;
       return aD - bD;
     });
     return results;
-  }, [activeStyle, sortBy]);
+  }, [golfVacations, activeStyle, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
     "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
@@ -177,64 +207,101 @@ export default function GolfVacationsPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <p className="text-sm text-foreground-500">{filteredVacations.length} {filteredVacations.length === 1 ? "package" : "packages"} available</p>
+            {!isLoading && !fetchError && (
+              <p className="text-sm text-foreground-500">{filteredVacations.length} {filteredVacations.length === 1 ? "package" : "packages"} available</p>
+            )}
           </div>
         </section>
 
         <section className="w-full px-4 md:px-8 lg:px-12 pb-20 bg-background-50">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-              {filteredVacations.map((vacation) => (
-                <div key={vacation.id} onClick={() => setSelectedVacation(vacation)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
-                  <div className="relative w-full h-52 md:h-56 overflow-hidden">
-                    <img src={vacation.image} alt={vacation.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
-                    {vacation.featured && (
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <i className="ri-star-fill text-[10px]"></i>Featured
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                      <i className="ri-time-line text-[11px]"></i>{vacation.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                        <i className="ri-golf-ball-line text-[10px]"></i>{vacation.holes} Holes
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{vacation.name}</h3>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <i className="ri-star-fill text-yellow-400 text-sm"></i>
-                        <span className="text-sm font-semibold text-foreground-900">{vacation.rating}</span>
-                        <span className="text-xs text-foreground-500">({vacation.reviewCount})</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{vacation.description}</p>
-                    <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                      <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{vacation.club}</span>
-                      <span className="flex items-center gap-1"><i className="ri-signal-wifi-line text-foreground-400"></i>{vacation.difficulty}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {vacation.courses.slice(0, 2).map((c) => (
-                        <span key={c} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{c}</span>
-                      ))}
-                      {vacation.courses.length > 2 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{vacation.courses.length - 2}</span>}
-                    </div>
-                    <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
-                      <div>
-                        <span className="text-lg font-bold text-foreground-900">€{vacation.pricePerPerson.toLocaleString()}</span>
-                        <span className="text-sm text-foreground-500"> / person</span>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedVacation(vacation); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-golf-ball-line text-sm"></i>View Details
-                      </button>
+            {fetchError ? (
+              <ErrorState
+                title="Unable to load golf vacation packages"
+                message={fetchError}
+                onRetry={loadVacations}
+              />
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-2xl border border-background-200/70 overflow-hidden animate-pulse">
+                    <div className="w-full h-52 md:h-56 bg-background-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-background-200 rounded w-3/4" />
+                      <div className="h-3 bg-background-100 rounded w-1/2" />
+                      <div className="h-10 bg-background-100 rounded w-full" />
+                      <div className="h-8 bg-background-200 rounded w-full pt-4" />
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredVacations.length === 0 ? (
+              <EmptyState
+                title="No golf vacations found"
+                description="Try selecting a different vacation style or clear your filters."
+                icon="ri-golf-ball-line"
+                action={{
+                  label: "Reset Filters",
+                  onClick: () => {
+                    setActiveStyle("all");
+                    setSortBy("rating");
+                  },
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                {filteredVacations.map((vacation) => (
+                  <div key={vacation.id} onClick={() => setSelectedVacation(vacation)} className="bg-white rounded-2xl border border-background-200/70 hover:border-primary-200/60 overflow-hidden group cursor-pointer transition-all">
+                    <div className="relative w-full h-52 md:h-56 overflow-hidden">
+                      <img src={vacation.image} alt={vacation.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
+                      {vacation.featured && (
+                        <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                          <i className="ri-star-fill text-[10px]"></i>Featured
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                        <i className="ri-time-line text-[11px]"></i>{vacation.duration || "3 Days / 2 Nights"}
+                      </div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
+                          <i className="ri-golf-ball-line text-[10px]"></i>{vacation.holes || 18} Holes
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h3 className="font-heading text-base text-foreground-900 leading-tight group-hover:text-primary-500 transition-colors">{vacation.name}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <i className="ri-star-fill text-yellow-400 text-sm"></i>
+                          <span className="text-sm font-semibold text-foreground-900">{vacation.rating}</span>
+                          <span className="text-xs text-foreground-500">({vacation.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{vacation.description}</p>
+                      <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
+                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{vacation.club || vacation.course || "Alanya Golf Club"}</span>
+                        <span className="flex items-center gap-1"><i className="ri-signal-wifi-line text-foreground-400"></i>{vacation.difficulty || "All Levels"}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-5">
+                        {(vacation.courses || [vacation.course]).filter(Boolean).slice(0, 2).map((c) => (
+                          <span key={c} className="px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{c}</span>
+                        ))}
+                        {(vacation.courses?.length || 1) > 2 && <span className="px-2 py-0.5 rounded-full bg-background-100 text-foreground-500 text-xs whitespace-nowrap">+{(vacation.courses?.length || 1) - 2}</span>}
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
+                        <div>
+                          <span className="text-lg font-bold text-foreground-900">€{(vacation.pricePerPerson || vacation.packagePrice || 0).toLocaleString()}</span>
+                          <span className="text-sm text-foreground-500"> / person</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedVacation(vacation); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
+                          <i className="ri-golf-ball-line text-sm"></i>View Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -257,7 +324,7 @@ export default function GolfVacationsPage() {
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-medium mb-2">
-                      <i className="ri-golf-ball-line text-[11px]"></i>{selectedVacation.holes} Holes
+                      <i className="ri-golf-ball-line text-[11px]"></i>{selectedVacation.holes || 18} Holes
                     </span>
                     <h2 className="font-heading text-2xl text-foreground-900">{selectedVacation.name}</h2>
                   </div>
@@ -272,40 +339,40 @@ export default function GolfVacationsPage() {
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Duration</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.duration}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.duration || "3 Days / 2 Nights"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-group-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Group Size</p>
-                    <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.groupSize}</p>
+                    <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.groupSize || "1-4 players"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Location</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedVacation.location.split("—")[0].trim()}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{(selectedVacation.location || "Alanya").split("—")[0].trim()}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-global-line text-foreground-500 text-lg mb-1 block"></i>
                     <p className="text-xs text-foreground-500">Language</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedVacation.language}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedVacation.language || "English, Turkish"}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
-                      <p className="text-2xl font-bold text-foreground-900">€{selectedVacation.pricePerPerson.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-foreground-900">€{(selectedVacation.pricePerPerson || selectedVacation.packagePrice || 0).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-foreground-500 mb-0.5">Difficulty</p>
-                      <span className="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold whitespace-nowrap">{selectedVacation.difficulty}</span>
+                      <span className="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold whitespace-nowrap">{selectedVacation.difficulty || "All Levels"}</span>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Courses</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedVacation.courses.map((c) => (
+                    {(selectedVacation.courses || [selectedVacation.course]).filter(Boolean).map((c) => (
                       <span key={c} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
                         <i className="ri-flag-line text-[11px]"></i>{c}
                       </span>
@@ -315,7 +382,7 @@ export default function GolfVacationsPage() {
                 <div className="mb-4">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">Amenities</h4>
                   <div className="flex flex-wrap gap-1.5">
-                    {selectedVacation.amenities.map((a) => (
+                    {(selectedVacation.amenities || selectedVacation.courseFeatures || []).map((a) => (
                       <span key={a} className="px-2.5 py-1 rounded-full bg-background-100 border border-background-200 text-foreground-600 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
                     ))}
                   </div>
@@ -323,7 +390,7 @@ export default function GolfVacationsPage() {
                 <div className="mb-6">
                   <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedVacation.priceIncludes.map((inc) => (
+                    {(selectedVacation.priceIncludes || selectedVacation.includes || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-check-line text-green-500 text-[11px]"></i>{inc}
                       </span>

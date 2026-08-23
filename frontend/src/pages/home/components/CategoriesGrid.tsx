@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
-import { categories as defaultCategories } from "@/mocks/categories";
+import { logger } from "@/lib/logger";
 
 export default function CategoriesGrid() {
-  const [categoriesList, setCategoriesList] = useState<Category[]>(defaultCategories);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
 
   useEffect(() => {
     let isMounted = true;
     forumService
       .getCategories()
       .then((data) => {
-        if (isMounted && data && data.length > 0) {
+        if (isMounted && data) {
           setCategoriesList(data);
         }
       })
       .catch((err) => {
-        console.warn("Failed to load forum categories:", err);
+        logger.warn("Failed to load forum categories:", err);
       });
 
     return () => {

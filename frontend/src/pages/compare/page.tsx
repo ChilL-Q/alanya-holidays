@@ -3,9 +3,8 @@ import { useSearchParams, Link } from "react-router-dom";
 import QRCode from "qrcode";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import { businesses as initialBusinesses, businessCategories } from "@/mocks/businesses";
-import { directoryService } from "@/api-services/directory.service";
-import type { Business } from "@/mocks/businesses";
+import { directoryService, businessCategories, type Business } from "@/api-services/directory.service";
+import { logger } from "@/lib/logger";
 
 const priceRangeLabel: Record<string, string> = {
   "$": "Budget",
@@ -90,7 +89,7 @@ export default function ComparePage() {
           });
         }
       } catch (err) {
-        console.warn("Failed to load compare listings via directoryService:", err);
+        logger.warn("Failed to load compare listings via directoryService:", err);
       }
     };
 
@@ -103,7 +102,7 @@ export default function ComparePage() {
 
   const selectedBusinesses = useMemo(() => {
     return ids
-      .map((id) => loadedBusinesses[id] || initialBusinesses.find((b) => b.id === id))
+      .map((id) => loadedBusinesses[id])
       .filter((b): b is Business => !!b);
   }, [ids, loadedBusinesses]);
 

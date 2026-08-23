@@ -4,6 +4,7 @@ import { useDarkMode } from "@/components/base/DarkModeContext";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/context/AuthContext";
 import CartDrawer from "@/components/feature/CartDrawer";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import {
   getNotifications,
   markAsRead,
@@ -13,6 +14,7 @@ import {
   type AppNotification,
   type NotificationType,
 } from "@/api-services/notifications.service";
+import { logger } from "@/lib/logger";
 
 interface NavDropdown {
   label: string;
@@ -153,7 +155,7 @@ export default function Navbar() {
           setNotifications(data);
         }
       } catch (err) {
-        console.warn("Failed to load notifications in Navbar:", err);
+        logger.warn("Failed to load notifications in Navbar:", err);
       }
     };
     void fetchNotifications();
@@ -170,19 +172,46 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenDesktopDropdown(null);
+        setMobileOpen(false);
+        setUserDropdownOpen(false);
+        setNotificationDropdownOpen(false);
+        setMobileNotificationsOpen(false);
+        setCartOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleMarkAllNotificationsRead = async () => {
+    const snapshot = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    await markAllAsRead(user?.id);
+    try {
+      await markAllAsRead(user?.id);
+    } catch (err) {
+      logger.error("Failed to mark all notifications as read:", err);
+      setNotifications(snapshot);
+    }
   };
 
   const handleNotificationClick = async (notif: AppNotification) => {
+    const snapshot = notifications;
     if (!notif.read) {
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
       );
-      await markAsRead(notif.id);
+      try {
+        await markAsRead(notif.id);
+      } catch (err) {
+        logger.error("Failed to mark notification as read:", err);
+        setNotifications(snapshot);
+      }
     }
     setNotificationDropdownOpen(false);
     setMobileOpen(false);
@@ -196,8 +225,14 @@ export default function Navbar() {
     id: string
   ) => {
     e.stopPropagation();
+    const snapshot = notifications;
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    await deleteNotification(id);
+    try {
+      await deleteNotification(id);
+    } catch (err) {
+      logger.error("Failed to delete notification:", err);
+      setNotifications(snapshot);
+    }
   };
 
   const getNotificationIcon = (type: NotificationType) => {
@@ -612,6 +647,9 @@ export default function Navbar() {
               <i className={`text-lg ${isDark ? "ri-sun-line" : "ri-moon-line"}`}></i>
             </button>
 
+            {/* Language Switcher */}
+            <LanguageSwitcher isSolidNav={isSolidNav} compact={false} />
+
             <Link
               to="/new-thread"
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
@@ -899,6 +937,14 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
+
+              <div className="py-2.5 flex items-center justify-between border-t border-background-200/40">
+                <span className="text-sm font-medium text-foreground-600 flex items-center">
+                  <i className="ri-global-line mr-2 text-foreground-400"></i>
+                  Language
+                </span>
+                <LanguageSwitcher isSolidNav={true} compact={false} />
+              </div>
             </div>
             <div className="pt-3 border-t border-background-200/50 flex flex-col gap-2">
               <Link

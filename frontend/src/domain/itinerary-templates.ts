@@ -1,0 +1,978 @@
+import type { PlanItem } from '@/hooks/usePlanner';
+
+export interface SuggestedPlan {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  items: Omit<PlanItem, 'id'>[];
+}
+
+export type ItineraryTemplate = SuggestedPlan;
+
+export const itineraryTemplates: SuggestedPlan[] = [
+  {
+    id: 'suggested-1',
+    name: 'Classic Alanya Weekend',
+    description:
+      'The perfect first-timer weekend — iconic breakfast, castle views, beach time, and a proper Turkish bath. Ideal for couples or solo travelers wanting a taste of everything.',
+    category: 'Food & Relaxation',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-003',
+        image: '',
+        subcategory: 'Turkish Cuisine',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Get there early — the garden fills up fast. Order the serpme kahvaltı for the full experience.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'custom',
+        customName: 'Explore Alanya Castle',
+        customDescription:
+          'Walk up through the old town to the castle. Entry is about 50 TL. The views from the top are absolutely worth the climb — bring water and a camera.',
+        image: '',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Wear comfortable shoes. The climb takes about 45 minutes if you walk from the harbor.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-001',
+        image: '',
+        subcategory: 'Turkish Cuisine',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Book a terrace table at least 2 days ahead for sunset. The lamb tandir is their signature dish.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-017',
+        image: '',
+        subcategory: 'Rooftop Bar',
+        dayLabel: 'Day 1',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          'Perfect nightcap spot. The castle looks incredible all lit up. Dress code is smart casual.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-002',
+        image: '',
+        subcategory: 'Beach Club',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Grab a sun lounger early — the front row goes fast. Their wood-fired pizzas are excellent for lunch.',
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-008',
+        image: '',
+        subcategory: 'Turkish Bath',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Book the signature package. You'll leave feeling like a new person. Allow about 90 minutes.",
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-024',
+        image: '',
+        subcategory: 'Kebab Restaurant',
+        dayLabel: 'Day 2',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'No reservations — just show up. The İskender kebab is what locals order. Affordable and incredible.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-2',
+    name: 'Adrenaline Seeker',
+    description:
+      'For thrill-seekers who want to experience Alanya from every angle — sky, sea, and mountains. Packed with paragliding, scuba diving, off-road safari, and cave exploration.',
+    category: 'Adventure',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-023',
+        image: '',
+        subcategory: 'Paragliding',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          "Morning flights usually have the best conditions. GoPro video is included — don't forget to smile!",
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-006',
+        image: '',
+        subcategory: 'Boat Tours',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Jump off the boat at the Phosphorus Cave — the water literally glows. Lunch is included on board.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-007',
+        image: '',
+        subcategory: 'Adventure Tours',
+        dayLabel: 'Day 2',
+        timeSlot: 'All Day',
+        notes:
+          'Full day trip. They pick you up from your hotel. Bring swimwear for the waterfall swim and a change of clothes.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-020',
+        image: '',
+        subcategory: 'Scuba Diving',
+        dayLabel: 'Day 3',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          "Two dives at different sites. Even if you've never dived before, the discovery dive is incredible. Small groups.",
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'custom',
+        customName: 'Damlataş Cave & Dim Cave Visit',
+        customDescription:
+          'Two stunning caves near Alanya. Damlataş is right by the beach and famous for its asthma-healing air. Dim Cave is larger with impressive stalactites and stalagmites.',
+        image: '',
+        dayLabel: 'Day 3',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Damlataş Cave entry is cheap (about 30 TL). Combine with a visit to the beach right outside.',
+        completed: false,
+        order: 5,
+      },
+    ],
+  },
+  {
+    id: 'suggested-3',
+    name: 'Culture & Culinary Deep Dive',
+    description:
+      'Go beyond the beach and discover authentic Alanya — learn to cook Turkish dishes, explore ancient history, browse bazaars, and dine where locals eat.',
+    category: 'Culture & Food',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-003',
+        image: '',
+        subcategory: 'Café & Breakfast',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Start the day right with their legendary Turkish breakfast spread. Over 40 items on the tray.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-013',
+        image: '',
+        subcategory: 'Carpets & Textiles',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Even if you're not buying, it's worth visiting just to see the craftsmanship. They serve complimentary tea.",
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-022',
+        image: '',
+        subcategory: 'Spices & Gourmet',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Pick up saffron, sumac, and Turkish delight as gifts. They vacuum-pack everything for travel.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-001',
+        image: '',
+        subcategory: 'Turkish Cuisine',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Reserve a terrace table at sunset. The meze platter + lamb tandir combo is unbeatable.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'event',
+        referenceId: 'e7',
+        image: '',
+        subcategory: 'Expat Socials',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Learn mantı, içli köfte, and baklava from Zeynep. Small group — book early, it fills up.',
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'custom',
+        customName: 'Alanya Archaeological Museum',
+        customDescription:
+          'Small but fascinating museum showcasing artifacts from the Bronze Age through Ottoman periods, including the famous Heracles statue.',
+        image: '',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Entry about 20 TL. Takes about an hour. Good air-conditioned break from the heat.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'event',
+        referenceId: 'e14',
+        image: '',
+        subcategory: 'Language Exchange Events',
+        dayLabel: 'Day 2',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Practice Turkish conversation over unlimited çay. Casual and welcoming — all levels welcome.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-4',
+    name: 'Digital Nomad Week',
+    description:
+      'Balance work and play like a pro. Coworking spots, networking events, beach meetups, and evening socials — designed for remote workers wanting to connect and explore.',
+    category: 'Work & Social',
+    items: [
+      {
+        type: 'event',
+        referenceId: 'e10',
+        image: '',
+        subcategory: 'Digital Nomad Events',
+        dayLabel: 'Day 1',
+        timeSlot: 'All Day',
+        notes:
+          'Desk, fast WiFi, unlimited coffee. The lunch break together at a local spot is a great way to meet people.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'event',
+        referenceId: 'e5',
+        image: '',
+        subcategory: 'Business Networking',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          "This month's topic: Turkish tax for foreigners. Super practical if you're thinking of staying long-term.",
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-002',
+        image: '',
+        subcategory: 'Beach Club',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Morning cowork from the beach — their WiFi reaches the sun loungers. Grab a frozen cocktail at lunch.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'event',
+        referenceId: 'e1',
+        image: '',
+        subcategory: 'Digital Nomad Events',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Monthly beach coworking + sunset drinks. Bring your laptop, sunscreen, and good vibes.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'event',
+        referenceId: 'e3',
+        image: '',
+        subcategory: 'Language Exchange Events',
+        dayLabel: 'Day 2',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Practice Turkish, English, German, Russian. Tables rotate every 20 min. First drink free!',
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'event',
+        referenceId: 'e17',
+        image: '',
+        subcategory: 'Expat Socials',
+        dayLabel: 'Day 3',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Beginner salsa lesson at 8pm, open dancing from 9. Great way to unwind after a work day.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'custom',
+        customName: 'Free Day — Explore on Your Own',
+        customDescription:
+          'Rent a scooter, discover a new neighborhood, try a random restaurant, or just relax. Some of the best travel memories come from unplanned adventures.',
+        image: '',
+        dayLabel: 'Day 4',
+        timeSlot: 'Flexible',
+        notes:
+          'Scoot Alanya (biz-021) rents scooters from €15/day with free delivery.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-5',
+    name: 'Rainy Day in Alanya',
+    description:
+      "When the weather isn't cooperating, Alanya still delivers. A cozy indoor itinerary packed with Turkish baths, spice shopping, cooking workshops, carpet browsing, and the best comfort food in town. You'll almost wish for rain.",
+    category: 'Indoor & Cozy',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-003',
+        image: '',
+        subcategory: 'Café & Breakfast',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'The garden has a covered section with heaters — perfect rainy day spot. Their menemen and fresh gözleme will warm you right up.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-008',
+        image: '',
+        subcategory: 'Turkish Bath',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "The ultimate rainy day activity. Steam, scrub, foam massage — you'll forget about the weather. Allow 90 minutes for the full package.",
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-022',
+        image: '',
+        subcategory: 'Spices & Gourmet',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'You could easily spend an hour here sampling teas and sniffing spices. Pick up saffron and Turkish delight as gifts — they vacuum-pack for travel.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-024',
+        image: '',
+        subcategory: 'Kebab Restaurant',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Nothing beats charcoal-grilled kebab on a rainy evening. The İskender here is what locals order. Warm, cozy, affordable.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'event',
+        referenceId: 'e7',
+        image: '',
+        subcategory: 'Expat Socials',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Learn mantı, içli köfte, and baklava indoors in Zeynep's cozy kitchen. Small group, hands-on, and you eat what you make. Book ahead — only 16 spots.",
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-013',
+        image: '',
+        subcategory: 'Carpets & Textiles',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          "A mesmerizing indoor experience. Even if you're not buying, the craftsmanship is stunning. They serve complimentary tea while you browse.",
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'custom',
+        customName: 'Alanya Archaeological Museum',
+        customDescription:
+          'Small but fascinating indoor museum showcasing artifacts from the Bronze Age through Ottoman periods, including the famous Heracles statue. Air-conditioned and perfect for a rainy afternoon.',
+        image: '',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Entry about 20 TL. Takes about an hour. Combine with the nearby Damlataş Cave if the rain lets up.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-6',
+    name: 'Family with Kids',
+    description:
+      'Keep the whole crew happy — pirate boats, water parks, sandy beaches, cave explorations, and a family fun day at the park. Designed for families with kids aged 2-14, with flexible pacing and plenty of breaks built in.',
+    category: 'Family-Friendly',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-006',
+        image: '',
+        subcategory: 'Boat Tours',
+        dayLabel: 'Day 1',
+        timeSlot: 'All Day',
+        notes:
+          'Kids absolutely love the pirate theme. Swimming stops at calm coves, foam party on deck, lunch included. The crew is great with children.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'custom',
+        customName: 'Damlataş Cave & Dim Cave Visit',
+        customDescription:
+          'Two stunning caves near Alanya. Damlataş is right by the beach — easy walk, kids love the colorful lighting. Dim Cave is larger with impressive stalactites. Both are stroller-accessible for the most part.',
+        image: '',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Damlataş entry about 30 TL. Dim Cave is further out — about 20 minutes by car. Combine with a scenic drive.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-002',
+        image: '',
+        subcategory: 'Beach Club',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Shallow entry water, wood-fired pizzas the kids will devour, sun loungers for the parents. Get there early for front-row spots.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'event',
+        referenceId: 'e16',
+        image: '',
+        subcategory: 'Traveler Meetups',
+        dayLabel: 'Day 3',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Games, face painting, and picnic in Alanya Central Park. Activities for ages 2-12. Bring a dish to share and meet other traveling families.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-018',
+        image: '',
+        subcategory: 'Apart Hotel',
+        dayLabel: 'Day 3',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Even if you're not staying here, the pools and playground are worth knowing about. Great backup plan if the beach is too windy.",
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-007',
+        image: '',
+        subcategory: 'Adventure Tours',
+        dayLabel: 'Day 4',
+        timeSlot: 'All Day',
+        notes:
+          'Best for kids 8+. River crossings, waterfall swims, Yörük village visit. The jeep ride itself is half the fun. Full day with BBQ lunch included.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-024',
+        image: '',
+        subcategory: 'Kebab Restaurant',
+        dayLabel: 'Day 4',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Casual, loud enough that kids fit right in, and the food comes fast. Everyone loves the fresh lavaş bread straight from the oven.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-7',
+    name: 'Romantic Couples Escape',
+    description:
+      'Sunset dinners, rooftop cocktails, couples spa treatments, and moonlit beach walks. A carefully curated itinerary for couples wanting to reconnect — whether it\'s a honeymoon, anniversary, or just because.',
+    category: 'Romantic',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-003',
+        image: '',
+        subcategory: 'Café & Breakfast',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Start slow with a shared Turkish breakfast in the garden courtyard. Over 40 items on the tray — linger as long as you like.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'custom',
+        customName: 'Explore Alanya Castle Together',
+        customDescription:
+          'Walk hand-in-hand up through the old town to the castle. Take your time, stop for photos, and soak in the panoramic views. The sunset from the castle walls is pure magic.',
+        image: '',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Wear comfortable shoes. Grab fresh-squeezed pomegranate juice from a street vendor on the way up.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-001',
+        image: '',
+        subcategory: 'Turkish Cuisine',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Book a terrace table at least 2 days ahead. Candlelit, 180-degree coastline views, and the lamb tandir is unforgettable. The most romantic dinner in Alanya.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-017',
+        image: '',
+        subcategory: 'Rooftop Bar',
+        dayLabel: 'Day 1',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          'Nightcap with the castle lit up in the distance. Live saxophone on Thursdays and Fridays. The espresso martini is their signature.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-019',
+        image: '',
+        subcategory: 'Spa & Wellness Center',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          "Book the couples treatment room. The 'Journey to Serenity' package — Turkish bath ritual, deep tissue massage, and facial — is 3 hours of pure bliss.",
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-002',
+        image: '',
+        subcategory: 'Beach Club',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Rent a cabana for two. Frozen cocktails, wood-fired pizza, and the sound of waves. Pure afternoon decadence.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'event',
+        referenceId: 'e6',
+        image: '',
+        subcategory: 'Beach Gatherings',
+        dayLabel: 'Day 2',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          "If your dates line up with the full moon, don't miss this. Bonfire, DJ, and a spectacular moonrise over the Mediterranean. Or simply walk the beach together under the stars.",
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-8',
+    name: 'Budget Explorer',
+    description:
+      "See the best of Alanya without spending a fortune. Free castle walks, affordable local eats, public beaches, self-guided explorations, and community meetups — proof that the best experiences don't need a big budget.",
+    category: 'Budget-Friendly',
+    items: [
+      {
+        type: 'custom',
+        customName: 'Self-Guided Old Town Walk',
+        customDescription:
+          'Start at the harbor, wind through the narrow streets of Tophane, climb to the castle (free to wander the outer walls), and end at the Red Tower. One of the best free activities in Alanya.',
+        image: '',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Download a free audio guide before you go. The Red Tower museum entry is only about 20 TL if you want to go inside.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-024',
+        image: '',
+        subcategory: 'Kebab Restaurant',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'The best value meal in Alanya. Huge portions, charcoal-grilled, and the İskender is under 200 TL. Locals eat here for a reason.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'custom',
+        customName: 'Cleopatra Beach — Public Section',
+        customDescription:
+          'The public section of Cleopatra Beach is free and just as beautiful as the private beach clubs. Bring a towel, some snacks, and enjoy the same golden sand and turquoise water for zero lira.',
+        image: '',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'The public access is near the east end. Sun loungers can be rented for about 50 TL if you want one, or just use your towel.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'event',
+        referenceId: 'e14',
+        image: '',
+        subcategory: 'Language Exchange Events',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Free to join, unlimited çay included. Practice Turkish, meet locals and travelers. One of the best free social events in town.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-022',
+        image: '',
+        subcategory: 'Spices & Gourmet',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Free tasting sessions! Sample Turkish delight, dried fruits, teas, and spices. No pressure to buy, but the prices are reasonable if you do.',
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'event',
+        referenceId: 'e4',
+        image: '',
+        subcategory: 'Hiking Groups',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Free community hike with stunning Mediterranean views. Transport from Alanya included. Just bring good shoes, water, and a camera.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-021',
+        image: '',
+        subcategory: 'Scooter Rental',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'At just a few euros per day, a scooter is the cheapest way to explore beyond the center. Ride to Dimçay for riverside çay or explore Mahmutlar.',
+        completed: false,
+        order: 7,
+      },
+    ],
+  },
+  {
+    id: 'suggested-9',
+    name: 'Summer Beach Week',
+    description:
+      'The ultimate July-August Alanya experience — golden sand, turquoise water, and endless summer energy. Paragliding over the coast, scuba diving shipwrecks, pirate boat foam parties, beach volleyball, and moonlit salsa by the sea. Designed for sun worshippers who want to squeeze every drop out of Mediterranean summer.',
+    category: 'Summer (Jul-Aug)',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-002',
+        image: '',
+        subcategory: 'Beach Club',
+        dayLabel: 'Day 1',
+        timeSlot: 'All Day',
+        notes:
+          'Claim a front-row sun lounger before 10am — they go fast in high season. Order the frozen mango daiquiri and wood-fired margherita pizza for lunch. Live DJ starts at 3pm on Saturdays.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-023',
+        image: '',
+        subcategory: 'Paragliding',
+        dayLabel: 'Day 2',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          "Book the 9am slot — the light is perfect for photos and the thermals are strongest. The GoPro footage is included. You'll land right on Cleopatra Beach. Pure magic.",
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-006',
+        image: '',
+        subcategory: 'Boat Tours',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'After paragliding, cool off on the pirate boat. The foam party on deck is legendary. Jump off at Phosphorus Cave — the water literally glows. Lunch and drinks included.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-017',
+        image: '',
+        subcategory: 'Rooftop Bar',
+        dayLabel: 'Day 2',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          'Wind down after an epic day with craft cocktails and the castle lit up across the bay. Live saxophone on Thursdays and Fridays. The espresso martini is their signature.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-020',
+        image: '',
+        subcategory: 'Scuba Diving',
+        dayLabel: 'Day 3',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Two dives at different sites — one cave, one reef. Small groups, max 6 divers. Even first-timers can do the discovery dive. The visibility in summer is incredible, up to 30 meters.',
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'event',
+        referenceId: 'e8',
+        image: '',
+        subcategory: 'Sports Activities',
+        dayLabel: 'Day 3',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Join the beach volleyball tournament at Cleopatra Beach. Mixed teams, all levels welcome. Cold drinks for everyone, prizes for winners. Register solo and they will match you into a team.',
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'event',
+        referenceId: 'e17',
+        image: '',
+        subcategory: 'Expat Socials',
+        dayLabel: 'Day 4',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Open-air salsa night right on the beachfront plaza. Beginner lesson at 8pm, open dancing from 9pm. The sea breeze keeps it perfect even on hot August nights. No partner needed.',
+        completed: false,
+        order: 7,
+      },
+      {
+        type: 'event',
+        referenceId: 'e6',
+        image: '',
+        subcategory: 'Beach Gatherings',
+        dayLabel: 'Day 5',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          "If your dates line up with the full moon, this is unmissable. Bonfire, DJ, and the most spectacular moonrise over the Mediterranean. BYOB, bring a blanket, and prepare for a night you won't forget.",
+        completed: false,
+        order: 8,
+      },
+    ],
+  },
+  {
+    id: 'suggested-10',
+    name: 'Winter in Alanya',
+    description:
+      'Who says Alanya is just a summer destination? November through March brings blissfully mild days (15-20°C), empty beaches perfect for long walks, and a slower, more authentic pace. Think steaming Turkish baths, hands-on cooking workshops, cozy tea garden afternoons, and crowd-free castle explorations. No sunburn, no queues — just the real Alanya.',
+    category: 'Winter (Nov-Mar)',
+    items: [
+      {
+        type: 'business',
+        referenceId: 'biz-003',
+        image: '',
+        subcategory: 'Café & Breakfast',
+        dayLabel: 'Day 1',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Winter is the best time to linger here — the garden has heaters and blankets. No rush, no crowds. Order the serpme kahvaltı and take your time. The gözleme is made fresh to order.',
+        completed: false,
+        order: 1,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-008',
+        image: '',
+        subcategory: 'Turkish Bath',
+        dayLabel: 'Day 1',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'A steaming hamam on a crisp winter afternoon is pure bliss. Book the signature package — steam, scrub, foam massage, and aromatherapy oil massage. Allow 90 minutes. You will float out of here.',
+        completed: false,
+        order: 2,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-001',
+        image: '',
+        subcategory: 'Turkish Cuisine',
+        dayLabel: 'Day 1',
+        timeSlot: 'Evening (5PM - 9PM)',
+        notes:
+          'Winter sunset dinners here are underrated. The terrace has glass windbreaks and heaters. Book for 5pm to catch the golden hour — the lamb tandir and a glass of Turkish red wine is the perfect winter warmer.',
+        completed: false,
+        order: 3,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-024',
+        image: '',
+        subcategory: 'Kebab Restaurant',
+        dayLabel: 'Day 1',
+        timeSlot: 'Night (9PM+)',
+        notes:
+          'Nothing beats charcoal-grilled İskender kebab on a cool winter evening. The restaurant is always buzzing with locals — winter is when you get the real neighborhood vibe without tourist crowds.',
+        completed: false,
+        order: 4,
+      },
+      {
+        type: 'event',
+        referenceId: 'e7',
+        image: '',
+        subcategory: 'Expat Socials',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Zeynep's winter cooking workshops are extra cozy. Learn mantı, içli köfte, and baklava in her warm kitchen. Small group of 16 max — book at least a week ahead. You eat what you make.",
+        completed: false,
+        order: 5,
+      },
+      {
+        type: 'event',
+        referenceId: 'e14',
+        image: '',
+        subcategory: 'Language Exchange Events',
+        dayLabel: 'Day 2',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          "Ahmet's tea garden is the coziest winter hangout. Unlimited çay, Turkish conversation practice, and fascinating chats about local customs. The garden has outdoor heaters and blankets when it's chilly.",
+        completed: false,
+        order: 6,
+      },
+      {
+        type: 'event',
+        referenceId: 'e4',
+        image: '',
+        subcategory: 'Hiking Groups',
+        dayLabel: 'Day 3',
+        timeSlot: 'Morning (8AM - 12PM)',
+        notes:
+          'Winter is actually the best hiking season — mild temperatures, crystal-clear visibility, and wildflowers starting in February. The 12km Taurus trail feels completely different without summer heat. Transport from Alanya included.',
+        completed: false,
+        order: 7,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-022',
+        image: '',
+        subcategory: 'Spices & Gourmet',
+        dayLabel: 'Day 3',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'The bazaar is wonderfully quiet in winter — you can actually browse without the summer crowds. Free tasting sessions for Turkish delight, dried fruits, teas, and spices. Pick up saffron and sumac as gifts.',
+        completed: false,
+        order: 8,
+      },
+      {
+        type: 'business',
+        referenceId: 'biz-013',
+        image: '',
+        subcategory: 'Carpets & Textiles',
+        dayLabel: 'Day 3',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'A mesmerizing indoor experience on a cooler day. The gallery owners have more time to share stories about each carpet origin and symbolism in winter. Complimentary tea while you browse. No pressure to buy.',
+        completed: false,
+        order: 9,
+      },
+      {
+        type: 'custom',
+        customName: 'Winter Castle Walk & Sunset Viewpoint',
+        customDescription:
+          'The castle in winter is a completely different experience — no crowds, no heat exhaustion, just you and 360-degree views of snow-capped Taurus Mountains meeting the Mediterranean. The winter light is softer and more photogenic. Walk the full outer walls (free), then find the hidden sunset viewpoint near Ehmedek Gate.',
+        image: '',
+        dayLabel: 'Day 4',
+        timeSlot: 'Afternoon (12PM - 5PM)',
+        notes:
+          'Wear layers — it can get breezy at the top. The climb takes about 45 minutes at a relaxed pace. Grab fresh-squeezed pomegranate juice from a street vendor on the way up. Entry to the inner castle is about 50 TL.',
+        completed: false,
+        order: 10,
+      },
+    ],
+  },
+];

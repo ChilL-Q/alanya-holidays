@@ -1,0 +1,18 @@
+export default {
+  "product.addToCart": "В корзину",
+  "product.buyNow": "Купить сейчас",
+  "product.inStock": "В наличии",
+  "product.outOfStock": "Нет в наличии",
+  "product.options": "Варианты",
+  "product.quantity": "Количество",
+  "product.tourMapPdf": "Скачать карту тура в PDF",
+  "product.sendToPhone": "Отправить карту на телефон",
+  "product.shareTour": "Поделиться туром",
+  "product.orderConfirmed": "Заказ подтвержден",
+  "product.howItWorks": "Как работает тур",
+  "product.pairingPhotos": "Кофе и десерты тура",
+  "product.favoriteCafes": "Избранные кофейни",
+  "product.saved": "сохранено",
+  "product.walkingDirections": "Пешеходный маршрут",
+  "product.totalWalking": "пешком всего",
+};

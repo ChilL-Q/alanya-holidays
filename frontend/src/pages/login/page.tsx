@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { loginSchema } from "@/lib/validation/auth.schemas";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,11 +22,18 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim();
-    if (!cleanEmail || !password.trim()) {
-      setError("Please fill in all fields.");
+    const validation = loginSchema.safeParse({
+      email,
+      password,
+      rememberMe,
+    });
+
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message || "Please fill in all fields.");
       return;
     }
+
+    const cleanEmail = validation.data.email;
 
     setIsSubmitting(true);
 

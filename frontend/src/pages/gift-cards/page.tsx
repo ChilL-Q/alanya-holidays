@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
-import ToastContainer, { createToast, type ToastData } from "@/components/base/Toast";
+import { useToast } from "@/hooks/useToast";
 import { useCart } from "@/hooks/useCart";
 import { Money } from "@/domain/money.vo";
 import {
@@ -16,40 +16,14 @@ import GiftCardFaq from "./components/GiftCardFaq";
 
 export default function GiftCardsPage() {
   const { addToCart } = useCart();
+  const { showToast, ToastContainer } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string>("All Experiences");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     document.title = "Gift Cards Hub | Alanya Holidays";
     window.scrollTo(0, 0);
-
-    const timers = toastTimersRef.current;
-    return () => {
-      timers.forEach((timer) => clearTimeout(timer));
-      timers.clear();
-    };
   }, []);
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-    const timer = toastTimersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      toastTimersRef.current.delete(id);
-    }
-  }, []);
-
-  const showToast = useCallback(
-    (productName: string, subMessage?: string) => {
-      const toast = createToast("Added to cart", `${productName}${subMessage ? ` (${subMessage})` : ""}`, "success");
-      setToasts((prev) => [...prev, toast]);
-      const timer = setTimeout(() => dismissToast(toast.id), 3500);
-      toastTimersRef.current.set(toast.id, timer);
-    },
-    [dismissToast],
-  );
 
   const handleAddToCart = useCallback(
     (collection: GiftCardCollection, tier: GiftCardTier) => {
@@ -64,7 +38,7 @@ export default function GiftCardsPage() {
         quantity: 1,
       });
 
-      showToast(`${collection.title} - ${tier.name}`, tier.money.format());
+      showToast("Added to cart", `${collection.title} - ${tier.name}`, "success");
     },
     [addToCart, showToast],
   );
@@ -101,7 +75,7 @@ export default function GiftCardsPage() {
 
       <Footer />
 
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer />
     </div>
   );
 }

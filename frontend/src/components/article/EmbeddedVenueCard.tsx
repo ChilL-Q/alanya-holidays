@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { businesses, type Business } from "@/mocks/businesses";
+import { directoryService, type Business } from "@/api-services/directory.service";
 
 export interface EmbeddedVenueCardProps {
   venue?: Business;
@@ -18,9 +18,32 @@ export default function EmbeddedVenueCard({
   className = "",
 }: EmbeddedVenueCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [fetchedVenue, setFetchedVenue] = useState<Business | null>(() =>
+    venueId ? directoryService.getListingByIdSync(venueId) : null
+  );
 
-  // Resolve business details from props or mock directory
-  const resolvedVenue = venue ?? (venueId ? businesses.find((b) => b.id === venueId) : undefined);
+  useEffect(() => {
+    if (venue || !venueId) return;
+    let isMounted = true;
+    void directoryService
+      .getListingById(venueId)
+      .then((data) => {
+        if (isMounted) {
+          setFetchedVenue(data);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setFetchedVenue(null);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [venue, venueId]);
+
+  // Resolve business details from props or directory service
+  const resolvedVenue = venue ?? (venueId ? fetchedVenue ?? undefined : undefined);
 
   if (!resolvedVenue) {
     return (

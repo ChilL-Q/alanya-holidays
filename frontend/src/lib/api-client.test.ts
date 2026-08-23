@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiClient, ApiError } from './api-client';
+import { ApiClient, ApiError, isAbortError, shouldUseOfflineFallback } from './api-client';
 
 describe('ApiClient', () => {
   let client: ApiClient;
@@ -78,5 +78,56 @@ describe('ApiClient', () => {
     mockFetch.mockRejectedValueOnce(new Error('Failed to fetch'));
 
     await expect(client.get('/network-fail')).rejects.toThrow(ApiError);
+  });
+
+  it('should allow offline fallback for network and 5xx errors only', () => {
+    expect(shouldUseOfflineFallback(new Error('Offline'))).toBe(true);
+    expect(
+      shouldUseOfflineFallback(
+        new ApiError('Server error', 500, 'Server Error', null, '/bookings')
+      )
+    ).toBe(true);
+    expect(
+      shouldUseOfflineFallback(
+        new ApiError('Unauthorized', 401, 'Unauthorized', null, '/bookings')
+      )
+    ).toBe(false);
+    expect(
+      shouldUseOfflineFallback(
+        new ApiError('Bad Request', 400, 'Bad Request', null, '/bookings')
+      )
+    ).toBe(false);
+    expect(
+      shouldUseOfflineFallback(
+        new DOMException('Aborted', 'AbortError')
+      )
+    ).toBe(false);
+  });
+
+  it('should preserve and rethrow AbortError when request is aborted via AbortSignal', async () => {
+    const abortError = new DOMException('The user aborted a request.', 'AbortError');
+    mockFetch.mockRejectedValueOnce(abortError);
+
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      client.get('/aborted-endpoint', { signal: controller.signal })
+    ).rejects.toSatisfy((err: unknown) => {
+      return isAbortError(err) && (err as Error).name === 'AbortError';
+    });
+  });
+
+  it('should identify abort errors with isAbortError helper', () => {
+    const domAbort = new DOMException('Aborted', 'AbortError');
+    const genericAbort = new Error('The operation was aborted');
+    const apiAbort = new ApiError('Aborted', 0, 'AbortError', null, '/test', true);
+    const standardError = new Error('Failed to fetch');
+
+    expect(isAbortError(domAbort)).toBe(true);
+    expect(isAbortError(genericAbort)).toBe(true);
+    expect(isAbortError(apiAbort)).toBe(true);
+    expect(isAbortError(standardError)).toBe(false);
+    expect(isAbortError(null)).toBe(false);
   });
 });

@@ -6,63 +6,75 @@ import {
   Body,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../auth/auth.guard';
-import { AuthenticatedRequest } from '../directory/types/directory.types';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import {
   ConciergeEnquiryRecord,
   PlatformAnalyticsData,
 } from './admin.repository';
+import { DaysQueryDto } from '../common/dto/pagination.dto';
+import { UpdateEnquiryStatusDto } from './dto/update-enquiry-status.dto';
+import { AssignEnquiryDto } from './dto/assign-enquiry.dto';
 
 @Controller('admin')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
+@RequireRole('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('enquiries')
   async getEnquiries(
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<ConciergeEnquiryRecord[]> {
-    return await this.adminService.getEnquiries(req.user.id);
+    return await this.adminService.getEnquiries(user.id);
   }
 
   @Patch('enquiries/:id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body() body: { status: string },
-    @Req() req: AuthenticatedRequest,
+    @Body() body: UpdateEnquiryStatusDto,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return await this.adminService.updateEnquiryStatus(
       Number(id),
       body.status,
-      req.user.id,
+      user.id,
     );
   }
 
   @Patch('enquiries/:id/assign')
   async assignEnquiry(
     @Param('id') id: string,
-    @Body() body: { assigned_to: string | null },
-    @Req() req: AuthenticatedRequest,
+    @Body() body: AssignEnquiryDto,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return await this.adminService.assignEnquiry(
       Number(id),
-      body.assigned_to,
-      req.user.id,
+      body.assigned_to ?? null,
+      user.id,
     );
   }
 
   @Get('analytics')
   async getAnalytics(
-    @Query('days') days: string | undefined,
-    @Req() req: AuthenticatedRequest,
+    @Query() query: DaysQueryDto | string,
+    @CurrentUser() user: AuthUser,
   ): Promise<PlatformAnalyticsData> {
-    const parsedDays = days ? parseInt(days, 10) : 30;
-    return await this.adminService.getPlatformAnalytics(
-      parsedDays,
-      req.user.id,
-    );
+    let days = 30;
+    if (typeof query === 'string') {
+      days = parseInt(query, 10) || 30;
+    } else if (
+      typeof query === 'object' &&
+      query !== null &&
+      query.days !== undefined
+    ) {
+      days = Number(query.days) || 30;
+    }
+    return await this.adminService.getPlatformAnalytics(days, user.id);
   }
 }

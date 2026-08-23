@@ -1,27 +1,342 @@
-import { apiClient } from "@/lib/api-client";
-import { yachts as mockYachts, type Yacht } from "@/mocks/yachts";
-import { helicopterTours as mockHelicopterTours, type HelicopterTour } from "@/mocks/helicopter-tours";
-import { wineTastings as mockWineTastings, type WineTasting } from "@/mocks/wine-tastings";
-import { hammamSpaExperiences as mockHammamSpa, type HammamSpa } from "@/mocks/hammam-spa";
-import { photographyExcursions as mockPhotography, type PhotographyExcursion } from "@/mocks/photography-excursions";
-import { golfVacations as mockGolf, type GolfVacation } from "@/mocks/golf-vacations";
-import { privateJets as mockJets, type PrivateJet } from "@/mocks/private-jets";
-import { personalChefs as mockChefs, type PersonalChef } from "@/mocks/personal-chefs";
-import { personalDrivers as mockDrivers, type PersonalDriver } from "@/mocks/personal-drivers";
-import { personalShoppers as mockShoppers, type PersonalShopper } from "@/mocks/personal-shoppers";
+import { apiClient, ApiError } from "@/lib/api-client";
+import { yachts as domainYachts, yachtTypes, type Yacht, type CrewMember } from "@/domain/yachts";
 
-export type {
-  Yacht,
-  PrivateJet,
-  HelicopterTour,
-  PersonalChef,
-  PersonalDriver,
-  PersonalShopper,
-  WineTasting,
-  HammamSpa,
-  GolfVacation,
-  PhotographyExcursion,
-};
+export type { Yacht, CrewMember };
+export { yachtTypes };
+
+export interface PrivateJet {
+  id: string;
+  name: string;
+  company: string;
+  type: "Light Jet" | "Midsize Jet" | "Heavy Jet" | "VIP Airliner" | string;
+  capacity: number;
+  range: string;
+  speed: string;
+  pricePerHour: number;
+  currency: string;
+  minHours: number;
+  image: string;
+  description: string;
+  amenities: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  base: string;
+}
+
+export const jetTypes = [
+  { id: "all", name: "All Aircraft", icon: "ri-plane-line" },
+  { id: "light-jet", name: "Light Jets", icon: "ri-flight-takeoff-line" },
+  { id: "midsize-jet", name: "Midsize Jets", icon: "ri-flight-land-line" },
+  { id: "heavy-jet", name: "Heavy Jets", icon: "ri-rocket-line" },
+  { id: "vip-airliner", name: "VIP Airliners", icon: "ri-vip-crown-line" },
+];
+
+export interface HelicopterTour {
+  id: string;
+  name: string;
+  company: string;
+  type: "Scenic Coastal Tour" | "Mountain & Canyon Safari" | "Sunset Romantic Flight" | "VIP Private Charter" | string;
+  duration: string;
+  maxPassengers: number;
+  pricePerPerson: number;
+  privatePrice: number;
+  currency: string;
+  aircraft: string;
+  departurePoint: string;
+  image: string;
+  description: string;
+  highlights: string[];
+  route: string[];
+  includes: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+}
+
+export const helicopterTypes = [
+  { id: "all", name: "All Tours", icon: "ri-flight-takeoff-line" },
+  { id: "scenic-coastal-tour", name: "Scenic Coastal", icon: "ri-landscape-line" },
+  { id: "mountain-canyon-safari", name: "Mountain & Canyon", icon: "ri-treasure-map-line" },
+  { id: "sunset-romantic-flight", name: "Sunset Romantic", icon: "ri-heart-line" },
+  { id: "vip-private-charter", name: "VIP Private", icon: "ri-vip-crown-line" },
+];
+
+export const tourDurations = [
+  { id: "all", name: "All Durations", icon: "ri-time-line" },
+  { id: "15-min", name: "15 Mins", icon: "ri-timer-line" },
+  { id: "30-min", name: "30 Mins", icon: "ri-timer-line" },
+  { id: "45-min", name: "45 Mins", icon: "ri-timer-line" },
+  { id: "60-min", name: "60 Mins", icon: "ri-timer-line" },
+];
+
+export interface PersonalChef {
+  id: string;
+  name: string;
+  title?: string;
+  cuisine?: string[];
+  cuisines?: string[];
+  experienceYears?: number;
+  experience?: string;
+  languages?: string[];
+  language?: string[];
+  location?: string;
+  specialty?: string;
+  specialties?: string[];
+  menuStyle?: string;
+  duration?: string;
+  groupSize?: string;
+  description?: string;
+  pricePerPerson?: number;
+  pricePerEvent?: number;
+  priceIncludes?: string[];
+  currency: string;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  bio: string;
+  sampleMenu?: Array<{ course: string; dish: string; description: string }>;
+  servicesOffered?: string[];
+  featured: boolean;
+}
+
+export const chefCuisines = [
+  { id: "all", name: "All Cuisines", icon: "ri-restaurant-2-line" },
+  { id: "mediterranean", name: "Mediterranean & Seafood", icon: "ri-drop-line" },
+  { id: "ottoman", name: "Ottoman Royal Cuisine", icon: "ri-copper-diamond-line" },
+  { id: "modern-fusion", name: "Modern Turkish Fusion", icon: "ri-sparkling-line" },
+  { id: "plant-based", name: "Plant-Based & Vegan", icon: "ri-plant-line" },
+  { id: "bbq-grill", name: "Private BBQ & Grill", icon: "ri-fire-line" },
+];
+
+export const chefStyles = chefCuisines;
+
+export interface PersonalDriver {
+  id: string;
+  name: string;
+  company?: string;
+  vehicle: string;
+  vehicleType: string;
+  vehicleCapacity: number;
+  capacity?: number;
+  languages: string[];
+  base?: string;
+  description?: string;
+  experienceYears?: number;
+  experience?: string;
+  location?: string;
+  dailyRate?: number;
+  hourlyRate?: number;
+  pricePerDay?: number;
+  pricePerHour?: number;
+  airportTransferRate?: number;
+  currency: string;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  vehicleImage?: string;
+  bio: string;
+  amenities?: string[];
+  includes?: string[];
+  popularRoutes?: Array<{ name: string; duration: string; price: number }>;
+  featured: boolean;
+}
+
+export const driverVehicleTypes = [
+  { id: "all", name: "All Vehicles", icon: "ri-car-line" },
+  { id: "luxury-sedan", name: "Luxury Sedans (Mercedes S/E)", icon: "ri-car-fill" },
+  { id: "vip-minivan", name: "VIP Minivans (Mercedes V-Class)", icon: "ri-bus-fill" },
+  { id: "executive-suv", name: "Executive SUVs (Range Rover)", icon: "ri-roadster-line" },
+  { id: "limousine", name: "Chauffeured Limousines", icon: "ri-vip-crown-fill" },
+];
+
+export const driverTypes = driverVehicleTypes;
+
+export interface PersonalShopper {
+  id: string;
+  name: string;
+  title?: string;
+  specialty: string | string[];
+  style?: string;
+  languages: string[];
+  experience?: string;
+  experienceYears?: number;
+  minHours?: number;
+  description?: string;
+  location?: string;
+  areas?: string[];
+  includes?: string[];
+  pricePerPerson?: number;
+  pricePerHour?: number;
+  hourlyRate?: number;
+  halfDayRate?: number;
+  fullDayRate?: number;
+  currency: string;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  bio: string;
+  exclusivePerks?: string[];
+  curatedBoutiques?: Array<{ name: string; category: string; discount: string }>;
+  featured: boolean;
+}
+
+export const shopperCategories = [
+  { id: "all", name: "All Categories", icon: "ri-shopping-bag-3-line" },
+  { id: "carpets-textiles", name: "Artisan Carpets & Textiles", icon: "ri-palette-line" },
+  { id: "designer-fashion", name: "Designer Fashion & Boutiques", icon: "ri-t-shirt-line" },
+  { id: "jewelry-gold", name: "Fine Jewelry & Gold", icon: "ri-vip-diamond-line" },
+  { id: "leather-goods", name: "Luxury Leather Goods", icon: "ri-handbag-line" },
+  { id: "spices-gourmet", name: "Turkish Gourmet & Spices", icon: "ri-cup-line" },
+];
+
+export const shopperStyles = shopperCategories;
+
+export interface WineTasting {
+  id: string;
+  name: string;
+  venue: string;
+  sommelier: string;
+  type: "Classic Tasting" | "Premium Tasting" | "Sunset Vineyard Tour" | "Private Sommelier Masterclass" | string;
+  duration: string;
+  groupSize: string;
+  pricePerPerson: number;
+  currency: string;
+  image: string;
+  description: string;
+  winesIncluded: number;
+  wineTypes: string[];
+  foodPairing: string[];
+  includes: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  language: string[];
+}
+
+export const wineTastingTypes = [
+  { id: "all", name: "All Tastings", icon: "ri-cup-line" },
+  { id: "classic-tasting", name: "Classic Tasting", icon: "ri-goblet-line" },
+  { id: "premium-tasting", name: "Premium Reserve", icon: "ri-vip-crown-line" },
+  { id: "sunset-vineyard-tour", name: "Sunset Vineyard Tour", icon: "ri-sun-line" },
+  { id: "private-sommelier-masterclass", name: "Sommelier Masterclass", icon: "ri-award-line" },
+];
+
+export const tastingStyles = wineTastingTypes;
+
+export interface HammamSpa {
+  id: string;
+  name: string;
+  venue: string;
+  location?: string;
+  type: "Traditional Turkish Bath" | "VIP Luxury Package" | "Couples Ritual" | "Aromatherapy & Massage" | string;
+  duration: string;
+  pricePerPerson: number;
+  couplesPrice?: number;
+  openingHours?: string;
+  currency: string;
+  image: string;
+  description: string;
+  treatments?: string[];
+  facilities?: string[];
+  includes?: string[];
+  oils?: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  privateSuiteAvailable?: boolean;
+}
+
+export type HammamSpaExperience = HammamSpa;
+
+export const hammamSpaTypes = [
+  { id: "all", name: "All Experiences", icon: "ri-heart-pulse-line" },
+  { id: "traditional-turkish-bath", name: "Traditional Hammam", icon: "ri-drop-line" },
+  { id: "vip-luxury-package", name: "VIP Luxury Suite", icon: "ri-vip-crown-line" },
+  { id: "couples-ritual", name: "Couples Ritual", icon: "ri-hearts-line" },
+  { id: "aromatherapy-massage", name: "Aromatherapy Massage", icon: "ri-magic-line" },
+];
+
+export const spaTypes = hammamSpaTypes;
+
+export interface GolfVacation {
+  id: string;
+  name: string;
+  course: string;
+  location: string;
+  type: "Championship 18-Hole" | "All-Inclusive Golf & Stay" | "PGA Pro Coaching" | "Executive 9-Hole & Spa" | string;
+  holes?: number;
+  par?: number;
+  designer?: string;
+  greenFee?: number;
+  packagePrice?: number;
+  pricePerPerson?: number;
+  duration?: string;
+  club?: string;
+  difficulty?: string;
+  groupSize?: string;
+  language?: string;
+  courses?: string[];
+  priceIncludes?: string[];
+  currency: string;
+  image: string;
+  description: string;
+  courseFeatures?: string[];
+  amenities?: string[];
+  includes?: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  handicapRequired?: string;
+}
+
+export const golfTypes = [
+  { id: "all", name: "All Packages", icon: "ri-golf-ball-line" },
+  { id: "championship-18-hole", name: "Championship 18-Hole", icon: "ri-flag-line" },
+  { id: "all-inclusive-golf-stay", name: "Golf & Stay All-Inclusive", icon: "ri-hotel-bed-line" },
+  { id: "pga-pro-coaching", name: "PGA Pro Coaching", icon: "ri-user-star-line" },
+  { id: "executive-9-hole-spa", name: "Executive 9-Hole & Spa", icon: "ri-heart-pulse-line" },
+];
+
+export const golfStyles = golfTypes;
+
+export interface PhotographyExcursion {
+  id: string;
+  name: string;
+  photographer: string;
+  type: "Sunset & Landscape" | "Old Town & Culture" | "Drone & Aerial" | "Couples & Portrait" | "Private VIP Session" | string;
+  focus?: string;
+  bestTime?: string;
+  privatePrice?: number;
+  duration: string;
+  groupSize: string;
+  photosDelivered: number;
+  editedPhotos: number;
+  deliveryTimeDays: number;
+  pricePerPerson: number;
+  currency: string;
+  image: string;
+  description: string;
+  locations: string[];
+  gearIncluded: string[];
+  includes: string[];
+  skillLevel?: string;
+  guide?: string;
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+}
+
+export const photographyTypes = [
+  { id: "all", name: "All Excursions", icon: "ri-camera-lens-line" },
+  { id: "sunset-landscape", name: "Sunset & Landscape", icon: "ri-sun-foggy-line" },
+  { id: "old-town-culture", name: "Old Town & Culture", icon: "ri-ancient-gate-line" },
+  { id: "drone-aerial", name: "Drone & Aerial", icon: "ri-flight-takeoff-line" },
+  { id: "couples-portrait", name: "Couples & Portrait", icon: "ri-heart-line" },
+  { id: "private-vip-session", name: "Private VIP Session", icon: "ri-vip-crown-line" },
+];
+
+export const excursionTypes = photographyTypes;
 
 export interface ConciergeServiceItem {
   id: string;
@@ -79,12 +394,11 @@ export type CreateConciergeEnquiryResult = ConciergeEnquiryResult;
 
 export interface CreateConciergeBookingPayload {
   item_id: string;
-  user_id?: string;
   service_type?: string;
   check_in?: string;
   check_out?: string;
   date?: string;
-  total_price: number;
+  total_price?: number;
   currency?: string;
   guests?: number;
   message?: string;
@@ -106,6 +420,14 @@ export interface ConciergeBookingResult {
 }
 
 export type CreateBookingResult = ConciergeBookingResult;
+
+function addOneDay(dateStr?: string): string | undefined {
+  if (!dateStr) return undefined;
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return undefined;
+  date.setDate(date.getDate() + 1);
+  return date.toISOString().slice(0, 10);
+}
 
 export interface LuxuryExperienceItem {
   icon: string;
@@ -230,370 +552,16 @@ export const luxuryExperiences: LuxuryExperienceItem[] = [
   },
 ];
 
-function mapYachtToConciergeItem(y: Yacht): ConciergeServiceItem {
-  return {
-    id: y.id,
-    title: y.name,
-    name: y.name,
-    description: y.description,
-    type: "yacht",
-    price: y.pricePerDay,
-    currency: y.currency,
-    rating: y.rating,
-    reviewCount: y.reviewCount,
-    review_count: y.reviewCount,
-    image: y.image,
-    image_url: y.image,
-    images: [y.image],
-    capacity: y.capacity,
-    featured: y.featured,
-    location: y.port,
-    amenities: y.amenities,
-    details: {
-      company: y.company,
-      yachtType: y.type,
-      capacity: y.capacity,
-      cabins: y.cabins,
-      length: y.length,
-      year: y.year,
-      halfDayPrice: y.halfDayPrice,
-      crewIncluded: y.crewIncluded,
-      skipperRequired: y.skipperRequired,
-      availableRoutes: y.availableRoutes,
-      crew: y.crew,
-    },
-  };
-}
-
-function mapHelicopterTourToConciergeItem(h: HelicopterTour): ConciergeServiceItem {
-  return {
-    id: h.id,
-    title: h.name,
-    name: h.name,
-    description: h.description,
-    type: "helicopter",
-    price: h.pricePerPerson,
-    currency: h.currency,
-    rating: h.rating,
-    reviewCount: h.reviewCount,
-    review_count: h.reviewCount,
-    image: h.image,
-    image_url: h.image,
-    images: [h.image],
-    duration: h.duration,
-    capacity: h.maxPassengers,
-    featured: h.featured,
-    location: h.departurePoint,
-    details: {
-      duration: h.duration,
-      maxPassengers: h.maxPassengers,
-      aircraft: h.aircraft,
-      privatePrice: h.privatePrice,
-      highlights: h.highlights,
-      route: h.route,
-      includes: h.includes,
-    },
-  };
-}
-
-function mapWineTastingToConciergeItem(w: WineTasting): ConciergeServiceItem {
-  return {
-    id: w.id,
-    title: w.name,
-    name: w.name,
-    description: w.description,
-    type: "wine-tasting",
-    price: w.pricePerPerson,
-    currency: w.currency,
-    rating: w.rating,
-    reviewCount: w.reviewCount,
-    review_count: w.reviewCount,
-    image: w.image,
-    image_url: w.image,
-    images: [w.image],
-    duration: w.duration,
-    capacity: w.groupSize,
-    featured: w.featured,
-    location: w.venue,
-    details: {
-      duration: w.duration,
-      groupSize: w.groupSize,
-      winesIncluded: w.winesIncluded,
-      wineTypes: w.wineTypes,
-      foodPairing: w.foodPairing,
-      includes: w.includes,
-      language: w.language,
-    },
-  };
-}
-
-function mapHammamToConciergeItem(h: HammamSpa): ConciergeServiceItem {
-  return {
-    id: h.id,
-    title: h.name,
-    name: h.name,
-    description: h.description,
-    type: "hammam-spa",
-    price: h.pricePerPerson,
-    currency: h.currency,
-    rating: h.rating,
-    reviewCount: h.reviewCount,
-    review_count: h.reviewCount,
-    image: h.image,
-    image_url: h.image,
-    images: [h.image],
-    duration: h.duration,
-    featured: h.featured,
-    location: h.location,
-    details: {
-      spaType: h.type,
-      duration: h.duration,
-      couplesPrice: h.couplesPrice,
-      treatments: h.treatments,
-      facilities: h.facilities,
-      openingHours: h.openingHours,
-    },
-  };
-}
-
-function mapPhotographyToConciergeItem(p: PhotographyExcursion): ConciergeServiceItem {
-  return {
-    id: p.id,
-    title: p.name,
-    name: p.name,
-    description: p.description,
-    type: "photography",
-    price: p.pricePerPerson,
-    currency: p.currency,
-    rating: p.rating,
-    reviewCount: p.reviewCount,
-    review_count: p.reviewCount,
-    image: p.image,
-    image_url: p.image,
-    images: [p.image],
-    duration: p.duration,
-    capacity: p.groupSize,
-    featured: p.featured,
-    details: {
-      duration: p.duration,
-      groupSize: p.groupSize,
-      privatePrice: p.privatePrice,
-      locations: p.locations,
-      includes: p.includes,
-      skillLevel: p.skillLevel,
-      focus: p.focus,
-      guide: p.guide,
-      bestTime: p.bestTime,
-    },
-  };
-}
-
-function mapGolfToConciergeItem(g: GolfVacation): ConciergeServiceItem {
-  return {
-    id: g.id,
-    title: g.name,
-    name: g.name,
-    description: g.description,
-    type: "golf",
-    price: g.pricePerPerson,
-    currency: "EUR",
-    rating: g.rating,
-    reviewCount: g.reviewCount,
-    review_count: g.reviewCount,
-    image: g.image,
-    image_url: g.image,
-    images: [g.image],
-    duration: g.duration,
-    capacity: g.groupSize,
-    featured: g.featured,
-    location: g.location,
-    details: {
-      club: g.club,
-      holes: g.holes,
-      courses: g.courses,
-      duration: g.duration,
-      difficulty: g.difficulty,
-      amenities: g.amenities,
-      priceIncludes: g.priceIncludes,
-      groupSize: g.groupSize,
-    },
-  };
-}
-
-function mapJetToConciergeItem(j: PrivateJet): ConciergeServiceItem {
-  return {
-    id: j.id,
-    title: j.name,
-    name: j.name,
-    description: j.description,
-    type: "private-jet",
-    price: j.pricePerHour,
-    currency: j.currency,
-    rating: j.rating,
-    reviewCount: j.reviewCount,
-    review_count: j.reviewCount,
-    image: j.image,
-    image_url: j.image,
-    images: [j.image],
-    capacity: j.capacity,
-    featured: j.featured,
-    location: j.base,
-    details: {
-      company: j.company,
-      jetType: j.type,
-      capacity: j.capacity,
-      range: j.range,
-      speed: j.speed,
-      minHours: j.minHours,
-      amenities: j.amenities,
-    },
-  };
-}
-
-function mapChefToConciergeItem(c: PersonalChef): ConciergeServiceItem {
-  return {
-    id: c.id,
-    title: c.name,
-    name: c.name,
-    description: c.description,
-    type: "personal-chef",
-    price: c.pricePerPerson,
-    currency: c.currency,
-    rating: c.rating,
-    reviewCount: c.reviewCount,
-    review_count: c.reviewCount,
-    image: c.image,
-    image_url: c.image,
-    images: [c.image],
-    duration: c.duration,
-    capacity: c.groupSize,
-    featured: c.featured,
-    location: c.location,
-    details: {
-      specialty: c.specialty,
-      cuisines: c.cuisines,
-      menuStyle: c.menuStyle,
-      duration: c.duration,
-      experience: c.experience,
-      priceIncludes: c.priceIncludes,
-      groupSize: c.groupSize,
-    },
-  };
-}
-
-function mapDriverToConciergeItem(d: PersonalDriver): ConciergeServiceItem {
-  return {
-    id: d.id,
-    title: d.name,
-    name: d.name,
-    description: d.description,
-    type: "personal-driver",
-    price: d.pricePerDay,
-    currency: d.currency,
-    rating: d.rating,
-    reviewCount: d.reviewCount,
-    review_count: d.reviewCount,
-    image: d.image,
-    image_url: d.image,
-    images: [d.image],
-    capacity: d.capacity,
-    featured: d.featured,
-    location: d.base,
-    details: {
-      company: d.company,
-      vehicleType: d.vehicleType,
-      vehicle: d.vehicle,
-      capacity: d.capacity,
-      pricePerHour: d.pricePerHour,
-      includes: d.includes,
-      languages: d.languages,
-    },
-  };
-}
-
-function mapShopperToConciergeItem(s: PersonalShopper): ConciergeServiceItem {
-  return {
-    id: s.id,
-    title: s.name,
-    name: s.name,
-    description: s.description,
-    type: "personal-shopper",
-    price: s.pricePerHour,
-    currency: s.currency,
-    rating: s.rating,
-    reviewCount: s.reviewCount,
-    review_count: s.reviewCount,
-    image: s.image,
-    image_url: s.image,
-    images: [s.image],
-    duration: `${s.minHours} hours min`,
-    featured: s.featured,
-    details: {
-      specialty: s.specialty,
-      minHours: s.minHours,
-      includes: s.includes,
-      areas: s.areas,
-      style: s.style,
-      languages: s.languages,
-    },
-  };
-}
-
-function getAllMockShowcaseItems(): ConciergeServiceItem[] {
-  return [
-    ...mockYachts.map(mapYachtToConciergeItem),
-    ...mockHelicopterTours.map(mapHelicopterTourToConciergeItem),
-    ...mockWineTastings.map(mapWineTastingToConciergeItem),
-    ...mockHammamSpa.map(mapHammamToConciergeItem),
-    ...mockPhotography.map(mapPhotographyToConciergeItem),
-    ...mockGolf.map(mapGolfToConciergeItem),
-    ...mockJets.map(mapJetToConciergeItem),
-    ...mockChefs.map(mapChefToConciergeItem),
-    ...mockDrivers.map(mapDriverToConciergeItem),
-    ...mockShoppers.map(mapShopperToConciergeItem),
-  ];
-}
-
-function getShowcaseItemsByCategory(categorySlug: string): ConciergeServiceItem[] {
-  const norm = categorySlug.toLowerCase().trim();
-  if (norm.includes("yacht")) return mockYachts.map(mapYachtToConciergeItem);
-  if (norm.includes("heli")) return mockHelicopterTours.map(mapHelicopterTourToConciergeItem);
-  if (norm.includes("wine")) return mockWineTastings.map(mapWineTastingToConciergeItem);
-  if (norm.includes("hammam") || norm.includes("spa")) return mockHammamSpa.map(mapHammamToConciergeItem);
-  if (norm.includes("photo")) return mockPhotography.map(mapPhotographyToConciergeItem);
-  if (norm.includes("golf")) return mockGolf.map(mapGolfToConciergeItem);
-  if (norm.includes("jet")) return mockJets.map(mapJetToConciergeItem);
-  if (norm.includes("chef")) return mockChefs.map(mapChefToConciergeItem);
-  if (norm.includes("driver")) return mockDrivers.map(mapDriverToConciergeItem);
-  if (norm.includes("shopper") || norm.includes("shop")) return mockShoppers.map(mapShopperToConciergeItem);
-  return getAllMockShowcaseItems();
-}
-
-function getRawCategoryMockItems<T>(category: string): T[] {
-  const norm = category.toLowerCase().trim();
-  if (norm.includes("yacht")) return mockYachts as unknown as T[];
-  if (norm.includes("heli")) return mockHelicopterTours as unknown as T[];
-  if (norm.includes("wine")) return mockWineTastings as unknown as T[];
-  if (norm.includes("hammam") || norm.includes("spa")) return mockHammamSpa as unknown as T[];
-  if (norm.includes("photo")) return mockPhotography as unknown as T[];
-  if (norm.includes("golf")) return mockGolf as unknown as T[];
-  if (norm.includes("jet")) return mockJets as unknown as T[];
-  if (norm.includes("chef")) return mockChefs as unknown as T[];
-  if (norm.includes("driver")) return mockDrivers as unknown as T[];
-  if (norm.includes("shopper") || norm.includes("shop")) return mockShoppers as unknown as T[];
-  return getAllMockShowcaseItems() as unknown as T[];
-}
-
 export class ConciergeService {
   /**
-   * Retrieves concierge offerings filtered by type/category with fallback to mock datasets.
+   * Retrieves concierge offerings filtered by type/category from live backend.
    */
   async getConciergeOfferings(
     type?: string,
     params?: Record<string, unknown>
   ): Promise<ConciergeServiceItem[]> {
     const queryParams: Record<string, string | number | boolean | undefined> = {};
-    if (type) {
+    if (type && type !== "all") {
       queryParams.type = type;
     }
     if (params) {
@@ -604,107 +572,64 @@ export class ConciergeService {
       });
     }
 
-    try {
-      const response = await apiClient.get<
-        { data?: ConciergeServiceItem[]; count?: number } | ConciergeServiceItem[]
-      >("/services", { params: queryParams });
+    const response = await apiClient.get<
+      { data?: ConciergeServiceItem[]; count?: number } | ConciergeServiceItem[]
+    >("/services", { params: queryParams });
 
-      if (Array.isArray(response) && response.length > 0) {
-        return response;
-      }
-      if (
-        response &&
-        typeof response === "object" &&
-        "data" in response &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        return response.data;
-      }
-    } catch (err) {
-      console.warn(
-        `Failed to fetch concierge offerings from API for type '${type || "all"}', using fallback:`,
-        err
-      );
+    if (Array.isArray(response)) {
+      return response;
+    }
+    if (
+      response &&
+      typeof response === "object" &&
+      "data" in response &&
+      Array.isArray(response.data)
+    ) {
+      return response.data;
     }
 
-    if (type) {
-      return getShowcaseItemsByCategory(type);
-    }
-    return getAllMockShowcaseItems();
+    return [];
   }
 
   /**
-   * Retrieves a concierge service item by ID with fallback to mock items.
+   * Retrieves a concierge service item by ID from live backend.
    */
-  async getServiceById(id: string, categoryHint?: string): Promise<ConciergeServiceItem | null> {
+  async getServiceById(id: string, _categoryHint?: string): Promise<ConciergeServiceItem | null> {
     try {
       const data = await apiClient.get<ConciergeServiceItem>(`/services/${id}`);
       if (data && data.id) {
         return data;
       }
+      return null;
     } catch (err) {
-      console.warn(`Failed to fetch concierge service '${id}' from API, searching fallback:`, err);
-    }
-
-    const searchPool = categoryHint
-      ? getShowcaseItemsByCategory(categoryHint)
-      : getAllMockShowcaseItems();
-
-    const normalizedTargetId = id.toLowerCase().trim();
-    const fallbackItem = searchPool.find(
-      (s) =>
-        s.id.toLowerCase() === normalizedTargetId ||
-        s.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === normalizedTargetId ||
-        s.id.replace(/-/g, "").toLowerCase() === normalizedTargetId.replace(/-/g, "")
-    );
-
-    if (fallbackItem) {
-      return fallbackItem;
-    }
-
-    if (categoryHint) {
-      const allItems = getAllMockShowcaseItems();
-      const anyFallback = allItems.find(
-        (s) =>
-          s.id.toLowerCase() === normalizedTargetId ||
-          s.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") === normalizedTargetId ||
-          s.id.replace(/-/g, "").toLowerCase() === normalizedTargetId.replace(/-/g, "")
-      );
-      if (anyFallback) {
-        return anyFallback;
+      if (err instanceof ApiError && err.status === 404) {
+        return null;
       }
+      throw err;
     }
-
-    return null;
   }
 
   /**
    * Retrieves typed luxury category items (e.g. Yacht[], PrivateJet[], etc.)
    */
   async getOfferingsByCategory<T>(category: string): Promise<T[]> {
-    try {
-      const response = await apiClient.get<T[] | { data?: T[] }>("/services", {
-        params: { type: category },
-      });
+    const response = await apiClient.get<T[] | { data?: T[] }>("/services", {
+      params: { type: category },
+    });
 
-      if (Array.isArray(response) && response.length > 0) {
-        return response;
-      }
-      if (
-        response &&
-        typeof response === "object" &&
-        "data" in response &&
-        Array.isArray(response.data) &&
-        response.data.length > 0
-      ) {
-        return response.data;
-      }
-    } catch (err) {
-      console.warn(`Failed to fetch category '${category}' offerings from API, using fallback:`, err);
+    if (Array.isArray(response)) {
+      return response;
+    }
+    if (
+      response &&
+      typeof response === "object" &&
+      "data" in response &&
+      Array.isArray(response.data)
+    ) {
+      return response.data;
     }
 
-    return getRawCategoryMockItems<T>(category);
+    return [];
   }
 
   /**
@@ -736,61 +661,29 @@ export class ConciergeService {
       .filter(Boolean)
       .join("\n");
 
-    try {
-      const res = await apiClient.post<{ success?: boolean; id?: number | string; message?: string }>(
-        "/enquiries",
-        {
-          name: payload.name.trim(),
-          email: payload.email.trim(),
-          phone: payload.phone
-            ? `${payload.country_code ? payload.country_code + " " : ""}${payload.phone}`.trim()
-            : undefined,
-          subject: formattedSubject,
-          message: enrichedNotes || payload.message || formattedSubject,
-          enquiry_type: payload.experience_type || "general",
-          service_type: payload.item_name,
-          dates: payload.dates,
-          duration: payload.duration,
-          party_size: payload.guests,
-          preferred_contact: payload.preferred_contact,
-        }
-      );
-
-      return {
-        success: res?.success ?? true,
-        id: res?.id || `enq-${Date.now()}`,
-        message: res?.message || "Enquiry submitted successfully",
-      };
-    } catch (err) {
-      console.warn("Failed to submit concierge enquiry via API /enquiries endpoint, using fallback:", err);
-    }
-
-    if (payload.form_endpoint) {
-      try {
-        const formData = new URLSearchParams();
-        formData.append("name", payload.name);
-        formData.append("email", payload.email);
-        if (payload.phone) formData.append("phone", payload.phone);
-        if (payload.country_code) formData.append("country_code", payload.country_code);
-        if (payload.preferred_contact) formData.append("preferred_contact", payload.preferred_contact);
-        if (payload.notes) formData.append("notes", payload.notes);
-        if (payload.experience_type) formData.append("experience_type", payload.experience_type);
-        if (payload.item_name) formData.append("item_name", payload.item_name);
-
-        await fetch(payload.form_endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString(),
-        });
-      } catch (err) {
-        console.warn("Form endpoint submission fallback warning:", err);
+    const res = await apiClient.post<{ success?: boolean; id?: number | string; message?: string }>(
+      "/enquiries",
+      {
+        name: payload.name.trim(),
+        email: payload.email.trim(),
+        phone: payload.phone
+          ? `${payload.country_code ? payload.country_code + " " : ""}${payload.phone}`.trim()
+          : undefined,
+        subject: formattedSubject,
+        message: enrichedNotes || payload.message || formattedSubject,
+        enquiry_type: payload.experience_type || "general",
+        service_type: payload.item_name,
+        dates: payload.dates,
+        duration: payload.duration,
+        party_size: payload.guests,
+        preferred_contact: payload.preferred_contact,
       }
-    }
+    );
 
     return {
-      success: true,
-      id: `enq-${Date.now()}`,
-      message: "Enquiry accepted",
+      success: res?.success !== false,
+      id: res?.id,
+      message: res?.message || "Enquiry submitted successfully",
     };
   }
 
@@ -805,75 +698,91 @@ export class ConciergeService {
    * Creates a booking request for a concierge experience.
    */
   async createBooking(payload: CreateConciergeBookingPayload): Promise<ConciergeBookingResult> {
-    try {
-      const res = await apiClient.post<{ id?: string; data?: string; booking_id?: string }>(
-        "/bookings",
-        payload
-      );
-      const generatedOrReceivedId = res.booking_id || res.id || res.data || `bk-${Date.now()}`;
-      return {
-        id: generatedOrReceivedId,
-        bookingId: generatedOrReceivedId,
-        success: true,
-        message: "Booking created successfully",
-      };
-    } catch (err) {
-      console.warn("Failed to create concierge booking on API, generating fallback confirmation:", err);
-      const fallbackId = `bk-${Date.now()}`;
-      return {
-        id: fallbackId,
-        bookingId: fallbackId,
-        success: true,
-        message: "Booking confirmed (offline)",
-      };
-    }
+    const checkIn = payload.check_in || payload.date || "";
+    const checkOut = payload.check_out || addOneDay(payload.date || payload.check_in) || "";
+    const requestBody = {
+      item_id: payload.item_id,
+      check_in: checkIn,
+      check_out: checkOut,
+      guests: payload.guests || 1,
+      item_type: "service",
+      message: payload.message,
+      payment_method: payload.payment_method,
+    };
+
+    const res = await apiClient.post<{ id?: string; data?: string; booking_id?: string; bookingId?: string }>(
+      "/bookings",
+      requestBody
+    );
+
+    const bookingId = res.booking_id || res.bookingId || res.id || res.data;
+    return {
+      id: bookingId,
+      bookingId,
+      success: true,
+      message: "Booking created successfully",
+    };
   }
 
   // ============================================
   // Category-specific convenience getters
   // ============================================
 
+  getYachtsSync(): Yacht[] {
+    return domainYachts;
+  }
+
   async getYachts(type?: string): Promise<Yacht[]> {
-    if (!type || type === "all") {
-      return mockYachts;
+    try {
+      const items = await this.getOfferingsByCategory<Yacht>("yacht");
+      const list = Array.isArray(items) && items.length > 0 ? items : domainYachts;
+      if (!type || type === "all") {
+        return list;
+      }
+      return list.filter((y) => (y.type || "").toLowerCase() === type.toLowerCase());
+    } catch {
+      const list = domainYachts;
+      if (!type || type === "all") {
+        return list;
+      }
+      return list.filter((y) => (y.type || "").toLowerCase() === type.toLowerCase());
     }
-    return mockYachts.filter((y) => y.type.toLowerCase() === type.toLowerCase());
   }
 
   async getPrivateJets(): Promise<PrivateJet[]> {
-    return mockJets;
+    return this.getOfferingsByCategory<PrivateJet>("private-jet");
   }
 
   async getHelicopterTours(): Promise<HelicopterTour[]> {
-    return mockHelicopterTours;
+    return this.getOfferingsByCategory<HelicopterTour>("helicopter");
   }
 
   async getWineTastings(): Promise<WineTasting[]> {
-    return mockWineTastings;
+    return this.getOfferingsByCategory<WineTasting>("wine-tasting");
   }
 
   async getHammamSpaExperiences(): Promise<HammamSpa[]> {
-    return mockHammamSpa;
+    return this.getOfferingsByCategory<HammamSpa>("hammam-spa");
   }
 
   async getPhotographyExcursions(): Promise<PhotographyExcursion[]> {
-    return mockPhotography;
+    return this.getOfferingsByCategory<PhotographyExcursion>("photography");
   }
 
   async getGolfVacations(): Promise<GolfVacation[]> {
-    return mockGolf;
+    return this.getOfferingsByCategory<GolfVacation>("golf");
   }
 
   async getPersonalChefs(): Promise<PersonalChef[]> {
-    return mockChefs;
+    return this.getOfferingsByCategory<PersonalChef>("personal-chef");
   }
 
   async getPersonalDrivers(): Promise<PersonalDriver[]> {
-    return mockDrivers;
+    return this.getOfferingsByCategory<PersonalDriver>("personal-driver");
   }
 
   async getPersonalShoppers(): Promise<PersonalShopper[]> {
-    return mockShoppers;
+    return this.getOfferingsByCategory<PersonalShopper>("personal-shopper");
   }
 
   getLuxuryExperiences(): LuxuryExperienceItem[] {

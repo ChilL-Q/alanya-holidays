@@ -22,8 +22,7 @@ import {
   ArrowUpRight,
   Zap,
 } from "lucide-react";
-import type { Business } from "@/mocks/businesses";
-import type { OwnerAnalyticsSummary } from "@/api-services/directory.service";
+import type { Business, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 
 export interface PerformanceAnalyticsTabProps {
   analytics: OwnerAnalyticsSummary | null;

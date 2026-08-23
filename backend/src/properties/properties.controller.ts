@@ -9,11 +9,14 @@ import {
   Param,
   Query,
   UseGuards,
-  Req,
   BadRequestException,
 } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { RequireRole } from '../auth/decorators/require-role.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthUser } from '../auth/types/auth-user.interface';
 import {
   GetPropertiesQueryDto,
   PropertyFilterDto,
@@ -21,9 +24,10 @@ import {
   UpdatePropertyDto,
   UpdateAvailabilityDto,
   CreatePropertyReviewDto,
+  UpdatePropertyStatusDto,
+  SavePropertyDraftDto,
 } from './dto';
-import { UpdateStatusDto } from '../common/dto/update-status.dto';
-import { AuthenticatedRequest } from './types/property.types';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -47,14 +51,17 @@ export class PropertiesController {
   async getPropertiesByLocation(
     @Param('type') type: string,
     @Param('location') location: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number }> {
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
     return this.propertiesService.getPropertiesByLocation(
       type,
       location,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
+      page,
+      limit,
     );
   }
 
@@ -75,32 +82,27 @@ export class PropertiesController {
     @Param('id') propertyId: string,
     @Body('name') name: string,
     @Body('url') url: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>> {
-    return this.propertiesService.addICalFeed(
-      propertyId,
-      name,
-      url,
-      req.user.id,
-    );
+    return this.propertiesService.addICalFeed(propertyId, name, url, user.id);
   }
 
   @Post(':id/ical/sync')
   @UseGuards(AuthGuard)
   async syncPropertyICal(
     @Param('id') propertyId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.propertiesService.syncPropertyICal(propertyId, req.user.id);
+    return this.propertiesService.syncPropertyICal(propertyId, user.id);
   }
 
   @Delete('ical/:id')
   @UseGuards(AuthGuard)
   async removeICalFeed(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.removeICalFeed(id, req.user.id);
+    return this.propertiesService.removeICalFeed(id, user.id);
   }
 
   // ============================================
@@ -125,14 +127,14 @@ export class PropertiesController {
   async updatePropertyAvailability(
     @Param('id') propertyId: string,
     @Body() data: UpdateAvailabilityDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return this.propertiesService.updatePropertyAvailability(
       propertyId,
       data.dates,
       data.status,
       data.price,
-      req.user.id,
+      user.id,
     );
   }
 
@@ -157,14 +159,13 @@ export class PropertiesController {
   @Get(':id/reviews')
   async getReviews(
     @Param('id') propertyId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    return this.propertiesService.getReviews(
-      propertyId,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 10,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 10);
+    return this.propertiesService.getReviews(propertyId, page, limit);
   }
 
   @Get(':id/reviews/count')
@@ -177,11 +178,11 @@ export class PropertiesController {
   async addReview(
     @Param('id') propertyId: string,
     @Body() body: CreatePropertyReviewDto,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return this.propertiesService.addReview(
       { ...body, property_id: propertyId },
-      req.user.id,
+      user.id,
     );
   }
 
@@ -189,50 +190,49 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   async deleteReview(
     @Param('id') reviewId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.deleteReview(reviewId, req.user.id);
+    return this.propertiesService.deleteReview(reviewId, user.id);
   }
 
   @Post('reviews/:id/flag')
   @UseGuards(AuthGuard)
   async flagReview(
     @Param('id') reviewId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.flagReview(reviewId, req.user.id);
+    return this.propertiesService.flagReview(reviewId, user.id);
   }
 
   @Post('reviews/:id/unflag')
   @UseGuards(AuthGuard)
   async unflagReview(
     @Param('id') reviewId: string,
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.unflagReview(reviewId, req.user.id);
+    return this.propertiesService.unflagReview(reviewId, user.id);
   }
 
   @Get('reviews/admin/flagged')
   @UseGuards(AuthGuard)
   async getFlaggedReviews(
-    @Req() req: AuthenticatedRequest,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @CurrentUser() user: AuthUser,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    return this.propertiesService.getFlaggedReviews(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
-      req.user.id,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    return this.propertiesService.getFlaggedReviews(page, limit, user.id);
   }
 
   @Post('reviews/admin/bulk-delete')
   @UseGuards(AuthGuard)
   async bulkDeleteReviews(
     @Body('reviewIds') reviewIds: string[],
-    @Req() req: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.bulkDeleteReviews(reviewIds, req.user.id);
+    return this.propertiesService.bulkDeleteReviews(reviewIds, user.id);
   }
 
   // ============================================
@@ -258,14 +258,13 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   async getAdminProperties(
     @Query('statusFilter') statusFilter?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+    @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
-    return this.propertiesService.getAdminProperties(
-      statusFilter,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 50,
-    );
+    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
+    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
+    return this.propertiesService.getAdminProperties(statusFilter, page, limit);
   }
 
   @Get('host/:hostId')
@@ -307,9 +306,28 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   async createProperty(
     @Body() data: CreatePropertyDto,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>> {
-    return this.propertiesService.createProperty(data, request.user.id);
+    return this.propertiesService.createProperty(data, user.id);
+  }
+
+  @Post('draft')
+  @UseGuards(AuthGuard)
+  async savePropertyDraft(
+    @Body() data: SavePropertyDraftDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ id: string }> {
+    return this.propertiesService.savePropertyDraft(data, user.id);
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AuthGuard)
+  async publishPropertyDraft(
+    @Param('id') id: string,
+    @Body() updates: Partial<CreatePropertyDto>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ success: boolean }> {
+    return this.propertiesService.publishPropertyDraft(id, updates, user.id);
   }
 
   @Put(':id')
@@ -317,23 +335,24 @@ export class PropertiesController {
   async updateProperty(
     @Param('id') id: string,
     @Body() updates: UpdatePropertyDto,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.updateProperty(id, updates, request.user.id);
+    return this.propertiesService.updateProperty(id, updates, user.id);
   }
 
   @Patch(':id/status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async updatePropertyStatus(
     @Param('id') id: string,
-    @Body() data: UpdateStatusDto,
-    @Req() request: AuthenticatedRequest,
+    @Body() data: UpdatePropertyStatusDto,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return this.propertiesService.updatePropertyStatus(
       id,
       data.status,
       data.reason,
-      request.user.id,
+      user.id,
     );
   }
 
@@ -342,8 +361,8 @@ export class PropertiesController {
   async deleteProperty(
     @Param('id') id: string,
     @Query('reason') reason: string | undefined,
-    @Req() request: AuthenticatedRequest,
+    @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
-    return this.propertiesService.deleteProperty(id, reason, request.user.id);
+    return this.propertiesService.deleteProperty(id, reason, user.id);
   }
 }

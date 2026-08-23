@@ -1,18 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   forumService,
-  formatRelativeTime,
   getCategories,
   getCategoryById,
+  getForumStats,
   getThreads,
   getThreadById,
   createThread,
   createComment,
-  toggleLike,
+  toggleLikePost,
+  toggleLikeComment,
 } from "./forum.service";
-import { apiClient } from "@/lib/api-client";
-import { categories as mockCategories } from "@/mocks/categories";
-import { threadDetails as mockThreadDetails } from "@/mocks/thread-details";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("forum.service", () => {
   beforeEach(() => {
@@ -21,26 +20,6 @@ describe("forum.service", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-  });
-
-  describe("formatRelativeTime", () => {
-    it("should format relative time correctly", () => {
-      expect(formatRelativeTime(undefined)).toBe("recently");
-      expect(formatRelativeTime(null)).toBe("recently");
-      expect(formatRelativeTime("invalid-date")).toBe("invalid-date");
-
-      const now = new Date();
-      expect(formatRelativeTime(now.toISOString())).toBe("just now");
-
-      const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-      expect(formatRelativeTime(tenMinutesAgo.toISOString())).toBe("10 mins ago");
-
-      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-      expect(formatRelativeTime(twoHoursAgo.toISOString())).toBe("2 hours ago");
-
-      const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-      expect(formatRelativeTime(threeDaysAgo.toISOString())).toBe("3 days ago");
-    });
   });
 
   describe("getCategories", () => {
@@ -80,11 +59,21 @@ describe("forum.service", () => {
       expect(result[0].subcategories).toContain("Subcategory 1");
     });
 
-    it("should fall back to mock categories when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Network error"));
+    it("should return empty array on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const result = await getCategories();
-      expect(result).toEqual(mockCategories);
+      expect(result).toEqual([]);
+    });
+
+    it("should propagate ApiError when 500 occurs", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Server Error", 500, "Internal Server Error")
+      );
+
+      await expect(getCategories()).rejects.toThrow(ApiError);
     });
   });
 
@@ -109,13 +98,32 @@ describe("forum.service", () => {
       expect(result?.threadCount).toBe(50);
     });
 
-    it("should fall back to mock category by ID when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
 
       const result = await getCategoryById("travel-vacation");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("travel-vacation");
-      expect(result?.name).toBe("Travel & Vacation Planning");
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("getForumStats", () => {
+    it("should return aggregated stats from GET /forum/stats", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({
+        totalPosts: 120,
+        totalMembers: 450,
+        totalComments: 890,
+        localExperts: 15,
+        totalCategories: 8,
+      });
+
+      const stats = await getForumStats();
+      expect(apiClient.get).toHaveBeenCalledWith("/forum/stats");
+      expect(stats.totalDiscussions).toBe(120);
+      expect(stats.activeMembers).toBe(450);
+      expect(stats.questionsAnswered).toBe(890);
+      expect(stats.localExperts).toBe(15);
     });
   });
 
@@ -177,12 +185,12 @@ describe("forum.service", () => {
       expect(result.threads[0].title).toBe("Beach Guide");
     });
 
-    it("should fall back to mock threads when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Failed to fetch"));
+    it("should throw ApiError when API fails", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Failed to fetch", 500, "Internal Server Error")
+      );
 
-      const result = await getThreads({ categorySlug: "travel-vacation" });
-      expect(result.threads.length).toBeGreaterThan(0);
-      expect(result.threads[0].categoryId).toBe("travel-vacation");
+      await expect(getThreads({ categorySlug: "travel-vacation" })).rejects.toThrow(ApiError);
     });
   });
 
@@ -223,14 +231,13 @@ describe("forum.service", () => {
       expect(result?.replies[0].content).toBe("Great recommendation!");
     });
 
-    it("should fall back to mock thread detail when API fails", async () => {
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Post not found"));
+    it("should return null on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Post not found", 404, "Not Found")
+      );
 
       const result = await getThreadById("t1");
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe("t1");
-      expect(result?.title).toBe(mockThreadDetails["t1"].title);
-      expect(result?.replies.length).toBeGreaterThan(0);
+      expect(result).toBeNull();
     });
   });
 
@@ -240,6 +247,7 @@ describe("forum.service", () => {
         id: "new-p1",
         slug: "my-new-post",
         title: "My New Post",
+        body: "This is my detailed post content",
       };
 
       vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockCreated);
@@ -260,18 +268,18 @@ describe("forum.service", () => {
       expect(result.slug).toBe("my-new-post");
     });
 
-    it("should return fallback response when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("API offline"));
+    it("should throw ApiError when createThread API fails", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new ApiError("API offline", 500, "Internal Server Error")
+      );
 
-      const result = await createThread({
-        title: "Fallback Test Post",
-        body: "Some content here",
-        category_id: "travel-vacation",
-      });
-
-      expect(result.title).toBe("Fallback Test Post");
-      expect(result.slug).toBe("fallback-test-post");
-      expect(result.id).toMatch(/^th-/);
+      await expect(
+        createThread({
+          title: "Fallback Test Post",
+          body: "Some content here",
+          category_id: "travel-vacation",
+        })
+      ).rejects.toThrow(ApiError);
     });
   });
 
@@ -287,45 +295,31 @@ describe("forum.service", () => {
 
       vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockReply);
 
-      const result = await createComment("p1", "This is a comment");
+      const result = await createComment({ postId: "p1", body: "This is a comment" });
       expect(apiClient.post).toHaveBeenCalledWith("/forum/comments/post/p1", {
         body: "This is a comment",
+        parent_id: null,
       });
       expect(result.id).toBe("c-new");
       expect(result.content).toBe("This is a comment");
     });
-
-    it("should return fallback reply when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
-
-      const result = await createComment("p1", "Offline comment test");
-      expect(result.content).toBe("Offline comment test");
-      expect(result.id).toMatch(/^r-new-/);
-    });
   });
 
-  describe("toggleLike", () => {
+  describe("toggleLikePost and toggleLikeComment", () => {
     it("should toggle post like via API", async () => {
-      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ liked: true });
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ liked: true, likesCount: 5 });
 
-      const result = await toggleLike("post", "p123");
+      const result = await toggleLikePost("p123");
       expect(apiClient.post).toHaveBeenCalledWith("/forum/posts/p123/like");
       expect(result.liked).toBe(true);
     });
 
     it("should toggle comment like via API", async () => {
-      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ liked: false });
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ liked: false, likesCount: 2 });
 
-      const result = await toggleLike("comment", "c123");
+      const result = await toggleLikeComment("c123");
       expect(apiClient.post).toHaveBeenCalledWith("/forum/comments/c123/like");
       expect(result.liked).toBe(false);
-    });
-
-    it("should return fallback liked state when API fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Offline"));
-
-      const result = await toggleLike("post", "p123");
-      expect(result.liked).toBe(true);
     });
   });
 });

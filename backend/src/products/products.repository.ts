@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
@@ -36,6 +36,26 @@ export interface ProductSkuRow {
   created_at?: string;
 }
 
+export interface ProductOrderRow {
+  id: number;
+  user_id: string;
+  total_amount: number;
+  currency: string;
+  status: string;
+  shipping_address: Record<string, unknown>;
+  payment_intent_id: string | null;
+  created_at: string;
+}
+
+export interface ProductOrderItemRow {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  created_at?: string;
+}
+
 export interface ProductDetailResult {
   product: ProductItemRow | null;
   variants: unknown[];
@@ -55,6 +75,7 @@ export interface CreateOrderResult {
 
 @Injectable()
 export class ProductsRepository {
+  private readonly logger = new Logger(ProductsRepository.name);
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -130,17 +151,6 @@ export class ProductsRepository {
       throw new Error(error.message);
     }
     return data;
-  }
-
-  async getUserRole(userId: string) {
-    if (!this.isValidUuid(userId)) return null;
-
-    const { data } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-    return data?.role;
   }
 
   async getProductOwnership(productId: string) {
@@ -348,47 +358,128 @@ export class ProductsRepository {
     };
   }
 
+  /**
+   * Resolves orderable products (and their SKUs) directly from the DB so that
+   * order prices are always server-authoritative. Only active products are returned.
+   */
+  async getOrderableProductsByIds(
+    productIds: Array<string | number>,
+    skuIds: Array<string | number>,
+  ): Promise<
+    Array<{
+      id: number;
+      name: string;
+      price: number;
+      currency: string;
+      stock: number;
+      status: string;
+      sku_id: number | null;
+      sku_price: number | null;
+      sku_stock: number | null;
+      sku_label: string | null;
+    }>
+  > {
+    const numericProductIds = productIds
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0);
+    const numericSkuIds = skuIds
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0);
+
+    if (numericProductIds.length === 0) return [];
+
+    const { data, error } = await this.client
+      .from('product_items')
+      .select(
+        'id, name, price, currency, stock, status' +
+          (numericSkuIds.length > 0
+            ? ', product_skus(id, price, stock, label)'
+            : ''),
+      )
+      .in('id', numericProductIds)
+      .eq('status', 'active');
+
+    if (error) throw new Error(error.message);
+
+    type SkuNested = {
+      id: number;
+      price: number;
+      stock: number;
+      label: string;
+    };
+    const rows = (data ?? []) as unknown as Array<
+      Omit<
+        {
+          id: number;
+          name: string;
+          price: number;
+          currency: string;
+          stock: number;
+          status: string;
+          sku_id: number | null;
+          sku_price: number | null;
+          sku_stock: number | null;
+          sku_label: string | null;
+        },
+        'sku_id' | 'sku_price' | 'sku_stock' | 'sku_label'
+      > & { product_skus?: SkuNested[] | null }
+    >;
+
+    return rows.map((row) => {
+      const sku =
+        numericSkuIds.length > 0 && row.product_skus?.length
+          ? (row.product_skus.find((s) => numericSkuIds.includes(s.id)) ?? null)
+          : null;
+      return {
+        id: row.id,
+        name: row.name,
+        price: row.price,
+        currency: row.currency,
+        stock: row.stock,
+        status: row.status,
+        sku_id: sku?.id ?? null,
+        sku_price: sku?.price ?? null,
+        sku_stock: sku?.stock ?? null,
+        sku_label: sku?.label ?? null,
+      };
+    });
+  }
+
   async createProductOrder(
     dto: CreateProductOrderDto,
     userId?: string,
   ): Promise<CreateOrderResult> {
-    const { data: orderData, error: orderError } = await this.client
-      .from('order_headers')
-      .insert({
-        currency: dto.currency,
-        payment_provider: 'manual',
-        status: 'pending_payment',
-        subtotal_items: dto.subtotal,
-        customer_notes: dto.customerNotes || null,
-        customer_id: userId && this.isValidUuid(userId) ? userId : null,
-        recipient: dto.recipient,
-      })
-      .select('id')
-      .single();
+    // Atomic RPC (audit 2.2): header + items are inserted in a single DB
+    // transaction so a failure can never leave an orphaned order header.
+    const customerId = userId && this.isValidUuid(userId) ? userId : null;
 
-    if (orderError || !orderData) {
-      throw new Error(orderError?.message || 'Failed to create order');
+    const { data, error } = (await this.client.rpc('create_product_order', {
+      p_currency: dto.currency,
+      p_subtotal: dto.subtotal,
+      p_customer_notes: dto.customerNotes || null,
+      p_customer_id: customerId,
+      p_recipient: dto.recipient,
+      p_items: dto.items.map((item) => ({
+        product_id: String(item.productId),
+        product_name: item.productName,
+        sku_id: item.skuId != null ? String(item.skuId) : null,
+        sku_label: item.skuLabel || null,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        final_price: item.finalPrice,
+        subtotal: item.subtotal,
+      })),
+    })) as { data: unknown; error: { message: string } | null };
+
+    if (error || !data) {
+      throw new Error(error?.message || 'Failed to create order');
     }
 
-    const orderId = Number(orderData.id);
-
-    const orderItems = dto.items.map((item) => ({
-      order_id: String(orderId),
-      product_id: String(item.productId),
-      product_name: item.productName,
-      sku_id: item.skuId != null ? String(item.skuId) : null,
-      sku_label: item.skuLabel || null,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      final_price: item.finalPrice,
-      subtotal: item.subtotal,
-    }));
-
-    const { error: itemError } = await this.client
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemError) throw new Error(itemError.message);
+    const orderId = Number(
+      typeof data === 'object' && data !== null && 'data' in data
+        ? (data as { data: number | string }).data
+        : data,
+    );
 
     return {
       success: true,

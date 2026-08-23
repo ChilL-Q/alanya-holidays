@@ -5,6 +5,7 @@ import {
   LiveNotification,
 } from './notifications.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('NotificationsController', () => {
   let controller: NotificationsController;
@@ -15,10 +16,7 @@ describe('NotificationsController', () => {
     deleteNotification: jest.Mock;
   };
 
-  const mockUser = { id: 'user-123', email: 'test@example.com' };
-  const mockRequest = {
-    user: mockUser,
-  };
+  const mockUser: AuthUser = { id: 'user-123', email: 'test@example.com' };
 
   const sampleNotifications: LiveNotification[] = [
     {
@@ -75,7 +73,7 @@ describe('NotificationsController', () => {
         sampleNotifications,
       );
 
-      const result = controller.getUserNotifications(mockRequest);
+      const result = controller.getUserNotifications(mockUser);
 
       expect(
         mockNotificationsService.getUserNotifications,
@@ -88,7 +86,7 @@ describe('NotificationsController', () => {
     it('should mark single notification as read', () => {
       mockNotificationsService.markAsRead.mockReturnValue(true);
 
-      const result = controller.markAsRead('notif-1', mockRequest);
+      const result = controller.markAsRead('notif-1', mockUser);
 
       expect(mockNotificationsService.markAsRead).toHaveBeenCalledWith(
         'user-123',
@@ -100,7 +98,7 @@ describe('NotificationsController', () => {
     it('should return success false if notification was not found', () => {
       mockNotificationsService.markAsRead.mockReturnValue(false);
 
-      const result = controller.markAsRead('non-existent', mockRequest);
+      const result = controller.markAsRead('non-existent', mockUser);
 
       expect(mockNotificationsService.markAsRead).toHaveBeenCalledWith(
         'user-123',
@@ -114,7 +112,7 @@ describe('NotificationsController', () => {
     it('should mark all notifications as read and return the count', () => {
       mockNotificationsService.markAllAsRead.mockReturnValue(2);
 
-      const result = controller.markAllAsRead(mockRequest);
+      const result = controller.markAllAsRead(mockUser);
 
       expect(mockNotificationsService.markAllAsRead).toHaveBeenCalledWith(
         'user-123',
@@ -127,7 +125,7 @@ describe('NotificationsController', () => {
     it('should delete a notification and return success true', () => {
       mockNotificationsService.deleteNotification.mockReturnValue(true);
 
-      const result = controller.deleteNotification('notif-1', mockRequest);
+      const result = controller.deleteNotification('notif-1', mockUser);
 
       expect(mockNotificationsService.deleteNotification).toHaveBeenCalledWith(
         'user-123',
@@ -139,7 +137,7 @@ describe('NotificationsController', () => {
     it('should return success false when deleting non-existent notification', () => {
       mockNotificationsService.deleteNotification.mockReturnValue(false);
 
-      const result = controller.deleteNotification('notif-999', mockRequest);
+      const result = controller.deleteNotification('notif-999', mockUser);
 
       expect(mockNotificationsService.deleteNotification).toHaveBeenCalledWith(
         'user-123',

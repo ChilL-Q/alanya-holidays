@@ -21,19 +21,6 @@ export class DirectoryRepository {
     return this.supabaseService.getClient();
   }
 
-  async getUserRole(userId: string): Promise<string | undefined> {
-    if (!UUID_RE.test(userId)) return undefined;
-    const { data, error } = await this.client
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single<{ role: string }>();
-    if (error && (error.code === 'PGRST116' || error.code === '22P02')) {
-      return undefined;
-    }
-    return data?.role ?? undefined;
-  }
-
   async getDirectoryListings(
     page: number,
     limit: number,
