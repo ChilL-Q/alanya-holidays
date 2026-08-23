@@ -89,7 +89,13 @@ jobs:
             fi
 
             deploy_stack() {
-              docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans
+              if ! docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build --remove-orphans; then
+                echo "❌ Docker compose deployment failed. Inspecting container logs..."
+                docker compose -f docker-compose.prod.yml logs --tail=100 backend || true
+                docker compose -f docker-compose.prod.yml logs --tail=50 nginx || true
+                docker compose -f docker-compose.prod.yml logs --tail=50 frontend || true
+                exit 1
+              fi
             }
 
             verify_health() {
