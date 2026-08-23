@@ -142,8 +142,8 @@ CREATE OR REPLACE FUNCTION public.expire_listing_addons() RETURNS void AS $$ BEG
 CREATE OR REPLACE FUNCTION public.get_available_properties(date, date) RETURNS SETOF record AS $$ SELECT 1 WHERE false; $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.handle_new_chat_message() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.get_property_by_ref_id(integer) RETURNS SETOF record AS $$ SELECT 1 WHERE false; $$ LANGUAGE sql;
-CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
-CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text) RETURNS JSONB AS $$ SELECT '{}'::jsonb; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text, text) RETURNS JSONB AS $$ SELECT '{}'::jsonb; $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.vote_listing(UUID, SMALLINT, TEXT) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.get_user_vote(UUID, TEXT) RETURNS smallint AS $$ SELECT 0::smallint; $$ LANGUAGE sql;
 CREATE OR REPLACE FUNCTION public.recalculate_net_votes() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
