@@ -86,8 +86,15 @@ CREATE SCHEMA IF NOT EXISTS storage;
 
 CREATE TABLE IF NOT EXISTS storage.buckets (
   id text PRIMARY KEY,
-  name text,
-  public boolean DEFAULT false
+  name text NOT NULL,
+  owner uuid,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  public boolean DEFAULT false,
+  avif_autodetection boolean DEFAULT false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
+  owner_id text
 );
 
 CREATE TABLE IF NOT EXISTS storage.objects (
@@ -95,7 +102,12 @@ CREATE TABLE IF NOT EXISTS storage.objects (
   bucket_id text REFERENCES storage.buckets(id),
   name text,
   owner uuid,
-  created_at timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  last_accessed_at timestamptz DEFAULT now(),
+  metadata jsonb DEFAULT '{}'::jsonb,
+  version text,
+  owner_id text
 );
 
 -- Pre-seed public enums if needed
