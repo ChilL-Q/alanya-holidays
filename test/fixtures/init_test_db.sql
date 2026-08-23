@@ -129,13 +129,30 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.is_service_role()
-RETURNS boolean
-LANGUAGE sql
-STABLE
-AS $$
-  SELECT auth.role() = 'service_role';
-$$;
+CREATE OR REPLACE FUNCTION storage.foldername(name text)
+RETURNS text[] AS $$
+  SELECT string_to_array(name, '/');
+$$ LANGUAGE sql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION public.update_property_rating() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.update_updated_at_column() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.cancel_expired_bookings() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.cancel_expired_pending_bookings() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.expire_listing_addons() RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.get_available_properties(date, date) RETURNS SETOF public.properties AS $$ SELECT * FROM public.properties; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.handle_new_chat_message() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.get_property_by_ref_id(integer) RETURNS SETOF public.properties AS $$ SELECT * FROM public.properties; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.create_booking(uuid, uuid, date, date, numeric, integer, text, text, text) RETURNS uuid AS $$ SELECT gen_random_uuid(); $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.vote_listing(UUID, SMALLINT, TEXT) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.get_user_vote(UUID, TEXT) RETURNS smallint AS $$ SELECT 0::smallint; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.recalculate_net_votes() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.remove_listing_vote(UUID, TEXT) RETURNS void AS $$ BEGIN END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.get_user_votes_batch(UUID[], TEXT) RETURNS TABLE(listing_id uuid, vote smallint) AS $$ SELECT gen_random_uuid(), 0::smallint WHERE false; $$ LANGUAGE sql;
+CREATE OR REPLACE FUNCTION public.enforce_premium_admin() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.enforce_premium_admin_only() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.validate_booking_status_transition() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION public.validate_blog_submission_status_transition() RETURNS trigger AS $$ BEGIN RETURN NEW; END; $$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS public.properties (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
