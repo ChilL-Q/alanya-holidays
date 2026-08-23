@@ -94,3 +94,262 @@ BEGIN
     CREATE TYPE public.notification_type AS ENUM ('info', 'success', 'warning', 'error');
   END IF;
 END $$;
+
+-- Base Public Tables
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text,
+  full_name text,
+  avatar_url text,
+  phone text,
+  company_name text,
+  role text DEFAULT 'user',
+  is_admin boolean DEFAULT false,
+  bio text,
+  iban text,
+  bank_name text,
+  bank_account_holder_name text,
+  crypto_wallet text,
+  social_links jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles 
+    WHERE id = auth.uid() AND (role = 'admin' OR is_admin = true)
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_service_role()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT auth.role() = 'service_role';
+$$;
+
+CREATE TABLE IF NOT EXISTS public.properties (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  host_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  property_type text DEFAULT 'apartment',
+  category text DEFAULT 'villa',
+  location text,
+  district text,
+  price_per_night numeric DEFAULT 0,
+  currency text DEFAULT 'EUR',
+  bedrooms integer DEFAULT 1,
+  bathrooms integer DEFAULT 1,
+  max_guests integer DEFAULT 2,
+  images text[] DEFAULT ARRAY[]::text[],
+  amenities text[] DEFAULT ARRAY[]::text[],
+  is_featured boolean DEFAULT false,
+  status text DEFAULT 'approved',
+  rating numeric DEFAULT 5.0,
+  review_count integer DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.services (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  service_type text NOT NULL,
+  category text,
+  price numeric DEFAULT 0,
+  currency text DEFAULT 'EUR',
+  duration_minutes integer,
+  images text[] DEFAULT ARRAY[]::text[],
+  status text DEFAULT 'approved',
+  rating numeric DEFAULT 5.0,
+  review_count integer DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  host_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  provider_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL,
+  service_id uuid REFERENCES public.services(id) ON DELETE SET NULL,
+  item_type text NOT NULL DEFAULT 'property',
+  item_id uuid,
+  check_in date,
+  check_out date,
+  guest_count integer DEFAULT 1,
+  total_price numeric DEFAULT 0,
+  currency text DEFAULT 'EUR',
+  status text DEFAULT 'pending',
+  payment_status text DEFAULT 'pending',
+  payout_status text DEFAULT 'pending',
+  stripe_session_id text,
+  payment_intent_id text,
+  guest_name text,
+  guest_email text,
+  guest_phone text,
+  special_requests text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.favorites (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  item_type text NOT NULL,
+  item_id uuid NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  booking_id uuid REFERENCES public.bookings(id) ON DELETE SET NULL,
+  item_type text NOT NULL,
+  item_id uuid NOT NULL,
+  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.property_availability (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES public.properties(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  is_available boolean DEFAULT true,
+  price_override numeric,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.property_ical_feeds (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid REFERENCES public.properties(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  url text NOT NULL,
+  last_synced_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text DEFAULT 'info',
+  is_read boolean DEFAULT false,
+  data jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  action text NOT NULL,
+  entity_type text NOT NULL,
+  entity_id uuid,
+  details jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
+  title text NOT NULL,
+  slug text UNIQUE,
+  excerpt text,
+  content text,
+  category text,
+  cover_image text,
+  tags text[] DEFAULT ARRAY[]::text[],
+  is_published boolean DEFAULT false,
+  views_count integer DEFAULT 0,
+  published_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.premium_subscriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  tier text DEFAULT 'explorer',
+  status text DEFAULT 'active',
+  current_period_end timestamptz,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.testimonials (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  role text,
+  content text NOT NULL,
+  avatar_url text,
+  rating integer DEFAULT 5,
+  is_approved boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS on core tables
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.property_availability ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.property_ical_feeds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Base RLS Policies
+CREATE POLICY "profiles_select" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "profiles_insert" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "profiles_update" ON public.profiles FOR UPDATE USING (auth.uid() = id OR public.is_admin());
+CREATE POLICY "profiles_delete" ON public.profiles FOR DELETE USING (public.is_admin());
+
+CREATE POLICY "bookings_select" ON public.bookings FOR SELECT USING (auth.uid() = user_id OR auth.uid() = host_id OR auth.uid() = provider_id OR public.is_admin());
+CREATE POLICY "bookings_insert" ON public.bookings FOR INSERT WITH CHECK (true);
+CREATE POLICY "bookings_update" ON public.bookings FOR UPDATE USING (auth.uid() = user_id OR auth.uid() = host_id OR auth.uid() = provider_id OR public.is_admin());
+CREATE POLICY "bookings_delete" ON public.bookings FOR DELETE USING (public.is_admin());
+
+CREATE POLICY "favorites_select" ON public.favorites FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "favorites_insert" ON public.favorites FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "favorites_update" ON public.favorites FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "favorites_delete" ON public.favorites FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "reviews_select" ON public.reviews FOR SELECT USING (true);
+CREATE POLICY "reviews_insert" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "reviews_update" ON public.reviews FOR UPDATE USING (auth.uid() = user_id OR public.is_admin());
+CREATE POLICY "reviews_delete" ON public.reviews FOR DELETE USING (public.is_admin());
+
+CREATE POLICY "property_availability_select" ON public.property_availability FOR SELECT USING (true);
+CREATE POLICY "property_availability_insert" ON public.property_availability FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+CREATE POLICY "property_availability_update" ON public.property_availability FOR UPDATE USING (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+CREATE POLICY "property_availability_delete" ON public.property_availability FOR DELETE USING (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+
+CREATE POLICY "property_ical_feeds_select" ON public.property_ical_feeds FOR SELECT USING (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+CREATE POLICY "property_ical_feeds_insert" ON public.property_ical_feeds FOR INSERT WITH CHECK (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+CREATE POLICY "property_ical_feeds_update" ON public.property_ical_feeds FOR UPDATE USING (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+CREATE POLICY "property_ical_feeds_delete" ON public.property_ical_feeds FOR DELETE USING (EXISTS (SELECT 1 FROM public.properties WHERE id = property_id AND host_id = auth.uid()) OR public.is_admin());
+
+CREATE POLICY "notifications_select" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "notifications_insert" ON public.notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "notifications_update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "audit_logs_select" ON public.audit_logs FOR SELECT USING (public.is_admin());
+CREATE POLICY "audit_logs_insert" ON public.audit_logs FOR INSERT WITH CHECK (true);
