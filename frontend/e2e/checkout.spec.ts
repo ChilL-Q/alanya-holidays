@@ -3,17 +3,12 @@ import { seedAuthSession, setupAuthMocks, mockSupabaseRest, seedCartAndWait, moc
 
 const seedCart = [
   {
-    id: 'checkout-test-1',
-    type: 'RENTAL',
-    title: 'Seaside Villa Alanya',
-    price: 450,
-    image: '/images/villa-test.jpg',
-    startDate: '2026-08-01',
-    endDate: '2026-08-08',
-    guests: 4,
-    nights: 7,
-    pricePerNight: 60,
-    cleaningFee: 30,
+    productName: 'Seaside Villa Alanya',
+    price: '€450',
+    moneyPrice: { cents: 45000, currency: 'EUR' },
+    icon: 'ri-home-4-line',
+    quantity: 1,
+    productId: 'checkout-test-1',
   }
 ];
 
