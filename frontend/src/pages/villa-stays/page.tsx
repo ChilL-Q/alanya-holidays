@@ -125,7 +125,6 @@ export default function VillaStaysPage() {
         item_name: selectedVilla?.name,
         item_id: selectedVilla?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumttg0",
       });
 
       if (result.success) {
@@ -376,7 +375,7 @@ export default function VillaStaysPage() {
                     ))}
                   </div>
                 </div>
-                <form onSubmit={handleBookingSubmit} data-readdy-form>
+                <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Villa Stay" />
                     <input type="hidden" name="villa_name" value={selectedVilla.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

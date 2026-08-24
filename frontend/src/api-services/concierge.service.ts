@@ -378,7 +378,6 @@ export interface ConciergeEnquiryPayload {
   duration?: string;
   subject?: string;
   message?: string;
-  form_endpoint?: string;
   custom_fields?: Record<string, unknown>;
 }
 

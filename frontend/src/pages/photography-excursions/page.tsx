@@ -88,7 +88,6 @@ export default function PhotographyExcursionsPage() {
         item_name: selectedExcursion?.name,
         item_id: selectedExcursion?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtth0",
       });
 
       if (result.success) {
@@ -361,7 +360,7 @@ export default function PhotographyExcursionsPage() {
                     <button onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Photography Excursion" />
                     <input type="hidden" name="excursion_name" value={selectedExcursion.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

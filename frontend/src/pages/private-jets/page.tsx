@@ -142,7 +142,6 @@ export default function PrivateJetsPage() {
         item_name: jetName,
         item_id: selectedJet?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtegg",
       });
 
       if (result.success) {
@@ -399,7 +398,7 @@ export default function PrivateJetsPage() {
                     <button onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Private Jet Charter" />
                     <input type="hidden" name="jet_name" value={selectedJet.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

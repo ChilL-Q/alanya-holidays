@@ -51,7 +51,6 @@ export default function LuxuryExperiencePage() {
         preferred_contact: prefContact,
         experience_type: experienceInterest,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtthg",
       });
 
       if (result.success) {
@@ -158,7 +157,7 @@ export default function LuxuryExperiencePage() {
             <p className="text-foreground-500 text-sm md:text-base mb-8">
               Our community concierge team can arrange custom experiences — surprise proposals, private dinners on the beach, or a tailored itinerary for your entire stay.
             </p>
-            <form onSubmit={handleConciergeSubmit} data-readdy-form className="max-w-md mx-auto">
+            <form onSubmit={handleConciergeSubmit} className="max-w-md mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <input name="name" type="text" placeholder="Your full name" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                   <input name="email" type="email" placeholder="Your email address" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />

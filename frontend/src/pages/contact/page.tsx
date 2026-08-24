@@ -167,24 +167,6 @@ export default function ContactPage() {
         enquiry_type: "general",
       });
 
-      // Also submit to form endpoint
-      try {
-        const payload = new URLSearchParams();
-        payload.append("name", form.name.trim());
-        payload.append("email", form.email.trim());
-        payload.append("subject", form.subject.trim() || "Concierge Enquiry");
-        payload.append("message", enrichedMessage);
-        payload.append("preferred_contact", preferredContact);
-
-        await fetch("https://readdy.ai/api/form/d9nm2s8bdkpk99j7glkg", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: payload.toString(),
-        });
-      } catch {
-        // Form endpoint failure is non-critical — Supabase already saved it
-      }
-
       navigate("/booking-confirmation", {
         state: {
           name: form.name.trim(),
@@ -468,7 +450,7 @@ export default function ContactPage() {
 
                   <form
                     id="concierge-contact-form"
-                    data-readdy-form=""
+
                     onSubmit={handleSubmit}
                     className="space-y-5"
                   >

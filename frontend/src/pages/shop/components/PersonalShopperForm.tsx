@@ -165,39 +165,8 @@ export default function PersonalShopperForm() {
         enquiry_type: "personal_shopper",
       });
 
-      // Submit to form URL
-      const formPayload = new URLSearchParams();
-      formPayload.append("name", name);
-      formPayload.append("email", email);
-      formPayload.append("phone", phoneFull);
-      formPayload.append("category", category);
-      formPayload.append("budget", budget);
-      formPayload.append("contact_method", contactMethod);
-      formPayload.append("timeline", timeline);
-      formPayload.append("details", details);
-
-      const res = await fetch("https://readdy.ai/api/form/d9rglime3oq4jqumu150", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formPayload.toString(),
-      });
-
-      const responseText = await res.text();
-      let parsed: { code?: string; meta?: { message?: string; detail?: string } } = {};
-      try { parsed = JSON.parse(responseText); } catch { /* ignore parse errors */ }
-
-      if (res.ok && parsed?.code === "OK") {
-        setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
-        resetForm();
-      } else {
-        const serverMsg = parsed?.meta?.message || parsed?.meta?.detail || responseText || "Something went wrong. Please try again.";
-        if (serverMsg.toLowerCase().includes("spam") || serverMsg.toLowerCase().includes("form data is spam")) {
-          setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
-          resetForm();
-        } else {
-          setStatus({ type: "error", message: serverMsg });
-        }
-      }
+      setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
+      resetForm();
     } catch (_err: unknown) {
       setStatus({ type: "error", message: "Network error. Please check your connection and try again." });
     } finally {
@@ -262,7 +231,7 @@ export default function PersonalShopperForm() {
             <form
               ref={formRef}
               onSubmit={handleSubmit}
-              data-readdy-form
+
               className="space-y-6"
               noValidate
             >

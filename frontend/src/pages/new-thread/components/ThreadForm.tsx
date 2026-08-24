@@ -165,7 +165,6 @@ export default function ThreadForm() {
 
   return (
     <form
-      data-readdy-form
       onSubmit={handleSubmit}
       className="bg-background-50 rounded-2xl border border-background-200/70 p-6 md:p-8 max-w-2xl mx-auto space-y-6"
     >

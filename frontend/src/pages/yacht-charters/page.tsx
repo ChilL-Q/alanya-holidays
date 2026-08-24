@@ -198,7 +198,6 @@ export default function YachtChartersPage() {
         dates: dateVal,
         duration: durationVal,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtteg",
       });
 
       if (result.success) {
@@ -802,7 +801,7 @@ export default function YachtChartersPage() {
                 )}
 
                 {/* CTA */}
-                <form onSubmit={handleBookingSubmit} data-readdy-form>
+                <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Yacht Charter" />
                     <input type="hidden" name="yacht_name" value={selectedYacht.name} />
                     <input type="hidden" name="company" value={selectedYacht.company} />

@@ -128,7 +128,6 @@ export default function PersonalDriverPage() {
         item_name: driverName,
         item_id: selectedDriver?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtfgg",
       });
 
       if (result.success) {
@@ -384,7 +383,7 @@ export default function PersonalDriverPage() {
                     <button onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Personal Driver" />
                     <input type="hidden" name="driver_name" value={selectedDriver.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

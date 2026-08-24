@@ -560,7 +560,7 @@ export default function BusinessDetailPage() {
                     ) : (
                       <form
                         id="business-review-form"
-                        data-readdy-form
+
                         onSubmit={async (e) => {
                           e.preventDefault();
                           const form = e.currentTarget;
