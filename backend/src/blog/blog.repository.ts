@@ -6,14 +6,12 @@ import {
   BlogPostSummary,
   BlogSubmission,
   BlogTag,
-  EmailNotificationPayload,
   GetBlogPostsFilter,
   GetBlogSubmissionsFilter,
   InsertBlogCommentPayload,
   InsertBlogPostPayload,
   InsertBlogPostTagRow,
   InsertBlogSubmissionPayload,
-  InsertNotificationPayload,
   RawBlogPostRow,
   UpdateBlogPostPayload,
 } from './types/blog.types';
@@ -384,19 +382,6 @@ export class BlogRepository {
     return data || null;
   }
 
-  async insertNotification(
-    notificationData: InsertNotificationPayload,
-  ): Promise<void> {
-    try {
-      await this.client.from('notifications').insert(notificationData);
-    } catch (error) {
-      this.logger.error(
-        'Failed to insert notification',
-        error instanceof Error ? error.stack : undefined,
-      );
-    }
-  }
-
   // ── Blog Comments ────────────────────────────────────────────
 
   async getBlogComments(
@@ -505,16 +490,5 @@ export class BlogRepository {
       .maybeSingle();
     if (error) throw new Error(error.message);
     return (data as unknown as BlogComment) || null;
-  }
-
-  async invokeEmailFunction(payload: EmailNotificationPayload): Promise<void> {
-    await this.client.functions
-      .invoke('send-email', { body: payload })
-      .catch((err: unknown) => {
-        this.logger.error(
-          'Failed to invoke send-email function',
-          err instanceof Error ? err.stack : undefined,
-        );
-      });
   }
 }

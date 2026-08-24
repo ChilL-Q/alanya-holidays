@@ -5,7 +5,7 @@ import {
   LiveNotification,
 } from './notifications.service';
 import { NOTIFICATIONS_REPOSITORY } from './domain/repositories/notifications.repository.interface';
-import { Server } from 'socket.io';
+import { SupabaseService } from '../supabase/supabase.service';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
@@ -16,19 +16,9 @@ describe('NotificationsService', () => {
     markAllAsRead: jest.Mock;
     delete: jest.Mock;
   };
-  let serverMock: {
-    to: jest.Mock;
-  };
-  let emitMock: jest.Mock;
+  let mockSupabase: { getClient: jest.Mock };
 
   beforeEach(async () => {
-    emitMock = jest.fn();
-    serverMock = {
-      to: jest.fn().mockReturnValue({
-        emit: emitMock,
-      }),
-    };
-
     mockRepo = {
       create: jest.fn(),
       findByUserId: jest.fn(),
@@ -37,6 +27,8 @@ describe('NotificationsService', () => {
       delete: jest.fn(),
     };
 
+    mockSupabase = { getClient: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationsService,
@@ -44,14 +36,17 @@ describe('NotificationsService', () => {
           provide: NOTIFICATIONS_REPOSITORY,
           useValue: mockRepo,
         },
+        {
+          provide: SupabaseService,
+          useValue: mockSupabase,
+        },
       ],
     }).compile();
 
     service = module.get<NotificationsService>(NotificationsService);
-    service.setServer(serverMock as unknown as Server);
   });
 
-  it('should emit notification event to target user room and persist to repository', async () => {
+  it('should persist notification to repository and return it', async () => {
     const payload: NotificationPayload = {
       type: 'NEW_BOOKING',
       title: 'Новое бронирование!',
@@ -79,10 +74,100 @@ describe('NotificationsService', () => {
       data: payload.data,
       link: undefined,
     });
-    expect(serverMock.to).toHaveBeenCalledWith('user:host-user-456');
-    expect(emitMock).toHaveBeenCalledTimes(1);
-    expect(emitMock).toHaveBeenCalledWith('notification', persisted);
     expect(result).toEqual(persisted);
+  });
+
+  it('should degrade gracefully when repository create fails', async () => {
+    mockRepo.create.mockRejectedValue(new Error('db down'));
+
+    const result = await service.notifyUser('user-1', {
+      type: 'SYSTEM',
+      title: 't',
+      message: 'm',
+    });
+
+    expect(result.id).toBeDefined();
+    expect(result.userId).toBe('user-1');
+    expect(result.type).toBe('SYSTEM');
+  });
+
+  describe('notifyAdmins', () => {
+    const adminRows = [{ id: 'admin-1' }, { id: 'admin-2' }];
+
+    function mockAdminQuery(rows: { id: string }[] | null, error?: Error) {
+      const eq = jest
+        .fn()
+        .mockReturnValue(
+          error
+            ? Promise.resolve({ data: null, error })
+            : Promise.resolve({ data: rows, error: null }),
+        );
+      mockSupabase.getClient.mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({ eq }),
+        }),
+      });
+      return eq;
+    }
+
+    it('should notify every admin profile with role=admin', async () => {
+      mockAdminQuery(adminRows);
+      mockRepo.create.mockImplementation(({ userId }) =>
+        Promise.resolve({
+          id: `n-${userId}`,
+          userId,
+          read: false,
+          createdAt: '2026-08-25T00:00:00.000Z',
+          type: 'warning',
+          title: 't',
+          message: 'm',
+        }),
+      );
+
+      const results = await service.notifyAdmins({
+        title: 'Charge Dispute Filed',
+        message: 'A dispute has been filed.',
+        type: 'warning',
+        link: '/admin/bookings',
+      });
+
+      expect(mockRepo.create).toHaveBeenCalledTimes(2);
+      expect(results.map((r) => r.userId)).toEqual(['admin-1', 'admin-2']);
+    });
+
+    it('should notify nobody when admin resolution fails (never throws)', async () => {
+      mockAdminQuery(null, new Error('rls denied'));
+      mockRepo.create.mockResolvedValue({
+        id: 'n-1',
+        userId: 'x',
+        read: false,
+        createdAt: 'now',
+        type: 'warning',
+        title: 't',
+        message: 'm',
+      });
+
+      const results = await service.notifyAdmins({
+        title: 't',
+        message: 'm',
+        type: 'warning',
+      });
+
+      expect(results).toEqual([]);
+      expect(mockRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('should notify nobody when there are no admins', async () => {
+      mockAdminQuery([]);
+
+      const results = await service.notifyAdmins({
+        title: 't',
+        message: 'm',
+        type: 'info',
+      });
+
+      expect(results).toEqual([]);
+    });
   });
 
   it('should retrieve persistent user notifications from repository', async () => {

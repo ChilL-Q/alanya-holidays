@@ -6,12 +6,14 @@ import { PropertiesRepository } from './properties.repository';
 import { SupabasePropertiesRepository } from './infrastructure/repositories/supabase-properties.repository';
 import { PROPERTIES_REPOSITORY } from './domain';
 import { AuthModule } from '../auth/auth.module';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 
 @Module({
   imports: [AuthModule],
   controllers: [PropertiesController, PropertiesAdminController],
   providers: [
     PropertiesService,
+    EmailOutboxRepository,
     SupabasePropertiesRepository,
     PropertiesRepository,
     {

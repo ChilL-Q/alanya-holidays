@@ -156,20 +156,6 @@ export interface GetBlogSubmissionsFilter {
   userId?: string;
 }
 
-export interface InsertNotificationPayload {
-  user_id: string;
-  title: string;
-  message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  link?: string;
-}
-
-export interface EmailNotificationPayload {
-  to: string;
-  type: string;
-  data: Record<string, unknown>;
-}
-
 export interface SuccessResponse {
   success: boolean;
 }

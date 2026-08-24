@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsController } from './notifications.controller';
 import { AuthModule } from '../auth/auth.module';
 import { SupabaseModule } from '../supabase/supabase.module';
@@ -12,7 +11,6 @@ import { SupabaseNotificationsRepository } from './infrastructure/repositories/s
   controllers: [NotificationsController],
   providers: [
     NotificationsService,
-    NotificationsGateway,
     {
       provide: NOTIFICATIONS_REPOSITORY,
       useClass: SupabaseNotificationsRepository,

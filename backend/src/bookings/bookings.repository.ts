@@ -533,17 +533,6 @@ export class BookingsRepository implements IBookingsRepository {
     return data || [];
   }
 
-  async invokeEmailFunction(payload: Record<string, unknown>): Promise<void> {
-    await this.client.functions
-      .invoke('send-email', { body: payload })
-      .catch((err: unknown) => {
-        this.logger.error(
-          'Failed to invoke send-email function',
-          err instanceof Error ? err.stack : undefined,
-        );
-      });
-  }
-
   async confirmBookingsFromStripe(
     bookingIds: string[],
     userId: string,

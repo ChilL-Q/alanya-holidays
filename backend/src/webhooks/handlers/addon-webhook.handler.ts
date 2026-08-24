@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class AddonWebhookHandler {
   private readonly logger = new Logger(AddonWebhookHandler.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private get supabase() {
     return this.supabaseService.getClient();
@@ -130,26 +134,16 @@ export class AddonWebhookHandler {
 
         const listingRecord = addonListing as { name?: string | null } | null;
         const listingName = listingRecord?.name ?? listingId;
-        const { data: admins } = await this.supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'admin');
 
-        if (admins && admins.length > 0) {
-          await this.supabase.from('notifications').insert(
-            admins.map((admin: { id: string }) => ({
-              user_id: admin.id,
-              title: 'Sponsored article purchased',
-              message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
-              type: 'info',
-              link: '/admin/directory',
-            })),
-          );
-        }
+        await this.notificationsService.notifyAdmins({
+          title: 'Sponsored article purchased',
+          message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
+          type: 'info',
+          link: '/admin/directory',
+        });
       }
 
-      await this.supabase.from('notifications').insert({
-        user_id: userId,
+      await this.notificationsService.notifyUser(userId, {
         title: 'Upgrade activated',
         message: `Your "${addonType.replace(/_/g, ' ')}" add-on is now active.`,
         type: 'success',

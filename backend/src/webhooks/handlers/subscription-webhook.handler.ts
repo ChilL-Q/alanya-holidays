@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class SubscriptionWebhookHandler {
   private readonly logger = new Logger(SubscriptionWebhookHandler.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private get supabase() {
     return this.supabaseService.getClient();
@@ -82,8 +86,7 @@ export class SubscriptionWebhookHandler {
       );
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: userId,
+    await this.notificationsService.notifyUser(userId, {
       title: '🎉 Welcome to Premium!',
       message: 'You now have access to AI Trip Planner and Premium benefits.',
       type: 'success',
@@ -147,8 +150,7 @@ export class SubscriptionWebhookHandler {
 
     // Recovery notification if moving from past_due to active
     if (subRecord.status === 'past_due' && newStatus === 'active') {
-      await this.supabase.from('notifications').insert({
-        user_id: subRecord.user_id,
+      await this.notificationsService.notifyUser(String(subRecord.user_id), {
         title: 'Subscription Restored',
         message:
           'Your Premium subscription has been restored. Enjoy your benefits!',
@@ -159,8 +161,7 @@ export class SubscriptionWebhookHandler {
 
     // Scheduled cancellation notification
     if (cancelAtPeriodEnd && !subRecord.cancel_at_period_end) {
-      await this.supabase.from('notifications').insert({
-        user_id: subRecord.user_id,
+      await this.notificationsService.notifyUser(String(subRecord.user_id), {
         title: 'Subscription Cancellation Scheduled',
         message: `Your Premium subscription will end on ${currentPeriodEnd}. You still have access until then.`,
         type: 'warning',
@@ -204,8 +205,7 @@ export class SubscriptionWebhookHandler {
       );
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: subRecord.user_id,
+    await this.notificationsService.notifyUser(String(subRecord.user_id), {
       title: 'Subscription Cancelled',
       message: 'Your Premium subscription has ended.',
       type: 'info',
@@ -260,8 +260,7 @@ export class SubscriptionWebhookHandler {
       throw new Error(`Failed updating subscription: ${updateError.message}`);
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: subRecord.user_id,
+    await this.notificationsService.notifyUser(String(subRecord.user_id), {
       title: '⚠️ Payment Failed',
       message:
         'Your Premium subscription payment failed. Please update your payment method.',

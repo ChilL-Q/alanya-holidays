@@ -585,15 +585,4 @@ export class SupabasePropertiesRepository implements IPropertiesRepository {
       .single();
     return data;
   }
-
-  invokeEmailFunction(payload: Record<string, unknown>): void {
-    this.client.functions
-      .invoke('send-email', { body: payload })
-      .catch((err: unknown) => {
-        this.logger.error(
-          'Failed to invoke send-email function',
-          err instanceof Error ? err.stack : undefined,
-        );
-      });
-  }
 }

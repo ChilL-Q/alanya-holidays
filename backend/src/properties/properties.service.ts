@@ -1,6 +1,7 @@
 import {
   Injectable,
   Inject,
+  Logger,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
@@ -12,6 +13,7 @@ import {
 } from './domain';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import {
   CreatePropertyDto,
   UpdatePropertyDto,
@@ -22,11 +24,14 @@ import { ICalSyncResult } from './types/property.types';
 
 @Injectable()
 export class PropertiesService {
+  private readonly logger = new Logger(PropertiesService.name);
+
   constructor(
     @Inject(PROPERTIES_REPOSITORY)
     private readonly propertiesRepository: IPropertiesRepository,
     private readonly redisService: RedisService,
     private readonly userRolesRepo: UserRolesRepository,
+    private readonly emailOutbox: EmailOutboxRepository,
   ) {}
 
   // ============================================
@@ -500,17 +505,23 @@ export class PropertiesService {
     const property =
       await this.propertiesRepository.getPropertyHostId(propertyId);
     if (property) {
-      this.propertiesRepository.invokeEmailFunction({
-        type: 'new_review',
-        userId: property.host_id,
-        data: {
-          itemTitle: property.title,
-          rating: review.rating,
-          comment: review.comment,
-          guestName: 'A Guest',
-          link: `https://alanyaholidays.com/property/${propertyId}`,
-        },
-      });
+      void this.emailOutbox
+        .enqueue({
+          type: 'new_review',
+          userId: property.host_id,
+          data: {
+            itemTitle: property.title,
+            rating: review.rating,
+            comment: review.comment,
+            guestName: 'A Guest',
+            link: `https://alanyaholidays.com/property/${propertyId}`,
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue new_review email for property ${propertyId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
     }
     return { success: true };
   }

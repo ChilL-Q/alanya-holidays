@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
@@ -8,6 +9,8 @@ import {
 import { BlogRepository } from './blog.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { ModerationAuditService } from '../admin/moderation-audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import { slugify, generateUniqueSlug } from '../utils/slugify';
 import sanitizeHtml from 'sanitize-html';
 import {
@@ -43,9 +46,13 @@ const generateExcerpt = (
 
 @Injectable()
 export class BlogService {
+  private readonly logger = new Logger(BlogService.name);
+
   constructor(
     private readonly blogRepository: BlogRepository,
     private readonly userRolesRepo: UserRolesRepository,
+    private readonly notificationsService: NotificationsService,
+    private readonly emailOutbox: EmailOutboxRepository,
     @Optional()
     private readonly moderationAuditService?: ModerationAuditService,
   ) {}
@@ -444,8 +451,7 @@ export class BlogService {
       submission.user_id,
     );
 
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Published!',
       message: `Your submission "${submission.title}" has been approved and published.`,
       type: 'success',
@@ -453,15 +459,21 @@ export class BlogService {
     });
 
     if (authorProfile?.email) {
-      void this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_approved',
-        data: {
-          postTitle: submission.title,
-          postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
-          authorName: authorProfile.full_name || 'Author',
-        },
-      });
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_approved',
+          data: {
+            postTitle: submission.title,
+            postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog approval email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
     }
 
     if (this.moderationAuditService) {
@@ -502,23 +514,28 @@ export class BlogService {
       submission.user_id,
     );
 
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Rejected',
       message: `Your submission "${submission.title}" was rejected. Reason: ${reason}`,
       type: 'error',
     });
 
     if (authorProfile?.email) {
-      void this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_rejected',
-        data: {
-          postTitle: submission.title,
-          reason,
-          authorName: authorProfile.full_name || 'Author',
-        },
-      });
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_rejected',
+          data: {
+            postTitle: submission.title,
+            reason,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog rejection email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
     }
 
     if (this.moderationAuditService) {

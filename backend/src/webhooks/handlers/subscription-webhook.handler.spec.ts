@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubscriptionWebhookHandler } from './subscription-webhook.handler';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 import Stripe from 'stripe';
 
 describe('SubscriptionWebhookHandler', () => {
   let handler: SubscriptionWebhookHandler;
+  let notificationsService: { notifyUser: jest.Mock; notifyAdmins: jest.Mock };
 
   interface MockQueryResult {
     data: unknown;
@@ -45,9 +47,13 @@ describe('SubscriptionWebhookHandler', () => {
   };
 
   beforeEach(async () => {
+    notificationsService = {
+      notifyUser: jest.fn().mockResolvedValue({ id: 'n-1' }),
+      notifyAdmins: jest.fn().mockResolvedValue([]),
+    };
+
     tableMocks = {
       premium_subscriptions: createTableMock(),
-      notifications: createTableMock(),
     };
 
     mockSupabaseClient = {
@@ -67,6 +73,10 @@ describe('SubscriptionWebhookHandler', () => {
           useValue: {
             getClient: () => mockSupabaseClient,
           },
+        },
+        {
+          provide: NotificationsService,
+          useValue: notificationsService,
         },
       ],
     }).compile();
@@ -140,9 +150,9 @@ describe('SubscriptionWebhookHandler', () => {
         }),
       );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'u_active',
         expect.objectContaining({
-          user_id: 'u_active',
           title: '🎉 Welcome to Premium!',
           type: 'success',
         }),
@@ -275,9 +285,9 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleUpdated(sub);
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'u_restored',
         expect.objectContaining({
-          user_id: 'u_restored',
           title: 'Subscription Restored',
           type: 'success',
         }),
@@ -304,9 +314,9 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleUpdated(sub);
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'u_sched',
         expect.objectContaining({
-          user_id: 'u_sched',
           title: 'Subscription Cancellation Scheduled',
           type: 'warning',
         }),
@@ -357,9 +367,9 @@ describe('SubscriptionWebhookHandler', () => {
         'rec_del',
       );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'u_del',
         expect.objectContaining({
-          user_id: 'u_del',
           title: 'Subscription Cancelled',
           type: 'info',
         }),
@@ -405,9 +415,9 @@ describe('SubscriptionWebhookHandler', () => {
         status: 'past_due',
       });
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'u_inv_fail',
         expect.objectContaining({
-          user_id: 'u_inv_fail',
           title: '⚠️ Payment Failed',
           type: 'error',
         }),
