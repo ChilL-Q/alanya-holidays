@@ -46,7 +46,7 @@ export default function CategoriesPage() {
         {/* Hero Section */}
         <section className="relative w-full h-[340px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Aerial%20panoramic%20view%20of%20Alanya%20harbor%20with%20red%20tile%20rooftops%20medieval%20castle%20on%20rocky%20peninsula%20turquoise%20Mediterranean%20sea%20golden%20sunset%20warm%20light%20editorial%20travel%20photography%20stunning%20coastal%20landscape&width=1600&height=840&seq=cat-hero-main-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Categories"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

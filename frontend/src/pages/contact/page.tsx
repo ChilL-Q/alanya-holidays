@@ -278,7 +278,7 @@ export default function ContactPage() {
         {/* Hero */}
         <section className="relative w-full h-[320px] md:h-[440px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Elegant%20hotel%20lobby%20with%20marble%20reception%20desk%20fresh%20flower%20arrangement%20warm%20ambient%20lighting%20personal%20concierge%20desk%20with%20leather%20chair%20Mediterranean%20coastal%20view%20through%20large%20windows%20sophisticated%20hospitality%20atmosphere%20Alanya%20Turkey%20luxury%20travel%20editorial%20photography&width=1800&height=880&seq=contact-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Holidays Concierge — Contact Us"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

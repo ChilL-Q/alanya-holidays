@@ -157,7 +157,7 @@ export default function GolfVacationsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Breathtaking%20championship%20golf%20course%20at%20golden%20hour%20with%20perfectly%20manicured%20emerald%20fairway%20winding%20through%20Mediterranean%20pine%20forest%20dramatic%20white%20sand%20bunkers%20pristine%20green%20with%20flag%20waving%20gently%20in%20breeze%20Taurus%20Mountains%20on%20horizon%20warm%20amber%20light%20luxury%20resort%20clubhouse%20in%20distance%20Belek%20Antalya%20Turkey%20editorial%20golf%20photography%20epic%20cinematic%20wide%20angle&width=1800&height=920&seq=golf-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Golf Vacations in Belek, Antalya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

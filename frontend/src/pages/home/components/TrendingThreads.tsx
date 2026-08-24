@@ -72,7 +72,7 @@ export default function TrendingThreads() {
                   {/* Card Image */}
                   <div className="relative h-40 overflow-hidden">
                     <img
-                      src="https://readdy.ai/api/search-image?query=Mediterranean%20coastal%20scene%20with%20turquoise%20water%20and%20warm%20sunlight%20stunning%20landscape%20editorial%20travel%20photography%20beautiful%20composition%20soft%20focus%20background&width=400&height=300&seq=thread-bg-01&orientation=landscape"
+                      src="/images/placeholder-business.svg"
                       alt="Thread"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

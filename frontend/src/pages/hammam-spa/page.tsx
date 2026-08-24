@@ -147,7 +147,7 @@ export default function HammamSpaPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxurious%20traditional%20Turkish%20hammam%20interior%20with%20white%20marble%20heated%20gobek%20tasi%20platform%20steam%20rising%20softly%20through%20beams%20of%20light%20from%20star%20shaped%20dome%20windows%20brass%20bowls%20with%20olive%20oil%20soaps%20warm%20serene%20atmosphere%20authentic%20spa%20editorial%20photography%20misty%20ethereal%20mood&width=1800&height=920&seq=spa-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Traditional Hammam & Spa in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

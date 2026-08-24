@@ -150,7 +150,7 @@ export default function PersonalDriverPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20black%20Mercedes%20S%20Class%20being%20driven%20along%20scenic%20coastal%20highway%20Mediterranean%20sea%20sparkling%20in%20sunlight%20Turkish%20Riviera%20rugged%20mountains%20in%20background%20professional%20chauffeur%20visible%20through%20window%20golden%20hour%20warm%20light%20automotive%20lifestyle%20photography%20cinematic%20composition%20high%20detail&width=1800&height=920&seq=driver-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Personal Drivers in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

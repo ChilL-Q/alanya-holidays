@@ -164,7 +164,7 @@ export default function PrivateJetsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20private%20jet%20interior%20with%20cream%20leather%20seats%20polished%20wood%20trim%20and%20ambient%20golden%20lighting%20aircraft%20parked%20on%20tarmac%20at%20dusk%20modern%20terminal%20building%20in%20background%20with%20runway%20lights%20twinkling%20warm%20sunset%20sky%20premium%20aviation%20lifestyle%20photography%20opulent%20atmosphere%20high%20detail&width=1800&height=920&seq=jet-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Private Jet Charters"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

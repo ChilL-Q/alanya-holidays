@@ -347,14 +347,14 @@ export function mapBackendCategoryToCategory(cat: ForumBackendCategory): Categor
     color: cat.accent || "from-primary-500 to-primary-700",
     image:
       cat.image_url ||
-      "https://readdy.ai/api/search-image?query=Alanya%20city%20landscape%20and%20Mediterranean%20sea%20travel%20editorial%20photography&width=800&height=600&orientation=landscape",
+      "/images/placeholder-business.svg",
     slug: cat.slug || cat.id,
   };
 }
 
 export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
   const defaultAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20person%20with%20warm%20smile%20clean%20background%20editorial%20photography&width=100&height=100&seq=forum-default-avatar&orientation=squarish";
+    "/images/placeholder-business.svg";
 
   const isHot = (post.views_count ?? 0) > 100 || (post.comments_count ?? 0) > 10;
 
@@ -382,7 +382,7 @@ export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
 }
 
 export function mapBackendCommentToReply(comment: ForumBackendComment): ThreadReply {  const defaultAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&seq=reply-avatar&orientation=squarish";
+    "/images/placeholder-business.svg";
 
   return {
     id: comment.id,
@@ -405,7 +405,7 @@ export function mapBackendPostToThreadDetail(
   comments: ForumBackendComment[] = []
 ): ThreadDetail {
   const defaultAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&seq=author-avatar&orientation=squarish";
+    "/images/placeholder-business.svg";
 
   const replies = comments.map(mapBackendCommentToReply);
   const isHot = (post.views_count ?? 0) > 100 || (post.comments_count ?? 0) > 10;
@@ -444,7 +444,7 @@ export function mapBackendMemberToForumMember(
   raw: BackendForumMember
 ): ForumMember {
   const defaultAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20person%20with%20warm%20smile%20clean%20background%20editorial%20photography&width=100&height=100&seq=forum-default-avatar&orientation=squarish";
+    "/images/placeholder-business.svg";
 
   const usernameBase = raw.full_name?.trim().toLowerCase().replace(/\s+/g, "_");
 

@@ -230,7 +230,7 @@ export default function YachtChartersPage() {
         {/* Hero */}
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20yacht%20cruising%20along%20dramatic%20Mediterranean%20coastline%20at%20golden%20hour%20Alanya%20castle%20on%20rocky%20peninsula%20silhouette%20warm%20amber%20sunlight%20reflecting%20on%20calm%20turquoise%20sea%20elegant%20wooden%20gulet%20with%20white%20sails%20unfurled%20breathtaking%20travel%20photography%20cinematic%20composition%20high%20detail&width=1800&height=920&seq=yacht-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Yacht Charters in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

@@ -8,7 +8,7 @@ export default function EventHero({ totalEvents, eventsThisMonth, onHostEvent }:
   return (
     <section className="relative w-full h-[280px] md:h-[360px] overflow-hidden">
       <img
-        src="https://readdy.ai/api/search-image?query=Lively%20outdoor%20community%20event%20at%20Mediterranean%20beachfront%20with%20diverse%20group%20of%20people%20socializing%20live%20music%20warm%20sunset%20atmosphere%20Alanya%20castle%20silhouette%20in%20background%20joyful%20gathering%20editorial%20photography&width=1800&height=720&seq=events-hero-02&orientation=landscape"
+        src="/images/placeholder-business.svg"
         alt="Alanya Holidays Events"
         className="absolute inset-0 w-full h-full object-cover object-top"
       />

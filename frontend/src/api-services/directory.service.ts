@@ -83,6 +83,7 @@ export interface BackendDirectoryListing {
   image?: string;
   image_url?: string;
   featured_image?: string;
+  gallery?: string[];
   tags?: string[] | string;
   is_featured?: boolean;
   featured?: boolean;
@@ -264,7 +265,8 @@ export function mapBackendListingToBusiness(item: BackendDirectoryListing): Busi
       item.image ||
       item.image_url ||
       item.featured_image ||
-      "https://readdy.ai/api/search-image?query=Alanya%20city%20business%20exterior%20travel%20photography&width=800&height=600&orientation=landscape",
+      item.gallery?.[0] ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || "Business")}&size=800&background=2C6E49&color=fff`,
     tags,
     featured: Boolean(item.featured ?? item.is_featured),
     priceRange: item.priceRange || item.price_range || "$$",
@@ -290,7 +292,7 @@ export function mapBackendReviewToBusinessReview(
     reviewerName: item.user?.full_name || "Verified Traveler",
     reviewerAvatar:
       item.user?.avatar_url ||
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&orientation=squarish",
+      "/images/placeholder-business.svg",
     rating: item.rating || 5,
     date: item.created_at
       ? item.created_at.split("T")[0]

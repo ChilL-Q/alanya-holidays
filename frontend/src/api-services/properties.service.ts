@@ -125,7 +125,7 @@ export function mapBackendPropertyToPropertyItem(
       : typeof item.image_url === "string" && item.image_url
         ? item.image_url
         : images[0] ||
-          "https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20villa%20exterior%20with%20infinity%20pool%20and%20sea%20view&width=800&height=600&orientation=landscape";
+          "/images/placeholder-business.svg";
 
   return {
     id: String(item.id || item.slug || ""),

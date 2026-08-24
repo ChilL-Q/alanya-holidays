@@ -22,7 +22,7 @@ export default function MemberHero() {
   return (
     <section className="relative w-full h-[280px] md:h-[340px] overflow-hidden">
       <img
-        src="https://readdy.ai/api/search-image?query=Diverse%20group%20of%20travelers%20and%20expats%20sitting%20together%20at%20beachfront%20cafe%20in%20Alanya%20Mediterranean%20sea%20background%20warm%20golden%20sunset%20light%20community%20social%20gathering%20atmosphere%20editorial%20photography%20authentic%20candid%20moments&width=1800&height=680&seq=members-hero&orientation=landscape"
+        src="/images/placeholder-business.svg"
         alt="Alanya Holidays Community"
         className="absolute inset-0 w-full h-full object-cover object-top"
       />

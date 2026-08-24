@@ -107,7 +107,7 @@ export default function HelicopterToursPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Stunning%20aerial%20view%20from%20helicopter%20cockpit%20over%20Alanya%20coastline%20turquoise%20Mediterranean%20sea%20dramatic%20castle%20on%20rocky%20peninsula%20golden%20sunset%20sky%20clouds%20below%20breathtaking%20perspective%20adventure%20tourism%20editorial%20photography%20epic%20cinematic%20composition&width=1800&height=920&seq=heli-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Helicopter Tours in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

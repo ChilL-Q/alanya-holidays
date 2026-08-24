@@ -95,7 +95,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "8 min read",
     description: "Everything you need to know for your first trip to Alanya — getting around, best areas, money tips, and essential Turkish phrases.",
     content: "Everything you need to know for your first trip to Alanya.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Alanya%20castle%20and%20harbor%20panoramic%20view&width=1200&height=512&seq=tg-hero-1&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-01-15T10:00:00Z",
   },
   {
@@ -107,7 +107,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "10 min read",
     description: "From traditional serpme kahvaltı to late-night kokoreç — the complete guide to eating like a local in Alanya.",
     content: "From traditional serpme kahvaltı to late-night kokoreç.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Turkish%20breakfast%20spread%20with%20mezes%20and%20fresh%20bread&width=1200&height=512&seq=tg-hero-2&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-01-20T10:00:00Z",
   },
   {
@@ -119,7 +119,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "12 min read",
     description: "Escape the town and explore Sapadere Canyon, Side ruins, Dim Cave, and the Taurus mountain villages.",
     content: "Escape the town and explore Sapadere Canyon, Side ruins, Dim Cave.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Sapadere%20canyon%20waterfalls%20and%20wooden%20walkway&width=1200&height=512&seq=tg-hero-3&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-02-01T10:00:00Z",
   },
   {
@@ -131,7 +131,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "15 min read",
     description: "Residency permits, finding an apartment, healthcare, banking, and settling into the expat community.",
     content: "Residency permits, finding an apartment, healthcare, banking.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Modern%20apartment%20balcony%20overlooking%20Alanya%20coastline&width=1200&height=512&seq=tg-hero-4&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-02-10T10:00:00Z",
   },
   {
@@ -143,7 +143,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "7 min read",
     description: "Cleopatra Beach, Keykubat, Damlataş, and hidden coves — where to find the best sand, water sports, and sunset spots.",
     content: "Cleopatra Beach, Keykubat, Damlataş, and hidden coves.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Cleopatra%20beach%20Alanya%20golden%20sand%20and%20turquoise%20water&width=1200&height=512&seq=tg-hero-5&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-02-15T10:00:00Z",
   },
   {
@@ -155,7 +155,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "9 min read",
     description: "Harbor clubs, rooftop cocktail bars, live music venues, and chill beach lounges — your guide after dark.",
     content: "Harbor clubs, rooftop cocktail bars, live music venues.",
-    cover_image_url: "https://readdy.ai/api/search-image?query=Alanya%20harbor%20nightlife%20with%20illuminated%20boats%20and%20bars&width=1200&height=512&seq=tg-hero-6&orientation=landscape",
+    cover_image_url: "/images/placeholder-business.svg",
     published_at: "2026-02-20T10:00:00Z",
   },
 ];
@@ -246,7 +246,7 @@ function mapBackendPostToItem(post: BackendBlogPostItem): BlogPostItem {
     category: post.category || "General",
     cover_image_url:
       post.cover_image_url ||
-      "https://readdy.ai/api/search-image?query=Mediterranean%20coast%20travel%20destination%20Alanya%20landscape&width=800&height=500&orientation=landscape",
+      "/images/placeholder-business.svg",
     author_id: post.author_id,
     author_name: post.author?.full_name || "Alanya Holidays Editor",
     status: post.status || "published",
@@ -388,7 +388,7 @@ export class BlogService {
         return {
           heroImage:
             post.cover_image_url ||
-            "https://readdy.ai/api/search-image?query=Turkish%20Riviera%20Mediterranean%20coastline&width=1200&height=512&seq=dynamic-guide-fallback&orientation=landscape",
+            "/images/placeholder-business.svg",
           sections: [
             {
               heading: post.title,

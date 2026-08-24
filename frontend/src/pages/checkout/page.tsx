@@ -180,7 +180,7 @@ export default function CheckoutPage() {
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
         <img
-          src="https://readdy.ai/api/search-image?query=Elegant%20minimalist%20checkout%20counter%20scene%20with%20warm%20ambient%20lighting%20kraft%20paper%20gift%20boxes%20neatly%20wrapped%20with%20twine%20on%20light%20marble%20surface%20soft%20natural%20light%20from%20window%20clean%20modern%20boutique%20aesthetic%20product%20photography%20high%20detail&width=1800&height=560&seq=checkout-hero-01&orientation=landscape"
+          src="/images/placeholder-business.svg"
           alt="Checkout"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />

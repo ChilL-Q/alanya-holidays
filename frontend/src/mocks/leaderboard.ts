@@ -21,7 +21,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "SunnySideUp",
     fullName: "Elena Kowalski",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-elena&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Community Leader",
     reputation: 12400,
     postsThisPeriod: 8,
@@ -37,7 +37,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "AlanyaExplorer",
     fullName: "Mark Stevenson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20middle%20aged%20man%20friendly%20smile%20outdoor%20light%20warm%20tones%20travel%20enthusiast%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-mark&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 8920,
     postsThisPeriod: 6,
@@ -53,7 +53,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "FoodieAlanya",
     fullName: "Zeynep Kaya",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20woman%20warm%20happy%20smile%20kitchen%20background%20warm%20light%20food%20lover%20style%20editorial%20photography&width=200&height=200&seq=member-zeynep&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Food Expert",
     reputation: 4500,
     postsThisPeriod: 5,
@@ -69,7 +69,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "DiveMasterAli",
     fullName: "Ali Karadeniz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20man%20with%20beard%20sun%20kissed%20skin%20warm%20smile%20outdoor%20light%20scuba%20diver%20style%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ali&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 5670,
     postsThisPeriod: 4,
@@ -85,7 +85,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "NomadicWriter",
     fullName: "Rachel Thompson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20creative%20look%20with%20laptop%20warm%20light%20clean%20background%20writer%20blogger%20style%20editorial%20photography&width=200&height=200&seq=member-rachel&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Content Creator",
     reputation: 7800,
     postsThisPeriod: 3,
@@ -101,7 +101,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "PhotoNomad",
     fullName: "Lucas Mueller",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20German%20man%20with%20camera%20creative%20look%20warm%20light%20clean%20background%20travel%20photographer%20editorial%20photography&width=200&height=200&seq=member-lucas&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Photographer",
     reputation: 5400,
     postsThisPeriod: 4,
@@ -117,7 +117,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "TurkishFoodie",
     fullName: "Ahmet Yılmaz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20warm%20smile%20outdoor%20light%20warm%20tones%20local%20resident%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ahmet&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Verified Local",
     reputation: 6780,
     postsThisPeriod: 2,
@@ -133,7 +133,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "BeachBumNomad",
     fullName: "Jake Morrison",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20relaxed%20smile%20beach%20background%20warm%20sunlight%20surfer%20style%20editorial%20photography%20casual%20vibe&width=200&height=200&seq=member-jake&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Rising Star",
     reputation: 2340,
     postsThisPeriod: 7,
@@ -149,7 +149,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "HistoryBuff",
     fullName: "David Chen",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20asian%20man%20intellectual%20look%20warm%20light%20clean%20background%20history%20enthusiast%20editorial%20photography%20glasses&width=200&height=200&seq=member-david&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Cultural Ambassador",
     reputation: 5670,
     postsThisPeriod: 2,
@@ -165,7 +165,7 @@ export const weeklyLeaderboard: LeaderboardEntry[] = [
     username: "CryptoNomad_TR",
     fullName: "Alex Volkov",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20Russian%20man%20tech%20savvy%20look%20casual%20style%20warm%20light%20clean%20background%20digital%20professional%20editorial%20photography&width=200&height=200&seq=member-alex&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Tech Expert",
     reputation: 2800,
     postsThisPeriod: 3,
@@ -184,7 +184,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "SunnySideUp",
     fullName: "Elena Kowalski",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-elena&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Community Leader",
     reputation: 12400,
     postsThisPeriod: 24,
@@ -200,7 +200,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "AlanyaExplorer",
     fullName: "Mark Stevenson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20middle%20aged%20man%20friendly%20smile%20outdoor%20light%20warm%20tones%20travel%20enthusiast%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-mark&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 8920,
     postsThisPeriod: 18,
@@ -216,7 +216,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "PropertyQueen",
     fullName: "Sophia Andersson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20professional%20woman%20confident%20smile%20business%20attire%20warm%20light%20clean%20background%20real%20estate%20editorial%20photography&width=200&height=200&seq=member-sophia&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Real Estate Expert",
     reputation: 8900,
     postsThisPeriod: 15,
@@ -232,7 +232,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "NomadicWriter",
     fullName: "Rachel Thompson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20creative%20look%20with%20laptop%20warm%20light%20clean%20background%20writer%20blogger%20style%20editorial%20photography&width=200&height=200&seq=member-rachel&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Content Creator",
     reputation: 7800,
     postsThisPeriod: 16,
@@ -248,7 +248,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "LegalEagle_TR",
     fullName: "Catherine Dupont",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20woman%20in%20her%20forties%20professional%20lawyer%20look%20warm%20light%20clean%20background%20legal%20professional%20editorial%20photography%20glasses&width=200&height=200&seq=member-catherine&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Legal Advisor",
     reputation: 6500,
     postsThisPeriod: 12,
@@ -264,7 +264,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "TurkishFoodie",
     fullName: "Ahmet Yılmaz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20warm%20smile%20outdoor%20light%20warm%20tones%20local%20resident%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ahmet&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Verified Local",
     reputation: 6780,
     postsThisPeriod: 10,
@@ -280,7 +280,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "DiveMasterAli",
     fullName: "Ali Karadeniz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20man%20with%20beard%20sun%20kissed%20skin%20warm%20smile%20outdoor%20light%20scuba%20diver%20style%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ali&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 5670,
     postsThisPeriod: 11,
@@ -296,7 +296,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "HistoryBuff",
     fullName: "David Chen",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20asian%20man%20intellectual%20look%20warm%20light%20clean%20background%20history%20enthusiast%20editorial%20photography%20glasses&width=200&height=200&seq=member-david&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Cultural Ambassador",
     reputation: 5670,
     postsThisPeriod: 9,
@@ -312,7 +312,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "PhotoNomad",
     fullName: "Lucas Mueller",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20German%20man%20with%20camera%20creative%20look%20warm%20light%20clean%20background%20travel%20photographer%20editorial%20photography&width=200&height=200&seq=member-lucas&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Photographer",
     reputation: 5400,
     postsThisPeriod: 13,
@@ -328,7 +328,7 @@ export const monthlyLeaderboard: LeaderboardEntry[] = [
     username: "FoodieAlanya",
     fullName: "Zeynep Kaya",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20woman%20warm%20happy%20smile%20kitchen%20background%20warm%20light%20food%20lover%20style%20editorial%20photography&width=200&height=200&seq=member-zeynep&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Food Expert",
     reputation: 4500,
     postsThisPeriod: 8,
@@ -347,7 +347,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "SunnySideUp",
     fullName: "Elena Kowalski",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-elena&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Community Leader",
     reputation: 12400,
     postsThisPeriod: 187,
@@ -363,7 +363,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "AlanyaExplorer",
     fullName: "Mark Stevenson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20middle%20aged%20man%20friendly%20smile%20outdoor%20light%20warm%20tones%20travel%20enthusiast%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-mark&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 8920,
     postsThisPeriod: 145,
@@ -379,7 +379,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "PropertyQueen",
     fullName: "Sophia Andersson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20professional%20woman%20confident%20smile%20business%20attire%20warm%20light%20clean%20background%20real%20estate%20editorial%20photography&width=200&height=200&seq=member-sophia&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Real Estate Expert",
     reputation: 8900,
     postsThisPeriod: 98,
@@ -395,7 +395,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "NomadicWriter",
     fullName: "Rachel Thompson",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20creative%20look%20with%20laptop%20warm%20light%20clean%20background%20writer%20blogger%20style%20editorial%20photography&width=200&height=200&seq=member-rachel&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Content Creator",
     reputation: 7800,
     postsThisPeriod: 134,
@@ -411,7 +411,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "TurkishFoodie",
     fullName: "Ahmet Yılmaz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20warm%20smile%20outdoor%20light%20warm%20tones%20local%20resident%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ahmet&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Verified Local",
     reputation: 6780,
     postsThisPeriod: 89,
@@ -427,7 +427,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "LegalEagle_TR",
     fullName: "Catherine Dupont",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20woman%20in%20her%20forties%20professional%20lawyer%20look%20warm%20light%20clean%20background%20legal%20professional%20editorial%20photography%20glasses&width=200&height=200&seq=member-catherine&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Legal Advisor",
     reputation: 6500,
     postsThisPeriod: 78,
@@ -443,7 +443,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "HistoryBuff",
     fullName: "David Chen",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20asian%20man%20intellectual%20look%20warm%20light%20clean%20background%20history%20enthusiast%20editorial%20photography%20glasses&width=200&height=200&seq=member-david&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Cultural Ambassador",
     reputation: 5670,
     postsThisPeriod: 67,
@@ -459,7 +459,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "DiveMasterAli",
     fullName: "Ali Karadeniz",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20man%20with%20beard%20sun%20kissed%20skin%20warm%20smile%20outdoor%20light%20scuba%20diver%20style%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ali&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Top Contributor",
     reputation: 5670,
     postsThisPeriod: 89,
@@ -475,7 +475,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "PhotoNomad",
     fullName: "Lucas Mueller",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20German%20man%20with%20camera%20creative%20look%20warm%20light%20clean%20background%20travel%20photographer%20editorial%20photography&width=200&height=200&seq=member-lucas&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Photographer",
     reputation: 5400,
     postsThisPeriod: 101,
@@ -491,7 +491,7 @@ export const allTimeLeaderboard: LeaderboardEntry[] = [
     username: "FoodieAlanya",
     fullName: "Zeynep Kaya",
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20woman%20warm%20happy%20smile%20kitchen%20background%20warm%20light%20food%20lover%20style%20editorial%20photography&width=200&height=200&seq=member-zeynep&orientation=squarish",
+      "/images/placeholder-business.svg",
     role: "Food Expert",
     reputation: 4500,
     postsThisPeriod: 67,

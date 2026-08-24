@@ -148,7 +148,7 @@ export default function WineTastingsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Elegant%20wine%20tasting%20scene%20in%20historic%20stone%20cellar%20warm%20candlelight%20rows%20of%20wine%20bottles%20in%20wooden%20racks%20six%20glasses%20of%20red%20and%20white%20wine%20on%20rustic%20oak%20table%20cheese%20board%20with%20grapes%20soft%20atmospheric%20lighting%20Anatolian%20vineyard%20setting%20editorial%20food%20photography%20rich%20warm%20tones&width=1800&height=920&seq=wine-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Private Wine Tastings in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

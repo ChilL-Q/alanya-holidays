@@ -25,7 +25,7 @@ export default function HeroSection() {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="https://static.readdy.ai/image/0b82ee2c96b338eb8e9b3f793da1836a/03ad30276061ca38b7431e701800a900.jpeg"
+          src="/images/placeholder-business.svg"
           alt="Alanya coastline"
           className="w-full h-full object-cover"
         />
@@ -40,17 +40,17 @@ export default function HeroSection() {
           <div className="flex items-center gap-4 mb-8">
             <div className="flex -space-x-3">
               <img
-                src="https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20young%20woman%20warm%20smile%20clean%20background%20travel%20blogger%20editorial%20photography&width=80&height=80&seq=hero-avatar-1&orientation=squarish"
+                src="/images/placeholder-business.svg"
                 alt="Member"
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
               />
               <img
-                src="https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20young%20man%20beard%20warm%20smile%20clean%20background%20travel%20enthusiast%20editorial%20photography&width=80&height=80&seq=hero-avatar-2&orientation=squarish"
+                src="/images/placeholder-business.svg"
                 alt="Member"
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
               />
               <img
-                src="https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20middle%20aged%20woman%20friendly%20smile%20clean%20background%20traveler%20editorial%20photography&width=80&height=80&seq=hero-avatar-3&orientation=squarish"
+                src="/images/placeholder-business.svg"
                 alt="Member"
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
               />

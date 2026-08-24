@@ -225,7 +225,7 @@ export default function PersonalShopperForm() {
           {/* Left panel — visual side */}
           <div className="lg:w-5/12 relative overflow-hidden min-h-[220px] lg:min-h-[560px]">
             <img
-              src="https://readdy.ai/api/search-image?query=A%20curated%20flat%20lay%20arrangement%20of%20artisanal%20Turkish%20products%20including%20handpainted%20Iznik%20ceramic%20plates%20ornate%20copper%20tea%20set%20with%20tulip%20glasses%20embroidered%20silk%20textile%20with%20Ottoman%20patterns%20on%20warm%20terracotta%20background%20soft%20natural%20window%20light%20editorial%20product%20photography%20rich%20textures%20high%20detail&width=900&height=1120&seq=personal-shopper-side-01&orientation=portrait"
+              src="/images/placeholder-business.svg"
               alt="Personal Shopper Service"
               className="absolute inset-0 w-full h-full object-cover object-top"
             />

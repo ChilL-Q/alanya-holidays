@@ -85,7 +85,7 @@ export default function RegisterPage() {
       <main className="min-h-screen bg-background-50">
         <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Warm%20golden%20morning%20light%20over%20Alanya%20coastline%20with%20Mediterranean%20Sea%20sparkling%20beneath%20hillside%20castle%20community%20gathering%20at%20waterfront%20cafe%20terrace%20vibrant%20atmosphere%20welcoming%20Turkish%20coastal%20town%20artistic%20painterly%20style&width=1800&height=560&seq=register-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Morning"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -136,7 +136,7 @@ export default function RegisterPage() {
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
         <img
-          src="https://readdy.ai/api/search-image?query=Warm%20golden%20morning%20light%20over%20Alanya%20coastline%20with%20Mediterranean%20Sea%20sparkling%20beneath%20hillside%20castle%20community%20gathering%20at%20waterfront%20cafe%20terrace%20vibrant%20atmosphere%20welcoming%20Turkish%20coastal%20town%20artistic%20painterly%20style&width=1800&height=560&seq=register-hero-01&orientation=landscape"
+          src="/images/placeholder-business.svg"
           alt="Alanya Morning"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />

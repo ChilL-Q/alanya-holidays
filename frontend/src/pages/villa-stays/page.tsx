@@ -147,7 +147,7 @@ export default function VillaStaysPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20villa%20with%20infinity%20pool%20overlooking%20turquoise%20sea%20at%20golden%20hour%20white%20modern%20architecture%20surrounded%20by%20palm%20trees%20and%20bougainvillea%20panoramic%20coastal%20view%20Alanya%20Turkey%20dream%20vacation%20setting%20warm%20light%20elegant%20atmosphere%20editorial%20real%20estate%20photography&width=1800&height=920&seq=villa-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Boutique Villa Stays in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

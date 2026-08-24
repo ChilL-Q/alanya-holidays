@@ -73,7 +73,7 @@ export default function LuxuryExperiencePage() {
       <main>
         <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20infinity%20pool%20overlooking%20Mediterranean%20Sea%20at%20sunset%20Alanya%20Turkey%20elegant%20loungers%20white%20cabanas%20golden%20hour%20light%20sophisticated%20atmosphere%20high-end%20resort%20photography%20warm%20amber%20tones&width=1800&height=840&seq=luxury-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Experiences in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

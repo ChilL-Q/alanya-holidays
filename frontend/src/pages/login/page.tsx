@@ -74,7 +74,7 @@ export default function LoginPage() {
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
         <img
-          src="https://readdy.ai/api/search-image?query=Warm%20sunset%20over%20Alanya%20harbor%20with%20soft%20golden%20light%20reflecting%20on%20calm%20Mediterranean%20Sea%20historic%20castle%20on%20hilltop%20distant%20silhouette%20peaceful%20evening%20atmosphere%20painterly%20artistic%20style&width=1800&height=560&seq=login-hero-01&orientation=landscape"
+          src="/images/placeholder-business.svg"
           alt="Alanya Sunset"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />

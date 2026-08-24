@@ -152,7 +152,7 @@ export default function PersonalChefsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Private%20chef%20in%20a%20bright%20luxury%20villa%20kitchen%20preparing%20an%20elegant%20multi-course%20Mediterranean%20meal%20fresh%20seafood%20colorful%20vegetables%20on%20marble%20countertop%20warm%20natural%20daylight%20modern%20interior%20with%20sea%20view%20behind%20culinary%20lifestyle%20photography%20high%20detail%20inviting%20atmosphere&width=1800&height=920&seq=chef-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Personal Chefs in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

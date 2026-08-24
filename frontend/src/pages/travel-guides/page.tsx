@@ -104,7 +104,7 @@ export default function TravelGuidesPage() {
         {/* Hero Section */}
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Turkish%20travel%20journal%20open%20on%20wooden%20table%20with%20vintage%20map%20of%20Antalya%20region%20Mediterranean%20coast%20compass%20Turkish%20tea%20glass%20warm%20golden%20sunlight%20terracotta%20tiles%20background%20editorial%20photography%20high%20detail&width=1800&height=760&seq=travel-guides-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Travel Guides"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -299,7 +299,7 @@ export default function TravelGuidesPage() {
           {guides.map((guide, idx) => {
             const heroImage =
               guide.cover_image_url ||
-              "https://readdy.ai/api/search-image?query=Alanya%20castle%20and%20Mediterranean%20coast&width=1200&height=512&seq=print-fallback&orientation=landscape";
+              "/images/placeholder-business.svg";
             const readTime = guide.readTime || "8 min read";
             const description = guide.description || guide.excerpt || "";
 

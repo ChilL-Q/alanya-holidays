@@ -151,7 +151,7 @@ export default function PersonalShopperPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Elegant%20boutique%20shopping%20street%20in%20Antalya%20Turkey%20with%20stylish%20woman%20browsing%20colorful%20designer%20clothing%20and%20accessories%20in%20a%20beautifully%20decorated%20shop%20warm%20ambient%20lighting%20Turkish%20fashion%20and%20artisan%20crafts%20visible%20through%20windows%20Mediterranean%20architecture%20outside%20lifestyle%20photography%20high%20detail%20inviting%20atmosphere&width=1800&height=920&seq=shopper-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Personal Shoppers in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

@@ -110,7 +110,7 @@ export default function PhotographyExcursionsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Professional%20photographer%20capturing%20golden%20hour%20scene%20in%20Alanya%20old%20town%20narrow%20cobblestone%20alley%20with%20colorful%20Ottoman%20houses%20bougainvillea%20flowers%20warm%20sunset%20light%20streaming%20through%20creative%20composition%20behind%20the%20scenes%20travel%20editorial%20photography%20artistic%20atmosphere&width=1800&height=920&seq=photo-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Photography Excursions in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

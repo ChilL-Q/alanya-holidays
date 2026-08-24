@@ -100,7 +100,7 @@ export default function BlogPostPage() {
             {/* Hero Image */}
             <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
               <img
-                src={post.cover_image_url || "https://readdy.ai/api/search-image?query=Alanya%20Mediterranean%20coast&width=1800&height=760&seq=blog-post-hero&orientation=landscape"}
+                src={post.cover_image_url || "/images/placeholder-business.svg"}
                 alt={post.title}
                 className="absolute inset-0 w-full h-full object-cover object-top"
               />

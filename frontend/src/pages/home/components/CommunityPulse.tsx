@@ -30,7 +30,7 @@ export default function CommunityPulse() {
         {/* Left Side - Image */}
         <div className="relative w-full lg:w-1/2 h-80 lg:h-auto lg:min-h-[600px]">
           <img
-            src="https://readdy.ai/api/search-image?query=Alanya%20harbor%20at%20sunset%20with%20boats%20and%20medieval%20castle%20silhouette%20warm%20golden%20light%20reflections%20on%20water%20atmospheric%20landscape%20editorial%20photography%20stunning%20composition&width=900&height=700&seq=pulse-harbor-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Harbor"
             className="absolute inset-0 w-full h-full object-cover"
           />

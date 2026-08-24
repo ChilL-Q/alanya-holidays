@@ -78,7 +78,7 @@ export default function GuideModal({ guide, onClose }: GuideModalProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const heroImage = content?.heroImage || guide.cover_image_url || "https://readdy.ai/api/search-image?query=Alanya%20castle%20and%20Mediterranean%20coast%20sunny%20day&width=1200&height=512&seq=guide-modal-fallback&orientation=landscape";
+  const heroImage = content?.heroImage || guide.cover_image_url || "/images/placeholder-business.svg";
   const tag = guide.tag || guide.category || "General";
   const readTime = guide.readTime || "8 min read";
   const description = guide.description || guide.excerpt || "";

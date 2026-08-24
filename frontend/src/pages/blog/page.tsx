@@ -113,7 +113,7 @@ export default function BlogPage() {
         {/* Hero Section */}
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=travel%20blog%20writing%20desk%20with%20laptop%20coffee%20Mediterranean%20view%20Alanya%20coast%20warm%20editorial%20photography&width=1800&height=760&seq=blog-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Travel Blog"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -241,7 +241,7 @@ export default function BlogPage() {
                       >
                         <div className="w-full h-44 overflow-hidden">
                           <img
-                            src={post.cover_image_url || "https://readdy.ai/api/search-image?query=Alanya%20Mediterranean%20coast&width=800&height=500&orientation=landscape"}
+                            src={post.cover_image_url || "/images/placeholder-business.svg"}
                             alt={post.title}
                             className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                           />
