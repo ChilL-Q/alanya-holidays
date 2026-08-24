@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS public.notifications (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Legacy environments (early schema, CI fixture) may already have a
+-- notifications table without these columns. Additive and idempotent.
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS link TEXT;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS data JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS read BOOLEAN NOT NULL DEFAULT false;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications (user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications (created_at DESC);

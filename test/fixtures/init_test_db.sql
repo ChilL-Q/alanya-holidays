@@ -299,12 +299,14 @@ CREATE TABLE IF NOT EXISTS public.property_ical_feeds (
 CREATE TABLE IF NOT EXISTS public.notifications (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
+  actor_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   title text NOT NULL,
   message text NOT NULL,
   type text DEFAULT 'info',
   is_read boolean DEFAULT false,
   read boolean DEFAULT false,
   data jsonb DEFAULT '{}'::jsonb,
+  link text,
   created_at timestamptz DEFAULT now()
 );
 
