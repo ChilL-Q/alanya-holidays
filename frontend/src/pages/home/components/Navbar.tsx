@@ -10,6 +10,7 @@ import {
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  subscribeToUserNotifications,
   formatNotificationTime,
   type AppNotification,
   type NotificationType,
@@ -148,8 +149,16 @@ export default function Navbar() {
       }
     };
     void fetchNotifications();
+
+    const unsubscribe = subscribeToUserNotifications(user.id, (newNotif) => {
+      if (isMounted) {
+        setNotifications((prev) => [newNotif, ...prev.filter((n) => n.id !== newNotif.id)]);
+      }
+    });
+
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [user?.id]);
 

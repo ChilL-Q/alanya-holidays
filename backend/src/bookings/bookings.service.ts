@@ -157,7 +157,7 @@ export class BookingsService {
     );
 
     if (hostId && this.notificationsService) {
-      this.notificationsService.notifyUser(hostId, {
+      void this.notificationsService.notifyUser(hostId, {
         type: 'NEW_BOOKING',
         title: 'Новое бронирование!',
         message: `Новая заявка на "${itemTitle}" с ${bookingEntity.stayPeriod.checkIn} по ${bookingEntity.stayPeriod.checkOut}`,

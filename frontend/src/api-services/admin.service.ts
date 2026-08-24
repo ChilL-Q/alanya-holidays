@@ -586,6 +586,371 @@ class AdminService {
     });
     return { successful, failed };
   }
+
+  // ==========================================
+  // Directory Curation Methods (Task 2.2)
+  // ==========================================
+
+  /**
+   * Sets listing featured status to true.
+   */
+  async featureListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/${id}/feature`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to feature listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing featured status to false.
+   */
+  async unfeatureListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/${id}/unfeature`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to unfeature listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing verified status to true.
+   */
+  async verifyListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/${id}/verify`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to verify listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing verified status to false.
+   */
+  async unverifyListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/${id}/unverify`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to unverify listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Updates listing base curation score (0-100).
+   */
+  async updateListingScore(id: string, score: number): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; base_score: number }>(`/directory/${id}/score`, {
+        score,
+      });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to update score for listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Convenience method: toggles feature state.
+   */
+  async toggleListingFeature(id: string, isFeatured: boolean): Promise<boolean> {
+    return isFeatured ? this.featureListing(id) : this.unfeatureListing(id);
+  }
+
+  /**
+   * Convenience method: toggles verify state.
+   */
+  async toggleListingVerify(id: string, isVerified: boolean): Promise<boolean> {
+    return isVerified ? this.verifyListing(id) : this.unverifyListing(id);
+  }
+
+  /**
+   * Batch features multiple listings concurrently.
+   */
+  async batchFeatureListings(ids: string[]): Promise<{ successful: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => this.featureListing(id)));
+    const successful: string[] = [];
+    const failed: string[] = [];
+    results.forEach((res, idx) => {
+      if (res.status === "fulfilled" && res.value) {
+        successful.push(ids[idx]);
+      } else {
+        failed.push(ids[idx]);
+      }
+    });
+    return { successful, failed };
+  }
+
+  /**
+   * Batch verifies multiple listings concurrently.
+   */
+  async batchVerifyListings(ids: string[]): Promise<{ successful: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => this.verifyListing(id)));
+    const successful: string[] = [];
+    const failed: string[] = [];
+    results.forEach((res, idx) => {
+      if (res.status === "fulfilled" && res.value) {
+        successful.push(ids[idx]);
+      } else {
+        failed.push(ids[idx]);
+      }
+    });
+    return { successful, failed };
+  }
+
+  // ==========================================
+  // Forum Moderation Hub Methods
+  // ==========================================
+
+  /**
+   * Fetches forum violation reports with optional status and pagination filters.
+   */
+  async getForumReports(params?: {
+    includeResolved?: boolean;
+    page?: number;
+    limit?: number;
+    target_type?: "post" | "comment";
+  }): Promise<ForumReportAdminItem[]> {
+    try {
+      const res = await apiClient.get<ForumReportAdminItem[]>("/forum/reports", {
+        params: params as Record<string, string | number | boolean | null | undefined>,
+      });
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      logger.error("Failed to fetch forum reports from API:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Marks a reported violation as resolved.
+   */
+  async resolveForumReport(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/reports/${id}/resolve`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to resolve forum report ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Fetches real-time forum metrics and KPIs.
+   */
+  async getForumStats(): Promise<ForumStatsAdminItem | null> {
+    try {
+      const stats = await apiClient.get<ForumStatsAdminItem>("/forum/stats");
+      return stats;
+    } catch (err) {
+      logger.error("Failed to fetch forum stats:", err);
+      return null;
+    }
+  }
+
+  /**
+   * Pins or unpins a forum discussion topic.
+   */
+  async setForumPostPinned(id: string, pinned: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/pin`, { pinned });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum post ${id} pinned:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Soft removes (is_removed = true) or restores (is_removed = false) a forum post.
+   */
+  async setForumPostRemoved(id: string, removed: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/remove`, { removed });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum post ${id} removed:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Permanently hard deletes a forum post from the database.
+   */
+  async deleteForumPost(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete<{ success: boolean }>(`/forum/posts/${id}`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to delete forum post ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Soft removes or restores a forum comment.
+   */
+  async setForumCommentRemoved(id: string, removed: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/comments/${id}/remove`, { removed });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum comment ${id} removed:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Permanently hard deletes a forum comment.
+   */
+  async deleteForumComment(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete<{ success: boolean }>(`/forum/comments/${id}`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to delete forum comment ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Fetches soft-deleted comments queue for moderation audit.
+   */
+  async getRemovedForumComments(limit?: number): Promise<ForumRemovedCommentItem[]> {
+    try {
+      const res = await apiClient.get<ForumRemovedCommentItem[]>("/forum/reports/removed-comments", {
+        params: limit !== undefined ? { limit } : undefined,
+      });
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      logger.error("Failed to fetch removed comments:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches paginated moderation audit logs with filter matrix.
+   */
+  async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLogPaginatedResult> {
+    try {
+      const res = await apiClient.get<AuditLogPaginatedResult>("/admin/audit-logs", {
+        params: params as Record<string, string | number | boolean | null | undefined>,
+      });
+      if (res && Array.isArray(res.data)) {
+        return res;
+      }
+      return {
+        data: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        totalPages: 0,
+      };
+    } catch (err) {
+      logger.error("Failed to fetch audit logs from API:", err);
+      return {
+        data: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        totalPages: 0,
+      };
+    }
+  }
+}
+
+export interface ModerationAuditLogItem {
+  id: string;
+  entity_type: "listing" | "blog_post" | "blog_submission" | "forum_post" | "forum_comment" | "forum_report" | "claim" | string;
+  entity_id: string;
+  action: "approve" | "reject" | "delete" | "feature" | "unfeature" | "verify" | "unverify" | "pin" | "remove" | "restore" | "resolve" | "update_score" | string;
+  admin_id?: string | null;
+  reason?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+  admin?: {
+    id?: string;
+    full_name?: string | null;
+    email?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export interface AuditLogQueryParams {
+  entity_type?: string;
+  action?: string;
+  admin_id?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AuditLogPaginatedResult {
+  data: ModerationAuditLogItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ForumReportAdminItem {
+  id: string;
+  reporter_id: string;
+  target_type: "post" | "comment" | string;
+  target_id: string;
+  reason: "spam" | "harassment" | "inappropriate" | "misinformation" | "other" | string;
+  resolved: boolean;
+  created_at: string;
+  reporter?: {
+    id?: string;
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  target_post?: {
+    id: string;
+    title?: string;
+    content?: string;
+    author_id?: string;
+    is_pinned?: boolean;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
+  target_comment?: {
+    id: string;
+    post_id?: string;
+    body?: string;
+    user_id?: string;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
+}
+
+export interface ForumStatsAdminItem {
+  totalTopics: number;
+  totalReplies: number;
+  usersOnline: number;
+  latestMember: string | null;
+}
+
+export interface ForumRemovedCommentItem {
+  id: string;
+  post_id: string;
+  user_id: string;
+  body: string;
+  is_removed: boolean;
+  created_at: string;
+  author_name?: string | null;
+  author_avatar?: string | null;
 }
 
 export interface BlogSubmissionAdminItem {
@@ -615,3 +980,4 @@ export interface BlogSubmissionAdminItem {
 }
 
 export const adminService = new AdminService();
+

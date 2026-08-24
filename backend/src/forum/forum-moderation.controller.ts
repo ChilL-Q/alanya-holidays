@@ -6,8 +6,10 @@ import {
   Post,
   Query,
   UseGuards,
+  Optional,
 } from '@nestjs/common';
 import { ForumService } from './forum.service';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { RequireRole } from '../auth/decorators/require-role.decorator';
@@ -26,7 +28,11 @@ import {
 
 @Controller('forum/reports')
 export class ForumModerationController {
-  constructor(private readonly forumService: ForumService) {}
+  constructor(
+    private readonly forumService: ForumService,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
+  ) {}
 
   @Post()
   @UseGuards(AuthGuard)
@@ -47,7 +53,15 @@ export class ForumModerationController {
     const includeResolved =
       query.includeResolved === true ||
       (query.includeResolved as unknown) === 'true';
-    return this.forumService.getForumReports(includeResolved, user.id);
+    return this.forumService.getForumReports(
+      {
+        includeResolved,
+        page: query.page !== undefined ? Number(query.page) : undefined,
+        limit: query.limit !== undefined ? Number(query.limit) : undefined,
+        target_type: query.target_type,
+      },
+      user.id,
+    );
   }
 
   @Post(':id/resolve')
@@ -57,7 +71,16 @@ export class ForumModerationController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumActionResponse> {
-    return this.forumService.resolveForumReport(id, user.id);
+    const result = await this.forumService.resolveForumReport(id, user.id);
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_report',
+        entity_id: id,
+        action: 'resolve',
+        admin_id: user.id,
+      });
+    }
+    return result;
   }
 
   @Get('removed-comments')

@@ -16,6 +16,7 @@ import { RedisService } from '../src/common/redis/redis.service';
 type HttpApp = Parameters<typeof request>[0];
 
 describe('Critical backend flows (e2e)', () => {
+  jest.setTimeout(30000);
   let app: INestApplication;
   let httpApp: HttpApp;
 

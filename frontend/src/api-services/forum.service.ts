@@ -30,6 +30,8 @@ export interface CategoryThread {
   isPinned?: boolean;
   isVerified?: boolean;
   isLiked?: boolean;
+  isBookmarked?: boolean;
+  authorId?: string;
   slug?: string;
 }
 
@@ -37,6 +39,7 @@ export interface ThreadReply {
   id: string;
   author: string;
   authorAvatar: string;
+  authorId?: string;
   authorRole: string;
   authorBadges: string[];
   content: string;
@@ -68,6 +71,8 @@ export interface ThreadDetail {
   views: number;
   likes: number;
   isLiked: boolean;
+  isBookmarked?: boolean;
+  authorId?: string;
   isPinned: boolean;
   isHot: boolean;
   isVerified: boolean;
@@ -286,6 +291,7 @@ export interface ForumBackendPost {
     avatar_url?: string;
   };
   liked_by_me?: boolean;
+  bookmarked_by_me?: boolean;
 }
 
 export interface ForumBackendComment {
@@ -331,7 +337,7 @@ export function mapBackendCategoryToCategory(cat: ForumBackendCategory): Categor
     : [];
 
   return {
-    id: cat.slug || cat.id,
+    id: cat.id || cat.slug,
     name: cat.name,
     icon: cat.icon || "ri-chat-3-line",
     description: cat.description || "Discussions and questions in this category",
@@ -342,7 +348,7 @@ export function mapBackendCategoryToCategory(cat: ForumBackendCategory): Categor
     image:
       cat.image_url ||
       "https://readdy.ai/api/search-image?query=Alanya%20city%20landscape%20and%20Mediterranean%20sea%20travel%20editorial%20photography&width=800&height=600&orientation=landscape",
-    slug: cat.slug,
+    slug: cat.slug || cat.id,
   };
 }
 
@@ -369,6 +375,8 @@ export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
     isPinned: !!post.is_pinned,
     isVerified: true,
     isLiked: !!post.liked_by_me,
+    isBookmarked: !!post.bookmarked_by_me,
+    authorId: post.author_id,
     slug: post.slug,
   };
 }
@@ -386,6 +394,7 @@ export function mapBackendCommentToReply(comment: ForumBackendComment): ThreadRe
     postedAt: timeAgo(comment.created_at),
     likes: comment.likes_count ?? 0,
     isLiked: !!comment.liked_by_me,
+    authorId: comment.author_id,
     parentId: comment.parent_id || null,
     replies: [],
   };
@@ -421,6 +430,8 @@ export function mapBackendPostToThreadDetail(
     views: post.views_count ?? 0,
     likes: post.likes_count ?? 0,
     isLiked: !!post.liked_by_me,
+    isBookmarked: !!post.bookmarked_by_me,
+    authorId: post.author_id,
     isPinned: !!post.is_pinned,
     isHot,
     isVerified: true,
@@ -688,6 +699,7 @@ export class ForumService {
       `/forum/comments/post/${input.postId}`,
       {
         body: input.body,
+        parentId: input.parentId || null,
         parent_id: input.parentId || null,
       }
     );
@@ -779,6 +791,84 @@ export class ForumService {
       throw err;
     }
   }
+  /**
+   * Toggles bookmark on a thread/post.
+   */
+  async toggleBookmark(postId: string): Promise<{ bookmarked: boolean }> {
+    return apiClient.post<{ bookmarked: boolean }>(
+      `/forum/posts/${postId}/bookmark`
+    );
+  }
+
+  /**
+   * Retrieves bookmarked posts for the current user.
+   */
+  async getBookmarkedPosts(
+    limit: number = 20,
+    options?: RequestOptions
+  ): Promise<CategoryThread[]> {
+    try {
+      const data = await apiClient.get<ForumBackendPost[] | { data: ForumBackendPost[] }>(
+        "/forum/bookmarks",
+        {
+          ...options,
+          params: { ...options?.params, limit },
+        }
+      );
+      if (Array.isArray(data)) {
+        return data.map(mapBackendPostToThread);
+      }
+      if (data && "data" in data && Array.isArray((data as { data: ForumBackendPost[] }).data)) {
+        return (data as { data: ForumBackendPost[] }).data.map(mapBackendPostToThread);
+      }
+      return [];
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 401)) {
+        return [];
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Alias for getBookmarkedPosts.
+   */
+  async getBookmarkedThreads(
+    limit: number = 20,
+    options?: RequestOptions
+  ): Promise<CategoryThread[]> {
+    return this.getBookmarkedPosts(limit, options);
+  }
+
+  /**
+   * Updates an existing forum post.
+   */
+  async updatePost(
+    postId: string,
+    data: { title?: string; body?: string }
+  ): Promise<CategoryThread> {
+    const response = await apiClient.put<ForumBackendPost>(
+      `/forum/posts/${postId}`,
+      data
+    );
+    return mapBackendPostToThread(response);
+  }
+
+  /**
+   * Updates an existing forum comment/reply.
+   */
+  async updateComment(
+    commentId: string,
+    data: { body: string } | string
+  ): Promise<ThreadReply> {
+    const body = typeof data === "string" ? { body: data } : data;
+    const response = await apiClient.put<ForumBackendComment>(
+      `/forum/comments/${commentId}`,
+      body
+    );
+    return mapBackendCommentToReply(response);
+  }
+
 }
 
 export const forumService = new ForumService();
@@ -798,3 +888,13 @@ export const getMembers = (options?: { role?: string; limit?: number } & Request
   forumService.getMembers(options);
 export const getMemberById = (memberId: string, options?: RequestOptions) =>
   forumService.getMemberById(memberId, options);
+
+export const toggleBookmark = (postId: string) => forumService.toggleBookmark(postId);
+export const getBookmarkedPosts = (limit?: number, options?: RequestOptions) =>
+  forumService.getBookmarkedPosts(limit, options);
+export const getBookmarkedThreads = (limit?: number, options?: RequestOptions) =>
+  forumService.getBookmarkedThreads(limit, options);
+export const updatePost = (postId: string, data: { title?: string; body?: string }) =>
+  forumService.updatePost(postId, data);
+export const updateComment = (commentId: string, data: { body: string } | string) =>
+  forumService.updateComment(commentId, data);

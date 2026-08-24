@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ForumDiscussionService } from './forum-discussion.service';
 import { ForumRepository } from '../forum.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
@@ -16,6 +21,7 @@ describe('ForumDiscussionService', () => {
 
   beforeEach(async () => {
     mockRepository = {
+      checkRateLimit: jest.fn().mockResolvedValue(true),
       getCategories: jest.fn().mockResolvedValue([]),
       getCategoryBySlug: jest.fn(),
       getCategoryById: jest.fn(),
@@ -39,7 +45,16 @@ describe('ForumDiscussionService', () => {
       getComments: jest.fn().mockResolvedValue([]),
       insertComment: jest.fn(),
       getCommentById: jest.fn(),
+      updateComment: jest
+        .fn()
+        .mockImplementation((id, updates) =>
+          Promise.resolve({ id, ...updates }),
+        ),
       deleteComment: jest.fn(),
+      checkBookmark: jest.fn(),
+      insertBookmark: jest.fn(),
+      deleteBookmark: jest.fn(),
+      getUserBookmarks: jest.fn().mockResolvedValue([]),
       getRemovedComments: jest.fn().mockResolvedValue([]),
       toggleRow: jest.fn().mockResolvedValue({ active: true }),
       annotateLikes: jest
@@ -158,6 +173,32 @@ describe('ForumDiscussionService', () => {
       );
     });
 
+    it('resolves category slug to UUID when category_id is provided as non-UUID slug', async () => {
+      mockRepository.getPostSlugs.mockResolvedValueOnce([]);
+      mockRepository.getCategoryBySlug.mockResolvedValueOnce({
+        id: '11111111-2222-3333-4444-555555555555',
+        name: 'General Discussion',
+        slug: 'general',
+      });
+      mockRepository.insertPost.mockResolvedValueOnce({
+        id: postId,
+        slug: 'slug-test',
+        category_id: '11111111-2222-3333-4444-555555555555',
+      });
+
+      await service.createForumPost(
+        { title: 'Slug Test', content: 'Body', category_id: 'general' },
+        'discussion',
+        userId,
+      );
+      expect(mockRepository.getCategoryBySlug).toHaveBeenCalledWith('general');
+      expect(mockRepository.insertPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category_id: '11111111-2222-3333-4444-555555555555',
+        }),
+      );
+    });
+
     it('updates post when user is author or admin', async () => {
       mockRepository.getPostById.mockResolvedValueOnce({
         id: postId,
@@ -219,6 +260,82 @@ describe('ForumDiscussionService', () => {
         'post_id',
         postId,
         userId,
+      );
+    });
+  });
+
+  describe('Rate Limiting (Task 4.5)', () => {
+    it('throws 429 when post creation rate limit (5/hour) is exceeded', async () => {
+      mockRepository.checkRateLimit.mockResolvedValueOnce(false);
+
+      await expect(
+        service.createForumPost(
+          { title: 'Spam post', body: 'Content' },
+          'discussion',
+          userId,
+        ),
+      ).rejects.toThrow(
+        new HttpException(
+          'Превышен лимит создания постов (максимум 5 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
+      );
+      expect(mockRepository.checkRateLimit).toHaveBeenCalledWith(
+        userId,
+        'post',
+        5,
+      );
+    });
+
+    it('throws 429 when comment creation rate limit (20/hour) is exceeded', async () => {
+      mockRepository.checkRateLimit.mockResolvedValueOnce(false);
+
+      await expect(
+        service.createForumComment(postId, 'Spam comment', userId),
+      ).rejects.toThrow(
+        new HttpException(
+          'Превышен лимит отправки комментариев (максимум 20 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
+      );
+      expect(mockRepository.checkRateLimit).toHaveBeenCalledWith(
+        userId,
+        'comment',
+        20,
+      );
+    });
+
+    it('throws 429 when post like rate limit (60/hour) is exceeded', async () => {
+      mockRepository.checkRateLimit.mockResolvedValueOnce(false);
+
+      await expect(service.togglePostLike(postId, userId)).rejects.toThrow(
+        new HttpException(
+          'Превышен лимит лайков (максимум 60 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
+      );
+      expect(mockRepository.checkRateLimit).toHaveBeenCalledWith(
+        userId,
+        'like',
+        60,
+      );
+    });
+
+    it('throws 429 when comment like rate limit (60/hour) is exceeded', async () => {
+      mockRepository.checkRateLimit.mockResolvedValueOnce(false);
+
+      await expect(
+        service.toggleCommentLike(commentId, userId),
+      ).rejects.toThrow(
+        new HttpException(
+          'Превышен лимит лайков (максимум 60 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
+      );
+      expect(mockRepository.checkRateLimit).toHaveBeenCalledWith(
+        userId,
+        'like',
+        60,
       );
     });
   });

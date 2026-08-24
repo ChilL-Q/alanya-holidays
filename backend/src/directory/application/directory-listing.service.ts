@@ -1,7 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Optional,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { RedisService } from '../../common/redis/redis.service';
+import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
 import {
   DirectoryListingRecord,
   DirectoryListResponse,
@@ -20,11 +28,56 @@ import {
 
 @Injectable()
 export class DirectoryListingService {
+  private readonly logger = new Logger(DirectoryListingService.name);
+
   constructor(
     private readonly directoryRepository: DirectoryRepository,
     private readonly redisService: RedisService,
     private readonly userRolesRepo: UserRolesRepository,
+    @Optional() private readonly emailOutbox?: EmailOutboxRepository,
   ) {}
+
+  private async enqueueAdminNotification(
+    listing: Partial<DirectoryListingRecord>,
+    ownerEmailOverride?: string | null,
+  ): Promise<void> {
+    if (!this.emailOutbox) return;
+    try {
+      const adminEmail =
+        process.env.ADMIN_NOTIFICATION_EMAIL || 'admin@alanyaholidays.com';
+      const listingId = listing.id ? String(listing.id) : '';
+      const listingTitle = listing.name || 'Untitled Listing';
+      const ownerEmail =
+        ownerEmailOverride ||
+        (typeof listing.email === 'string' ? listing.email : '') ||
+        '';
+      const category =
+        (typeof listing.category_id === 'string'
+          ? listing.category_id
+          : typeof listing.category === 'string'
+            ? listing.category
+            : '') || 'general';
+      const tier =
+        (typeof listing.tier === 'string' ? listing.tier : '') || 'explorer';
+
+      await this.emailOutbox.enqueue({
+        to: adminEmail,
+        type: 'admin_listing_notification',
+        data: {
+          listingId,
+          listingTitle,
+          ownerEmail,
+          category,
+          tier,
+        },
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(
+        `Failed to enqueue admin notification for pending listing ${listing?.id}: ${msg}`,
+      );
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Public Queries & Landing
@@ -77,6 +130,9 @@ export class DirectoryListingService {
     if (cached) return cached;
 
     const data = await this.directoryRepository.getDirectoryListingById(id);
+    if (data && data.status && data.status !== 'approved') {
+      return null;
+    }
     if (data) {
       await this.redisService.setJson(cacheKey, data, 600);
     }
@@ -92,6 +148,9 @@ export class DirectoryListingService {
     if (cached) return cached;
 
     const data = await this.directoryRepository.getDirectoryListingBySlug(slug);
+    if (data && data.status && data.status !== 'approved') {
+      return null;
+    }
     if (data) {
       await this.redisService.setJson(cacheKey, data, 600);
     }
@@ -395,6 +454,7 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+    await this.enqueueAdminNotification(data, rawEmail);
     return data;
   }
 
@@ -457,6 +517,10 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+    await this.enqueueAdminNotification(
+      data,
+      data.email || (typeof listing.email === 'string' ? listing.email : null),
+    );
     return data;
   }
 
@@ -509,6 +573,14 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+
+    if ((updates as Record<string, unknown>).status === 'pending') {
+      await this.enqueueAdminNotification(
+        data,
+        typeof updates.email === 'string' ? updates.email : data.email,
+      );
+    }
+
     return data;
   }
 
@@ -681,6 +753,7 @@ export class DirectoryListingService {
       status: 'rejected',
       rejection_reason: reason,
     });
+    await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {
       void this.directoryRepository.invokeFunction('send-email', {
@@ -692,5 +765,109 @@ export class DirectoryListingService {
       });
     }
     return { success: true };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Admin Curation Operations (Task 2.2)
+  // ---------------------------------------------------------------------------
+  async featureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_featured: true,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_featured: true };
+  }
+
+  async unfeatureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_featured: false,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_featured: false };
+  }
+
+  async verifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_verified: true,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_verified: true };
+  }
+
+  async unverifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_verified: false,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_verified: false };
+  }
+
+  async setListingScore(
+    id: string,
+    score: number,
+    userId: string,
+  ): Promise<{ success: boolean; base_score: number }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (
+      score === undefined ||
+      score === null ||
+      isNaN(score) ||
+      score < 0 ||
+      score > 100
+    ) {
+      throw new BadRequestException('Score must be a number between 0 and 100');
+    }
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      base_score: score,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, base_score: score };
   }
 }

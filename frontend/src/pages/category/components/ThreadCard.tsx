@@ -1,11 +1,47 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { CategoryThread } from "@/api-services/forum.service";
+import { forumService, type CategoryThread } from "@/api-services/forum.service";
+import { logger } from "@/lib/logger";
 
 interface ThreadCardProps {
   thread: CategoryThread;
+  onBookmarkToggle?: (threadId: string, bookmarked: boolean) => void;
 }
 
-export default function ThreadCard({ thread }: ThreadCardProps) {
+export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps) {
+  const [isBookmarked, setIsBookmarked] = useState(Boolean(thread.isBookmarked));
+  const [likes, setLikes] = useState(thread.likes);
+  const [isLiked, setIsLiked] = useState(Boolean(thread.isLiked));
+
+  const handleBookmarkClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nextState = !isBookmarked;
+    setIsBookmarked(nextState);
+    try {
+      await forumService.toggleBookmark(thread.id);
+      onBookmarkToggle?.(thread.id, nextState);
+    } catch (err) {
+      logger.warn("Failed to toggle bookmark on ThreadCard:", err);
+      setIsBookmarked(!nextState);
+    }
+  };
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nextLiked = !isLiked;
+    setIsLiked(nextLiked);
+    setLikes((l) => (nextLiked ? l + 1 : Math.max(0, l - 1)));
+    try {
+      await forumService.toggleLike("post", thread.id);
+    } catch (err) {
+      logger.warn("Failed to toggle like on ThreadCard:", err);
+      setIsLiked(!nextLiked);
+      setLikes((l) => (!nextLiked ? l + 1 : Math.max(0, l - 1)));
+    }
+  };
+
   return (
     <article className="group bg-background-50 rounded-xl border border-background-200/70 p-4 md:p-5 hover:border-primary-200/60 transition-all duration-200">
       <div className="flex items-start gap-4">
@@ -81,13 +117,36 @@ export default function ThreadCard({ thread }: ThreadCardProps) {
           </div>
         </div>
 
-        {/* Right side - likes */}
-        <div className="hidden sm:flex flex-col items-center gap-1 shrink-0">
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-background-100 transition-colors">
-            <i className="ri-heart-line text-foreground-400 hover:text-primary-500 transition-colors"></i>
+        {/* Right side - actions (Bookmark & Like) */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={handleBookmarkClick}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
+              isBookmarked
+                ? "text-teal-600 bg-teal-50"
+                : "text-foreground-400 hover:text-teal-600 hover:bg-background-100"
+            }`}
+            title={isBookmarked ? "Remove bookmark" : "Save post"}
+            aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
+          >
+            <i className={`${isBookmarked ? "ri-bookmark-fill" : "ri-bookmark-line"} text-base`}></i>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLikeClick}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer ${
+              isLiked
+                ? "text-primary-500 bg-primary-50"
+                : "text-foreground-400 hover:text-primary-500 hover:bg-background-100"
+            }`}
+            aria-label={isLiked ? "Unlike post" : "Like post"}
+          >
+            <i className={`${isLiked ? "ri-heart-fill" : "ri-heart-line"} text-base`}></i>
           </button>
           <span className="text-xs font-medium text-foreground-500">
-            {thread.likes}
+            {likes}
           </span>
         </div>
       </div>

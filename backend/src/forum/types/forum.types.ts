@@ -40,6 +40,7 @@ export interface ForumPost {
   view_count?: number;
   views_count?: number;
   liked_by_me?: boolean;
+  bookmarked_by_me?: boolean;
   post_type?: 'announcement' | 'discussion' | 'question';
   created_at: string;
   updated_at?: string;

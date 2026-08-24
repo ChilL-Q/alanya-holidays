@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import RichTextEditor from "@/components/base/RichTextEditor";
 
 export default function ThreadForm() {
   const [searchParams] = useSearchParams();
@@ -90,9 +91,13 @@ export default function ThreadForm() {
         title: res.title,
       });
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: unknown) {
       logger.warn("Failed to create thread:", err);
-      setSubmitted(true);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to create thread. Please check your inputs and try again.";
+      setErrors((prev) => ({ ...prev, submit: message }));
     } finally {
       setIsSubmitting(false);
     }
@@ -125,20 +130,20 @@ export default function ThreadForm() {
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {createdThread && (
-            <a
-              href={`/thread/${createdThread.slug || createdThread.id}`}
+            <Link
+              to={`/thread/${createdThread.slug || createdThread.id}`}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
               View Your Thread
               <i className="ri-arrow-right-line"></i>
-            </a>
+            </Link>
           )}
-          <a
-            href={`/category/${categoryId}`}
+          <Link
+            to={`/category/${selectedCategory?.slug || categoryId}`}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap"
           >
             View in {selectedCategory?.name}
-          </a>
+          </Link>
           <button
             onClick={() => {
               setSubmitted(false);
@@ -164,6 +169,13 @@ export default function ThreadForm() {
       onSubmit={handleSubmit}
       className="bg-background-50 rounded-2xl border border-background-200/70 p-6 md:p-8 max-w-2xl mx-auto space-y-6"
     >
+      {errors.submit && (
+        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+          <i className="ri-error-warning-line text-lg shrink-0"></i>
+          <span>{errors.submit}</span>
+        </div>
+      )}
+
       {/* Category */}
       <div>
         <label className="block text-sm font-medium text-foreground-800 mb-1.5">
@@ -256,19 +268,10 @@ export default function ThreadForm() {
         <label className="block text-sm font-medium text-foreground-800 mb-1.5">
           Content <span className="text-primary-500">*</span>
         </label>
-        <textarea
-          name="content"
+        <RichTextEditor
           value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-            if (errors.content) setErrors((prev) => { const n = { ...prev }; delete n.content; return n; });
-          }}
+          onChange={setContent}
           placeholder="Share your thoughts, question, or experience in detail..."
-          rows={8}
-          maxLength={500}
-          className={`w-full bg-background-50 border ${
-            errors.content ? "border-primary-500" : "border-background-200"
-          } rounded-lg px-4 py-3 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500 transition-colors resize-y`}
         />
         <div className="flex items-center justify-between mt-1">
           {errors.content ? (
@@ -276,7 +279,6 @@ export default function ThreadForm() {
           ) : (
             <span />
           )}
-          <span className="text-xs text-foreground-400">{content.length}/500</span>
         </div>
       </div>
 

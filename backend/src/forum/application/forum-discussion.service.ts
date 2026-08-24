@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -330,13 +332,43 @@ export class ForumDiscussionService {
     postType: 'discussion' | 'question',
     userId: string,
   ): Promise<ForumPost> {
+    if (typeof this.forumRepository.checkRateLimit === 'function') {
+      const allowed = await this.forumRepository.checkRateLimit(
+        userId,
+        'post',
+        5,
+      );
+      if (!allowed) {
+        throw new HttpException(
+          'Превышен лимит создания постов (максимум 5 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+
+    let resolvedCategoryId: string | null = null;
+    if (input.category_id) {
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          input.category_id,
+        );
+      if (isUuid) {
+        resolvedCategoryId = input.category_id;
+      } else {
+        const cat = await this.forumRepository.getCategoryBySlug(
+          input.category_id,
+        );
+        resolvedCategoryId = cat ? cat.id : null;
+      }
+    }
+
     const uniqueSlug = await this.resolveSlug(slugify(input.title));
     return this.forumRepository.insertPost({
       title: input.title,
       slug: uniqueSlug,
       body: input.body ?? input.content ?? '',
       content: input.content ?? input.body ?? '',
-      category_id: input.category_id || null,
+      category_id: resolvedCategoryId,
       author_id: userId,
       post_type: postType,
     });
@@ -359,8 +391,24 @@ export class ForumDiscussionService {
     if (updates.title !== undefined) safe.title = updates.title;
     if (updates.body !== undefined) safe.body = updates.body;
     if (updates.content !== undefined) safe.content = updates.content;
-    if (updates.category_id !== undefined)
-      safe.category_id = updates.category_id || null;
+    if (updates.category_id !== undefined) {
+      if (updates.category_id) {
+        const isUuid =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            updates.category_id,
+          );
+        if (isUuid) {
+          safe.category_id = updates.category_id;
+        } else {
+          const cat = await this.forumRepository.getCategoryBySlug(
+            updates.category_id,
+          );
+          safe.category_id = cat ? cat.id : null;
+        }
+      } else {
+        safe.category_id = null;
+      }
+    }
 
     return this.forumRepository.updatePost(id, safe);
   }
@@ -440,6 +488,20 @@ export class ForumDiscussionService {
     userId: string,
     parentId?: string | null,
   ): Promise<ForumComment> {
+    if (typeof this.forumRepository.checkRateLimit === 'function') {
+      const allowed = await this.forumRepository.checkRateLimit(
+        userId,
+        'comment',
+        20,
+      );
+      if (!allowed) {
+        throw new HttpException(
+          'Превышен лимит отправки комментариев (максимум 20 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+
     return this.forumRepository.insertComment({
       post_id: postId,
       author_id: userId,
@@ -447,6 +509,21 @@ export class ForumDiscussionService {
       content: body,
       parent_id: parentId || null,
     });
+  }
+
+  async updateForumComment(
+    id: string,
+    body: string,
+    userId: string,
+  ): Promise<ForumComment> {
+    const role = this.userRolesRepo
+      ? await this.userRolesRepo.getRole(userId)
+      : undefined;
+    const existing = await this.forumRepository.getCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+    assertAuthorOrAdmin(existing.author_id, userId, role);
+
+    return this.forumRepository.updateComment(id, { body, content: body });
   }
 
   async deleteForumComment(
@@ -481,6 +558,20 @@ export class ForumDiscussionService {
     postId: string,
     userId: string,
   ): Promise<ForumLikeResponse> {
+    if (typeof this.forumRepository.checkRateLimit === 'function') {
+      const allowed = await this.forumRepository.checkRateLimit(
+        userId,
+        'like',
+        60,
+      );
+      if (!allowed) {
+        throw new HttpException(
+          'Превышен лимит лайков (максимум 60 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+
     if (typeof this.forumRepository.toggleRow === 'function') {
       const { active } = await this.forumRepository.toggleRow(
         'forum_post_likes',
@@ -516,6 +607,20 @@ export class ForumDiscussionService {
     commentId: string,
     userId: string,
   ): Promise<ForumLikeResponse> {
+    if (typeof this.forumRepository.checkRateLimit === 'function') {
+      const allowed = await this.forumRepository.checkRateLimit(
+        userId,
+        'like',
+        60,
+      );
+      if (!allowed) {
+        throw new HttpException(
+          'Превышен лимит лайков (максимум 60 в час). Пожалуйста, попробуйте позже.',
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
+
     if (typeof this.forumRepository.toggleRow === 'function') {
       const { active } = await this.forumRepository.toggleRow(
         'forum_comment_likes',
@@ -548,6 +653,50 @@ export class ForumDiscussionService {
       }
       throw err;
     }
+  }
+
+  // ============================================================
+  // Bookmarks
+  // ============================================================
+  async getUserBookmarks(userId: string): Promise<ForumPost[]> {
+    const posts = await this.forumRepository.getUserBookmarks(userId);
+    const annotated = await this.annotateLikes(
+      posts,
+      'forum_post_likes',
+      'post_id',
+      userId,
+    );
+    await this.attachCategoryParents(annotated);
+    return annotated.map((p) => ({ ...p, bookmarked_by_me: true }));
+  }
+
+  async togglePostBookmark(
+    postId: string,
+    userId: string,
+  ): Promise<{ bookmarked: boolean }> {
+    const existingPost = await this.forumRepository.getPostById(postId);
+    if (!existingPost) throw new NotFoundException('Post not found');
+
+    if (typeof this.forumRepository.toggleRow === 'function') {
+      const { active } = await this.forumRepository.toggleRow(
+        'forum_bookmarks' as unknown as 'forum_post_likes',
+        'post_id',
+        postId,
+        userId,
+      );
+      return { bookmarked: active };
+    }
+
+    const isBookmarked = await this.forumRepository.checkBookmark(
+      postId,
+      userId,
+    );
+    if (isBookmarked) {
+      await this.forumRepository.deleteBookmark(postId, userId);
+      return { bookmarked: false };
+    }
+    await this.forumRepository.insertBookmark(postId, userId);
+    return { bookmarked: true };
   }
 
   // ============================================================

@@ -8,9 +8,11 @@ import {
   Put,
   Query,
   UseGuards,
+  Optional,
 } from '@nestjs/common';
 import { ForumService } from './forum.service';
 import { UsersService } from '../users/users.service';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -31,6 +33,7 @@ import {
 import {
   CreateForumCommentDto,
   GetForumCommentsQueryDto,
+  UpdateForumCommentDto,
 } from './dto/forum-comments.dto';
 import {
   CreateForumEventDto,
@@ -59,6 +62,8 @@ export class ForumController {
   constructor(
     private readonly forumService: ForumService,
     private readonly usersService: UsersService,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
   // ============================================================
@@ -227,7 +232,16 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'pinned' in body
         ? Boolean(body.pinned)
         : Boolean(body);
-    return this.forumService.setPinned(id, pinned, user.id);
+    const result = await this.forumService.setPinned(id, pinned, user.id);
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_post',
+        entity_id: id,
+        action: pinned ? 'pin' : 'unpin',
+        admin_id: user.id,
+      });
+    }
+    return result;
   }
 
   @Post('posts/:id/remove')
@@ -242,7 +256,39 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'removed' in body
         ? Boolean(body.removed)
         : Boolean(body);
-    return this.forumService.setRemoved('post', id, removed, user.id);
+    const result = await this.forumService.setRemoved(
+      'post',
+      id,
+      removed,
+      user.id,
+    );
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_post',
+        entity_id: id,
+        action: removed ? 'remove' : 'restore',
+        admin_id: user.id,
+      });
+    }
+    return result;
+  }
+
+  // ============================================================
+  // Bookmarks (/forum/bookmarks*)
+  // ============================================================
+  @Get('bookmarks')
+  @UseGuards(AuthGuard)
+  async getUserBookmarks(@CurrentUser() user: AuthUser): Promise<ForumPost[]> {
+    return this.forumService.getUserBookmarks(user.id);
+  }
+
+  @Post('posts/:id/bookmark')
+  @UseGuards(AuthGuard)
+  async togglePostBookmark(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ bookmarked: boolean }> {
+    return this.forumService.togglePostBookmark(id, user.id);
   }
 
   // ============================================================
@@ -278,8 +324,19 @@ export class ForumController {
       postId,
       text,
       user.id,
-      body.parentId,
+      body.parentId || body.parent_id || null,
     );
+  }
+
+  @Put('comments/:id')
+  @UseGuards(AuthGuard)
+  async updateForumComment(
+    @Param('id') id: string,
+    @Body() body: UpdateForumCommentDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ForumComment> {
+    const text = body.body ?? body.content ?? '';
+    return this.forumService.updateForumComment(id, text, user.id);
   }
 
   @Delete('comments/:id')
@@ -312,7 +369,21 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'removed' in body
         ? Boolean(body.removed)
         : Boolean(body);
-    return this.forumService.setRemoved('comment', id, removed, user.id);
+    const result = await this.forumService.setRemoved(
+      'comment',
+      id,
+      removed,
+      user.id,
+    );
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_comment',
+        entity_id: id,
+        action: removed ? 'remove' : 'restore',
+        admin_id: user.id,
+      });
+    }
+    return result;
   }
 
   // ============================================================

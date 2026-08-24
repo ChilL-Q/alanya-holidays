@@ -1,4 +1,6 @@
 import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
+import { supabase } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 
 export type NotificationType = "booking" | "message" | "community" | "system";
 
@@ -151,6 +153,46 @@ export class NotificationsService {
     await apiClient.delete(`/notifications/${id}`);
     return true;
   }
+
+  /**
+   * Subscribes to Supabase Realtime channel for live notifications.
+   */
+  subscribeToUserNotifications(
+    userId: string,
+    onNotification: (notification: AppNotification) => void
+  ): () => void {
+    try {
+      const channel = supabase
+        .channel(`user-notifications:${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            if (payload.new) {
+              const appNotif = mapRawNotificationToApp(payload.new as RawBackendNotification);
+              onNotification(appNotif);
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (err) {
+          logger.warn("Failed to remove notification channel:", err);
+        }
+      };
+    } catch (err) {
+      logger.warn("Failed to subscribe to realtime notifications:", err);
+      return () => {};
+    }
+  }
 }
 
 export const notificationsService = new NotificationsService();
@@ -167,3 +209,7 @@ export const markAllAsRead = (userId?: string) =>
 export const deleteNotification = (id: string) =>
   notificationsService.deleteNotification(id);
 
+export const subscribeToUserNotifications = (
+  userId: string,
+  onNotification: (notification: AppNotification) => void
+) => notificationsService.subscribeToUserNotifications(userId, onNotification);

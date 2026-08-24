@@ -10,6 +10,10 @@ import {
   createComment,
   toggleLikePost,
   toggleLikeComment,
+  toggleBookmark,
+  getBookmarkedPosts,
+  updatePost,
+  updateComment,
 } from "./forum.service";
 import { apiClient, ApiError } from "@/lib/api-client";
 
@@ -53,7 +57,8 @@ describe("forum.service", () => {
       const result = await forumService.getCategories();
       expect(apiClient.get).toHaveBeenCalledWith("/forum/categories/tree");
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("test-category");
+      expect(result[0].id).toBe("cat-1");
+      expect(result[0].slug).toBe("test-category");
       expect(result[0].name).toBe("Test Category");
       expect(result[0].threadCount).toBe(42);
       expect(result[0].subcategories).toContain("Subcategory 1");
@@ -298,6 +303,7 @@ describe("forum.service", () => {
       const result = await createComment({ postId: "p1", body: "This is a comment" });
       expect(apiClient.post).toHaveBeenCalledWith("/forum/comments/post/p1", {
         body: "This is a comment",
+        parentId: null,
         parent_id: null,
       });
       expect(result.id).toBe("c-new");
@@ -322,4 +328,86 @@ describe("forum.service", () => {
       expect(result.liked).toBe(false);
     });
   });
+  describe("toggleBookmark", () => {
+    it("should toggle bookmark via POST /forum/posts/:id/bookmark", async () => {
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ bookmarked: true });
+
+      const result = await toggleBookmark("p123");
+      expect(apiClient.post).toHaveBeenCalledWith("/forum/posts/p123/bookmark");
+      expect(result.bookmarked).toBe(true);
+    });
+  });
+
+  describe("getBookmarkedPosts", () => {
+    it("should retrieve bookmarked posts mapped to CategoryThread", async () => {
+      const mockBookmarked = [
+        {
+          id: "bm-1",
+          slug: "saved-discussion",
+          title: "Saved Discussion",
+          body: "Some saved content",
+          bookmarked_by_me: true,
+          created_at: new Date().toISOString(),
+          category: { name: "Living & Expat", slug: "living-expat" },
+          author: { full_name: "Expat User" },
+        },
+      ];
+
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockBookmarked);
+
+      const result = await getBookmarkedPosts(10);
+      expect(apiClient.get).toHaveBeenCalledWith("/forum/bookmarks", {
+        params: { limit: 10 },
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe("Saved Discussion");
+      expect(result[0].isBookmarked).toBe(true);
+    });
+
+    it("should return empty array on 404 ApiError", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not found", 404, "Not Found")
+      );
+
+      const result = await getBookmarkedPosts();
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("updatePost and updateComment", () => {
+    it("should update post via PUT /forum/posts/:id", async () => {
+      const mockUpdated = {
+        id: "p-edit",
+        slug: "edited-post",
+        title: "Edited Title",
+        body: "Updated content",
+      };
+
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce(mockUpdated);
+
+      const result = await updatePost("p-edit", { body: "Updated content" });
+      expect(apiClient.put).toHaveBeenCalledWith("/forum/posts/p-edit", {
+        body: "Updated content",
+      });
+      expect(result.id).toBe("p-edit");
+    });
+
+    it("should update comment via PUT /forum/comments/:id", async () => {
+      const mockUpdatedComment = {
+        id: "c-edit",
+        post_id: "p1",
+        body: "Updated comment text",
+      };
+
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce(mockUpdatedComment);
+
+      const result = await updateComment("c-edit", "Updated comment text");
+      expect(apiClient.put).toHaveBeenCalledWith("/forum/comments/c-edit", {
+        body: "Updated comment text",
+      });
+      expect(result.id).toBe("c-edit");
+      expect(result.content).toBe("Updated comment text");
+    });
+  });
+
 });

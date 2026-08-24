@@ -63,6 +63,21 @@ describe('DirectoryController & DirectoryAdminController', () => {
         .fn()
         .mockResolvedValue({ id: 'draft-1', status: 'pending' }),
       getMyListingClaims: jest.fn().mockResolvedValue([]),
+      featureListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_featured: true }),
+      unfeatureListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_featured: false }),
+      verifyListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_verified: true }),
+      unverifyListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_verified: false }),
+      setListingScore: jest
+        .fn()
+        .mockResolvedValue({ success: true, base_score: 80 }),
     };
 
     const module: TestingModule = await Test.createTestingModule({

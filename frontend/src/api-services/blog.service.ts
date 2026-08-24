@@ -60,6 +60,21 @@ export interface BlogPostDetail extends BlogPostItem {
   relatedPosts?: BlogPostItem[];
 }
 
+export interface BlogComment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  body: string;
+  parent_id: string | null;
+  like_count: number;
+  is_removed: boolean;
+  created_at: string;
+  updated_at: string;
+  author?: { full_name: string | null; avatar_url: string | null } | null;
+  isLiked?: boolean;
+  children?: BlogComment[];
+}
+
 export const mockBlogTags: BlogTag[] = [
   { id: "all", name: "All", slug: "all" },
   { id: "first-timer", name: "First-Timer", slug: "first-timer" },
@@ -391,6 +406,30 @@ export class BlogService {
 
     return null;
   }
+
+  async getComments(postId: string): Promise<BlogComment[]> {
+    const response = await apiClient.get<BlogComment[]>(`/blog/posts/${postId}/comments`);
+    return response;
+  }
+
+  async createComment(postId: string, body: string, parentId?: string | null): Promise<BlogComment> {
+    const response = await apiClient.post<BlogComment>(`/blog/posts/${postId}/comments`, { body, parentId });
+    return response;
+  }
+
+  async updateComment(commentId: string, body: string): Promise<BlogComment> {
+    const response = await apiClient.put<BlogComment>(`/blog/comments/${commentId}`, { body });
+    return response;
+  }
+
+  async deleteComment(commentId: string): Promise<void> {
+    await apiClient.delete(`/blog/comments/${commentId}`);
+  }
+
+  async toggleCommentLike(commentId: string): Promise<{ liked: boolean }> {
+    const response = await apiClient.post<{ liked: boolean }>(`/blog/comments/${commentId}/like`);
+    return response;
+  }
 }
 
 export const blogService = new BlogService();
@@ -401,3 +440,8 @@ export const getFeaturedPosts = (limit?: number) => blogService.getFeaturedPosts
 export const getTags = () => blogService.getTags();
 export const submitGuide = (payload: SubmitGuidePayload) => blogService.submitGuide(payload);
 export const getGuideContent = (titleOrSlug: string) => blogService.getGuideContent(titleOrSlug);
+export const getComments = (postId: string) => blogService.getComments(postId);
+export const createComment = (postId: string, body: string, parentId?: string | null) => blogService.createComment(postId, body, parentId);
+export const updateComment = (commentId: string, body: string) => blogService.updateComment(commentId, body);
+export const deleteComment = (commentId: string) => blogService.deleteComment(commentId);
+export const toggleCommentLike = (commentId: string) => blogService.toggleCommentLike(commentId);

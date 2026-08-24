@@ -14,6 +14,7 @@ jest.mock('sanitize-html', () => {
 import { BlogService } from './blog.service';
 import { BlogRepository } from './blog.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import {
   BlogPost,
   BlogPostSummary,
@@ -105,6 +106,7 @@ describe('BlogService', () => {
       getProfileForNotification: jest.fn(),
       insertNotification: jest.fn(),
       invokeEmailFunction: jest.fn(),
+      getBlogComments: jest.fn(),
     } as unknown as MockRepositoryType;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -117,6 +119,12 @@ describe('BlogService', () => {
         {
           provide: UserRolesRepository,
           useValue: mockUserRolesRepo,
+        },
+        {
+          provide: ModerationAuditService,
+          useValue: {
+            logAction: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+          },
         },
       ],
     }).compile();
@@ -214,6 +222,46 @@ describe('BlogService', () => {
 
       await service.getBlogPost('title', false);
       expect(mockRepository.incrementBlogViews).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when public user tries to view draft post', async () => {
+      const draftPost = {
+        ...mockRawRow,
+        status: 'draft',
+        author_id: 'user-author',
+      };
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.getBlogPost('title', false, 'other-user'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should allow admin or author to view draft post', async () => {
+      const draftPost = {
+        ...mockRawRow,
+        status: 'draft',
+        author_id: 'user-author',
+      };
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+
+      const adminResult = await service.getBlogPost(
+        'title',
+        false,
+        'admin-user',
+      );
+      expect(adminResult.id).toBe(draftPost.id);
+
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      const authorResult = await service.getBlogPost(
+        'title',
+        false,
+        'user-author',
+      );
+      expect(authorResult.id).toBe(draftPost.id);
     });
   });
 
@@ -669,6 +717,22 @@ describe('BlogService', () => {
         }),
       );
       expect(mockRepository.invokeEmailFunction).toHaveBeenCalled();
+    });
+  });
+
+  describe('getBlogComments', () => {
+    it('should delegate getBlogComments with postId and userId', async () => {
+      mockRepository.getBlogComments.mockResolvedValueOnce([
+        { id: 'c-1', post_id: 'p-1', body: 'Nice post', isLiked: true },
+      ]);
+
+      const res = await service.getBlogComments('p-1', 'user-1');
+      expect(res).toHaveLength(1);
+      expect(res[0].isLiked).toBe(true);
+      expect(mockRepository.getBlogComments).toHaveBeenCalledWith(
+        'p-1',
+        'user-1',
+      );
     });
   });
 });

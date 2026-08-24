@@ -42,7 +42,16 @@ describe('ForumService', () => {
       getComments: jest.fn().mockResolvedValue([]),
       insertComment: jest.fn(),
       getCommentById: jest.fn(),
+      updateComment: jest
+        .fn()
+        .mockImplementation((id, updates) =>
+          Promise.resolve({ id, ...updates }),
+        ),
       deleteComment: jest.fn(),
+      checkBookmark: jest.fn(),
+      insertBookmark: jest.fn(),
+      deleteBookmark: jest.fn(),
+      getUserBookmarks: jest.fn().mockResolvedValue([]),
       getRemovedComments: jest.fn().mockResolvedValue([]),
       checkPostLike: jest.fn(),
       insertPostLike: jest.fn(),
@@ -524,6 +533,65 @@ describe('ForumService', () => {
         'post-1',
         true,
       );
+    });
+  });
+
+  describe('Comment in-place editing & Bookmarks delegation', () => {
+    it('should update forum comment when user is author', async () => {
+      mockRepository.getCommentById.mockResolvedValueOnce({
+        id: 'c-1',
+        author_id: 'user-1',
+        body: 'Old text',
+      });
+      mockRepository.updateComment.mockResolvedValueOnce({
+        id: 'c-1',
+        body: 'New text',
+      });
+
+      const res = await service.updateForumComment('c-1', 'New text', 'user-1');
+      expect(mockRepository.updateComment).toHaveBeenCalledWith('c-1', {
+        body: 'New text',
+        content: 'New text',
+      });
+      expect(res.body).toBe('New text');
+    });
+
+    it('should reject unauthorized comment update with ForbiddenException', async () => {
+      mockRepository.getCommentById.mockResolvedValueOnce({
+        id: 'c-1',
+        author_id: 'user-1',
+        body: 'Old text',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.updateForumComment('c-1', 'Hacked text', 'user-2'),
+      ).rejects.toThrow();
+    });
+
+    it('should toggle bookmark on post from unbookmarked to bookmarked and vice-versa', async () => {
+      mockRepository.getPostById.mockResolvedValue({ id: 'p-1' });
+      mockRepository.checkBookmark.mockResolvedValueOnce(false);
+      mockRepository.insertBookmark.mockResolvedValueOnce(undefined);
+
+      const res1 = await service.togglePostBookmark('p-1', 'user-1');
+      expect(res1).toEqual({ bookmarked: true });
+
+      mockRepository.checkBookmark.mockResolvedValueOnce(true);
+      mockRepository.deleteBookmark.mockResolvedValueOnce(undefined);
+
+      const res2 = await service.togglePostBookmark('p-1', 'user-1');
+      expect(res2).toEqual({ bookmarked: false });
+    });
+
+    it('should retrieve user bookmarks', async () => {
+      mockRepository.getUserBookmarks.mockResolvedValueOnce([
+        { id: 'p-1', title: 'Saved post' },
+      ]);
+
+      const res = await service.getUserBookmarks('user-1');
+      expect(mockRepository.getUserBookmarks).toHaveBeenCalledWith('user-1');
+      expect(res[0].bookmarked_by_me).toBe(true);
     });
   });
 

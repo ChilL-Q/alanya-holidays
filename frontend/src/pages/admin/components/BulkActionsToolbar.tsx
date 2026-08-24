@@ -5,12 +5,16 @@ interface BulkActionsToolbarProps {
   totalCount: number;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  onBatchApprove: () => Promise<void> | void;
-  onBatchReject: () => Promise<void> | void;
+  onBatchApprove?: () => Promise<void> | void;
+  onBatchReject?: () => Promise<void> | void;
+  onBatchFeature?: () => Promise<void> | void;
+  onBatchVerify?: () => Promise<void> | void;
   isLoading?: boolean;
   itemLabel?: string;
   approveLabel?: string;
   rejectLabel?: string;
+  featureLabel?: string;
+  verifyLabel?: string;
 }
 
 export default function BulkActionsToolbar({
@@ -20,10 +24,14 @@ export default function BulkActionsToolbar({
   onDeselectAll,
   onBatchApprove,
   onBatchReject,
+  onBatchFeature,
+  onBatchVerify,
   isLoading = false,
   itemLabel = "items",
   approveLabel = "Batch Approve",
   rejectLabel = "Batch Reject",
+  featureLabel = "Feature Selected",
+  verifyLabel = "Verify Selected",
 }: BulkActionsToolbarProps) {
   if (selectedCount === 0) return null;
 
@@ -55,38 +63,68 @@ export default function BulkActionsToolbar({
 
       {/* Action Buttons */}
       <div className="flex items-center space-x-2 ml-auto">
-        <button
-          type="button"
-          data-testid="bulk-approve-btn"
-          onClick={onBatchApprove}
-          disabled={isLoading}
-          className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
-        >
-          {isLoading ? (
-            <i className="ri-loader-4-line animate-spin text-xs" />
-          ) : (
-            <i className="ri-checkbox-circle-line text-sm" />
-          )}
-          <span>{approveLabel}</span>
-        </button>
+        {onBatchFeature && (
+          <button
+            type="button"
+            data-testid="bulk-feature-btn"
+            onClick={onBatchFeature}
+            disabled={isLoading}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          >
+            <i className="ri-star-fill text-sm" />
+            <span>{featureLabel}</span>
+          </button>
+        )}
 
-        <button
-          type="button"
-          data-testid="bulk-reject-btn"
-          onClick={onBatchReject}
-          disabled={isLoading}
-          className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
-        >
-          <i className="ri-close-circle-line text-sm" />
-          <span>{rejectLabel}</span>
-        </button>
+        {onBatchVerify && (
+          <button
+            type="button"
+            data-testid="bulk-verify-btn"
+            onClick={onBatchVerify}
+            disabled={isLoading}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          >
+            <i className="ri-checkbox-circle-fill text-sm" />
+            <span>{verifyLabel}</span>
+          </button>
+        )}
+
+        {onBatchApprove && (
+          <button
+            type="button"
+            data-testid="bulk-approve-btn"
+            onClick={onBatchApprove}
+            disabled={isLoading}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          >
+            {isLoading ? (
+              <i className="ri-loader-4-line animate-spin text-xs" />
+            ) : (
+              <i className="ri-checkbox-circle-line text-sm" />
+            )}
+            <span>{approveLabel}</span>
+          </button>
+        )}
+
+        {onBatchReject && (
+          <button
+            type="button"
+            data-testid="bulk-reject-btn"
+            onClick={onBatchReject}
+            disabled={isLoading}
+            className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+          >
+            <i className="ri-close-circle-line text-sm" />
+            <span>{rejectLabel}</span>
+          </button>
+        )}
 
         <button
           type="button"
           onClick={onDeselectAll}
           title="Clear Selection"
           aria-label="Clear Selection"
-          className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/50 transition-colors"
+          className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer"
         >
           <i className="ri-close-line text-lg" />
         </button>

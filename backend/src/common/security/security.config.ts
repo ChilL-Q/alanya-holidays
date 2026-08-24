@@ -199,10 +199,48 @@ export function resolveClientIp(req: Request): string {
   return req.socket?.remoteAddress || 'unknown';
 }
 
+export interface RateLimitRule {
+  id: string;
+  method?: string;
+  pattern: RegExp | string;
+  maxRequests: number;
+  windowSeconds: number;
+}
+
+export const FORUM_ANTI_SPAM_RULES: readonly RateLimitRule[] = [
+  // Likes: max 60 per hour (3600s TTL)
+  {
+    id: 'anti-spam:likes',
+    method: 'POST',
+    pattern:
+      /^(\/api)?\/(forum\/(posts|comments)\/[^/]+\/like|blog\/comments\/[^/]+\/like)/,
+    maxRequests: 60,
+    windowSeconds: 3600,
+  },
+  // Comments: max 20 per hour (3600s TTL)
+  {
+    id: 'anti-spam:comments',
+    method: 'POST',
+    pattern:
+      /^(\/api)?\/(forum\/comments(\/post\/[^/]+)?|blog\/posts\/[^/]+\/comments)/,
+    maxRequests: 20,
+    windowSeconds: 3600,
+  },
+  // Posts & Questions: max 5 per hour (3600s TTL)
+  {
+    id: 'anti-spam:posts',
+    method: 'POST',
+    pattern: /^(\/api)?\/(forum\/(posts|questions)|blog(\/submissions)?)$/,
+    maxRequests: 5,
+    windowSeconds: 3600,
+  },
+];
+
 export interface RateLimitOptions {
   env?: NodeJS.ProcessEnv;
   storage?: RateLimitStorage;
   redisService?: RedisService;
+  rules?: readonly RateLimitRule[];
 }
 
 export function createRateLimitMiddleware(
@@ -211,15 +249,18 @@ export function createRateLimitMiddleware(
 ) {
   let env: NodeJS.ProcessEnv = process.env;
   let storage: RateLimitStorage | undefined;
+  let customRules: readonly RateLimitRule[] | undefined;
 
   if (optionsOrEnv) {
     if (
       'env' in optionsOrEnv ||
       'storage' in optionsOrEnv ||
-      'redisService' in optionsOrEnv
+      'redisService' in optionsOrEnv ||
+      'rules' in optionsOrEnv
     ) {
       const opts = optionsOrEnv as RateLimitOptions;
       env = opts.env || process.env;
+      customRules = opts.rules;
       storage =
         opts.storage ||
         (opts.redisService
@@ -237,6 +278,8 @@ export function createRateLimitMiddleware(
   if (!storage) {
     storage = new MemoryRateLimitStorage();
   }
+
+  const rules = customRules || FORUM_ANTI_SPAM_RULES;
 
   const windowMs = Number(
     env.RATE_LIMIT_WINDOW_MS || DEFAULT_RATE_LIMIT_WINDOW_MS,
@@ -266,11 +309,34 @@ export function createRateLimitMiddleware(
     }
 
     const clientIp = resolveClientIp(req);
-    const limit = resolveMaxRequests(req.path);
-    const key = `${clientIp}:${limit}`;
+    const reqMethod = (req.method || 'GET').toUpperCase();
+
+    // Check specific route & method rules (anti-spam, etc.)
+    const matchedRule = rules.find((rule) => {
+      if (rule.method && rule.method.toUpperCase() !== reqMethod) {
+        return false;
+      }
+      if (typeof rule.pattern === 'string') {
+        return req.path === rule.pattern || req.path === `/api${rule.pattern}`;
+      }
+      return rule.pattern.test(req.path);
+    });
+
+    const limit = matchedRule
+      ? matchedRule.maxRequests
+      : resolveMaxRequests(req.path);
+    const effectiveWindowSeconds = matchedRule
+      ? matchedRule.windowSeconds
+      : windowSeconds;
+    const key = matchedRule
+      ? `${clientIp}:${matchedRule.id}:${limit}:${effectiveWindowSeconds}`
+      : `${clientIp}:${limit}`;
 
     try {
-      const { count, ttl } = await storage.increment(key, windowSeconds);
+      const { count, ttl } = await storage.increment(
+        key,
+        effectiveWindowSeconds,
+      );
 
       if (count > limit) {
         res.setHeader('Retry-After', String(ttl));

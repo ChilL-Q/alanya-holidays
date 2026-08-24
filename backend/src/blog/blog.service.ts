@@ -3,22 +3,27 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { BlogRepository } from './blog.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { slugify, generateUniqueSlug } from '../utils/slugify';
 import sanitizeHtml from 'sanitize-html';
 import {
+  BlogComment,
   BlogPost,
   BlogPostSummary,
   BlogPostsListResult,
   BlogSubmission,
   BlogTag,
+  InsertBlogCommentPayload,
   SubmissionCreatedResponse,
   SuccessResponse,
   UpdateBlogPostPayload,
 } from './types/blog.types';
 import {
+  CreateBlogCommentDto,
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
   GetBlogQueryDto,
@@ -41,6 +46,8 @@ export class BlogService {
   constructor(
     private readonly blogRepository: BlogRepository,
     private readonly userRolesRepo: UserRolesRepository,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
   private async checkAdmin(userId: string): Promise<void> {
@@ -93,9 +100,22 @@ export class BlogService {
     return this.blogRepository.getFeaturedBlogPosts(limit);
   }
 
-  async getBlogPost(slug: string, incrementViews = true): Promise<BlogPost> {
+  async getBlogPost(
+    slug: string,
+    incrementViews = true,
+    userId?: string,
+  ): Promise<BlogPost> {
     const data = await this.blogRepository.getBlogPostBySlug(slug);
     if (!data) throw new NotFoundException('Blog post not found');
+
+    if (data.status !== 'published') {
+      const role = userId
+        ? await this.userRolesRepo.getRole(userId)
+        : undefined;
+      if (role !== 'admin' && data.author_id !== userId) {
+        throw new NotFoundException('Blog post not found');
+      }
+    }
 
     const result: BlogPost = {
       ...data,
@@ -267,6 +287,70 @@ export class BlogService {
     return { role, existing };
   }
 
+  // ── Blog Comments ────────────────────────────────────────────
+
+  async getBlogComments(
+    postId: string,
+    userId?: string,
+  ): Promise<BlogComment[]> {
+    return this.blogRepository.getBlogComments(postId, userId);
+  }
+
+  async createBlogComment(
+    postId: string,
+    dto: CreateBlogCommentDto,
+    userId: string,
+  ): Promise<BlogComment> {
+    const payload: InsertBlogCommentPayload = {
+      post_id: postId,
+      user_id: userId,
+      body: dto.body,
+      parent_id: dto.parentId || null,
+    };
+    return this.blogRepository.insertBlogComment(payload);
+  }
+
+  async updateBlogComment(
+    id: string,
+    body: string,
+    userId: string,
+  ): Promise<BlogComment> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    return this.blogRepository.updateBlogComment(id, body);
+  }
+
+  async deleteBlogComment(
+    id: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    await this.blogRepository.deleteBlogComment(id);
+    return { success: true };
+  }
+
+  async toggleBlogCommentLike(
+    id: string,
+    userId: string,
+  ): Promise<{ liked: boolean }> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const liked = await this.blogRepository.toggleBlogCommentLike(id, userId);
+    return { liked };
+  }
+
   // Submissions
   async createBlogSubmission(
     data: CreateBlogSubmissionDto,
@@ -380,6 +464,16 @@ export class BlogService {
       });
     }
 
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'approve',
+        admin_id: userId,
+        metadata: { post_id: post.id, title: submission.title },
+      });
+    }
+
     return post;
   }
 
@@ -424,6 +518,17 @@ export class BlogService {
           reason,
           authorName: authorProfile.full_name || 'Author',
         },
+      });
+    }
+
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'reject',
+        admin_id: userId,
+        reason,
+        metadata: { title: submission.title },
       });
     }
 

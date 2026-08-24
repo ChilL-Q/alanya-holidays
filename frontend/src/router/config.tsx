@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import type { RouteObject } from "react-router-dom";
+import { Navigate, type RouteObject } from "react-router-dom";
 
 const NotFound = lazy(() => import("../pages/NotFound"));
 const Home = lazy(() => import("../pages/home/page"));
@@ -40,7 +40,9 @@ const PersonalChefsPage = lazy(() => import("../pages/personal-chefs/page"));
 const PersonalDriverPage = lazy(() => import("../pages/personal-driver/page"));
 const PersonalShopperPage = lazy(() => import("../pages/personal-shopper/page"));
 const SettingsPage = lazy(() => import("../pages/settings/page"));
-
+const BlogPage = lazy(() => import("../pages/blog/page"));
+const BlogPostPage = lazy(() => import("../pages/blog/post/page"));
+const BlogSubmitPage = lazy(() => import("../pages/blog/submit/page"));
 
 const routes: RouteObject[] = [
   {
@@ -198,6 +200,26 @@ const routes: RouteObject[] = [
   {
     path: "/profile",
     element: <SettingsPage />,
+  },
+  {
+    path: "/forum",
+    element: <Navigate to="/categories" replace />,
+  },
+  {
+    path: "/directory",
+    element: <Navigate to="/explore" replace />,
+  },
+  {
+    path: "/blog",
+    element: <BlogPage />,
+  },
+  {
+    path: "/blog/submit",
+    element: <BlogSubmitPage />,
+  },
+  {
+    path: "/blog/:slug",
+    element: <BlogPostPage />,
   },
   {
     path: "*",

@@ -58,6 +58,13 @@ const emailDataSchemas = {
   subscription_restored: z.object({ name: sOpt, link: sOpt }),
   listing_claim_verification: z.object({ claimantEmail: s, businessName: s, verificationToken: s }),
   admin_claim_notification: z.object({ businessName: s, claimantEmail: s, listingId: s }),
+  admin_listing_notification: z.object({
+    listingId: s,
+    listingTitle: s,
+    ownerEmail: s,
+    category: s,
+    tier: sOpt,
+  }),
   listing_claim_approved: z.object({ claimantEmail: s, businessName: s }),
   listing_claim_rejected: z.object({ claimantEmail: s, businessName: s, rejectionReason: s }),
   listing_payment_instructions: z.object({ businessName: s, tier: s, link: sOpt }),
@@ -736,6 +743,37 @@ function generateEmailContent(type: string, data: any): { subject: string, html:
             };
 
         // --- Admin/System ---
+        case 'admin_listing_notification': {
+            const siteUrl = (typeof Deno !== 'undefined' ? Deno.env.get('SITE_URL') : undefined) || (typeof process !== 'undefined' ? process.env.SITE_URL : undefined) || 'https://alanyaholidays.com';
+            const adminLink = `${siteUrl}/admin?tab=listings&id=${encodeURIComponent(data.listingId)}`;
+            const submissionDate = new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+            return {
+                subject: `[Alanya Holidays Admin] New Pending Listing Submitted: ${escapeHtml(data.listingTitle)}`,
+                html: getHtmlTemplate(
+                    'New Pending Listing',
+                    `
+                    <p style="font-size: 16px;">A new merchant listing has been submitted and is awaiting administrative review.</p>
+                    <div class="card">
+                        <div class="info-row"><span class="label">Listing Title</span><span class="value"><strong>${escapeHtml(data.listingTitle)}</strong></span></div>
+                        <div class="info-row"><span class="label">Category</span><span class="value">${escapeHtml(data.category)}</span></div>
+                        <div class="info-row"><span class="label">Owner Email</span><span class="value">${escapeHtml(data.ownerEmail)}</span></div>
+                        ${data.tier ? `<div class="info-row"><span class="label">Tier</span><span class="value">${escapeHtml(data.tier)}</span></div>` : ''}
+                        <div class="info-row"><span class="label">Submission Date</span><span class="value">${submissionDate}</span></div>
+                        <div class="info-row"><span class="label">Listing ID</span><span class="value" style="font-family: monospace; font-size: 13px;">${escapeHtml(data.listingId)}</span></div>
+                    </div>
+                    <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Please review the listing details and approve or reject the submission in the admin hub.</p>
+                    `,
+                    adminLink,
+                    'Review Listing in Admin Panel',
+                    false
+                )
+            };
+        }
+
         case 'admin_contact_message':
             return {
                 subject: `📩 New Contact Message: ${escapeHtml(data.subject)}`,

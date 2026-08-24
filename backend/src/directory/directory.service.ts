@@ -4,6 +4,7 @@ import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import { SubmitClaimDto } from './dto/submit-claim.dto';
 import {
   DirectoryListingRecord,
@@ -22,6 +23,7 @@ export class DirectoryService {
     @Optional() directoryRepository?: DirectoryRepository,
     @Optional() redisService?: RedisService,
     @Optional() userRolesRepo?: UserRolesRepository,
+    @Optional() emailOutbox?: EmailOutboxRepository,
   ) {
     if (directoryListingService && listingClaimService) {
       this.listingService = directoryListingService;
@@ -31,6 +33,7 @@ export class DirectoryService {
         directoryRepository,
         redisService,
         userRolesRepo,
+        emailOutbox,
       );
       this.claimService = new ListingClaimService(
         directoryRepository,
@@ -319,5 +322,44 @@ export class DirectoryService {
     userId: string,
   ): Promise<{ success: boolean }> {
     return this.claimService.rejectListingClaim(claimId, reason, userId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Directory Curation Delegation (Task 2.2)
+  // ---------------------------------------------------------------------------
+  async featureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    return this.listingService.featureListing(id, userId);
+  }
+
+  async unfeatureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    return this.listingService.unfeatureListing(id, userId);
+  }
+
+  async verifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    return this.listingService.verifyListing(id, userId);
+  }
+
+  async unverifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    return this.listingService.unverifyListing(id, userId);
+  }
+
+  async setListingScore(
+    id: string,
+    score: number,
+    userId: string,
+  ): Promise<{ success: boolean; base_score: number }> {
+    return this.listingService.setListingScore(id, score, userId);
   }
 }

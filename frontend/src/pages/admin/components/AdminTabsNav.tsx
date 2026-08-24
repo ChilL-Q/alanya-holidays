@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AdminTab = "listings" | "claims" | "content" | "analytics" | "concierge";
+export type AdminTab = "listings" | "claims" | "content" | "forum" | "audit" | "analytics" | "concierge";
 
 interface AdminTabsNavProps {
   activeTab: AdminTab;
@@ -9,6 +9,7 @@ interface AdminTabsNavProps {
     pendingListings?: number;
     pendingClaims?: number;
     pendingContent?: number;
+    pendingReports?: number;
     newEnquiries?: number;
   };
 }
@@ -49,10 +50,23 @@ export default function AdminTabsNav({
       badgeColor: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
     },
     {
+      id: "forum",
+      label: "Forum Moderation",
+      icon: "ri-discuss-line",
+      badge: counts?.pendingReports,
+      badgeColor: "bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    },
+    {
+      id: "audit",
+      label: "Audit Log",
+      icon: "ri-history-line",
+    },
+    {
       id: "analytics",
       label: "Platform Analytics",
       icon: "ri-bar-chart-box-line",
     },
+
     {
       id: "concierge",
       label: "Concierge Enquiries",

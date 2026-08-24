@@ -185,6 +185,14 @@ export class ForumService {
     );
   }
 
+  async updateForumComment(
+    id: string,
+    body: string,
+    userId: string,
+  ): Promise<ForumComment> {
+    return this.discussionService.updateForumComment(id, body, userId);
+  }
+
   async deleteForumComment(
     id: string,
     userId: string,
@@ -281,10 +289,17 @@ export class ForumService {
   }
 
   async getForumReports(
-    includeResolved: boolean,
+    options:
+      | {
+          includeResolved?: boolean;
+          page?: number;
+          limit?: number;
+          target_type?: 'post' | 'comment';
+        }
+      | boolean,
     userId: string,
   ): Promise<ForumReport[]> {
-    return this.reportService.getForumReports(includeResolved, userId);
+    return this.reportService.getForumReports(options, userId);
   }
 
   async resolveForumReport(
@@ -292,6 +307,20 @@ export class ForumService {
     userId: string,
   ): Promise<ForumActionResponse> {
     return this.reportService.resolveForumReport(id, userId);
+  }
+
+  // ============================================================
+  // Bookmarks Delegation
+  // ============================================================
+  async getUserBookmarks(userId: string): Promise<ForumPost[]> {
+    return this.discussionService.getUserBookmarks(userId);
+  }
+
+  async togglePostBookmark(
+    postId: string,
+    userId: string,
+  ): Promise<{ bookmarked: boolean }> {
+    return this.discussionService.togglePostBookmark(postId, userId);
   }
 
   // ============================================================

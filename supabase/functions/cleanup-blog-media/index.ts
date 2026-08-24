@@ -113,10 +113,18 @@ Deno.serve(async (req: Request) => {
     // Note: auto-reject of expired blog submissions is handled by cancel-expired-bookings cron
 
     // Get submissions to determine which files to keep or delete aggressively
-    const { data: rawSubmissions } = await supabase
+    const { data: rawSubmissions, error: subError } = await supabase
       .from('blog_submissions')
       .select('status, payment_expires_at, media_urls')
       .in('status', ['pending_payment', 'pending_review'])
+
+    if (subError) {
+      console.error('Error fetching blog submissions:', subError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database query failed for blog submissions' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     const activeUrls = new Set<string>()
     const abandonedUrls = new Set<string>()
@@ -140,10 +148,18 @@ Deno.serve(async (req: Request) => {
     }
 
     // Get published blog posts
-    const { data: publishedPosts } = await supabase
+    const { data: publishedPosts, error: postError } = await supabase
       .from('blog_posts')
       .select('cover_image_url')
       .eq('status', 'published')
+
+    if (postError) {
+      console.error('Error fetching blog posts:', postError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Database query failed for blog posts' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     // Add cover images to activeUrls
     for (const post of (publishedPosts || [])) {

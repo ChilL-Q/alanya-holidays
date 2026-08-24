@@ -1,14 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForumModerationController } from './forum-moderation.controller';
 import { ForumService } from './forum.service';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
-import { CreateForumReportDto } from './dto/forum-reports.dto';
+import {
+  CreateForumReportDto,
+  GetForumReportsQueryDto,
+} from './dto/forum-reports.dto';
 
 describe('ForumModerationController', () => {
   let controller: ForumModerationController;
   let mockService: Record<string, jest.Mock>;
+  let mockAuditService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockService = {
@@ -18,12 +23,20 @@ describe('ForumModerationController', () => {
       getRemovedComments: jest.fn().mockResolvedValue([]),
     };
 
+    mockAuditService = {
+      logAction: jest.fn().mockResolvedValue({ id: 'audit-rep-1' }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ForumModerationController],
       providers: [
         {
           provide: ForumService,
           useValue: mockService,
+        },
+        {
+          provide: ModerationAuditService,
+          useValue: mockAuditService,
         },
       ],
     })
@@ -55,19 +68,49 @@ describe('ForumModerationController', () => {
     const user: AuthUser = { id: 'admin-1' };
 
     await controller.getForumReports({ includeResolved: true }, user);
-    expect(mockService.getForumReports).toHaveBeenCalledWith(true, 'admin-1');
+    expect(mockService.getForumReports).toHaveBeenCalledWith(
+      expect.objectContaining({ includeResolved: true }),
+      'admin-1',
+    );
 
     await controller.getForumReports(
       { includeResolved: 'true' as unknown as boolean },
       user,
     );
-    expect(mockService.getForumReports).toHaveBeenCalledWith(true, 'admin-1');
+    expect(mockService.getForumReports).toHaveBeenCalledWith(
+      expect.objectContaining({ includeResolved: true }),
+      'admin-1',
+    );
 
     await controller.getForumReports({ includeResolved: false }, user);
-    expect(mockService.getForumReports).toHaveBeenCalledWith(false, 'admin-1');
+    expect(mockService.getForumReports).toHaveBeenCalledWith(
+      expect.objectContaining({ includeResolved: false }),
+      'admin-1',
+    );
   });
 
-  it('should delegate resolveForumReport with id and userId', async () => {
+  it('should delegate getForumReports with pagination and target_type filters', async () => {
+    const user: AuthUser = { id: 'admin-1' };
+    const query: GetForumReportsQueryDto = {
+      includeResolved: true,
+      page: 2,
+      limit: 10,
+      target_type: 'post',
+    };
+
+    await controller.getForumReports(query, user);
+    expect(mockService.getForumReports).toHaveBeenCalledWith(
+      {
+        includeResolved: true,
+        page: 2,
+        limit: 10,
+        target_type: 'post',
+      },
+      'admin-1',
+    );
+  });
+
+  it('should delegate resolveForumReport with id and userId and log audit action', async () => {
     const user: AuthUser = { id: 'admin-1' };
 
     const res = await controller.resolveForumReport('rep-1', user);
@@ -76,6 +119,12 @@ describe('ForumModerationController', () => {
       'rep-1',
       'admin-1',
     );
+    expect(mockAuditService.logAction).toHaveBeenCalledWith({
+      entity_type: 'forum_report',
+      entity_id: 'rep-1',
+      action: 'resolve',
+      admin_id: 'admin-1',
+    });
   });
 
   it('should delegate getRemovedComments with custom limit and default limit', async () => {

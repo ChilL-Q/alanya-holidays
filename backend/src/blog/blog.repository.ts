@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
+  BlogComment,
   BlogPost,
   BlogPostSummary,
   BlogSubmission,
@@ -8,6 +9,7 @@ import {
   EmailNotificationPayload,
   GetBlogPostsFilter,
   GetBlogSubmissionsFilter,
+  InsertBlogCommentPayload,
   InsertBlogPostPayload,
   InsertBlogPostTagRow,
   InsertBlogSubmissionPayload,
@@ -58,12 +60,14 @@ export class BlogRepository {
         { count: 'exact' },
       );
 
-    if (filters.status) {
-      query = query.eq('status', filters.status);
-    } else if (
-      userRole !== 'admin' &&
-      !(requestUserId && filters.authorId === requestUserId)
+    if (
+      userRole === 'admin' ||
+      (requestUserId && filters.authorId === requestUserId)
     ) {
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+    } else {
       query = query.eq('status', 'published');
     }
 
@@ -391,6 +395,116 @@ export class BlogRepository {
         error instanceof Error ? error.stack : undefined,
       );
     }
+  }
+
+  // ── Blog Comments ────────────────────────────────────────────
+
+  async getBlogComments(
+    postId: string,
+    userId?: string,
+  ): Promise<BlogComment[]> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    if (error) throw new Error(error.message);
+    const comments = (data as unknown as BlogComment[]) || [];
+
+    if (!userId || comments.length === 0) {
+      return comments.map((c) => ({ ...c, isLiked: false }));
+    }
+
+    const commentIds = comments.map((c) => c.id);
+    const { data: userLikes } = await this.client
+      .from('blog_comment_likes')
+      .select('comment_id')
+      .eq('user_id', userId)
+      .in('comment_id', commentIds);
+
+    const likedCommentIds = new Set(
+      ((userLikes as Array<{ comment_id: string }>) || []).map(
+        (l) => l.comment_id,
+      ),
+    );
+
+    return comments.map((c) => ({
+      ...c,
+      isLiked: likedCommentIds.has(c.id),
+    }));
+  }
+
+  async insertBlogComment(
+    payload: InsertBlogCommentPayload,
+  ): Promise<BlogComment> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .insert(payload)
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .single();
+    if (error) throw new Error(error.message);
+    return data as unknown as BlogComment;
+  }
+
+  async updateBlogComment(id: string, body: string): Promise<BlogComment> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .update({ body })
+      .eq('id', id)
+      .select(
+        '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
+      )
+      .single();
+    if (error) throw new Error(error.message);
+    return data as unknown as BlogComment;
+  }
+
+  async deleteBlogComment(id: string): Promise<void> {
+    const { error } = await this.client
+      .from('blog_comments')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+  }
+
+  async toggleBlogCommentLike(
+    commentId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const { data: existing } = await this.client
+      .from('blog_comment_likes')
+      .select('comment_id')
+      .eq('comment_id', commentId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existing) {
+      await this.client
+        .from('blog_comment_likes')
+        .delete()
+        .eq('comment_id', commentId)
+        .eq('user_id', userId);
+      return false;
+    } else {
+      await this.client
+        .from('blog_comment_likes')
+        .insert({ comment_id: commentId, user_id: userId });
+      return true;
+    }
+  }
+
+  async getBlogCommentById(id: string): Promise<BlogComment | null> {
+    const { data, error } = await this.client
+      .from('blog_comments')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as unknown as BlogComment) || null;
   }
 
   async invokeEmailFunction(payload: EmailNotificationPayload): Promise<void> {

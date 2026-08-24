@@ -6,6 +6,8 @@ import AdminTabsNav, { type AdminTab } from "./components/AdminTabsNav";
 import ListingsModerationTab from "./components/ListingsModerationTab";
 import ClaimsQueueTab from "./components/ClaimsQueueTab";
 import ContentModerationTab from "./components/ContentModerationTab";
+import ForumModerationTab from "./components/ForumModerationTab";
+import AuditLogTab from "./components/AuditLogTab";
 import PlatformAnalyticsTab from "./components/PlatformAnalyticsTab";
 import ConciergeTab from "./components/ConciergeTab";
 import { adminService } from "@/api-services/admin.service";
@@ -14,14 +16,21 @@ export default function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
   const activeTab: AdminTab =
-    rawTab === "claims" || rawTab === "content" || rawTab === "analytics" || rawTab === "concierge"
+    rawTab === "claims" ||
+    rawTab === "content" ||
+    rawTab === "forum" ||
+    rawTab === "audit" ||
+    rawTab === "analytics" ||
+    rawTab === "concierge"
       ? (rawTab as AdminTab)
       : "listings";
+
 
   const [counts, setCounts] = useState<{
     pendingListings?: number;
     pendingClaims?: number;
     pendingContent?: number;
+    pendingReports?: number;
     newEnquiries?: number;
   }>({});
 
@@ -35,22 +44,25 @@ export default function AdminDashboardPage() {
 
   const fetchGlobalBadgeCounts = useCallback(async () => {
     try {
-      const [listings, claims, contentSubmissions, enquiries] = await Promise.all([
+      const [listings, claims, contentSubmissions, reports, enquiries] = await Promise.all([
         adminService.getModerationListings({ status: "pending" }),
         adminService.getClaimsQueue("pending"),
         adminService.getContentSubmissions({ status: "pending_review" }),
+        adminService.getForumReports({ includeResolved: false }),
         adminService.getEnquiries(),
       ]);
 
       const pendingListings = (listings || []).length;
       const pendingClaims = (claims || []).length;
       const pendingContent = (contentSubmissions || []).length;
+      const pendingReports = (reports || []).filter((r) => !r.resolved).length;
       const newEnquiries = (enquiries || []).filter((e) => e.status === "new").length;
 
       setCounts({
         pendingListings,
         pendingClaims,
         pendingContent,
+        pendingReports,
         newEnquiries,
       });
     } catch {
@@ -72,6 +84,10 @@ export default function AdminDashboardPage() {
 
   const handleContentCountUpdate = useCallback((c: { total: number; pending: number }) => {
     setCounts((prev) => (prev.pendingContent === c.pending ? prev : { ...prev, pendingContent: c.pending }));
+  }, []);
+
+  const handleReportCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingReports === c.pending ? prev : { ...prev, pendingReports: c.pending }));
   }, []);
 
   const handleEnquiriesCountUpdate = useCallback((c: { total: number; newCount: number }) => {
@@ -157,6 +173,28 @@ export default function AdminDashboardPage() {
             <ContentModerationTab
               onContentCountUpdate={handleContentCountUpdate}
             />
+          </div>
+        )}
+
+        {activeTab === "forum" && (
+          <div
+            id="admin-tabpanel-forum"
+            role="tabpanel"
+            aria-labelledby="admin-tab-forum"
+          >
+            <ForumModerationTab
+              onReportCountUpdate={handleReportCountUpdate}
+            />
+          </div>
+        )}
+
+        {activeTab === "audit" && (
+          <div
+            id="admin-tabpanel-audit"
+            role="tabpanel"
+            aria-labelledby="admin-tab-audit"
+          >
+            <AuditLogTab />
           </div>
         )}
 

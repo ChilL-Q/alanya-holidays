@@ -310,5 +310,143 @@ describe('security.config', () => {
       expect(statusMock).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalledTimes(11);
     });
+
+    describe('Forum & Blog Anti-Spam Rate Limiting (R6)', () => {
+      it('should enforce posts rate limit: max 5 per hour (3600s TTL) with 429 and Retry-After', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const statusMock = jest.fn().mockReturnThis();
+        const jsonMock = jest.fn();
+        const setHeaderMock = jest.fn();
+        const res = {
+          setHeader: setHeaderMock,
+          status: statusMock,
+          json: jsonMock,
+        } as unknown as Response;
+        const postReq = {
+          method: 'POST',
+          path: '/api/forum/posts',
+          headers: {},
+          ip: '192.168.1.10',
+          socket: { remoteAddress: '192.168.1.10' },
+        } as unknown as Request;
+
+        for (let i = 0; i < 5; i += 1) {
+          await middleware(postReq, res, next);
+        }
+        expect(next).toHaveBeenCalledTimes(5);
+        expect(statusMock).not.toHaveBeenCalled();
+
+        // 6th request must exceed 5/hour limit
+        await middleware(postReq, res, next);
+        expect(next).toHaveBeenCalledTimes(5);
+        expect(statusMock).toHaveBeenCalledWith(429);
+        expect(setHeaderMock).toHaveBeenCalledWith(
+          'Retry-After',
+          expect.any(String),
+        );
+        expect(jsonMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            statusCode: 429,
+            message: expect.stringMatching(/too many/i),
+          }),
+        );
+      });
+
+      it('should enforce comments rate limit: max 20 per hour (3600s TTL) with 429 and Retry-After', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const statusMock = jest.fn().mockReturnThis();
+        const jsonMock = jest.fn();
+        const setHeaderMock = jest.fn();
+        const res = {
+          setHeader: setHeaderMock,
+          status: statusMock,
+          json: jsonMock,
+        } as unknown as Response;
+        const commentReq = {
+          method: 'POST',
+          path: '/api/forum/comments/post/thread-xyz',
+          headers: {},
+          ip: '192.168.1.20',
+          socket: { remoteAddress: '192.168.1.20' },
+        } as unknown as Request;
+
+        for (let i = 0; i < 20; i += 1) {
+          await middleware(commentReq, res, next);
+        }
+        expect(next).toHaveBeenCalledTimes(20);
+        expect(statusMock).not.toHaveBeenCalled();
+
+        // 21st request must trigger 429
+        await middleware(commentReq, res, next);
+        expect(next).toHaveBeenCalledTimes(20);
+        expect(statusMock).toHaveBeenCalledWith(429);
+        expect(setHeaderMock).toHaveBeenCalledWith(
+          'Retry-After',
+          expect.any(String),
+        );
+      });
+
+      it('should enforce likes rate limit: max 60 per hour (3600s TTL) with 429 and Retry-After', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const statusMock = jest.fn().mockReturnThis();
+        const jsonMock = jest.fn();
+        const setHeaderMock = jest.fn();
+        const res = {
+          setHeader: setHeaderMock,
+          status: statusMock,
+          json: jsonMock,
+        } as unknown as Response;
+        const likeReq = {
+          method: 'POST',
+          path: '/api/forum/posts/post-99/like',
+          headers: {},
+          ip: '192.168.1.30',
+          socket: { remoteAddress: '192.168.1.30' },
+        } as unknown as Request;
+
+        for (let i = 0; i < 60; i += 1) {
+          await middleware(likeReq, res, next);
+        }
+        expect(next).toHaveBeenCalledTimes(60);
+        expect(statusMock).not.toHaveBeenCalled();
+
+        // 61st request must trigger 429
+        await middleware(likeReq, res, next);
+        expect(next).toHaveBeenCalledTimes(60);
+        expect(statusMock).toHaveBeenCalledWith(429);
+        expect(setHeaderMock).toHaveBeenCalledWith(
+          'Retry-After',
+          expect.any(String),
+        );
+      });
+
+      it('should not apply POST rate limits to GET read requests', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const statusMock = jest.fn().mockReturnThis();
+        const res = {
+          setHeader: jest.fn(),
+          status: statusMock,
+          json: jest.fn(),
+        } as unknown as Response;
+        const getReq = {
+          method: 'GET',
+          path: '/api/forum/posts',
+          headers: {},
+          ip: '192.168.1.40',
+          socket: { remoteAddress: '192.168.1.40' },
+        } as unknown as Request;
+
+        // Make 10 GET requests - should not be throttled by the 5/h post limit
+        for (let i = 0; i < 10; i += 1) {
+          await middleware(getReq, res, next);
+        }
+        expect(next).toHaveBeenCalledTimes(10);
+        expect(statusMock).not.toHaveBeenCalled();
+      });
+    });
   });
 });

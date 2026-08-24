@@ -40,7 +40,6 @@ describe('NotificationsGateway', () => {
       userId: 'user-777',
     });
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(socketMock.join).toHaveBeenCalledWith('user:user-777');
     expect(result).toEqual({ event: 'subscribed', room: 'user:user-777' });
   });
