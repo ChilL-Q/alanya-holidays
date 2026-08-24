@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 @Injectable()
 export class AddonWebhookHandler {
@@ -10,6 +11,7 @@ export class AddonWebhookHandler {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly notificationsService: NotificationsService,
+    private readonly redisService: RedisService,
   ) {}
 
   private get supabase() {
@@ -122,6 +124,11 @@ export class AddonWebhookHandler {
           this.logger.error(
             `Failed to update directory_listings for listing ${listingId} with patch ${JSON.stringify(patch)}: ${patchError.message}`,
           );
+        } else {
+          // Fast-path flags bypass DirectoryListingService, so this handler
+          // owns the cache invalidation for them — otherwise Guests see the
+          // badge only after up to 600s of stale cache.
+          await this.redisService.delByPattern('directory:*');
         }
       }
 

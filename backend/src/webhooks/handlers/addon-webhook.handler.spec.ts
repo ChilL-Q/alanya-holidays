@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AddonWebhookHandler } from './addon-webhook.handler';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { RedisService } from '../../common/redis/redis.service';
 import Stripe from 'stripe';
 
 describe('AddonWebhookHandler', () => {
   let handler: AddonWebhookHandler;
   let notificationsService: { notifyUser: jest.Mock; notifyAdmins: jest.Mock };
+  let redisService: { delByPattern: jest.Mock };
 
   interface MockQueryResult {
     data: unknown;
@@ -47,6 +49,9 @@ describe('AddonWebhookHandler', () => {
       notifyUser: jest.fn().mockResolvedValue({ id: 'n-1' }),
       notifyAdmins: jest.fn().mockResolvedValue([]),
     };
+    redisService = {
+      delByPattern: jest.fn().mockResolvedValue(undefined),
+    };
     tableMocks = {
       listing_addons: createTableMock(),
       directory_listings: createTableMock(),
@@ -73,6 +78,10 @@ describe('AddonWebhookHandler', () => {
         {
           provide: NotificationsService,
           useValue: notificationsService,
+        },
+        {
+          provide: RedisService,
+          useValue: redisService,
         },
       ],
     }).compile();
@@ -219,6 +228,7 @@ describe('AddonWebhookHandler', () => {
       'id',
       'list-1',
     );
+    expect(redisService.delByPattern).toHaveBeenCalledWith('directory:*');
 
     expect(notificationsService.notifyUser).toHaveBeenCalledWith(
       'host-1',
