@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AdminTab = "listings" | "claims" | "content" | "forum" | "audit" | "analytics" | "concierge";
+export type AdminTab = "listings" | "claims" | "content" | "forum" | "bookings" | "reviews" | "users" | "audit" | "analytics" | "concierge";
 
 interface AdminTabsNavProps {
   activeTab: AdminTab;
@@ -10,6 +10,8 @@ interface AdminTabsNavProps {
     pendingClaims?: number;
     pendingContent?: number;
     pendingReports?: number;
+    pendingBookings?: number;
+    pendingReviews?: number;
     newEnquiries?: number;
   };
 }
@@ -55,6 +57,25 @@ export default function AdminTabsNav({
       icon: "ri-discuss-line",
       badge: counts?.pendingReports,
       badgeColor: "bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    },
+    {
+      id: "bookings",
+      label: "Bookings",
+      icon: "ri-calendar-check-line",
+      badge: counts?.pendingBookings,
+      badgeColor: "bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+    },
+    {
+      id: "reviews",
+      label: "Reviews",
+      icon: "ri-star-line",
+      badge: counts?.pendingReviews,
+      badgeColor: "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    },
+    {
+      id: "users",
+      label: "Users",
+      icon: "ri-group-line",
     },
     {
       id: "audit",
