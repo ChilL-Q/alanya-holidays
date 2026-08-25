@@ -4,6 +4,7 @@ import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { RedisService } from '../../common/redis/redis.service';
 import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
+import { PAYMENT_GATEWAY } from '../../webhooks/domain/payment-gateway.interface';
 
 describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', () => {
   let service: DirectoryListingService;
@@ -24,6 +25,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
     setJson: jest.Mock;
   };
   let mockEmailOutbox: { enqueue: jest.Mock };
+  let mockPaymentGateway: { createAddonCheckoutSession: jest.Mock };
 
   const validListingId = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
   const validOwnerId = 'b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e';
@@ -38,6 +40,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
       deleteListingLocations: jest.fn().mockResolvedValue(undefined),
       updateListingStatus: jest.fn(),
       invokeFunction: jest.fn(),
+      getListingAddons: jest.fn().mockResolvedValue([]),
     };
     mockUserRolesRepo = {
       getRole: jest.fn().mockResolvedValue('user'),
@@ -46,6 +49,11 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
       delByPattern: jest.fn().mockResolvedValue(undefined),
       getJson: jest.fn().mockResolvedValue(null),
       setJson: jest.fn().mockResolvedValue(undefined),
+    };
+    mockPaymentGateway = {
+      createAddonCheckoutSession: jest
+        .fn()
+        .mockResolvedValue({ url: 'https://checkout.stripe.test/x' }),
     };
     mockEmailOutbox = {
       enqueue: jest.fn().mockResolvedValue(undefined),
@@ -69,6 +77,10 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
         {
           provide: EmailOutboxRepository,
           useValue: mockEmailOutbox,
+        },
+        {
+          provide: PAYMENT_GATEWAY,
+          useValue: mockPaymentGateway,
         },
       ],
     }).compile();
@@ -629,6 +641,82 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
           to: 'admin@alanyaholidays.com',
         }),
       );
+    });
+  });
+  describe('createAddonCheckout', () => {
+    it('throws when the caller does not own the listing', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValue({
+        owner_user_id: 'someone-else',
+      });
+
+      await expect(
+        service.createAddonCheckout(
+          validListingId,
+          'verified_badge',
+          validOwnerId,
+        ),
+      ).rejects.toThrow('You do not own this listing');
+      expect(
+        mockPaymentGateway.createAddonCheckoutSession,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('throws when an active addon of the same type already exists', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValue({
+        owner_user_id: validOwnerId,
+      });
+      mockRepository.getListingAddons.mockResolvedValue([
+        { addon_type: 'verified_badge', status: 'active' },
+      ]);
+
+      await expect(
+        service.createAddonCheckout(
+          validListingId,
+          'verified_badge',
+          validOwnerId,
+        ),
+      ).rejects.toThrow('This add-on is already active for the listing');
+      expect(
+        mockPaymentGateway.createAddonCheckoutSession,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('throws on invalid addonType', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValue({
+        owner_user_id: validOwnerId,
+      });
+
+      await expect(
+        service.createAddonCheckout(
+          validListingId,
+          'instant_booking',
+          validOwnerId,
+        ),
+      ).rejects.toThrow('Invalid request');
+    });
+
+    it('delegates to the payment gateway when ownership and dedupe pass', async () => {
+      mockRepository.getDirectoryListingOwner.mockResolvedValue({
+        owner_user_id: validOwnerId,
+      });
+      mockRepository.getListingAddons.mockResolvedValue([
+        { addon_type: 'seasonal_placement', status: 'active' },
+      ]);
+
+      const result = await service.createAddonCheckout(
+        validListingId,
+        'verified_badge',
+        validOwnerId,
+      );
+
+      expect(result).toEqual({ url: 'https://checkout.stripe.test/x' });
+      expect(
+        mockPaymentGateway.createAddonCheckoutSession,
+      ).toHaveBeenCalledWith({
+        userId: validOwnerId,
+        listingId: validListingId,
+        addonType: 'verified_badge',
+      });
     });
   });
 });

@@ -1,6 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import Stripe from 'stripe';
-import { PaymentGateway } from '../domain/payment-gateway.interface';
+import {
+  AddonCheckoutParams,
+  PaymentGateway,
+} from '../domain/payment-gateway.interface';
 
 @Injectable()
 export class InMemoryPaymentFake implements PaymentGateway {
@@ -83,5 +86,16 @@ export class InMemoryPaymentFake implements PaymentGateway {
     throw new BadRequestException(
       `Webhook Error: No mock event found for signature "${signature}"`,
     );
+  }
+
+  createdAddonSessions: AddonCheckoutParams[] = [];
+
+  async createAddonCheckoutSession(
+    params: AddonCheckoutParams,
+  ): Promise<{ url: string }> {
+    this.createdAddonSessions.push(params);
+    return {
+      url: `https://checkout.stripe.test/session-${this.createdAddonSessions.length}`,
+    };
   }
 }

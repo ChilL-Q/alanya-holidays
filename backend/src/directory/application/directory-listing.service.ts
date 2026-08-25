@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   Logger,
   Optional,
@@ -10,6 +11,10 @@ import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { RedisService } from '../../common/redis/redis.service';
 import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
+import {
+  PAYMENT_GATEWAY,
+  PaymentGateway,
+} from '../../webhooks/domain/payment-gateway.interface';
 import {
   DirectoryListingRecord,
   DirectoryListResponse,
@@ -35,6 +40,9 @@ export class DirectoryListingService {
     private readonly redisService: RedisService,
     private readonly userRolesRepo: UserRolesRepository,
     @Optional() private readonly emailOutbox?: EmailOutboxRepository,
+    @Optional()
+    @Inject(PAYMENT_GATEWAY)
+    private readonly paymentGateway?: PaymentGateway,
   ) {}
 
   private async enqueueAdminNotification(
@@ -635,23 +643,56 @@ export class DirectoryListingService {
     return this.directoryRepository.getListingAddons(listingId);
   }
 
+  private static readonly ADDON_TYPES = [
+    'verified_badge',
+    'seasonal_placement',
+    'sponsored_article',
+    'ai_localization',
+  ] as const;
+
   async createAddonCheckout(
     listingId: string,
     addonType: string,
     userId: string,
   ): Promise<{ url: string }> {
     validateUUIDs([listingId]);
-    const { data, error } = await this.directoryRepository.invokeFunction(
-      'create-addon-checkout',
-      {
-        body: { listingId, addonType },
-        headers: { 'x-user-id': userId },
-      },
+    if (
+      !DirectoryListingService.ADDON_TYPES.includes(
+        addonType as (typeof DirectoryListingService.ADDON_TYPES)[number],
+      )
+    ) {
+      throw new Error(
+        'Invalid request. Provide listingId (uuid) and a valid addonType.',
+      );
+    }
+    if (!this.paymentGateway) {
+      throw new Error('Payment gateway is not configured');
+    }
+
+    // Ownership invariant (was enforced only in the deleted Edge function)
+    const ownership =
+      await this.directoryRepository.getDirectoryListingOwner(listingId);
+    if (!ownership || ownership.owner_user_id !== userId) {
+      throw new Error('You do not own this listing');
+    }
+
+    // Block duplicate active add-on of the same type
+    const addons = await this.directoryRepository.getListingAddons(listingId);
+    const hasActive = addons.some(
+      (a) =>
+        a.addon_type === addonType &&
+        (a as { status?: string }).status === 'active',
     );
-    if (error) throw new Error(error.message);
-    if (data?.error) throw new Error(data.error);
-    if (!data?.url) throw new Error('No checkout URL returned');
-    return { url: data.url };
+    if (hasActive) {
+      throw new Error('This add-on is already active for the listing');
+    }
+
+    return this.paymentGateway.createAddonCheckoutSession({
+      userId,
+      listingId,
+      addonType:
+        addonType as (typeof DirectoryListingService.ADDON_TYPES)[number],
+    });
   }
 
   sendListingPaymentInstructions(
