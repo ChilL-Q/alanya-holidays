@@ -134,8 +134,6 @@ export function parseAllowedOrigins(
     ...configuredOrigins,
     env.APP_URL,
     env.SITE_URL,
-    env.NEXT_PUBLIC_SITE_URL,
-    env.VITE_APP_URL,
   ];
 
   return [...new Set(candidates.filter(isNonEmptyString).map(normalizeOrigin))];
