@@ -19,7 +19,7 @@ export interface GuideContent {
 export const guideContents: Record<string, GuideContent> = {
   "Alanya First-Timer's Guide": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Panoramic%20view%20of%20Alanya%20harbor%20at%20golden%20hour%20with%20the%20Red%20Tower%20fortress%20and%20ancient%20city%20walls%20overlooking%20the%20Mediterranean%20Sea%20whitewashed%20buildings%20climbing%20the%20hillside%20warm%20amber%20light%20Turkish%20riviera%20landscape%20soft%20natural%20tones&width=1200&height=512&seq=guide-essential-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Getting to Alanya",
@@ -90,7 +90,7 @@ Grab lunch at a harbor-side fish restaurant (the grilled sea bass is reliably ex
   },
   "The Ultimate Food Lover's Alanya": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Rich%20Turkish%20breakfast%20spread%20on%20ornate%20copper%20tray%20with%20menemen%20eggs%20simit%20bread%20olives%20honey%20kaymak%20cheese%20varieties%20Turkish%20tea%20in%20tulip%20glasses%20overlooking%20Mediterranean%20harbor%20soft%20morning%20light%20terracotta%20and%20turquoise%20color%20palette%20editorial%20food%20photography&width=1200&height=512&seq=guide-food-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Turkish Breakfast: The Non-Negotiable Start",
@@ -142,7 +142,7 @@ Rooftop 42 near the Red Tower does Mediterranean fusion with a killer cocktail p
   },
   "Best Day Trips from Alanya": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Ancient%20Roman%20amphitheater%20ruins%20of%20Side%20overlooking%20Mediterranean%20turquoise%20water%20dramatic%20stone%20columns%20against%20bright%20blue%20sky%20golden%20sunshine%20archaeological%20site%20travel%20photography%20warm%20Mediterranean%20tones%20ancient%20history&width=1200&height=512&seq=guide-adventure-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Side: Ancient Ruins Meet the Sea",
@@ -194,7 +194,7 @@ The canyon is managed (small entrance fee, well-maintained paths) so it feels ac
   },
   "Moving to Alanya: Expat Guide": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Cozy%20modern%20apartment%20balcony%20overlooking%20Alanya%20coastline%20with%20Turkish%20coffee%20cup%20on%20small%20table%20terracotta%20plant%20pots%20relaxing%20residential%20neighborhood%20view%20Mediterranean%20Sea%20in%20distance%20warm%20afternoon%20light%20soft%20lifestyle%20photography%20homely%20atmosphere&width=1200&height=512&seq=guide-expat-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Visas and Residence Permits",
@@ -258,7 +258,7 @@ Most landlords want 3-6 months upfront for short-term, or a full year contract. 
   },
   "Alanya Beach Guide": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Stunning%20turquoise%20Mediterranean%20water%20lapping%20against%20golden%20sandy%20Cleopatra%20Beach%20in%20Alanya%20with%20sun%20loungers%20and%20colorful%20umbrellas%20distant%20Taurus%20Mountains%20backdrop%20clear%20blue%20sky%20summer%20afternoon%20vibrant%20coastal%20photography%20bright%20natural%20colors&width=1200&height=512&seq=guide-beach-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Cleopatra Beach: The Main Event",
@@ -325,7 +325,7 @@ The western end (near Damlataş Cave) is busier and better for families; the eas
   },
   "Alanya Nightlife: Where to Go": {
     heroImage:
-      "https://readdy.ai/api/search-image?query=Elegant%20rooftop%20cocktail%20bar%20at%20night%20overlooking%20illuminated%20Alanya%20harbor%20and%20Red%20Tower%20with%20string%20lights%20warm%20ambient%20glow%20Mediterranean%20bay%20below%20lively%20yet%20sophisticated%20atmosphere%20night%20photography%20deep%20blue%20sky%20golden%20city%20lights&width=1200&height=512&seq=guide-nightlife-hero&orientation=landscape",
+      "/images/placeholder-business.svg",
     sections: [
       {
         heading: "Rooftop Bars: The Golden Hour Circuit",

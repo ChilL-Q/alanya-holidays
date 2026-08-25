@@ -75,7 +75,6 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
 
     it("R3: ListBusinessModal allows tier selection and submits free vs paid forms with correct confirmation popups", async () => {
       vi.spyOn(directoryService, "createListing").mockResolvedValue(mockFullBusiness);
-      vi.spyOn(directoryService, "sendPaymentInstructions").mockResolvedValue({ success: true });
 
       const { unmount } = renderWithProviders(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 

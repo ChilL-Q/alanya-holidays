@@ -142,7 +142,6 @@ export default function PrivateJetsPage() {
         item_name: jetName,
         item_id: selectedJet?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtegg",
       });
 
       if (result.success) {
@@ -164,7 +163,7 @@ export default function PrivateJetsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20private%20jet%20interior%20with%20cream%20leather%20seats%20polished%20wood%20trim%20and%20ambient%20golden%20lighting%20aircraft%20parked%20on%20tarmac%20at%20dusk%20modern%20terminal%20building%20in%20background%20with%20runway%20lights%20twinkling%20warm%20sunset%20sky%20premium%20aviation%20lifestyle%20photography%20opulent%20atmosphere%20high%20detail&width=1800&height=920&seq=jet-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Private Jet Charters"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -173,7 +172,7 @@ export default function PrivateJetsPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Private Jets</span>
             </div>
@@ -399,7 +398,7 @@ export default function PrivateJetsPage() {
                     <button onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Private Jet Charter" />
                     <input type="hidden" name="jet_name" value={selectedJet.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

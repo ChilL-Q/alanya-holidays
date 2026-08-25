@@ -30,7 +30,7 @@ export default function CommunityHubPage() {
       <main>
         <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Lively%20community%20gathering%20at%20Turkish%20seaside%20cafe%20people%20chatting%20laughing%20sharing%20food%20warm%20sunset%20light%20Alanya%20harbor%20background%20Mediterranean%20atmosphere%20candid%20editorial%20photography%20joyful%20authentic%20moments&width=1800&height=760&seq=community-hub-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Holidays Community Hub"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

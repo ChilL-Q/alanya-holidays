@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { adminService } from "@/api-services/admin.service";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -22,28 +23,16 @@ export default function Footer() {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     try {
-      const formData = new URLSearchParams();
-      formData.append("email", email.trim());
-
-      const response = await fetch(
-        "https://readdy.ai/api/form/d8mhs48jb57qogjbhad0",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: formData.toString(),
-        }
-      );
-
-      if (response.ok) {
-        setSubmitStatus("success");
-        setEmail("");
-        timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
-      } else {
-        setSubmitStatus("error");
-        timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
-      }
+      await adminService.submitEnquiry({
+        name: "Newsletter Subscriber",
+        email: email.trim(),
+        subject: "Newsletter Subscription",
+        message: `Newsletter subscription request from ${email.trim()}`,
+        enquiry_type: "newsletter",
+      });
+      setSubmitStatus("success");
+      setEmail("");
+      timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
     } catch {
       setSubmitStatus("error");
       timerRef.current = setTimeout(() => setSubmitStatus("idle"), 4000);
@@ -84,7 +73,6 @@ export default function Footer() {
             {/* Newsletter */}
             <form
               onSubmit={handleNewsletterSubmit}
-              data-readdy-form=""
               className="space-y-3"
             >
               <p className="text-white/80 text-sm font-medium">

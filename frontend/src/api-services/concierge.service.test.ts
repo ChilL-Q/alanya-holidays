@@ -7,7 +7,6 @@ import {
   getOfferingsByCategory,
   createEnquiry,
   submitConciergeEnquiry,
-  createBooking,
   getYachts,
   getPrivateJets,
   getHelicopterTours,
@@ -22,7 +21,6 @@ import {
   luxuryExperiences,
   type ConciergeServiceItem,
   type ConciergeEnquiryPayload,
-  type CreateConciergeBookingPayload,
 } from "./concierge.service";
 import { apiClient, ApiError } from "@/lib/api-client";
 
@@ -191,49 +189,6 @@ describe("ConciergeService", () => {
     });
   });
 
-  describe("createBooking", () => {
-    it("should send POST to /bookings and return confirmation", async () => {
-      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
-        id: "bk-999",
-        data: "bk-999",
-        success: true,
-      });
-
-      const payload: CreateConciergeBookingPayload = {
-        item_id: "yacht-001",
-        service_type: "yacht",
-        total_price: 1500,
-        currency: "EUR",
-        guests: 6,
-        date: "2026-09-10",
-      };
-
-      const result = await createBooking(payload);
-      expect(apiClient.post).toHaveBeenCalledWith("/bookings", {
-        item_id: "yacht-001",
-        check_in: "2026-09-10",
-        check_out: "2026-09-11",
-        guests: 6,
-        item_type: "service",
-        message: undefined,
-        payment_method: undefined,
-      });
-      expect(result.success).toBe(true);
-      expect(result.bookingId).toBe("bk-999");
-      expect(result.id).toBe("bk-999");
-    });
-
-    it("should propagate ApiError on booking API failure without synthesizing fake IDs", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new ApiError("Booking unavailable", 500, "Internal Server Error"));
-
-      const payload: CreateConciergeBookingPayload = {
-        item_id: "jet-001",
-        total_price: 5000,
-      };
-
-      await expect(createBooking(payload)).rejects.toThrow(ApiError);
-    });
-  });
 
   describe("Category Convenience Getters", () => {
     it("getYachts should call API for yachts and filter by type if provided", async () => {

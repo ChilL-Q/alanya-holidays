@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { productsService, type CreateProductOrderPayload } from "./products.service";
+import {
+  productsService,
+  type CreateProductOrderPayload,
+  type SellerProductDraft,
+} from "./products.service";
 import { apiClient } from "@/lib/api-client";
 
 describe("products.service (Clean Architecture)", () => {
@@ -224,6 +228,66 @@ describe("products.service (Clean Architecture)", () => {
 
       const result = await productsService.getRecentEnquiries();
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("seller products (My Products tab)", () => {
+    it("getMyProducts should call GET /products/mine and return array", async () => {
+      const mockProducts = [
+        { id: 1, name: "Ceramic Bowl", price: 24.9, currency: "EUR", stock: 8, status: "active" },
+      ];
+      const getSpy = vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockProducts);
+
+      const result = await productsService.getMyProducts();
+
+      expect(getSpy).toHaveBeenCalledWith("/products/mine", undefined);
+      expect(result).toEqual(mockProducts);
+    });
+
+    it("getMyProducts should unwrap { data: [...] } structure", async () => {
+      const mockProducts = [{ id: 2, name: "Olive Soap", price: 6, currency: "EUR", stock: 40, status: "draft" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: mockProducts });
+
+      const result = await productsService.getMyProducts();
+
+      expect(result).toEqual(mockProducts);
+    });
+
+    it("getMyProducts should return empty array on API error", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Unauthorized 401"));
+
+      const result = await productsService.getMyProducts();
+
+      expect(result).toEqual([]);
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it("createMyProduct should POST /products/mine with the draft payload", async () => {
+      const draft: SellerProductDraft = {
+        name: "Handwoven Rug",
+        description: "Natural wool",
+        price: 149,
+        stock: 3,
+      };
+      const mockCreated = { id: 10, ...draft, status: "active" };
+      const postSpy = vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockCreated);
+
+      const result = await productsService.createMyProduct(draft);
+
+      expect(postSpy).toHaveBeenCalledWith("/products/mine", draft);
+      expect(result).toEqual(mockCreated);
+    });
+
+    it("updateMyProduct should PATCH /products/mine/:id with updates", async () => {
+      const updates: SellerProductDraft = { price: 159, stock: 5 };
+      const mockUpdated = { id: 10, name: "Handwoven Rug", price: 159, stock: 5 };
+      const patchSpy = vi.spyOn(apiClient, "patch").mockResolvedValueOnce(mockUpdated);
+
+      const result = await productsService.updateMyProduct(10, updates);
+
+      expect(patchSpy).toHaveBeenCalledWith("/products/mine/10", updates);
+      expect(result).toEqual(mockUpdated);
     });
   });
 });

@@ -88,7 +88,6 @@ export default function PhotographyExcursionsPage() {
         item_name: selectedExcursion?.name,
         item_id: selectedExcursion?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtth0",
       });
 
       if (result.success) {
@@ -110,7 +109,7 @@ export default function PhotographyExcursionsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Professional%20photographer%20capturing%20golden%20hour%20scene%20in%20Alanya%20old%20town%20narrow%20cobblestone%20alley%20with%20colorful%20Ottoman%20houses%20bougainvillea%20flowers%20warm%20sunset%20light%20streaming%20through%20creative%20composition%20behind%20the%20scenes%20travel%20editorial%20photography%20artistic%20atmosphere&width=1800&height=920&seq=photo-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Photography Excursions in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -119,7 +118,7 @@ export default function PhotographyExcursionsPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Photography Excursions</span>
             </div>
@@ -361,7 +360,7 @@ export default function PhotographyExcursionsPage() {
                     <button onClick={() => setSelectedExcursion(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Photography Excursion" />
                     <input type="hidden" name="excursion_name" value={selectedExcursion.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

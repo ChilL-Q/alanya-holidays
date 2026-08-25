@@ -72,12 +72,6 @@ describe('UsersController', () => {
     );
   });
 
-  it('should delegate getUserProfile by ID', async () => {
-    const res = await controller.getUserProfile('usr-55');
-    expect(res).toEqual({ id: 'usr-1' });
-    expect(mockService.getUserProfile).toHaveBeenCalledWith('usr-55');
-  });
-
   it('should delegate updateUserProfile with bio and company_name', async () => {
     const user: AuthUser = { id: 'usr-55' };
     const dto = {

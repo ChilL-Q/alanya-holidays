@@ -85,7 +85,6 @@ export default function HelicopterToursPage() {
         item_name: selectedTour?.name,
         item_id: selectedTour?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumttf0",
       });
 
       if (result.success) {
@@ -107,7 +106,7 @@ export default function HelicopterToursPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Stunning%20aerial%20view%20from%20helicopter%20cockpit%20over%20Alanya%20coastline%20turquoise%20Mediterranean%20sea%20dramatic%20castle%20on%20rocky%20peninsula%20golden%20sunset%20sky%20clouds%20below%20breathtaking%20perspective%20adventure%20tourism%20editorial%20photography%20epic%20cinematic%20composition&width=1800&height=920&seq=heli-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Helicopter Tours in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -116,7 +115,7 @@ export default function HelicopterToursPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Helicopter Tours</span>
             </div>
@@ -354,7 +353,7 @@ export default function HelicopterToursPage() {
                     <button onClick={() => setSelectedTour(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Helicopter Tour" />
                     <input type="hidden" name="tour_name" value={selectedTour.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

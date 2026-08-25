@@ -3,12 +3,14 @@ import { BookingWebhookHandler } from './booking-webhook.handler';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { BookingsService } from '../../bookings/bookings.service';
 import { BookingsRepository } from '../../bookings/bookings.repository';
+import { NotificationsService } from '../../notifications/notifications.service';
 import Stripe from 'stripe';
 
 describe('BookingWebhookHandler', () => {
   let handler: BookingWebhookHandler;
   let bookingsService: jest.Mocked<Partial<BookingsService>>;
   let bookingsRepository: jest.Mocked<Partial<BookingsRepository>>;
+  let notificationsService: { notifyUser: jest.Mock; notifyAdmins: jest.Mock };
 
   interface MockQueryResult {
     data: unknown;
@@ -51,7 +53,6 @@ describe('BookingWebhookHandler', () => {
   beforeEach(async () => {
     tableMocks = {
       bookings: createTableMock(),
-      notifications: createTableMock(),
       properties: createTableMock(),
       services: createTableMock(),
       profiles: createTableMock(),
@@ -74,6 +75,11 @@ describe('BookingWebhookHandler', () => {
       unblockDatesForBooking: jest.fn().mockResolvedValue(undefined),
     };
 
+    notificationsService = {
+      notifyUser: jest.fn().mockResolvedValue({ id: 'n-1' }),
+      notifyAdmins: jest.fn().mockResolvedValue([]),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BookingWebhookHandler,
@@ -90,6 +96,10 @@ describe('BookingWebhookHandler', () => {
         {
           provide: BookingsRepository,
           useValue: bookingsRepository,
+        },
+        {
+          provide: NotificationsService,
+          useValue: notificationsService,
         },
       ],
     }).compile();
@@ -198,13 +208,13 @@ describe('BookingWebhookHandler', () => {
       });
       expect(tableMocks.bookings.eq).toHaveBeenCalledWith('id', 'b_failed_1');
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'guest_1',
-          title: '⚠️ Payment Failed',
-          type: 'error',
-        }),
-      );
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith('guest_1', {
+        title: '⚠️ Payment Failed',
+        message:
+          'Your booking payment could not be processed. Please check your payment details and try again.',
+        type: 'error',
+        link: '/profile',
+      });
     });
 
     it('should handle missing bookings gracefully', async () => {
@@ -254,20 +264,14 @@ describe('BookingWebhookHandler', () => {
       });
       expect(tableMocks.bookings.in).toHaveBeenCalledWith('id', ['b_disp_1']);
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith([
-        expect.objectContaining({
-          user_id: 'admin_1',
-          title: 'Charge Dispute Filed',
-          type: 'warning',
-          link: '/admin/bookings',
-        }),
-        expect.objectContaining({
-          user_id: 'admin_2',
-          title: 'Charge Dispute Filed',
-          type: 'warning',
-          link: '/admin/bookings',
-        }),
-      ]);
+      expect(notificationsService.notifyAdmins).toHaveBeenCalledWith({
+        title: 'Charge Dispute Filed',
+        message: expect.stringContaining(
+          'A dispute has been filed for payment intent pi_dispute_100',
+        ),
+        type: 'warning',
+        link: '/admin/bookings',
+      });
     });
   });
 
@@ -309,7 +313,7 @@ describe('BookingWebhookHandler', () => {
 
       expect(tableMocks.bookings.update).not.toHaveBeenCalled();
       expect(bookingsRepository.unblockDatesForBooking).not.toHaveBeenCalled();
-      expect(tableMocks.notifications.insert).not.toHaveBeenCalled();
+      expect(notificationsService.notifyUser).not.toHaveBeenCalled();
     });
 
     it('should cancel booking, unblock dates, and notify guest and property host', async () => {
@@ -350,16 +354,14 @@ describe('BookingWebhookHandler', () => {
         mockBooking.id,
       );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          user_id: 'guest_1',
-          title: 'Booking Refunded & Cancelled',
-          type: 'info',
-        }),
-      );
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith('guest_1', {
+        title: 'Booking Refunded & Cancelled',
+        message: 'Your booking #b_refund has been cancelled and refunded.',
+        type: 'info',
+        link: '/profile',
+      });
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith({
-        user_id: 'host_1',
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith('host_1', {
         title: 'Booking Refunded & Cancelled',
         message:
           'Booking for "Luxury Villa" was cancelled due to a refund. Dates have been reopened.',
@@ -400,14 +402,16 @@ describe('BookingWebhookHandler', () => {
         mockBooking.id,
       );
 
-      expect(tableMocks.notifications.insert).toHaveBeenCalledWith({
-        user_id: 'provider_1',
-        title: 'Booking Refunded & Cancelled',
-        message:
-          'Booking for "City Tour" was cancelled due to a refund. Dates have been reopened.',
-        type: 'warning',
-        link: '/host/bookings',
-      });
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'provider_1',
+        {
+          title: 'Booking Refunded & Cancelled',
+          message:
+            'Booking for "City Tour" was cancelled due to a refund. Dates have been reopened.',
+          type: 'warning',
+          link: '/host/bookings',
+        },
+      );
     });
   });
 });

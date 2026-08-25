@@ -4,6 +4,8 @@ import {
   createOrder,
   getOrder,
   getMyOrders,
+  getSellerOrders,
+  updateSellerOrderStatus,
   type CreateOrderPayload,
   type OrderDetailsResponse,
 } from "./orders.service";
@@ -200,6 +202,63 @@ describe("orders.service (Clean Architecture)", () => {
       const result = await ordersService.getMyOrders();
 
       expect(result).toEqual([]);
+      expect(warnSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("getSellerOrders", () => {
+    it("should call GET /products/orders/seller and return orders array", async () => {
+      const mockOrders = [{ id: 1, status: "paid", items: [] }];
+      const getSpy = vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockOrders);
+
+      const result = await getSellerOrders();
+
+      expect(getSpy).toHaveBeenCalledWith("/products/orders/seller");
+      expect(result).toEqual(mockOrders);
+    });
+
+    it("should unwrap { data: [...] } structure if returned by API", async () => {
+      const mockOrders = [{ id: 2, status: "shipped", items: [] }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: mockOrders });
+
+      const result = await getSellerOrders();
+
+      expect(result).toEqual(mockOrders);
+    });
+
+    it("should return empty array on API error", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Offline"));
+
+      const result = await getSellerOrders();
+
+      expect(result).toEqual([]);
+      expect(warnSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("updateSellerOrderStatus", () => {
+    it("should PATCH /products/orders/:id/status with the new status", async () => {
+      const patchSpy = vi
+        .spyOn(apiClient, "patch")
+        .mockResolvedValueOnce({ id: 7, status: "shipped" });
+
+      const result = await updateSellerOrderStatus(7, "shipped");
+
+      expect(patchSpy).toHaveBeenCalledWith("/products/orders/7/status", {
+        status: "shipped",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should return success:false with message on failure", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.spyOn(apiClient, "patch").mockRejectedValueOnce(new Error("Invalid transition"));
+
+      const result = await updateSellerOrderStatus(7, "completed");
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("Invalid transition");
       expect(warnSpy).toHaveBeenCalled();
     });
   });

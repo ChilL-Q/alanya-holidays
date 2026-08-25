@@ -1,9 +1,9 @@
 import React from "react";
-import { User, Shield, Activity, Calendar, Mail, CheckCircle2, Sparkles, Store } from "lucide-react";
+import { User, Shield, Activity, Calendar, Mail, CheckCircle2, Sparkles, Store, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { UserProfile } from "@/context/AuthContext";
 
-export type SettingsTabId = "profile" | "security" | "activity";
+export type SettingsTabId = "profile" | "security" | "activity" | "billing";
 
 export interface SettingsHeroProps {
   user: { id?: string; email?: string | null; created_at?: string } | null;
@@ -60,6 +60,12 @@ export const SettingsHero: React.FC<SettingsHeroProps> = ({
       label: "Account Security",
       icon: <Shield className="w-4 h-4" />,
       description: "Password & access settings",
+    },
+    {
+      id: "billing",
+      label: "Billing",
+      icon: <CreditCard className="w-4 h-4" />,
+      description: "Manage your subscription & payments",
     },
     {
       id: "activity",

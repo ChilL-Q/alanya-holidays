@@ -272,7 +272,8 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
       const mockOrderQuery = {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({
+        order: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue({
           data: [{ id: 1, customer_id: validUuid }],
           error: null,
         }),

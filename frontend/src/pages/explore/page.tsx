@@ -148,7 +148,7 @@ export default function ExplorePage() {
         {/* Hero Section */}
         <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Wide%20panoramic%20aerial%20view%20of%20Alanya%20city%20center%20harbor%20marina%20with%20boats%20medieval%20castle%20on%20rocky%20peninsula%20modern%20buildings%20along%20coastline%20turquoise%20Mediterranean%20sea%20golden%20sunset%20warm%20light%20stunning%20travel%20destination%20editorial%20photography%20high%20detail&width=1800&height=840&seq=explore-hero-v2&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Business Directory"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

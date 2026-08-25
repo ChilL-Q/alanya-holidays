@@ -10,6 +10,7 @@ vi.mock("@/context/AuthContext", () => ({
     profile: { role: "admin", full_name: "Admin User" },
     loading: false,
     isAuthenticated: true,
+    isAdmin: true,
     signOut: vi.fn(),
   }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -198,6 +199,22 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
     vi.spyOn(adminService, "getContentSubmissions").mockResolvedValue(mockContentSubmissions);
     vi.spyOn(adminService, "getPlatformAnalytics").mockResolvedValue(mockAnalytics);
     vi.spyOn(adminService, "getEnquiries").mockResolvedValue(mockEnquiries);
+    vi.spyOn(adminService, "getAuditLogs").mockResolvedValue({
+      data: [
+        {
+          id: "audit-1",
+          entity_type: "listing",
+          entity_id: "l-101",
+          action: "approve",
+          admin_id: "admin-1",
+          created_at: "2026-08-24T12:00:00Z",
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    });
     vi.spyOn(adminService, "approveListing").mockResolvedValue(true);
     vi.spyOn(adminService, "rejectListing").mockResolvedValue(true);
     vi.spyOn(adminService, "deleteListing").mockResolvedValue(true);
@@ -206,7 +223,7 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
     vi.spyOn(adminService, "updateEnquiryStatus").mockResolvedValue(true);
   });
 
-  it("renders the 5-tab control navigation with count badges", async () => {
+  it("renders the 7-tab control navigation with count badges", async () => {
     render(
       <MemoryRouter initialEntries={["/admin?tab=listings"]}>
         <AdminDashboardPage />
@@ -217,8 +234,23 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
       expect(screen.getByRole("tab", { name: /Listings Moderation/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Claims Queue/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Content Moderation/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Forum Moderation/i })).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: /Audit Log/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Platform Analytics/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Concierge Enquiries/i })).toBeInTheDocument();
+    });
+  });
+
+  it("switches to Audit Log tab and displays audit history", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin?tab=audit"]}>
+        <AdminDashboardPage />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Universal Moderation Audit Log/i)).toBeInTheDocument();
+      expect(screen.getByText("l-101")).toBeInTheDocument();
     });
   });
 
@@ -228,6 +260,7 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
         <AdminDashboardPage />
       </MemoryRouter>,
     );
+
 
     await waitFor(() => {
       expect(screen.getByText("Secret Sunset Spot in Mahmutlar")).toBeInTheDocument();

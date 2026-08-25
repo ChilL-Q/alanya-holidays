@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { DirectoryService } from './directory.service';
+import { DirectoryListingService } from './application/directory-listing.service';
+import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { DirectoryListingRecord } from './types/directory.types';
 
 describe('Directory Invariants Safety Net (PR-1 Invariant Spec)', () => {
-  let service: DirectoryService;
+  let service: DirectoryListingService;
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: {
     insertDirectoryListing: jest.Mock;
@@ -56,7 +57,8 @@ describe('Directory Invariants Safety Net (PR-1 Invariant Spec)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        DirectoryService,
+        DirectoryListingService,
+        ListingClaimService,
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
@@ -76,7 +78,7 @@ describe('Directory Invariants Safety Net (PR-1 Invariant Spec)', () => {
       ],
     }).compile();
 
-    service = module.get<DirectoryService>(DirectoryService);
+    service = module.get<DirectoryListingService>(DirectoryListingService);
   });
 
   describe('1. Protected Fields Firewall Invariants', () => {

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { BookingsService } from '../../bookings/bookings.service';
 import { BookingsRepository } from '../../bookings/bookings.repository';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class BookingWebhookHandler {
@@ -12,6 +13,7 @@ export class BookingWebhookHandler {
     private readonly supabaseService: SupabaseService,
     private readonly bookingsService: BookingsService,
     private readonly bookingsRepository: BookingsRepository,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private get supabase() {
@@ -95,8 +97,7 @@ export class BookingWebhookHandler {
       }
 
       if (booking.user_id) {
-        await this.supabase.from('notifications').insert({
-          user_id: booking.user_id,
+        await this.notificationsService.notifyUser(String(booking.user_id), {
           title: '⚠️ Payment Failed',
           message:
             'Your booking payment could not be processed. Please check your payment details and try again.',
@@ -150,35 +151,13 @@ export class BookingWebhookHandler {
       }
     }
 
-    // Admin notification
-    const { data: admins, error: adminError } = await this.supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin');
-
-    if (adminError) {
-      this.logger.error(
-        `Failed to fetch admin users for dispute notification: ${adminError.message}`,
-      );
-    } else if (admins && admins.length > 0) {
-      const notifications = admins.map((admin: { id: string }) => ({
-        user_id: admin.id,
-        title: 'Charge Dispute Filed',
-        message: `A dispute has been filed for payment intent ${paymentIntentId || dispute.id}.${bookingSummary} Reason: ${dispute.reason || 'unknown'}. Amount: ${amountStr} ${currencyStr}.`,
-        type: 'warning',
-        link: '/admin/bookings',
-      }));
-
-      const { error: notifError } = await this.supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (notifError) {
-        this.logger.error(
-          `Failed to insert admin dispute notifications: ${notifError.message}`,
-        );
-      }
-    }
+    // Admin notification — единственный владелец «кто админы» внутри двери
+    await this.notificationsService.notifyAdmins({
+      title: 'Charge Dispute Filed',
+      message: `A dispute has been filed for payment intent ${paymentIntentId || dispute.id}.${bookingSummary} Reason: ${dispute.reason || 'unknown'}. Amount: ${amountStr} ${currencyStr}.`,
+      type: 'warning',
+      link: '/admin/bookings',
+    });
   }
 
   async handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
@@ -240,8 +219,7 @@ export class BookingWebhookHandler {
 
       // In-app notification to guest
       if (booking.user_id) {
-        await this.supabase.from('notifications').insert({
-          user_id: booking.user_id,
+        await this.notificationsService.notifyUser(String(booking.user_id), {
           title: 'Booking Refunded & Cancelled',
           message: `Your booking #${booking.id.slice(0, 8)} has been cancelled and refunded.`,
           type: 'info',
@@ -289,8 +267,7 @@ export class BookingWebhookHandler {
       }
 
       if (hostId && hostId !== booking.user_id) {
-        await this.supabase.from('notifications').insert({
-          user_id: hostId,
+        await this.notificationsService.notifyUser(hostId, {
           title: 'Booking Refunded & Cancelled',
           message: `Booking for "${itemTitle}" was cancelled due to a refund. Dates have been reopened.`,
           type: 'warning',

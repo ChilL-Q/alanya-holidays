@@ -20,34 +20,39 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  getUserNotifications(@CurrentUser() user: AuthUser): LiveNotification[] {
+  async getUserNotifications(
+    @CurrentUser() user: AuthUser,
+  ): Promise<LiveNotification[]> {
     return this.notificationsService.getUserNotifications(user.id);
   }
 
   @Patch('read-all')
-  markAllAsRead(@CurrentUser() user: AuthUser): {
+  async markAllAsRead(@CurrentUser() user: AuthUser): Promise<{
     success: boolean;
     count: number;
-  } {
-    const count = this.notificationsService.markAllAsRead(user.id);
+  }> {
+    const count = await this.notificationsService.markAllAsRead(user.id);
     return { success: true, count };
   }
 
   @Patch(':id/read')
-  markAsRead(
+  async markAsRead(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
-  ): { success: boolean } {
-    const success = this.notificationsService.markAsRead(user.id, id);
+  ): Promise<{ success: boolean }> {
+    const success = await this.notificationsService.markAsRead(user.id, id);
     return { success };
   }
 
   @Delete(':id')
-  deleteNotification(
+  async deleteNotification(
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
-  ): { success: boolean } {
-    const success = this.notificationsService.deleteNotification(user.id, id);
+  ): Promise<{ success: boolean }> {
+    const success = await this.notificationsService.deleteNotification(
+      user.id,
+      id,
+    );
     return { success };
   }
 }

@@ -370,9 +370,13 @@ export class BookingsRepository implements IBookingsRepository {
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
     }
-    const { data, error } = await query.order('created_at', {
-      ascending: false,
-    });
+    // Bounded until a real pagination need exists — unbounded enrichment
+    // (properties/services/guests per row) would scale linearly with data.
+    const { data, error } = await query
+      .order('created_at', {
+        ascending: false,
+      })
+      .limit(200);
 
     if (error) throw new Error(error.message);
     return await this.enrichBookingsWithItems(data || []);
@@ -531,17 +535,6 @@ export class BookingsRepository implements IBookingsRepository {
       .select('id, title, images, price, type')
       .in('id', serviceIds);
     return data || [];
-  }
-
-  async invokeEmailFunction(payload: Record<string, unknown>): Promise<void> {
-    await this.client.functions
-      .invoke('send-email', { body: payload })
-      .catch((err: unknown) => {
-        this.logger.error(
-          'Failed to invoke send-email function',
-          err instanceof Error ? err.stack : undefined,
-        );
-      });
   }
 
   async confirmBookingsFromStripe(

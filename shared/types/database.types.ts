@@ -671,35 +671,71 @@ export type Database = {
       forum_posts: {
         Row: {
           id: string;
-          title: string | null;
-          content: string | null;
+          title: string;
+          slug: string;
+          body: string | null;
+          content?: string | null;
           author_id: string | null;
           category_id: string | null;
+          view_count: number;
+          like_count: number;
+          comment_count: number;
+          is_pinned: boolean;
+          is_removed: boolean;
+          post_type: 'announcement' | 'discussion' | 'question' | string | null;
           created_at: string | null;
           updated_at: string | null;
-          [key: string]: any;
         };
         Insert: {
           id?: string;
-          title?: string | null;
+          title: string;
+          slug?: string;
+          body?: string | null;
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          view_count?: number;
+          like_count?: number;
+          comment_count?: number;
+          is_pinned?: boolean;
+          is_removed?: boolean;
+          post_type?: 'announcement' | 'discussion' | 'question' | string | null;
           created_at?: string | null;
           updated_at?: string | null;
-          [key: string]: any;
         };
         Update: {
           id?: string;
-          title?: string | null;
+          title?: string;
+          slug?: string;
+          body?: string | null;
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          view_count?: number;
+          like_count?: number;
+          comment_count?: number;
+          is_pinned?: boolean;
+          is_removed?: boolean;
+          post_type?: 'announcement' | 'discussion' | 'question' | string | null;
           created_at?: string | null;
           updated_at?: string | null;
-          [key: string]: any;
         };
-        Relationships: any[];
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "forum_posts_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "forum_categories";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       [key: string]: GenericTable;
     };

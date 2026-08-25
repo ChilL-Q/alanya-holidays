@@ -8,6 +8,7 @@ import { SettingsHero, type SettingsTabId } from "./components/SettingsHero";
 import { ProfileTab } from "./components/ProfileTab";
 import { SecurityTab } from "./components/SecurityTab";
 import { ActivityTab } from "./components/ActivityTab";
+import { BillingTab } from "./components/BillingTab";
 
 export default function SettingsPage() {
   const { user, profile, loading } = useAuth();
@@ -29,7 +30,9 @@ export default function SettingsPage() {
   // Tab state derived from and synced to URL search param
   const rawTab = searchParams.get("tab");
   const activeTab: SettingsTabId =
-    rawTab === "security" || rawTab === "activity" ? rawTab : "profile";
+    rawTab === "security" || rawTab === "activity" || rawTab === "billing"
+      ? rawTab
+      : "profile";
 
   const handleTabChange = useCallback(
     (newTab: SettingsTabId) => {
@@ -37,6 +40,20 @@ export default function SettingsPage() {
     },
     [setSearchParams]
   );
+
+  // Stripe checkout return: показать результат
+  useEffect(() => {
+    const result = searchParams.get("subscription");
+    if (result === "success") {
+      showToast("Subscription activated! Welcome aboard 🎉", undefined, "success");
+    } else if (result === "cancelled") {
+      showToast("Checkout cancelled — no charge was made.", undefined, "info");
+    }
+    if (result) {
+      searchParams.delete("subscription");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, showToast]);
 
   // Render loading skeleton while checking auth session
   if (loading) {
@@ -95,6 +112,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "activity" && <ActivityTab />}
+        {activeTab === "billing" && <BillingTab />}
         </div>
       </main>
 

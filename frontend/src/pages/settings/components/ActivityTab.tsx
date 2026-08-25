@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Activity, ShoppingBag, Compass, Bookmark, MessageSquare } from "lucide-react";
+import { Activity, ShoppingBag, Compass, Bookmark, MessageSquare, BookmarkCheck } from "lucide-react";
 import { OrdersList } from "./OrdersList";
 import { BookingsList } from "./BookingsList";
 import { FavoritesList } from "./FavoritesList";
 import { ForumActivityList } from "./ForumActivityList";
+import { SavedPostsList } from "./SavedPostsList";
 
-export type ActivitySubtabId = "orders" | "bookings" | "favorites" | "forum";
+export type ActivitySubtabId = "orders" | "bookings" | "favorites" | "forum" | "saved-posts";
 
 export interface ActivityTabProps {
   initialSubtab?: ActivitySubtabId;
@@ -46,6 +47,14 @@ export function ActivityTab({ initialSubtab = "orders" }: ActivityTabProps) {
       icon: MessageSquare,
       description: "Discussions & questions",
       activeColor: "bg-emerald-600 text-white shadow-xs",
+    },
+    {
+      id: "saved-posts" as const,
+      label: "Saved Posts",
+      shortLabel: "Saved",
+      icon: BookmarkCheck,
+      description: "Bookmarked forum discussions",
+      activeColor: "bg-teal-600 text-white shadow-xs",
     },
   ];
 
@@ -113,6 +122,7 @@ export function ActivityTab({ initialSubtab = "orders" }: ActivityTabProps) {
         {activeSubtab === "bookings" && <BookingsList />}
         {activeSubtab === "favorites" && <FavoritesList />}
         {activeSubtab === "forum" && <ForumActivityList />}
+        {activeSubtab === "saved-posts" && <SavedPostsList />}
       </div>
     </div>
   );

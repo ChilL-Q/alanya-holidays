@@ -4,12 +4,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumEventService } from './application/forum-event.service';
+import { ForumReportService } from './application/forum-report.service';
 import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
-  let service: ForumService;
+  let discussionService: ForumDiscussionService;
+  let eventService: ForumEventService;
+  let reportService: ForumReportService;
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: Record<string, jest.Mock>;
 
@@ -103,7 +107,9 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ForumService,
+        ForumDiscussionService,
+        ForumEventService,
+        ForumReportService,
         {
           provide: ForumRepository,
           useValue: mockRepository,
@@ -115,7 +121,11 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
       ],
     }).compile();
 
-    service = module.get<ForumService>(ForumService);
+    discussionService = module.get<ForumDiscussionService>(
+      ForumDiscussionService,
+    );
+    eventService = module.get<ForumEventService>(ForumEventService);
+    reportService = module.get<ForumReportService>(ForumReportService);
   });
 
   describe('1. Permission Model Invariants', () => {
@@ -124,25 +134,33 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         mockUserRolesRepo.getRole.mockResolvedValue('user');
 
         await expect(
-          service.createForumCategory({ name: 'General' }, userAlice),
+          discussionService.createForumCategory({ name: 'General' }, userAlice),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.updateForumCategory('cat-1', { name: 'New' }, userAlice),
+          discussionService.updateForumCategory(
+            'cat-1',
+            { name: 'New' },
+            userAlice,
+          ),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.deleteForumCategory('cat-1', userAlice),
+          discussionService.deleteForumCategory('cat-1', userAlice),
         ).rejects.toThrow(UnauthorizedException);
 
         // Admin succeeds
         mockUserRolesRepo.getRole.mockResolvedValue('admin');
         await expect(
-          service.createForumCategory({ name: 'General' }, adminUser),
+          discussionService.createForumCategory({ name: 'General' }, adminUser),
         ).resolves.toBeDefined();
         await expect(
-          service.updateForumCategory('cat-1', { name: 'New' }, adminUser),
+          discussionService.updateForumCategory(
+            'cat-1',
+            { name: 'New' },
+            adminUser,
+          ),
         ).resolves.toBeDefined();
         await expect(
-          service.deleteForumCategory('cat-1', adminUser),
+          discussionService.deleteForumCategory('cat-1', adminUser),
         ).resolves.toEqual({ success: true });
       });
 
@@ -150,37 +168,45 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         mockUserRolesRepo.getRole.mockResolvedValue('user');
 
         await expect(
-          service.createForumEvent(
+          eventService.createForumEvent(
             { title: 'Party', event_date: '2026-09-01' },
             userAlice,
           ),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.updateForumEvent(eventId, { title: 'New Party' }, userAlice),
+          eventService.updateForumEvent(
+            eventId,
+            { title: 'New Party' },
+            userAlice,
+          ),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.deleteForumEvent(eventId, userAlice),
+          eventService.deleteForumEvent(eventId, userAlice),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.getEventAttendees(eventId, userAlice),
+          eventService.getEventAttendees(eventId, userAlice),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.getForumEvents({ includeUnpublished: true }, userAlice),
+          eventService.getForumEvents({ includeUnpublished: true }, userAlice),
         ).rejects.toThrow(UnauthorizedException);
 
         // Admin succeeds
         mockUserRolesRepo.getRole.mockResolvedValue('admin');
         await expect(
-          service.createForumEvent(
+          eventService.createForumEvent(
             { title: 'Party', event_date: '2026-09-01' },
             adminUser,
           ),
         ).resolves.toBeDefined();
         await expect(
-          service.updateForumEvent(eventId, { title: 'New Party' }, adminUser),
+          eventService.updateForumEvent(
+            eventId,
+            { title: 'New Party' },
+            adminUser,
+          ),
         ).resolves.toBeDefined();
         await expect(
-          service.deleteForumEvent(eventId, adminUser),
+          eventService.deleteForumEvent(eventId, adminUser),
         ).resolves.toEqual({ success: true });
       });
 
@@ -188,34 +214,34 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         mockUserRolesRepo.getRole.mockResolvedValue('user');
 
         await expect(
-          service.setPinned(postId, true, userAlice),
+          discussionService.setPinned(postId, true, userAlice),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.setRemoved('post', postId, true, userAlice),
+          discussionService.setRemoved('post', postId, true, userAlice),
         ).rejects.toThrow(UnauthorizedException);
         await expect(
-          service.setRemoved('comment', commentId, true, userAlice),
+          discussionService.setRemoved('comment', commentId, true, userAlice),
         ).rejects.toThrow(UnauthorizedException);
-        await expect(service.getRemovedComments(10, userAlice)).rejects.toThrow(
-          UnauthorizedException,
-        );
-        await expect(service.getForumReports(false, userAlice)).rejects.toThrow(
-          UnauthorizedException,
-        );
         await expect(
-          service.resolveForumReport('rep-1', userAlice),
+          discussionService.getRemovedComments(10, userAlice),
+        ).rejects.toThrow(UnauthorizedException);
+        await expect(
+          reportService.getForumReports(false, userAlice),
+        ).rejects.toThrow(UnauthorizedException);
+        await expect(
+          reportService.resolveForumReport('rep-1', userAlice),
         ).rejects.toThrow(UnauthorizedException);
 
         // Admin succeeds
         mockUserRolesRepo.getRole.mockResolvedValue('admin');
         await expect(
-          service.setPinned(postId, true, adminUser),
+          discussionService.setPinned(postId, true, adminUser),
         ).resolves.toEqual({ success: true });
         await expect(
-          service.setRemoved('post', postId, true, adminUser),
+          discussionService.setRemoved('post', postId, true, adminUser),
         ).resolves.toEqual({ success: true });
         await expect(
-          service.resolveForumReport('rep-1', adminUser),
+          reportService.resolveForumReport('rep-1', adminUser),
         ).resolves.toEqual({ success: true });
       });
     });
@@ -230,19 +256,27 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         // 1. Author (Alice) updates -> Success
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.updateForumPost(postId, { title: 'Alice Edit' }, userAlice),
+          discussionService.updateForumPost(
+            postId,
+            { title: 'Alice Edit' },
+            userAlice,
+          ),
         ).resolves.toBeDefined();
 
         // 2. Admin updates Alice's post -> Success
         mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
         await expect(
-          service.updateForumPost(postId, { title: 'Admin Edit' }, adminUser),
+          discussionService.updateForumPost(
+            postId,
+            { title: 'Admin Edit' },
+            adminUser,
+          ),
         ).resolves.toBeDefined();
 
         // 3. Bob (non-author, non-admin) updates Alice's post -> Throws UnauthorizedException
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.updateForumPost(
+          discussionService.updateForumPost(
             postId,
             { title: 'Bob Malicious Edit' },
             userBob,
@@ -259,20 +293,20 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         // Author deletes
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.deleteForumPost(postId, userAlice),
+          discussionService.deleteForumPost(postId, userAlice),
         ).resolves.toEqual({ success: true });
 
         // Admin deletes
         mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
         await expect(
-          service.deleteForumPost(postId, adminUser),
+          discussionService.deleteForumPost(postId, adminUser),
         ).resolves.toEqual({ success: true });
 
         // Bob deletes -> UnauthorizedException
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
-        await expect(service.deleteForumPost(postId, userBob)).rejects.toThrow(
-          UnauthorizedException,
-        );
+        await expect(
+          discussionService.deleteForumPost(postId, userBob),
+        ).rejects.toThrow(UnauthorizedException);
       });
 
       it('deleteForumComment: allows author OR admin, rejects unauthorized 3rd party', async () => {
@@ -284,19 +318,19 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         // Author deletes
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.deleteForumComment(commentId, userAlice),
+          discussionService.deleteForumComment(commentId, userAlice),
         ).resolves.toEqual({ success: true });
 
         // Admin deletes
         mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
         await expect(
-          service.deleteForumComment(commentId, adminUser),
+          discussionService.deleteForumComment(commentId, adminUser),
         ).resolves.toEqual({ success: true });
 
         // Bob deletes -> UnauthorizedException
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.deleteForumComment(commentId, userBob),
+          discussionService.deleteForumComment(commentId, userBob),
         ).rejects.toThrow(UnauthorizedException);
       });
 
@@ -304,13 +338,17 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         mockRepository.getPostById.mockResolvedValueOnce(null);
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.updateForumPost('non-existent', { title: 'Test' }, userAlice),
+          discussionService.updateForumPost(
+            'non-existent',
+            { title: 'Test' },
+            userAlice,
+          ),
         ).rejects.toThrow(NotFoundException);
 
         mockRepository.getCommentById.mockResolvedValueOnce(null);
         mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
         await expect(
-          service.deleteForumComment('non-existent', userAlice),
+          discussionService.deleteForumComment('non-existent', userAlice),
         ).rejects.toThrow(NotFoundException);
       });
     });
@@ -327,7 +365,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         ),
       );
 
-      const res = await service.togglePostLike(postId, userAlice);
+      const res = await discussionService.togglePostLike(postId, userAlice);
 
       // Must tolerate race condition gracefully
       expect(res).toEqual({ liked: true });
@@ -336,7 +374,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
     it('2.2 togglePostLike: toggles off and returns { liked: false } when already liked', async () => {
       mockRepository.checkPostLike.mockResolvedValueOnce({ id: 'like-1' });
 
-      const res = await service.togglePostLike(postId, userAlice);
+      const res = await discussionService.togglePostLike(postId, userAlice);
 
       expect(mockRepository.deletePostLike).toHaveBeenCalledWith(
         postId,
@@ -351,9 +389,9 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         new Error('Connection terminated unexpectedly'),
       );
 
-      await expect(service.togglePostLike(postId, userAlice)).rejects.toThrow(
-        'Connection terminated unexpectedly',
-      );
+      await expect(
+        discussionService.togglePostLike(postId, userAlice),
+      ).rejects.toThrow('Connection terminated unexpectedly');
     });
 
     it('2.4 toggleCommentLike: returns { liked: true } on PG 23505 unique constraint error', async () => {
@@ -362,7 +400,10 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         new Error('duplicate key value violates unique constraint (23505)'),
       );
 
-      const res = await service.toggleCommentLike(commentId, userAlice);
+      const res = await discussionService.toggleCommentLike(
+        commentId,
+        userAlice,
+      );
       expect(res).toEqual({ liked: true });
     });
 
@@ -374,7 +415,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         ),
       );
 
-      const res = await service.toggleEventRsvp(
+      const res = await eventService.toggleEventRsvp(
         eventId,
         '+905551234567',
         userAlice,
@@ -390,7 +431,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         'living-in-alanya-1',
       ]);
 
-      const _res = await service.createForumPost(
+      const _res = await discussionService.createForumPost(
         { title: 'Living in Alanya', body: 'Post content' },
         'discussion',
         userAlice,
@@ -408,7 +449,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
     it('3.2 createForumPost: transliterates Turkish and Cyrillic characters properly', async () => {
       mockRepository.getPostSlugs.mockResolvedValueOnce([]);
 
-      await service.createForumPost(
+      await discussionService.createForumPost(
         { title: 'En İyi Plajlar & Oteller', body: 'Turkish chars' },
         'discussion',
         userAlice,
@@ -420,7 +461,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
       );
 
       mockRepository.getPostSlugs.mockResolvedValueOnce([]);
-      await service.createForumPost(
+      await discussionService.createForumPost(
         { title: 'Лучшие рестораны Аланьи', body: 'Cyrillic chars' },
         'discussion',
         userAlice,
@@ -435,7 +476,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
     it('3.3 createForumPost: falls back to default seed when title contains only special characters', async () => {
       mockRepository.getPostSlugs.mockResolvedValueOnce([]);
 
-      await service.createForumPost(
+      await discussionService.createForumPost(
         { title: '??? !!!', body: 'No alphanumeric chars' },
         'discussion',
         userAlice,
@@ -453,7 +494,7 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
         'beach-volleyball-tournament',
       ]);
 
-      await service.createForumEvent(
+      await eventService.createForumEvent(
         { title: 'Beach Volleyball Tournament', event_date: '2026-08-30' },
         adminUser,
       );
@@ -470,13 +511,13 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
   describe('4. Soft Removal and Filter Invariants', () => {
     it('4.1 getForumPosts: throws BadRequestException if both removedOnly and includeRemoved are specified', async () => {
       await expect(
-        service.getForumPosts({
+        discussionService.getForumPosts({
           removedOnly: true,
           includeRemoved: true,
         } as any),
       ).rejects.toThrow(BadRequestException);
       await expect(
-        service.getForumPosts({
+        discussionService.getForumPosts({
           removedOnly: true,
           includeRemoved: true,
         } as any),
@@ -484,14 +525,14 @@ describe('Forum Invariants Safety Net (PR-1 Invariant Spec)', () => {
     });
 
     it('4.2 getForumPosts: correctly passes removedOnly or includeRemoved flags to repository filter', async () => {
-      await service.getForumPosts({ removedOnly: true });
+      await discussionService.getForumPosts({ removedOnly: true });
       expect(mockRepository.getPosts).toHaveBeenCalledWith(
         expect.objectContaining({ removedOnly: true }),
         20,
         0,
       );
 
-      await service.getForumPosts({ includeRemoved: true });
+      await discussionService.getForumPosts({ includeRemoved: true });
       expect(mockRepository.getPosts).toHaveBeenCalledWith(
         expect.objectContaining({ includeRemoved: true }),
         20,

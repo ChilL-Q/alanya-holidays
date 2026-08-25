@@ -91,7 +91,10 @@ describe('ProductsService - server-side order pricing', () => {
 
   it('should use the SKU price when skuId is provided and override the item price from DB', async () => {
     mockRepository.getOrderableProductsByIds.mockResolvedValueOnce([
-      { ...dbItem, sku_id: 10, sku_price: 750, sku_label: 'Large' },
+      {
+        ...dbItem,
+        skus: [{ id: 10, price: 750, stock: 20, label: 'Large' }],
+      },
     ]);
 
     await service.createProductOrder(
@@ -115,6 +118,82 @@ describe('ProductsService - server-side order pricing', () => {
     expect(persisted.items[0].unitPrice).toBe(750);
     expect(persisted.items[0].subtotal).toBe(1500);
     expect(persisted.subtotal).toBe(1500);
+  });
+
+  it('should price each line by its OWN sku when one product appears twice with different variants', async () => {
+    mockRepository.getOrderableProductsByIds.mockResolvedValueOnce([
+      {
+        ...dbItem,
+        price: 10,
+        stock: 100,
+        skus: [
+          { id: 10, price: 100, stock: 5, label: 'Standard' },
+          { id: 11, price: 500, stock: 3, label: 'Deluxe' },
+        ],
+      },
+    ]);
+
+    await service.createProductOrder(
+      baseDto([
+        {
+          productId: 1,
+          productName: 'Handmade Carpet',
+          skuId: 11,
+          quantity: 1,
+          unitPrice: 1,
+          finalPrice: 1,
+          subtotal: 1,
+        },
+        {
+          productId: 1,
+          productName: 'Handmade Carpet',
+          skuId: 10,
+          quantity: 2,
+          unitPrice: 1,
+          finalPrice: 1,
+          subtotal: 2,
+        },
+      ]),
+      'user-xyz',
+    );
+
+    const [[persisted]] = mockRepository.createProductOrder.mock
+      .calls as unknown as [[CreateProductOrderDto]];
+    if (!persisted) throw new Error('createProductOrder was not called');
+    // Deluxe priced at 500 despite the cheaper Standard sku existing first.
+    expect(persisted.items[0].unitPrice).toBe(500);
+    expect(persisted.items[0].skuId).toBe(11);
+    expect(persisted.items[1].unitPrice).toBe(100);
+    expect(persisted.items[1].skuId).toBe(10);
+    expect(persisted.subtotal).toBe(700);
+  });
+
+  it('should reject a skuId that does not belong to the ordered product', async () => {
+    mockRepository.getOrderableProductsByIds.mockResolvedValueOnce([
+      {
+        ...dbItem,
+        skus: [{ id: 10, price: 750, stock: 20, label: 'Large' }],
+      },
+    ]);
+
+    await expect(
+      service.createProductOrder(
+        baseDto([
+          {
+            productId: 1,
+            productName: 'Handmade Carpet',
+            skuId: 999,
+            quantity: 1,
+            unitPrice: 10,
+            finalPrice: 10,
+            subtotal: 10,
+          },
+        ]),
+        'user-xyz',
+      ),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(mockRepository.createProductOrder).not.toHaveBeenCalled();
   });
 
   it('should reject an order referencing an unknown or inactive product', async () => {

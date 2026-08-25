@@ -135,34 +135,34 @@ export class ServicesService {
     limit = 20,
   ): Promise<ServiceListResponse> {
     const cacheKey = `services:list:${type || 'all'}:${page}:${limit}`;
-    const cached =
-      await this.redisService.getJson<ServiceListResponse>(cacheKey);
-    if (cached) return cached;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const { data, count } = await this.servicesRepository.getServices(
+          type,
+          page,
+          limit,
+        );
 
-    const { data, count } = await this.servicesRepository.getServices(
-      type,
-      page,
-      limit,
+        const mappedData =
+          data?.map((s) => {
+            const idStr =
+              typeof s.id === 'string'
+                ? s.id
+                : typeof s.id === 'number'
+                  ? String(s.id)
+                  : '';
+            return {
+              ...s,
+              service_ref:
+                s.service_ref || parseInt(idStr.slice(0, 8), 16) % 10000,
+            };
+          }) || [];
+        const response: ServiceListResponse = { data: mappedData, count };
+        return response;
+      },
+      { ttlFreshSeconds: 600 },
     );
-
-    const mappedData =
-      data?.map((s) => {
-        const idStr =
-          typeof s.id === 'string'
-            ? s.id
-            : typeof s.id === 'number'
-              ? String(s.id)
-              : '';
-        return {
-          ...s,
-          service_ref: s.service_ref || parseInt(idStr.slice(0, 8), 16) % 10000,
-        };
-      }) || [];
-    const response: ServiceListResponse = { data: mappedData, count };
-    if (response.data) {
-      await this.redisService.setJson(cacheKey, response, 600); // 10 minutes TTL
-    }
-    return response;
   }
 
   async getServicesByProvider(
@@ -173,17 +173,16 @@ export class ServicesService {
 
   async getService(id: string): Promise<Record<string, unknown>> {
     const cacheKey = `services:item:${id}`;
-    const cached =
-      await this.redisService.getJson<Record<string, unknown>>(cacheKey);
-    if (cached) return cached;
-
-    const { data, error } =
-      await this.servicesRepository.getServiceByIdOrRef(id);
-    if (error || !data) throw new NotFoundException('Service not found');
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const { data, error } =
+          await this.servicesRepository.getServiceByIdOrRef(id);
+        if (error || !data) throw new NotFoundException('Service not found');
+        return data;
+      },
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async updateService(

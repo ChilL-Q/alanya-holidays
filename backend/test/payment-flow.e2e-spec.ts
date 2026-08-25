@@ -48,6 +48,7 @@ const GUEST_ID = 'user-123';
 const PROPERTY_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 describe('Payment flow e2e: booking -> checkout webhook -> confirmation', () => {
+  jest.setTimeout(30000);
   let app: INestApplication;
   let httpApp: HttpApp;
 

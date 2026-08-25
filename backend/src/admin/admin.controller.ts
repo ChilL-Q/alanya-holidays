@@ -6,8 +6,10 @@ import {
   Body,
   Query,
   UseGuards,
+  Optional,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { ModerationAuditService } from './moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { RequireRole } from '../auth/decorators/require-role.decorator';
@@ -20,12 +22,20 @@ import {
 import { DaysQueryDto } from '../common/dto/pagination.dto';
 import { UpdateEnquiryStatusDto } from './dto/update-enquiry-status.dto';
 import { AssignEnquiryDto } from './dto/assign-enquiry.dto';
+import {
+  GetAuditLogsQueryDto,
+  PaginatedAuditLogsResult,
+} from './dto/audit-log.dto';
 
 @Controller('admin')
 @UseGuards(AuthGuard, RolesGuard)
 @RequireRole('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
+  ) {}
 
   @Get('enquiries')
   async getEnquiries(
@@ -76,5 +86,22 @@ export class AdminController {
       days = Number(query.days) || 30;
     }
     return await this.adminService.getPlatformAnalytics(days, user.id);
+  }
+
+  @Get('audit-logs')
+  async getAuditLogs(
+    @Query() query: GetAuditLogsQueryDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<PaginatedAuditLogsResult> {
+    if (!this.moderationAuditService) {
+      return {
+        data: [],
+        total: 0,
+        page: query.page || 1,
+        limit: query.limit || 20,
+        totalPages: 0,
+      };
+    }
+    return await this.moderationAuditService.getAuditLogs(query, user.id);
   }
 }

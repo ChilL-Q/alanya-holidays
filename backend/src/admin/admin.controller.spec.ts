@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { ModerationAuditService } from './moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -29,6 +30,25 @@ describe('AdminController', () => {
     }),
   };
 
+  const mockModerationAuditService = {
+    getAuditLogs: jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'audit-1',
+          entity_type: 'listing',
+          entity_id: 'l-1',
+          action: 'approve',
+          admin_id: 'admin-uuid-123',
+          created_at: '2026-08-24T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    }),
+  };
+
   const mockUser: AuthUser = {
     id: 'admin-uuid-123',
     role: 'admin',
@@ -43,6 +63,10 @@ describe('AdminController', () => {
         {
           provide: AdminService,
           useValue: mockAdminService,
+        },
+        {
+          provide: ModerationAuditService,
+          useValue: mockModerationAuditService,
         },
         {
           provide: SupabaseService,
@@ -114,6 +138,38 @@ describe('AdminController', () => {
       expect(result).toEqual({ kpiSummary: { totalViews: 100 } });
       expect(mockAdminService.getPlatformAnalytics).toHaveBeenCalledWith(
         60,
+        'admin-uuid-123',
+      );
+    });
+  });
+
+  describe('getAuditLogs', () => {
+    it('should call moderationAuditService.getAuditLogs with query and user id', async () => {
+      const query = {
+        entity_type: 'listing',
+        action: 'approve',
+        page: 1,
+        limit: 10,
+      };
+      const result = await controller.getAuditLogs(query, mockUser);
+      expect(result).toEqual({
+        data: [
+          {
+            id: 'audit-1',
+            entity_type: 'listing',
+            entity_id: 'l-1',
+            action: 'approve',
+            admin_id: 'admin-uuid-123',
+            created_at: '2026-08-24T00:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      });
+      expect(mockModerationAuditService.getAuditLogs).toHaveBeenCalledWith(
+        query,
         'admin-uuid-123',
       );
     });

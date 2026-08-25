@@ -378,7 +378,6 @@ export interface ConciergeEnquiryPayload {
   duration?: string;
   subject?: string;
   message?: string;
-  form_endpoint?: string;
   custom_fields?: Record<string, unknown>;
 }
 
@@ -392,42 +391,8 @@ export interface ConciergeEnquiryResult {
 
 export type CreateConciergeEnquiryResult = ConciergeEnquiryResult;
 
-export interface CreateConciergeBookingPayload {
-  item_id: string;
-  service_type?: string;
-  check_in?: string;
-  check_out?: string;
-  date?: string;
-  total_price?: number;
-  currency?: string;
-  guests?: number;
-  message?: string;
-  payment_method?: string;
-  contact_info?: {
-    name: string;
-    email: string;
-    phone?: string;
-  };
-  details?: Record<string, unknown>;
-  [key: string]: unknown;
-}
 
-export interface ConciergeBookingResult {
-  success: boolean;
-  bookingId?: string;
-  id?: string;
-  message?: string;
-}
 
-export type CreateBookingResult = ConciergeBookingResult;
-
-function addOneDay(dateStr?: string): string | undefined {
-  if (!dateStr) return undefined;
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return undefined;
-  date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
-}
 
 export interface LuxuryExperienceItem {
   icon: string;
@@ -635,7 +600,7 @@ export class ConciergeService {
   /**
    * Submits a concierge enquiry request.
    */
-  async createEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
+  async submitConciergeEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
     const formattedSubject =
       payload.subject ||
       `${payload.experience_type || "Experience"} — ${payload.item_name || "Custom Request"}`;
@@ -688,41 +653,12 @@ export class ConciergeService {
   }
 
   /**
-   * Alias for createEnquiry.
+   * Alias for submitConciergeEnquiry (canonical name).
    */
-  async submitConciergeEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
-    return this.createEnquiry(payload);
+  async createEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
+    return this.submitConciergeEnquiry(payload);
   }
 
-  /**
-   * Creates a booking request for a concierge experience.
-   */
-  async createBooking(payload: CreateConciergeBookingPayload): Promise<ConciergeBookingResult> {
-    const checkIn = payload.check_in || payload.date || "";
-    const checkOut = payload.check_out || addOneDay(payload.date || payload.check_in) || "";
-    const requestBody = {
-      item_id: payload.item_id,
-      check_in: checkIn,
-      check_out: checkOut,
-      guests: payload.guests || 1,
-      item_type: "service",
-      message: payload.message,
-      payment_method: payload.payment_method,
-    };
-
-    const res = await apiClient.post<{ id?: string; data?: string; booking_id?: string; bookingId?: string }>(
-      "/bookings",
-      requestBody
-    );
-
-    const bookingId = res.booking_id || res.bookingId || res.id || res.data;
-    return {
-      id: bookingId,
-      bookingId,
-      success: true,
-      message: "Booking created successfully",
-    };
-  }
 
   // ============================================
   // Category-specific convenience getters
@@ -807,8 +743,6 @@ export const createEnquiry = (payload: ConciergeEnquiryPayload) =>
 export const submitConciergeEnquiry = (payload: ConciergeEnquiryPayload) =>
   conciergeService.submitConciergeEnquiry(payload);
 
-export const createBooking = (payload: CreateConciergeBookingPayload) =>
-  conciergeService.createBooking(payload);
 
 export const getYachts = (type?: string) => conciergeService.getYachts(type);
 export const getPrivateJets = () => conciergeService.getPrivateJets();

@@ -173,9 +173,6 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
             </div>
           ) : (
             <form
-              data-readdy-form
-              method="POST"
-              action="https://readdy.ai/api/form/d8gt48l2497afn2is7ug"
               onSubmit={handleSubmit}
               className="space-y-4"
             >

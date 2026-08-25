@@ -96,7 +96,7 @@ export default function ShopPage() {
       <main>
         <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Stylish%20marketplace%20display%20with%20Turkish%20artisan%20products%20ceramics%20textiles%20leather%20goods%20warm%20natural%20lighting%20Mediterranean%20aesthetic%20wooden%20shelves%20terracotta%20tones%20editorial%20product%20photography%20high%20detail&width=1800&height=760&seq=shop-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Holidays Shop"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

@@ -4,32 +4,49 @@ import {
   NotificationPayload,
   LiveNotification,
 } from './notifications.service';
-import { Server } from 'socket.io';
+import { NOTIFICATIONS_REPOSITORY } from './domain/repositories/notifications.repository.interface';
+import { SupabaseService } from '../supabase/supabase.service';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
-  let serverMock: {
-    to: jest.Mock;
+  let mockRepo: {
+    create: jest.Mock;
+    findByUserId: jest.Mock;
+    markAsRead: jest.Mock;
+    markAllAsRead: jest.Mock;
+    delete: jest.Mock;
   };
-  let emitMock: jest.Mock;
+  let mockSupabase: { getClient: jest.Mock };
 
   beforeEach(async () => {
-    emitMock = jest.fn();
-    serverMock = {
-      to: jest.fn().mockReturnValue({
-        emit: emitMock,
-      }),
+    mockRepo = {
+      create: jest.fn(),
+      findByUserId: jest.fn(),
+      markAsRead: jest.fn(),
+      markAllAsRead: jest.fn(),
+      delete: jest.fn(),
     };
 
+    mockSupabase = { getClient: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [NotificationsService],
+      providers: [
+        NotificationsService,
+        {
+          provide: NOTIFICATIONS_REPOSITORY,
+          useValue: mockRepo,
+        },
+        {
+          provide: SupabaseService,
+          useValue: mockSupabase,
+        },
+      ],
     }).compile();
 
     service = module.get<NotificationsService>(NotificationsService);
-    service.setServer(serverMock as unknown as Server);
   });
 
-  it('should emit notification event to target user room', () => {
+  it('should persist notification to repository and return it', async () => {
     const payload: NotificationPayload = {
       type: 'NEW_BOOKING',
       title: 'Новое бронирование!',
@@ -37,92 +54,163 @@ describe('NotificationsService', () => {
       data: { bookingId: 'b-123', amount: 500 },
     };
 
-    const result = service.notifyUser('host-user-456', payload);
+    const persisted: LiveNotification = {
+      id: 'notif-uuid-1',
+      userId: 'host-user-456',
+      read: false,
+      createdAt: '2026-08-24T12:00:00.000Z',
+      ...payload,
+    };
 
-    expect(serverMock.to).toHaveBeenCalledWith('user:host-user-456');
-    expect(emitMock).toHaveBeenCalledTimes(1);
-    const firstCall = (
-      emitMock.mock.calls as unknown as Array<[string, LiveNotification]>
-    )[0];
-    expect(firstCall[0]).toBe('notification');
-    const emitted = firstCall[1];
-    expect(emitted.type).toBe('NEW_BOOKING');
-    expect(emitted.title).toBe('Новое бронирование!');
-    expect(emitted.message).toBe(payload.message);
-    expect(emitted.data).toEqual(payload.data);
-    expect(typeof emitted.id).toBe('string');
-    expect(typeof emitted.createdAt).toBe('string');
-    expect(result).toHaveProperty('id');
+    mockRepo.create.mockResolvedValue(persisted);
+
+    const result = await service.notifyUser('host-user-456', payload);
+
+    expect(mockRepo.create).toHaveBeenCalledWith({
+      userId: 'host-user-456',
+      type: payload.type,
+      title: payload.title,
+      message: payload.message,
+      data: payload.data,
+      link: undefined,
+    });
+    expect(result).toEqual(persisted);
   });
 
-  it('should store recent notifications in memory for retrieval', () => {
-    service.notifyUser('host-user-1', {
-      type: 'BOOKING_CANCELLED',
-      title: 'Бронирование отменено',
-      message: 'Гость отменил бронь',
+  it('should degrade gracefully when repository create fails', async () => {
+    mockRepo.create.mockRejectedValue(new Error('db down'));
+
+    const result = await service.notifyUser('user-1', {
+      type: 'SYSTEM',
+      title: 't',
+      message: 'm',
     });
 
-    const userNotifications = service.getUserNotifications('host-user-1');
-    expect(userNotifications).toHaveLength(1);
-    expect(userNotifications[0].title).toBe('Бронирование отменено');
+    expect(result.id).toBeDefined();
+    expect(result.userId).toBe('user-1');
+    expect(result.type).toBe('SYSTEM');
   });
 
-  it('should mark a specific notification as read', () => {
-    const notif = service.notifyUser('user-1', {
-      type: 'SYSTEM',
-      title: 'System Alert',
-      message: 'Maintenance in 1 hour',
+  describe('notifyAdmins', () => {
+    const adminRows = [{ id: 'admin-1' }, { id: 'admin-2' }];
+
+    function mockAdminQuery(rows: { id: string }[] | null, error?: Error) {
+      const eq = jest
+        .fn()
+        .mockReturnValue(
+          error
+            ? Promise.resolve({ data: null, error })
+            : Promise.resolve({ data: rows, error: null }),
+        );
+      mockSupabase.getClient.mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          select: jest.fn().mockReturnValue({ eq }),
+        }),
+      });
+      return eq;
+    }
+
+    it('should notify every admin profile with role=admin', async () => {
+      mockAdminQuery(adminRows);
+      mockRepo.create.mockImplementation(({ userId }) =>
+        Promise.resolve({
+          id: `n-${userId}`,
+          userId,
+          read: false,
+          createdAt: '2026-08-25T00:00:00.000Z',
+          type: 'warning',
+          title: 't',
+          message: 'm',
+        }),
+      );
+
+      const results = await service.notifyAdmins({
+        title: 'Charge Dispute Filed',
+        message: 'A dispute has been filed.',
+        type: 'warning',
+        link: '/admin/bookings',
+      });
+
+      expect(mockRepo.create).toHaveBeenCalledTimes(2);
+      expect(results.map((r) => r.userId)).toEqual(['admin-1', 'admin-2']);
     });
 
-    expect(service.markAsRead('user-1', notif.id)).toBe(true);
-    const userNotifications = service.getUserNotifications('user-1');
-    expect(userNotifications[0].read).toBe(true);
+    it('should notify nobody when admin resolution fails (never throws)', async () => {
+      mockAdminQuery(null, new Error('rls denied'));
+      mockRepo.create.mockResolvedValue({
+        id: 'n-1',
+        userId: 'x',
+        read: false,
+        createdAt: 'now',
+        type: 'warning',
+        title: 't',
+        message: 'm',
+      });
 
-    expect(service.markAsRead('user-1', 'non-existent-id')).toBe(false);
-    expect(service.markAsRead('non-existent-user', notif.id)).toBe(false);
+      const results = await service.notifyAdmins({
+        title: 't',
+        message: 'm',
+        type: 'warning',
+      });
+
+      expect(results).toEqual([]);
+      expect(mockRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('should notify nobody when there are no admins', async () => {
+      mockAdminQuery([]);
+
+      const results = await service.notifyAdmins({
+        title: 't',
+        message: 'm',
+        type: 'info',
+      });
+
+      expect(results).toEqual([]);
+    });
   });
 
-  it('should mark all notifications as read and return updated count', () => {
-    service.notifyUser('user-2', {
-      type: 'SYSTEM',
-      title: 'Alert 1',
-      message: 'Msg 1',
-    });
-    service.notifyUser('user-2', {
-      type: 'SYSTEM',
-      title: 'Alert 2',
-      message: 'Msg 2',
-    });
+  it('should retrieve persistent user notifications from repository', async () => {
+    const expected = [
+      {
+        id: 'n-1',
+        userId: 'host-user-1',
+        type: 'BOOKING_CANCELLED',
+        title: 'Бронирование отменено',
+        message: 'Гость отменил бронь',
+        read: false,
+        createdAt: '2026-08-24T10:00:00.000Z',
+      },
+    ];
 
-    const count = service.markAllAsRead('user-2');
-    expect(count).toBe(2);
+    mockRepo.findByUserId.mockResolvedValue(expected);
 
-    const userNotifications = service.getUserNotifications('user-2');
-    expect(userNotifications.every((n) => n.read)).toBe(true);
-
-    // Subsequent call should mark 0 as read
-    expect(service.markAllAsRead('user-2')).toBe(0);
-    expect(service.markAllAsRead('unknown-user')).toBe(0);
+    const userNotifications = await service.getUserNotifications('host-user-1');
+    expect(mockRepo.findByUserId).toHaveBeenCalledWith('host-user-1');
+    expect(userNotifications).toEqual(expected);
   });
 
-  it('should delete a notification successfully', () => {
-    const notif1 = service.notifyUser('user-3', {
-      type: 'SYSTEM',
-      title: 'Alert 1',
-      message: 'Msg 1',
-    });
-    const notif2 = service.notifyUser('user-3', {
-      type: 'SYSTEM',
-      title: 'Alert 2',
-      message: 'Msg 2',
-    });
+  it('should delegate markAsRead to repository', async () => {
+    mockRepo.markAsRead.mockResolvedValue(true);
 
-    expect(service.deleteNotification('user-3', notif1.id)).toBe(true);
-    const notifications = service.getUserNotifications('user-3');
-    expect(notifications).toHaveLength(1);
-    expect(notifications[0].id).toBe(notif2.id);
+    const res = await service.markAsRead('user-1', 'notif-1');
+    expect(mockRepo.markAsRead).toHaveBeenCalledWith('user-1', 'notif-1');
+    expect(res).toBe(true);
+  });
 
-    expect(service.deleteNotification('user-3', 'non-existent')).toBe(false);
-    expect(service.deleteNotification('unknown-user', notif2.id)).toBe(false);
+  it('should delegate markAllAsRead to repository', async () => {
+    mockRepo.markAllAsRead.mockResolvedValue(3);
+
+    const count = await service.markAllAsRead('user-2');
+    expect(mockRepo.markAllAsRead).toHaveBeenCalledWith('user-2');
+    expect(count).toBe(3);
+  });
+
+  it('should delegate deleteNotification to repository', async () => {
+    mockRepo.delete.mockResolvedValue(true);
+
+    const res = await service.deleteNotification('user-3', 'notif-1');
+    expect(mockRepo.delete).toHaveBeenCalledWith('user-3', 'notif-1');
+    expect(res).toBe(true);
   });
 });

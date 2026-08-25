@@ -47,3 +47,22 @@ export class DaysQueryDto {
   @Max(365)
   days?: number = 30;
 }
+
+/**
+ * Единый парсинг page/limit из query: PaginationDto (transformed) имеет
+ * приоритет, иначе строковые query-параметры, иначе дефолты вызова.
+ */
+export function parsePagination(
+  query: { page?: string; limit?: string },
+  pagination?: PaginationDto,
+  defaults: { page?: number; limit?: number } = {},
+): { page: number; limit: number } {
+  return {
+    page:
+      pagination?.page ??
+      (query.page ? parseInt(query.page, 10) : (defaults.page ?? 1)),
+    limit:
+      pagination?.limit ??
+      (query.limit ? parseInt(query.limit, 10) : (defaults.limit ?? 20)),
+  };
+}

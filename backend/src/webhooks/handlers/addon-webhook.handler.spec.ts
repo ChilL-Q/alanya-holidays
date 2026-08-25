@@ -1,10 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AddonWebhookHandler } from './addon-webhook.handler';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { RedisService } from '../../common/redis/redis.service';
 import Stripe from 'stripe';
 
 describe('AddonWebhookHandler', () => {
   let handler: AddonWebhookHandler;
+  let notificationsService: { notifyUser: jest.Mock; notifyAdmins: jest.Mock };
+  let redisService: { delByPattern: jest.Mock };
 
   interface MockQueryResult {
     data: unknown;
@@ -41,10 +45,16 @@ describe('AddonWebhookHandler', () => {
   };
 
   beforeEach(async () => {
+    notificationsService = {
+      notifyUser: jest.fn().mockResolvedValue({ id: 'n-1' }),
+      notifyAdmins: jest.fn().mockResolvedValue([]),
+    };
+    redisService = {
+      delByPattern: jest.fn().mockResolvedValue(undefined),
+    };
     tableMocks = {
       listing_addons: createTableMock(),
       directory_listings: createTableMock(),
-      notifications: createTableMock(),
     };
 
     mockSupabaseClient = {
@@ -64,6 +74,14 @@ describe('AddonWebhookHandler', () => {
           useValue: {
             getClient: () => mockSupabaseClient,
           },
+        },
+        {
+          provide: NotificationsService,
+          useValue: notificationsService,
+        },
+        {
+          provide: RedisService,
+          useValue: redisService,
         },
       ],
     }).compile();
@@ -136,7 +154,11 @@ describe('AddonWebhookHandler', () => {
       'pi_addon_dup',
     );
     expect(tableMocks.listing_addons.insert).not.toHaveBeenCalled();
-    expect(tableMocks.directory_listings.update).not.toHaveBeenCalled();
+    // Duplicate delivery still re-applies the idempotent fast-path flag:
+    // a prior attempt may have recorded the addon but failed the patch.
+    expect(tableMocks.directory_listings.update).toHaveBeenCalledWith({
+      is_verified: true,
+    });
   });
 
   it('should set expires_at to null when durationDays metadata is omitted for permanent add-on', async () => {
@@ -210,10 +232,11 @@ describe('AddonWebhookHandler', () => {
       'id',
       'list-1',
     );
+    expect(redisService.delByPattern).toHaveBeenCalledWith('directory:*');
 
-    expect(tableMocks.notifications.insert).toHaveBeenCalledWith(
+    expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+      'host-1',
       expect.objectContaining({
-        user_id: 'host-1',
         title: 'Upgrade activated',
         type: 'success',
       }),
@@ -276,23 +299,14 @@ describe('AddonWebhookHandler', () => {
       error: null,
     });
 
-    tableMocks.profiles = createTableMock();
-    tableMocks.profiles.then = (resolve, reject) =>
-      Promise.resolve({
-        data: [{ id: 'admin-1' }],
-        error: null,
-      }).then(resolve, reject);
-
     await handler.handleCheckoutSession(session);
 
-    expect(tableMocks.notifications.insert).toHaveBeenCalledWith([
-      expect.objectContaining({
-        user_id: 'admin-1',
-        title: 'Sponsored article purchased',
-        type: 'info',
-        link: '/admin/directory',
-      }),
-    ]);
+    expect(notificationsService.notifyAdmins).toHaveBeenCalledWith({
+      title: 'Sponsored article purchased',
+      message: expect.stringContaining('Sunset Cafe'),
+      type: 'info',
+      link: '/admin/directory',
+    });
   });
 
   it('should throw error when insert into listing_addons fails', async () => {

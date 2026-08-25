@@ -24,7 +24,7 @@ import {
   UpdateServiceStatusDto,
   SaveServiceDraftDto,
 } from './dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -204,8 +204,10 @@ export class ServicesController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<ServiceListResponse> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.servicesService.getServices(type, page, limit);
   }
 
@@ -233,8 +235,11 @@ export class ServicesController {
         parsedTypes = [typesFilter];
       }
     }
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 50 },
+    );
     return this.servicesService.getAdminServices(
       statusFilter,
       parsedTypes,

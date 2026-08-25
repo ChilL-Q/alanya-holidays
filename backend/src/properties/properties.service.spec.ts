@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PropertiesService } from './properties.service';
 import { PROPERTIES_REPOSITORY } from './domain';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
@@ -13,10 +14,12 @@ describe('PropertiesService', () => {
   let service: PropertiesService;
   let mockRepository: Record<string, jest.Mock>;
   let mockUserRolesRepo: { getRole: jest.Mock };
+  let emailOutbox: { enqueue: jest.Mock };
   let mockRedisService: {
     getJson: jest.Mock;
     setJson: jest.Mock;
     delByPattern: jest.Mock;
+    getOrFetchSWR: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -63,13 +66,35 @@ describe('PropertiesService', () => {
       updateReviewFlag: jest.fn().mockResolvedValue(undefined),
       getFlaggedReviews: jest.fn().mockResolvedValue({ data: [], count: 0 }),
       bulkDeleteReviews: jest.fn().mockResolvedValue(undefined),
-      invokeEmailFunction: jest.fn(),
     };
 
     mockRedisService = {
       getJson: jest.fn().mockResolvedValue(null),
       setJson: jest.fn().mockResolvedValue(undefined),
       delByPattern: jest.fn().mockResolvedValue(undefined),
+      getOrFetchSWR: jest.fn(),
+    };
+
+    mockRedisService.getOrFetchSWR = jest.fn(
+      async (
+        _key: string,
+        loader: () => unknown,
+        options?: { ttlFreshSeconds?: number },
+      ) => {
+        const hit = await mockRedisService.getJson(_key);
+        if (hit) return hit;
+        const fresh = await loader();
+        await mockRedisService.setJson(
+          _key,
+          fresh,
+          options?.ttlFreshSeconds ?? 600,
+        );
+        return fresh;
+      },
+    );
+
+    emailOutbox = {
+      enqueue: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -86,6 +111,10 @@ describe('PropertiesService', () => {
         {
           provide: RedisService,
           useValue: mockRedisService,
+        },
+        {
+          provide: EmailOutboxRepository,
+          useValue: emailOutbox,
         },
       ],
     }).compile();
@@ -397,7 +426,7 @@ describe('PropertiesService', () => {
         comment: 'Loved the stay!',
         user_id: 'user-1',
       });
-      expect(mockRepository.invokeEmailFunction).toHaveBeenCalledWith({
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith({
         type: 'new_review',
         userId: 'host-1',
         data: {

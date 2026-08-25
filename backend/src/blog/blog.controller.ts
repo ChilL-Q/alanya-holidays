@@ -17,6 +17,7 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import {
+  BlogComment,
   BlogPost,
   BlogPostSummary,
   BlogPostsListResult,
@@ -26,6 +27,7 @@ import {
   SuccessResponse,
 } from './types/blog.types';
 import {
+  CreateBlogCommentDto,
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
   CreateBlogTagDto,
@@ -40,7 +42,7 @@ import { LimitQueryDto } from '../common/dto/pagination.dto';
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
-  @Get()
+  @Get(['', 'posts'])
   async getBlogPosts(
     @Query() query: GetBlogQueryDto,
     @CurrentUser() user?: AuthUser,
@@ -146,8 +148,13 @@ export class BlogController {
   async getBlogPost(
     @Param('slug') slug: string,
     @Query('incrementViews') incrementViews?: string,
+    @CurrentUser() user?: AuthUser,
   ): Promise<BlogPost> {
-    return this.blogService.getBlogPost(slug, incrementViews !== 'false');
+    return this.blogService.getBlogPost(
+      slug,
+      incrementViews !== 'false',
+      user?.id,
+    );
   }
 
   @Get('related/:id')
@@ -211,5 +218,53 @@ export class BlogController {
     @CurrentUser() user: AuthUser,
   ): Promise<SuccessResponse> {
     return this.blogService.removeTagFromPost(id, tagId, user.id);
+  }
+
+  // ── Blog Comments ────────────────────────────────────────────
+
+  @Get('posts/:postId/comments')
+  async getBlogComments(
+    @Param('postId') postId: string,
+    @CurrentUser() user?: AuthUser,
+  ): Promise<BlogComment[]> {
+    return this.blogService.getBlogComments(postId, user?.id);
+  }
+
+  @Post('posts/:postId/comments')
+  @UseGuards(AuthGuard)
+  async createBlogComment(
+    @Param('postId') postId: string,
+    @Body() body: CreateBlogCommentDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BlogComment> {
+    return this.blogService.createBlogComment(postId, body, user.id);
+  }
+
+  @Put('comments/:id')
+  @UseGuards(AuthGuard)
+  async updateBlogComment(
+    @Param('id') id: string,
+    @Body() body: { body: string },
+    @CurrentUser() user: AuthUser,
+  ): Promise<BlogComment> {
+    return this.blogService.updateBlogComment(id, body.body, user.id);
+  }
+
+  @Delete('comments/:id')
+  @UseGuards(AuthGuard)
+  async deleteBlogComment(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<SuccessResponse> {
+    return this.blogService.deleteBlogComment(id, user.id);
+  }
+
+  @Post('comments/:id/like')
+  @UseGuards(AuthGuard)
+  async toggleBlogCommentLike(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ liked: boolean }> {
+    return this.blogService.toggleBlogCommentLike(id, user.id);
   }
 }

@@ -255,10 +255,6 @@ export default function ListBusinessModal({
         await directoryService.createListing(inputPayload);
       }
 
-      if (isPaid) {
-        await directoryService.sendPaymentInstructions(inputPayload.name, selectedTier);
-      }
-
       clearDraft();
       onListingCreated?.(inputPayload);
       setStep("confirmed");

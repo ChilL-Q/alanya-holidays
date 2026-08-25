@@ -5,8 +5,6 @@ import {
   UploadedFile,
   Body,
   BadRequestException,
-  ParseFilePipeBuilder,
-  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -14,8 +12,15 @@ import {
   ProcessedMediaResult,
 } from './media-processing.service';
 
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class UploadMediaDto {
+  @IsString({ message: 'Bucket name is required' })
+  @IsNotEmpty({ message: 'Bucket name is required' })
   bucket!: string;
+
+  @IsOptional()
+  @IsString()
   folder?: string;
 }
 
@@ -28,19 +33,7 @@ export class MediaController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadMedia(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(jpg|jpeg|png|webp|avif)$/i,
-        })
-        .addMaxSizeValidator({
-          maxSize: 15 * 1024 * 1024, // 15MB
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-          fileIsRequired: true,
-        }),
-    )
+    @UploadedFile()
     file: Express.Multer.File,
     @Body() dto: UploadMediaDto,
   ): Promise<ProcessedMediaResult> {

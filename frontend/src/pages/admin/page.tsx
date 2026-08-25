@@ -1,27 +1,46 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 import AdminTabsNav, { type AdminTab } from "./components/AdminTabsNav";
 import ListingsModerationTab from "./components/ListingsModerationTab";
 import ClaimsQueueTab from "./components/ClaimsQueueTab";
 import ContentModerationTab from "./components/ContentModerationTab";
+import ForumModerationTab from "./components/ForumModerationTab";
+import AuditLogTab from "./components/AuditLogTab";
 import PlatformAnalyticsTab from "./components/PlatformAnalyticsTab";
 import ConciergeTab from "./components/ConciergeTab";
+import BookingsAdminTab from "./components/BookingsAdminTab";
+import ReviewsModerationTab from "./components/ReviewsModerationTab";
+import UsersAdminTab from "./components/UsersAdminTab";
 import { adminService } from "@/api-services/admin.service";
 
 export default function AdminDashboardPage() {
+  const { isAdmin, loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
   const activeTab: AdminTab =
-    rawTab === "claims" || rawTab === "content" || rawTab === "analytics" || rawTab === "concierge"
+    rawTab === "claims" ||
+    rawTab === "content" ||
+    rawTab === "forum" ||
+    rawTab === "bookings" ||
+    rawTab === "reviews" ||
+    rawTab === "users" ||
+    rawTab === "audit" ||
+    rawTab === "analytics" ||
+    rawTab === "concierge"
       ? (rawTab as AdminTab)
       : "listings";
+
 
   const [counts, setCounts] = useState<{
     pendingListings?: number;
     pendingClaims?: number;
     pendingContent?: number;
+    pendingReports?: number;
+    pendingBookings?: number;
+    pendingReviews?: number;
     newEnquiries?: number;
   }>({});
 
@@ -35,23 +54,24 @@ export default function AdminDashboardPage() {
 
   const fetchGlobalBadgeCounts = useCallback(async () => {
     try {
-      const [listings, claims, contentSubmissions, enquiries] = await Promise.all([
+      const [listings, claims, contentSubmissions, reports, enquiries, bookings, reviews] = await Promise.all([
         adminService.getModerationListings({ status: "pending" }),
         adminService.getClaimsQueue("pending"),
         adminService.getContentSubmissions({ status: "pending_review" }),
+        adminService.getForumReports({ includeResolved: false }),
         adminService.getEnquiries(),
+        adminService.getAdminBookings("pending"),
+        adminService.getModerationReviews("pending", 1, 1),
       ]);
 
-      const pendingListings = (listings || []).length;
-      const pendingClaims = (claims || []).length;
-      const pendingContent = (contentSubmissions || []).length;
-      const newEnquiries = (enquiries || []).filter((e) => e.status === "new").length;
-
       setCounts({
-        pendingListings,
-        pendingClaims,
-        pendingContent,
-        newEnquiries,
+        pendingListings: (listings || []).length,
+        pendingClaims: (claims || []).length,
+        pendingContent: (contentSubmissions || []).length,
+        pendingReports: (reports || []).filter((r) => !r.resolved).length,
+        newEnquiries: (enquiries || []).filter((e) => e.status === "new").length,
+        pendingBookings: bookings.length,
+        pendingReviews: reviews.total,
       });
     } catch {
       // Non-blocking background sync
@@ -74,9 +94,57 @@ export default function AdminDashboardPage() {
     setCounts((prev) => (prev.pendingContent === c.pending ? prev : { ...prev, pendingContent: c.pending }));
   }, []);
 
+  const handleReportCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingReports === c.pending ? prev : { ...prev, pendingReports: c.pending }));
+  }, []);
+
   const handleEnquiriesCountUpdate = useCallback((c: { total: number; newCount: number }) => {
     setCounts((prev) => (prev.newEnquiries === c.newCount ? prev : { ...prev, newEnquiries: c.newCount }));
   }, []);
+
+  // Stable identities are required: the tabs include onCountUpdate in their
+  // fetch-effect deps, and inline arrows would retrigger fetching forever.
+  const handleBookingsCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingBookings === c.pending ? prev : { ...prev, pendingBookings: c.pending }));
+  }, []);
+
+  const handleReviewsCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingReviews === c.pending ? prev : { ...prev, pendingReviews: c.pending }));
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-4 border-accent-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 shadow-xl text-center space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto text-3xl">
+            <i className="ri-shield-keyhole-line" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-2xl font-bold font-display text-secondary-900 dark:text-white">
+              Access Restricted
+            </h2>
+            <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400">
+              This control center is available to platform administrators only.
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="inline-block px-6 py-3 rounded-xl text-sm font-semibold bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-900 dark:text-white transition-colors"
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-secondary-50/50 dark:bg-slate-950 text-secondary-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
@@ -157,6 +225,58 @@ export default function AdminDashboardPage() {
             <ContentModerationTab
               onContentCountUpdate={handleContentCountUpdate}
             />
+          </div>
+        )}
+
+        {activeTab === "forum" && (
+          <div
+            id="admin-tabpanel-forum"
+            role="tabpanel"
+            aria-labelledby="admin-tab-forum"
+          >
+            <ForumModerationTab
+              onReportCountUpdate={handleReportCountUpdate}
+            />
+          </div>
+        )}
+
+        {activeTab === "bookings" && (
+          <div
+            id="admin-tabpanel-bookings"
+            role="tabpanel"
+            aria-labelledby="admin-tab-bookings"
+          >
+            <BookingsAdminTab onCountUpdate={handleBookingsCountUpdate} />
+          </div>
+        )}
+
+        {activeTab === "reviews" && (
+          <div
+            id="admin-tabpanel-reviews"
+            role="tabpanel"
+            aria-labelledby="admin-tab-reviews"
+          >
+            <ReviewsModerationTab onCountUpdate={handleReviewsCountUpdate} />
+          </div>
+        )}
+
+        {activeTab === "users" && (
+          <div
+            id="admin-tabpanel-users"
+            role="tabpanel"
+            aria-labelledby="admin-tab-users"
+          >
+            <UsersAdminTab />
+          </div>
+        )}
+
+        {activeTab === "audit" && (
+          <div
+            id="admin-tabpanel-audit"
+            role="tabpanel"
+            aria-labelledby="admin-tab-audit"
+          >
+            <AuditLogTab />
           </div>
         )}
 

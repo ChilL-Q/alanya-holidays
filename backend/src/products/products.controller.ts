@@ -3,11 +3,13 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Param,
   Body,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductDraftsService } from './product-drafts.service';
@@ -17,6 +19,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
+import {
+  CreateSellerProductDto,
+  UpdateSellerProductDto,
+} from './dto/seller-product.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('products')
@@ -41,6 +48,50 @@ export class ProductsController {
   @Get('items/:id')
   async getShopProductDetails(@Param('id') id: string) {
     return this.productsService.getShopProductDetails(id);
+  }
+
+  // --- Seller (Business Dashboard) Endpoints ---
+  // Declared before the @Get(':id') catch-all so literal paths win.
+
+  @Get('mine')
+  @UseGuards(AuthGuard)
+  async getMyProducts(@CurrentUser() user: AuthUser) {
+    return this.productsService.getMyProducts(user.id);
+  }
+
+  @Post('mine')
+  @UseGuards(AuthGuard)
+  async createMyProduct(
+    @Body() dto: CreateSellerProductDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.productsService.createMyProduct(dto, user.id);
+  }
+
+  @Patch('mine/:id')
+  @UseGuards(AuthGuard)
+  async updateMyProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSellerProductDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.productsService.updateMyProduct(id, dto, user.id);
+  }
+
+  @Get('orders/seller')
+  @UseGuards(AuthGuard)
+  async getSellerOrders(@CurrentUser() user: AuthUser) {
+    return this.productsService.getSellerOrders(user.id);
+  }
+
+  @Patch('orders/:id/status')
+  @UseGuards(AuthGuard)
+  async updateOrderStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateOrderStatusDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.productsService.updateOrderStatus(id, dto.status, user.id);
   }
 
   @Post('orders')

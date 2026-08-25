@@ -130,7 +130,6 @@ export default function PersonalChefsPage() {
         item_name: chefName,
         item_id: selectedChef?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumt5gg",
       });
 
       if (result.success) {
@@ -152,7 +151,7 @@ export default function PersonalChefsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Private%20chef%20in%20a%20bright%20luxury%20villa%20kitchen%20preparing%20an%20elegant%20multi-course%20Mediterranean%20meal%20fresh%20seafood%20colorful%20vegetables%20on%20marble%20countertop%20warm%20natural%20daylight%20modern%20interior%20with%20sea%20view%20behind%20culinary%20lifestyle%20photography%20high%20detail%20inviting%20atmosphere&width=1800&height=920&seq=chef-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Personal Chefs in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -161,7 +160,7 @@ export default function PersonalChefsPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Personal Chefs</span>
             </div>
@@ -394,7 +393,7 @@ export default function PersonalChefsPage() {
                     <button onClick={() => setSelectedChef(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Personal Chef" />
                     <input type="hidden" name="chef_name" value={selectedChef.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

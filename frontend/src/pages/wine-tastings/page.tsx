@@ -126,7 +126,6 @@ export default function WineTastingsPage() {
         item_name: tastingName,
         item_id: selectedTasting?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumttfg",
       });
 
       if (result.success) {
@@ -148,7 +147,7 @@ export default function WineTastingsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Elegant%20wine%20tasting%20scene%20in%20historic%20stone%20cellar%20warm%20candlelight%20rows%20of%20wine%20bottles%20in%20wooden%20racks%20six%20glasses%20of%20red%20and%20white%20wine%20on%20rustic%20oak%20table%20cheese%20board%20with%20grapes%20soft%20atmospheric%20lighting%20Anatolian%20vineyard%20setting%20editorial%20food%20photography%20rich%20warm%20tones&width=1800&height=920&seq=wine-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Private Wine Tastings in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -157,7 +156,7 @@ export default function WineTastingsPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Wine Tastings</span>
             </div>
@@ -395,7 +394,7 @@ export default function WineTastingsPage() {
                     <button onClick={() => setSelectedTasting(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Wine Tasting" />
                     <input type="hidden" name="tasting_name" value={selectedTasting.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

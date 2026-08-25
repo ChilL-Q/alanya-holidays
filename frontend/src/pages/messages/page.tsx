@@ -253,7 +253,7 @@ export default function MessagesPage() {
         {/* Hero Header */}
         <section className="relative w-full h-[180px] md:h-[220px] overflow-hidden shrink-0">
           <img
-            src="https://readdy.ai/api/search-image?query=Abstract%20warm%20Mediterranean%20gradient%20background%20with%20soft%20golden%20amber%20tones%20gentle%20light%20textures%20minimalist%20composition%20serene%20atmosphere&width=1800&height=560&seq=messages-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Messages"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

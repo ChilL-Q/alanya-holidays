@@ -10,7 +10,6 @@ import {
   parseAllowedOrigins,
 } from './common/security/security.config';
 import { RedisService } from './common/redis/redis.service';
-import { AppSocketIoAdapter } from './common/websockets/app-socket-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -36,7 +35,6 @@ async function bootstrap() {
     origin: createCorsOriginDelegate(allowedOrigins),
     credentials: true,
   });
-  app.useWebSocketAdapter(new AppSocketIoAdapter(app));
   await app.listen(process.env.PORT ?? 4000, '0.0.0.0');
 }
 void bootstrap();

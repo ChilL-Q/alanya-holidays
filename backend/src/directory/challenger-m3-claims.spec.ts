@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DirectoryController } from './directory.controller';
-import { DirectoryService } from './directory.service';
+import { DirectoryListingService } from './application/directory-listing.service';
+import { ListingClaimService } from './application/listing-claim.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { DirectoryClaimRecord } from './types/directory.types';
@@ -27,7 +28,11 @@ describe('Challenger M3 Adversarial Tests: Claims Security & Isolation', () => {
       controllers: [DirectoryController],
       providers: [
         {
-          provide: DirectoryService,
+          provide: DirectoryListingService,
+          useValue: mockService,
+        },
+        {
+          provide: ListingClaimService,
           useValue: mockService,
         },
       ],

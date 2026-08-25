@@ -34,11 +34,18 @@ export class ForumReportService {
   }
 
   async getForumReports(
-    includeResolved: boolean,
+    options:
+      | {
+          includeResolved?: boolean;
+          page?: number;
+          limit?: number;
+          target_type?: 'post' | 'comment';
+        }
+      | boolean,
     userId: string,
   ): Promise<ForumReport[]> {
     await this.requireAdmin(userId);
-    return this.forumRepository.getReports(includeResolved);
+    return this.forumRepository.getReports(options);
   }
 
   async resolveForumReport(

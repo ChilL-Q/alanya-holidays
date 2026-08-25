@@ -28,12 +28,60 @@ export type { ItineraryItem, GeneratedDayPlan, GeneratedItineraryResponse };
 @Injectable()
 export class AiGuideService {
   private readonly logger = new Logger(AiGuideService.name);
+  private static readonly RATE_LIMIT_PER_MINUTE = 10;
 
   constructor(
     private readonly redisService: RedisService,
     @Inject(AI_GUIDE_DRIVER)
     private readonly guideDriver: AiGuideDriver,
   ) {}
+
+  /**
+   * Фиксированное окно 60с в Redis. При сбое Redis — fail-open
+   * (не блокируем пользователей из-за инфраструктуры).
+   */
+  private async checkRateLimit(identityKey: string): Promise<boolean> {
+    try {
+      const window = Math.floor(Date.now() / 60_000);
+      const rlKey = `ai_rate:${identityKey}:${window}`;
+      const current = Number((await this.redisService.get(rlKey)) ?? 0);
+      if (current >= AiGuideService.RATE_LIMIT_PER_MINUTE) return false;
+      await this.redisService.set(rlKey, String(current + 1), 60);
+      return true;
+    } catch (err) {
+      this.logger.warn(
+        `Rate limit check failed (fail-open): ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return true;
+    }
+  }
+
+  private static sanitize(value: string, maxLen: number): string {
+    return value
+      .trim()
+      .slice(0, maxLen)
+      .replace(
+        /\[INST\]|\[\/INST\]|<s>|<\/s>|###\s*(System|Human|Assistant)/gi,
+        '',
+      );
+  }
+
+  private sanitizeGuideDto(dto: AiGuideDto): AiGuideDto {
+    return {
+      ...dto,
+      userQuestion: AiGuideService.sanitize(dto.userQuestion || '', 500),
+      propertyName: dto.propertyName
+        ? AiGuideService.sanitize(dto.propertyName, 200)
+        : dto.propertyName,
+      location: dto.location
+        ? AiGuideService.sanitize(dto.location, 200)
+        : dto.location,
+      history: dto.history?.slice(-15).map((h) => ({
+        role: h.role,
+        content: AiGuideService.sanitize(h.content || '', 300),
+      })),
+    };
+  }
 
   private computeHash(dto: AiGuideDto): string {
     const historyPart =
@@ -65,8 +113,19 @@ export class AiGuideService {
 
   async askGuide(
     dto: AiGuideDto,
+    identityKey = 'anonymous',
   ): Promise<{ answer: string; cached: boolean }> {
-    const hash = this.computeHash(dto);
+    const allowed = await this.checkRateLimit(`guide:${identityKey}`);
+    if (!allowed) {
+      return {
+        answer:
+          "I'm receiving too many requests from you. Please wait a moment and try again! ⏳",
+        cached: false,
+      };
+    }
+
+    const sanitized = this.sanitizeGuideDto(dto);
+    const hash = this.computeHash(sanitized);
     const cacheKey = `ai_guide:${hash}`;
 
     // 1. Check Redis Cache
@@ -77,7 +136,7 @@ export class AiGuideService {
     }
 
     // 2. Fetch completion from injected guide driver
-    const answer = await this.guideDriver.generateGuideAnswer(dto);
+    const answer = await this.guideDriver.generateGuideAnswer(sanitized);
 
     // 3. Store in Redis Cache with 24-hour TTL
     await this.redisService.set(cacheKey, answer, 86400);
@@ -87,7 +146,14 @@ export class AiGuideService {
 
   async generateItinerary(
     dto: GenerateItineraryDto,
+    identityKey = 'anonymous',
   ): Promise<GeneratedItineraryResponse> {
+    const allowed = await this.checkRateLimit(`itinerary:${identityKey}`);
+    if (!allowed) {
+      throw new Error(
+        'Too many itinerary requests. Please wait a minute and try again.',
+      );
+    }
     const hash = this.computeItineraryHash(dto);
     const cacheKey = `ai_itinerary:${hash}`;
 

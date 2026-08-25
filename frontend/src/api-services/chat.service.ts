@@ -134,7 +134,7 @@ export function mapBackendConversationToChatConversation(
   conv: BackendChatConversation
 ): ChatConversation {
   const defaultAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20clean%20background&width=100&height=100&seq=chat-avatar&orientation=squarish";
+    "/images/placeholder-business.svg";
 
   return {
     id: conv.id,

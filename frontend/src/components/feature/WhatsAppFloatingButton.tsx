@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const WHATSAPP_NUMBER = "14389294208";
+export const WHATSAPP_NUMBER = "14389294208";
 const WHATSAPP_MESSAGE = encodeURIComponent("Hi Alanya Holidays! I have a question about your experiences.");
 
 export default function WhatsAppFloatingButton() {

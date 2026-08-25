@@ -29,6 +29,7 @@ vi.mock("@/context/AuthContext", () => ({
 
 // Mock notifications service to avoid background async errors
 vi.mock("@/api-services/notifications.service", () => ({
+  subscribeToUserNotifications: vi.fn(() => () => {}),
   notificationsService: {
     getUnreadCount: vi.fn().mockResolvedValue(0),
     getNotifications: vi.fn().mockResolvedValue([]),

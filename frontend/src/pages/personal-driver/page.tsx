@@ -128,7 +128,6 @@ export default function PersonalDriverPage() {
         item_name: driverName,
         item_id: selectedDriver?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtfgg",
       });
 
       if (result.success) {
@@ -150,7 +149,7 @@ export default function PersonalDriverPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20black%20Mercedes%20S%20Class%20being%20driven%20along%20scenic%20coastal%20highway%20Mediterranean%20sea%20sparkling%20in%20sunlight%20Turkish%20Riviera%20rugged%20mountains%20in%20background%20professional%20chauffeur%20visible%20through%20window%20golden%20hour%20warm%20light%20automotive%20lifestyle%20photography%20cinematic%20composition%20high%20detail&width=1800&height=920&seq=driver-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Personal Drivers in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -159,7 +158,7 @@ export default function PersonalDriverPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Personal Driver</span>
             </div>
@@ -384,7 +383,7 @@ export default function PersonalDriverPage() {
                     <button onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Personal Driver" />
                     <input type="hidden" name="driver_name" value={selectedDriver.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

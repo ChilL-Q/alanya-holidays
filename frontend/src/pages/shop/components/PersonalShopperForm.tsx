@@ -165,39 +165,8 @@ export default function PersonalShopperForm() {
         enquiry_type: "personal_shopper",
       });
 
-      // Submit to form URL
-      const formPayload = new URLSearchParams();
-      formPayload.append("name", name);
-      formPayload.append("email", email);
-      formPayload.append("phone", phoneFull);
-      formPayload.append("category", category);
-      formPayload.append("budget", budget);
-      formPayload.append("contact_method", contactMethod);
-      formPayload.append("timeline", timeline);
-      formPayload.append("details", details);
-
-      const res = await fetch("https://readdy.ai/api/form/d9rglime3oq4jqumu150", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formPayload.toString(),
-      });
-
-      const responseText = await res.text();
-      let parsed: { code?: string; meta?: { message?: string; detail?: string } } = {};
-      try { parsed = JSON.parse(responseText); } catch { /* ignore parse errors */ }
-
-      if (res.ok && parsed?.code === "OK") {
-        setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
-        resetForm();
-      } else {
-        const serverMsg = parsed?.meta?.message || parsed?.meta?.detail || responseText || "Something went wrong. Please try again.";
-        if (serverMsg.toLowerCase().includes("spam") || serverMsg.toLowerCase().includes("form data is spam")) {
-          setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
-          resetForm();
-        } else {
-          setStatus({ type: "error", message: serverMsg });
-        }
-      }
+      setStatus({ type: "success", message: "Your enquiry has been submitted! We'll get back to you shortly." });
+      resetForm();
     } catch (_err: unknown) {
       setStatus({ type: "error", message: "Network error. Please check your connection and try again." });
     } finally {
@@ -225,7 +194,7 @@ export default function PersonalShopperForm() {
           {/* Left panel — visual side */}
           <div className="lg:w-5/12 relative overflow-hidden min-h-[220px] lg:min-h-[560px]">
             <img
-              src="https://readdy.ai/api/search-image?query=A%20curated%20flat%20lay%20arrangement%20of%20artisanal%20Turkish%20products%20including%20handpainted%20Iznik%20ceramic%20plates%20ornate%20copper%20tea%20set%20with%20tulip%20glasses%20embroidered%20silk%20textile%20with%20Ottoman%20patterns%20on%20warm%20terracotta%20background%20soft%20natural%20window%20light%20editorial%20product%20photography%20rich%20textures%20high%20detail&width=900&height=1120&seq=personal-shopper-side-01&orientation=portrait"
+              src="/images/placeholder-business.svg"
               alt="Personal Shopper Service"
               className="absolute inset-0 w-full h-full object-cover object-top"
             />
@@ -262,7 +231,7 @@ export default function PersonalShopperForm() {
             <form
               ref={formRef}
               onSubmit={handleSubmit}
-              data-readdy-form
+
               className="space-y-6"
               noValidate
             >

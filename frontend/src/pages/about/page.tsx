@@ -94,7 +94,7 @@ export default function AboutPage() {
         {/* Hero */}
         <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Panoramic%20view%20of%20Alanya%20coastline%20at%20golden%20hour%20with%20medieval%20castle%20on%20rocky%20peninsula%20turquoise%20Mediterranean%20sea%20fishing%20boats%20in%20harbor%20warm%20sunset%20sky%20editorial%20travel%20photography%20breathtaking%20landscape&width=1800&height=760&seq=about-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Holidays — About Us"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />

@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
         {/* Hero */}
         <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Serene%20Mediterranean%20sunset%20with%20calm%20sea%20gentle%20waves%20soft%20warm%20golden%20and%20coral%20tones%20peaceful%20horizon%20view%20from%20coastal%20cliff%20minimalist%20artistic%20style%20painterly%20composition&width=1800&height=560&seq=forgotpw-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Alanya Serene Sunset"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
         <img
-          src="https://readdy.ai/api/search-image?query=Serene%20Mediterranean%20sunset%20with%20calm%20sea%20gentle%20waves%20soft%20warm%20golden%20and%20coral%20tones%20peaceful%20horizon%20view%20from%20coastal%20cliff%20minimalist%20artistic%20style%20painterly%20composition&width=1800&height=560&seq=forgotpw-hero-01&orientation=landscape"
+          src="/images/placeholder-business.svg"
           alt="Alanya Serene Sunset"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />

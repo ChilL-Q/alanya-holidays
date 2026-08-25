@@ -8,11 +8,9 @@ import {
   Body,
   Query,
   UseGuards,
-  Optional,
 } from '@nestjs/common';
 import { DirectoryListingService } from '../application/directory-listing.service';
 import { ListingClaimService } from '../application/listing-claim.service';
-import { DirectoryService } from '../directory.service';
 import { AuthGuard } from '../../auth/auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthUser } from '../../auth/types/auth-user.interface';
@@ -23,39 +21,15 @@ import {
   PaginationDto,
   LimitQueryDto,
   DaysQueryDto,
+  parsePagination,
 } from '../../common/dto/pagination.dto';
 
 @Controller('directory')
 export class DirectoryController {
-  private readonly listingService!: DirectoryListingService;
-  private readonly claimService!: ListingClaimService;
-
   constructor(
-    @Optional() directoryListingService?: DirectoryListingService,
-    @Optional() listingClaimService?: ListingClaimService,
-    @Optional() directoryService?: DirectoryService,
-  ) {
-    if (directoryListingService) {
-      this.listingService = directoryListingService;
-    } else if (directoryService) {
-      const facade = directoryService as unknown as {
-        listingService?: DirectoryListingService;
-      };
-      this.listingService =
-        facade.listingService ??
-        (directoryService as unknown as DirectoryListingService);
-    }
-    if (listingClaimService) {
-      this.claimService = listingClaimService;
-    } else if (directoryService) {
-      const facade = directoryService as unknown as {
-        claimService?: ListingClaimService;
-      };
-      this.claimService =
-        facade.claimService ??
-        (directoryService as unknown as ListingClaimService);
-    }
-  }
+    private readonly listingService: DirectoryListingService,
+    private readonly claimService: ListingClaimService,
+  ) {}
 
   @Get()
   async getDirectoryListings(
@@ -65,8 +39,10 @@ export class DirectoryController {
     @Query('sortBy') sortBy?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.listingService.getDirectoryListings(
       page,
       limit,
@@ -81,8 +57,10 @@ export class DirectoryController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.listingService.getDirectoryListings(page, limit, 'restaurants');
   }
 
@@ -95,8 +73,11 @@ export class DirectoryController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 40);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 40 },
+    );
     return this.listingService.searchDirectoryListings(
       query,
       categoryId,
@@ -246,20 +227,6 @@ export class DirectoryController {
     @CurrentUser() user: AuthUser,
   ) {
     return this.listingService.createAddonCheckout(id, addonType, user.id);
-  }
-
-  @Post('payment/instructions')
-  @UseGuards(AuthGuard)
-  sendListingPaymentInstructions(
-    @Body('businessName') businessName: string,
-    @Body('tier') tier: string,
-    @CurrentUser() user: AuthUser,
-  ) {
-    return this.listingService.sendListingPaymentInstructions(
-      businessName,
-      tier,
-      user.id,
-    );
   }
 
   // ---------------------------------------------------------------------------

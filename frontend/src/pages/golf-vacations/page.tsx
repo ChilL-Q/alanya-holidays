@@ -135,7 +135,6 @@ export default function GolfVacationsPage() {
         item_name: vacationName,
         item_id: selectedVacation?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtfg",
       });
 
       if (result.success) {
@@ -157,7 +156,7 @@ export default function GolfVacationsPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Breathtaking%20championship%20golf%20course%20at%20golden%20hour%20with%20perfectly%20manicured%20emerald%20fairway%20winding%20through%20Mediterranean%20pine%20forest%20dramatic%20white%20sand%20bunkers%20pristine%20green%20with%20flag%20waving%20gently%20in%20breeze%20Taurus%20Mountains%20on%20horizon%20warm%20amber%20light%20luxury%20resort%20clubhouse%20in%20distance%20Belek%20Antalya%20Turkey%20editorial%20golf%20photography%20epic%20cinematic%20wide%20angle&width=1800&height=920&seq=golf-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Golf Vacations in Belek, Antalya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -166,7 +165,7 @@ export default function GolfVacationsPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Golf Vacations</span>
             </div>
@@ -414,7 +413,7 @@ export default function GolfVacationsPage() {
                     <button onClick={() => setSelectedVacation(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Golf Vacation" />
                     <input type="hidden" name="vacation_name" value={selectedVacation.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

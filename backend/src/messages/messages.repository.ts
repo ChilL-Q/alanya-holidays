@@ -304,15 +304,4 @@ export class MessagesRepository {
     const { error } = await this.client.from('messages').insert([messageData]);
     if (error) throw new Error(error.message);
   }
-
-  invokeEmailFunction(payload: Record<string, unknown>): void {
-    this.client.functions
-      .invoke('send-email', { body: payload })
-      .catch((err: unknown) => {
-        this.logger.error(
-          'Failed to send email',
-          err instanceof Error ? err.stack : undefined,
-        );
-      });
-  }
 }

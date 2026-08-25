@@ -27,7 +27,7 @@ import {
   UpdatePropertyStatusDto,
   SavePropertyDraftDto,
 } from './dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -55,8 +55,10 @@ export class PropertiesController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number }> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.propertiesService.getPropertiesByLocation(
       type,
       location,
@@ -163,8 +165,11 @@ export class PropertiesController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 10);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 10 },
+    );
     return this.propertiesService.getReviews(propertyId, page, limit);
   }
 
@@ -221,8 +226,10 @@ export class PropertiesController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.propertiesService.getFlaggedReviews(page, limit, user.id);
   }
 
@@ -262,8 +269,11 @@ export class PropertiesController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 50 },
+    );
     return this.propertiesService.getAdminProperties(statusFilter, page, limit);
   }
 

@@ -4,6 +4,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import sharp from 'sharp';
 
 describe('MediaProcessingService', () => {
+  jest.setTimeout(30000);
   let service: MediaProcessingService;
   let supabaseServiceMock: {
     getClient: jest.Mock;

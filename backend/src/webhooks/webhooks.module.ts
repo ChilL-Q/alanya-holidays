@@ -3,6 +3,7 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { StripeWebhookService } from './stripe-webhook.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { BookingsModule } from '../bookings/bookings.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PAYMENT_GATEWAY } from './domain/payment-gateway.interface';
 import { StripePaymentAdapter } from './adapters/stripe-payment.adapter';
 import { AddonWebhookHandler } from './handlers/addon-webhook.handler';
@@ -11,7 +12,7 @@ import { BookingWebhookHandler } from './handlers/booking-webhook.handler';
 import { ProcessedStripeEventsRepository } from './processed-stripe-events.repository';
 
 @Module({
-  imports: [SupabaseModule, BookingsModule],
+  imports: [SupabaseModule, BookingsModule, NotificationsModule],
   controllers: [StripeWebhookController],
   providers: [
     {

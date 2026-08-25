@@ -1,5 +1,14 @@
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsInt, IsOptional, IsString, Min } from 'class-validator';
+export class UpdateForumCommentDto {
+  @IsOptional()
+  @IsString()
+  body?: string;
+
+  @IsOptional()
+  @IsString()
+  content?: string;
+}
 
 export class CreateForumCommentDto {
   @IsOptional()
@@ -13,6 +22,10 @@ export class CreateForumCommentDto {
   @IsOptional()
   @IsString()
   parentId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  parent_id?: string | null;
 }
 
 export class GetForumCommentsQueryDto {

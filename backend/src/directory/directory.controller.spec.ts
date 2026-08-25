@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DirectoryController } from './directory.controller';
 import { DirectoryAdminController } from './presentation/directory-admin.controller';
-import { DirectoryService } from './directory.service';
 import { DirectoryListingService } from './application/directory-listing.service';
 import { ListingClaimService } from './application/listing-claim.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -11,7 +10,7 @@ import { AuthUser } from '../auth/types/auth-user.interface';
 describe('DirectoryController & DirectoryAdminController', () => {
   let controller: DirectoryController;
   let adminController: DirectoryAdminController;
-  let mockService: Record<keyof DirectoryService, jest.Mock>;
+  let mockService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockService = {
@@ -46,9 +45,6 @@ describe('DirectoryController & DirectoryAdminController', () => {
       createAddonCheckout: jest
         .fn()
         .mockResolvedValue({ url: 'http://checkout' }),
-      sendListingPaymentInstructions: jest
-        .fn()
-        .mockResolvedValue({ success: true }),
       getMyDirectoryListings: jest.fn().mockResolvedValue([]),
       getDirectoryListingBySlug: jest.fn().mockResolvedValue({ id: 'd1' }),
       getDirectoryListingsByCategory: jest.fn().mockResolvedValue([]),
@@ -63,15 +59,26 @@ describe('DirectoryController & DirectoryAdminController', () => {
         .fn()
         .mockResolvedValue({ id: 'draft-1', status: 'pending' }),
       getMyListingClaims: jest.fn().mockResolvedValue([]),
+      featureListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_featured: true }),
+      unfeatureListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_featured: false }),
+      verifyListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_verified: true }),
+      unverifyListing: jest
+        .fn()
+        .mockResolvedValue({ success: true, is_verified: false }),
+      setListingScore: jest
+        .fn()
+        .mockResolvedValue({ success: true, base_score: 80 }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DirectoryController, DirectoryAdminController],
       providers: [
-        {
-          provide: DirectoryService,
-          useValue: mockService,
-        },
         {
           provide: DirectoryListingService,
           useValue: mockService,

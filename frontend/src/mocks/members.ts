@@ -10,7 +10,7 @@ export const members = [
     reputation: 8920,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20middle%20aged%20man%20friendly%20smile%20outdoor%20light%20warm%20tones%20travel%20enthusiast%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-mark&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Living in Alanya for 5 years. I know every beach, every hidden cafe, and every shortcut.",
     badges: ["Local Expert", "Beach Guide", "Food Critic"],
   },
@@ -25,7 +25,7 @@ export const members = [
     reputation: 12400,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-elena&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Digital nomad turned local. Organizing meetups and helping newcomers settle in.",
     badges: ["Event Organizer", "Digital Nomad", "Mentor"],
   },
@@ -40,7 +40,7 @@ export const members = [
     reputation: 6780,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20warm%20smile%20outdoor%20light%20warm%20tones%20local%20resident%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ahmet&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Born and raised in Alanya. Restaurant owner and passionate about sharing our food culture.",
     badges: ["Local Expert", "Food Critic", "Business Owner"],
   },
@@ -55,7 +55,7 @@ export const members = [
     reputation: 2340,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20man%20relaxed%20smile%20beach%20background%20warm%20sunlight%20surfer%20style%20editorial%20photography%20casual%20vibe&width=200&height=200&seq=member-jake&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Moved here 3 months ago. Sharing my fresh perspective as a new expat.",
     badges: ["New Member", "Beach Guide"],
   },
@@ -70,7 +70,7 @@ export const members = [
     reputation: 8900,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20professional%20woman%20confident%20smile%20business%20attire%20warm%20light%20clean%20background%20real%20estate%20editorial%20photography&width=200&height=200&seq=member-sophia&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Real estate consultant specializing in foreign investments. Here to help you navigate the market.",
     badges: ["Real Estate Expert", "Verified Local", "Mentor"],
   },
@@ -85,7 +85,7 @@ export const members = [
     reputation: 5670,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20asian%20man%20intellectual%20look%20warm%20light%20clean%20background%20history%20enthusiast%20editorial%20photography%20glasses&width=200&height=200&seq=member-david&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Archaeology PhD student. Exploring ancient sites and sharing their stories.",
     badges: ["History Expert", "Tour Guide", "Cultural Ambassador"],
   },
@@ -100,7 +100,7 @@ export const members = [
     reputation: 5670,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20man%20with%20beard%20sun%20kissed%20skin%20warm%20smile%20outdoor%20light%20scuba%20diver%20style%20editorial%20photography%20clean%20background&width=200&height=200&seq=member-ali&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "PADI dive instructor. Ask me anything about diving spots, marine life, and underwater photography.",
     badges: ["Local Expert", "Adventure Guide", "Photographer"],
   },
@@ -115,7 +115,7 @@ export const members = [
     reputation: 7800,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20creative%20look%20with%20laptop%20warm%20light%20clean%20background%20writer%20blogger%20style%20editorial%20photography&width=200&height=200&seq=member-rachel&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Travel writer and blogger. Sharing stories from Antalya's coast and helping tell the region's stories.",
     badges: ["Content Creator", "Digital Nomad", "Mentor"],
   },
@@ -130,7 +130,7 @@ export const members = [
     reputation: 4200,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20man%20in%20his%20thirties%20friendly%20expression%20warm%20light%20clean%20background%20local%20business%20owner%20editorial%20photography&width=200&height=200&seq=member-mehmet&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Moved from Istanbul 3 years ago. Running a boutique hotel and sharing insider tips.",
     badges: ["Business Owner", "Local Expert", "Verified Local"],
   },
@@ -145,7 +145,7 @@ export const members = [
     reputation: 3100,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Swedish%20woman%20calm%20peaceful%20expression%20yoga%20lifestyle%20warm%20light%20clean%20background%20wellness%20instructor%20editorial%20photography&width=200&height=200&seq=member-anna&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Yoga instructor offering beach sessions. Helping expats and travelers find balance and community.",
     badges: ["Wellness Expert", "Event Organizer", "Mentor"],
   },
@@ -160,7 +160,7 @@ export const members = [
     reputation: 6500,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20woman%20in%20her%20forties%20professional%20lawyer%20look%20warm%20light%20clean%20background%20legal%20professional%20editorial%20photography%20glasses&width=200&height=200&seq=member-catherine&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "International lawyer specializing in Turkish property law and residence permits.",
     badges: ["Legal Expert", "Mentor", "Verified Local"],
   },
@@ -175,7 +175,7 @@ export const members = [
     reputation: 5400,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20German%20man%20with%20camera%20creative%20look%20warm%20light%20clean%20background%20travel%20photographer%20editorial%20photography&width=200&height=200&seq=member-lucas&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Travel photographer capturing Alanya's beauty. Happy to share photo spots and tips.",
     badges: ["Photographer", "Travel Guide", "Content Creator"],
   },
@@ -190,7 +190,7 @@ export const members = [
     reputation: 3900,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20British%20woman%20warm%20motherly%20smile%20outdoor%20light%20clean%20background%20family%20travel%20style%20editorial%20photography&width=200&height=200&seq=member-emma&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Mum of three, living in Alanya. All the tips you need for family-friendly activities and schools.",
     badges: ["Family Expert", "Local Expert", "Mentor"],
   },
@@ -205,7 +205,7 @@ export const members = [
     reputation: 2800,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20Russian%20man%20tech%20savvy%20look%20casual%20style%20warm%20light%20clean%20background%20digital%20professional%20editorial%20photography&width=200&height=200&seq=member-alex&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Software developer and crypto enthusiast. Remote working from Alanya since 2024.",
     badges: ["Tech Expert", "Digital Nomad", "Rising Star"],
   },
@@ -220,7 +220,7 @@ export const members = [
     reputation: 2100,
     isOnline: false,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20French%20man%20outdoorsy%20hiking%20style%20warm%20light%20clean%20background%20adventure%20guide%20editorial%20photography&width=200&height=200&seq=member-jean&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Hiking enthusiast. Mapped over 50 trails in the Antalya region. Join our weekly hiking group!",
     badges: ["Adventure Guide", "Event Organizer", "Local Expert"],
   },
@@ -235,7 +235,7 @@ export const members = [
     reputation: 4500,
     isOnline: true,
     avatar:
-      "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20Turkish%20woman%20warm%20happy%20smile%20kitchen%20background%20warm%20light%20food%20lover%20style%20editorial%20photography&width=200&height=200&seq=member-zeynep&orientation=squarish",
+      "/images/placeholder-business.svg",
     bio: "Home cook and food blogger. Sharing authentic Turkish recipes and restaurant discoveries.",
     badges: ["Food Critic", "Local Expert", "Content Creator"],
   },

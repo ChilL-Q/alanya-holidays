@@ -466,6 +466,22 @@ export class ForumRepository {
   // ============================================================
   // Comments
   // ============================================================
+  async updateComment(
+    id: string,
+    updates: { body?: string; content?: string },
+  ): Promise<ForumComment> {
+    const { data: comment, error } = await this.client
+      .from('forum_comments')
+      .update(updates)
+      .eq('id', id)
+      .select(
+        '*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)',
+      )
+      .single();
+    if (error) throw new Error(error.message);
+    return comment as unknown as ForumComment;
+  }
+
   async getComments(
     postId: string,
     includeRemoved: boolean,
@@ -778,7 +794,16 @@ export class ForumRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getReports(includeResolved: boolean): Promise<ForumReport[]> {
+  async getReports(
+    options?:
+      | {
+          includeResolved?: boolean;
+          page?: number;
+          limit?: number;
+          target_type?: 'post' | 'comment';
+        }
+      | boolean,
+  ): Promise<ForumReport[]> {
     let q = this.client
       .from('forum_reports')
       .select(
@@ -786,9 +811,34 @@ export class ForumRepository {
       )
       .order('created_at', { ascending: false });
 
+    const includeResolved =
+      typeof options === 'boolean'
+        ? options
+        : options?.includeResolved === true;
+
     if (!includeResolved) {
       q = q.eq('resolved', false);
     }
+
+    if (typeof options === 'object' && options !== null) {
+      if (options.target_type) {
+        q = q.eq('target_type', options.target_type);
+      }
+    }
+
+    const limit =
+      typeof options === 'object' &&
+      options?.limit !== undefined &&
+      options.limit > 0
+        ? options.limit
+        : 50;
+    const page =
+      typeof options === 'object' && options?.page && options.page > 0
+        ? options.page
+        : 1;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    q = q.range(from, to);
 
     const { data, error } = await q;
     if (error) throw new Error(error.message);
@@ -801,6 +851,65 @@ export class ForumRepository {
       .update({ resolved: true })
       .eq('id', id);
     if (error) throw new Error(error.message);
+  }
+
+  // ============================================================
+  // Bookmarks
+  // ============================================================
+  async checkBookmark(postId: string, userId: string): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('forum_bookmarks')
+      .select('post_id')
+      .eq('post_id', postId)
+      .eq('user_id', userId)
+      .single();
+    if (error && error.code !== 'PGRST116') {
+      this.logger.error(`checkBookmark error: ${error.message}`);
+    }
+    return !!data;
+  }
+
+  async insertBookmark(postId: string, userId: string): Promise<void> {
+    const { error } = await this.client
+      .from('forum_bookmarks')
+      .insert([{ post_id: postId, user_id: userId }]);
+    if (error) throw new Error(error.message);
+  }
+
+  async deleteBookmark(postId: string, userId: string): Promise<void> {
+    const { error } = await this.client
+      .from('forum_bookmarks')
+      .delete()
+      .match({ post_id: postId, user_id: userId });
+    if (error) throw new Error(error.message);
+  }
+
+  async getUserBookmarks(userId: string): Promise<ForumPost[]> {
+    const { data: bookmarks, error: bmErr } = await this.client
+      .from('forum_bookmarks')
+      .select('post_id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (bmErr) throw new Error(bmErr.message);
+    if (!bookmarks || bookmarks.length === 0) return [];
+
+    const postIds = (bookmarks as { post_id: string }[]).map((b) => b.post_id);
+    const { data: posts, error: pErr } = await this.client
+      .from('forum_posts')
+      .select(POST_SELECT)
+      .in('id', postIds)
+      .eq('is_removed', false);
+
+    if (pErr) throw new Error(pErr.message);
+    if (!posts) return [];
+
+    const postMap = new Map(
+      (posts as unknown as ForumPost[]).map((p) => [p.id, p]),
+    );
+    return postIds
+      .map((id) => postMap.get(id))
+      .filter((p): p is ForumPost => !!p);
   }
 
   // ============================================================
@@ -857,5 +966,36 @@ export class ForumRepository {
       usersOnline: onlineRes.count ?? 0,
       latestMember: memberData?.[0]?.full_name || null,
     };
+  }
+
+  // ============================================================
+  // Rate Limiting (Task 4.5)
+  // ============================================================
+  async checkRateLimit(
+    userId: string,
+    action: 'post' | 'comment' | 'like',
+    limit: number,
+  ): Promise<boolean> {
+    try {
+      const { data, error } = (await this.client.rpc('check_forum_rate_limit', {
+        p_user_id: userId,
+        p_action: action,
+        p_limit: limit,
+      })) as { data: boolean | null; error: { message: string } | null };
+
+      if (error) {
+        this.logger.warn(
+          `Failed to check forum rate limit via RPC, falling back to allow: ${error.message}`,
+        );
+        return true;
+      }
+
+      return data === true;
+    } catch (err: unknown) {
+      this.logger.warn(
+        `Error during check_forum_rate_limit RPC execution: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return true;
+    }
   }
 }

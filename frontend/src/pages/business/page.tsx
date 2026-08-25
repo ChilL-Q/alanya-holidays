@@ -22,60 +22,60 @@ const priceRangeLabel: Record<string, string> = {
 
 const businessGalleryImages: Record<string, string[]> = {
   "biz-001": [
-    "https://readdy.ai/api/search-image?query=Elegant%20rooftop%20restaurant%20terrace%20with%20panoramic%20Mediterranean%20sea%20view%20at%20sunset%20candlelit%20tables%20white%20tablecloths%20Turkish%20lanterns%20warm%20golden%20atmosphere%20Alanya%20castle%20hill%20background%20editorial%20food%20photography%20high%20detail%20luxurious%20ambiance&width=800&height=600&seq=biz-gal-001-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Close%20up%20of%20beautifully%20plated%20Ottoman%20Turkish%20fine%20dining%20dish%20with%20grilled%20lamb%20and%20meze%20on%20white%20plate%20elegant%20restaurant%20interior%20warm%20candlelight%20Alanya%20upscale%20dining&width=800&height=600&seq=biz-gal-001-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-002": [
-    "https://readdy.ai/api/search-image?query=Luxury%20beach%20club%20with%20white%20sun%20loungers%20turquoise%20sea%20golden%20sand%20palm%20trees%20Mediterranean%20coastline%20sunny%20day%20clear%20blue%20sky%20Alanya%20Cleopatra%20beach%20resort%20lifestyle%20editorial%20photography%20vibrant%20colors&width=800&height=600&seq=biz-gal-002-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Wood%20fired%20pizza%20and%20colorful%20frozen%20cocktails%20on%20beachside%20table%20with%20turquoise%20Mediterranean%20sea%20background%20palm%20trees%20sunny%20summer%20day%20Alanya%20beach%20club%20food%20photography&width=800&height=600&seq=biz-gal-002-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-003": [
-    "https://readdy.ai/api/search-image?query=Charming%20garden%20courtyard%20cafe%20with%20colorful%20flowers%20hanging%20vines%20rustic%20wooden%20tables%20traditional%20Turkish%20breakfast%20spread%20with%20fresh%20bread%20olives%20honey%20and%20tea%20warm%20morning%20sunlight%20cozy%20atmosphere%20editorial%20photography%20high%20detail&width=800&height=600&seq=biz-gal-003-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Handmade%20traditional%20Turkish%20gozleme%20being%20prepared%20by%20village%20women%20in%20rustic%20garden%20setting%20fresh%20spinach%20and%20cheese%20filling%20flour%20dusted%20wooden%20table%20warm%20natural%20light%20Alanya%20cafe&width=800&height=600&seq=biz-gal-003-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-004": [
-    "https://readdy.ai/api/search-image?query=Elegant%20boutique%20hotel%20restored%20Ottoman%20mansion%20white%20stone%20exterior%20blue%20shutters%20bougainvillea%20flowers%20rooftop%20infinity%20pool%20overlooking%20Mediterranean%20harbor%20Alanya%20castle%20background%20luxury%20travel%20photography%20warm%20golden%20hour%20light&width=800&height=600&seq=biz-gal-004-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Luxurious%20Ottoman%20style%20hotel%20room%20with%20antique%20wooden%20bed%20hand%20painted%20ceiling%20tiles%20traditional%20Turkish%20decor%20balcony%20overlooking%20Alanya%20harbor%20warm%20romantic%20atmosphere%20boutique%20hotel%20interior&width=800&height=600&seq=biz-gal-004-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-005": [
-    "https://readdy.ai/api/search-image?query=Luxury%20Mediterranean%20resort%20with%20multiple%20pools%20palm%20trees%20tropical%20gardens%20private%20sandy%20beach%20turquoise%20sea%20white%20buildings%20terracotta%20roofs%20aerial%20view%20sunny%20day%20editorial%20travel%20photography%20grand%20scale&width=800&height=600&seq=biz-gal-005-2&orientation=landscape",
-    "https://readdy.ai/api/family-friendly-resort-pool-area-with-water-slides-splash-park-children-playing-parents-relaxing-sun-loungers-palm-trees-mediterranean-resort-alanya-turkey-sunny-day",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-006": [
-    "https://readdy.ai/api/search-image?query=Traditional%20wooden%20pirate-themed%20boat%20with%20colorful%20flags%20sailing%20on%20crystal%20clear%20turquoise%20Mediterranean%20water%20Alanya%20castle%20and%20rocky%20coastline%20in%20background%20sunny%20summer%20day%20adventure%20tourism%20editorial%20photography%20vibrant%20joyful%20atmosphere&width=800&height=600&seq=biz-gal-006-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=People%20swimming%20and%20having%20fun%20in%20crystal%20clear%20turquoise%20water%20near%20dramatic%20rocky%20caves%20Alanya%20coastline%20foam%20party%20on%20pirate%20boat%20summer%20adventure%20travel%20photography&width=800&height=600&seq=biz-gal-006-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-007": [
-    "https://readdy.ai/api/search-image?query=Off-road%20jeep%20driving%20through%20rugged%20Taurus%20mountains%20pine%20forest%20dusty%20trail%20dramatic%20landscape%20turquoise%20river%20waterfall%20natural%20pool%20adventure%20travel%20photography%20sunny%20day%20outdoor%20exploration%20majestic%20scenery&width=800&height=600&seq=biz-gal-007-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20nomadic%20Yoruk%20village%20in%20Taurus%20mountains%20stone%20houses%20villagers%20making%20tea%20outdoor%20barbecue%20lunch%20pine%20forest%20Alanya%20region%20cultural%20travel%20photography&width=800&height=600&seq=biz-gal-007-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-008": [
-    "https://readdy.ai/api/search-image?query=Luxurious%20traditional%20Turkish%20bath%20interior%20white%20marble%20heated%20stone%20platform%20domed%20ceiling%20with%20star-shaped%20windows%20soft%20steam%20atmospheric%20lighting%20elegant%20spa%20setting%20gold%20accents%20authentic%20Ottoman%20architecture%20editorial%20photography%20serene%20mood&width=800&height=600&seq=biz-gal-008-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20hammam%20foam%20massage%20ritual%20with%20therapist%20white%20marble%20setting%20soft%20steam%20atmospheric%20lighting%20authentic%20spa%20experience%20Alanya%20Turkey%20wellness%20photography&width=800&height=600&seq=biz-gal-008-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-009": [
-    "https://readdy.ai/api/search-image?query=Modern%20bright%20dental%20clinic%20interior%20with%20white%20walls%20clean%20design%20reception%20area%20plants%20comfortable%20seating%20professional%20medical%20environment%20large%20windows%20natural%20light%20welcoming%20atmosphere%20editorial%20photography%20high%20detail&width=800&height=600&seq=biz-gal-009-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Modern%20dental%20treatment%20room%20with%20advanced%20equipment%20comfortable%20patient%20chair%203D%20scanner%20technology%20bright%20clean%20medical%20environment%20Alanya%20Turkey%20professional%20dental%20clinic&width=800&height=600&seq=biz-gal-009-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-010": [
-    "https://readdy.ai/api/search-image?query=Modern%20real%20estate%20office%20interior%20with%20large%20window%20displaying%20Mediterranean%20sea%20view%20property%20listings%20on%20screens%20professional%20atmosphere%20clean%20design%20comfortable%20seating%20area%20warm%20lighting%20Alanya%20map%20on%20wall%20editorial%20photography&width=800&height=600&seq=biz-gal-010-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Luxury%20modern%20apartment%20with%20panoramic%20Mediterranean%20sea%20view%20balcony%20Alanya%20Turkey%20white%20interior%20design%20bright%20natural%20light%20real%20estate%20property%20photography&width=800&height=600&seq=biz-gal-010-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-011": [
-    "https://readdy.ai/api/search-image?query=Fleet%20of%20modern%20rental%20cars%20parked%20outside%20clean%20office%20building%20Mediterranean%20palm%20trees%20sunny%20day%20compact%20cars%20and%20SUVs%20professional%20car%20rental%20service%20Alanya%20editorial%20photography&width=800&height=600&seq=biz-gal-011-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Open%20top%20convertible%20car%20driving%20along%20scenic%20Mediterranean%20coastal%20highway%20with%20turquoise%20sea%20and%20dramatic%20cliffs%20Alanya%20Antalya%20road%20trip%20travel%20photography%20sunny%20day&width=800&height=600&seq=biz-gal-011-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-012": [
-    "https://readdy.ai/api/search-image?query=Elegant%20jewelry%20store%20interior%20with%20glass%20display%20cases%20filled%20with%20gold%20necklaces%20rings%20and%20precious%20stones%20warm%20spotlighting%20luxurious%20atmosphere%20polished%20marble%20floor%20Turkish%20jewelry%20craftsmanship%20editorial%20photography%20rich%20golden%20tones&width=800&height=600&seq=biz-gal-012-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Close%20up%20of%20master%20jeweler%20working%20on%20handcrafted%20gold%20necklace%20intricate%20detailed%20work%20Turkish%20jewelry%20craftsmanship%20workshop%20Alanya%20Turkey%20warm%20lighting&width=800&height=600&seq=biz-gal-012-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-013": [
-    "https://readdy.ai/api/search-image?query=Beautifully%20lit%20carpet%20shop%20interior%20with%20colorful%20handwoven%20Turkish%20kilims%20and%20silk%20carpets%20hanging%20on%20walls%20and%20stacked%20on%20floor%20traditional%20patterns%20rich%20reds%20blues%20and%20warm%20tones%20authentic%20atmosphere%20editorial%20photography%20cultural%20craftsmanship&width=800&height=600&seq=biz-gal-013-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Close%20up%20of%20intricate%20handwoven%20Turkish%20silk%20carpet%20details%20colorful%20geometric%20patterns%20fine%20craftsmanship%20Anatolian%20textile%20art%20warm%20natural%20light&width=800&height=600&seq=biz-gal-013-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
   "biz-024": [
-    "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20kebab%20restaurant%20interior%20with%20wooden%20tables%20charcoal%20grill%20visible%20from%20dining%20area%20freshly%20grilled%20Adana%20kebab%20skewers%20on%20plate%20with%20lava%C5%9F%20bread%20and%20grilled%20vegetables%20warm%20casual%20atmosphere%20authentic%20local%20eatery%20editorial%20food%20photography&width=800&height=600&seq=biz-gal-024-2&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Close%20up%20of%20freshly%20grilled%20Iskender%20kebab%20on%20crispy%20pide%20bread%20topped%20with%20tomato%20sauce%20and%20melted%20butter%20traditional%20Turkish%20restaurant%20Alanya%20steaming%20hot%20authentic%20food%20photography&width=800&height=600&seq=biz-gal-024-3&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ],
 };
 
@@ -112,8 +112,8 @@ function buildMapUrl(business: Business): string {
 
 function getGalleryForBusiness(businessId: string): string[] {
   return businessGalleryImages[businessId] || [
-    "https://readdy.ai/api/search-image?query=Beautiful%20Mediterranean%20coastal%20town%20Alanya%20Turkey%20with%20castle%20on%20hill%20turquoise%20sea%20palm%20trees%20sunny%20day%20panoramic%20view%20travel%20photography&width=800&height=600&seq=biz-gal-default-1&orientation=landscape",
-    "https://readdy.ai/api/search-image?query=Alanya%20harbor%20with%20yachts%20and%20fishing%20boats%20colorful%20buildings%20Mediterranean%20coast%20sunny%20day%20Turkish%20Riviera%20travel%20photography%20vibrant%20atmosphere&width=800&height=600&seq=biz-gal-default-2&orientation=landscape",
+    "/images/placeholder-business.svg",
+    "/images/placeholder-business.svg",
   ];
 }
 
@@ -560,7 +560,7 @@ export default function BusinessDetailPage() {
                     ) : (
                       <form
                         id="business-review-form"
-                        data-readdy-form
+
                         onSubmit={async (e) => {
                           e.preventDefault();
                           const form = e.currentTarget;

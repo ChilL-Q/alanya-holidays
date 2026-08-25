@@ -20,7 +20,7 @@ import {
   PaginatedReviewsResponse,
   ReviewOperationResult,
 } from './types/review.types';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -33,8 +33,10 @@ export class ReviewsController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.reviewsService.getListingReviews(id, page, limit);
   }
 
@@ -71,8 +73,11 @@ export class ReviewsController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 50 },
+    );
     return this.reviewsService.getPendingReviews(page, limit, user.id);
   }
 
@@ -86,8 +91,11 @@ export class ReviewsController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 50);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 50 },
+    );
     return this.reviewsService.getReviewsByStatus(status, page, limit, user.id);
   }
 

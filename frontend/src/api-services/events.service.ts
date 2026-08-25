@@ -166,9 +166,9 @@ export function formatEventDateParts(dateStr?: string | null): {
 export function mapBackendEventToForumEvent(event: BackendForumEvent): ForumEvent {
   const dateParts = formatEventDateParts(event.event_date);
   const defaultHostAvatar =
-    "https://readdy.ai/api/search-image?query=Professional%20headshot%20portrait%20of%20young%20woman%20bright%20smile%20sunny%20outdoor%20light%20warm%20tones%20community%20leader%20editorial%20photography%20clean%20background&width=100&height=100&seq=member-default-host&orientation=squarish";
+    "/images/placeholder-business.svg";
   const defaultEventImage =
-    "https://readdy.ai/api/search-image?query=Group%20of%20diverse%20digital%20nomads%20coworking%20at%20beach%20cafe%20in%20Alanya%20laptops%20coffee%20sunny%20day%20turquoise%20Mediterranean%20sea%20background%20editorial%20travel%20photography&width=800&height=500&seq=event-default&orientation=landscape";
+    "/images/placeholder-business.svg";
 
   return {
     id: event.id,

@@ -51,7 +51,6 @@ export default function LuxuryExperiencePage() {
         preferred_contact: prefContact,
         experience_type: experienceInterest,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtthg",
       });
 
       if (result.success) {
@@ -73,7 +72,7 @@ export default function LuxuryExperiencePage() {
       <main>
         <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20infinity%20pool%20overlooking%20Mediterranean%20Sea%20at%20sunset%20Alanya%20Turkey%20elegant%20loungers%20white%20cabanas%20golden%20hour%20light%20sophisticated%20atmosphere%20high-end%20resort%20photography%20warm%20amber%20tones&width=1800&height=840&seq=luxury-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Experiences in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -158,7 +157,7 @@ export default function LuxuryExperiencePage() {
             <p className="text-foreground-500 text-sm md:text-base mb-8">
               Our community concierge team can arrange custom experiences — surprise proposals, private dinners on the beach, or a tailored itinerary for your entire stay.
             </p>
-            <form onSubmit={handleConciergeSubmit} data-readdy-form className="max-w-md mx-auto">
+            <form onSubmit={handleConciergeSubmit} className="max-w-md mx-auto">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                   <input name="name" type="text" placeholder="Your full name" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                   <input name="email" type="email" placeholder="Your email address" required className="w-full px-4 py-3 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />

@@ -2,13 +2,19 @@ interface EventHeroProps {
   totalEvents: number;
   eventsThisMonth: number;
   onHostEvent: () => void;
+  showHostButton?: boolean;
 }
 
-export default function EventHero({ totalEvents, eventsThisMonth, onHostEvent }: EventHeroProps) {
+export default function EventHero({
+  totalEvents,
+  eventsThisMonth,
+  onHostEvent,
+  showHostButton = true,
+}: EventHeroProps) {
   return (
     <section className="relative w-full h-[280px] md:h-[360px] overflow-hidden">
       <img
-        src="https://readdy.ai/api/search-image?query=Lively%20outdoor%20community%20event%20at%20Mediterranean%20beachfront%20with%20diverse%20group%20of%20people%20socializing%20live%20music%20warm%20sunset%20atmosphere%20Alanya%20castle%20silhouette%20in%20background%20joyful%20gathering%20editorial%20photography&width=1800&height=720&seq=events-hero-02&orientation=landscape"
+        src="/images/placeholder-business.svg"
         alt="Alanya Holidays Events"
         className="absolute inset-0 w-full h-full object-cover object-top"
       />
@@ -44,16 +50,20 @@ export default function EventHero({ totalEvents, eventsThisMonth, onHostEvent }:
               <p className="text-white text-xl md:text-2xl font-semibold">{eventsThisMonth}</p>
               <p className="text-white/50 text-xs">This Month</p>
             </div>
-            <div className="w-px h-8 bg-white/20"></div>
-            <div className="text-center">
-              <button
-                onClick={onHostEvent}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                <i className="ri-add-line"></i>
-                Host an Event
-              </button>
-            </div>
+            {showHostButton && (
+              <>
+                <div className="w-px h-8 bg-white/20"></div>
+                <div className="text-center">
+                  <button
+                    onClick={onHostEvent}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    <i className="ri-add-line"></i>
+                    Host an Event
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

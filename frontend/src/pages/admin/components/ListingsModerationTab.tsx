@@ -320,6 +320,164 @@ export default function ListingsModerationTab({
     }
   };
 
+  // Directory Curation Handlers (Task 2.2)
+  const handleToggleFeature = async (id: string, nextFeatured: boolean) => {
+    setActionLoadingId(id);
+    const previous = listings.find((l) => l.id === id)?.is_featured;
+
+    // Optimistic update
+    setListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, is_featured: nextFeatured } : l))
+    );
+
+    try {
+      const ok = await adminService.toggleListingFeature(id, nextFeatured);
+      if (ok) {
+        toast.success(nextFeatured ? "Listing marked as featured" : "Listing unfeatured");
+      } else {
+        // Rollback
+        setListings((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, is_featured: previous } : l))
+        );
+        toast.error("Failed to update featured status");
+      }
+    } catch {
+      setListings((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, is_featured: previous } : l))
+      );
+      toast.error("Network error while updating featured status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleToggleVerify = async (id: string, nextVerified: boolean) => {
+    setActionLoadingId(id);
+    const previous = listings.find((l) => l.id === id)?.is_verified;
+
+    // Optimistic update
+    setListings((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, is_verified: nextVerified } : l))
+    );
+
+    try {
+      const ok = await adminService.toggleListingVerify(id, nextVerified);
+      if (ok) {
+        toast.success(nextVerified ? "Listing verified" : "Listing unverified");
+      } else {
+        // Rollback
+        setListings((prev) =>
+          prev.map((l) => (l.id === id ? { ...l, is_verified: previous } : l))
+        );
+        toast.error("Failed to update verification status");
+      }
+    } catch {
+      setListings((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, is_verified: previous } : l))
+      );
+      toast.error("Network error while updating verification status");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleUpdateScore = async (listing: ModerationListing) => {
+    const currentScore = listing.base_score || 0;
+    const input = window.prompt(
+      `Enter curation base score (0 - 100) for "${listing.name}":`,
+      String(currentScore)
+    );
+    if (input === null || input.trim() === "") return;
+
+    const num = Number(input.trim());
+    if (isNaN(num) || num < 0 || num > 100) {
+      toast.error("Score must be a number between 0 and 100");
+      return;
+    }
+
+    setActionLoadingId(listing.id);
+    // Optimistic update
+    setListings((prev) =>
+      prev.map((l) => (l.id === listing.id ? { ...l, base_score: num } : l))
+    );
+
+    try {
+      const ok = await adminService.updateListingScore(listing.id, num);
+      if (ok) {
+        toast.success(`Score updated to ${num}`);
+      } else {
+        // Rollback
+        setListings((prev) =>
+          prev.map((l) => (l.id === listing.id ? { ...l, base_score: currentScore } : l))
+        );
+        toast.error("Failed to update listing score");
+      }
+    } catch {
+      setListings((prev) =>
+        prev.map((l) => (l.id === listing.id ? { ...l, base_score: currentScore } : l))
+      );
+      toast.error("Network error while updating score");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleBatchFeature = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    setIsBulkLoading(true);
+    // Optimistic update
+    setListings((prev) =>
+      prev.map((l) => (selectedIds.has(l.id) ? { ...l, is_featured: true } : l))
+    );
+
+    try {
+      const res = await adminService.batchFeatureListings(ids);
+      if (res.successful.length > 0) {
+        toast.success(`Batch featured ${res.successful.length} listing(s)`);
+      }
+      if (res.failed.length > 0) {
+        toast.error(`Failed to feature ${res.failed.length} listing(s)`);
+        await fetchListings();
+      }
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Error during batch feature");
+      await fetchListings();
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
+  const handleBatchVerify = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    setIsBulkLoading(true);
+    // Optimistic update
+    setListings((prev) =>
+      prev.map((l) => (selectedIds.has(l.id) ? { ...l, is_verified: true } : l))
+    );
+
+    try {
+      const res = await adminService.batchVerifyListings(ids);
+      if (res.successful.length > 0) {
+        toast.success(`Batch verified ${res.successful.length} listing(s)`);
+      }
+      if (res.failed.length > 0) {
+        toast.error(`Failed to verify ${res.failed.length} listing(s)`);
+        await fetchListings();
+      }
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Error during batch verify");
+      await fetchListings();
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Filter Bar & Search */}
@@ -550,11 +708,25 @@ export default function ListingsModerationTab({
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${statusStyle.bg} ${statusStyle.text}`}
-                        >
-                          {statusStyle.label}
-                        </span>
+                        <div className="flex flex-col items-start space-y-1.5">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${statusStyle.bg} ${statusStyle.text}`}
+                          >
+                            {statusStyle.label}
+                          </span>
+                          <button
+                            type="button"
+                            data-testid={`score-btn-${listing.id}`}
+                            onClick={() => handleUpdateScore(listing)}
+                            disabled={isActionLoading}
+                            aria-label={`Score: ${listing.base_score || 0} for ${listing.name}`}
+                            title={`Curation Base Score: ${listing.base_score || 0} / 100 (Click to edit)`}
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border border-secondary-200 dark:border-slate-700 bg-secondary-50 dark:bg-slate-800 text-secondary-700 dark:text-slate-300 hover:border-accent-500 hover:text-accent-600 transition-colors cursor-pointer"
+                          >
+                            <span className="text-[10px] text-secondary-400 dark:text-slate-500 mr-1 font-normal">Score:</span>
+                            <span>{listing.base_score || 0}</span>
+                          </button>
+                        </div>
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-secondary-500 dark:text-slate-400">
@@ -569,6 +741,40 @@ export default function ListingsModerationTab({
 
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <div className="flex items-center justify-end space-x-1.5">
+                          {/* Feature toggle */}
+                          <button
+                            type="button"
+                            data-testid={`feature-toggle-${listing.id}`}
+                            onClick={() => handleToggleFeature(listing.id, !listing.is_featured)}
+                            disabled={isActionLoading}
+                            aria-label={listing.is_featured ? `Unfeature ${listing.name}` : `Feature ${listing.name}`}
+                            title={listing.is_featured ? "Featured on Homepage / Category (Click to unfeature)" : "Not Featured (Click to feature)"}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50 ${
+                              listing.is_featured
+                                ? "text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/40"
+                                : "text-secondary-400 dark:text-slate-500 hover:text-amber-500 hover:bg-amber-50/50 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            <i className={`text-lg ${listing.is_featured ? "ri-star-fill text-amber-500" : "ri-star-line"}`} />
+                          </button>
+
+                          {/* Verify toggle */}
+                          <button
+                            type="button"
+                            data-testid={`verify-toggle-${listing.id}`}
+                            onClick={() => handleToggleVerify(listing.id, !listing.is_verified)}
+                            disabled={isActionLoading}
+                            aria-label={listing.is_verified ? `Unverify ${listing.name}` : `Verify ${listing.name}`}
+                            title={listing.is_verified ? "Verified Business Badge (Click to unverify)" : "Unverified (Click to verify)"}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50 ${
+                              listing.is_verified
+                                ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40"
+                                : "text-secondary-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            <i className={`text-lg ${listing.is_verified ? "ri-checkbox-circle-fill text-blue-600 dark:text-blue-400" : "ri-checkbox-circle-line"}`} />
+                          </button>
+
                           {/* Preview modal trigger */}
                           <button
                             type="button"
@@ -635,10 +841,14 @@ export default function ListingsModerationTab({
         onDeselectAll={deselectAll}
         onBatchApprove={handleBatchApprove}
         onBatchReject={() => setIsBulkRejectModalOpen(true)}
+        onBatchFeature={handleBatchFeature}
+        onBatchVerify={handleBatchVerify}
         isLoading={isBulkLoading}
         itemLabel="listings"
         approveLabel="Approve Selected"
         rejectLabel="Reject Selected"
+        featureLabel="Feature Selected"
+        verifyLabel="Verify Selected"
       />
 
       {/* Preview Modal */}

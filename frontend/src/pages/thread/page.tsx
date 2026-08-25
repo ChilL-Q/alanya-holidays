@@ -187,6 +187,27 @@ export default function ThreadPage() {
     }
   };
 
+
+  const handleUpdatePost = async (newContent: string) => {
+    await forumService.updatePost(thread.id, { body: newContent });
+    setThread((prev) => (prev ? { ...prev, content: newContent } : null));
+  };
+
+  const handleUpdateReply = async (replyId: string, newContent: string) => {
+    await forumService.updateComment(replyId, newContent);
+    const updateReplyContent = (list: ThreadReply[]): ThreadReply[] =>
+      list.map((r) => {
+        if (r.id === replyId) {
+          return { ...r, content: newContent };
+        }
+        if (r.replies && r.replies.length > 0) {
+          return { ...r, replies: updateReplyContent(r.replies) };
+        }
+        return r;
+      });
+    setReplies(updateReplyContent);
+  };
+
   const handleShare = () => {
     setShareToast(true);
     setTimeout(() => setShareToast(false), 2500);
@@ -214,6 +235,7 @@ export default function ThreadPage() {
               onLike={handleLikePost}
               onShare={handleShare}
               onScrollToReplies={scrollToReplies}
+              onUpdate={handleUpdatePost}
             />
 
             {/* Replies count heading */}
@@ -245,6 +267,7 @@ export default function ThreadPage() {
                     depth={0}
                     onLike={handleLikeReply}
                     onReply={handleReplyClick}
+                    onUpdate={handleUpdateReply}
                   />
                 ))
               )}

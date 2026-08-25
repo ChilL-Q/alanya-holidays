@@ -36,7 +36,7 @@ export const categories: Category[] = [
     ],
     color: "bg-primary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Aerial%20view%20of%20Alanya%20coastline%20with%20cleopatra%20beach%20and%20medieval%20castle%20on%20rocky%20peninsula%20at%20golden%20hour%20warm%20sunlight%20turquoise%20water%20editorial%20travel%20photography%20stunning%20landscape%20composition&width=800&height=600&seq=cat-travel-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "beaches-nature",
@@ -62,7 +62,7 @@ export const categories: Category[] = [
     ],
     color: "bg-accent-500",
     image:
-      "https://readdy.ai/api/search-image?query=Stunning%20turquoise%20Mediterranean%20beach%20with%20white%20sand%20and%20crystal%20clear%20water%20surrounded%20by%20limestone%20cliffs%20sunny%20day%20vacation%20paradise%20editorial%20photography%20warm%20golden%20light&width=800&height=600&seq=cat-beach-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "food-nightlife",
@@ -89,7 +89,7 @@ export const categories: Category[] = [
     ],
     color: "bg-secondary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20breakfast%20spread%20with%20fresh%20bread%20olives%20cheese%20honey%20and%20tea%20on%20outdoor%20terrace%20overlooking%20Mediterranean%20warm%20morning%20light%20editorial%20food%20photography&width=800&height=600&seq=cat-food-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "things-to-do",
@@ -116,7 +116,7 @@ export const categories: Category[] = [
     ],
     color: "bg-primary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Ancient%20Roman%20ruins%20with%20columns%20and%20theater%20overlooking%20Mediterranean%20sea%20Antalya%20region%20historical%20site%20warm%20sunlight%20archaeological%20landscape%20editorial%20photography&width=800&height=600&seq=cat-todo-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "expats-nomads",
@@ -142,7 +142,7 @@ export const categories: Category[] = [
     ],
     color: "bg-accent-500",
     image:
-      "https://readdy.ai/api/search-image?query=Modern%20cozy%20coworking%20space%20with%20laptop%20coffee%20and%20Mediterranean%20view%20through%20large%20windows%20warm%20natural%20light%20digital%20nomad%20workspace%20editorial%20photography%20comfortable%20atmosphere&width=800&height=600&seq=cat-expat-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "real-estate",
@@ -165,7 +165,7 @@ export const categories: Category[] = [
     ],
     color: "bg-secondary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Luxury%20modern%20villa%20with%20infinity%20pool%20overlooking%20Mediterranean%20sea%20at%20sunset%20warm%20golden%20light%20architectural%20photography%20palm%20trees%20elegant%20terrace%20editorial%20style&width=800&height=600&seq=cat-realestate-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "local-culture",
@@ -188,7 +188,7 @@ export const categories: Category[] = [
     ],
     color: "bg-primary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Traditional%20Turkish%20bazaar%20market%20with%20colorful%20spices%20textiles%20and%20local%20people%20warm%20afternoon%20light%20cultural%20authentic%20atmosphere%20editorial%20photography%20vibrant%20colors&width=800&height=600&seq=cat-culture-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "events-meetups",
@@ -211,7 +211,7 @@ export const categories: Category[] = [
     ],
     color: "bg-accent-500",
     image:
-      "https://readdy.ai/api/search-image?query=Group%20of%20diverse%20friends%20toasting%20drinks%20at%20beach%20sunset%20gathering%20warm%20golden%20light%20social%20community%20atmosphere%20editorial%20photography%20joyful%20moments%20Mediterranean%20coastline&width=800&height=600&seq=cat-events-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "marketplace",
@@ -233,7 +233,7 @@ export const categories: Category[] = [
     ],
     color: "bg-secondary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Modern%20local%20shop%20front%20with%20colorful%20signs%20and%20products%20displayed%20on%20Mediterranean%20street%20warm%20afternoon%20light%20small%20business%20atmosphere%20editorial%20photography%20charming%20%20storefront&width=800&height=600&seq=cat-marketplace-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
   {
     id: "support-help",
@@ -252,6 +252,6 @@ export const categories: Category[] = [
     ],
     color: "bg-primary-500",
     image:
-      "https://readdy.ai/api/search-image?query=Friendly%20help%20desk%20concept%20with%20warm%20lighting%20modern%20office%20interior%20supportive%20atmosphere%20clean%20minimal%20design%20professional%20community%20space%20editorial%20photography&width=800&height=600&seq=cat-help-01&orientation=landscape",
+      "/images/placeholder-business.svg",
   },
 ];

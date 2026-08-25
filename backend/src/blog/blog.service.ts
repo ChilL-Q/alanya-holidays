@@ -1,24 +1,32 @@
 import {
   Injectable,
+  Logger,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { BlogRepository } from './blog.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import { slugify, generateUniqueSlug } from '../utils/slugify';
 import sanitizeHtml from 'sanitize-html';
 import {
+  BlogComment,
   BlogPost,
   BlogPostSummary,
   BlogPostsListResult,
   BlogSubmission,
   BlogTag,
+  InsertBlogCommentPayload,
   SubmissionCreatedResponse,
   SuccessResponse,
   UpdateBlogPostPayload,
 } from './types/blog.types';
 import {
+  CreateBlogCommentDto,
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
   GetBlogQueryDto,
@@ -38,9 +46,15 @@ const generateExcerpt = (
 
 @Injectable()
 export class BlogService {
+  private readonly logger = new Logger(BlogService.name);
+
   constructor(
     private readonly blogRepository: BlogRepository,
     private readonly userRolesRepo: UserRolesRepository,
+    private readonly notificationsService: NotificationsService,
+    private readonly emailOutbox: EmailOutboxRepository,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
   private async checkAdmin(userId: string): Promise<void> {
@@ -93,9 +107,22 @@ export class BlogService {
     return this.blogRepository.getFeaturedBlogPosts(limit);
   }
 
-  async getBlogPost(slug: string, incrementViews = true): Promise<BlogPost> {
+  async getBlogPost(
+    slug: string,
+    incrementViews = true,
+    userId?: string,
+  ): Promise<BlogPost> {
     const data = await this.blogRepository.getBlogPostBySlug(slug);
     if (!data) throw new NotFoundException('Blog post not found');
+
+    if (data.status !== 'published') {
+      const role = userId
+        ? await this.userRolesRepo.getRole(userId)
+        : undefined;
+      if (role !== 'admin' && data.author_id !== userId) {
+        throw new NotFoundException('Blog post not found');
+      }
+    }
 
     const result: BlogPost = {
       ...data,
@@ -267,6 +294,70 @@ export class BlogService {
     return { role, existing };
   }
 
+  // ── Blog Comments ────────────────────────────────────────────
+
+  async getBlogComments(
+    postId: string,
+    userId?: string,
+  ): Promise<BlogComment[]> {
+    return this.blogRepository.getBlogComments(postId, userId);
+  }
+
+  async createBlogComment(
+    postId: string,
+    dto: CreateBlogCommentDto,
+    userId: string,
+  ): Promise<BlogComment> {
+    const payload: InsertBlogCommentPayload = {
+      post_id: postId,
+      user_id: userId,
+      body: dto.body,
+      parent_id: dto.parentId || null,
+    };
+    return this.blogRepository.insertBlogComment(payload);
+  }
+
+  async updateBlogComment(
+    id: string,
+    body: string,
+    userId: string,
+  ): Promise<BlogComment> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    return this.blogRepository.updateBlogComment(id, body);
+  }
+
+  async deleteBlogComment(
+    id: string,
+    userId: string,
+  ): Promise<SuccessResponse> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (existing.user_id !== userId && role !== 'admin')
+      throw new UnauthorizedException('Not authorized');
+
+    await this.blogRepository.deleteBlogComment(id);
+    return { success: true };
+  }
+
+  async toggleBlogCommentLike(
+    id: string,
+    userId: string,
+  ): Promise<{ liked: boolean }> {
+    const existing = await this.blogRepository.getBlogCommentById(id);
+    if (!existing) throw new NotFoundException('Comment not found');
+
+    const liked = await this.blogRepository.toggleBlogCommentLike(id, userId);
+    return { liked };
+  }
+
   // Submissions
   async createBlogSubmission(
     data: CreateBlogSubmissionDto,
@@ -360,8 +451,7 @@ export class BlogService {
       submission.user_id,
     );
 
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Published!',
       message: `Your submission "${submission.title}" has been approved and published.`,
       type: 'success',
@@ -369,14 +459,30 @@ export class BlogService {
     });
 
     if (authorProfile?.email) {
-      void this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_approved',
-        data: {
-          postTitle: submission.title,
-          postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
-          authorName: authorProfile.full_name || 'Author',
-        },
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_approved',
+          data: {
+            postTitle: submission.title,
+            postUrl: `https://alanyaholidays.com/blog/${uniqueSlug}`,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog approval email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
+    }
+
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'approve',
+        admin_id: userId,
+        metadata: { post_id: post.id, title: submission.title },
       });
     }
 
@@ -408,22 +514,38 @@ export class BlogService {
       submission.user_id,
     );
 
-    await this.blogRepository.insertNotification({
-      user_id: submission.user_id,
+    await this.notificationsService.notifyUser(submission.user_id, {
       title: 'Blog Post Rejected',
       message: `Your submission "${submission.title}" was rejected. Reason: ${reason}`,
       type: 'error',
     });
 
     if (authorProfile?.email) {
-      void this.blogRepository.invokeEmailFunction({
-        to: authorProfile.email,
-        type: 'blog_submission_rejected',
-        data: {
-          postTitle: submission.title,
-          reason,
-          authorName: authorProfile.full_name || 'Author',
-        },
+      this.emailOutbox
+        .enqueue({
+          to: authorProfile.email,
+          type: 'blog_submission_rejected',
+          data: {
+            postTitle: submission.title,
+            reason,
+            authorName: authorProfile.full_name || 'Author',
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue blog rejection email for submission ${submissionId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
+    }
+
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'blog_submission',
+        entity_id: submissionId,
+        action: 'reject',
+        admin_id: userId,
+        reason,
+        metadata: { title: submission.title },
       });
     }
 

@@ -7,7 +7,7 @@ export default function NewThreadHero() {
       <div className="absolute inset-0 bg-gradient-to-b from-background-100 to-background-50" />
       <div className="absolute inset-0">
         <img
-          src="https://readdy.ai/api/search-image?query=Abstract%20geometric%20composition%20with%20warm%20coral%20and%20teal%20gradients%20flowing%20organic%20shapes%20layered%20translucent%20forms%20creating%20depth%20modern%20digital%20art%20style%20editorial%20design%20soft%20atmospheric%20background&width=1600&height=500&seq=newthread-hero-bg&orientation=landscape"
+          src="/images/placeholder-business.svg"
           alt=""
           className="w-full h-full object-cover object-top"
         />

@@ -1,7 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { RedisService } from '../../common/redis/redis.service';
+import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
+import {
+  PAYMENT_GATEWAY,
+  PaymentGateway,
+} from '../../webhooks/domain/payment-gateway.interface';
 import {
   DirectoryListingRecord,
   DirectoryListResponse,
@@ -20,11 +33,59 @@ import {
 
 @Injectable()
 export class DirectoryListingService {
+  private readonly logger = new Logger(DirectoryListingService.name);
+
   constructor(
     private readonly directoryRepository: DirectoryRepository,
     private readonly redisService: RedisService,
     private readonly userRolesRepo: UserRolesRepository,
+    @Optional() private readonly emailOutbox?: EmailOutboxRepository,
+    @Optional()
+    @Inject(PAYMENT_GATEWAY)
+    private readonly paymentGateway?: PaymentGateway,
   ) {}
+
+  private async enqueueAdminNotification(
+    listing: Partial<DirectoryListingRecord>,
+    ownerEmailOverride?: string | null,
+  ): Promise<void> {
+    if (!this.emailOutbox) return;
+    try {
+      const adminEmail =
+        process.env.ADMIN_NOTIFICATION_EMAIL || 'admin@alanyaholidays.com';
+      const listingId = listing.id ? String(listing.id) : '';
+      const listingTitle = listing.name || 'Untitled Listing';
+      const ownerEmail =
+        ownerEmailOverride ||
+        (typeof listing.email === 'string' ? listing.email : '') ||
+        '';
+      const category =
+        (typeof listing.category_id === 'string'
+          ? listing.category_id
+          : typeof listing.category === 'string'
+            ? listing.category
+            : '') || 'general';
+      const tier =
+        (typeof listing.tier === 'string' ? listing.tier : '') || 'explorer';
+
+      await this.emailOutbox.enqueue({
+        to: adminEmail,
+        type: 'admin_listing_notification',
+        data: {
+          listingId,
+          listingTitle,
+          ownerEmail,
+          category,
+          tier,
+        },
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(
+        `Failed to enqueue admin notification for pending listing ${listing?.id}: ${msg}`,
+      );
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Public Queries & Landing
@@ -36,31 +97,29 @@ export class DirectoryListingService {
     sortBy = 'base_score',
   ): Promise<DirectoryListResponse> {
     const cacheKey = `directory:list:${page}:${limit}:${category || 'all'}:${sortBy}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListResponse>(cacheKey);
-    if (cached) return cached;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const result = await this.directoryRepository.getDirectoryListings(
+          page,
+          limit,
+          category,
+          sortBy,
+        );
 
-    const result = await this.directoryRepository.getDirectoryListings(
-      page,
-      limit,
-      category,
-      sortBy,
-    );
-
-    const response: DirectoryListResponse = {
-      data: result.data,
-      pagination: {
-        page,
-        limit,
-        total: result.count,
-        totalPages: Math.ceil(result.count / limit),
+        const response: DirectoryListResponse = {
+          data: result.data,
+          pagination: {
+            page,
+            limit,
+            total: result.count,
+            totalPages: Math.ceil(result.count / limit),
+          },
+        };
+        return response;
       },
-    };
-
-    if (response.data) {
-      await this.redisService.setJson(cacheKey, response, 600); // 10 min TTL
-    }
-    return response;
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListing(
@@ -72,46 +131,46 @@ export class DirectoryListingService {
     }
 
     const cacheKey = `directory:item:${id}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.directoryRepository.getDirectoryListingById(id);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const data = await this.directoryRepository.getDirectoryListingById(id);
+        if (data && data.status && data.status !== 'approved') {
+          return null;
+        }
+        return data;
+      },
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListingBySlug(
     slug: string,
   ): Promise<DirectoryListingRecord | null> {
     const cacheKey = `directory:slug:${slug}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.directoryRepository.getDirectoryListingBySlug(slug);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const data =
+          await this.directoryRepository.getDirectoryListingBySlug(slug);
+        if (data && data.status && data.status !== 'approved') {
+          return null;
+        }
+        return data;
+      },
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListingsByCategory(
     categoryId: string,
   ): Promise<DirectoryListingRecord[]> {
     const cacheKey = `directory:cat:${categoryId}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord[]>(cacheKey);
-    if (cached) return cached;
-
-    const data =
-      await this.directoryRepository.getDirectoryListingsByCategory(categoryId);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      () => this.directoryRepository.getDirectoryListingsByCategory(categoryId),
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async searchDirectoryListings(
@@ -395,6 +454,7 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+    await this.enqueueAdminNotification(data, rawEmail);
     return data;
   }
 
@@ -457,6 +517,10 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+    await this.enqueueAdminNotification(
+      data,
+      data.email || (typeof listing.email === 'string' ? listing.email : null),
+    );
     return data;
   }
 
@@ -509,6 +573,14 @@ export class DirectoryListingService {
     }
 
     await this.redisService.delByPattern('directory:*');
+
+    if ((updates as Record<string, unknown>).status === 'pending') {
+      await this.enqueueAdminNotification(
+        data,
+        typeof updates.email === 'string' ? updates.email : data.email,
+      );
+    }
+
     return data;
   }
 
@@ -571,46 +643,56 @@ export class DirectoryListingService {
     return this.directoryRepository.getListingAddons(listingId);
   }
 
+  private static readonly ADDON_TYPES = [
+    'verified_badge',
+    'seasonal_placement',
+    'sponsored_article',
+    'ai_localization',
+  ] as const;
+
   async createAddonCheckout(
     listingId: string,
     addonType: string,
     userId: string,
   ): Promise<{ url: string }> {
     validateUUIDs([listingId]);
-    const { data, error } = await this.directoryRepository.invokeFunction(
-      'create-addon-checkout',
-      {
-        body: { listingId, addonType },
-        headers: { 'x-user-id': userId },
-      },
-    );
-    if (error) throw new Error(error.message);
-    if (data?.error) throw new Error(data.error);
-    if (!data?.url) throw new Error('No checkout URL returned');
-    return { url: data.url };
-  }
+    if (
+      !DirectoryListingService.ADDON_TYPES.includes(
+        addonType as (typeof DirectoryListingService.ADDON_TYPES)[number],
+      )
+    ) {
+      throw new Error(
+        'Invalid request. Provide listingId (uuid) and a valid addonType.',
+      );
+    }
+    if (!this.paymentGateway) {
+      throw new Error('Payment gateway is not configured');
+    }
 
-  sendListingPaymentInstructions(
-    businessName: string,
-    tier: string,
-    userId: string,
-  ): { success: boolean } {
-    void this.directoryRepository.invokeFunction('send-email', {
-      body: {
-        type: 'listing_payment_instructions',
-        userId,
-        data: {
-          businessName,
-          tier,
-          link:
-            (process.env.APP_URL ||
-              process.env.SITE_URL ||
-              process.env.NEXT_PUBLIC_SITE_URL ||
-              'https://alanyaholidays.com') + '/profile',
-        },
-      },
+    // Ownership invariant (was enforced only in the deleted Edge function)
+    const ownership =
+      await this.directoryRepository.getDirectoryListingOwner(listingId);
+    if (!ownership || ownership.owner_user_id !== userId) {
+      throw new Error('You do not own this listing');
+    }
+
+    // Block duplicate active add-on of the same type
+    const addons = await this.directoryRepository.getListingAddons(listingId);
+    const hasActive = addons.some(
+      (a) =>
+        a.addon_type === addonType &&
+        (a as { status?: string }).status === 'active',
+    );
+    if (hasActive) {
+      throw new Error('This add-on is already active for the listing');
+    }
+
+    return this.paymentGateway.createAddonCheckoutSession({
+      userId,
+      listingId,
+      addonType:
+        addonType as (typeof DirectoryListingService.ADDON_TYPES)[number],
     });
-    return { success: true };
   }
 
   // ---------------------------------------------------------------------------
@@ -681,6 +763,7 @@ export class DirectoryListingService {
       status: 'rejected',
       rejection_reason: reason,
     });
+    await this.redisService.delByPattern('directory:*');
 
     if (listing?.owner_user_id) {
       void this.directoryRepository.invokeFunction('send-email', {
@@ -692,5 +775,109 @@ export class DirectoryListingService {
       });
     }
     return { success: true };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Admin Curation Operations (Task 2.2)
+  // ---------------------------------------------------------------------------
+  async featureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_featured: true,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_featured: true };
+  }
+
+  async unfeatureListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_featured: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_featured: false,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_featured: false };
+  }
+
+  async verifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_verified: true,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_verified: true };
+  }
+
+  async unverifyListing(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; is_verified: boolean }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      is_verified: false,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, is_verified: false };
+  }
+
+  async setListingScore(
+    id: string,
+    score: number,
+    userId: string,
+  ): Promise<{ success: boolean; base_score: number }> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    if (
+      score === undefined ||
+      score === null ||
+      isNaN(score) ||
+      score < 0 ||
+      score > 100
+    ) {
+      throw new BadRequestException('Score must be a number between 0 and 100');
+    }
+
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const updated = await this.directoryRepository.updateDirectoryListing(id, {
+      base_score: score,
+    });
+    if (!updated) throw new NotFoundException('Listing not found');
+
+    await this.redisService.delByPattern('directory:*');
+    return { success: true, base_score: score };
   }
 }

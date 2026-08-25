@@ -6,7 +6,6 @@ import {
   getAvailableProperties,
   checkAvailability,
   getPropertyTypes,
-  createBooking,
   mapBackendPropertyToPropertyItem,
   mapVillaToPropertyItem,
   type Villa,
@@ -298,50 +297,4 @@ describe("properties.service", () => {
     });
   });
 
-  describe("createBooking", () => {
-    it("should call POST /bookings and return bookingId on success", async () => {
-      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
-        id: "bk-999",
-        data: "bk-999",
-        success: true,
-      });
-
-      const payload = {
-        propertyId: "villa-001",
-        checkIn: "2026-08-01",
-        checkOut: "2026-08-07",
-        totalPrice: 2520,
-        guests: 4,
-        customerName: "John Doe",
-        customerEmail: "john@example.com",
-        customerPhone: "+905551234567",
-      };
-
-      const result = await propertiesService.createBooking(payload);
-      expect(apiClient.post).toHaveBeenCalledWith("/bookings", expect.objectContaining({
-        item_id: "villa-001",
-        check_in: "2026-08-01",
-        check_out: "2026-08-07",
-        guests: 4,
-        item_type: "property",
-      }));
-      expect(result.success).toBe(true);
-      expect(result.bookingId).toBe("bk-999");
-    });
-
-    it("should throw ApiError when createBooking fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
-        new ApiError("Booking service offline", 500, "Internal Server Error")
-      );
-
-      const payload = {
-        propertyId: "villa-002",
-        checkIn: "2026-09-01",
-        checkOut: "2026-09-05",
-        totalPrice: 1120,
-      };
-
-      await expect(createBooking(payload)).rejects.toThrow(ApiError);
-    });
-  });
 });

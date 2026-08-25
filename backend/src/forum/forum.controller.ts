@@ -8,9 +8,13 @@ import {
   Put,
   Query,
   UseGuards,
+  Optional,
 } from '@nestjs/common';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumEventService } from './application/forum-event.service';
+import { ForumReportService } from './application/forum-report.service';
 import { UsersService } from '../users/users.service';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -31,6 +35,7 @@ import {
 import {
   CreateForumCommentDto,
   GetForumCommentsQueryDto,
+  UpdateForumCommentDto,
 } from './dto/forum-comments.dto';
 import {
   CreateForumEventDto,
@@ -57,8 +62,12 @@ import {
 @Controller('forum')
 export class ForumController {
   constructor(
-    private readonly forumService: ForumService,
+    private readonly discussionService: ForumDiscussionService,
+    private readonly eventService: ForumEventService,
+    private readonly reportService: ForumReportService,
     private readonly usersService: UsersService,
+    @Optional()
+    private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
   // ============================================================
@@ -66,19 +75,19 @@ export class ForumController {
   // ============================================================
   @Get('categories')
   async getForumCategories(): Promise<ForumCategory[]> {
-    return this.forumService.getForumCategories();
+    return this.discussionService.getForumCategories();
   }
 
   @Get('categories/tree')
   async getForumCategoryTree(): Promise<ForumCategory[]> {
-    return this.forumService.getForumCategoryTree();
+    return this.discussionService.getForumCategoryTree();
   }
 
   @Get('categories/slug/:slug')
   async getForumCategory(
     @Param('slug') slug: string,
   ): Promise<ForumCategory | null> {
-    return this.forumService.getForumCategory(slug);
+    return this.discussionService.getForumCategory(slug);
   }
 
   @Post('categories')
@@ -88,7 +97,7 @@ export class ForumController {
     @Body() body: CreateForumCategoryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumCategory> {
-    return this.forumService.createForumCategory(body, user.id);
+    return this.discussionService.createForumCategory(body, user.id);
   }
 
   @Put('categories/:id')
@@ -99,7 +108,7 @@ export class ForumController {
     @Body() body: UpdateForumCategoryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumCategory> {
-    return this.forumService.updateForumCategory(id, body, user.id);
+    return this.discussionService.updateForumCategory(id, body, user.id);
   }
 
   @Delete('categories/:id')
@@ -109,7 +118,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumActionResponse> {
-    return this.forumService.deleteForumCategory(id, user.id);
+    return this.discussionService.deleteForumCategory(id, user.id);
   }
 
   // ============================================================
@@ -135,7 +144,7 @@ export class ForumController {
       authorId: query.authorId,
       search: query.search,
     };
-    return this.forumService.getForumPosts(filters, user?.id);
+    return this.discussionService.getForumPosts(filters, user?.id);
   }
 
   @Get('posts/hot')
@@ -150,7 +159,7 @@ export class ForumController {
     } else if (query?.limit !== undefined) {
       limit = Number(query.limit) || 8;
     }
-    return this.forumService.getHotPosts(limit, user?.id);
+    return this.discussionService.getHotPosts(limit, user?.id);
   }
 
   @Get('posts/slug/:slug')
@@ -159,7 +168,7 @@ export class ForumController {
     @Param('slug') slug: string,
     @CurrentUser() user?: AuthUser,
   ): Promise<ForumPost | null> {
-    return this.forumService.getForumPost(slug, user?.id);
+    return this.discussionService.getForumPost(slug, user?.id);
   }
 
   @Post('posts')
@@ -168,7 +177,7 @@ export class ForumController {
     @Body() body: CreateForumPostDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumPost> {
-    return this.forumService.createForumPost(body, 'discussion', user.id);
+    return this.discussionService.createForumPost(body, 'discussion', user.id);
   }
 
   @Post('questions')
@@ -177,7 +186,7 @@ export class ForumController {
     @Body() body: CreateForumPostDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumPost> {
-    return this.forumService.createForumPost(body, 'question', user.id);
+    return this.discussionService.createForumPost(body, 'question', user.id);
   }
 
   @Put('posts/:id')
@@ -187,7 +196,7 @@ export class ForumController {
     @Body() body: UpdateForumPostDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumPost> {
-    return this.forumService.updateForumPost(id, body, user.id);
+    return this.discussionService.updateForumPost(id, body, user.id);
   }
 
   @Delete('posts/:id')
@@ -196,14 +205,14 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumActionResponse> {
-    return this.forumService.deleteForumPost(id, user.id);
+    return this.discussionService.deleteForumPost(id, user.id);
   }
 
   @Post('posts/:id/view')
   async incrementPostView(
     @Param('id') id: string,
   ): Promise<ForumActionResponse> {
-    return this.forumService.incrementPostView(id);
+    return this.discussionService.incrementPostView(id);
   }
 
   @Post('posts/:id/like')
@@ -212,7 +221,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumLikeResponse> {
-    return this.forumService.togglePostLike(id, user.id);
+    return this.discussionService.togglePostLike(id, user.id);
   }
 
   @Post('posts/:id/pin')
@@ -227,7 +236,16 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'pinned' in body
         ? Boolean(body.pinned)
         : Boolean(body);
-    return this.forumService.setPinned(id, pinned, user.id);
+    const result = await this.discussionService.setPinned(id, pinned, user.id);
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_post',
+        entity_id: id,
+        action: pinned ? 'pin' : 'unpin',
+        admin_id: user.id,
+      });
+    }
+    return result;
   }
 
   @Post('posts/:id/remove')
@@ -242,7 +260,39 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'removed' in body
         ? Boolean(body.removed)
         : Boolean(body);
-    return this.forumService.setRemoved('post', id, removed, user.id);
+    const result = await this.discussionService.setRemoved(
+      'post',
+      id,
+      removed,
+      user.id,
+    );
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_post',
+        entity_id: id,
+        action: removed ? 'remove' : 'restore',
+        admin_id: user.id,
+      });
+    }
+    return result;
+  }
+
+  // ============================================================
+  // Bookmarks (/forum/bookmarks*)
+  // ============================================================
+  @Get('bookmarks')
+  @UseGuards(AuthGuard)
+  async getUserBookmarks(@CurrentUser() user: AuthUser): Promise<ForumPost[]> {
+    return this.discussionService.getUserBookmarks(user.id);
+  }
+
+  @Post('posts/:id/bookmark')
+  @UseGuards(AuthGuard)
+  async togglePostBookmark(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<{ bookmarked: boolean }> {
+    return this.discussionService.togglePostBookmark(id, user.id);
   }
 
   // ============================================================
@@ -255,7 +305,7 @@ export class ForumController {
     @Query() query: GetForumCommentsQueryDto,
     @CurrentUser() user?: AuthUser,
   ): Promise<ForumComment[]> {
-    return this.forumService.getForumComments(
+    return this.discussionService.getForumComments(
       postId,
       {
         includeRemoved:
@@ -274,12 +324,23 @@ export class ForumController {
     @CurrentUser() user: AuthUser,
   ): Promise<ForumComment> {
     const text = body.body || body.content || '';
-    return this.forumService.createForumComment(
+    return this.discussionService.createForumComment(
       postId,
       text,
       user.id,
-      body.parentId,
+      body.parentId || body.parent_id || null,
     );
+  }
+
+  @Put('comments/:id')
+  @UseGuards(AuthGuard)
+  async updateForumComment(
+    @Param('id') id: string,
+    @Body() body: UpdateForumCommentDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<ForumComment> {
+    const text = body.body ?? body.content ?? '';
+    return this.discussionService.updateForumComment(id, text, user.id);
   }
 
   @Delete('comments/:id')
@@ -288,7 +349,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumActionResponse> {
-    return this.forumService.deleteForumComment(id, user.id);
+    return this.discussionService.deleteForumComment(id, user.id);
   }
 
   @Post('comments/:id/like')
@@ -297,7 +358,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumLikeResponse> {
-    return this.forumService.toggleCommentLike(id, user.id);
+    return this.discussionService.toggleCommentLike(id, user.id);
   }
 
   @Post('comments/:id/remove')
@@ -312,7 +373,21 @@ export class ForumController {
       typeof body === 'object' && body !== null && 'removed' in body
         ? Boolean(body.removed)
         : Boolean(body);
-    return this.forumService.setRemoved('comment', id, removed, user.id);
+    const result = await this.discussionService.setRemoved(
+      'comment',
+      id,
+      removed,
+      user.id,
+    );
+    if (this.moderationAuditService) {
+      await this.moderationAuditService.logAction({
+        entity_type: 'forum_comment',
+        entity_id: id,
+        action: removed ? 'remove' : 'restore',
+        admin_id: user.id,
+      });
+    }
+    return result;
   }
 
   // ============================================================
@@ -334,7 +409,7 @@ export class ForumController {
         (query.includeUnpublished as unknown) === 'true',
       search: query.search,
     };
-    return this.forumService.getForumEvents(filters, user?.id);
+    return this.eventService.getForumEvents(filters, user?.id);
   }
 
   @Get('events/slug/:slug')
@@ -343,7 +418,7 @@ export class ForumController {
     @Param('slug') slug: string,
     @CurrentUser() user?: AuthUser,
   ): Promise<ForumEvent | null> {
-    return this.forumService.getForumEvent(slug, user?.id);
+    return this.eventService.getForumEvent(slug, user?.id);
   }
 
   @Post('events')
@@ -353,7 +428,7 @@ export class ForumController {
     @Body() body: CreateForumEventDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumEvent> {
-    return this.forumService.createForumEvent(body, user.id);
+    return this.eventService.createForumEvent(body, user.id);
   }
 
   @Put('events/:id')
@@ -364,7 +439,7 @@ export class ForumController {
     @Body() body: UpdateForumEventDto,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumEvent> {
-    return this.forumService.updateForumEvent(id, body, user.id);
+    return this.eventService.updateForumEvent(id, body, user.id);
   }
 
   @Delete('events/:id')
@@ -374,7 +449,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumActionResponse> {
-    return this.forumService.deleteForumEvent(id, user.id);
+    return this.eventService.deleteForumEvent(id, user.id);
   }
 
   @Get('events/:id/attendees')
@@ -384,7 +459,7 @@ export class ForumController {
     @Param('id') id: string,
     @CurrentUser() user: AuthUser,
   ): Promise<ForumEventAttendee[]> {
-    return this.forumService.getEventAttendees(id, user.id);
+    return this.eventService.getEventAttendees(id, user.id);
   }
 
   @Post('events/:id/rsvp')
@@ -400,7 +475,7 @@ export class ForumController {
         : typeof body === 'string'
           ? body
           : null;
-    return this.forumService.toggleEventRsvp(id, contactPhone, user.id);
+    return this.eventService.toggleEventRsvp(id, contactPhone, user.id);
   }
 
   // ============================================================
@@ -408,7 +483,7 @@ export class ForumController {
   // ============================================================
   @Get('stats')
   async getForumStats(): Promise<ForumStatsResponse> {
-    return this.forumService.getForumStats();
+    return this.discussionService.getForumStats();
   }
 
   // ============================================================

@@ -125,7 +125,6 @@ export default function HammamSpaPage() {
         item_name: spaName,
         item_id: selectedSpa?.id,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumttgg",
       });
 
       if (result.success) {
@@ -147,7 +146,7 @@ export default function HammamSpaPage() {
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxurious%20traditional%20Turkish%20hammam%20interior%20with%20white%20marble%20heated%20gobek%20tasi%20platform%20steam%20rising%20softly%20through%20beams%20of%20light%20from%20star%20shaped%20dome%20windows%20brass%20bowls%20with%20olive%20oil%20soaps%20warm%20serene%20atmosphere%20authentic%20spa%20editorial%20photography%20misty%20ethereal%20mood&width=1800&height=920&seq=spa-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Traditional Hammam & Spa in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -156,7 +155,7 @@ export default function HammamSpaPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Hammam & Spa</span>
             </div>
@@ -392,7 +391,7 @@ export default function HammamSpaPage() {
                     <button onClick={() => setSelectedSpa(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
                   </div>
                 ) : (
-                  <form onSubmit={handleBookingSubmit} data-readdy-form>
+                  <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Hammam & Spa" />
                     <input type="hidden" name="spa_name" value={selectedSpa.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">

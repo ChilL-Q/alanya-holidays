@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import {
   ProductsRepository,
@@ -15,6 +16,11 @@ import {
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
+import {
+  CreateSellerProductDto,
+  UpdateSellerProductDto,
+} from './dto/seller-product.dto';
+import type { SellerOrderStatus } from './dto/update-order-status.dto';
 import { Money } from '../common/domain/value-objects/money.vo';
 
 export interface Product {
@@ -47,6 +53,18 @@ export interface ShopProductDetailResult {
 
 @Injectable()
 export class ProductsService {
+  // Allowed seller fulfillment transitions; terminal states map to no exits.
+  private static readonly ORDER_STATUS_TRANSITIONS: Record<
+    string,
+    readonly string[]
+  > = {
+    pending_payment: ['paid', 'cancelled'],
+    paid: ['shipped', 'cancelled'],
+    shipped: ['completed'],
+    completed: [],
+    cancelled: [],
+  };
+
   constructor(
     private readonly productsRepository: ProductsRepository,
     private readonly userRolesRepo: UserRolesRepository,
@@ -220,8 +238,24 @@ export class ProductsService {
         );
       }
 
-      const unitPriceFromDb = dbProduct.sku_price ?? dbProduct.price;
-      const stockFromDb = dbProduct.sku_stock ?? dbProduct.stock;
+      // Resolve the variant PER ORDER LINE: the same product can appear in
+      // one cart under different skus, so pricing/stock must follow the
+      // item's own skuId, not "any sku of this product".
+      const requestedSkuId = item.skuId != null ? Number(item.skuId) : null;
+      let unitPriceFromDb = dbProduct.price;
+      let stockFromDb = dbProduct.stock;
+      if (requestedSkuId !== null && !Number.isNaN(requestedSkuId)) {
+        const sku = (dbProduct.skus ?? []).find((s) => s.id === requestedSkuId);
+        if (!sku) {
+          throw new BadRequestException(
+            `SKU "${item.skuId}" is not available for product "${dbProduct.name}"`,
+          );
+        }
+        unitPriceFromDb = sku.price;
+        stockFromDb = sku.stock;
+        item.skuId = sku.id;
+      }
+
       if (stockFromDb < item.quantity) {
         throw new BadRequestException(
           `Insufficient stock for product "${dbProduct.name}": requested ${item.quantity}, available ${stockFromDb}`,
@@ -265,5 +299,120 @@ export class ProductsService {
     }
 
     return order;
+  }
+
+  // --- Seller (Business Dashboard) ---
+
+  async getMyProducts(sellerId: string) {
+    return this.productsRepository.getMyCatalogItems(sellerId);
+  }
+
+  async createMyProduct(dto: CreateSellerProductDto, sellerId: string) {
+    return this.productsRepository.createCatalogItem(
+      {
+        name: dto.name,
+        description: dto.description ?? null,
+        price: dto.price,
+        currency: dto.currency || 'EUR',
+        stock: dto.stock ?? 0,
+        media: dto.media ?? null,
+        category_id: dto.category_id ?? null,
+      },
+      sellerId,
+    );
+  }
+
+  async updateMyProduct(
+    itemId: number,
+    dto: UpdateSellerProductDto,
+    sellerId: string,
+  ) {
+    const updates: Record<string, unknown> = {};
+    for (const key of [
+      'name',
+      'description',
+      'price',
+      'currency',
+      'stock',
+      'media',
+      'category_id',
+      'status',
+    ] as const) {
+      if (dto[key] !== undefined) updates[key] = dto[key];
+    }
+
+    const updated = await this.productsRepository.updateCatalogItem(
+      itemId,
+      updates,
+      sellerId,
+    );
+    // Repository scopes the update by seller_id, so a miss means "not yours".
+    if (!updated) throw new NotFoundException('Product not found');
+    return updated;
+  }
+
+  async getSellerOrders(sellerId: string) {
+    const role = await this.userRolesRepo.getRole(sellerId);
+    if (role === 'admin') {
+      return this.productsRepository.getAllOrders();
+    }
+
+    const items = await this.productsRepository.getMyCatalogItems(sellerId);
+    if (items.length === 0) return [];
+
+    return this.productsRepository.getOrdersContainingCatalogItems(
+      items.map((item) => item.id),
+    );
+  }
+
+  async updateOrderStatus(
+    orderId: string | number,
+    nextStatus: SellerOrderStatus,
+    userId: string,
+  ) {
+    const order = (await this.productsRepository.getOrderById(orderId)) as {
+      id: number;
+      status: string;
+      items?: Array<{ product_id: string | number }> | null;
+    } | null;
+
+    if (!order) throw new NotFoundException('Order not found');
+
+    const allowed =
+      ProductsService.ORDER_STATUS_TRANSITIONS[order.status] ?? [];
+    if (!allowed.includes(nextStatus)) {
+      throw new BadRequestException(
+        `Cannot change order status from '${order.status}' to '${nextStatus}'`,
+      );
+    }
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') {
+      const itemIds = [
+        ...new Set((order.items ?? []).map((item) => String(item.product_id))),
+      ];
+      const ownsItem = await this.productsRepository.sellerOwnsAnyCatalogItem(
+        itemIds,
+        userId,
+      );
+      if (!ownsItem) {
+        throw new UnauthorizedException('Not authorized to update this order');
+      }
+    }
+
+    // The UPDATE is guarded on the status validated above; a concurrent
+    // transition makes it match 0 rows and surfaces as a conflict.
+    const updated = (await this.productsRepository.updateOrderStatus(
+      order.id,
+      nextStatus,
+      order.status,
+    )) as { id: number; status: string } | null;
+
+    if (!updated) {
+      throw new ConflictException(
+        `Order ${order.id} was already modified — current status differs from '${order.status}'`,
+      );
+    }
+    return updated;
   }
 }

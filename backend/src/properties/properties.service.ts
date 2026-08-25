@@ -1,6 +1,7 @@
 import {
   Injectable,
   Inject,
+  Logger,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
@@ -12,6 +13,8 @@ import {
 } from './domain';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
+import { appUrl } from '../utils/app-url';
 import {
   CreatePropertyDto,
   UpdatePropertyDto,
@@ -22,11 +25,14 @@ import { ICalSyncResult } from './types/property.types';
 
 @Injectable()
 export class PropertiesService {
+  private readonly logger = new Logger(PropertiesService.name);
+
   constructor(
     @Inject(PROPERTIES_REPOSITORY)
     private readonly propertiesRepository: IPropertiesRepository,
     private readonly redisService: RedisService,
     private readonly userRolesRepo: UserRolesRepository,
+    private readonly emailOutbox: EmailOutboxRepository,
   ) {}
 
   // ============================================
@@ -51,25 +57,27 @@ export class PropertiesService {
     queryOptions: PropertyQueryOptions,
   ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
     const cacheKey = `properties:list:${JSON.stringify(queryOptions || {})}`;
-    const cached = await this.redisService.getJson<{
-      data: Record<string, unknown>[];
-      count: number | null;
-    }>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.propertiesRepository.getProperties(queryOptions);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 300); // 5 minutes TTL
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      () => this.propertiesRepository.getProperties(queryOptions),
+      { ttlFreshSeconds: 300 },
+    );
   }
 
   async getProperty(id: string): Promise<Record<string, unknown>> {
     const cacheKey = `properties:item:${id}`;
-    const cached =
-      await this.redisService.getJson<Record<string, unknown>>(cacheKey);
-    if (cached) return cached;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        return this.fetchPropertyById(id);
+      },
+      { ttlFreshSeconds: 600 },
+    );
+  }
 
+  private async fetchPropertyById(
+    id: string,
+  ): Promise<Record<string, unknown>> {
     const isUUID =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         id,
@@ -92,9 +100,6 @@ export class PropertiesService {
       }
     }
 
-    if (prop) {
-      await this.redisService.setJson(cacheKey, prop, 600); // 10 minutes TTL
-    }
     return prop;
   }
 
@@ -500,17 +505,23 @@ export class PropertiesService {
     const property =
       await this.propertiesRepository.getPropertyHostId(propertyId);
     if (property) {
-      this.propertiesRepository.invokeEmailFunction({
-        type: 'new_review',
-        userId: property.host_id,
-        data: {
-          itemTitle: property.title,
-          rating: review.rating,
-          comment: review.comment,
-          guestName: 'A Guest',
-          link: `https://alanyaholidays.com/property/${propertyId}`,
-        },
-      });
+      void this.emailOutbox
+        .enqueue({
+          type: 'new_review',
+          userId: property.host_id,
+          data: {
+            itemTitle: property.title,
+            rating: review.rating,
+            comment: review.comment,
+            guestName: 'A Guest',
+            link: appUrl(`/property/${propertyId}`),
+          },
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Failed to enqueue new_review email for property ${propertyId}: ${err instanceof Error ? err.message : String(err)}`,
+          ),
+        );
     }
     return { success: true };
   }

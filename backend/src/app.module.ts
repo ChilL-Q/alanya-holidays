@@ -21,6 +21,7 @@ import { AiModule } from './ai/ai.module';
 import { MediaModule } from './media/media.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
+import { BillingModule } from './billing/billing.module';
 import { ItinerariesModule } from './itineraries/itineraries.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { ItinerariesModule } from './itineraries/itineraries.module';
     MediaModule,
     NotificationsModule,
     AdminModule,
+    BillingModule,
     ItinerariesModule,
   ],
   controllers: [AppController],

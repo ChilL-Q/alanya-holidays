@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RichTextEditor from "@/components/base/RichTextEditor";
 
 interface ReplyInputProps {
   replyTo: string | null;
@@ -6,6 +7,14 @@ interface ReplyInputProps {
   onSubmit: (content: string, parentId: string | null) => void;
   onCancel: () => void;
 }
+
+const replyModules = {
+  toolbar: [
+    ['bold', 'italic', 'strike'],
+    ['link', 'image'],
+    ['clean'],
+  ],
+};
 
 export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel }: ReplyInputProps) {
   const [content, setContent] = useState("");
@@ -40,19 +49,14 @@ export default function ReplyInput({ replyTo, replyToAuthor, onSubmit, onCancel 
         </p>
       )}
 
-      <textarea
+      <RichTextEditor
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={setContent}
         placeholder={replyTo ? `Write your reply to ${replyToAuthor}...` : "Share your thoughts, experiences, or questions..."}
-        rows={3}
-        maxLength={2000}
-        className="w-full bg-background-100 border border-background-200/70 rounded-lg px-4 py-3 text-sm text-foreground-800 placeholder:text-foreground-300 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100/60 resize-none transition-all"
+        modules={replyModules}
       />
 
-      <div className="flex items-center justify-between mt-3">
-        <span className="text-[10px] text-foreground-300">
-          {content.length}/2000
-        </span>
+      <div className="flex items-center justify-end mt-3">
         <div className="flex items-center gap-2">
           {replyTo && (
             <button

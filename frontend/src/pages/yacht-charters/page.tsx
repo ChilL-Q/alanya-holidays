@@ -198,7 +198,6 @@ export default function YachtChartersPage() {
         dates: dateVal,
         duration: durationVal,
         notes: bookingNotes,
-        form_endpoint: "https://readdy.ai/api/form/d9r4h76e3oq4jqumtteg",
       });
 
       if (result.success) {
@@ -230,7 +229,7 @@ export default function YachtChartersPage() {
         {/* Hero */}
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
           <img
-            src="https://readdy.ai/api/search-image?query=Luxury%20yacht%20cruising%20along%20dramatic%20Mediterranean%20coastline%20at%20golden%20hour%20Alanya%20castle%20on%20rocky%20peninsula%20silhouette%20warm%20amber%20sunlight%20reflecting%20on%20calm%20turquoise%20sea%20elegant%20wooden%20gulet%20with%20white%20sails%20unfurled%20breathtaking%20travel%20photography%20cinematic%20composition%20high%20detail&width=1800&height=920&seq=yacht-hero-01&orientation=landscape"
+            src="/images/placeholder-business.svg"
             alt="Luxury Yacht Charters in Alanya"
             className="absolute inset-0 w-full h-full object-cover object-top"
           />
@@ -240,7 +239,7 @@ export default function YachtChartersPage() {
             <div className="flex items-center gap-2 mb-4">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/luxury-experience" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Luxury Experience</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
               <span className="text-white/90 text-sm">Yacht Charters</span>
             </div>
@@ -802,7 +801,7 @@ export default function YachtChartersPage() {
                 )}
 
                 {/* CTA */}
-                <form onSubmit={handleBookingSubmit} data-readdy-form>
+                <form onSubmit={handleBookingSubmit}>
                     <input type="hidden" name="experience_type" value="Yacht Charter" />
                     <input type="hidden" name="yacht_name" value={selectedYacht.name} />
                     <input type="hidden" name="company" value={selectedYacht.company} />

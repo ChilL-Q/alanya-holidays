@@ -105,6 +105,31 @@ describe('BlogController', () => {
       deleteBlogPost: jest.fn().mockResolvedValue({ success: true }),
       addTagToPost: jest.fn().mockResolvedValue({ success: true }),
       removeTagFromPost: jest.fn().mockResolvedValue({ success: true }),
+      getBlogComments: jest.fn().mockResolvedValue([]),
+      createBlogComment: jest.fn().mockResolvedValue({
+        id: 'comment-1',
+        post_id: 'post-1',
+        user_id: 'user-1',
+        body: 'Great post!',
+        parent_id: null,
+        like_count: 0,
+        is_removed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }),
+      updateBlogComment: jest.fn().mockResolvedValue({
+        id: 'comment-1',
+        post_id: 'post-1',
+        user_id: 'user-1',
+        body: 'Updated comment',
+        parent_id: null,
+        like_count: 0,
+        is_removed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }),
+      deleteBlogComment: jest.fn().mockResolvedValue({ success: true }),
+      toggleBlogCommentLike: jest.fn().mockResolvedValue({ liked: true }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -139,6 +164,16 @@ describe('BlogController', () => {
       expect(mockService.getBlogPosts).toHaveBeenCalledWith(query, 'user-1');
     });
 
+    it('should have route path metadata supporting both /blog and /blog/posts', () => {
+      const paths = Reflect.getMetadata(
+        'path',
+        BlogController.prototype.getBlogPosts,
+      );
+      const isArrayWithPosts = Array.isArray(paths) && paths.includes('posts');
+      const isPosts = paths === 'posts';
+      expect(isArrayWithPosts || isPosts).toBe(true);
+    });
+
     it('should delegate getBlogPosts call to service with undefined user when unauthenticated', async () => {
       const query: GetBlogQueryDto = { category: 'news', page: 1, limit: 10 };
       const res = await controller.getBlogPosts(query, undefined);
@@ -153,10 +188,14 @@ describe('BlogController', () => {
       expect(mockService.getFeaturedBlogPosts).toHaveBeenCalledWith(5);
     });
 
-    it('should delegate getBlogPost with incrementViews flag', async () => {
-      const res = await controller.getBlogPost('test-slug', 'false');
+    it('should delegate getBlogPost with incrementViews flag and user ID', async () => {
+      const res = await controller.getBlogPost('test-slug', 'false', undefined);
       expect(res.slug).toBe('test-post');
-      expect(mockService.getBlogPost).toHaveBeenCalledWith('test-slug', false);
+      expect(mockService.getBlogPost).toHaveBeenCalledWith(
+        'test-slug',
+        false,
+        undefined,
+      );
     });
 
     it('should delegate getRelatedPosts with category and limit', async () => {

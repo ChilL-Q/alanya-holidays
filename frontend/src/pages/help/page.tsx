@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import { adminService } from "@/api-services/admin.service";
 
 const faqItems = [
   {
@@ -89,22 +90,18 @@ export default function HelpPage() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const urlEncoded = new URLSearchParams(formData as unknown as Record<string, string>).toString();
 
     try {
-      const res = await fetch("https://readdy.ai/api/form/d8m6etr97o3u3g1u5lhg", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: urlEncoded,
+      await adminService.submitEnquiry({
+        name: String(formData.get("name") || "").trim(),
+        email: String(formData.get("email") || "").trim(),
+        subject: String(formData.get("subject") || "").trim() || "Support Request",
+        message: String(formData.get("message") || "").trim(),
+        enquiry_type: "support",
       });
-      if (res.ok) {
-        setFormStatus("success");
-        form.reset();
-        setTimeout(() => setFormStatus("idle"), 4000);
-      } else {
-        setFormStatus("error");
-        setTimeout(() => setFormStatus("idle"), 4000);
-      }
+      setFormStatus("success");
+      form.reset();
+      setTimeout(() => setFormStatus("idle"), 4000);
     } catch {
       setFormStatus("error");
       setTimeout(() => setFormStatus("idle"), 4000);
@@ -256,7 +253,7 @@ export default function HelpPage() {
 
             <form
               onSubmit={handleFormSubmit}
-              data-readdy-form
+
               className="bg-background-50 rounded-xl border border-background-200/70 p-6 md:p-8 space-y-5"
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

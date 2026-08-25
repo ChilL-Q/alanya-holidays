@@ -1,5 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { conciergeService } from "./concierge.service";
+import { directoryService } from "./directory.service";
 
 export interface ConciergeEnquiry {
   id: number;
@@ -205,39 +207,26 @@ class AdminService {
   }
 
   /**
-   * Submits a new concierge enquiry via REST API.
+   * Submits a new concierge enquiry via the canonical concierge service
+   * (single POST /enquiries path for the whole app).
    */
   async submitEnquiry(
     payload: SubmitEnquiryPayload
   ): Promise<{ success: boolean; id?: number | string; message?: string }> {
-    try {
-      const res = await apiClient.post<{ success?: boolean; id?: number | string; message?: string }>("/enquiries", {
-        name: payload.name.trim(),
-        email: payload.email.trim(),
-        phone: payload.phone ? `${payload.country_code ? payload.country_code + " " : ""}${payload.phone}`.trim() : undefined,
-        subject: payload.subject?.trim() || "Concierge Enquiry",
-        message: payload.message.trim(),
-        enquiry_type: payload.enquiry_type || "general",
-        service_type: payload.service_type,
-        dates: payload.dates,
-        duration: payload.duration,
-        party_size: payload.party_size,
-        preferred_contact: payload.preferred_contact,
-      });
-
-      return {
-        success: res?.success ?? true,
-        id: res?.id || Date.now(),
-        message: res?.message || "Enquiry submitted successfully",
-      };
-    } catch (err) {
-      logger.warn("Failed to submit enquiry via API, using fallback:", err);
-      return {
-        success: true,
-        id: Date.now(),
-        message: "Enquiry submitted (offline mode)",
-      };
-    }
+    return conciergeService.submitConciergeEnquiry({
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      country_code: payload.country_code,
+      preferred_contact: payload.preferred_contact,
+      subject: payload.subject || "Concierge Enquiry",
+      message: payload.message,
+      experience_type: payload.enquiry_type,
+      item_name: payload.service_type,
+      dates: payload.dates,
+      duration: payload.duration,
+      guests: payload.party_size,
+    });
   }
 
   /**
@@ -281,7 +270,7 @@ class AdminService {
    */
   async approveListing(id: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/${id}/approve`);
+      await apiClient.post(`/directory/admin/${id}/approve`);
       return true;
     } catch (err) {
       logger.error("Failed to approve listing:", err);
@@ -294,7 +283,7 @@ class AdminService {
    */
   async rejectListing(id: string, reason: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/${id}/reject`, { reason });
+      await apiClient.post(`/directory/admin/${id}/reject`, { reason });
       return true;
     } catch (err) {
       logger.error("Failed to reject listing:", err);
@@ -306,8 +295,9 @@ class AdminService {
    * Deletes a listing.
    */
   async deleteListing(id: string): Promise<boolean> {
+    // Delegates to the canonical directory service (single DELETE /directory/:id path).
     try {
-      await apiClient.delete(`/directory/${id}`);
+      await directoryService.deleteListing(id);
       return true;
     } catch (err) {
       logger.error("Failed to delete listing:", err);
@@ -320,7 +310,7 @@ class AdminService {
    */
   async getClaimsQueue(status?: string): Promise<DirectoryClaim[]> {
     try {
-      const response = await apiClient.get<DirectoryClaim[] | { data: DirectoryClaim[] }>("/directory/claims");
+      const response = await apiClient.get<DirectoryClaim[] | { data: DirectoryClaim[] }>("/directory/admin/claims");
       let list: DirectoryClaim[] = [];
       if (Array.isArray(response)) {
         list = response;
@@ -348,7 +338,7 @@ class AdminService {
    */
   async approveClaim(claimId: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/claims/${claimId}/approve`);
+      await apiClient.post(`/directory/admin/claims/${claimId}/approve`);
       return true;
     } catch (err) {
       logger.error("Failed to approve claim:", err);
@@ -361,7 +351,7 @@ class AdminService {
    */
   async rejectClaim(claimId: string, reason: string): Promise<boolean> {
     try {
-      await apiClient.post(`/directory/claims/${claimId}/reject`, { reason });
+      await apiClient.post(`/directory/admin/claims/${claimId}/reject`, { reason });
       return true;
     } catch (err) {
       logger.error("Failed to reject claim:", err);
@@ -586,6 +576,559 @@ class AdminService {
     });
     return { successful, failed };
   }
+
+  // ==========================================
+  // Directory Curation Methods (Task 2.2)
+  // ==========================================
+
+  /**
+   * Sets listing featured status to true.
+   */
+  async featureListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/feature`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to feature listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing featured status to false.
+   */
+  async unfeatureListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_featured: boolean }>(`/directory/admin/${id}/unfeature`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to unfeature listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing verified status to true.
+   */
+  async verifyListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/verify`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to verify listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Sets listing verified status to false.
+   */
+  async unverifyListing(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; is_verified: boolean }>(`/directory/admin/${id}/unverify`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to unverify listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Updates listing base curation score (0-100).
+   */
+  async updateListingScore(id: string, score: number): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean; base_score: number }>(`/directory/admin/${id}/score`, {
+        score,
+      });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to update score for listing ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Convenience method: toggles feature state.
+   */
+  async toggleListingFeature(id: string, isFeatured: boolean): Promise<boolean> {
+    return isFeatured ? this.featureListing(id) : this.unfeatureListing(id);
+  }
+
+  /**
+   * Convenience method: toggles verify state.
+   */
+  async toggleListingVerify(id: string, isVerified: boolean): Promise<boolean> {
+    return isVerified ? this.verifyListing(id) : this.unverifyListing(id);
+  }
+
+  /**
+   * Batch features multiple listings concurrently.
+   */
+  async batchFeatureListings(ids: string[]): Promise<{ successful: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => this.featureListing(id)));
+    const successful: string[] = [];
+    const failed: string[] = [];
+    results.forEach((res, idx) => {
+      if (res.status === "fulfilled" && res.value) {
+        successful.push(ids[idx]);
+      } else {
+        failed.push(ids[idx]);
+      }
+    });
+    return { successful, failed };
+  }
+
+  /**
+   * Batch verifies multiple listings concurrently.
+   */
+  async batchVerifyListings(ids: string[]): Promise<{ successful: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => this.verifyListing(id)));
+    const successful: string[] = [];
+    const failed: string[] = [];
+    results.forEach((res, idx) => {
+      if (res.status === "fulfilled" && res.value) {
+        successful.push(ids[idx]);
+      } else {
+        failed.push(ids[idx]);
+      }
+    });
+    return { successful, failed };
+  }
+
+  // ==========================================
+  // Forum Moderation Hub Methods
+  // ==========================================
+
+  /**
+   * Fetches forum violation reports with optional status and pagination filters.
+   */
+  async getForumReports(params?: {
+    includeResolved?: boolean;
+    page?: number;
+    limit?: number;
+    target_type?: "post" | "comment";
+  }): Promise<ForumReportAdminItem[]> {
+    try {
+      const res = await apiClient.get<ForumReportAdminItem[]>("/forum/reports", {
+        params: params as Record<string, string | number | boolean | null | undefined>,
+      });
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      logger.error("Failed to fetch forum reports from API:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Marks a reported violation as resolved.
+   */
+  async resolveForumReport(id: string): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/reports/${id}/resolve`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to resolve forum report ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Fetches real-time forum metrics and KPIs.
+   */
+  async getForumStats(): Promise<ForumStatsAdminItem | null> {
+    try {
+      const stats = await apiClient.get<ForumStatsAdminItem>("/forum/stats");
+      return stats;
+    } catch (err) {
+      logger.error("Failed to fetch forum stats:", err);
+      return null;
+    }
+  }
+
+  /**
+   * Pins or unpins a forum discussion topic.
+   */
+  async setForumPostPinned(id: string, pinned: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/pin`, { pinned });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum post ${id} pinned:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Soft removes (is_removed = true) or restores (is_removed = false) a forum post.
+   */
+  async setForumPostRemoved(id: string, removed: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/posts/${id}/remove`, { removed });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum post ${id} removed:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Permanently hard deletes a forum post from the database.
+   */
+  async deleteForumPost(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete<{ success: boolean }>(`/forum/posts/${id}`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to delete forum post ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Soft removes or restores a forum comment.
+   */
+  async setForumCommentRemoved(id: string, removed: boolean): Promise<boolean> {
+    try {
+      await apiClient.post<{ success: boolean }>(`/forum/comments/${id}/remove`, { removed });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to set forum comment ${id} removed:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Permanently hard deletes a forum comment.
+   */
+  async deleteForumComment(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete<{ success: boolean }>(`/forum/comments/${id}`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to delete forum comment ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Fetches soft-deleted comments queue for moderation audit.
+   */
+  async getRemovedForumComments(limit?: number): Promise<ForumRemovedCommentItem[]> {
+    try {
+      const res = await apiClient.get<ForumRemovedCommentItem[]>("/forum/reports/removed-comments", {
+        params: limit !== undefined ? { limit } : undefined,
+      });
+      return Array.isArray(res) ? res : [];
+    } catch (err) {
+      logger.error("Failed to fetch removed comments:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Fetches paginated moderation audit logs with filter matrix.
+   */
+  async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLogPaginatedResult> {
+    try {
+      const res = await apiClient.get<AuditLogPaginatedResult>("/admin/audit-logs", {
+        params: params as Record<string, string | number | boolean | null | undefined>,
+      });
+      if (res && Array.isArray(res.data)) {
+        return res;
+      }
+      return {
+        data: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        totalPages: 0,
+      };
+    } catch (err) {
+      logger.error("Failed to fetch audit logs from API:", err);
+      return {
+        data: [],
+        total: 0,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        totalPages: 0,
+      };
+    }
+  }
+
+  // ============================================
+  // Bookings Administration
+  // ============================================
+
+  /**
+   * Fetches all bookings, optionally filtered by status.
+   */
+  async getAdminBookings(status?: string): Promise<AdminBookingItem[]> {
+    try {
+      const res = await apiClient.get<
+        AdminBookingItem[] | { data: AdminBookingItem[] }
+      >("/bookings/admin", { params: status ? { status } : undefined });
+      if (Array.isArray(res)) return res;
+      if (res && typeof res === "object" && "data" in res && Array.isArray(res.data)) {
+        return res.data;
+      }
+      return [];
+    } catch (err) {
+      logger.error("Failed to fetch admin bookings:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Updates booking lifecycle status (confirm/reject/cancel/complete).
+   */
+  async updateBookingStatus(
+    id: string,
+    status: string,
+    reason?: string
+  ): Promise<boolean> {
+    try {
+      await apiClient.patch(`/bookings/admin/${id}/status`, { status, reason });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to update booking ${id} status:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Updates the payout lifecycle status of a booking.
+   */
+  async updatePayoutStatus(id: string, payoutStatus: string): Promise<boolean> {
+    try {
+      await apiClient.patch(`/bookings/admin/${id}/payout-status`, { payoutStatus });
+      return true;
+    } catch (err) {
+      logger.error(`Failed to update payout status for booking ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Refunds (cancels with refund handling) a booking.
+   */
+  async refundBooking(id: string): Promise<boolean> {
+    try {
+      await apiClient.post(`/bookings/admin/${id}/refund`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to refund booking ${id}:`, err);
+      return false;
+    }
+  }
+
+  // ============================================
+  // Reviews Moderation
+  // ============================================
+
+  /**
+   * Fetches paginated reviews by moderation status (default queue: pending).
+   */
+  async getModerationReviews(
+    status: "pending" | "approved" | "rejected",
+    page = 1,
+    limit = 20
+  ): Promise<{ data: AdminReviewItem[]; total: number }> {
+    try {
+      const endpoint =
+        status === "pending"
+          ? "/reviews/admin/pending"
+          : `/reviews/admin/status/${status}`;
+      const res = await apiClient.get<{
+        data?: AdminReviewItem[];
+        total?: number;
+      }>(endpoint, { params: { page, limit } });
+      return {
+        data: Array.isArray(res?.data) ? res.data : [],
+        total: res?.total ?? 0,
+      };
+    } catch (err) {
+      logger.error("Failed to fetch reviews for moderation:", err);
+      return { data: [], total: 0 };
+    }
+  }
+
+  /**
+   * Approves a pending review.
+   */
+  async approveReview(id: string): Promise<boolean> {
+    try {
+      await apiClient.patch(`/reviews/${id}/approve`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to approve review ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Rejects a review.
+   */
+  async rejectReview(id: string): Promise<boolean> {
+    try {
+      await apiClient.patch(`/reviews/${id}/reject`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to reject review ${id}:`, err);
+      return false;
+    }
+  }
+
+  /**
+   * Permanently deletes a review.
+   */
+  async deleteReview(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/reviews/${id}`);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to delete review ${id}:`, err);
+      return false;
+    }
+  }
+
+  // ============================================
+  // Users Administration
+  // ============================================
+
+  /**
+   * Fetches paginated user directory, optionally filtered by role.
+   */
+  async getUsers(params?: {
+    role?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: AdminUserItem[]; pagination: AdminPagination }> {
+    const empty = {
+      data: [] as AdminUserItem[],
+      pagination: { page: 1, limit: params?.limit ?? 20, total: 0, totalPages: 0 },
+    };
+    try {
+      const res = await apiClient.get<{
+        data?: AdminUserItem[];
+        pagination?: AdminPagination;
+      }>("/users/admin", { params: params as Record<string, string | number> });
+      if (res && Array.isArray(res.data)) {
+        return {
+          data: res.data,
+          pagination:
+            res.pagination ??
+            empty.pagination,
+        };
+      }
+      return empty;
+    } catch (err) {
+      logger.error("Failed to fetch users:", err);
+      return empty;
+    }
+  }
+
+  /**
+   * Updates a user profile fields (role, contacts, etc.).
+   */
+  async updateUserProfile(
+    id: string,
+    updates: { role?: string; full_name?: string; phone?: string; company_name?: string }
+  ): Promise<boolean> {
+    try {
+      await apiClient.patch(`/users/admin/${id}/status`, updates);
+      return true;
+    } catch (err) {
+      logger.error(`Failed to update user ${id}:`, err);
+      return false;
+    }
+  }
+}
+
+export interface ModerationAuditLogItem {
+  id: string;
+  entity_type: "listing" | "blog_post" | "blog_submission" | "forum_post" | "forum_comment" | "forum_report" | "claim" | string;
+  entity_id: string;
+  action: "approve" | "reject" | "delete" | "feature" | "unfeature" | "verify" | "unverify" | "pin" | "remove" | "restore" | "resolve" | "update_score" | string;
+  admin_id?: string | null;
+  reason?: string | null;
+  metadata?: Record<string, unknown> | null;
+  created_at: string;
+  admin?: {
+    id?: string;
+    full_name?: string | null;
+    email?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export interface AuditLogQueryParams {
+  entity_type?: string;
+  action?: string;
+  admin_id?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AuditLogPaginatedResult {
+  data: ModerationAuditLogItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ForumReportAdminItem {
+  id: string;
+  reporter_id: string;
+  target_type: "post" | "comment" | string;
+  target_id: string;
+  reason: "spam" | "harassment" | "inappropriate" | "misinformation" | "other" | string;
+  resolved: boolean;
+  created_at: string;
+  reporter?: {
+    id?: string;
+    full_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+  target_post?: {
+    id: string;
+    title?: string;
+    content?: string;
+    author_id?: string;
+    is_pinned?: boolean;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
+  target_comment?: {
+    id: string;
+    post_id?: string;
+    body?: string;
+    user_id?: string;
+    is_removed?: boolean;
+    created_at?: string;
+  } | null;
+}
+
+export interface ForumStatsAdminItem {
+  totalTopics: number;
+  totalReplies: number;
+  usersOnline: number;
+  latestMember: string | null;
+}
+
+export interface ForumRemovedCommentItem {
+  id: string;
+  post_id: string;
+  user_id: string;
+  body: string;
+  is_removed: boolean;
+  created_at: string;
+  author_name?: string | null;
+  author_avatar?: string | null;
 }
 
 export interface BlogSubmissionAdminItem {
@@ -614,4 +1157,58 @@ export interface BlogSubmissionAdminItem {
   } | null;
 }
 
+export interface AdminBookingItem {
+  id: string;
+  item_id?: string | null;
+  item_type?: "property" | "service" | string | null;
+  check_in: string;
+  check_out: string;
+  total_price: number;
+  guests?: number | null;
+  status: "pending" | "confirmed" | "cancelled" | "rejected" | "completed" | string;
+  payment_status?: string | null;
+  payout_status?: string | null;
+  created_at?: string | null;
+  itemTitle?: string;
+  property?: { id: string; title?: string; images?: string[] | null } | null;
+  service?: { id: string; title?: string } | null;
+  user?: {
+    id?: string;
+    full_name?: string | null;
+    email?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export interface AdminReviewItem {
+  id: string;
+  listing_id?: string | null;
+  rating?: number | null;
+  title?: string | null;
+  comment?: string | null;
+  status?: "pending" | "approved" | "rejected" | string;
+  created_at?: string | null;
+  user?: { full_name?: string | null; avatar_url?: string | null } | null;
+  listing?: { id?: string; name?: string | null } | null;
+}
+
+export interface AdminUserItem {
+  id: string;
+  full_name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  phone?: string | null;
+  company_name?: string | null;
+  avatar_url?: string | null;
+  created_at?: string | null;
+}
+
+export interface AdminPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export const adminService = new AdminService();
+

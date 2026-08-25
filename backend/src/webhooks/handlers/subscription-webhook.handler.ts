@@ -1,15 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class SubscriptionWebhookHandler {
   private readonly logger = new Logger(SubscriptionWebhookHandler.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private get supabase() {
     return this.supabaseService.getClient();
+  }
+
+  private async findUserIdByEmail(email: string): Promise<string | null> {
+    const { data, error } = await this.supabase
+      .from('profiles')
+      .select('id')
+      .ilike('email', email)
+      .maybeSingle<{ id: string }>();
+    if (error) {
+      this.logger.error(`Failed to resolve user by email: ${error.message}`);
+      return null;
+    }
+    return data?.id ?? null;
   }
 
   async handleCreated(subscription: Stripe.Subscription): Promise<void> {
@@ -17,12 +34,43 @@ export class SubscriptionWebhookHandler {
       typeof subscription.customer === 'string'
         ? subscription.customer
         : ((subscription.customer as { id?: string } | null)?.id ?? '');
-    const { userId, plan, tier } = subscription.metadata || {};
-    if (!userId || !plan) {
+    const {
+      userId: metaUserId,
+      plan: metaPlan,
+      tier,
+    } = subscription.metadata || {};
+
+    // Резолвим пользователя: metadata (Stripe Checkout) → email (ручная
+    // активация в Stripe Dashboard без метаданных).
+    let userId: string | undefined = metaUserId;
+    if (!userId) {
+      // customer_email присутствует на Subscription в новых версиях API,
+      // но не типизирован в установленной версии SDK — читаем безопасно.
+      const email = (
+        subscription as unknown as { customer_email?: string | null }
+      ).customer_email;
+      if (email) {
+        userId = (await this.findUserIdByEmail(email)) ?? undefined;
+        if (userId) {
+          this.logger.log(
+            `Subscription ${subscription.id}: userId resolved by email ${email}`,
+          );
+        }
+      }
+    }
+    if (!userId) {
       this.logger.warn(
-        `Subscription created missing metadata: userId=${userId}, plan=${plan}`,
+        `Subscription created missing metadata and resolvable email: sub=${subscription.id}`,
       );
       return;
+    }
+
+    // Ручная активация без плана в metadata — дефолт monthly (CHECK в БД).
+    const plan = metaPlan || 'monthly';
+    if (!metaPlan) {
+      this.logger.warn(
+        `Subscription ${subscription.id} created without plan metadata, defaulting to monthly`,
+      );
     }
 
     const { data: existing, error: findError } = await this.supabase
@@ -69,21 +117,22 @@ export class SubscriptionWebhookHandler {
     };
     if (tier) insertPayload.tier = tier;
 
+    // user_id UNIQUE: повторная подписка после отмены — обновляем запись,
+    // иначе INSERT упадёт с конфликтом при уже уплаченных деньгах.
     const { error: insertError } = await this.supabase
       .from('premium_subscriptions')
-      .insert(insertPayload);
+      .upsert(insertPayload, { onConflict: 'user_id' });
 
     if (insertError) {
       this.logger.error(
-        `Failed to insert premium_subscription for user ${userId}: ${insertError.message}`,
+        `Failed to upsert premium_subscription for user ${userId}: ${insertError.message}`,
       );
       throw new Error(
-        `Failed to insert premium_subscription: ${insertError.message}`,
+        `Failed to upsert premium_subscription: ${insertError.message}`,
       );
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: userId,
+    await this.notificationsService.notifyUser(userId, {
       title: '🎉 Welcome to Premium!',
       message: 'You now have access to AI Trip Planner and Premium benefits.',
       type: 'success',
@@ -147,8 +196,7 @@ export class SubscriptionWebhookHandler {
 
     // Recovery notification if moving from past_due to active
     if (subRecord.status === 'past_due' && newStatus === 'active') {
-      await this.supabase.from('notifications').insert({
-        user_id: subRecord.user_id,
+      await this.notificationsService.notifyUser(String(subRecord.user_id), {
         title: 'Subscription Restored',
         message:
           'Your Premium subscription has been restored. Enjoy your benefits!',
@@ -159,8 +207,7 @@ export class SubscriptionWebhookHandler {
 
     // Scheduled cancellation notification
     if (cancelAtPeriodEnd && !subRecord.cancel_at_period_end) {
-      await this.supabase.from('notifications').insert({
-        user_id: subRecord.user_id,
+      await this.notificationsService.notifyUser(String(subRecord.user_id), {
         title: 'Subscription Cancellation Scheduled',
         message: `Your Premium subscription will end on ${currentPeriodEnd}. You still have access until then.`,
         type: 'warning',
@@ -204,8 +251,7 @@ export class SubscriptionWebhookHandler {
       );
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: subRecord.user_id,
+    await this.notificationsService.notifyUser(String(subRecord.user_id), {
       title: 'Subscription Cancelled',
       message: 'Your Premium subscription has ended.',
       type: 'info',
@@ -260,8 +306,7 @@ export class SubscriptionWebhookHandler {
       throw new Error(`Failed updating subscription: ${updateError.message}`);
     }
 
-    await this.supabase.from('notifications').insert({
-      user_id: subRecord.user_id,
+    await this.notificationsService.notifyUser(String(subRecord.user_id), {
       title: '⚠️ Payment Failed',
       message:
         'Your Premium subscription payment failed. Please update your payment method.',

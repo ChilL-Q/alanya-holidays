@@ -1,12 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
 import { SupabaseService } from '../../supabase/supabase.service';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { RedisService } from '../../common/redis/redis.service';
 
 @Injectable()
 export class AddonWebhookHandler {
   private readonly logger = new Logger(AddonWebhookHandler.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+    private readonly redisService: RedisService,
+  ) {}
 
   private get supabase() {
     return this.supabaseService.getClient();
@@ -63,6 +69,9 @@ export class AddonWebhookHandler {
           this.logger.log(
             `Listing add-on already recorded for payment ${paymentIntentId}, skipping duplicate`,
           );
+          // Re-apply fast-path flags idempotently: a prior attempt may have
+          // recorded the addon row but failed while patching the listing.
+          await this.applyFastPathFlags(listingId, addonType);
           return;
         }
       }
@@ -101,25 +110,7 @@ export class AddonWebhookHandler {
       }
 
       // Apply fast-path flags to the listing record directly
-      let patch: Record<string, unknown> | null = null;
-      if (addonType === 'verified_badge') {
-        patch = { is_verified: true };
-      } else if (addonType === 'seasonal_placement') {
-        patch = { is_featured: true };
-      }
-
-      if (patch) {
-        const { error: patchError } = await this.supabase
-          .from('directory_listings')
-          .update(patch)
-          .eq('id', listingId);
-
-        if (patchError) {
-          this.logger.error(
-            `Failed to update directory_listings for listing ${listingId} with patch ${JSON.stringify(patch)}: ${patchError.message}`,
-          );
-        }
-      }
+      await this.applyFastPathFlags(listingId, addonType);
 
       if (addonType === 'sponsored_article') {
         const { data: addonListing } = await this.supabase
@@ -130,26 +121,16 @@ export class AddonWebhookHandler {
 
         const listingRecord = addonListing as { name?: string | null } | null;
         const listingName = listingRecord?.name ?? listingId;
-        const { data: admins } = await this.supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'admin');
 
-        if (admins && admins.length > 0) {
-          await this.supabase.from('notifications').insert(
-            admins.map((admin: { id: string }) => ({
-              user_id: admin.id,
-              title: 'Sponsored article purchased',
-              message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
-              type: 'info',
-              link: '/admin/directory',
-            })),
-          );
-        }
+        await this.notificationsService.notifyAdmins({
+          title: 'Sponsored article purchased',
+          message: `Listing "${listingName}" purchased a Sponsored Article. Reach out to the owner and schedule the editorial piece.`,
+          type: 'info',
+          link: '/admin/directory',
+        });
       }
 
-      await this.supabase.from('notifications').insert({
-        user_id: userId,
+      await this.notificationsService.notifyUser(userId, {
         title: 'Upgrade activated',
         message: `Your "${addonType.replace(/_/g, ' ')}" add-on is now active.`,
         type: 'success',
@@ -164,5 +145,41 @@ export class AddonWebhookHandler {
       );
       throw err;
     }
+  }
+
+  /**
+   * Applies the listing fast-path flags for a purchased add-on.
+   * Idempotent (boolean flags) and fail-loud: a failure must propagate so
+   * the webhook claim is released and Stripe retries the delivery —
+   * otherwise the customer pays and the flag is lost forever.
+   */
+  private async applyFastPathFlags(
+    listingId: string,
+    addonType: string,
+  ): Promise<void> {
+    let patch: Record<string, unknown> | null = null;
+    if (addonType === 'verified_badge') {
+      patch = { is_verified: true };
+    } else if (addonType === 'seasonal_placement') {
+      patch = { is_featured: true };
+    }
+    if (!patch) return;
+
+    const { error: patchError } = await this.supabase
+      .from('directory_listings')
+      .update(patch)
+      .eq('id', listingId);
+
+    if (patchError) {
+      this.logger.error(
+        `Failed to update directory_listings for listing ${listingId} with patch ${JSON.stringify(patch)}: ${patchError.message}`,
+      );
+      throw patchError;
+    }
+
+    // Fast-path flags bypass DirectoryListingService, so this handler owns
+    // the cache invalidation — otherwise guests see the badge only after up
+    // to 600s of stale cache.
+    await this.redisService.delByPattern('directory:*');
   }
 }

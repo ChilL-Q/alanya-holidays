@@ -14,6 +14,9 @@ jest.mock('sanitize-html', () => {
 import { BlogService } from './blog.service';
 import { BlogRepository } from './blog.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { ModerationAuditService } from '../admin/moderation-audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
 import {
   BlogPost,
   BlogPostSummary,
@@ -37,6 +40,8 @@ describe('BlogService', () => {
   let service: BlogService;
   let mockRepository: MockRepositoryType;
   let mockUserRolesRepo: { getRole: jest.Mock };
+  let notificationsService: { notifyUser: jest.Mock; notifyAdmins: jest.Mock };
+  let emailOutbox: { enqueue: jest.Mock };
 
   const mockBlogPost: BlogPost = {
     id: 'post-1',
@@ -103,8 +108,7 @@ describe('BlogService', () => {
       getBlogSubmissionById: jest.fn(),
       updateBlogSubmissionStatus: jest.fn(),
       getProfileForNotification: jest.fn(),
-      insertNotification: jest.fn(),
-      invokeEmailFunction: jest.fn(),
+      getBlogComments: jest.fn(),
     } as unknown as MockRepositoryType;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -118,10 +122,31 @@ describe('BlogService', () => {
           provide: UserRolesRepository,
           useValue: mockUserRolesRepo,
         },
+        {
+          provide: ModerationAuditService,
+          useValue: {
+            logAction: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            notifyUser: jest.fn().mockResolvedValue({ id: 'n-1' }),
+            notifyAdmins: jest.fn().mockResolvedValue([]),
+          },
+        },
+        {
+          provide: EmailOutboxRepository,
+          useValue: {
+            enqueue: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<BlogService>(BlogService);
+    notificationsService = module.get(NotificationsService);
+    emailOutbox = module.get(EmailOutboxRepository);
   });
 
   describe('getBlogPosts', () => {
@@ -214,6 +239,46 @@ describe('BlogService', () => {
 
       await service.getBlogPost('title', false);
       expect(mockRepository.incrementBlogViews).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when public user tries to view draft post', async () => {
+      const draftPost = {
+        ...mockRawRow,
+        status: 'draft',
+        author_id: 'user-author',
+      };
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.getBlogPost('title', false, 'other-user'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should allow admin or author to view draft post', async () => {
+      const draftPost = {
+        ...mockRawRow,
+        status: 'draft',
+        author_id: 'user-author',
+      };
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+
+      const adminResult = await service.getBlogPost(
+        'title',
+        false,
+        'admin-user',
+      );
+      expect(adminResult.id).toBe(draftPost.id);
+
+      mockRepository.getBlogPostBySlug.mockResolvedValueOnce(draftPost);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      const authorResult = await service.getBlogPost(
+        'title',
+        false,
+        'user-author',
+      );
+      expect(authorResult.id).toBe(draftPost.id);
     });
   });
 
@@ -549,13 +614,19 @@ describe('BlogService', () => {
       const result = await service.approveBlogSubmission('sub-1', 'admin-1');
 
       expect(result.id).toBe('post-1');
-      expect(mockRepository.insertNotification).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'author-1',
         expect.objectContaining({
-          user_id: 'author-1',
+          title: 'Blog Post Published!',
           type: 'success',
         }),
       );
-      expect(mockRepository.invokeEmailFunction).toHaveBeenCalled();
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'author@test.com',
+          type: 'blog_submission_approved',
+        }),
+      );
     });
 
     it('should persist submission category in insertBlogPost during approval', async () => {
@@ -662,13 +733,35 @@ describe('BlogService', () => {
         'pending_review',
         { rejection_reason: 'Content is not related to Alanya tourism.' },
       );
-      expect(mockRepository.insertNotification).toHaveBeenCalledWith(
+      expect(notificationsService.notifyUser).toHaveBeenCalledWith(
+        'author-1',
         expect.objectContaining({
-          user_id: 'author-1',
+          title: 'Blog Post Rejected',
           type: 'error',
         }),
       );
-      expect(mockRepository.invokeEmailFunction).toHaveBeenCalled();
+      expect(emailOutbox.enqueue).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'author@test.com',
+          type: 'blog_submission_rejected',
+        }),
+      );
+    });
+  });
+
+  describe('getBlogComments', () => {
+    it('should delegate getBlogComments with postId and userId', async () => {
+      mockRepository.getBlogComments.mockResolvedValueOnce([
+        { id: 'c-1', post_id: 'p-1', body: 'Nice post', isLiked: true },
+      ]);
+
+      const res = await service.getBlogComments('p-1', 'user-1');
+      expect(res).toHaveLength(1);
+      expect(res[0].isLiked).toBe(true);
+      expect(mockRepository.getBlogComments).toHaveBeenCalledWith(
+        'p-1',
+        'user-1',
+      );
     });
   });
 });

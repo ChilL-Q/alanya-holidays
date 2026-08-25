@@ -9,6 +9,7 @@ import { ClaimTrackerTab } from "../components/ClaimTrackerTab";
 import { UpgradeModal } from "../components/UpgradeModal";
 import { SettingsHero } from "@/pages/settings/components/SettingsHero";
 import { directoryService } from "@/api-services/directory.service";
+import { billingService } from "@/api-services/billing.service";
 import type { Business } from "@/mocks/businesses";
 import type { DirectoryClaim, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 import type { UserProfile } from "@/context/AuthContext";
@@ -387,7 +388,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
   });
 
   describe("4. UpgradeModal Tier Showcase & Payment Flow", () => {
-    it("renders all 3 paid tiers (Voyager, Signature, Partner) with full perk lists", () => {
+    it("renders both plans (Voyager, Custom) with full perk lists", () => {
       render(
         <UpgradeModal
           isOpen={true}
@@ -398,16 +399,23 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       );
 
       expect(screen.getByText("Voyager")).toBeInTheDocument();
-      expect(screen.getByText("Signature")).toBeInTheDocument();
-      expect(screen.getByText("Partner")).toBeInTheDocument();
+      expect(screen.getByText("Custom")).toBeInTheDocument();
+      expect(screen.queryByText("Signature")).not.toBeInTheDocument();
 
       expect(screen.getByText("Priority directory search placement")).toBeInTheDocument();
-      expect(screen.getByText("Top-of-category placement & search boost")).toBeInTheDocument();
       expect(screen.getByText("AI translation & localization (8 languages)")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /Contact us on WhatsApp/i })).toHaveAttribute(
+        "href",
+        expect.stringContaining("wa.me")
+      );
     });
 
-    it("triggers sendPaymentInstructions and shows confirmation view", async () => {
-      vi.spyOn(directoryService, "sendPaymentInstructions").mockResolvedValueOnce({ success: true });
+    it("triggers Stripe checkout redirect for Voyager subscription", async () => {
+      const locationStub = { href: "" };
+      vi.stubGlobal("location", locationStub);
+      const checkoutSpy = vi
+        .spyOn(billingService, "createSubscriptionCheckout")
+        .mockResolvedValue({ url: "https://checkout.stripe.com/test" });
 
       render(
         <UpgradeModal
@@ -418,16 +426,13 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
         />
       );
 
-      const chooseVoyagerBtn = screen.getByRole("button", { name: /Choose Voyager/i });
-      fireEvent.click(chooseVoyagerBtn);
+      fireEvent.click(screen.getByRole("button", { name: /Subscribe/i }));
 
       await waitFor(() => {
-        expect(directoryService.sendPaymentInstructions).toHaveBeenCalledWith(
-          "Alanya Panoramic Bistro",
-          "voyager"
-        );
-        expect(screen.getByText("Upgrade Request Submitted")).toBeInTheDocument();
+        expect(checkoutSpy).toHaveBeenCalledWith("monthly");
+        expect(locationStub.href).toBe("https://checkout.stripe.com/test");
       });
+      vi.unstubAllGlobals();
     });
   });
 
@@ -949,7 +954,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText("Upgrade Your Business Listing: Cleopatra Yacht Charters")
+          screen.getByText("Choose a Plan for Cleopatra Yacht Charters")
         ).toBeInTheDocument();
       });
 

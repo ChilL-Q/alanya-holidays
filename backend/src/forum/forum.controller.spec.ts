@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForumController } from './forum.controller';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumEventService } from './application/forum-event.service';
+import { ForumReportService } from './application/forum-report.service';
 import { UsersService } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
@@ -49,7 +51,12 @@ describe('ForumController', () => {
 
       getForumComments: jest.fn().mockResolvedValue([]),
       createForumComment: jest.fn().mockResolvedValue({ id: 'comment-1' }),
+      updateForumComment: jest
+        .fn()
+        .mockResolvedValue({ id: 'comment-1', body: 'Updated text' }),
       deleteForumComment: jest.fn().mockResolvedValue({ success: true }),
+      getUserBookmarks: jest.fn().mockResolvedValue([{ id: 'post-1' }]),
+      togglePostBookmark: jest.fn().mockResolvedValue({ bookmarked: true }),
       toggleCommentLike: jest.fn().mockResolvedValue({ liked: true }),
 
       getForumEvents: jest.fn().mockResolvedValue([]),
@@ -72,7 +79,15 @@ describe('ForumController', () => {
       controllers: [ForumController],
       providers: [
         {
-          provide: ForumService,
+          provide: ForumDiscussionService,
+          useValue: mockService,
+        },
+        {
+          provide: ForumEventService,
+          useValue: mockService,
+        },
+        {
+          provide: ForumReportService,
           useValue: mockService,
         },
         {
@@ -273,6 +288,40 @@ describe('ForumController', () => {
     });
   });
 
+  describe('Comments editing and bookmarks', () => {
+    const mockUser: AuthUser = { id: 'user-123', email: 'user@example.com' };
+
+    it('should update forum comment via PUT comments/:id', async () => {
+      const res = await controller.updateForumComment(
+        'comment-1',
+        { body: 'Updated text' },
+        mockUser,
+      );
+
+      expect(mockService.updateForumComment).toHaveBeenCalledWith(
+        'comment-1',
+        'Updated text',
+        'user-123',
+      );
+      expect(res).toEqual({ id: 'comment-1', body: 'Updated text' });
+    });
+
+    it('should get user bookmarks via GET bookmarks', async () => {
+      const res = await controller.getUserBookmarks(mockUser);
+      expect(mockService.getUserBookmarks).toHaveBeenCalledWith('user-123');
+      expect(res).toEqual([{ id: 'post-1' }]);
+    });
+
+    it('should toggle post bookmark via POST posts/:id/bookmark', async () => {
+      const res = await controller.togglePostBookmark('post-1', mockUser);
+      expect(mockService.togglePostBookmark).toHaveBeenCalledWith(
+        'post-1',
+        'user-123',
+      );
+      expect(res).toEqual({ bookmarked: true });
+    });
+  });
+
   describe('Comments routes', () => {
     it('should delegate getForumComments and createForumComment', async () => {
       const user: AuthUser = { id: 'usr-1' };
@@ -304,6 +353,18 @@ describe('ForumController', () => {
         'Nice post',
         'usr-1',
         'c-parent',
+      );
+
+      const snakeBody: CreateForumCommentDto = {
+        body: 'Reply with snake_case',
+        parent_id: 'c-snake-parent',
+      };
+      await controller.createForumComment('p-1', snakeBody, user);
+      expect(mockService.createForumComment).toHaveBeenCalledWith(
+        'p-1',
+        'Reply with snake_case',
+        'usr-1',
+        'c-snake-parent',
       );
     });
 

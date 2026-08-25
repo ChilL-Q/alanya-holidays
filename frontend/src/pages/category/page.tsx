@@ -7,6 +7,7 @@ import CategoryHeader from "./components/CategoryHeader";
 import SubcategorySidebar from "./components/SubcategorySidebar";
 import ThreadCard from "./components/ThreadCard";
 import ThreadFilters from "./components/ThreadFilters";
+import PaginationControls from "@/components/base/PaginationControls";
 import ErrorState from "@/components/base/ErrorState";
 import { logger } from "@/lib/logger";
 
@@ -23,6 +24,8 @@ export default function CategoryPage() {
   const [fetchedThreads, setFetchedThreads] = useState<CategoryThread[]>([]);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("latest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
   const [visibleCount, setVisibleCount] = useState(5);
   const ITEMS_PER_LOAD = 5;
 
@@ -99,16 +102,25 @@ export default function CategoryPage() {
     return result;
   }, [fetchedThreads, activeSubcategory, sortBy]);
 
+  const totalPages = Math.ceil(allFilteredThreads.length / pageSize) || 1;
   const visibleThreads = allFilteredThreads.slice(0, visibleCount);
   const hasMore = visibleCount < allFilteredThreads.length;
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + ITEMS_PER_LOAD);
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setVisibleCount(page * pageSize);
+    window.scrollTo({ top: 350, behavior: "smooth" });
   };
 
   // Reset visible count when category or filters change
   useEffect(() => {
     setVisibleCount(5);
+    setCurrentPage(1);
   }, [category?.id, activeSubcategory, sortBy]);
 
   if (categoryLoading) {
@@ -239,22 +251,21 @@ export default function CategoryPage() {
                 </div>
               )}
 
-              {/* Pagination */}
+              {/* Pagination Controls */}
               {allFilteredThreads.length > 0 && (
-                <div className="mt-8 flex items-center justify-between">
-                  <p className="text-xs text-foreground-400">
-                    Showing {visibleThreads.length} of {allFilteredThreads.length} discussions
-                    {activeSubcategory && ` in "${activeSubcategory}"`}
-                  </p>
-                  {hasMore && (
-                    <button
-                      onClick={handleLoadMore}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-background-100 text-foreground-700 rounded-full text-sm font-medium hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer"
-                    >
-                      Load More
-                      <i className="ri-arrow-down-line"></i>
-                    </button>
-                  )}
+                <div className="mt-8">
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={allFilteredThreads.length}
+                    pageSize={pageSize}
+                    showItemCount={true}
+                    itemName="discussions"
+                    mode="both"
+                    hasMore={hasMore}
+                    onLoadMore={handleLoadMore}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </div>

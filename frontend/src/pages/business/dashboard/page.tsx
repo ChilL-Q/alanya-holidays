@@ -10,6 +10,8 @@ import {
   ArrowLeft,
   ChevronRight,
   Eye,
+  Package,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -23,12 +25,20 @@ import { MerchantHero } from "./components/MerchantHero";
 import { MyListingsTab } from "./components/MyListingsTab";
 import { PerformanceAnalyticsTab } from "./components/PerformanceAnalyticsTab";
 import { ClaimTrackerTab } from "./components/ClaimTrackerTab";
+import { MyProductsTab } from "./components/MyProductsTab";
+import { SellerOrdersTab } from "./components/SellerOrdersTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
 import UpgradesAddonsShowcase from "@/components/feature/UpgradesAddonsShowcase";
 import { logger } from "@/lib/logger";
 
-export type DashboardTab = "listings" | "analytics" | "claims" | "upgrades";
+export type DashboardTab =
+  | "listings"
+  | "products"
+  | "orders"
+  | "analytics"
+  | "claims"
+  | "upgrades";
 
 export default function MerchantDashboardPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
@@ -267,6 +277,16 @@ export default function MerchantDashboardPage() {
               count: listings.length,
             },
             {
+              id: "products" as DashboardTab,
+              label: "My Products",
+              icon: <Package className="w-4 h-4" />,
+            },
+            {
+              id: "orders" as DashboardTab,
+              label: "Incoming Orders",
+              icon: <ShoppingBag className="w-4 h-4" />,
+            },
+            {
               id: "analytics" as DashboardTab,
               label: "Performance Analytics",
               icon: <TrendingUp className="w-4 h-4" />,
@@ -358,6 +378,10 @@ export default function MerchantDashboardPage() {
               onOpenUpgradeModal={() => handleOpenUpgrade()}
             />
           )}
+
+          {activeTab === "products" && <MyProductsTab />}
+
+          {activeTab === "orders" && <SellerOrdersTab />}
 
           {activeTab === "claims" && (
             <ClaimTrackerTab claims={claims} loading={loading} />
