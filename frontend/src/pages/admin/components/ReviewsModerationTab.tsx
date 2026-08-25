@@ -20,11 +20,13 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
 
   const loadReviews = useCallback(
     async (status: ReviewStatus, targetPage: number) => {
       setLoading(true);
+      setError(null);
       try {
         const res = await adminService.getModerationReviews(status, targetPage, PAGE_SIZE);
         setReviews(res.data);
@@ -34,6 +36,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
         }
       } catch (err) {
         logger.error("Failed to load reviews for moderation:", err);
+        setError("Failed to load reviews. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -79,6 +82,12 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
         ))}
         <span className="ml-auto self-center text-xs text-secondary-400">{total} total</span>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">

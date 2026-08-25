@@ -102,6 +102,16 @@ export default function AdminDashboardPage() {
     setCounts((prev) => (prev.newEnquiries === c.newCount ? prev : { ...prev, newEnquiries: c.newCount }));
   }, []);
 
+  // Stable identities are required: the tabs include onCountUpdate in their
+  // fetch-effect deps, and inline arrows would retrigger fetching forever.
+  const handleBookingsCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingBookings === c.pending ? prev : { ...prev, pendingBookings: c.pending }));
+  }, []);
+
+  const handleReviewsCountUpdate = useCallback((c: { total: number; pending: number }) => {
+    setCounts((prev) => (prev.pendingReviews === c.pending ? prev : { ...prev, pendingReviews: c.pending }));
+  }, []);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -236,13 +246,7 @@ export default function AdminDashboardPage() {
             role="tabpanel"
             aria-labelledby="admin-tab-bookings"
           >
-            <BookingsAdminTab
-              onCountUpdate={(c) =>
-                setCounts((prev) =>
-                  prev.pendingBookings === c.pending ? prev : { ...prev, pendingBookings: c.pending }
-                )
-              }
-            />
+            <BookingsAdminTab onCountUpdate={handleBookingsCountUpdate} />
           </div>
         )}
 
@@ -252,13 +256,7 @@ export default function AdminDashboardPage() {
             role="tabpanel"
             aria-labelledby="admin-tab-reviews"
           >
-            <ReviewsModerationTab
-              onCountUpdate={(c) =>
-                setCounts((prev) =>
-                  prev.pendingReviews === c.pending ? prev : { ...prev, pendingReviews: c.pending }
-                )
-              }
-            />
+            <ReviewsModerationTab onCountUpdate={handleReviewsCountUpdate} />
           </div>
         )}
 

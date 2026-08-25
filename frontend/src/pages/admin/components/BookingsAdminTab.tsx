@@ -20,11 +20,13 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>("all");
   const [bookings, setBookings] = useState<AdminBookingItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
 
   const loadBookings = useCallback(
     async (filter: string) => {
       setLoading(true);
+      setError(null);
       try {
         const res = await adminService.getAdminBookings(filter === "all" ? undefined : filter);
         setBookings(res);
@@ -33,6 +35,7 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
         onCountUpdate({ total: source.length, pending: source.filter((b) => b.status === "pending").length });
       } catch (err) {
         logger.error("Failed to load admin bookings:", err);
+        setError("Failed to load bookings. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -88,6 +91,12 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">
