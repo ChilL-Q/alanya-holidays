@@ -2,11 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { BillingRepository } from './billing.repository';
-import {
-  PAYMENT_GATEWAY,
-  PaymentGateway,
-} from '../webhooks/domain/payment-gateway.interface';
-import { SupabaseService } from '../supabase/supabase.service';
+import { PAYMENT_GATEWAY } from '../webhooks/domain/payment-gateway.interface';
 
 const activeRecord = {
   id: 'rec-1',
