@@ -416,10 +416,7 @@ export class ProductsRepository {
       currency: string;
       stock: number;
       status: string;
-      sku_id: number | null;
-      sku_price: number | null;
-      sku_stock: number | null;
-      sku_label: string | null;
+      skus: Array<{ id: number; price: number; stock: number; label: string }>;
     }>
   > {
     const numericProductIds = productIds
@@ -450,42 +447,28 @@ export class ProductsRepository {
       stock: number;
       label: string;
     };
-    const rows = (data ?? []) as unknown as Array<
-      Omit<
-        {
-          id: number;
-          name: string;
-          price: number;
-          currency: string;
-          stock: number;
-          status: string;
-          sku_id: number | null;
-          sku_price: number | null;
-          sku_stock: number | null;
-          sku_label: string | null;
-        },
-        'sku_id' | 'sku_price' | 'sku_stock' | 'sku_label'
-      > & { product_skus?: SkuNested[] | null }
-    >;
+    const rows = (data ?? []) as unknown as Array<{
+      id: number;
+      name: string;
+      price: number;
+      currency: string;
+      stock: number;
+      status: string;
+      product_skus?: SkuNested[] | null;
+    }>;
 
-    return rows.map((row) => {
-      const sku =
-        numericSkuIds.length > 0 && row.product_skus?.length
-          ? (row.product_skus.find((s) => numericSkuIds.includes(s.id)) ?? null)
-          : null;
-      return {
-        id: row.id,
-        name: row.name,
-        price: row.price,
-        currency: row.currency,
-        stock: row.stock,
-        status: row.status,
-        sku_id: sku?.id ?? null,
-        sku_price: sku?.price ?? null,
-        sku_stock: sku?.stock ?? null,
-        sku_label: sku?.label ?? null,
-      };
-    });
+    // Return every product with its FULL sku list: which variant applies is
+    // a per-order-line decision (the same product can appear in one cart
+    // with different skus), so collapsing here would misprice line items.
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      price: row.price,
+      currency: row.currency,
+      stock: row.stock,
+      status: row.status,
+      skus: row.product_skus ?? [],
+    }));
   }
 
   async createProductOrder(
@@ -660,14 +643,22 @@ export class ProductsRepository {
     return (data ?? []).length > 0;
   }
 
-  async updateOrderStatus(orderId: number | string, status: string) {
+  async updateOrderStatus(
+    orderId: number | string,
+    status: string,
+    expectedCurrentStatus: string,
+  ) {
     const numId = Number(orderId);
     const queryId = Number.isNaN(numId) ? orderId : numId;
 
+    // Guard on the status the caller validated against: if a concurrent
+    // request changed it meanwhile, this UPDATE matches 0 rows instead of
+    // silently overwriting (TOCTOU / last-write-wins race).
     const { data, error } = await this.client
       .from('order_headers')
       .update({ status })
       .eq('id', queryId)
+      .eq('status', expectedCurrentStatus)
       .select('id, status, updated_at')
       .maybeSingle();
 

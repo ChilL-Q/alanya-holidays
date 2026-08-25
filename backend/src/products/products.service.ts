@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import {
   ProductsRepository,
@@ -237,8 +238,24 @@ export class ProductsService {
         );
       }
 
-      const unitPriceFromDb = dbProduct.sku_price ?? dbProduct.price;
-      const stockFromDb = dbProduct.sku_stock ?? dbProduct.stock;
+      // Resolve the variant PER ORDER LINE: the same product can appear in
+      // one cart under different skus, so pricing/stock must follow the
+      // item's own skuId, not "any sku of this product".
+      const requestedSkuId = item.skuId != null ? Number(item.skuId) : null;
+      let unitPriceFromDb = dbProduct.price;
+      let stockFromDb = dbProduct.stock;
+      if (requestedSkuId !== null && !Number.isNaN(requestedSkuId)) {
+        const sku = (dbProduct.skus ?? []).find((s) => s.id === requestedSkuId);
+        if (!sku) {
+          throw new BadRequestException(
+            `SKU "${item.skuId}" is not available for product "${dbProduct.name}"`,
+          );
+        }
+        unitPriceFromDb = sku.price;
+        stockFromDb = sku.stock;
+        item.skuId = sku.id;
+      }
+
       if (stockFromDb < item.quantity) {
         throw new BadRequestException(
           `Insufficient stock for product "${dbProduct.name}": requested ${item.quantity}, available ${stockFromDb}`,
@@ -383,6 +400,19 @@ export class ProductsService {
       }
     }
 
-    return this.productsRepository.updateOrderStatus(order.id, nextStatus);
+    // The UPDATE is guarded on the status validated above; a concurrent
+    // transition makes it match 0 rows and surfaces as a conflict.
+    const updated = (await this.productsRepository.updateOrderStatus(
+      order.id,
+      nextStatus,
+      order.status,
+    )) as { id: number; status: string } | null;
+
+    if (!updated) {
+      throw new ConflictException(
+        `Order ${order.id} was already modified — current status differs from '${order.status}'`,
+      );
+    }
+    return updated;
   }
 }
