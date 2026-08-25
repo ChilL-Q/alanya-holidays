@@ -90,12 +90,12 @@ export class InMemoryPaymentFake implements PaymentGateway {
 
   createdAddonSessions: AddonCheckoutParams[] = [];
 
-  async createAddonCheckoutSession(
+  createAddonCheckoutSession(
     params: AddonCheckoutParams,
   ): Promise<{ url: string }> {
     this.createdAddonSessions.push(params);
-    return {
+    return Promise.resolve({
       url: `https://checkout.stripe.test/session-${this.createdAddonSessions.length}`,
-    };
+    });
   }
 }
