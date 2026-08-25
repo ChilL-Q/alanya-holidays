@@ -89,31 +89,29 @@ export class DirectoryListingService {
     sortBy = 'base_score',
   ): Promise<DirectoryListResponse> {
     const cacheKey = `directory:list:${page}:${limit}:${category || 'all'}:${sortBy}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListResponse>(cacheKey);
-    if (cached) return cached;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const result = await this.directoryRepository.getDirectoryListings(
+          page,
+          limit,
+          category,
+          sortBy,
+        );
 
-    const result = await this.directoryRepository.getDirectoryListings(
-      page,
-      limit,
-      category,
-      sortBy,
-    );
-
-    const response: DirectoryListResponse = {
-      data: result.data,
-      pagination: {
-        page,
-        limit,
-        total: result.count,
-        totalPages: Math.ceil(result.count / limit),
+        const response: DirectoryListResponse = {
+          data: result.data,
+          pagination: {
+            page,
+            limit,
+            total: result.count,
+            totalPages: Math.ceil(result.count / limit),
+          },
+        };
+        return response;
       },
-    };
-
-    if (response.data) {
-      await this.redisService.setJson(cacheKey, response, 600); // 10 min TTL
-    }
-    return response;
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListing(
@@ -125,52 +123,46 @@ export class DirectoryListingService {
     }
 
     const cacheKey = `directory:item:${id}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.directoryRepository.getDirectoryListingById(id);
-    if (data && data.status && data.status !== 'approved') {
-      return null;
-    }
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const data = await this.directoryRepository.getDirectoryListingById(id);
+        if (data && data.status && data.status !== 'approved') {
+          return null;
+        }
+        return data;
+      },
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListingBySlug(
     slug: string,
   ): Promise<DirectoryListingRecord | null> {
     const cacheKey = `directory:slug:${slug}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.directoryRepository.getDirectoryListingBySlug(slug);
-    if (data && data.status && data.status !== 'approved') {
-      return null;
-    }
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        const data =
+          await this.directoryRepository.getDirectoryListingBySlug(slug);
+        if (data && data.status && data.status !== 'approved') {
+          return null;
+        }
+        return data;
+      },
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async getDirectoryListingsByCategory(
     categoryId: string,
   ): Promise<DirectoryListingRecord[]> {
     const cacheKey = `directory:cat:${categoryId}`;
-    const cached =
-      await this.redisService.getJson<DirectoryListingRecord[]>(cacheKey);
-    if (cached) return cached;
-
-    const data =
-      await this.directoryRepository.getDirectoryListingsByCategory(categoryId);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 600);
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      () => this.directoryRepository.getDirectoryListingsByCategory(categoryId),
+      { ttlFreshSeconds: 600 },
+    );
   }
 
   async searchDirectoryListings(

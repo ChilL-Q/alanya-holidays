@@ -46,7 +46,19 @@ describe('ServicesService', () => {
       getJson: jest.fn().mockResolvedValue(null),
       setJson: jest.fn().mockResolvedValue(undefined),
       delByPattern: jest.fn().mockResolvedValue(undefined),
+      getOrFetchSWR: jest.fn(),
     };
+
+    mockRedisService.getOrFetchSWR = jest.fn(
+      async (_key: string, loader: () => unknown) => {
+        const hit = await mockRedisService.getJson(_key);
+        if (hit) return hit;
+        const fresh = await loader();
+        await mockRedisService.setJson(_key, fresh, 600);
+        return fresh;
+      },
+    );
+
     mockUserRolesRepo = {
       getRole: jest.fn(),
     };

@@ -56,25 +56,27 @@ export class PropertiesService {
     queryOptions: PropertyQueryOptions,
   ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
     const cacheKey = `properties:list:${JSON.stringify(queryOptions || {})}`;
-    const cached = await this.redisService.getJson<{
-      data: Record<string, unknown>[];
-      count: number | null;
-    }>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.propertiesRepository.getProperties(queryOptions);
-    if (data) {
-      await this.redisService.setJson(cacheKey, data, 300); // 5 minutes TTL
-    }
-    return data;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      () => this.propertiesRepository.getProperties(queryOptions),
+      { ttlFreshSeconds: 300 },
+    );
   }
 
   async getProperty(id: string): Promise<Record<string, unknown>> {
     const cacheKey = `properties:item:${id}`;
-    const cached =
-      await this.redisService.getJson<Record<string, unknown>>(cacheKey);
-    if (cached) return cached;
+    return this.redisService.getOrFetchSWR(
+      cacheKey,
+      async () => {
+        return this.fetchPropertyById(id);
+      },
+      { ttlFreshSeconds: 600 },
+    );
+  }
 
+  private async fetchPropertyById(
+    id: string,
+  ): Promise<Record<string, unknown>> {
     const isUUID =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
         id,
@@ -97,9 +99,6 @@ export class PropertiesService {
       }
     }
 
-    if (prop) {
-      await this.redisService.setJson(cacheKey, prop, 600); // 10 minutes TTL
-    }
     return prop;
   }
 

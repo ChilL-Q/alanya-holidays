@@ -73,6 +73,24 @@ describe('PropertiesService', () => {
       delByPattern: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockRedisService.getOrFetchSWR = jest.fn(
+      async (
+        _key: string,
+        loader: () => unknown,
+        options?: { ttlFreshSeconds?: number },
+      ) => {
+        const hit = await mockRedisService.getJson(_key);
+        if (hit) return hit;
+        const fresh = await loader();
+        await mockRedisService.setJson(
+          _key,
+          fresh,
+          options?.ttlFreshSeconds ?? 600,
+        );
+        return fresh;
+      },
+    );
+
     emailOutbox = {
       enqueue: jest.fn().mockResolvedValue(undefined),
     };
