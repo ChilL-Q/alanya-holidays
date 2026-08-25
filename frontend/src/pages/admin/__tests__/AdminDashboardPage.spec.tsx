@@ -10,6 +10,7 @@ vi.mock("@/context/AuthContext", () => ({
     profile: { role: "admin", full_name: "Admin User" },
     loading: false,
     isAuthenticated: true,
+    isAdmin: true,
     signOut: vi.fn(),
   }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
