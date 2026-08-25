@@ -19,6 +19,7 @@ describe('PropertiesService', () => {
     getJson: jest.Mock;
     setJson: jest.Mock;
     delByPattern: jest.Mock;
+    getOrFetchSWR: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -71,6 +72,7 @@ describe('PropertiesService', () => {
       getJson: jest.fn().mockResolvedValue(null),
       setJson: jest.fn().mockResolvedValue(undefined),
       delByPattern: jest.fn().mockResolvedValue(undefined),
+      getOrFetchSWR: jest.fn(),
     };
 
     mockRedisService.getOrFetchSWR = jest.fn(

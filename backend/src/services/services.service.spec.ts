@@ -12,6 +12,7 @@ describe('ServicesService', () => {
     getJson: jest.Mock;
     setJson: jest.Mock;
     delByPattern: jest.Mock;
+    getOrFetchSWR: jest.Mock;
   };
   let mockUserRolesRepo: {
     getRole: jest.Mock;
