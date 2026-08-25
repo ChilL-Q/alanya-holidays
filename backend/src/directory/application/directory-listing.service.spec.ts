@@ -17,6 +17,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
     deleteListingLocations: jest.Mock;
     updateListingStatus: jest.Mock;
     invokeFunction: jest.Mock;
+    getListingAddons: jest.Mock;
   };
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRedisService: {
