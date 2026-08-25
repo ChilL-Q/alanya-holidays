@@ -9,6 +9,7 @@ import { PerformanceAnalyticsTab } from "../components/PerformanceAnalyticsTab";
 import { ClaimTrackerTab } from "../components/ClaimTrackerTab";
 import { UpgradeModal } from "../components/UpgradeModal";
 import { directoryService } from "@/api-services/directory.service";
+import { billingService } from "@/api-services/billing.service";
 import type { Business } from "@/mocks/businesses";
 import type { DirectoryClaim, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 
@@ -345,9 +346,13 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
   });
 
   describe("UpgradeModal", () => {
-    it("displays tiers and allows sending payment instructions", async () => {
+    it("renders Voyager and Custom plans and starts Stripe checkout", async () => {
       const onClose = vi.fn();
-      vi.spyOn(directoryService, "sendPaymentInstructions").mockResolvedValueOnce({ success: true });
+      const locationStub = { href: "" };
+      vi.stubGlobal("location", locationStub);
+      const checkoutSpy = vi
+        .spyOn(billingService, "createSubscriptionCheckout")
+        .mockResolvedValue({ url: "https://checkout.stripe.com/test" });
 
       render(
         <UpgradeModal
@@ -357,22 +362,18 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
         />
       );
 
-      expect(screen.getByText(/Upgrade Your Business Listing/i)).toBeInTheDocument();
+      expect(screen.getByText(/Choose a Plan for/i)).toBeInTheDocument();
       expect(screen.getByText("Voyager")).toBeInTheDocument();
-      expect(screen.getByText("Signature")).toBeInTheDocument();
-      expect(screen.getByText("Partner")).toBeInTheDocument();
+      expect(screen.getByText("Custom")).toBeInTheDocument();
+      expect(screen.queryByText("Signature")).not.toBeInTheDocument();
 
-      const upgradeButtons = screen.getAllByRole("button", { name: /Select|Upgrade|Choose/i });
-      expect(upgradeButtons.length).toBeGreaterThan(0);
-
-      fireEvent.click(upgradeButtons[0]);
+      fireEvent.click(screen.getByRole("button", { name: /Subscribe/i }));
 
       await waitFor(() => {
-        expect(directoryService.sendPaymentInstructions).toHaveBeenCalledWith(
-          "Alanya Sunset Cafe",
-          expect.any(String)
-        );
+        expect(checkoutSpy).toHaveBeenCalledWith("monthly");
+        expect(locationStub.href).toBe("https://checkout.stripe.com/test");
       });
+      vi.unstubAllGlobals();
     });
   });
 

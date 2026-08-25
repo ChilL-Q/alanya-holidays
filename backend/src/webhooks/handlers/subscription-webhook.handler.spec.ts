@@ -16,6 +16,7 @@ describe('SubscriptionWebhookHandler', () => {
   interface TableMock {
     select: jest.Mock;
     insert: jest.Mock;
+    upsert: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
     eq: jest.Mock;
@@ -35,6 +36,7 @@ describe('SubscriptionWebhookHandler', () => {
     const mock = {} as TableMock;
     mock.select = jest.fn().mockReturnValue(mock);
     mock.insert = jest.fn().mockResolvedValue({ data: null, error: null });
+    mock.upsert = jest.fn().mockResolvedValue({ data: null, error: null });
     mock.update = jest.fn().mockReturnValue(mock);
     mock.delete = jest.fn().mockReturnValue(mock);
     mock.eq = jest.fn().mockReturnValue(mock);
@@ -95,7 +97,7 @@ describe('SubscriptionWebhookHandler', () => {
   });
 
   describe('handleCreated', () => {
-    it('should ignore subscription if userId or plan is missing', async () => {
+    it('should default plan to monthly when metadata omits it (manual activation)', async () => {
       const sub = {
         id: 'sub_1',
         metadata: { userId: 'u1' },
@@ -103,7 +105,45 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleCreated(sub);
 
-      expect(tableMocks.premium_subscriptions.insert).not.toHaveBeenCalled();
+      expect(tableMocks.premium_subscriptions.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ user_id: 'u1', plan: 'monthly' }),
+        { onConflict: 'user_id' },
+      );
+    });
+
+    it('should ignore subscription when userId is missing and email cannot resolve', async () => {
+      const sub = {
+        id: 'sub_no_user',
+        metadata: { plan: 'monthly' },
+      } as unknown as Stripe.Subscription;
+
+      await handler.handleCreated(sub);
+
+      expect(tableMocks.premium_subscriptions.upsert).not.toHaveBeenCalled();
+    });
+
+    it('should resolve userId by customer email when metadata is absent', async () => {
+      const sub = {
+        id: 'sub_email_resolve',
+        customer_email: 'owner@example.com',
+        metadata: { plan: 'monthly' },
+      } as unknown as Stripe.Subscription;
+
+      const profilesEq = jest.fn().mockResolvedValue({
+        data: { id: 'resolved-user-1' },
+        error: null,
+      });
+      tableMocks.profiles = createTableMock();
+      tableMocks.profiles.select = jest.fn().mockReturnValue({
+        ilike: jest.fn().mockReturnValue({ maybeSingle: profilesEq }),
+      });
+
+      await handler.handleCreated(sub);
+
+      expect(tableMocks.premium_subscriptions.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ user_id: 'resolved-user-1' }),
+        { onConflict: 'user_id' },
+      );
     });
 
     it('should skip duplicate subscription when already exists (idempotency)', async () => {
@@ -119,7 +159,7 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleCreated(sub);
 
-      expect(tableMocks.premium_subscriptions.insert).not.toHaveBeenCalled();
+      expect(tableMocks.premium_subscriptions.upsert).not.toHaveBeenCalled();
     });
 
     it('should insert active premium subscription with tier and notify user', async () => {
@@ -138,7 +178,7 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleCreated(sub);
 
-      expect(tableMocks.premium_subscriptions.insert).toHaveBeenCalledWith(
+      expect(tableMocks.premium_subscriptions.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'u_active',
           plan: 'monthly',
@@ -148,6 +188,7 @@ describe('SubscriptionWebhookHandler', () => {
           stripe_customer_id: 'cus_1',
           cancel_at_period_end: false,
         }),
+        { onConflict: 'user_id' },
       );
 
       expect(notificationsService.notifyUser).toHaveBeenCalledWith(
@@ -174,11 +215,12 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleCreated(sub);
 
-      expect(tableMocks.premium_subscriptions.insert).toHaveBeenCalledWith(
+      expect(tableMocks.premium_subscriptions.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'u_obj_cust',
           stripe_customer_id: 'cus_from_sub_obj',
         }),
+        { onConflict: 'user_id' },
       );
     });
 
@@ -197,10 +239,11 @@ describe('SubscriptionWebhookHandler', () => {
 
       await handler.handleCreated(sub);
 
-      expect(tableMocks.premium_subscriptions.insert).toHaveBeenCalledWith(
+      expect(tableMocks.premium_subscriptions.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'trialing',
         }),
+        { onConflict: 'user_id' },
       );
     });
 
@@ -211,13 +254,13 @@ describe('SubscriptionWebhookHandler', () => {
         metadata: { userId: 'u_err', plan: 'pro' },
       } as unknown as Stripe.Subscription;
 
-      tableMocks.premium_subscriptions.insert.mockResolvedValueOnce({
+      tableMocks.premium_subscriptions.upsert.mockResolvedValueOnce({
         data: null,
         error: { message: 'Insert failed' },
       });
 
       await expect(handler.handleCreated(sub)).rejects.toThrow(
-        'Failed to insert premium_subscription: Insert failed',
+        'Failed to upsert premium_subscription: Insert failed',
       );
     });
   });

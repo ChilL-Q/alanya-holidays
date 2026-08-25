@@ -2,6 +2,15 @@ import Stripe from 'stripe';
 
 export const PAYMENT_GATEWAY = 'PAYMENT_GATEWAY';
 
+export type SubscriptionPlan = 'monthly' | 'annual';
+
+export interface SubscriptionCheckoutParams {
+  userId: string;
+  userEmail?: string | null;
+  plan: SubscriptionPlan;
+  siteUrl?: string;
+}
+
 export type ListingAddonType =
   | 'verified_badge'
   | 'seasonal_placement'
@@ -30,5 +39,28 @@ export interface PaymentGateway {
    */
   createAddonCheckoutSession(
     params: AddonCheckoutParams,
+  ): Promise<{ url: string }>;
+
+  /**
+   * Stripe Checkout (mode: subscription) для Voyager-плана.
+   * ВАЖНО: метаданные дублируются в subscription_data.metadata —
+   * webhook читает их с объекта Subscription, не с Session.
+   */
+  createSubscriptionCheckoutSession(
+    params: SubscriptionCheckoutParams,
+  ): Promise<{ url: string }>;
+
+  /**
+   * Помечает подписку отменой в конце оплаченного периода
+   * (доступ сохраняется до конца периода).
+   */
+  cancelSubscriptionAtPeriodEnd(stripeSubscriptionId: string): Promise<void>;
+
+  /**
+   * Stripe Billing Portal для управления оплатой клиентом.
+   */
+  createBillingPortalSession(
+    stripeCustomerId: string,
+    returnUrl: string,
   ): Promise<{ url: string }>;
 }

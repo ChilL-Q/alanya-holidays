@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import {
   AddonCheckoutParams,
   PaymentGateway,
+  SubscriptionCheckoutParams,
 } from '../domain/payment-gateway.interface';
 
 @Injectable()
@@ -115,5 +116,82 @@ export class StripePaymentAdapter implements PaymentGateway {
       throw new Error('Stripe did not return a checkout URL');
     }
     return { url: session.url };
+  }
+
+  private static readonly VOYAGER_PRICE_IDS: Record<
+    SubscriptionCheckoutParams['plan'],
+    string | undefined
+  > = {
+    monthly: process.env.STRIPE_VOYAGER_PRICE_ID,
+    annual: process.env.STRIPE_VOYAGER_ANNUAL_PRICE_ID,
+  };
+
+  async createSubscriptionCheckoutSession(
+    params: SubscriptionCheckoutParams,
+  ): Promise<{ url: string }> {
+    const siteUrl = params.siteUrl || 'https://alanyaholidays.com';
+    const plan = params.plan;
+    const priceId = StripePaymentAdapter.VOYAGER_PRICE_IDS[plan];
+
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Alanya Holidays Voyager Plan',
+              description: 'Voyager membership subscription',
+            },
+            unit_amount: plan === 'annual' ? 19000 : 1900,
+            recurring: {
+              interval:
+                plan === 'annual' ? ('year' as const) : ('month' as const),
+            },
+          },
+          quantity: 1,
+        };
+
+    const metadata = {
+      userId: params.userId,
+      plan,
+      tier: 'voyager',
+    };
+
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [lineItem],
+      metadata,
+      // CRITICAL: webhook читает метаданные с объекта Subscription
+      subscription_data: { metadata },
+      customer_email: params.userEmail || undefined,
+      success_url: `${siteUrl}/settings?tab=billing&subscription=success`,
+      cancel_url: `${siteUrl}/settings?tab=billing&subscription=cancelled`,
+      allow_promotion_codes: true,
+    });
+
+    if (!session.url) {
+      throw new Error('Stripe did not return a checkout URL');
+    }
+    return { url: session.url };
+  }
+
+  async cancelSubscriptionAtPeriodEnd(
+    stripeSubscriptionId: string,
+  ): Promise<void> {
+    await this.stripe.subscriptions.update(stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
+  }
+
+  async createBillingPortalSession(
+    stripeCustomerId: string,
+    returnUrl: string,
+  ): Promise<{ url: string }> {
+    const portal = await this.stripe.billingPortal.sessions.create({
+      customer: stripeCustomerId,
+      return_url: returnUrl,
+    });
+    return { url: portal.url };
   }
 }

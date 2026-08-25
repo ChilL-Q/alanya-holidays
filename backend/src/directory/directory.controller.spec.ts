@@ -45,9 +45,6 @@ describe('DirectoryController & DirectoryAdminController', () => {
       createAddonCheckout: jest
         .fn()
         .mockResolvedValue({ url: 'http://checkout' }),
-      sendListingPaymentInstructions: jest
-        .fn()
-        .mockResolvedValue({ success: true }),
       getMyDirectoryListings: jest.fn().mockResolvedValue([]),
       getDirectoryListingBySlug: jest.fn().mockResolvedValue({ id: 'd1' }),
       getDirectoryListingsByCategory: jest.fn().mockResolvedValue([]),

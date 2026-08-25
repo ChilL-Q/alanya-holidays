@@ -229,20 +229,6 @@ export class DirectoryController {
     return this.listingService.createAddonCheckout(id, addonType, user.id);
   }
 
-  @Post('payment/instructions')
-  @UseGuards(AuthGuard)
-  sendListingPaymentInstructions(
-    @Body('businessName') businessName: string,
-    @Body('tier') tier: string,
-    @CurrentUser() user: AuthUser,
-  ) {
-    return this.listingService.sendListingPaymentInstructions(
-      businessName,
-      tier,
-      user.id,
-    );
-  }
-
   // ---------------------------------------------------------------------------
   // User Listings & Claims
   // ---------------------------------------------------------------------------

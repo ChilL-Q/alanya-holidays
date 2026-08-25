@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import {
   AddonCheckoutParams,
   PaymentGateway,
+  SubscriptionCheckoutParams,
 } from '../domain/payment-gateway.interface';
 
 @Injectable()
@@ -96,6 +97,35 @@ export class InMemoryPaymentFake implements PaymentGateway {
     this.createdAddonSessions.push(params);
     return Promise.resolve({
       url: `https://checkout.stripe.test/session-${this.createdAddonSessions.length}`,
+    });
+  }
+
+  createdSubscriptionSessions: SubscriptionCheckoutParams[] = [];
+  cancelledSubscriptionIds: string[] = [];
+  portalRequests: { customerId: string; returnUrl: string }[] = [];
+  portalUrlToReturn: string | null = null;
+
+  createSubscriptionCheckoutSession(
+    params: SubscriptionCheckoutParams,
+  ): Promise<{ url: string }> {
+    this.createdSubscriptionSessions.push(params);
+    return Promise.resolve({
+      url: `https://checkout.stripe.test/subscription-${this.createdSubscriptionSessions.length}`,
+    });
+  }
+
+  cancelSubscriptionAtPeriodEnd(stripeSubscriptionId: string): Promise<void> {
+    this.cancelledSubscriptionIds.push(stripeSubscriptionId);
+    return Promise.resolve();
+  }
+
+  createBillingPortalSession(
+    customerId: string,
+    returnUrl: string,
+  ): Promise<{ url: string }> {
+    this.portalRequests.push({ customerId, returnUrl });
+    return Promise.resolve({
+      url: this.portalUrlToReturn ?? 'https://billing.stripe.test/portal',
     });
   }
 }

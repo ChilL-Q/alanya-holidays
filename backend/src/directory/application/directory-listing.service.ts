@@ -695,29 +695,6 @@ export class DirectoryListingService {
     });
   }
 
-  sendListingPaymentInstructions(
-    businessName: string,
-    tier: string,
-    userId: string,
-  ): { success: boolean } {
-    void this.directoryRepository.invokeFunction('send-email', {
-      body: {
-        type: 'listing_payment_instructions',
-        userId,
-        data: {
-          businessName,
-          tier,
-          link:
-            (process.env.APP_URL ||
-              process.env.SITE_URL ||
-              process.env.NEXT_PUBLIC_SITE_URL ||
-              'https://alanyaholidays.com') + '/profile',
-        },
-      },
-    });
-    return { success: true };
-  }
-
   // ---------------------------------------------------------------------------
   // Admin Moderation Operations
   // ---------------------------------------------------------------------------
