@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-vercel-json.js && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "type-check:strict-slice": "tsc --noEmit --project tsconfig.strict-slice.json",
