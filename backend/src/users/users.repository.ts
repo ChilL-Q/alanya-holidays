@@ -24,9 +24,13 @@ export class UsersRepository {
   }
 
   async getUserProfile(id: string) {
+    // Explicit projection: profiles carry banking PII (iban, bank_name,
+    // crypto_wallet) that must never leave the server through this API.
     const { data, error } = await this.client
       .from('profiles')
-      .select('*')
+      .select(
+        'id, full_name, email, phone, avatar_url, bio, company_name, social_links, role, created_at',
+      )
       .eq('id', id)
       .single();
     if (error) {

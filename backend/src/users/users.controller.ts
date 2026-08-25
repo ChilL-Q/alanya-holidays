@@ -83,10 +83,9 @@ export class UsersController {
     return this.usersService.getUsersByRole(role, page, limit, user?.id ?? '');
   }
 
-  @Get(':id')
-  async getUserProfile(@Param('id') id: string) {
-    return this.usersService.getUserProfile(id);
-  }
+  // Note: no public GET :id — profile reads are admin-only
+  // (UsersAdminController) or self-scoped via the guarded PUT below.
+  // A public variant previously leaked contact/banking PII via select('*').
 
   @Put(':id')
   @UseGuards(AuthGuard)
