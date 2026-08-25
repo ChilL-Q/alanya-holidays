@@ -8,7 +8,9 @@ import { AuthModule } from '../auth/auth.module';
 @Module({
   imports: [AuthModule],
   providers: [UsersService, UsersRepository],
-  controllers: [UsersController, UsersAdminController],
+  // Admin controller MUST stay first: UsersController declares routes that
+  // would otherwise shadow GET /users/admin (guarded handler never runs).
+  controllers: [UsersAdminController, UsersController],
   exports: [UsersService, UsersRepository],
 })
 export class UsersModule {}
