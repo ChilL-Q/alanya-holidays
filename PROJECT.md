@@ -1,7 +1,7 @@
 # Project: Alanya Holidays Platform — Phase 2: Moderation & Administration
 
 ## Architecture
-- **Monorepo Structure**: Turbo monorepo with `backend/` (NestJS 11 + Fastify / Express + Jest) and `frontend/` (Next.js 15 / React 19 + TailwindCSS + Vitest) and `supabase/` (PostgreSQL migrations & Deno Edge Functions).
+- **Monorepo Structure**: Turbo monorepo with `backend/` (NestJS 11 + Express + Jest) and `frontend/` (React 19 + Vite + TailwindCSS + Vitest) and `supabase/` (PostgreSQL migrations & Deno Edge Functions).
 - **Backend Architecture**: Pragmatic DDD / Clean Architecture (`domain/` -> `application/` -> `infrastructure/` -> `presentation/`).
   - Strict RBAC: `@UseGuards(AuthGuard, RolesGuard)` and `@RequireRole('admin')` for all administrative endpoints.
   - Caching: Multi-level cache with Redis invalidation (`directory:*`, `forum:*`).

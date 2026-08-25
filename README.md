@@ -190,7 +190,8 @@ Useful docs in this repo:
 - `TEST_INFRA.md` — testing strategy and coverage model
 - `docs/INFRASTRUCTURE.md` — VPS / Docker / operational notes
 - `docs/MAINTENANCE_STRATEGY.md` — engineering and maintenance strategy
-- `docs/TODO_ANALYSIS.md` — prioritized remediation backlog from project audit
+- `docs/adr/` — architecture decision records
+- `CONTEXT.md` "Known Gaps" section — tracked, prioritized gaps
 
 ## CI/CD
 
