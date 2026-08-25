@@ -84,30 +84,6 @@ export interface PropertyAvailabilityResult {
 
 export type PropertyTypesResponse = string[];
 
-export interface CreatePropertyBookingPayload {
-  propertyId?: string;
-  itemId?: string;
-  item_id?: string;
-  checkIn?: string;
-  check_in?: string;
-  checkOut?: string;
-  check_out?: string;
-  guests?: number;
-  totalPrice?: number;
-  paymentMethod?: string;
-  payment_method?: string;
-  message?: string;
-  guestName?: string;
-  guestEmail?: string;
-  guestPhone?: string;
-}
-
-export interface CreatePropertyBookingResult {
-  success: boolean;
-  bookingId?: string;
-  message?: string;
-}
-
 export function mapBackendPropertyToPropertyItem(
   item: Record<string, unknown>
 ): PropertyItem {
@@ -415,42 +391,6 @@ export class PropertiesService {
     }
   }
 
-  /**
-   * Creates a direct booking for a property.
-   */
-  async createBooking(
-    payload: CreatePropertyBookingPayload
-  ): Promise<CreatePropertyBookingResult> {
-    const propertyId = payload.propertyId || payload.itemId || payload.item_id || "";
-    const checkIn = payload.checkIn || payload.check_in || "";
-    const checkOut = payload.checkOut || payload.check_out || "";
-    const guests = payload.guests || 1;
-    const paymentMethod = payload.paymentMethod || payload.payment_method || "credit_card";
-
-    const requestBody = {
-      item_id: propertyId,
-      check_in: checkIn,
-      check_out: checkOut,
-      guests,
-      item_type: "property",
-      message: payload.message,
-      payment_method: paymentMethod,
-    };
-
-    const res = await apiClient.post<{
-      id?: string;
-      bookingId?: string;
-      booking_id?: string;
-      data?: string;
-      success?: boolean;
-    }>("/bookings", requestBody);
-
-    const bookingId = res.bookingId || res.booking_id || res.id || res.data;
-    return {
-      success: res.success !== false,
-      bookingId,
-    };
-  }
 }
 
 export const propertiesService = new PropertiesService();
@@ -465,5 +405,3 @@ export const checkAvailability = (id: string, checkIn: string, checkOut: string,
   propertiesService.checkAvailability(id, checkIn, checkOut, options);
 export const getPropertyTypes = (options?: RequestOptions) =>
   propertiesService.getPropertyTypes(options);
-export const createBooking = (payload: CreatePropertyBookingPayload) =>
-  propertiesService.createBooking(payload);
