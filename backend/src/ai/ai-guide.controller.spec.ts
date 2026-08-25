@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiGuideController } from './ai-guide.controller';
 import { AiGuideService } from './ai-guide.service';
+import type { Request } from 'express';
 import { AiGuideDto } from './dto/ai-guide.dto';
 import { GenerateItineraryDto } from './dto/generate-itinerary.dto';
 
@@ -47,9 +48,12 @@ describe('AiGuideController', () => {
 
       mockAiGuideService.askGuide.mockResolvedValue(expectedResponse);
 
-      const result = await controller.askGuide(dto);
+      const result = await controller.askGuide(dto, {} as Request);
 
-      expect(mockAiGuideService.askGuide).toHaveBeenCalledWith(dto);
+      expect(mockAiGuideService.askGuide).toHaveBeenCalledWith(
+        dto,
+        'anonymous',
+      );
       expect(result).toEqual(expectedResponse);
     });
   });
@@ -88,9 +92,12 @@ describe('AiGuideController', () => {
 
       mockAiGuideService.generateItinerary.mockResolvedValue(expectedResponse);
 
-      const result = await controller.generateItinerary(dto);
+      const result = await controller.generateItinerary(dto, {} as Request);
 
-      expect(mockAiGuideService.generateItinerary).toHaveBeenCalledWith(dto);
+      expect(mockAiGuideService.generateItinerary).toHaveBeenCalledWith(
+        dto,
+        'anonymous',
+      );
       expect(result).toEqual(expectedResponse);
     });
   });
