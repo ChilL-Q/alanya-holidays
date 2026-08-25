@@ -73,9 +73,52 @@ export interface CreateOrderResult {
   message: string;
 }
 
+export interface CatalogItemRow {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  stock: number;
+  status: string;
+  media: Array<{ url: string; type: string }> | null;
+  category_id: number | null;
+  seller_id: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
 @Injectable()
 export class ProductsRepository {
   private readonly logger = new Logger(ProductsRepository.name);
+
+  // Shared projection for order headers with their line items.
+  private static readonly ORDER_SELECT = `
+        id,
+        currency,
+        payment_provider,
+        status,
+        subtotal_items,
+        customer_notes,
+        customer_id,
+        recipient,
+        created_at,
+        updated_at,
+        items:order_items(
+          id,
+          order_id,
+          product_id,
+          product_name,
+          sku_id,
+          sku_label,
+          quantity,
+          unit_price,
+          final_price,
+          subtotal,
+          created_at
+        )
+      `;
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   get client() {
@@ -493,33 +536,7 @@ export class ProductsRepository {
 
     const { data, error } = await this.client
       .from('order_headers')
-      .select(
-        `
-        id,
-        currency,
-        payment_provider,
-        status,
-        subtotal_items,
-        customer_notes,
-        customer_id,
-        recipient,
-        created_at,
-        updated_at,
-        items:order_items(
-          id,
-          order_id,
-          product_id,
-          product_name,
-          sku_id,
-          sku_label,
-          quantity,
-          unit_price,
-          final_price,
-          subtotal,
-          created_at
-        )
-      `,
-      )
+      .select(ProductsRepository.ORDER_SELECT)
       .eq('customer_id', userId)
       .order('created_at', { ascending: false });
 
@@ -533,33 +550,7 @@ export class ProductsRepository {
 
     const { data, error } = await this.client
       .from('order_headers')
-      .select(
-        `
-        id,
-        currency,
-        payment_provider,
-        status,
-        subtotal_items,
-        customer_notes,
-        customer_id,
-        recipient,
-        created_at,
-        updated_at,
-        items:order_items(
-          id,
-          order_id,
-          product_id,
-          product_name,
-          sku_id,
-          sku_label,
-          quantity,
-          unit_price,
-          final_price,
-          subtotal,
-          created_at
-        )
-      `,
-      )
+      .select(ProductsRepository.ORDER_SELECT)
       .eq('id', queryId)
       .maybeSingle();
 
@@ -567,6 +558,120 @@ export class ProductsRepository {
       if (error.code === 'PGRST116' || error.code === '22P02') return null;
       throw new Error(error.message);
     }
+    return data;
+  }
+
+  // --- Seller (Business Dashboard) ---
+
+  async getMyCatalogItems(sellerId: string): Promise<CatalogItemRow[]> {
+    if (!this.isValidUuid(sellerId)) return [];
+
+    const { data, error } = await this.client
+      .from('product_items')
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at',
+      )
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
+  async createCatalogItem(
+    item: {
+      name: string;
+      description?: string | null;
+      price: number;
+      currency: string;
+      stock: number;
+      media?: Array<{ url: string; type: string }> | null;
+      category_id?: number | null;
+    },
+    sellerId: string,
+  ): Promise<CatalogItemRow> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .insert({ ...item, seller_id: sellerId })
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at',
+      )
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async updateCatalogItem(
+    itemId: number,
+    updates: Record<string, unknown>,
+    sellerId: string,
+  ): Promise<CatalogItemRow | null> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .update(updates)
+      .eq('id', itemId)
+      .eq('seller_id', sellerId)
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at',
+      )
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    // Empty result means the item does not exist or is not owned by the seller.
+    return data;
+  }
+
+  async getOrdersContainingCatalogItems(catalogItemIds: number[]) {
+    const { data, error } = await this.client
+      .from('order_headers')
+      .select(ProductsRepository.ORDER_SELECT)
+      .in(
+        'items.product_id',
+        catalogItemIds.map((id) => String(id)),
+      )
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
+  async getAllOrders() {
+    const { data, error } = await this.client
+      .from('order_headers')
+      .select(ProductsRepository.ORDER_SELECT)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
+  async sellerOwnsAnyCatalogItem(itemIds: string[], sellerId: string) {
+    if (itemIds.length === 0 || !this.isValidUuid(sellerId)) return false;
+
+    const { data, error } = await this.client
+      .from('product_items')
+      .select('id')
+      .in('id', itemIds)
+      .eq('seller_id', sellerId)
+      .limit(1);
+
+    if (error) throw new Error(error.message);
+    return (data ?? []).length > 0;
+  }
+
+  async updateOrderStatus(orderId: number | string, status: string) {
+    const numId = Number(orderId);
+    const queryId = Number.isNaN(numId) ? orderId : numId;
+
+    const { data, error } = await this.client
+      .from('order_headers')
+      .update({ status })
+      .eq('id', queryId)
+      .select('id, status, updated_at')
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
     return data;
   }
 }

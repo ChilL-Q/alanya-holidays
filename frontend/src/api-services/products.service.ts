@@ -1,5 +1,6 @@
 import { apiClient, isAbortError, type RequestOptions } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { ordersService } from "./orders.service";
 
 export interface ProductCategory {
   id: number;
@@ -101,6 +102,23 @@ export interface ProductDetailResponse {
   skus: ProductSku[];
 }
 
+export interface SellerProduct {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  currency: string;
+  stock: number;
+  status: "active" | "inactive" | "draft" | string;
+  media?: Array<{ url: string; type: string }> | null;
+  category_id?: number | null;
+  seller_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type SellerProductDraft = Partial<Omit<SellerProduct, "id">>;
+
 class ProductsService {
   /**
    * Fetches featured products and bestsellers for homepage/showcase.
@@ -198,18 +216,25 @@ class ProductsService {
 
   /**
    * Places an order for a product/variant.
+   * Delegates to ordersService.createOrder — the single POST /products/orders path.
    */
   async createProductOrder(payload: CreateProductOrderPayload): Promise<CreateProductOrderResult> {
-    try {
-      const response = await apiClient.post<CreateProductOrderResult>(
-        "/products/orders",
-        payload
-      );
-      return response;
-    } catch (err: unknown) {
-      logger.error("Failed to create product order via API:", err);
-      throw err;
-    }
+    return ordersService.createOrder({
+      currency: payload.currency,
+      subtotal: payload.subtotal,
+      customerNotes: payload.customerNotes ?? undefined,
+      recipient: payload.recipient,
+      items: payload.items.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        skuId: item.skuId ?? null,
+        skuLabel: item.skuLabel ?? null,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        finalPrice: item.finalPrice,
+        subtotal: item.subtotal,
+      })),
+    });
   }
 
   /**
@@ -230,6 +255,43 @@ class ProductsService {
     }
 
     return [];
+  }
+
+  /**
+   * Fetches sellable catalog items owned by the current seller.
+   * Dispatches GET /products/mine via apiClient.
+   */
+  async getMyProducts(options?: RequestOptions): Promise<SellerProduct[]> {
+    try {
+      const response = await apiClient.get<SellerProduct[] | { data: SellerProduct[] }>(
+        "/products/mine",
+        options
+      );
+      if (Array.isArray(response)) return response;
+      if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    } catch (err: unknown) {
+      logger.warn("Failed to fetch my products from API:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Creates a new catalog product owned by the current seller.
+   * Dispatches POST /products/mine via apiClient.
+   */
+  async createMyProduct(draft: SellerProductDraft): Promise<SellerProduct> {
+    return apiClient.post<SellerProduct>("/products/mine", draft);
+  }
+
+  /**
+   * Updates an own catalog product. Scoped by ownership on the backend.
+   * Dispatches PATCH /products/mine/:id via apiClient.
+   */
+  async updateMyProduct(id: number, updates: SellerProductDraft): Promise<SellerProduct> {
+    return apiClient.patch<SellerProduct>(`/products/mine/${id}`, updates);
   }
 }
 

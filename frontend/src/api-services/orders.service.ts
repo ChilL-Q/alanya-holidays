@@ -192,12 +192,101 @@ export class OrdersService {
       return [];
     }
   }
+
+  /**
+   * Retrieves orders containing products owned by the current seller.
+   * Dispatches GET /products/orders/seller via apiClient.
+   */
+  async getSellerOrders(): Promise<SellerOrder[]> {
+    try {
+      const response = await apiClient.get<
+        SellerOrder[] | { data: SellerOrder[] }
+      >("/products/orders/seller");
+
+      if (Array.isArray(response)) {
+        return response;
+      }
+      if (
+        response &&
+        typeof response === "object" &&
+        "data" in response &&
+        Array.isArray(response.data)
+      ) {
+        return response.data;
+      }
+      return [];
+    } catch (err: unknown) {
+      logger.warn("Failed to fetch seller orders from API:", err);
+      return [];
+    }
+  }
+
+  /**
+   * Moves a seller order through the fulfillment state machine
+   * (pending_payment -> paid/cancelled -> shipped -> completed).
+   * Dispatches PATCH /products/orders/:id/status via apiClient.
+   */
+  async updateSellerOrderStatus(
+    orderId: number | string,
+    status: SellerOrderStatus,
+  ): Promise<{ success: boolean; message?: string }> {
+    try {
+      const result = await apiClient.patch<{
+        id?: number | string;
+        status?: string;
+        message?: string;
+      }>(`/products/orders/${orderId}/status`, { status });
+      return { success: true, message: result?.message };
+    } catch (err: unknown) {
+      logger.warn(`Failed to update order ${orderId} status:`, err);
+      const message =
+        err instanceof Error ? err.message : "Failed to update order status";
+      return { success: false, message };
+    }
+  }
+}
+
+export type SellerOrderStatus =
+  | "paid"
+  | "shipped"
+  | "completed"
+  | "cancelled";
+
+export interface SellerOrderItem {
+  id?: number | string;
+  product_id?: string | number;
+  product_name?: string;
+  sku_label?: string | null;
+  quantity?: number;
+  unit_price?: number;
+  final_price?: number;
+  subtotal?: number;
+}
+
+export interface SellerOrder {
+  id: number | string;
+  currency?: string;
+  payment_provider?: string;
+  status?: string;
+  subtotal_items?: number;
+  customer_notes?: string | null;
+  recipient?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
+  items?: SellerOrderItem[];
 }
 
 export const ordersService = new OrdersService();
 
 export const createOrder = (payload: CreateOrderPayload) =>
   ordersService.createOrder(payload);
+
+export const getSellerOrders = () => ordersService.getSellerOrders();
+
+export const updateSellerOrderStatus = (
+  orderId: number | string,
+  status: SellerOrderStatus,
+) => ordersService.updateSellerOrderStatus(orderId, status);
 
 export const getOrder = (orderId: number | string) =>
   ordersService.getOrder(orderId);
