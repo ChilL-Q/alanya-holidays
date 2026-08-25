@@ -521,7 +521,9 @@ export class ProductsRepository {
       .from('order_headers')
       .select(ProductsRepository.ORDER_SELECT)
       .eq('customer_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      // Bounded until a real pagination need exists.
+      .limit(200);
 
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -613,7 +615,9 @@ export class ProductsRepository {
         'items.product_id',
         catalogItemIds.map((id) => String(id)),
       )
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      // Bounded until seller-side pagination exists.
+      .limit(200);
 
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -623,7 +627,9 @@ export class ProductsRepository {
     const { data, error } = await this.client
       .from('order_headers')
       .select(ProductsRepository.ORDER_SELECT)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      // Bounded until admin pagination exists.
+      .limit(200);
 
     if (error) throw new Error(error.message);
     return data ?? [];

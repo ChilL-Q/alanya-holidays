@@ -370,9 +370,13 @@ export class BookingsRepository implements IBookingsRepository {
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
     }
-    const { data, error } = await query.order('created_at', {
-      ascending: false,
-    });
+    // Bounded until a real pagination need exists — unbounded enrichment
+    // (properties/services/guests per row) would scale linearly with data.
+    const { data, error } = await query
+      .order('created_at', {
+        ascending: false,
+      })
+      .limit(200);
 
     if (error) throw new Error(error.message);
     return await this.enrichBookingsWithItems(data || []);

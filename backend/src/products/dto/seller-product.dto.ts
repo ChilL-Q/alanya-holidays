@@ -1,21 +1,38 @@
 import {
+  ArrayMaxSize,
   IsArray,
   IsIn,
   IsNumber,
   IsOptional,
   IsPositive,
   IsString,
+  Length,
+  MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 const CATALOG_ITEM_STATUSES = ['active', 'inactive', 'draft'] as const;
 
+export class SellerProductMediaDto {
+  @IsString()
+  @MaxLength(500)
+  url!: string;
+
+  @IsString()
+  @MaxLength(20)
+  type!: string;
+}
+
 export class CreateSellerProductDto {
   @IsString()
+  @MaxLength(120)
   name!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   description?: string | null;
 
   @IsNumber()
@@ -24,6 +41,7 @@ export class CreateSellerProductDto {
 
   @IsOptional()
   @IsString()
+  @Length(3, 3)
   currency?: string;
 
   @IsOptional()
@@ -33,7 +51,10 @@ export class CreateSellerProductDto {
 
   @IsOptional()
   @IsArray()
-  media?: Array<{ url: string; type: string }> | null;
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => SellerProductMediaDto)
+  media?: SellerProductMediaDto[] | null;
 
   @IsOptional()
   @IsNumber()
@@ -44,10 +65,12 @@ export class CreateSellerProductDto {
 export class UpdateSellerProductDto {
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   name?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   description?: string | null;
 
   @IsOptional()
@@ -57,6 +80,7 @@ export class UpdateSellerProductDto {
 
   @IsOptional()
   @IsString()
+  @Length(3, 3)
   currency?: string;
 
   @IsOptional()
@@ -66,7 +90,10 @@ export class UpdateSellerProductDto {
 
   @IsOptional()
   @IsArray()
-  media?: Array<{ url: string; type: string }> | null;
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => SellerProductMediaDto)
+  media?: SellerProductMediaDto[] | null;
 
   @IsOptional()
   @IsNumber()
