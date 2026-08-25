@@ -19,7 +19,7 @@ import { ListingClaimService } from '../application/listing-claim.service';
 import { CurateListingScoreDto } from '../dto/curate-listing.dto';
 import { ModerationAuditService } from '../../admin/moderation-audit.service';
 
-@Controller('directory')
+@Controller('directory/admin')
 @UseGuards(AuthGuard, RolesGuard)
 @RequireRole('admin')
 export class DirectoryAdminController {
@@ -30,7 +30,7 @@ export class DirectoryAdminController {
     private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
-  @Get('admin/listings')
+  @Get('listings')
   async getDirectoryListingsAdmin(
     @Query('status') status: string | undefined,
     @Query('category') category: string | undefined,
@@ -45,7 +45,7 @@ export class DirectoryAdminController {
     );
   }
 
-  @Get('admin/status/:status')
+  @Get('status/:status')
   async getDirectoryListingsByStatus(
     @Param('status') status: 'approved' | 'rejected',
     @Query('category') category?: string,
@@ -53,7 +53,7 @@ export class DirectoryAdminController {
     return this.listingService.getDirectoryListingsByStatus(status, category);
   }
 
-  @Get('admin/pending')
+  @Get('pending')
   async getPendingDirectoryListings() {
     return this.listingService.getPendingDirectoryListings();
   }

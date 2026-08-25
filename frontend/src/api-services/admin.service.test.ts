@@ -83,42 +83,49 @@ describe("admin.service", () => {
   });
 
   describe("submitEnquiry", () => {
-    it("should submit enquiry to /enquiries via apiClient", async () => {
-      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, id: 99 });
+    it("should delegate to conciergeService.submitConciergeEnquiry with mapped fields", async () => {
+      const { conciergeService } = await import("./concierge.service");
+      const submitSpy = vi
+        .spyOn(conciergeService, "submitConciergeEnquiry")
+        .mockResolvedValueOnce({ success: true, id: 99, message: "Enquiry submitted successfully" });
 
-      const payload = {
+      const result = await adminService.submitEnquiry({
         name: "Alice Smith",
         email: "alice@example.com",
         phone: "+90 555 123 4567",
         subject: "Yacht Inquiry",
         message: "Interested in sunset yacht trip",
         enquiry_type: "yacht",
-      };
+        party_size: 4,
+      });
 
-      const result = await adminService.submitEnquiry(payload);
-      expect(apiClient.post).toHaveBeenCalledWith("/enquiries", expect.objectContaining({
-        name: "Alice Smith",
-        email: "alice@example.com",
-        subject: "Yacht Inquiry",
-        message: "Interested in sunset yacht trip",
-        enquiry_type: "yacht",
-      }));
+      expect(submitSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "Alice Smith",
+          email: "alice@example.com",
+          subject: "Yacht Inquiry",
+          message: "Interested in sunset yacht trip",
+          experience_type: "yacht",
+          guests: 4,
+        })
+      );
       expect(result.success).toBe(true);
       expect(result.id).toBe(99);
     });
 
-    it("should provide fallback when apiClient.post fails", async () => {
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network down"));
+    it("should propagate failure instead of faking success", async () => {
+      const { conciergeService } = await import("./concierge.service");
+      vi.spyOn(conciergeService, "submitConciergeEnquiry").mockRejectedValueOnce(
+        new Error("Network down")
+      );
 
-      const payload = {
-        name: "Bob Jones",
-        email: "bob@example.com",
-        message: "Need transfers",
-      };
-
-      const result = await adminService.submitEnquiry(payload);
-      expect(result.success).toBe(true);
-      expect(result.id).toBeDefined();
+      await expect(
+        adminService.submitEnquiry({
+          name: "Bob Jones",
+          email: "bob@example.com",
+          message: "Need transfers",
+        })
+      ).rejects.toThrow("Network down");
     });
   });
 
@@ -149,17 +156,17 @@ describe("admin.service", () => {
   });
 
   describe("approveListing & rejectListing & deleteListing", () => {
-    it("should call POST /directory/:id/approve", async () => {
+    it("should call POST /directory/admin/:id/approve", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true });
       const success = await adminService.approveListing("list-123");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-123/approve");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-123/approve");
       expect(success).toBe(true);
     });
 
-    it("should call POST /directory/:id/reject with reason", async () => {
+    it("should call POST /directory/admin/:id/reject with reason", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true });
       const success = await adminService.rejectListing("list-123", "Incomplete info");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-123/reject", {
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-123/reject", {
         reason: "Incomplete info",
       });
       expect(success).toBe(true);
@@ -182,22 +189,22 @@ describe("admin.service", () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockClaims);
 
       const result = await adminService.getClaimsQueue("pending");
-      expect(apiClient.get).toHaveBeenCalledWith("/directory/claims");
+      expect(apiClient.get).toHaveBeenCalledWith("/directory/admin/claims");
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("c1");
     });
 
-    it("should call POST /directory/claims/:id/approve", async () => {
+    it("should call POST /directory/admin/claims/:id/approve", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true });
       const success = await adminService.approveClaim("claim-99");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/claims/claim-99/approve");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/claims/claim-99/approve");
       expect(success).toBe(true);
     });
 
-    it("should call POST /directory/claims/:id/reject with reason", async () => {
+    it("should call POST /directory/admin/claims/:id/reject with reason", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true });
       const success = await adminService.rejectClaim("claim-99", "Invalid proof");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/claims/claim-99/reject", {
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/claims/claim-99/reject", {
         reason: "Invalid proof",
       });
       expect(success).toBe(true);
@@ -349,38 +356,38 @@ describe("admin.service", () => {
   });
 
   describe("directory curation methods (Task 2.2)", () => {
-    it("should call POST /directory/:id/feature to feature listing", async () => {
+    it("should call POST /directory/admin/:id/feature to feature listing", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, is_featured: true });
       const ok = await adminService.featureListing("list-1");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-1/feature");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-1/feature");
       expect(ok).toBe(true);
     });
 
-    it("should call POST /directory/:id/unfeature to unfeature listing", async () => {
+    it("should call POST /directory/admin/:id/unfeature to unfeature listing", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, is_featured: false });
       const ok = await adminService.unfeatureListing("list-1");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-1/unfeature");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-1/unfeature");
       expect(ok).toBe(true);
     });
 
-    it("should call POST /directory/:id/verify to verify listing", async () => {
+    it("should call POST /directory/admin/:id/verify to verify listing", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, is_verified: true });
       const ok = await adminService.verifyListing("list-1");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-1/verify");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-1/verify");
       expect(ok).toBe(true);
     });
 
-    it("should call POST /directory/:id/unverify to unverify listing", async () => {
+    it("should call POST /directory/admin/:id/unverify to unverify listing", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, is_verified: false });
       const ok = await adminService.unverifyListing("list-1");
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-1/unverify");
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-1/unverify");
       expect(ok).toBe(true);
     });
 
-    it("should call POST /directory/:id/score to update listing base score", async () => {
+    it("should call POST /directory/admin/:id/score to update listing base score", async () => {
       vi.spyOn(apiClient, "post").mockResolvedValueOnce({ success: true, base_score: 88 });
       const ok = await adminService.updateListingScore("list-1", 88);
-      expect(apiClient.post).toHaveBeenCalledWith("/directory/list-1/score", { score: 88 });
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/admin/list-1/score", { score: 88 });
       expect(ok).toBe(true);
     });
 
@@ -465,6 +472,124 @@ describe("admin.service", () => {
         limit: 10,
         totalPages: 0,
       });
+    });
+  });
+
+  describe("bookings administration", () => {
+    it("getAdminBookings should call GET /bookings/admin with optional status filter", async () => {
+      const mockBookings = [{ id: "b1", status: "pending", total_price: 100 }];
+      const getSpy = vi.spyOn(apiClient, "get").mockResolvedValueOnce(mockBookings);
+
+      const result = await adminService.getAdminBookings("pending");
+
+      expect(getSpy).toHaveBeenCalledWith("/bookings/admin", { params: { status: "pending" } });
+      expect(result).toEqual(mockBookings);
+    });
+
+    it("getAdminBookings should omit params when no filter and unwrap { data }", async () => {
+      const getSpy = vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: [{ id: "b2" }] });
+
+      const result = await adminService.getAdminBookings();
+
+      expect(getSpy).toHaveBeenCalledWith("/bookings/admin", { params: undefined });
+      expect(result).toEqual([{ id: "b2" }]);
+    });
+
+    it("updateBookingStatus should PATCH /bookings/admin/:id/status", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: true });
+
+      const ok = await adminService.updateBookingStatus("b1", "confirmed", "Looks good");
+
+      expect(apiClient.patch).toHaveBeenCalledWith("/bookings/admin/b1/status", {
+        status: "confirmed",
+        reason: "Looks good",
+      });
+      expect(ok).toBe(true);
+    });
+
+    it("updatePayoutStatus should PATCH /bookings/admin/:id/payout-status", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: true });
+
+      const ok = await adminService.updatePayoutStatus("b1", "paid");
+
+      expect(apiClient.patch).toHaveBeenCalledWith("/bookings/admin/b1/payout-status", {
+        payoutStatus: "paid",
+      });
+      expect(ok).toBe(true);
+    });
+
+    it("refundBooking should POST /bookings/admin/:id/refund and return false on error", async () => {
+      const logSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Stripe down"));
+
+      const ok = await adminService.refundBooking("b1");
+
+      expect(apiClient.post).toHaveBeenCalledWith("/bookings/admin/b1/refund");
+      expect(ok).toBe(false);
+      expect(logSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("reviews moderation", () => {
+    it("getModerationReviews('pending') should hit /reviews/admin/pending with pagination", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: [{ id: "r1" }], total: 7 });
+
+      const result = await adminService.getModerationReviews("pending", 2, 20);
+
+      expect(apiClient.get).toHaveBeenCalledWith("/reviews/admin/pending", {
+        params: { page: 2, limit: 20 },
+      });
+      expect(result.data).toEqual([{ id: "r1" }]);
+      expect(result.total).toBe(7);
+    });
+
+    it("getModerationReviews(approved) should hit /reviews/admin/status/approved", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: [], total: 0 });
+
+      await adminService.getModerationReviews("approved");
+
+      expect(apiClient.get).toHaveBeenCalledWith("/reviews/admin/status/approved", {
+        params: { page: 1, limit: 20 },
+      });
+    });
+
+    it("approve/reject/delete should target /reviews/:id", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValue({ success: true });
+      vi.spyOn(apiClient, "delete").mockResolvedValueOnce({ success: true });
+
+      expect(await adminService.approveReview("r9")).toBe(true);
+      expect(await adminService.rejectReview("r9")).toBe(true);
+      expect(await adminService.deleteReview("r9")).toBe(true);
+      expect(apiClient.patch).toHaveBeenNthCalledWith(1, "/reviews/r9/approve");
+      expect(apiClient.patch).toHaveBeenNthCalledWith(2, "/reviews/r9/reject");
+      expect(apiClient.delete).toHaveBeenCalledWith("/reviews/r9");
+    });
+  });
+
+  describe("users administration", () => {
+    it("getUsers should call GET /users/admin and return data + pagination", async () => {
+      const mockUsers = [{ id: "u1", email: "a@b.c", role: "user" }];
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({
+        data: mockUsers,
+        pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      });
+
+      const result = await adminService.getUsers({ role: "host", page: 1, limit: 20 });
+
+      expect(apiClient.get).toHaveBeenCalledWith("/users/admin", {
+        params: { role: "host", page: 1, limit: 20 },
+      });
+      expect(result.data).toEqual(mockUsers);
+      expect(result.pagination.total).toBe(1);
+    });
+
+    it("updateUserProfile should PATCH /users/admin/:id/status", async () => {
+      vi.spyOn(apiClient, "patch").mockResolvedValueOnce({ success: true });
+
+      const ok = await adminService.updateUserProfile("u1", { role: "host" });
+
+      expect(apiClient.patch).toHaveBeenCalledWith("/users/admin/u1/status", { role: "host" });
+      expect(ok).toBe(true);
     });
   });
 });

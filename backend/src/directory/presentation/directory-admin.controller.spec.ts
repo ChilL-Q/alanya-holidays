@@ -99,7 +99,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
   });
 
   describe('Feature & Unfeature Curation Controls', () => {
-    it('POST /directory/:id/feature should set is_featured to true, invalidate cache and return success', async () => {
+    it('POST /directory/admin/:id/feature should set is_featured to true, invalidate cache and return success', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,
@@ -116,7 +116,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
       expect(mockRedisService.delByPattern).toHaveBeenCalledWith('directory:*');
     });
 
-    it('POST /directory/:id/unfeature should set is_featured to false, invalidate cache and return success', async () => {
+    it('POST /directory/admin/:id/unfeature should set is_featured to false, invalidate cache and return success', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,
@@ -156,7 +156,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
   });
 
   describe('Verify & Unverify Curation Controls', () => {
-    it('POST /directory/:id/verify should set is_verified to true, invalidate cache and return success', async () => {
+    it('POST /directory/admin/:id/verify should set is_verified to true, invalidate cache and return success', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,
@@ -173,7 +173,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
       expect(mockRedisService.delByPattern).toHaveBeenCalledWith('directory:*');
     });
 
-    it('POST /directory/:id/unverify should set is_verified to false, invalidate cache and return success', async () => {
+    it('POST /directory/admin/:id/unverify should set is_verified to false, invalidate cache and return success', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,
@@ -213,7 +213,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
   });
 
   describe('Score Adjustment Curation Controls', () => {
-    it('POST /directory/:id/score with score property should update base_score, invalidate cache and return base_score', async () => {
+    it('POST /directory/admin/:id/score with score property should update base_score, invalidate cache and return base_score', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,
@@ -235,7 +235,7 @@ describe('DirectoryAdminController Curation Controls (Task 2.2)', () => {
       expect(mockRedisService.delByPattern).toHaveBeenCalledWith('directory:*');
     });
 
-    it('POST /directory/:id/score with base_score property should update base_score', async () => {
+    it('POST /directory/admin/:id/score with base_score property should update base_score', async () => {
       userRolesRepo.getRole.mockResolvedValue('admin');
       mockDirectoryRepository.updateDirectoryListing.mockResolvedValue({
         id: listingId,

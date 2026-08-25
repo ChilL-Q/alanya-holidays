@@ -600,7 +600,7 @@ export class ConciergeService {
   /**
    * Submits a concierge enquiry request.
    */
-  async createEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
+  async submitConciergeEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
     const formattedSubject =
       payload.subject ||
       `${payload.experience_type || "Experience"} — ${payload.item_name || "Custom Request"}`;
@@ -653,10 +653,10 @@ export class ConciergeService {
   }
 
   /**
-   * Alias for createEnquiry.
+   * Alias for submitConciergeEnquiry (canonical name).
    */
-  async submitConciergeEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
-    return this.createEnquiry(payload);
+  async createEnquiry(payload: ConciergeEnquiryPayload): Promise<ConciergeEnquiryResult> {
+    return this.submitConciergeEnquiry(payload);
   }
 
 
