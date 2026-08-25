@@ -1,6 +1,9 @@
 import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
-import type { TrustBadgeType } from "@/components/common/TrustBadge";
-import { businesses as domainBusinesses } from "@/domain/directory-businesses";
+import { businesses as domainBusinesses, type Business } from "@/domain/directory-businesses";
+import type { DirectoryListingRecord } from "@alanya-holidays/shared";
+
+export type { Business };
+export type { DirectoryListingRecord };
 
 export interface BusinessCategory {
   id: string;
@@ -9,33 +12,6 @@ export interface BusinessCategory {
 }
 
 export type TaxonomyCategory = BusinessCategory;
-
-export interface Business {
-  id: string;
-  name: string;
-  category: string;
-  subcategory: string;
-  description: string;
-  address: string;
-  phone: string;
-  email: string;
-  website: string;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  tags: string[];
-  featured: boolean;
-  trustBadge?: TrustBadgeType;
-  priceRange: string;
-  openingHours: string;
-  lat: number;
-  lng: number;
-  is_claimed?: boolean;
-  is_verified?: boolean;
-  claimed_at?: string;
-  status?: string;
-  tier?: string;
-}
 
 export interface BusinessReview {
   id: string;
@@ -61,49 +37,6 @@ export const businessCategories: BusinessCategory[] = [
   { id: "services", name: "Professional Services", icon: "ri-briefcase-line" },
   { id: "nightlife", name: "Nightlife & Bars", icon: "ri-goblet-line" },
 ];
-
-export interface BackendDirectoryListing {
-  id: string;
-  slug?: string;
-  name: string;
-  category_id?: string;
-  category?: string;
-  subcategory?: string;
-  description?: string;
-  short_description?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  rating?: number;
-  average_rating?: number;
-  review_count?: number;
-  reviews_count?: number;
-  reviewCount?: number;
-  image?: string;
-  image_url?: string;
-  featured_image?: string;
-  gallery?: string[];
-  tags?: string[] | string;
-  is_featured?: boolean;
-  featured?: boolean;
-  price_range?: string;
-  priceRange?: string;
-  opening_hours?: string;
-  openingHours?: string;
-  latitude?: number;
-  lat?: number;
-  longitude?: number;
-  lng?: number;
-  status?: string;
-  tier?: string;
-  is_verified?: boolean;
-  is_claimed?: boolean;
-  claimed_at?: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: unknown;
-}
 
 export interface BackendReview {
   id: string;
@@ -233,21 +166,16 @@ export interface CreateListingInput {
   [key: string]: unknown;
 }
 
-export function mapBackendListingToBusiness(item: BackendDirectoryListing): Business {
-  let tags: string[] = [];
-  if (Array.isArray(item.tags)) {
-    tags = item.tags.map(String);
-  } else if (typeof item.tags === "string") {
-    try {
-      const parsed = JSON.parse(item.tags);
-      tags = Array.isArray(parsed) ? parsed.map(String) : [item.tags];
-    } catch {
-      tags = item.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-    }
-  }
+export function mapBackendListingToBusiness(
+  item: DirectoryListingRecord
+): Business {
+  const priceLevel = item.price_level;
+  const priceRange =
+    typeof priceLevel === "number"
+      ? "$".repeat(Math.min(Math.max(priceLevel, 1), 4))
+      : typeof priceLevel === "string" && priceLevel
+        ? priceLevel
+        : "$$";
 
   return {
     id: item.id || item.slug || "biz-unknown",
@@ -259,24 +187,21 @@ export function mapBackendListingToBusiness(item: BackendDirectoryListing): Busi
     phone: item.phone || "",
     email: item.email || "",
     website: item.website || "",
-    rating: item.rating ?? item.average_rating ?? 0,
-    reviewCount: item.reviewCount ?? item.review_count ?? item.reviews_count ?? 0,
+    rating: item.reviews_average ?? 0,
+    reviewCount: item.reviews_count ?? 0,
     image:
-      item.image ||
-      item.image_url ||
-      item.featured_image ||
       item.gallery?.[0] ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || "Business")}&size=800&background=2C6E49&color=fff`,
-    tags,
-    featured: Boolean(item.featured ?? item.is_featured),
-    priceRange: item.priceRange || item.price_range || "$$",
-    openingHours: item.openingHours || item.opening_hours || "09:00 - 18:00",
-    lat: item.lat ?? item.latitude ?? 36.5437,
-    lng: item.lng ?? item.longitude ?? 31.9998,
+    tags: [],
+    featured: Boolean(item.is_featured),
+    priceRange,
+    openingHours: "09:00 - 18:00",
+    lat: 36.5437,
+    lng: 31.9998,
     status: item.status,
-    is_claimed: item.is_claimed,
+    is_claimed: Boolean(item.claimed_at),
     is_verified: item.is_verified,
-    claimed_at: item.claimed_at,
+    claimed_at: item.claimed_at ?? undefined,
     tier: item.tier,
     trustBadge: item.tier === "signature" ? "Signature Collection" : undefined,
   };
@@ -312,8 +237,8 @@ export class DirectoryService {
     const { page = 1, limit = 20, category, sortBy, params: extraParams, ...reqConfig } = options;
 
     const response = await apiClient.get<
-      | { data: BackendDirectoryListing[]; pagination?: { total?: number; totalPages?: number } }
-      | BackendDirectoryListing[]
+      | { data: DirectoryListingRecord[]; pagination?: { total?: number; totalPages?: number } }
+      | DirectoryListingRecord[]
     >("/directory", {
       ...reqConfig,
       params: {
@@ -368,8 +293,8 @@ export class DirectoryService {
     const { category, location, page = 1, limit = 40, params: extraParams, ...reqConfig } = options;
 
     const response = await apiClient.get<
-      | { data: BackendDirectoryListing[]; total?: number; count?: number }
-      | BackendDirectoryListing[]
+      | { data: DirectoryListingRecord[]; total?: number; count?: number }
+      | DirectoryListingRecord[]
     >("/directory/search", {
       ...reqConfig,
       params: {
@@ -428,8 +353,8 @@ export class DirectoryService {
   async getListingById(id: string, options?: RequestOptions): Promise<Business | null> {
     try {
       const data = options
-        ? await apiClient.get<BackendDirectoryListing>(`/directory/${id}`, options)
-        : await apiClient.get<BackendDirectoryListing>(`/directory/${id}`);
+        ? await apiClient.get<DirectoryListingRecord>(`/directory/${id}`, options)
+        : await apiClient.get<DirectoryListingRecord>(`/directory/${id}`);
       if (data && data.id) {
         return mapBackendListingToBusiness(data);
       }
@@ -450,8 +375,8 @@ export class DirectoryService {
   async getListingBySlug(slug: string, options?: RequestOptions): Promise<Business | null> {
     try {
       const data = options
-        ? await apiClient.get<BackendDirectoryListing>(`/directory/slug/${slug}`, options)
-        : await apiClient.get<BackendDirectoryListing>(`/directory/slug/${slug}`);
+        ? await apiClient.get<DirectoryListingRecord>(`/directory/slug/${slug}`, options)
+        : await apiClient.get<DirectoryListingRecord>(`/directory/slug/${slug}`);
       if (data && (data.id || data.slug)) {
         return mapBackendListingToBusiness(data);
       }
@@ -544,28 +469,41 @@ export class DirectoryService {
   }
 
   /**
+   * Единственный билдер payload листинга для create/draft/publish/update.
+   */
+  private buildListingFields(
+    input: Partial<CreateListingInput>,
+    status?: string,
+    options: { defaultEmptyGallery?: boolean } = {}
+  ) {
+    const { defaultEmptyGallery = true } = options;
+    return {
+      name: input.name,
+      category_id: input.category,
+      subcategory: input.subcategory,
+      short_description: input.description,
+      description: input.description,
+      location: input.address,
+      address: input.address,
+      phone: input.phone,
+      email: input.email,
+      website: input.website,
+      tier: input.tier,
+      price_level: input.price_level,
+      gallery: input.images ?? (defaultEmptyGallery ? [] : undefined),
+      video_url: input.video_url,
+      booking_url: input.booking_url,
+      whatsapp: input.social_links?.whatsapp,
+      ...(status ? { status } : {}),
+    };
+  }
+
+  /**
    * Creates a new business directory listing submission.
    */
   async createListing(input: CreateListingInput): Promise<Business> {
-    const response = await apiClient.post<BackendDirectoryListing>("/directory", {
-      listing: {
-        name: input.name,
-        category_id: input.category,
-        subcategory: input.subcategory,
-        short_description: input.description,
-        description: input.description,
-        location: input.address,
-        address: input.address,
-        phone: input.phone,
-        email: input.email,
-        website: input.website,
-        tier: input.tier,
-        price_level: input.price_level,
-        gallery: input.images || [],
-        video_url: input.video_url,
-        whatsapp: input.social_links?.whatsapp,
-        status: "pending",
-      },
+    const response = await apiClient.post<DirectoryListingRecord>("/directory", {
+      listing: this.buildListingFields(input, "pending"),
       locationIds: [],
     });
 
@@ -579,26 +517,8 @@ export class DirectoryService {
     input: Partial<CreateListingInput>,
     draftId?: string
   ): Promise<Business> {
-    const response = await apiClient.post<BackendDirectoryListing>("/directory/draft", {
-      listing: {
-        name: input.name,
-        category_id: input.category,
-        subcategory: input.subcategory,
-        short_description: input.description,
-        description: input.description,
-        location: input.address,
-        address: input.address,
-        phone: input.phone,
-        email: input.email,
-        website: input.website,
-        tier: input.tier,
-        price_level: input.price_level,
-        gallery: input.images || [],
-        video_url: input.video_url,
-        booking_url: input.booking_url,
-        whatsapp: input.social_links?.whatsapp,
-        status: "draft",
-      },
+    const response = await apiClient.post<DirectoryListingRecord>("/directory/draft", {
+      listing: this.buildListingFields(input, "draft"),
       draftId,
       locationIds: [],
     });
@@ -613,26 +533,13 @@ export class DirectoryService {
     id: string,
     input: CreateListingInput
   ): Promise<Business> {
-    const response = await apiClient.post<BackendDirectoryListing>(`/directory/${id}/publish`, {
-      name: input.name,
-      category_id: input.category,
-      subcategory: input.subcategory,
-      short_description: input.description,
-      description: input.description,
-      location: input.address,
-      address: input.address,
-      phone: input.phone,
-      email: input.email,
-      website: input.website,
-      tier: input.tier,
-      price_level: input.price_level,
-      gallery: input.images || [],
-      video_url: input.video_url,
-      booking_url: input.booking_url,
-      whatsapp: input.social_links?.whatsapp,
-      status: "pending",
-      locationIds: [],
-    });
+    const response = await apiClient.post<DirectoryListingRecord>(
+      `/directory/${id}/publish`,
+      {
+        ...this.buildListingFields(input, "pending"),
+        locationIds: [],
+      }
+    );
 
     return mapBackendListingToBusiness(response);
   }
@@ -642,7 +549,7 @@ export class DirectoryService {
    */
   async getMyListings(status?: string): Promise<Business[]> {
     try {
-      const response = await apiClient.get<BackendDirectoryListing[]>("/directory/me/listings", {
+      const response = await apiClient.get<DirectoryListingRecord[]>("/directory/me/listings", {
         params: status ? { status } : undefined,
       });
 
@@ -663,7 +570,7 @@ export class DirectoryService {
    */
   async getRecentlyClaimedListings(limit = 6): Promise<Business[]> {
     try {
-      const response = await apiClient.get<BackendDirectoryListing[]>(
+      const response = await apiClient.get<DirectoryListingRecord[]>(
         `/directory/landing/recent`,
         { params: { limit } }
       );
@@ -764,25 +671,10 @@ export class DirectoryService {
     updates: Partial<CreateListingInput>,
     locationIds: string[] = []
   ): Promise<Business> {
-    const response = await apiClient.put<BackendDirectoryListing>(`/directory/${id}`, {
-      updates: {
-        name: updates.name,
-        category_id: updates.category,
-        subcategory: updates.subcategory,
-        short_description: updates.description,
-        description: updates.description,
-        location: updates.address,
-        address: updates.address,
-        phone: updates.phone,
-        email: updates.email,
-        website: updates.website,
-        tier: updates.tier,
-        price_level: updates.price_level,
-        gallery: updates.images,
-        video_url: updates.video_url,
-        booking_url: updates.booking_url,
-        whatsapp: updates.social_links?.whatsapp,
-      },
+    const response = await apiClient.put<DirectoryListingRecord>(`/directory/${id}`, {
+      updates: this.buildListingFields(updates, undefined, {
+        defaultEmptyGallery: false,
+      }),
       locationIds,
     });
 

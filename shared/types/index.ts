@@ -18,3 +18,6 @@ export type Enums<T extends keyof Database['public']['Enums']> =
 // Re-export common DTOs
 export * from './dto.js';
 
+// District Directory canonical contract
+export * from './directory.js';
+

@@ -6,7 +6,7 @@ import {
   getListings,
   getCategories,
   businessCategories,
-  type BackendDirectoryListing,
+  type DirectoryListingRecord,
   type BackendReview,
   type SubmitClaimPayload,
 } from "./directory.service";
@@ -23,7 +23,7 @@ describe("directory.service", () => {
 
   describe("Mappers", () => {
     it("mapBackendListingToBusiness should format raw backend listing properly", () => {
-      const backendListing: BackendDirectoryListing = {
+      const backendListing: DirectoryListingRecord = {
         id: "biz-uuid-1",
         slug: "kale-panorama",
         name: "Kale Panorama",
@@ -34,15 +34,11 @@ describe("directory.service", () => {
         phone: "+90 555 123 4567",
         email: "info@kale.com",
         website: "https://kale.com",
-        average_rating: 4.9,
+        reviews_average: 4.9,
         reviews_count: 120,
-        featured_image: "https://example.com/kale.jpg",
-        tags: '["Terrace", "View", "Fine Dining"]',
+        gallery: ["https://example.com/kale.jpg"],
         is_featured: true,
-        price_range: "$$$",
-        opening_hours: "10:00 - 23:00",
-        latitude: 36.5361,
-        longitude: 31.9956,
+        price_level: 3,
       };
 
       const result = mapBackendListingToBusiness(backendListing);
@@ -54,25 +50,26 @@ describe("directory.service", () => {
       expect(result.rating).toBe(4.9);
       expect(result.reviewCount).toBe(120);
       expect(result.image).toBe("https://example.com/kale.jpg");
-      expect(result.tags).toEqual(["Terrace", "View", "Fine Dining"]);
+      expect(result.tags).toEqual([]);
       expect(result.featured).toBe(true);
       expect(result.priceRange).toBe("$$$");
-      expect(result.lat).toBe(36.5361);
-      expect(result.lng).toBe(31.9956);
+      expect(result.lat).toBe(36.5437);
+      expect(result.lng).toBe(31.9998);
     });
 
-    it("mapBackendListingToBusiness should handle comma-separated string tags and defaults", () => {
-      const backendListing: BackendDirectoryListing = {
+    it("mapBackendListingToBusiness should apply canonical defaults for missing fields", () => {
+      const backendListing: DirectoryListingRecord = {
         id: "biz-uuid-2",
         name: "Beach Cafe",
-        tags: "Beach, Sun, Drinks",
       };
 
       const result = mapBackendListingToBusiness(backendListing);
-      expect(result.tags).toEqual(["Beach", "Sun", "Drinks"]);
+      expect(result.tags).toEqual([]);
       expect(result.priceRange).toBe("$$");
       expect(result.rating).toBe(0);
       expect(result.reviewCount).toBe(0);
+      expect(result.openingHours).toBe("09:00 - 18:00");
+      expect(result.image).toContain("ui-avatars.com");
     });
 
     it("mapBackendReviewToBusinessReview should format backend review properly", () => {
@@ -385,7 +382,7 @@ describe("directory.service", () => {
 
   describe("saveDraft", () => {
     it("should post draft payload to /directory/draft and return mapped Business", async () => {
-      const mockBackendDraft: BackendDirectoryListing = {
+      const mockBackendDraft: DirectoryListingRecord = {
         id: "draft-123",
         name: "Draft Cafe",
         category_id: "restaurants",
@@ -414,7 +411,7 @@ describe("directory.service", () => {
     });
 
     it("should pass draftId when updating an existing draft", async () => {
-      const mockBackendDraft: BackendDirectoryListing = {
+      const mockBackendDraft: DirectoryListingRecord = {
         id: "draft-456",
         name: "Updated Draft Cafe",
         status: "draft",
@@ -441,7 +438,7 @@ describe("directory.service", () => {
 
   describe("publishDraft", () => {
     it("should post publish payload to /directory/:id/publish", async () => {
-      const mockPublished: BackendDirectoryListing = {
+      const mockPublished: DirectoryListingRecord = {
         id: "draft-123",
         name: "Published Restaurant",
         category_id: "restaurants",
@@ -581,7 +578,7 @@ describe("directory.service", () => {
 
   describe("updateListing and deleteListing", () => {
     it("should call PUT /directory/:id when updating listing", async () => {
-      const mockUpdated: BackendDirectoryListing = {
+      const mockUpdated: DirectoryListingRecord = {
         id: "biz-123",
         name: "Updated Name",
         status: "approved",
