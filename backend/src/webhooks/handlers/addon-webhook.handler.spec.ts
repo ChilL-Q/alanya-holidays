@@ -154,7 +154,11 @@ describe('AddonWebhookHandler', () => {
       'pi_addon_dup',
     );
     expect(tableMocks.listing_addons.insert).not.toHaveBeenCalled();
-    expect(tableMocks.directory_listings.update).not.toHaveBeenCalled();
+    // Duplicate delivery still re-applies the idempotent fast-path flag:
+    // a prior attempt may have recorded the addon but failed the patch.
+    expect(tableMocks.directory_listings.update).toHaveBeenCalledWith({
+      is_verified: true,
+    });
   });
 
   it('should set expires_at to null when durationDays metadata is omitted for permanent add-on', async () => {
