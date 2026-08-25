@@ -7,6 +7,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { BookingsRepository } from './bookings.repository';
+import { appUrl } from '../utils/app-url';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -273,7 +274,7 @@ export class BookingsService {
           checkOut: booking.check_out,
           totalPrice: booking.total_price,
           guests: booking.guests,
-          link: `${process.env.APP_URL || 'http://localhost:8080'}/profile`,
+          link: `${appUrl('/profile')}`,
         },
       });
 
@@ -290,7 +291,7 @@ export class BookingsService {
             totalPrice: booking.total_price,
             guests: booking.guests,
             message: booking.message,
-            link: `${process.env.APP_URL || 'http://localhost:8080'}/host/bookings`,
+            link: `${appUrl('/host/bookings')}`,
           },
         });
       }
@@ -445,7 +446,7 @@ export class BookingsService {
           checkIn: domainBooking.stayPeriod.checkIn,
           checkOut: domainBooking.stayPeriod.checkOut,
           reason,
-          link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/profile`,
+          link: `${appUrl('/profile')}`,
         },
       });
 
@@ -459,7 +460,7 @@ export class BookingsService {
             itemTypeLabel: typeLabel,
             checkIn: domainBooking.stayPeriod.checkIn,
             checkOut: domainBooking.stayPeriod.checkOut,
-            link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/host/bookings`,
+            link: `${appUrl('/host/bookings')}`,
           },
         });
       }
@@ -550,7 +551,7 @@ export class BookingsService {
             checkIn: booking.check_in,
             checkOut: booking.check_out,
             guests: String(booking.guests ?? 1),
-            link: `${process.env.APP_URL || 'https://alanyaholidays.com'}/profile`,
+            link: `${appUrl('/profile')}`,
           },
         });
       }

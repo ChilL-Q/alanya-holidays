@@ -14,7 +14,11 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { PaginationDto, LimitQueryDto } from '../common/dto/pagination.dto';
+import {
+  PaginationDto,
+  LimitQueryDto,
+  parsePagination,
+} from '../common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -55,8 +59,10 @@ export class UsersController {
     @CurrentUser() user?: AuthUser,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.usersService.getAllUsers(page, limit, user?.id ?? '');
   }
 
@@ -70,8 +76,10 @@ export class UsersController {
     @CurrentUser() user?: AuthUser,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.usersService.getUsersByRole(role, page, limit, user?.id ?? '');
   }
 

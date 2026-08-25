@@ -21,6 +21,7 @@ import {
   PaginationDto,
   LimitQueryDto,
   DaysQueryDto,
+  parsePagination,
 } from '../../common/dto/pagination.dto';
 
 @Controller('directory')
@@ -38,8 +39,10 @@ export class DirectoryController {
     @Query('sortBy') sortBy?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.listingService.getDirectoryListings(
       page,
       limit,
@@ -54,8 +57,10 @@ export class DirectoryController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 20);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+    );
     return this.listingService.getDirectoryListings(page, limit, 'restaurants');
   }
 
@@ -68,8 +73,11 @@ export class DirectoryController {
     @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const page = pagination?.page ?? (pageStr ? parseInt(pageStr, 10) : 1);
-    const limit = pagination?.limit ?? (limitStr ? parseInt(limitStr, 10) : 40);
+    const { page, limit } = parsePagination(
+      { page: pageStr, limit: limitStr },
+      pagination,
+      { limit: 40 },
+    );
     return this.listingService.searchDirectoryListings(
       query,
       categoryId,

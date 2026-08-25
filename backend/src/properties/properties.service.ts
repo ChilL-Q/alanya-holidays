@@ -14,6 +14,7 @@ import {
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
+import { appUrl } from '../utils/app-url';
 import {
   CreatePropertyDto,
   UpdatePropertyDto,
@@ -513,7 +514,7 @@ export class PropertiesService {
             rating: review.rating,
             comment: review.comment,
             guestName: 'A Guest',
-            link: `https://alanyaholidays.com/property/${propertyId}`,
+            link: appUrl(`/property/${propertyId}`),
           },
         })
         .catch((err: unknown) =>
