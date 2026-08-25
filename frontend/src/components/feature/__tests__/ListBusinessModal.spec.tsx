@@ -150,10 +150,6 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       lng: 31.99,
     });
 
-    const paymentSpy = vi.spyOn(directoryService, "sendPaymentInstructions").mockResolvedValue({
-      success: true,
-    });
-
     render(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 
     // Select Signature tier
@@ -189,7 +185,6 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
           tier: "signature",
         })
       );
-      expect(paymentSpy).toHaveBeenCalledWith("Alanya Grand Luxury Hotel", "signature");
     });
 
     // Bank transfer popup check

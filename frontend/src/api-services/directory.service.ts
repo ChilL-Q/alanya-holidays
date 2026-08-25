@@ -588,19 +588,6 @@ export class DirectoryService {
   }
 
   /**
-   * Sends listing payment instructions to claimant/owner.
-   */
-  async sendPaymentInstructions(
-    businessName: string,
-    tier: string
-  ): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }>("/directory/payment/instructions", {
-      businessName,
-      tier,
-    });
-  }
-
-  /**
    * Retrieves business categories list.
    */
   async getCategories(): Promise<typeof businessCategories> {
@@ -731,6 +718,4 @@ export const updateListing = (
 export const deleteListing = (id: string) => directoryService.deleteListing(id);
 export const getRecentlyClaimedListings = (limit?: number) =>
   directoryService.getRecentlyClaimedListings(limit);
-export const sendPaymentInstructions = (businessName: string, tier: string) =>
-  directoryService.sendPaymentInstructions(businessName, tier);
 export const getCategories = () => directoryService.getCategories();
