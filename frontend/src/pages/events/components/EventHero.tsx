@@ -2,9 +2,15 @@ interface EventHeroProps {
   totalEvents: number;
   eventsThisMonth: number;
   onHostEvent: () => void;
+  showHostButton?: boolean;
 }
 
-export default function EventHero({ totalEvents, eventsThisMonth, onHostEvent }: EventHeroProps) {
+export default function EventHero({
+  totalEvents,
+  eventsThisMonth,
+  onHostEvent,
+  showHostButton = true,
+}: EventHeroProps) {
   return (
     <section className="relative w-full h-[280px] md:h-[360px] overflow-hidden">
       <img
@@ -44,16 +50,20 @@ export default function EventHero({ totalEvents, eventsThisMonth, onHostEvent }:
               <p className="text-white text-xl md:text-2xl font-semibold">{eventsThisMonth}</p>
               <p className="text-white/50 text-xs">This Month</p>
             </div>
-            <div className="w-px h-8 bg-white/20"></div>
-            <div className="text-center">
-              <button
-                onClick={onHostEvent}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                <i className="ri-add-line"></i>
-                Host an Event
-              </button>
-            </div>
+            {showHostButton && (
+              <>
+                <div className="w-px h-8 bg-white/20"></div>
+                <div className="text-center">
+                  <button
+                    onClick={onHostEvent}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    <i className="ri-add-line"></i>
+                    Host an Event
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

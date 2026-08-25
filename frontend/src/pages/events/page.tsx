@@ -10,6 +10,7 @@ import EventSearch from "./components/EventSearch";
 import ViewToggle from "./components/ViewToggle";
 import MapView from "./components/MapView";
 import HostEventModal from "./components/HostEventModal";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/useToast";
 import ErrorState from "@/components/base/ErrorState";
 import { logger } from "@/lib/logger";
@@ -47,6 +48,7 @@ export default function EventsPage() {
   const [rsvpdEvents, setRsvpdEvents] = useState<Set<string>>(new Set());
   const [savedEvents, setSavedEvents] = useState<Set<string>>(() => loadSavedEvents());
   const { showToast, ToastContainer } = useToast();
+  const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
@@ -236,7 +238,7 @@ export default function EventsPage() {
     <>
       <Navbar />
       <main>
-        <EventHero totalEvents={events.length} eventsThisMonth={eventsThisMonth} onHostEvent={() => setShowHostModal(true)} />
+        <EventHero totalEvents={events.length} eventsThisMonth={eventsThisMonth} onHostEvent={() => setShowHostModal(true)} showHostButton={isAdmin} />
 
         {/* Calendar Strip */}
         <CalendarStrip
@@ -494,23 +496,25 @@ export default function EventsPage() {
             </>
           )}
 
-          {/* Host your own event CTA */}
-          <div className="mt-16 bg-gradient-to-r from-accent-500 to-accent-600 rounded-2xl p-8 md:p-10 text-center">
-            <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
-              Want to host your own event?
-            </h2>
-            <p className="text-white/80 text-sm md:text-base max-w-lg mx-auto mb-6">
-              Whether it is a beach cleanup, hiking trip, or coffee meetup — our community loves
-              showing up. Create your event and we will help spread the word.
-            </p>
-            <button
-              onClick={() => setShowHostModal(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-accent-600 rounded-full text-sm font-semibold hover:bg-white/95 transition-colors cursor-pointer"
-            >
-              Create an Event
-              <i className="ri-arrow-right-line"></i>
-            </button>
-          </div>
+          {/* Host your own event CTA — backend event creation is admin-gated */}
+          {isAdmin && (
+            <div className="mt-16 bg-gradient-to-r from-accent-500 to-accent-600 rounded-2xl p-8 md:p-10 text-center">
+              <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
+                Want to host your own event?
+              </h2>
+              <p className="text-white/80 text-sm md:text-base max-w-lg mx-auto mb-6">
+                Whether it is a beach cleanup, hiking trip, or coffee meetup — our community loves
+                showing up. Create your event and we will help spread the word.
+              </p>
+              <button
+                onClick={() => setShowHostModal(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-accent-600 rounded-full text-sm font-semibold hover:bg-white/95 transition-colors cursor-pointer"
+              >
+                Create an Event
+                <i className="ri-arrow-right-line"></i>
+              </button>
+            </div>
+          )}
         </section>
       </main>
       <Footer />
