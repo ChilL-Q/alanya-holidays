@@ -16,7 +16,9 @@ import { DirectoryListingService } from '../directory/application/directory-list
 import { ListingClaimService } from '../directory/application/listing-claim.service';
 
 import { ForumModerationController } from '../forum/forum-moderation.controller';
-import { ForumService } from '../forum/forum.service';
+import { ForumDiscussionService } from '../forum/application/forum-discussion.service';
+import { ForumEventService } from '../forum/application/forum-event.service';
+import { ForumReportService } from '../forum/application/forum-report.service';
 
 import { SupabaseService } from '../supabase/supabase.service';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
@@ -154,7 +156,15 @@ describe('Challenger M3: Adversarial & Empirical Stress Suite for Audit Logging'
           useValue: mockClaimService,
         },
         {
-          provide: ForumService,
+          provide: ForumDiscussionService,
+          useValue: mockForumService,
+        },
+        {
+          provide: ForumEventService,
+          useValue: mockForumService,
+        },
+        {
+          provide: ForumReportService,
           useValue: mockForumService,
         },
         {

@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
 import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 
 describe('Adversarial Stress Test: Forum Service Security & Edge Cases', () => {
-  let service: ForumService;
+  let service: ForumDiscussionService;
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: Record<string, jest.Mock>;
 
@@ -97,7 +97,7 @@ describe('Adversarial Stress Test: Forum Service Security & Edge Cases', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ForumService,
+        ForumDiscussionService,
         {
           provide: ForumRepository,
           useValue: mockRepository,
@@ -109,7 +109,7 @@ describe('Adversarial Stress Test: Forum Service Security & Edge Cases', () => {
       ],
     }).compile();
 
-    service = module.get<ForumService>(ForumService);
+    service = module.get<ForumDiscussionService>(ForumDiscussionService);
   });
 
   describe('1. Slug Generation & Multilingual Stress Tests', () => {

@@ -22,7 +22,7 @@ import {
   CreateNotificationInput,
 } from '../src/notifications/domain/repositories/notifications.repository.interface';
 import { ForumController } from '../src/forum/forum.controller';
-import { ForumService } from '../src/forum/forum.service';
+import { ForumDiscussionService } from '../src/forum/application/forum-discussion.service';
 import { UsersService } from '../src/users/users.service';
 import { BlogController } from '../src/blog/blog.controller';
 import { BlogService } from '../src/blog/blog.service';
@@ -417,7 +417,7 @@ describe('Platform Milestones Comprehensive E2E & Multi-Tier Test Suite (Tiers 1
           useValue: notificationsService,
         },
         {
-          provide: ForumService,
+          provide: ForumDiscussionService,
           useValue: forumServiceMock,
         },
         {

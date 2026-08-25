@@ -6,7 +6,6 @@ import { AdminService } from './admin.service';
 import { AdminRepository } from './admin.repository';
 import { DirectoryController } from '../directory/directory.controller';
 import { DirectoryAdminController } from '../directory/presentation/directory-admin.controller';
-import { DirectoryService } from '../directory/directory.service';
 import { DirectoryListingService } from '../directory/application/directory-listing.service';
 import { ListingClaimService } from '../directory/application/listing-claim.service';
 import { DirectoryRepository } from '../directory/directory.repository';
@@ -24,7 +23,8 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
 
   let _directoryController: DirectoryController;
   let directoryAdminController: DirectoryAdminController;
-  let directoryService: DirectoryService;
+  let listingService: DirectoryListingService;
+  let claimService: ListingClaimService;
   let _directoryRepo: DirectoryRepository;
   let userRolesRepo: UserRolesRepository;
 
@@ -57,7 +57,8 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
       providers: [
         AdminService,
         AdminRepository,
-        DirectoryService,
+        DirectoryListingService,
+        ListingClaimService,
         DirectoryListingService,
         ListingClaimService,
         DirectoryRepository,
@@ -91,7 +92,10 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
     directoryAdminController = module.get<DirectoryAdminController>(
       DirectoryAdminController,
     );
-    directoryService = module.get<DirectoryService>(DirectoryService);
+    listingService = module.get<DirectoryListingService>(
+      DirectoryListingService,
+    );
+    claimService = module.get<ListingClaimService>(ListingClaimService);
     _directoryRepo = module.get<DirectoryRepository>(DirectoryRepository);
     userRolesRepo = module.get<UserRolesRepository>(UserRolesRepository);
   });
@@ -250,7 +254,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
         };
         mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 
-        await directoryService.getDirectoryListingsAdmin(
+        await listingService.getDirectoryListingsAdmin(
           { status: st, category: 'all' },
           '00000000-0000-0000-0000-000000000001',
         );
@@ -272,7 +276,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
       };
       mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 
-      await directoryService.getDirectoryListingsAdmin(
+      await listingService.getDirectoryListingsAdmin(
         { query: '100%_pure,dining' },
         '00000000-0000-0000-0000-000000000001',
       );
@@ -393,7 +397,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
       });
 
       await expect(
-        directoryService.approveListingClaim(
+        claimService.approveListingClaim(
           'claim-123',
           '00000000-0000-0000-0000-000000000001',
         ),
@@ -405,7 +409,7 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
       const oversizedReason = 'a'.repeat(1001);
 
       await expect(
-        directoryService.rejectDirectoryListing(
+        listingService.rejectDirectoryListing(
           'list-123',
           oversizedReason,
           '00000000-0000-0000-0000-000000000001',

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForumModerationController } from './forum-moderation.controller';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumReportService } from './application/forum-report.service';
 import { ModerationAuditService } from '../admin/moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -31,7 +32,11 @@ describe('ForumModerationController', () => {
       controllers: [ForumModerationController],
       providers: [
         {
-          provide: ForumService,
+          provide: ForumDiscussionService,
+          useValue: mockService,
+        },
+        {
+          provide: ForumReportService,
           useValue: mockService,
         },
         {

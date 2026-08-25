@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DirectoryService } from './directory.service';
+import { DirectoryListingService } from './application/directory-listing.service';
 import { DirectoryRepository } from './directory.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
 
 describe('Adversarial Stress Test: Directory Security & Prototype Pollution Invariants', () => {
-  let service: DirectoryService;
+  let service: DirectoryListingService;
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: {
     insertDirectoryListing: jest.Mock;
@@ -49,7 +49,7 @@ describe('Adversarial Stress Test: Directory Security & Prototype Pollution Inva
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        DirectoryService,
+        DirectoryListingService,
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
@@ -69,7 +69,7 @@ describe('Adversarial Stress Test: Directory Security & Prototype Pollution Inva
       ],
     }).compile();
 
-    service = module.get<DirectoryService>(DirectoryService);
+    service = module.get<DirectoryListingService>(DirectoryListingService);
   });
 
   describe('1. Prototype Pollution & Object Prototype Injection Attacks', () => {

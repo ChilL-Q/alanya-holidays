@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForumController } from './forum.controller';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumEventService } from './application/forum-event.service';
+import { ForumReportService } from './application/forum-report.service';
 import { UsersService } from '../users/users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { OptionalAuthGuard } from '../auth/optional-auth.guard';
@@ -77,7 +79,15 @@ describe('ForumController', () => {
       controllers: [ForumController],
       providers: [
         {
-          provide: ForumService,
+          provide: ForumDiscussionService,
+          useValue: mockService,
+        },
+        {
+          provide: ForumEventService,
+          useValue: mockService,
+        },
+        {
+          provide: ForumReportService,
           useValue: mockService,
         },
         {

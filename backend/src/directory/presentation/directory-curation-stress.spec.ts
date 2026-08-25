@@ -513,9 +513,8 @@ describe('Adversarial Stress Test: Directory Curation Controls (Milestone 2 Task
       };
 
       const facadeController = new DirectoryAdminController(
-        undefined,
-        undefined,
-        facadeInstance as any,
+        facadeInstance.listingService,
+        facadeInstance.claimService as any,
       );
 
       const result = await facadeController.featureListing(

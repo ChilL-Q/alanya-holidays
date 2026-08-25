@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { ForumService } from './forum.service';
+import { ForumDiscussionService } from './application/forum-discussion.service';
+import { ForumReportService } from './application/forum-report.service';
 import { ForumRepository } from './forum.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { ForumModerationController } from './forum-moderation.controller';
@@ -16,7 +17,8 @@ import { AuthUser } from '../auth/types/auth-user.interface';
 import { SupabaseService } from '../supabase/supabase.service';
 
 describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
-  let forumService: ForumService;
+  let discussionService: ForumDiscussionService;
+  let reportService: ForumReportService;
   let moderationController: ForumModerationController;
   let mockRepository: Record<string, jest.Mock>;
   let mockUserRolesRepo: { getRole: jest.Mock };
@@ -56,7 +58,8 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ForumModerationController],
       providers: [
-        ForumService,
+        ForumDiscussionService,
+        ForumReportService,
         {
           provide: ForumRepository,
           useValue: mockRepository,
@@ -73,7 +76,10 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
       .useValue({ canActivate: () => true })
       .compile();
 
-    forumService = module.get<ForumService>(ForumService);
+    discussionService = module.get<ForumDiscussionService>(
+      ForumDiscussionService,
+    );
+    reportService = module.get<ForumReportService>(ForumReportService);
     moderationController = module.get<ForumModerationController>(
       ForumModerationController,
     );
@@ -186,64 +192,69 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
   describe('2. Authorization & Non-Admin Escalation Attack Tests', () => {
     it('2.1 non-admin cannot access getForumReports', async () => {
       await expect(
-        forumService.getForumReports({ includeResolved: false }, normalUserId),
+        reportService.getForumReports({ includeResolved: false }, normalUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.getForumReports(
+        reportService.getForumReports(
           { includeResolved: false },
           attackerUserId,
         ),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.getForumReports({ includeResolved: false }, adminUserId),
+        reportService.getForumReports({ includeResolved: false }, adminUserId),
       ).resolves.toEqual([]);
     });
 
     it('2.2 non-admin cannot resolve forum reports', async () => {
       await expect(
-        forumService.resolveForumReport('report-1', normalUserId),
+        reportService.resolveForumReport('report-1', normalUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.resolveForumReport('report-1', adminUserId),
+        reportService.resolveForumReport('report-1', adminUserId),
       ).resolves.toEqual({ success: true });
     });
 
     it('2.3 non-admin cannot access getRemovedComments', async () => {
       await expect(
-        forumService.getRemovedComments(50, normalUserId),
+        discussionService.getRemovedComments(50, normalUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.getRemovedComments(50, adminUserId),
+        discussionService.getRemovedComments(50, adminUserId),
       ).resolves.toEqual([]);
     });
 
     it('2.4 non-admin cannot set post or comment pinned / removed status', async () => {
       await expect(
-        forumService.setPinned('post-1', true, normalUserId),
+        discussionService.setPinned('post-1', true, normalUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.setRemoved('post', 'post-1', true, normalUserId),
+        discussionService.setRemoved('post', 'post-1', true, normalUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.setRemoved('comment', 'comment-1', true, normalUserId),
+        discussionService.setRemoved(
+          'comment',
+          'comment-1',
+          true,
+          normalUserId,
+        ),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.setPinned('post-1', true, adminUserId),
+        discussionService.setPinned('post-1', true, adminUserId),
       ).resolves.toEqual({ success: true });
 
       await expect(
-        forumService.setRemoved('post', 'post-1', true, adminUserId),
+        discussionService.setRemoved('post', 'post-1', true, adminUserId),
       ).resolves.toEqual({ success: true });
 
       await expect(
-        forumService.setRemoved('comment', 'comment-1', true, adminUserId),
+        discussionService.setRemoved('comment', 'comment-1', true, adminUserId),
       ).resolves.toEqual({ success: true });
     });
 
@@ -259,29 +270,29 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
 
       // Attacker attempt
       await expect(
-        forumService.deleteForumPost('post-1', attackerUserId),
+        discussionService.deleteForumPost('post-1', attackerUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        forumService.deleteForumComment('comment-1', attackerUserId),
+        discussionService.deleteForumComment('comment-1', attackerUserId),
       ).rejects.toThrow(UnauthorizedException);
 
       // Author attempt
       await expect(
-        forumService.deleteForumPost('post-1', authorUserId),
+        discussionService.deleteForumPost('post-1', authorUserId),
       ).resolves.toEqual({ success: true });
 
       await expect(
-        forumService.deleteForumComment('comment-1', authorUserId),
+        discussionService.deleteForumComment('comment-1', authorUserId),
       ).resolves.toEqual({ success: true });
 
       // Admin attempt
       await expect(
-        forumService.deleteForumPost('post-1', adminUserId),
+        discussionService.deleteForumPost('post-1', adminUserId),
       ).resolves.toEqual({ success: true });
 
       await expect(
-        forumService.deleteForumComment('comment-1', adminUserId),
+        discussionService.deleteForumComment('comment-1', adminUserId),
       ).resolves.toEqual({ success: true });
     });
 
@@ -290,11 +301,14 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
       mockRepository.getCommentById.mockResolvedValue(null);
 
       await expect(
-        forumService.deleteForumPost('non-existent-post', adminUserId),
+        discussionService.deleteForumPost('non-existent-post', adminUserId),
       ).rejects.toThrow(NotFoundException);
 
       await expect(
-        forumService.deleteForumComment('non-existent-comment', adminUserId),
+        discussionService.deleteForumComment(
+          'non-existent-comment',
+          adminUserId,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -302,9 +316,9 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
   describe('3. Soft-Remove vs Restore vs Hard-Delete Idempotency Tests', () => {
     it('3.1 soft-removing already removed post/comment is idempotent', async () => {
       // Multiple soft-removes in succession
-      await forumService.setRemoved('post', 'post-100', true, adminUserId);
-      await forumService.setRemoved('post', 'post-100', true, adminUserId);
-      await forumService.setRemoved('post', 'post-100', true, adminUserId);
+      await discussionService.setRemoved('post', 'post-100', true, adminUserId);
+      await discussionService.setRemoved('post', 'post-100', true, adminUserId);
+      await discussionService.setRemoved('post', 'post-100', true, adminUserId);
 
       expect(mockRepository.setRemoved).toHaveBeenCalledTimes(3);
       expect(mockRepository.setRemoved).toHaveBeenLastCalledWith(
@@ -316,8 +330,18 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
 
     it('3.2 restoring already restored post/comment is idempotent', async () => {
       // Multiple restores in succession
-      await forumService.setRemoved('post', 'post-100', false, adminUserId);
-      await forumService.setRemoved('post', 'post-100', false, adminUserId);
+      await discussionService.setRemoved(
+        'post',
+        'post-100',
+        false,
+        adminUserId,
+      );
+      await discussionService.setRemoved(
+        'post',
+        'post-100',
+        false,
+        adminUserId,
+      );
 
       expect(mockRepository.setRemoved).toHaveBeenCalledWith(
         'forum_posts',
@@ -325,13 +349,13 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
         false,
       );
 
-      await forumService.setRemoved(
+      await discussionService.setRemoved(
         'comment',
         'comment-100',
         false,
         adminUserId,
       );
-      await forumService.setRemoved(
+      await discussionService.setRemoved(
         'comment',
         'comment-100',
         false,
@@ -346,15 +370,15 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
     });
 
     it('3.3 pin and unpin operations are idempotent', async () => {
-      await forumService.setPinned('post-200', true, adminUserId);
-      await forumService.setPinned('post-200', true, adminUserId);
+      await discussionService.setPinned('post-200', true, adminUserId);
+      await discussionService.setPinned('post-200', true, adminUserId);
       expect(mockRepository.updatePostPinned).toHaveBeenCalledWith(
         'post-200',
         true,
       );
 
-      await forumService.setPinned('post-200', false, adminUserId);
-      await forumService.setPinned('post-200', false, adminUserId);
+      await discussionService.setPinned('post-200', false, adminUserId);
+      await discussionService.setPinned('post-200', false, adminUserId);
       expect(mockRepository.updatePostPinned).toHaveBeenCalledWith(
         'post-200',
         false,
@@ -362,8 +386,8 @@ describe('Empirical Adversarial Challenge: Forum Moderation Suite', () => {
     });
 
     it('3.4 resolve report operation is idempotent', async () => {
-      await forumService.resolveForumReport('report-55', adminUserId);
-      await forumService.resolveForumReport('report-55', adminUserId);
+      await reportService.resolveForumReport('report-55', adminUserId);
+      await reportService.resolveForumReport('report-55', adminUserId);
 
       expect(mockRepository.updateReportResolved).toHaveBeenCalledTimes(2);
       expect(mockRepository.updateReportResolved).toHaveBeenCalledWith(

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DirectoryController } from './directory.controller';
 import { DirectoryAdminController } from './presentation/directory-admin.controller';
-import { DirectoryService } from './directory.service';
 import { DirectoryListingService } from './application/directory-listing.service';
 import { ListingClaimService } from './application/listing-claim.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -11,7 +10,7 @@ import { AuthUser } from '../auth/types/auth-user.interface';
 describe('DirectoryController & DirectoryAdminController', () => {
   let controller: DirectoryController;
   let adminController: DirectoryAdminController;
-  let mockService: Record<keyof DirectoryService, jest.Mock>;
+  let mockService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     mockService = {
@@ -83,10 +82,6 @@ describe('DirectoryController & DirectoryAdminController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DirectoryController, DirectoryAdminController],
       providers: [
-        {
-          provide: DirectoryService,
-          useValue: mockService,
-        },
         {
           provide: DirectoryListingService,
           useValue: mockService,

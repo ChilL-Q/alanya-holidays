@@ -2,7 +2,7 @@ import { IsString, IsUUID, IsOptional } from 'class-validator';
 
 /**
  * Body DTO for POST /directory/claims (public, authenticated). Mirrors exactly
- * the fields `DirectoryService.submitListingClaim` reads off the body. Fields
+ * the fields `ListingClaimService.submitListingClaim` reads off the body. Fields
  * the service sets server-side (`user_id` from the JWT, `status: 'pending'`)
  * are intentionally NOT here — the client cannot supply them.
  *

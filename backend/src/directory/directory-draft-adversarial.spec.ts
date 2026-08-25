@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { DirectoryService } from './directory.service';
+import { DirectoryListingService } from './application/directory-listing.service';
+import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { RedisService } from '../common/redis/redis.service';
@@ -9,7 +10,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
 
 describe('Empirical Adversarial Verification: Directory Listing Drafts System', () => {
-  let service: DirectoryService;
+  let service: DirectoryListingService;
   let controller: DirectoryController;
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRepository: {
@@ -89,7 +90,8 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DirectoryController],
       providers: [
-        DirectoryService,
+        DirectoryListingService,
+        ListingClaimService,
         {
           provide: DirectoryRepository,
           useValue: mockRepository,
@@ -112,7 +114,7 @@ describe('Empirical Adversarial Verification: Directory Listing Drafts System', 
       .useValue({ canActivate: () => true })
       .compile();
 
-    service = module.get<DirectoryService>(DirectoryService);
+    service = module.get<DirectoryListingService>(DirectoryListingService);
     controller = module.get<DirectoryController>(DirectoryController);
   });
 

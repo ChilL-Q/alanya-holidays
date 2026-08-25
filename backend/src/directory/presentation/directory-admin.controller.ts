@@ -16,7 +16,6 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthUser } from '../../auth/types/auth-user.interface';
 import { DirectoryListingService } from '../application/directory-listing.service';
 import { ListingClaimService } from '../application/listing-claim.service';
-import { DirectoryService } from '../directory.service';
 import { CurateListingScoreDto } from '../dto/curate-listing.dto';
 import { ModerationAuditService } from '../../admin/moderation-audit.service';
 
@@ -24,33 +23,12 @@ import { ModerationAuditService } from '../../admin/moderation-audit.service';
 @UseGuards(AuthGuard, RolesGuard)
 @RequireRole('admin')
 export class DirectoryAdminController {
-  private readonly listingService!: DirectoryListingService;
-  private readonly claimService!: ListingClaimService;
-
   constructor(
-    @Optional() directoryListingService?: DirectoryListingService,
-    @Optional() listingClaimService?: ListingClaimService,
-    @Optional() directoryService?: DirectoryService,
+    private readonly listingService: DirectoryListingService,
+    private readonly claimService: ListingClaimService,
     @Optional()
     private readonly moderationAuditService?: ModerationAuditService,
-  ) {
-    if (directoryListingService) {
-      this.listingService = directoryListingService;
-    } else if (directoryService) {
-      const facade = directoryService as unknown as {
-        listingService: DirectoryListingService;
-      };
-      this.listingService = facade.listingService;
-    }
-    if (listingClaimService) {
-      this.claimService = listingClaimService;
-    } else if (directoryService) {
-      const facade = directoryService as unknown as {
-        claimService: ListingClaimService;
-      };
-      this.claimService = facade.claimService;
-    }
-  }
+  ) {}
 
   @Get('admin/listings')
   async getDirectoryListingsAdmin(
