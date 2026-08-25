@@ -3,6 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
@@ -501,7 +502,24 @@ describe('ProductsService', () => {
       expect(mockRepository.updateOrderStatus).toHaveBeenCalledWith(
         77,
         'shipped',
+        'paid',
       );
+    });
+
+    it('updateOrderStatus should reject when a concurrent transition won the race', async () => {
+      mockRepository.getOrderById.mockResolvedValueOnce({
+        id: 77,
+        status: 'paid',
+        items: [{ product_id: '3' }],
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.sellerOwnsAnyCatalogItem.mockResolvedValueOnce(true);
+      // Guarded UPDATE matched 0 rows — status changed concurrently.
+      mockRepository.updateOrderStatus.mockResolvedValueOnce(null);
+
+      await expect(
+        service.updateOrderStatus('77', 'shipped', 'seller-1'),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('updateOrderStatus should reject invalid transitions', async () => {
@@ -548,6 +566,44 @@ describe('ProductsService', () => {
         service.updateOrderStatus('88', 'cancelled', 'admin-1'),
       ).resolves.toEqual({ id: 88, status: 'cancelled' });
       expect(mockRepository.sellerOwnsAnyCatalogItem).not.toHaveBeenCalled();
+    });
+
+    describe.each([
+      ['pending_payment', 'paid', true],
+      ['pending_payment', 'cancelled', true],
+      ['pending_payment', 'shipped', false],
+      ['paid', 'shipped', true],
+      ['paid', 'cancelled', true],
+      ['paid', 'completed', false],
+      ['shipped', 'completed', true],
+      ['shipped', 'cancelled', false],
+      ['completed', 'cancelled', false],
+      ['cancelled', 'paid', false],
+    ])('transition %s -> %s', (fromStatus, toStatus, allowed) => {
+      it(`${allowed ? 'persists' : 'rejects'} the transition`, async () => {
+        mockRepository.getOrderById.mockResolvedValueOnce({
+          id: 50,
+          status: fromStatus,
+          items: [],
+        });
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+        if (allowed) {
+          mockRepository.updateOrderStatus.mockResolvedValueOnce({
+            id: 50,
+            status: toStatus,
+          });
+        }
+
+        const call = () =>
+          service.updateOrderStatus('50', toStatus as never, 'admin-1');
+
+        if (allowed) {
+          await expect(call()).resolves.toEqual({ id: 50, status: toStatus });
+        } else {
+          await expect(call()).rejects.toThrow(BadRequestException);
+          expect(mockRepository.updateOrderStatus).not.toHaveBeenCalled();
+        }
+      });
     });
 
     it('updateOrderStatus should throw NotFoundException for unknown orders', async () => {
