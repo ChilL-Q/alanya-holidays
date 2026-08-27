@@ -70,6 +70,10 @@ export interface SearchListingsOptions extends RequestOptions {
   limit?: number;
 }
 
+export interface GetListingByIdOptions extends RequestOptions {
+  allowSyncFallback?: boolean;
+}
+
 export interface GetListingsResult {
   data: Business[];
   total: number;
@@ -350,21 +354,30 @@ export class DirectoryService {
   /**
    * Retrieves a single business listing by its ID.
    */
-  async getListingById(id: string, options?: RequestOptions): Promise<Business | null> {
+  async getListingById(id: string, options: GetListingByIdOptions = {}): Promise<Business | null> {
+    const { allowSyncFallback = true, ...requestOptions } = options;
+    const hasRequestOptions = Object.keys(requestOptions).length > 0;
+
     try {
-      const data = options
-        ? await apiClient.get<DirectoryListingRecord>(`/directory/${id}`, options)
+      const data = hasRequestOptions
+        ? await apiClient.get<DirectoryListingRecord>(`/directory/${id}`, requestOptions)
         : await apiClient.get<DirectoryListingRecord>(`/directory/${id}`);
+
       if (data && data.id) {
         return mapBackendListingToBusiness(data);
       }
-      return this.getListingByIdSync(id);
+
+      return allowSyncFallback ? this.getListingByIdSync(id) : null;
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        return this.getListingByIdSync(id);
+        return allowSyncFallback ? this.getListingByIdSync(id) : null;
       }
-      const fallback = this.getListingByIdSync(id);
-      if (fallback) return fallback;
+
+      if (allowSyncFallback) {
+        const fallback = this.getListingByIdSync(id);
+        if (fallback) return fallback;
+      }
+
       throw err;
     }
   }
@@ -682,7 +695,7 @@ export const getListings = (options?: GetListingsOptions) =>
   directoryService.getListings(options);
 export const searchListings = (query: string, options?: SearchListingsOptions) =>
   directoryService.searchListings(query, options);
-export const getListingById = (id: string, options?: RequestOptions) =>
+export const getListingById = (id: string, options?: GetListingByIdOptions) =>
   directoryService.getListingById(id, options);
 export const getListingByIdSync = (id: string) => directoryService.getListingByIdSync(id);
 export const getListingBySlug = (slug: string, options?: RequestOptions) =>

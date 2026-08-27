@@ -1,7 +1,7 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import ErrorState from "@/components/base/ErrorState";
+import { useAuth } from "@/context/AuthContext";
 import EventHero from "./components/EventHero";
 import CalendarStrip from "./components/CalendarStrip";
 import EventCard from "./components/EventCard";
@@ -10,246 +10,63 @@ import EventSearch from "./components/EventSearch";
 import ViewToggle from "./components/ViewToggle";
 import MapView from "./components/MapView";
 import HostEventModal from "./components/HostEventModal";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/useToast";
-import ErrorState from "@/components/base/ErrorState";
-import { logger } from "@/lib/logger";
-
-function loadSavedEvents(): Set<string> {
-  try {
-    const raw = localStorage.getItem("alanya-holidays-saved-events");
-    if (raw) {
-      const arr: string[] = JSON.parse(raw);
-      if (Array.isArray(arr)) return new Set(arr);
-    }
-  } catch {
-    // localStorage unavailable or data corrupted, start fresh
-  }
-  return new Set();
-}
-
-function saveSavedEvents(saved: Set<string>) {
-  try {
-    localStorage.setItem("alanya-holidays-saved-events", JSON.stringify([...saved]));
-  } catch {
-    // localStorage unavailable, silently ignore
-  }
-}
+import { useEventsPage } from "./useEventsPage";
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<ForumEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [showFeatured, setShowFeatured] = useState(false);
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
-  const [showHostModal, setShowHostModal] = useState(false);
-  const [rsvpdEvents, setRsvpdEvents] = useState<Set<string>>(new Set());
-  const [savedEvents, setSavedEvents] = useState<Set<string>>(() => loadSavedEvents());
-  const { showToast, ToastContainer } = useToast();
   const { isAdmin } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
-
-  const loadEvents = useCallback(async () => {
-    setIsLoading(true);
-    setFetchError(null);
-    try {
-      const data = await eventsService.getEvents();
-      setEvents(data);
-      const myRsvps = new Set<string>();
-      data.forEach((e) => {
-        if (e.going_by_me) {
-          myRsvps.add(e.id);
-        }
-      });
-      if (myRsvps.size > 0) {
-        setRsvpdEvents((prev) => new Set([...prev, ...myRsvps]));
-      }
-    } catch {
-      setFetchError("Failed to load community events. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
-
-  useEffect(() => {
-    saveSavedEvents(savedEvents);
-  }, [savedEvents]);
-
-  const handleRsvp = useCallback(async (eventId: string) => {
-    setRsvpdEvents((prev) => new Set([...prev, eventId]));
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId ? { ...e, attendees: e.attendees + 1, going_by_me: true } : e
-      )
-    );
-
-    try {
-      await eventsService.toggleRsvp(eventId);
-      const evt = events.find((e) => e.id === eventId);
-      showToast(
-        "You're going!",
-        evt ? `${evt.title} — ${evt.month} ${evt.day} at ${evt.time}` : "See you there!",
-        "success"
-      );
-    } catch (err) {
-      logger.warn("Failed to dispatch RSVP on server, rolling back:", err);
-      setRsvpdEvents((prev) => {
-        const next = new Set(prev);
-        next.delete(eventId);
-        return next;
-      });
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === eventId ? { ...e, attendees: Math.max(0, e.attendees - 1), going_by_me: false } : e
-        )
-      );
-      showToast(
-        "RSVP Failed",
-        "Could not confirm your attendance. Please try again.",
-        "error"
-      );
-    }
-  }, [events, showToast]);
-
-  const handleCancelRsvp = useCallback(async (eventId: string) => {
-    setRsvpdEvents((prev) => {
-      const next = new Set(prev);
-      next.delete(eventId);
-      return next;
-    });
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId
-          ? { ...e, attendees: Math.max(0, e.attendees - 1), going_by_me: false }
-          : e
-      )
-    );
-
-    try {
-      await eventsService.toggleRsvp(eventId);
-      const evt = events.find((e) => e.id === eventId);
-      showToast(
-        "RSVP cancelled",
-        evt ? `You're no longer attending ${evt.title}` : "Maybe next time!",
-        "info"
-      );
-    } catch (err) {
-      logger.warn("Failed to dispatch cancel RSVP on server, rolling back:", err);
-      setRsvpdEvents((prev) => new Set([...prev, eventId]));
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === eventId ? { ...e, attendees: e.attendees + 1, going_by_me: true } : e
-        )
-      );
-      showToast(
-        "Cancellation Failed",
-        "Could not cancel RSVP. Please try again.",
-        "error"
-      );
-    }
-  }, [events, showToast]);
-
-  const handleEventCreated = useCallback((newEvent: ForumEvent) => {
-    setEvents((prev) => [newEvent, ...prev]);
-    showToast(
-      "Event created!",
-      `${newEvent.title} has been submitted successfully`,
-      "success"
-    );
-  }, [showToast]);
-
-  const handleSave = useCallback((eventId: string) => {
-    setSavedEvents((prev) => new Set([...prev, eventId]));
-    const evt = events.find((e) => e.id === eventId);
-    showToast(
-      "Event saved!",
-      evt ? `${evt.title} added to your saved events` : "Event bookmarked!",
-      "success"
-    );
-  }, [events, showToast]);
-
-  const handleUnsave = useCallback((eventId: string) => {
-    setSavedEvents((prev) => {
-      const next = new Set(prev);
-      next.delete(eventId);
-      return next;
-    });
-    showToast(
-      "Removed",
-      "Event removed from your saved list",
-      "info"
-    );
-  }, [showToast]);
-
-  const filteredEvents = useMemo(() => {
-    let result = [...events];
-
-    if (selectedDate) {
-      result = result.filter((e) => e.date === selectedDate);
-    }
-
-    if (activeCategory) {
-      result = result.filter((e) => e.category === activeCategory);
-    }
-
-    if (showFeatured) {
-      result = result.filter((e) => e.isFeatured);
-    }
-
-    if (showSavedOnly) {
-      result = result.filter((e) => savedEvents.has(e.id));
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.location.toLowerCase().includes(q) ||
-          e.host.toLowerCase().includes(q)
-      );
-    }
-
-    return result;
-  }, [events, selectedDate, activeCategory, showFeatured, showSavedOnly, savedEvents, searchQuery]);
-
-  const eventsThisMonth = useMemo(() => {
-    return events.filter((e) => e.date.startsWith("2026-06")).length;
-  }, [events]);
-
-  const hasActiveFilters = !!(activeCategory || selectedDate || showFeatured || showSavedOnly || searchQuery.trim());
-
-  const clearAllFilters = () => {
-    setActiveCategory(null);
-    setSelectedDate(null);
-    setShowFeatured(false);
-    setShowSavedOnly(false);
-    setSearchQuery("");
-  };
+  const {
+    events,
+    isLoading,
+    fetchError,
+    selectedDate,
+    setSelectedDate,
+    activeCategory,
+    setActiveCategory,
+    showFeatured,
+    setShowFeatured,
+    showSavedOnly,
+    setShowSavedOnly,
+    showHostModal,
+    setShowHostModal,
+    rsvpdEvents,
+    savedEvents,
+    searchQuery,
+    setSearchQuery,
+    viewMode,
+    setViewMode,
+    filteredEvents,
+    savedVisibleEvents,
+    featuredEvents,
+    eventsThisMonth,
+    hasActiveFilters,
+    clearAllFilters,
+    loadEvents,
+    handleRsvp,
+    handleCancelRsvp,
+    handleEventCreated,
+    handleSave,
+    handleUnsave,
+    ToastContainer,
+  } = useEventsPage();
 
   return (
     <>
       <Navbar />
       <main>
-        <EventHero totalEvents={events.length} eventsThisMonth={eventsThisMonth} onHostEvent={() => setShowHostModal(true)} showHostButton={isAdmin} />
+        <EventHero
+          totalEvents={events.length}
+          eventsThisMonth={eventsThisMonth}
+          onHostEvent={() => setShowHostModal(true)}
+          showHostButton={isAdmin}
+        />
 
-        {/* Calendar Strip */}
         <CalendarStrip
           events={events}
           selectedDate={selectedDate}
           onDateSelect={setSelectedDate}
         />
 
-        {/* Main content */}
-        <section className="w-full px-4 md:px-8 lg:px-12 py-8 md:py-12">
-          {/* Search + View Toggle row */}
+        <section className="w-full px-4 md:px-8 lg:px-12 pt-10 md:pt-12 pb-8 md:pb-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-5">
             <div className="flex-1">
               <EventSearch query={searchQuery} onQueryChange={setSearchQuery} />
@@ -257,7 +74,6 @@ export default function EventsPage() {
             <ViewToggle mode={viewMode} onChange={setViewMode} />
           </div>
 
-          {/* Filters */}
           <div className="mb-6">
             <EventFilters
               activeCategory={activeCategory}
@@ -269,7 +85,6 @@ export default function EventsPage() {
             />
           </div>
 
-          {/* Active filters indicator */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <p className="text-sm text-foreground-500">
@@ -310,10 +125,28 @@ export default function EventsPage() {
             </div>
           )}
 
-          {/* Map View */}
           {viewMode === "map" && (
             <div>
-              {filteredEvents.length > 0 ? (
+              {fetchError ? (
+                <ErrorState
+                  title="Unable to load events"
+                  message={fetchError}
+                  onRetry={loadEvents}
+                />
+              ) : isLoading ? (
+                <div className="rounded-2xl border border-background-200 bg-background-50 p-8 md:p-10 animate-pulse">
+                  <div className="w-full h-[320px] md:h-[420px] rounded-2xl bg-background-200 mb-6" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className="rounded-xl border border-background-200 bg-white p-4 space-y-3">
+                        <div className="h-4 bg-background-200 rounded w-2/3" />
+                        <div className="h-3 bg-background-100 rounded w-1/2" />
+                        <div className="h-8 bg-background-100 rounded w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : filteredEvents.length > 0 ? (
                 <MapView
                   events={filteredEvents}
                   rsvpdEvents={rsvpdEvents}
@@ -347,39 +180,34 @@ export default function EventsPage() {
             </div>
           )}
 
-          {/* List View */}
           {viewMode === "list" && (
             <>
-              {/* Saved Events - show when no filters active and user has saved events */}
-              {!hasActiveFilters && savedEvents.size > 0 && (
+              {!hasActiveFilters && !isLoading && savedVisibleEvents.length > 0 && (
                 <div className="mb-10">
                   <div className="flex items-center gap-2 mb-2">
                     <i className="ri-bookmark-fill text-primary-500"></i>
                     <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">Your Saved Events</span>
                     <span className="text-xs text-foreground-400 ml-1">{savedEvents.size}</span>
                   </div>
-                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">Don't Miss These</h2>
+                  <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">Your Saved Events</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                    {events
-                      .filter((e) => savedEvents.has(e.id))
-                      .map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          isRsvpd={rsvpdEvents.has(event.id)}
-                          isSaved={true}
-                          onRsvp={handleRsvp}
-                          onCancelRsvp={handleCancelRsvp}
-                          onSave={handleSave}
-                          onUnsave={handleUnsave}
-                        />
-                      ))}
+                    {savedVisibleEvents.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        isRsvpd={rsvpdEvents.has(event.id)}
+                        isSaved={true}
+                        onRsvp={handleRsvp}
+                        onCancelRsvp={handleCancelRsvp}
+                        onSave={handleSave}
+                        onUnsave={handleUnsave}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Featured Events - only show when no filters active */}
-              {!hasActiveFilters && (
+              {!hasActiveFilters && !isLoading && featuredEvents.length > 0 && (
                 <div className="mb-10">
                   <div className="flex items-center gap-2 mb-2">
                     <i className="ri-star-fill text-primary-500"></i>
@@ -387,25 +215,22 @@ export default function EventsPage() {
                   </div>
                   <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-5">Don't Miss These</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-                    {events
-                      .filter((e) => e.isFeatured)
-                      .map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          isRsvpd={rsvpdEvents.has(event.id)}
-                          isSaved={savedEvents.has(event.id)}
-                          onRsvp={handleRsvp}
-                          onCancelRsvp={handleCancelRsvp}
-                          onSave={handleSave}
-                          onUnsave={handleUnsave}
-                        />
-                      ))}
+                    {featuredEvents.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        isRsvpd={rsvpdEvents.has(event.id)}
+                        isSaved={savedEvents.has(event.id)}
+                        onRsvp={handleRsvp}
+                        onCancelRsvp={handleCancelRsvp}
+                        onSave={handleSave}
+                        onUnsave={handleUnsave}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* All / Filtered Events */}
               <div>
                 {!hasActiveFilters && (
                   <div className="flex items-center gap-2 mb-2">
@@ -496,7 +321,6 @@ export default function EventsPage() {
             </>
           )}
 
-          {/* Host your own event CTA — backend event creation is admin-gated */}
           {isAdmin && (
             <div className="mt-16 bg-gradient-to-r from-accent-500 to-accent-600 rounded-2xl p-8 md:p-10 text-center">
               <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
@@ -518,6 +342,7 @@ export default function EventsPage() {
         </section>
       </main>
       <Footer />
+
       <HostEventModal
         isOpen={showHostModal}
         onClose={() => setShowHostModal(false)}

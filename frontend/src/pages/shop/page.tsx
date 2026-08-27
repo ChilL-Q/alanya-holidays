@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
+import { ErrorState } from "@/components/base/ErrorState";
 import PersonalShopperForm from "@/pages/shop/components/PersonalShopperForm";
 import RecentEnquiriesSidebar from "@/pages/shop/components/RecentEnquiriesSidebar";
 import { useCart } from "@/hooks/useCart";
@@ -21,12 +23,29 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadCatalog = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await productsService.getShopCatalog();
+      setProducts(data.products);
+      setCategories(data.categories);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    async function fetchData() {
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        setError(null);
         const data = await productsService.getShopCatalog();
 
         if (!cancelled) {
@@ -38,11 +57,17 @@ export default function ShopPage() {
           setError(err instanceof Error ? err.message : "Failed to load products");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    }
-    fetchData();
-    return () => { cancelled = true; };
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredProducts = activeCategory === null
@@ -95,10 +120,9 @@ export default function ShopPage() {
       <Navbar />
       <main>
         <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="shop"
             alt="Alanya Holidays Shop"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/55 via-foreground-950/30 to-foreground-950/75"></div>
 
@@ -174,19 +198,12 @@ export default function ShopPage() {
             )}
 
             {error && !loading && (
-              <div className="text-center py-20">
-                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-red-100 mx-auto mb-4">
-                  <i className="ri-error-warning-line text-red-500 text-2xl"></i>
-                </div>
-                <p className="text-foreground-700 text-sm mb-4">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
-                >
-                  <i className="ri-refresh-line"></i>
-                  Retry
-                </button>
-              </div>
+              <ErrorState
+                title="Unable to load shop catalog"
+                message={error}
+                onRetry={loadCatalog}
+                className="py-20"
+              />
             )}
 
             {!loading && !error && filteredProducts.length === 0 && (

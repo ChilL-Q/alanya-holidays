@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { forgotPasswordSchema } from "@/lib/validation/auth.schemas";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -45,10 +46,9 @@ export default function ForgotPasswordPage() {
       <main className="min-h-screen bg-background-50">
         {/* Hero */}
         <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="forgotPassword"
             alt="Alanya Serene Sunset"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 
@@ -110,10 +110,9 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-background-50">
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-        <img
-          src="/images/placeholder-business.svg"
+        <PageHeroImage
+          page="forgotPassword"
           alt="Alanya Serene Sunset"
-          className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 

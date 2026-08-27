@@ -1,3 +1,5 @@
+import PageHeroImage from "@/components/base/PageHeroImage";
+
 interface EventHeroProps {
   totalEvents: number;
   eventsThisMonth: number;
@@ -13,10 +15,9 @@ export default function EventHero({
 }: EventHeroProps) {
   return (
     <section className="relative w-full h-[280px] md:h-[360px] overflow-hidden">
-      <img
-        src="/images/placeholder-business.svg"
+      <PageHeroImage
+        page="events"
         alt="Alanya Holidays Events"
-        className="absolute inset-0 w-full h-full object-cover object-top"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/55 via-foreground-950/30 to-foreground-950/75"></div>
 

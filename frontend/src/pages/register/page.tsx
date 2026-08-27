@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { registerSchema } from "@/lib/validation/auth.schemas";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -84,10 +85,9 @@ export default function RegisterPage() {
     return (
       <main className="min-h-screen bg-background-50">
         <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="register"
             alt="Alanya Morning"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 
@@ -121,7 +121,7 @@ export default function RegisterPage() {
             </p>
             <Link
               to="/login"
-              className="block w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
+              className="w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
             >
               Go to Sign In
             </Link>
@@ -135,10 +135,9 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-background-50">
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-        <img
-          src="/images/placeholder-business.svg"
+        <PageHeroImage
+          page="register"
           alt="Alanya Morning"
-          className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 

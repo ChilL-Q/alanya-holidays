@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { ForumEvent } from "@/api-services/events.service";
 
 interface CalendarStripProps {
@@ -16,12 +16,25 @@ const formatLocalDate = (d: Date) => {
 };
 
 export default function CalendarStrip({ events, selectedDate, onDateSelect }: CalendarStripProps) {
-  // Generate dynamic date range (-14 days to +90 days)
   const today = new Date();
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() - 14);
-  const endDate = new Date(today);
-  endDate.setDate(today.getDate() + 90);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const parsedEventDates = events
+    .map((event) => new Date(`${event.date}T00:00:00`))
+    .filter((date) => !Number.isNaN(date.getTime()));
+
+  const firstEventDate = parsedEventDates.length > 0
+    ? new Date(Math.min(...parsedEventDates.map((date) => date.getTime())))
+    : today;
+  const lastEventDate = parsedEventDates.length > 0
+    ? new Date(Math.max(...parsedEventDates.map((date) => date.getTime())))
+    : today;
+
+  const startDate = new Date(firstEventDate < today ? firstEventDate : today);
+  startDate.setDate(startDate.getDate() - 7);
+
+  const endDate = new Date(lastEventDate > today ? lastEventDate : today);
+  endDate.setDate(endDate.getDate() + 30);
+
   const dates: Date[] = [];
   const current = new Date(startDate);
   while (current <= endDate) {
@@ -46,6 +59,46 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
     return () => clearTimeout(timer);
   }, []);
 
+  const focusCalendarOption = (targetIndex: number) => {
+    const options = scrollContainerRef.current?.querySelectorAll<HTMLButtonElement>('[data-calendar-option="true"]');
+    if (!options || options.length === 0) return;
+
+    const clampedIndex = Math.max(0, Math.min(targetIndex, options.length - 1));
+    const targetOption = options[clampedIndex];
+    if (!targetOption) return;
+
+    targetOption.focus();
+    targetOption.click();
+    if (typeof targetOption.scrollIntoView === "function") {
+      targetOption.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  };
+
+  const handleOptionKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, currentIndex: number) => {
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const options = scrollContainerRef.current?.querySelectorAll<HTMLButtonElement>('[data-calendar-option="true"]');
+    const optionCount = options?.length ?? 0;
+    if (optionCount === 0) return;
+
+    if (event.key === "Home") {
+      focusCalendarOption(0);
+      return;
+    }
+
+    if (event.key === "End") {
+      focusCalendarOption(optionCount - 1);
+      return;
+    }
+
+    const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
+    focusCalendarOption(currentIndex + direction);
+  };
+
   let lastMonth = "";
 
   return (
@@ -54,10 +107,12 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
         <div className="flex items-center gap-3 py-3">
           {/* Scroll left */}
           <button
+            type="button"
             onClick={() => {
               const container = document.getElementById("calendar-scroll");
               if (container) container.scrollBy({ left: -200, behavior: "smooth" });
             }}
+            aria-label="Scroll calendar left"
             className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 hover:bg-background-200 transition-colors shrink-0"
           >
             <i className="ri-arrow-left-s-line text-foreground-600"></i>
@@ -66,12 +121,22 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
           {/* Scrollable dates */}
           <div
             id="calendar-scroll"
-            className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide"
+            ref={scrollContainerRef}
+            className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide py-1 pr-1 scroll-px-1"
+            role="listbox"
+            aria-label="Event dates"
           >
             {/* All Dates button */}
             <button
+              type="button"
+              role="option"
+              data-calendar-option="true"
+              tabIndex={selectedDate === null ? 0 : -1}
               onClick={() => onDateSelect(null)}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[64px] shrink-0 transition-all ${
+              onKeyDown={(event) => handleOptionKeyDown(event, 0)}
+              aria-selected={selectedDate === null}
+              aria-label="Show events for all dates"
+              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[64px] shrink-0 transition-all first:ml-1 ${
                 selectedDate === null
                   ? "bg-primary-500 text-background-50"
                   : "bg-background-100 text-foreground-600 hover:bg-background-200"
@@ -81,7 +146,7 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               <i className="ri-calendar-line text-sm"></i>
             </button>
 
-            {dates.map((d) => {
+            {dates.map((d, dateIndex) => {
               const dateStr = formatLocalDate(d);
               const hasEvent = eventDates.has(dateStr);
               const isSelected = selectedDate === dateStr;
@@ -93,21 +158,36 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
               return (
                 <button
                   key={dateStr}
+                  type="button"
+                  role="option"
+                  data-calendar-option="true"
+                  tabIndex={isSelected ? 0 : -1}
                   id={isToday ? "calendar-today" : undefined}
                   onClick={() => onDateSelect(isSelected ? null : dateStr)}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[56px] shrink-0 transition-all relative ${
+                  onKeyDown={(event) => handleOptionKeyDown(event, dateIndex + 1)}
+                  aria-selected={isSelected}
+                  aria-current={isToday ? "date" : undefined}
+                  aria-label={`${d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}${hasEvent ? ", has events" : ""}${isToday ? ", today" : ""}`}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-[56px] shrink-0 transition-all relative last:mr-1 ${
                     isSelected
                       ? "bg-primary-500 text-background-50"
                       : hasEvent
                         ? "bg-accent-100 text-accent-800 hover:bg-accent-200"
                         : "bg-background-100 text-foreground-600 hover:bg-background-200"
-                  } ${isToday && !isSelected ? "ring-2 ring-primary-300" : ""}`}
+                  } ${isToday && !isSelected ? "ring-2 ring-inset ring-primary-300" : ""}`}
                 >
-                  {showMonthLabel && (
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? "text-background-50/70" : "text-foreground-400"}`}>
-                      {thisMonth}
-                    </span>
-                  )}
+                  <span
+                    aria-hidden={!showMonthLabel}
+                    className={`text-[10px] font-bold uppercase tracking-wider min-h-[12px] ${
+                      showMonthLabel
+                        ? isSelected
+                          ? "text-background-50/70"
+                          : "text-foreground-400"
+                        : "invisible"
+                    }`}
+                  >
+                    {thisMonth}
+                  </span>
                   <span className="text-xs font-medium">{dayNames[d.getDay()]}</span>
                   <span className="text-base font-semibold">{d.getDate()}</span>
                   {hasEvent && !isSelected && (
@@ -120,10 +200,12 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
 
           {/* Scroll right */}
           <button
+            type="button"
             onClick={() => {
               const container = document.getElementById("calendar-scroll");
               if (container) container.scrollBy({ left: 200, behavior: "smooth" });
             }}
+            aria-label="Scroll calendar right"
             className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 hover:bg-background-200 transition-colors shrink-0"
           >
             <i className="ri-arrow-right-s-line text-foreground-600"></i>

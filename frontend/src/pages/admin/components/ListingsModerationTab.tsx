@@ -567,7 +567,9 @@ export default function ListingsModerationTab({
           </div>
           <button
             type="button"
-            onClick={fetchListings}
+            onClick={() => {
+              void fetchListings();
+            }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

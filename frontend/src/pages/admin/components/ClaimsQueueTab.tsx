@@ -322,7 +322,9 @@ export default function ClaimsQueueTab({
           </div>
           <button
             type="button"
-            onClick={fetchClaims}
+            onClick={() => {
+              void fetchClaims();
+            }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

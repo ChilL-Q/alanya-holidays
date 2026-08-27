@@ -216,7 +216,9 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={fetchLogs}
+            onClick={() => {
+              void fetchLogs();
+            }}
             disabled={loading}
             className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             title="Refresh audit logs"
@@ -357,7 +359,9 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           </div>
           <button
             type="button"
-            onClick={fetchLogs}
+            onClick={() => {
+              void fetchLogs();
+            }}
             className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors"
           >
             Retry

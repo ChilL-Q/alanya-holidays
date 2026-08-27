@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import { propertiesService, villaLocations, type Villa, type PropertyItem } from "@/api-services/properties.service";
 import { conciergeService } from "@/api-services/concierge.service";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
@@ -145,10 +146,9 @@ export default function VillaStaysPage() {
       <Navbar />
       <main>
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="villaStays"
             alt="Boutique Villa Stays in Alanya"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">

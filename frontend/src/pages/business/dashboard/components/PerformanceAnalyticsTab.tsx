@@ -1,4 +1,5 @@
 import React from "react";
+import { ErrorState } from "@/components/base/ErrorState";
 import {
   AreaChart,
   Area,
@@ -29,9 +30,11 @@ export interface PerformanceAnalyticsTabProps {
   userListings: Business[];
   highestTier?: string;
   loading: boolean;
+  error?: string | null;
   days: number;
   onDaysChange: (days: number) => void;
   onOpenUpgradeModal: () => void;
+  onRetry?: () => void | Promise<void>;
 }
 
 export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = ({
@@ -39,9 +42,11 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
   userListings,
   highestTier = "explorer",
   loading,
+  error = null,
   days,
   onDaysChange,
   onOpenUpgradeModal,
+  onRetry,
 }) => {
   const isPaidTier =
     highestTier.toLowerCase() === "voyager" ||
@@ -52,7 +57,10 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
       return t === "voyager" || t === "signature" || t === "partner";
     });
 
-  if (loading) {
+  const hasAnalyticsData = Boolean(analytics);
+  const isInitialLoading = loading && !hasAnalyticsData;
+
+  if (isInitialLoading) {
     return (
       <div className="space-y-6">
         <div className="h-16 bg-white dark:bg-slate-900 rounded-2xl animate-pulse border border-secondary-200 dark:border-slate-800" />
@@ -130,6 +138,16 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
     );
   }
 
+  if (error && !hasAnalyticsData) {
+    return (
+      <ErrorState
+        title="Unable to load analytics"
+        message={error}
+        onRetry={onRetry}
+      />
+    );
+  }
+
   // Paid Analytics View
   const totalViews = analytics?.total_views || 0;
   const totalWhatsapp = analytics?.total_whatsapp_clicks || 0;
@@ -142,6 +160,14 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
 
   return (
     <div className="space-y-6">
+      {error && hasAnalyticsData && (
+        <ErrorState
+          variant="inline"
+          message={error}
+          onRetry={onRetry}
+        />
+      )}
+
       {/* Header & Timeframe Selector */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-secondary-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -152,6 +178,11 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
           <p className="text-xs text-secondary-500 dark:text-slate-400">
             Real-time customer impressions, WhatsApp calls, website clicks, and map directions.
           </p>
+          {loading && hasAnalyticsData && (
+            <p className="mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              Refreshing analytics for the selected timeframe...
+            </p>
+          )}
         </div>
 
         {/* Timeframe selector */}
@@ -165,8 +196,9 @@ export const PerformanceAnalyticsTab: React.FC<PerformanceAnalyticsTabProps> = (
               key={tf.value}
               type="button"
               aria-pressed={days === tf.value}
+              disabled={loading}
               onClick={() => onDaysChange(tf.value)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/50 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/50 disabled:opacity-60 disabled:cursor-not-allowed ${
                 days === tf.value
                   ? "bg-white dark:bg-slate-700 text-secondary-900 dark:text-white shadow-sm"
                   : "text-secondary-600 dark:text-slate-400 hover:text-secondary-900 dark:hover:text-white"

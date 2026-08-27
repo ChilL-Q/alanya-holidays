@@ -347,7 +347,9 @@ export default function ConciergeTab({
           </div>
           <button
             type="button"
-            onClick={fetchEnquiries}
+            onClick={() => {
+              void fetchEnquiries();
+            }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

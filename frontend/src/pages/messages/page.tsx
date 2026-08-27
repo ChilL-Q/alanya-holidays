@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import {
   chatService,
   formatChatTime,
@@ -252,10 +253,9 @@ export default function MessagesPage() {
       <main className="min-h-screen bg-background-50 flex flex-col">
         {/* Hero Header */}
         <section className="relative w-full h-[180px] md:h-[220px] overflow-hidden shrink-0">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="messages"
             alt="Messages"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/75"></div>
 

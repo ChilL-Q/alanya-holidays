@@ -278,6 +278,33 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
 
       expect(screen.getByText("Alanya Sunset Cafe")).toBeInTheDocument();
     });
+
+    it("opens an in-app confirmation dialog before deleting a listing", () => {
+      const onDelete = vi.fn();
+
+      render(
+        <MemoryRouter>
+          <MyListingsTab
+            listings={sampleListings}
+            loading={false}
+            onEditListing={vi.fn()}
+            onResumeDraft={vi.fn()}
+            onDeleteListing={onDelete}
+            onUpgradeTier={vi.fn()}
+          />
+        </MemoryRouter>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /Delete Alanya Sunset Cafe/i }));
+
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeInTheDocument();
+      expect(screen.getByText(/Delete this listing\?/i)).toBeInTheDocument();
+      expect(dialog).toHaveTextContent("Alanya Sunset Cafe");
+
+      fireEvent.click(screen.getByRole("button", { name: /Delete listing/i }));
+      expect(onDelete).toHaveBeenCalledWith("biz-1");
+    });
   });
 
   describe("PerformanceAnalyticsTab", () => {
@@ -318,6 +345,26 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
 
       fireEvent.click(screen.getByText("Upgrade Subscription"));
       expect(onUpgrade).toHaveBeenCalled();
+    });
+
+    it("keeps current analytics visible while refreshing timeframe data", () => {
+      render(
+        <PerformanceAnalyticsTab
+          analytics={sampleAnalytics}
+          userListings={sampleListings}
+          highestTier="signature"
+          loading={true}
+          error={null}
+          days={30}
+          onDaysChange={vi.fn()}
+          onOpenUpgradeModal={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText("Performance & Engagement Analytics")).toBeInTheDocument();
+      expect(screen.getByText("Refreshing analytics for the selected timeframe...")).toBeInTheDocument();
+      expect(screen.getByText("3,200")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "7 Days" })).toBeDisabled();
     });
   });
 

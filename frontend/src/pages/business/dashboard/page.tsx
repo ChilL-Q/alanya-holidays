@@ -14,6 +14,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/useToast";
 import {
   directoryService,
   type DirectoryClaim,
@@ -40,6 +41,7 @@ export type DashboardTab =
 
 export default function MerchantDashboardPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
+  const { showToast, ToastContainer } = useToast();
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("listings");
   const [listingsFilter, setListingsFilter] = useState<string>("all");
@@ -49,8 +51,11 @@ export default function MerchantDashboardPage() {
   const [claims, setClaims] = useState<DirectoryClaim[]>([]);
   const [analytics, setAnalytics] = useState<OwnerAnalyticsSummary | null>(null);
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState<boolean>(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
 
   // Modal States
   const [isListModalOpen, setIsListModalOpen] = useState(false);
@@ -60,29 +65,54 @@ export default function MerchantDashboardPage() {
 
   const fetchDashboardData = useCallback(async () => {
     if (!isAuthenticated && !user) return;
-    setLoading(true);
-    setError(null);
+
+    setDashboardLoading(true);
+    setDashboardError(null);
+
     try {
-      const [fetchedListings, fetchedClaims, fetchedAnalytics] = await Promise.all([
+      const [fetchedListings, fetchedClaims] = await Promise.all([
         directoryService.getMyListings(),
         directoryService.getMyClaims(),
-        directoryService.getOwnerAnalytics(days),
       ]);
 
       setListings(fetchedListings);
       setClaims(fetchedClaims);
-      setAnalytics(fetchedAnalytics);
     } catch (err) {
       logger.error("Failed to load merchant dashboard data:", err);
-      setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+      setDashboardError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
-      setLoading(false);
+      setDashboardLoading(false);
     }
-  }, [isAuthenticated, user, days]);
+  }, [isAuthenticated, user]);
+
+  const fetchAnalytics = useCallback(async (selectedDays: number) => {
+    if (!isAuthenticated && !user) return;
+
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+
+    try {
+      const fetchedAnalytics = await directoryService.getOwnerAnalytics(selectedDays);
+      setAnalytics(fetchedAnalytics);
+    } catch (err) {
+      logger.error("Failed to load merchant analytics:", err);
+      setAnalyticsError(err instanceof Error ? err.message : "Failed to load analytics");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [isAuthenticated, user]);
+
+  const refreshDashboard = useCallback(async () => {
+    await Promise.all([fetchDashboardData(), fetchAnalytics(days)]);
+  }, [fetchDashboardData, fetchAnalytics, days]);
 
   useEffect(() => {
-    fetchDashboardData();
+    void fetchDashboardData();
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    void fetchAnalytics(days);
+  }, [fetchAnalytics, days]);
 
   // Determine highest tier
   const highestTier = listings.reduce<string>((highest, curr) => {
@@ -162,12 +192,28 @@ export default function MerchantDashboardPage() {
   };
 
   const handleDeleteListing = async (id: string) => {
+    if (deletingListingId === id) return;
+
+    const listingToDelete = listings.find((item) => item.id === id);
+    setDeletingListingId(id);
+
     try {
       await directoryService.deleteListing(id);
       setListings((prev) => prev.filter((item) => item.id !== id));
+      showToast(
+        "Listing deleted",
+        listingToDelete?.name ? `${listingToDelete.name} was removed from your dashboard.` : "The listing was removed successfully.",
+        "success"
+      );
     } catch (err) {
       logger.error("Failed to delete listing:", err);
-      alert("Failed to delete listing. Please try again.");
+      showToast(
+        "Delete failed",
+        err instanceof Error ? err.message : "Could not delete the listing. Please try again.",
+        "error"
+      );
+    } finally {
+      setDeletingListingId(null);
     }
   };
 
@@ -245,15 +291,15 @@ export default function MerchantDashboardPage() {
           }}
         />
 
-        {error && (
+        {dashboardError && (
           <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-rose-500" />
-              <span>{error}</span>
+              <span>{dashboardError}</span>
             </div>
             <button
               type="button"
-              onClick={fetchDashboardData}
+              onClick={() => void refreshDashboard()}
               className="text-xs font-semibold underline hover:no-underline"
             >
               Retry
@@ -349,7 +395,7 @@ export default function MerchantDashboardPage() {
           {activeTab === "listings" && (
             <MyListingsTab
               listings={listings}
-              loading={loading}
+              loading={dashboardLoading}
               filter={listingsFilter}
               onFilterChange={setListingsFilter}
               onEditListing={handleEditListing}
@@ -357,6 +403,7 @@ export default function MerchantDashboardPage() {
               onDeleteListing={handleDeleteListing}
               onUpgradeTier={handleOpenUpgrade}
               onListNewBusiness={handleOpenCreateModal}
+              deletingListingId={deletingListingId}
             />
           )}
 
@@ -365,10 +412,12 @@ export default function MerchantDashboardPage() {
               analytics={analytics}
               userListings={listings}
               highestTier={highestTier}
-              loading={loading}
+              loading={analyticsLoading}
+              error={analyticsError}
               days={days}
               onDaysChange={(newDays) => setDays(newDays)}
               onOpenUpgradeModal={() => handleOpenUpgrade()}
+              onRetry={() => fetchAnalytics(days)}
             />
           )}
 
@@ -377,7 +426,7 @@ export default function MerchantDashboardPage() {
           {activeTab === "orders" && <SellerOrdersTab />}
 
           {activeTab === "claims" && (
-            <ClaimTrackerTab claims={claims} loading={loading} />
+            <ClaimTrackerTab claims={claims} loading={dashboardLoading} />
           )}
         </div>
       </div>
@@ -389,7 +438,7 @@ export default function MerchantDashboardPage() {
           onClose={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
           draftId={draftToResume?.id}
           initialData={
@@ -413,15 +462,17 @@ export default function MerchantDashboardPage() {
           onListingCreated={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
           onDraftSaved={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
         />
       )}
+
+      <ToastContainer />
 
       {/* Tier Upgrade Modal */}
       {isUpgradeModalOpen && (

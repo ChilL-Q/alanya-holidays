@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, yachtTypes, type Yacht } from "@/api-services/concierge.service";
 import { formatAmenity } from "@/utils/format-amenity";
@@ -228,10 +229,9 @@ export default function YachtChartersPage() {
       <main>
         {/* Hero */}
         <section className="relative w-full h-[340px] md:h-[460px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="yachtCharters"
             alt="Luxury Yacht Charters in Alanya"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
 

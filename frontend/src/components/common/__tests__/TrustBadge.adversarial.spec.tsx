@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import TrustBadge, {
@@ -15,11 +15,16 @@ import MapView from "@/pages/explore/components/MapView";
 import BusinessDetailPage from "@/pages/business/page";
 import { businesses } from "@/mocks/businesses";
 import { AuthProvider } from "@/context/AuthContext";
+import { directoryService } from "@/api-services/directory.service";
 
 const VARIANTS: TrustBadgeVariant[] = ["glass", "solid", "subtle", "pill"];
 const SIZES: TrustBadgeSize[] = ["xs", "sm", "md", "lg"];
 
 describe("Milestone M1 Adversarial Challenger Suite", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("1. Exhaustive 7 Badges x 4 Variants x 4 Sizes Matrix (112 Combinations)", () => {
     // Generate all 112 permutations
     const matrix: Array<[TrustBadgeType, TrustBadgeVariant, TrustBadgeSize]> = [];
@@ -247,7 +252,20 @@ describe("Milestone M1 Adversarial Challenger Suite", () => {
   });
 
   describe("6. Business Detail Page Hero Integration", () => {
-    it("renders TrustBadge in business detail hero section for biz-001", () => {
+    it("renders TrustBadge in business detail hero section for biz-001", async () => {
+      vi.spyOn(directoryService, "getListingById").mockResolvedValue({
+        ...businesses[0],
+        trustBadge: "Signature Collection",
+      });
+      vi.spyOn(directoryService, "getListingReviews").mockResolvedValue([]);
+      vi.spyOn(directoryService, "getListings").mockResolvedValue({
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 5,
+        totalPages: 1,
+      });
+
       render(
         <AuthProvider>
           <MemoryRouter initialEntries={["/business/biz-001"]}>
@@ -258,10 +276,9 @@ describe("Milestone M1 Adversarial Challenger Suite", () => {
         </AuthProvider>
       );
 
-      const badge = screen.getByRole("status");
+      const badge = await screen.findByText("Signature Collection");
       expect(badge).toBeInTheDocument();
-      expect(badge).toHaveTextContent("Signature Collection");
-      expect(badge.className).toContain("backdrop-blur-md");
+      expect(badge.closest('[role="status"]')?.className).toContain("backdrop-blur-md");
     });
   });
 });

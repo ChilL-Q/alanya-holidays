@@ -18,15 +18,31 @@ export default function EmbeddedVenueCard({
   className = "",
 }: EmbeddedVenueCardProps) {
   const [imageError, setImageError] = useState(false);
-  const [fetchedVenue, setFetchedVenue] = useState<Business | null>(() =>
-    venueId ? directoryService.getListingByIdSync(venueId) : null
-  );
+  const [fetchedVenue, setFetchedVenue] = useState<Business | null>(null);
+  const [isLoadingVenue, setIsLoadingVenue] = useState(Boolean(!venue && venueId));
 
   useEffect(() => {
-    if (venue || !venueId) return;
+    setImageError(false);
+  }, [venue?.id, venueId, layout]);
+
+  useEffect(() => {
+    if (venue) {
+      setFetchedVenue(null);
+      setIsLoadingVenue(false);
+      return;
+    }
+
+    if (!venueId) {
+      setFetchedVenue(null);
+      setIsLoadingVenue(false);
+      return;
+    }
+
     let isMounted = true;
+    setIsLoadingVenue(true);
+
     void directoryService
-      .getListingById(venueId)
+      .getListingById(venueId, { allowSyncFallback: false })
       .then((data) => {
         if (isMounted) {
           setFetchedVenue(data);
@@ -36,7 +52,13 @@ export default function EmbeddedVenueCard({
         if (isMounted) {
           setFetchedVenue(null);
         }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingVenue(false);
+        }
       });
+
     return () => {
       isMounted = false;
     };
@@ -44,6 +66,19 @@ export default function EmbeddedVenueCard({
 
   // Resolve business details from props or directory service
   const resolvedVenue = venue ?? (venueId ? fetchedVenue ?? undefined : undefined);
+
+  if (!resolvedVenue && isLoadingVenue) {
+    return (
+      <div
+        className={`p-4 rounded-xl border border-background-200 bg-white dark:bg-background-900 text-center my-4 ${className}`}
+      >
+        <div className="flex items-center justify-center gap-2 text-sm text-foreground-500">
+          <i className="ri-loader-4-line animate-spin text-primary-500"></i>
+          <span>Loading venue details...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!resolvedVenue) {
     return (

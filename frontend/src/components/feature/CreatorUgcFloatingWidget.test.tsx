@@ -12,9 +12,9 @@ vi.mock("./SubmitContentModal", () => ({
     ) : null,
 }));
 
-const renderWidget = () =>
+const renderWidget = (initialEntries: string[] = ["/"]) =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <CreatorUgcFloatingWidget />
     </MemoryRouter>
   );
@@ -31,6 +31,17 @@ describe("CreatorUgcFloatingWidget", () => {
     });
     expect(trigger).toBeInTheDocument();
     expect(screen.getByText(/Share with the Community/i)).toBeInTheDocument();
+  });
+
+  it("uses the full text trigger outside the events page", () => {
+    renderWidget(["/"]);
+    expect(screen.getByText(/Share with the Community/i)).toBeInTheDocument();
+  });
+
+  it("switches to a compact trigger on the events page to avoid covering cards", () => {
+    renderWidget(["/events"]);
+    expect(screen.getByRole("button", { name: /open community post widget/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Post a tip, story, or question/i)).not.toBeInTheDocument();
   });
 
   it("expands to the floating card when clicked", () => {

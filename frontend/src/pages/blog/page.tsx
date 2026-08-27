@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import PaginationControls from "@/components/base/PaginationControls";
 import { blogService, type BlogPostItem, type BlogTag } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
@@ -112,10 +113,9 @@ export default function BlogPage() {
       <main>
         {/* Hero Section */}
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="blog"
             alt="Alanya Travel Blog"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/80"></div>
 

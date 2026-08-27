@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/base/EmptyState";
 import LoadingSpinner from "@/components/base/LoadingSpinner";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 export default function CategoriesPage() {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
@@ -45,10 +46,9 @@ export default function CategoriesPage() {
       <main>
         {/* Hero Section */}
         <section className="relative w-full h-[340px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="categories"
             alt="Alanya Categories"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
 

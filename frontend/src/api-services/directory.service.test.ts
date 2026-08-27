@@ -220,21 +220,34 @@ describe("directory.service", () => {
       expect(result?.name).toBe("Direct API Business");
     });
 
-    it("should return null on 404 ApiError", async () => {
+    it("should return local fallback on 404 when sync fallback is allowed", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("Not Found", 404, "Not Found")
       );
 
-      const result = await directoryService.getListingById("non-existent-biz-id");
+      const result = await directoryService.getListingById("biz-001");
+      expect(result?.id).toBe("biz-001");
+    });
+
+    it("should return null on 404 in strict live mode", async () => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Not Found", 404, "Not Found")
+      );
+
+      const result = await directoryService.getListingById("biz-001", {
+        allowSyncFallback: false,
+      });
       expect(result).toBeNull();
     });
 
-    it("should propagate ApiError on 500 error", async () => {
+    it("should propagate ApiError on 500 error in strict live mode", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("Server Error", 500, "Internal Server Error")
       );
 
-      await expect(directoryService.getListingById("biz-500")).rejects.toThrow(ApiError);
+      await expect(
+        directoryService.getListingById("biz-001", { allowSyncFallback: false })
+      ).rejects.toThrow(ApiError);
     });
   });
 

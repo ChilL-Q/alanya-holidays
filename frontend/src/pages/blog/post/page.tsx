@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import { getPageHeroImage } from "@/components/base/PageHeroImage";
 import ArticleContentRenderer from "@/components/article/ArticleContentRenderer";
 import BlogComments from "./components/BlogComments";
 import { blogService, type BlogPostDetail } from "@/api-services/blog.service";
@@ -100,9 +101,12 @@ export default function BlogPostPage() {
             {/* Hero Image */}
             <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
               <img
-                src={post.cover_image_url || "/images/placeholder-business.svg"}
+                src={post.cover_image_url || getPageHeroImage("blog")}
                 alt={post.title}
                 className="absolute inset-0 w-full h-full object-cover object-top"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/images/hero-bg.jpg";
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/80"></div>
 
