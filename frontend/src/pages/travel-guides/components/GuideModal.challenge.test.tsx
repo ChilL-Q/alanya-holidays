@@ -475,4 +475,62 @@ Safe text after.`,
       delete guideContents[heavyGuide.title];
     });
   });
+
+  describe("Challenge 6: White Surface, Smart Image Resolution & Forum/Blog Quality Formatting", () => {
+    it("verifies GuideModal has a pure white surface container (bg-white) and does not show generic svg placeholder for transport guides", async () => {
+      const airportGuide: BlogPostItem = {
+        id: "guide-airport-transfer-01",
+        title: "Reliable Airport Transfer Services in Alanya: Stress-Free Travel from Antalya and Gazipaşa Airports",
+        slug: "reliable-airport-transfer-services-in-alanya",
+        tag: "Transport",
+        category: "Transport",
+        excerpt: "Arriving in a new destination should be exciting, not stressful. Whether you're visiting Alanya for a relaxing beach holiday, a business trip, or a long-term stay, arranging a reliable airport transfe...",
+        cover_image_url: null,
+      };
+
+      vi.spyOn(blogService, "getGuideContent").mockResolvedValueOnce({
+        heroImage: "",
+        sections: [
+          {
+            heading: "Reliable Airport Transfer Services in Alanya",
+            body: `Arriving in a new destination should be exciting, not stressful. Whether you're visiting Alanya for a relaxing beach holiday, a business trip, or a long-term stay, arranging a reliable airport transfer gives you total peace of mind.
+
+Why Book an Airport Transfer Instead of Taking a Taxi?
+
+Many travelers choose pre-booked airport transfers because they offer:
+- Fixed prices with no unexpected charges
+- Professional and experienced drivers
+- Flight tracking and punctual pickups`,
+          },
+        ],
+        relatedLinks: [{ label: "Explore Transport", href: "/explore?category=transport", icon: "ri-taxi-line" }],
+      });
+
+      const { container } = render(
+        <MemoryRouter>
+          <GuideModal guide={airportGuide} onClose={vi.fn()} />
+        </MemoryRouter>
+      );
+
+      // Verify modal surface has pure white surface and no dark mode background classes
+      const card = container.querySelector(".guide-modal-card > div");
+      expect(card?.className).toContain("bg-white");
+      expect(card?.className).not.toContain("dark:bg-slate-900");
+      expect(card?.className).not.toContain("dark:");
+
+      // Verify image resolved to transport image instead of placeholder-business.svg
+      await waitFor(() => {
+        const heroImg = screen.getByRole("img", { name: airportGuide.title });
+        expect(heroImg.getAttribute("src")).toContain("transport");
+        expect(heroImg.getAttribute("src")).not.toContain("placeholder-business.svg");
+      });
+
+      // Verify truncated excerpt box was NOT rendered with cutoff "transfe..."
+      expect(screen.queryByText(/arranging a reliable airport transfe\.\.\./i)).not.toBeInTheDocument();
+
+      // Verify full body text is rendered cleanly with bullet points and headings
+      expect(screen.getByText(/Fixed prices with no unexpected charges/i)).toBeInTheDocument();
+      expect(screen.getByText(/Why Book an Airport Transfer Instead of Taking a Taxi\?/i)).toBeInTheDocument();
+    });
+  });
 });

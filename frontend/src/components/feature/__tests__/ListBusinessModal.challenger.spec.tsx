@@ -356,8 +356,8 @@ describe("Adversarial Empirical Verification: ListBusinessModal Component", () =
       // Tier picker is visible again
       expect(screen.getByText(/choose your business tier/i)).toBeInTheDocument();
 
-      // Select Signature tier
-      fireEvent.click(screen.getByTestId("select-tier-signature"));
+      // Select Voyager tier
+      fireEvent.click(screen.getByTestId("select-tier-voyager"));
 
       // Form step returned: check that typed values are preserved
       expect((screen.getByLabelText(/business name/i) as HTMLInputElement).value).toBe(

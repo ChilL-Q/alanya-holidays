@@ -46,7 +46,7 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
     <article className="group bg-background-50 rounded-xl border border-background-200/70 p-4 md:p-5 hover:border-primary-200/60 transition-all duration-200">
       <div className="flex items-start gap-4">
         {/* Author avatar */}
-        <Link to={`/thread/${thread.id}`} className="shrink-0">
+        <Link to={`/thread/${thread.slug || thread.id}`} className="shrink-0">
           <div className="w-10 h-10 md:w-11 md:h-11 shrink-0 rounded-full overflow-hidden bg-background-200">
             <img
               src={thread.authorAvatar}
@@ -88,7 +88,7 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
 
           {/* Title */}
           <h3 className="font-heading text-base md:text-lg text-foreground-900 group-hover:text-primary-500 transition-colors leading-snug mb-1.5">
-            <Link to={`/thread/${thread.id}`}>{thread.title}</Link>
+            <Link to={`/thread/${thread.slug || thread.id}`}>{thread.title}</Link>
           </h3>
 
           {/* Excerpt */}

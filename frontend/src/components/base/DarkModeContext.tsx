@@ -11,31 +11,13 @@ const DarkModeContext = createContext<DarkModeContextValue>({
 });
 
 export function DarkModeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(() => {
-    try {
-      const stored = localStorage.getItem("alanya-holidays-dark-mode");
-      if (stored !== null) return stored === "true";
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
-    } catch {
-      return false;
-    }
-  });
+  const [isDark] = useState(false);
 
   useEffect(() => {
-    const html = document.documentElement;
-    if (isDark) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
-    }
-    try {
-      localStorage.setItem("alanya-holidays-dark-mode", String(isDark));
-    } catch {
-      // localStorage unavailable
-    }
-  }, [isDark]);
+    document.documentElement.classList.remove("dark");
+  }, []);
 
-  const toggle = useCallback(() => setIsDark((prev) => !prev), []);
+  const toggle = useCallback(() => {}, []);
 
   const value = useMemo(() => ({ isDark, toggle }), [isDark, toggle]);
 

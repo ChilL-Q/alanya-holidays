@@ -103,7 +103,7 @@ describe("PlatformAnalyticsTab", () => {
       expect(screen.getByText("Alanya Yacht Excursions")).toBeInTheDocument();
     });
 
-    expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(30);
+    expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(30, { throwOnError: true });
   });
 
   it("switches timeframe when 7 Days and 90 Days buttons are clicked", async () => {
@@ -112,21 +112,21 @@ describe("PlatformAnalyticsTab", () => {
     render(<PlatformAnalyticsTab />);
 
     await waitFor(() => {
-      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(30);
+      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(30, { throwOnError: true });
     });
 
     const sevenDaysBtn = screen.getByRole("button", { name: "7 Days" });
     fireEvent.click(sevenDaysBtn);
 
     await waitFor(() => {
-      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(7);
+      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(7, { throwOnError: true });
     });
 
     const ninetyDaysBtn = screen.getByRole("button", { name: "90 Days" });
     fireEvent.click(ninetyDaysBtn);
 
     await waitFor(() => {
-      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(90);
+      expect(adminService.getPlatformAnalytics).toHaveBeenCalledWith(90, { throwOnError: true });
     });
   });
 

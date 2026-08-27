@@ -9,11 +9,13 @@ export default function ThreadForm() {
   const initialCategory = searchParams.get("category") || "";
 
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-  const [categoryId, setCategoryId] = useState(initialCategory);
+  const [categoryId, setCategoryId] = useState("");
   const [subcategory, setSubcategory] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [createdThread, setCreatedThread] = useState<{ id: string; slug: string; title: string } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -21,6 +23,7 @@ export default function ThreadForm() {
   // Load dynamic categories
   useEffect(() => {
     let isMounted = true;
+    setIsLoadingCategories(true);
     forumService
       .getCategories()
       .then((cats) => {
@@ -30,6 +33,14 @@ export default function ThreadForm() {
       })
       .catch((err) => {
         logger.warn("Failed to load categories in ThreadForm:", err);
+        if (isMounted) {
+          setCategoriesList([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingCategories(false);
+        }
       });
 
     return () => {
@@ -37,11 +48,16 @@ export default function ThreadForm() {
     };
   }, []);
 
-  // Validate the initial category from URL is a real category
+  // Normalize the initial category from URL against backend taxonomy.
   useEffect(() => {
-    if (initialCategory && !categoriesList.find((c) => c.id === initialCategory)) {
-      setCategoryId("");
-    }
+    if (!initialCategory) return;
+    if (categoriesList.length === 0) return;
+
+    const matchedCategory = categoriesList.find(
+      (c) => c.id === initialCategory || c.slug === initialCategory
+    );
+
+    setCategoryId(matchedCategory?.id || "");
   }, [initialCategory, categoriesList]);
 
   const selectedCategory = useMemo(
@@ -49,7 +65,23 @@ export default function ThreadForm() {
     [categoryId, categoriesList]
   );
 
-  const subcategories = selectedCategory?.subcategories ?? [];
+  const subcategories = useMemo(
+    () => selectedCategory?.subcategories ?? [],
+    [selectedCategory]
+  );
+
+  useEffect(() => {
+    if (subcategories.length === 0) {
+      if (subcategory) {
+        setSubcategory("");
+      }
+      return;
+    }
+
+    if (subcategory && !subcategories.includes(subcategory)) {
+      setSubcategory("");
+    }
+  }, [subcategory, subcategories]);
 
   const handleCategoryChange = (value: string) => {
     setCategoryId(value);
@@ -64,11 +96,22 @@ export default function ThreadForm() {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!categoryId.trim()) errs.categoryId = "Please select a category";
-    if (!title.trim()) errs.title = "Title is required";
-    else if (title.trim().length < 10) errs.title = "Title must be at least 10 characters";
-    if (!content.trim()) errs.content = "Content is required";
-    else if (content.trim().length < 20) errs.content = "Content must be at least 20 characters";
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    const trimmedMediaUrl = mediaUrl.trim();
+
+    if (!categoryId.trim()) errs.categoryId = "Please pick a category for your post.";
+    if (!trimmedTitle) errs.title = "Please enter a title for your post.";
+    if (!trimmedContent) errs.content = "Please share a short description or story.";
+
+    if (trimmedMediaUrl) {
+      try {
+        new URL(trimmedMediaUrl);
+      } catch {
+        errs.mediaUrl = "Please enter a valid media URL (https://…).";
+      }
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -80,8 +123,8 @@ export default function ThreadForm() {
     setIsSubmitting(true);
     try {
       const res = await forumService.createThread({
-        title,
-        body: content,
+        title: title.trim(),
+        body: content.trim(),
         category_id: categoryId,
         subcategory: subcategory || undefined,
       });
@@ -120,7 +163,7 @@ export default function ThreadForm() {
           {subcategory ? (
             <span>
               {" "}
-              →{" "}
+              → Topic:{" "}
               <span className="font-medium text-foreground-900">{subcategory}</span>
             </span>
           ) : (
@@ -152,6 +195,7 @@ export default function ThreadForm() {
               setSubcategory("");
               setTitle("");
               setContent("");
+              setMediaUrl("");
             }}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
@@ -166,62 +210,74 @@ export default function ThreadForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-background-50 rounded-2xl border border-background-200/70 p-6 md:p-8 max-w-2xl mx-auto space-y-6"
+      className="bg-white rounded-2xl border border-background-200/70 p-6 md:p-8 max-w-2xl mx-auto space-y-5 shadow-sm"
     >
       {errors.submit && (
-        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-          <i className="ri-error-warning-line text-lg shrink-0"></i>
-          <span>{errors.submit}</span>
+        <div className="p-3 text-sm rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
+          {errors.submit}
         </div>
       )}
 
-      {/* Category */}
-      <div>
-        <label className="block text-sm font-medium text-foreground-800 mb-1.5">
-          Category <span className="text-primary-500">*</span>
-        </label>
-        <div className="relative">
+      <div className="space-y-4">
+        <div>
+          <label
+            htmlFor="thread-category"
+            className="block text-sm font-semibold text-foreground-800 dark:text-background-200 mb-2"
+          >
+            Category *
+          </label>
           <select
+            id="thread-category"
             name="category"
             value={categoryId}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className={`w-full appearance-none bg-background-50 border ${
+            disabled={isLoadingCategories || categoriesList.length === 0}
+            className={`w-full px-4 py-2.5 rounded-xl border bg-white text-foreground-900 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
               errors.categoryId ? "border-primary-500" : "border-background-200"
-            } rounded-lg px-4 py-3 pr-10 text-sm text-foreground-900 focus:outline-none focus:border-primary-500 transition-colors cursor-pointer`}
+            }`}
           >
-            <option value="">Select a category...</option>
+            <option value="" disabled>
+              {isLoadingCategories
+                ? "Loading categories…"
+                : categoriesList.length === 0
+                  ? "No categories available right now"
+                  : "Choose a category…"}
+            </option>
             {categoriesList.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
           </select>
-          <i className="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-foreground-400 pointer-events-none"></i>
+          {errors.categoryId && (
+            <p className="mt-2 text-xs text-primary-500">{errors.categoryId}</p>
+          )}
+          {categoriesList.length === 0 && !isLoadingCategories && (
+            <p className="mt-2 text-xs text-foreground-500">
+              We couldn't load any forum categories. Please try again later.
+            </p>
+          )}
         </div>
-        {errors.categoryId && (
-          <p className="text-xs text-primary-500 mt-1">{errors.categoryId}</p>
-        )}
-      </div>
 
-      {/* Subcategory */}
-      <div>
-        <label className="block text-sm font-medium text-foreground-800 mb-1.5">
-          Subcategory <span className="text-foreground-400 font-normal">(optional)</span>
-        </label>
-        <div className="relative">
+        <div>
+          <label
+            htmlFor="thread-subcategory"
+            className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-2"
+          >
+            Topic <span className="text-foreground-400">(optional)</span>
+          </label>
           <select
+            id="thread-subcategory"
             name="subcategory"
             value={subcategory}
             onChange={(e) => setSubcategory(e.target.value)}
-            disabled={subcategories.length === 0}
-            className={`w-full appearance-none bg-background-50 border border-background-200 rounded-lg px-4 py-3 pr-10 text-sm text-foreground-900 focus:outline-none focus:border-primary-500 transition-colors cursor-pointer ${
-              subcategories.length === 0 ? "text-foreground-400 cursor-not-allowed" : ""
-            }`}
+            disabled={isLoadingCategories || subcategories.length === 0}
+            className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-white text-foreground-900 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option value="">
               {subcategories.length === 0
                 ? "Select a category first"
-                : "All subcategories"}
+                : "All topics in this category"}
             </option>
             {subcategories.map((sub) => (
               <option key={sub} value={sub}>
@@ -229,59 +285,104 @@ export default function ThreadForm() {
               </option>
             ))}
           </select>
-          <i className="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-foreground-400 pointer-events-none"></i>
         </div>
       </div>
 
-      {/* Title */}
-      <div>
-        <label className="block text-sm font-medium text-foreground-800 mb-1.5">
-          Title <span className="text-primary-500">*</span>
-        </label>
-        <input
-          type="text"
-          name="title"
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            if (errors.title) setErrors((prev) => { const n = { ...prev }; delete n.title; return n; });
-          }}
-          placeholder="e.g. What's the best neighborhood for families in Alanya?"
-          maxLength={150}
-          className={`w-full bg-background-50 border ${
-            errors.title ? "border-primary-500" : "border-background-200"
-          } rounded-lg px-4 py-3 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500 transition-colors`}
-        />
-        <div className="flex items-center justify-between mt-1">
-          {errors.title ? (
-            <p className="text-xs text-primary-500">{errors.title}</p>
-          ) : (
-            <span />
-          )}
-          <span className="text-xs text-foreground-400">{title.length}/150</span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div>
-        <label className="block text-sm font-medium text-foreground-800 mb-1.5">
-          Content <span className="text-primary-500">*</span>
-        </label>
-        <RichTextEditor
-          value={content}
-          onChange={setContent}
-          placeholder="Share your thoughts, question, or experience in detail..."
-        />
-        <div className="flex items-center justify-between mt-1">
-          {errors.content ? (
-            <p className="text-xs text-primary-500">{errors.content}</p>
-          ) : (
-            <span />
+      <div className="space-y-4">
+        <div>
+          <label
+            htmlFor="thread-title"
+            className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
+          >
+            Title *
+          </label>
+          <input
+            id="thread-title"
+            type="text"
+            name="title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.title;
+                  return next;
+                });
+              }
+            }}
+            placeholder="e.g. Hidden Cleopatra Beach Sunset Cove"
+            maxLength={140}
+            className={`w-full px-4 py-2.5 rounded-xl border bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              errors.title ? "border-primary-500" : "border-background-200"
+            }`}
+          />
+          {errors.title && (
+            <p className="mt-2 text-xs text-primary-500">{errors.title}</p>
           )}
         </div>
+
+        <div>
+          <label
+            htmlFor="thread-content"
+            className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
+          >
+            Story *
+          </label>
+          <RichTextEditor
+            inputId="thread-content"
+            ariaLabel="Story"
+            value={content}
+            onChange={(value) => {
+              setContent(value);
+              if (errors.content) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.content;
+                  return next;
+                });
+              }
+            }}
+            placeholder="Tell the community what makes this spot special, share tips, or ask a question…"
+          />
+          {errors.content && (
+            <p className="mt-2 text-xs text-primary-500">{errors.content}</p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="thread-media-url"
+            className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
+          >
+            Media URL <span className="text-xs text-foreground-400">(optional — YouTube, Drive, Instagram)</span>
+          </label>
+          <input
+            id="thread-media-url"
+            type="url"
+            name="mediaUrl"
+            value={mediaUrl}
+            onChange={(e) => {
+              setMediaUrl(e.target.value);
+              if (errors.mediaUrl) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.mediaUrl;
+                  return next;
+                });
+              }
+            }}
+            placeholder="https://…"
+            className={`w-full px-4 py-2.5 rounded-xl border bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              errors.mediaUrl ? "border-primary-500" : "border-background-200"
+            }`}
+          />
+          {errors.mediaUrl && (
+            <p className="mt-2 text-xs text-primary-500">{errors.mediaUrl}</p>
+          )}
+        </div>
       </div>
 
-      {/* Formatting tips */}
       <div className="flex items-center gap-2 text-xs text-foreground-500 bg-background-100/70 rounded-lg px-4 py-2.5">
         <i className="ri-information-line"></i>
         <span>
@@ -289,21 +390,20 @@ export default function ThreadForm() {
         </span>
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 disabled:opacity-50 transition-colors whitespace-nowrap cursor-pointer"
+        disabled={isSubmitting || isLoadingCategories}
+        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl bg-primary-600 text-white hover:bg-primary-700 active:scale-[0.99] transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         {isSubmitting ? (
           <>
             <i className="ri-loader-4-line animate-spin"></i>
-            Posting Discussion...
+            Publishing…
           </>
         ) : (
           <>
-            <i className="ri-send-plane-line"></i>
-            Post Discussion
+            Publish Post
+            <i className="ri-send-plane-fill"></i>
           </>
         )}
       </button>

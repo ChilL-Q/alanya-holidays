@@ -27,7 +27,7 @@ export default function NewThreadPage() {
                 },
                 {
                   icon: "ri-focus-2-line",
-                  text: "Pick the most specific category so the right people see your post.",
+                  text: "Pick the right category and, if available, the most relevant topic so the right people see your post.",
                 },
                 {
                   icon: "ri-file-text-line",

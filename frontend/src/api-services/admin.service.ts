@@ -155,11 +155,15 @@ export interface PlatformAnalyticsData {
   topListings: TopListingPerformance[];
 }
 
+interface AdminFetchOptions {
+  throwOnError?: boolean;
+}
+
 class AdminService {
   /**
    * Fetches all concierge enquiries for admin dashboard and analytics.
    */
-  async getEnquiries(): Promise<ConciergeEnquiry[]> {
+  async getEnquiries(options?: AdminFetchOptions): Promise<ConciergeEnquiry[]> {
     try {
       const response = await apiClient.get<ConciergeEnquiry[] | { data: ConciergeEnquiry[] }>("/admin/enquiries");
       if (Array.isArray(response)) {
@@ -176,6 +180,7 @@ class AdminService {
       return [];
     } catch (err) {
       logger.warn("Failed to fetch enquiries from API:", err);
+      if (options?.throwOnError) throw err;
       return [];
     }
   }
@@ -236,6 +241,7 @@ class AdminService {
     status?: string;
     category?: string;
     query?: string;
+    throwOnError?: boolean;
   }): Promise<ModerationListing[]> {
     try {
       const queryParams: Record<string, string> = {};
@@ -261,6 +267,7 @@ class AdminService {
       return [];
     } catch (err) {
       logger.warn("Failed to fetch moderation listings:", err);
+      if (params?.throwOnError) throw err;
       return [];
     }
   }
@@ -308,7 +315,7 @@ class AdminService {
   /**
    * Fetches claims moderation queue.
    */
-  async getClaimsQueue(status?: string): Promise<DirectoryClaim[]> {
+  async getClaimsQueue(status?: string, options?: AdminFetchOptions): Promise<DirectoryClaim[]> {
     try {
       const response = await apiClient.get<DirectoryClaim[] | { data: DirectoryClaim[] }>("/directory/admin/claims");
       let list: DirectoryClaim[] = [];
@@ -329,6 +336,7 @@ class AdminService {
       return list;
     } catch (err) {
       logger.warn("Failed to fetch claims queue:", err);
+      if (options?.throwOnError) throw err;
       return [];
     }
   }
@@ -362,7 +370,7 @@ class AdminService {
   /**
    * Fetches platform-wide analytics.
    */
-  async getPlatformAnalytics(days = 30): Promise<PlatformAnalyticsData> {
+  async getPlatformAnalytics(days = 30, options?: AdminFetchOptions): Promise<PlatformAnalyticsData> {
     try {
       const response = await apiClient.get<PlatformAnalyticsData>("/admin/analytics", {
         params: { days },
@@ -373,6 +381,7 @@ class AdminService {
       throw new Error("Invalid analytics payload format");
     } catch (err) {
       logger.warn("Failed to fetch platform analytics, using fallback:", err);
+      if (options?.throwOnError) throw err;
       return {
         kpiSummary: {
           totalViews: 0,
@@ -408,13 +417,15 @@ class AdminService {
     search?: string;
     limit?: number;
     page?: number;
+    throwOnError?: boolean;
   }): Promise<BlogSubmissionAdminItem[]> {
+    const { throwOnError, ...restParams } = params ?? {};
     try {
       const queryParams: Record<string, string | number> = {};
-      if (params?.status && params.status !== "all") queryParams.status = params.status;
-      if (params?.search?.trim()) queryParams.search = params.search.trim();
-      if (params?.limit) queryParams.limit = params.limit;
-      if (params?.page) queryParams.page = params.page;
+      if (restParams.status && restParams.status !== "all") queryParams.status = restParams.status;
+      if (restParams.search?.trim()) queryParams.search = restParams.search.trim();
+      if (restParams.limit) queryParams.limit = restParams.limit;
+      if (restParams.page) queryParams.page = restParams.page;
 
       const response = await apiClient.get<
         BlogSubmissionAdminItem[] | { data: BlogSubmissionAdminItem[] }
@@ -432,6 +443,7 @@ class AdminService {
       return [];
     } catch (err) {
       logger.warn("Failed to fetch content submissions, using fallback:", err);
+      if (throwOnError) throw err;
       return [];
     }
   }
@@ -708,14 +720,17 @@ class AdminService {
     page?: number;
     limit?: number;
     target_type?: "post" | "comment";
+    throwOnError?: boolean;
   }): Promise<ForumReportAdminItem[]> {
+    const { throwOnError, ...queryParams } = params ?? {};
     try {
       const res = await apiClient.get<ForumReportAdminItem[]>("/forum/reports", {
-        params: params as Record<string, string | number | boolean | null | undefined>,
+        params: queryParams as Record<string, string | number | boolean | null | undefined>,
       });
       return Array.isArray(res) ? res : [];
     } catch (err) {
       logger.error("Failed to fetch forum reports from API:", err);
+      if (throwOnError) throw err;
       return [];
     }
   }
@@ -736,12 +751,13 @@ class AdminService {
   /**
    * Fetches real-time forum metrics and KPIs.
    */
-  async getForumStats(): Promise<ForumStatsAdminItem | null> {
+  async getForumStats(options?: AdminFetchOptions): Promise<ForumStatsAdminItem | null> {
     try {
       const stats = await apiClient.get<ForumStatsAdminItem>("/forum/stats");
       return stats;
     } catch (err) {
       logger.error("Failed to fetch forum stats:", err);
+      if (options?.throwOnError) throw err;
       return null;
     }
   }
@@ -814,7 +830,10 @@ class AdminService {
   /**
    * Fetches soft-deleted comments queue for moderation audit.
    */
-  async getRemovedForumComments(limit?: number): Promise<ForumRemovedCommentItem[]> {
+  async getRemovedForumComments(
+    limit?: number,
+    options?: AdminFetchOptions
+  ): Promise<ForumRemovedCommentItem[]> {
     try {
       const res = await apiClient.get<ForumRemovedCommentItem[]>("/forum/reports/removed-comments", {
         params: limit !== undefined ? { limit } : undefined,
@@ -822,6 +841,7 @@ class AdminService {
       return Array.isArray(res) ? res : [];
     } catch (err) {
       logger.error("Failed to fetch removed comments:", err);
+      if (options?.throwOnError) throw err;
       return [];
     }
   }
@@ -829,10 +849,13 @@ class AdminService {
   /**
    * Fetches paginated moderation audit logs with filter matrix.
    */
-  async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLogPaginatedResult> {
+  async getAuditLogs(
+    params?: AuditLogQueryParams & AdminFetchOptions
+  ): Promise<AuditLogPaginatedResult> {
+    const { throwOnError, ...queryParams } = params ?? {};
     try {
       const res = await apiClient.get<AuditLogPaginatedResult>("/admin/audit-logs", {
-        params: params as Record<string, string | number | boolean | null | undefined>,
+        params: queryParams as Record<string, string | number | boolean | null | undefined>,
       });
       if (res && Array.isArray(res.data)) {
         return res;
@@ -840,17 +863,18 @@ class AdminService {
       return {
         data: [],
         total: 0,
-        page: params?.page || 1,
-        limit: params?.limit || 20,
+        page: queryParams.page || 1,
+        limit: queryParams.limit || 20,
         totalPages: 0,
       };
     } catch (err) {
       logger.error("Failed to fetch audit logs from API:", err);
+      if (throwOnError) throw err;
       return {
         data: [],
         total: 0,
-        page: params?.page || 1,
-        limit: params?.limit || 20,
+        page: queryParams.page || 1,
+        limit: queryParams.limit || 20,
         totalPages: 0,
       };
     }
@@ -863,7 +887,7 @@ class AdminService {
   /**
    * Fetches all bookings, optionally filtered by status.
    */
-  async getAdminBookings(status?: string): Promise<AdminBookingItem[]> {
+  async getAdminBookings(status?: string, options?: AdminFetchOptions): Promise<AdminBookingItem[]> {
     try {
       const res = await apiClient.get<
         AdminBookingItem[] | { data: AdminBookingItem[] }
@@ -875,6 +899,7 @@ class AdminService {
       return [];
     } catch (err) {
       logger.error("Failed to fetch admin bookings:", err);
+      if (options?.throwOnError) throw err;
       return [];
     }
   }
@@ -932,7 +957,8 @@ class AdminService {
   async getModerationReviews(
     status: "pending" | "approved" | "rejected",
     page = 1,
-    limit = 20
+    limit = 20,
+    options?: AdminFetchOptions
   ): Promise<{ data: AdminReviewItem[]; total: number }> {
     try {
       const endpoint =
@@ -949,6 +975,7 @@ class AdminService {
       };
     } catch (err) {
       logger.error("Failed to fetch reviews for moderation:", err);
+      if (options?.throwOnError) throw err;
       return { data: [], total: 0 };
     }
   }

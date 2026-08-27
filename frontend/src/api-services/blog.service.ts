@@ -95,7 +95,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "8 min read",
     description: "Everything you need to know for your first trip to Alanya — getting around, best areas, money tips, and essential Turkish phrases.",
     content: "Everything you need to know for your first trip to Alanya.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/home/alanya_castle.webp",
     published_at: "2026-01-15T10:00:00Z",
   },
   {
@@ -107,7 +107,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "10 min read",
     description: "From traditional serpme kahvaltı to late-night kokoreç — the complete guide to eating like a local in Alanya.",
     content: "From traditional serpme kahvaltı to late-night kokoreç.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/home/turkish_cuisine.webp",
     published_at: "2026-01-20T10:00:00Z",
   },
   {
@@ -119,7 +119,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "12 min read",
     description: "Escape the town and explore Sapadere Canyon, Side ruins, Dim Cave, and the Taurus mountain villages.",
     content: "Escape the town and explore Sapadere Canyon, Side ruins, Dim Cave.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/home/dim_river.webp",
     published_at: "2026-02-01T10:00:00Z",
   },
   {
@@ -131,7 +131,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "15 min read",
     description: "Residency permits, finding an apartment, healthcare, banking, and settling into the expat community.",
     content: "Residency permits, finding an apartment, healthcare, banking.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/categories/accommodations.webp",
     published_at: "2026-02-10T10:00:00Z",
   },
   {
@@ -143,7 +143,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "7 min read",
     description: "Cleopatra Beach, Keykubat, Damlataş, and hidden coves — where to find the best sand, water sports, and sunset spots.",
     content: "Cleopatra Beach, Keykubat, Damlataş, and hidden coves.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/home/cleopatra_beach.webp",
     published_at: "2026-02-15T10:00:00Z",
   },
   {
@@ -155,7 +155,7 @@ export const mockTravelGuides: BlogPostItem[] = [
     readTime: "9 min read",
     description: "Harbor clubs, rooftop cocktail bars, live music venues, and chill beach lounges — your guide after dark.",
     content: "Harbor clubs, rooftop cocktail bars, live music venues.",
-    cover_image_url: "/images/placeholder-business.svg",
+    cover_image_url: "/images/alanya-bazaar-hero.webp",
     published_at: "2026-02-20T10:00:00Z",
   },
 ];
@@ -392,7 +392,7 @@ export class BlogService {
           sections: [
             {
               heading: post.title,
-              body: post.content.replace(/<[^>]*>/g, ""),
+              body: post.content,
             },
           ],
           relatedLinks: [

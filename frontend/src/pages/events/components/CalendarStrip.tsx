@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { ForumEvent } from "@/api-services/events.service";
 
 interface CalendarStripProps {
@@ -6,10 +7,21 @@ interface CalendarStripProps {
   onDateSelect: (date: string | null) => void;
 }
 
+const formatLocalDate = (d: Date) => {
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
 export default function CalendarStrip({ events, selectedDate, onDateSelect }: CalendarStripProps) {
-  // Generate June 10 - August 10 date range
-  const startDate = new Date("2026-06-10");
-  const endDate = new Date("2026-08-10");
+  // Generate dynamic date range (-14 days to +90 days)
+  const today = new Date();
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - 14);
+  const endDate = new Date(today);
+  endDate.setDate(today.getDate() + 90);
   const dates: Date[] = [];
   const current = new Date(startDate);
   while (current <= endDate) {
@@ -21,16 +33,18 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
   const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-  // Find the range that's visible
-  const scrollToToday = () => {
-    const el = document.getElementById("calendar-today");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    }
-  };
-
   // Scroll to today on mount
-  setTimeout(scrollToToday, 200);
+  useEffect(() => {
+    const scrollToToday = () => {
+      const el = document.getElementById("calendar-today");
+      if (el && typeof el.scrollIntoView === "function") {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    };
+    // small delay ensures DOM is fully painted with the scroll container
+    const timer = setTimeout(scrollToToday, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   let lastMonth = "";
 
@@ -68,10 +82,10 @@ export default function CalendarStrip({ events, selectedDate, onDateSelect }: Ca
             </button>
 
             {dates.map((d) => {
-              const dateStr = d.toISOString().split("T")[0];
+              const dateStr = formatLocalDate(d);
               const hasEvent = eventDates.has(dateStr);
               const isSelected = selectedDate === dateStr;
-              const isToday = dateStr === "2026-06-04"; // current date
+              const isToday = dateStr === formatLocalDate(new Date());
               const thisMonth = monthNames[d.getMonth()];
               const showMonthLabel = thisMonth !== lastMonth;
               lastMonth = thisMonth;

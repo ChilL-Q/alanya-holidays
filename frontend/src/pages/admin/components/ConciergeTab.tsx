@@ -3,6 +3,7 @@ import {
   adminService,
   type ConciergeEnquiry,
 } from "@/api-services/admin.service";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 type StatusFilter = "all" | "new" | "responded" | "archived";
 type EnquiryTypeFilter = string;
@@ -102,11 +103,11 @@ export default function ConciergeTab({
     onEnquiriesCountUpdateRef.current = onEnquiriesCountUpdate;
   }, [onEnquiriesCountUpdate]);
 
-  const fetchEnquiries = useCallback(async () => {
-    setLoading(true);
+  const fetchEnquiries = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getEnquiries();
+      const data = await adminService.getEnquiries({ throwOnError: true });
       setEnquiries(data || []);
       if (onEnquiriesCountUpdateRef.current) {
         const newCount = (data || []).filter((e) => e.status === "new").length;
@@ -120,8 +121,10 @@ export default function ConciergeTab({
   }, []);
 
   useEffect(() => {
-    fetchEnquiries();
+    void fetchEnquiries();
   }, [fetchEnquiries]);
+
+  useAutoRefresh(() => fetchEnquiries(true), { intervalMs: 15000 });
 
   const filtered = useMemo(() => {
     let list = enquiries;

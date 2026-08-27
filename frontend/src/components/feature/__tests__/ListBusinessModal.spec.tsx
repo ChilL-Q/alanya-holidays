@@ -23,7 +23,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     expect(screen.getByText(/choose your business tier/i)).toBeInTheDocument();
     expect(screen.getByText("Explorer")).toBeInTheDocument();
     expect(screen.getByText("Voyager")).toBeInTheDocument();
-    expect(screen.getByText("Signature")).toBeInTheDocument();
+    expect(screen.getByText("Custom")).toBeInTheDocument();
   });
 
   it("does not render when isOpen is false", () => {
@@ -53,9 +53,9 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
   it("unlocks social links, video URL, and instant booking when Paid tier is selected", async () => {
     render(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 
-    // Click Signature (Paid) tier
-    const signatureSelectBtn = screen.getByTestId("select-tier-signature");
-    fireEvent.click(signatureSelectBtn);
+    // Click Voyager (Paid) tier
+    const voyagerSelectBtn = screen.getByTestId("select-tier-voyager");
+    fireEvent.click(voyagerSelectBtn);
 
     // Paid tier fields should be accessible
     expect(await screen.findByLabelText(/instagram url/i)).toBeInTheDocument();
@@ -152,8 +152,8 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
 
     render(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 
-    // Select Signature tier
-    fireEvent.click(screen.getByTestId("select-tier-signature"));
+    // Select Voyager tier
+    fireEvent.click(screen.getByTestId("select-tier-voyager"));
 
     // Fill form
     fireEvent.change(screen.getByLabelText(/business name/i), {
@@ -182,7 +182,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "Alanya Grand Luxury Hotel",
-          tier: "signature",
+          tier: "voyager",
         })
       );
     });

@@ -15,9 +15,13 @@ import BookingsAdminTab from "./components/BookingsAdminTab";
 import ReviewsModerationTab from "./components/ReviewsModerationTab";
 import UsersAdminTab from "./components/UsersAdminTab";
 import { adminService } from "@/api-services/admin.service";
+import { useToast } from "@/hooks/useToast";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 export default function AdminDashboardPage() {
   const { isAdmin, loading: authLoading } = useAuth();
+  const { showToast, ToastContainer } = useToast();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
   const activeTab: AdminTab =
@@ -52,16 +56,17 @@ export default function AdminDashboardPage() {
     });
   };
 
-  const fetchGlobalBadgeCounts = useCallback(async () => {
+  const fetchGlobalBadgeCounts = useCallback(async (manual: boolean = false) => {
+    if (manual) setIsRefreshing(true);
     try {
       const [listings, claims, contentSubmissions, reports, enquiries, bookings, reviews] = await Promise.all([
-        adminService.getModerationListings({ status: "pending" }),
-        adminService.getClaimsQueue("pending"),
-        adminService.getContentSubmissions({ status: "pending_review" }),
-        adminService.getForumReports({ includeResolved: false }),
-        adminService.getEnquiries(),
-        adminService.getAdminBookings("pending"),
-        adminService.getModerationReviews("pending", 1, 1),
+        adminService.getModerationListings({ status: "pending", throwOnError: true }),
+        adminService.getClaimsQueue("pending", { throwOnError: true }),
+        adminService.getContentSubmissions({ status: "pending_review", throwOnError: true }),
+        adminService.getForumReports({ includeResolved: false, throwOnError: true }),
+        adminService.getEnquiries({ throwOnError: true }),
+        adminService.getAdminBookings("pending", { throwOnError: true }),
+        adminService.getModerationReviews("pending", 1, 1, { throwOnError: true }),
       ]);
 
       setCounts({
@@ -73,14 +78,28 @@ export default function AdminDashboardPage() {
         pendingBookings: bookings.length,
         pendingReviews: reviews.total,
       });
+
+      if (manual) {
+        showToast("Hub Refreshed", "Badge counts are up to date", "success");
+      }
     } catch {
       // Non-blocking background sync
+      if (manual) {
+        showToast("Refresh Failed", "Could not sync some badge counts", "error");
+      }
+    } finally {
+      if (manual) setIsRefreshing(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
-    fetchGlobalBadgeCounts();
+    fetchGlobalBadgeCounts(false);
   }, [fetchGlobalBadgeCounts]);
+
+  useAutoRefresh(() => fetchGlobalBadgeCounts(false), {
+    enabled: isAdmin && !authLoading,
+    intervalMs: 30000,
+  });
 
   const handleListingCountUpdate = useCallback((c: { total: number; pending: number }) => {
     setCounts((prev) => (prev.pendingListings === c.pending ? prev : { ...prev, pendingListings: c.pending }));
@@ -149,6 +168,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-secondary-50/50 dark:bg-slate-950 text-secondary-900 dark:text-white flex flex-col font-sans transition-colors duration-200">
       <Navbar />
+      <ToastContainer />
 
       {/* Admin Hub Header */}
       <div className="bg-white dark:bg-slate-900 border-b border-secondary-200 dark:border-slate-800 pt-24 pb-6 transition-colors duration-200">
@@ -171,12 +191,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center space-x-3 self-start sm:self-auto">
               <button
                 type="button"
-                onClick={fetchGlobalBadgeCounts}
-                className="px-3.5 py-2 text-xs font-semibold text-secondary-700 dark:text-slate-200 bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
+                onClick={() => fetchGlobalBadgeCounts(true)}
+                disabled={isRefreshing}
+                className={`px-3.5 py-2 text-xs font-semibold text-secondary-700 dark:text-slate-200 bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700 rounded-xl transition-colors flex items-center space-x-1.5 ${isRefreshing ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Refresh badge counts"
               >
-                <i className="ri-refresh-line" />
-                <span>Refresh Hub</span>
+                <i className={`ri-refresh-line ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Refreshing...' : 'Refresh Hub'}</span>
               </button>
             </div>
           </div>

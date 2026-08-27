@@ -141,7 +141,7 @@ export default function CategoriesPage() {
               {categoriesList.map((category) => (
                 <Link
                   key={category.id}
-                  to={`/category/${category.id}`}
+                  to={`/category/${category.slug || category.id}`}
                   className="group bg-background-50 rounded-xl border border-background-200/70 overflow-hidden hover:border-primary-200/60 transition-all duration-300 flex flex-col"
                 >
                   {/* Card Image */}

@@ -4,6 +4,7 @@ import { sanitizeForumHtml } from "@/utils/sanitizeHtml";
 import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
 import { logger } from "@/lib/logger";
+import ReportModal from "./ReportModal";
 
 interface OriginalPostProps {
   thread: ThreadDetail;
@@ -28,6 +29,7 @@ export default function OriginalPost({
   const [editContent, setEditContent] = useState(thread.content);
   const [isSaving, setIsSaving] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(Boolean(thread.isBookmarked));
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     setContent(thread.content);
@@ -82,6 +84,16 @@ export default function OriginalPost({
     } catch (err) {
       logger.warn("Failed to toggle bookmark:", err);
       setIsBookmarked(!nextState);
+    }
+  };
+
+  const handleReportSubmit = async (reason: string) => {
+    const success = await forumService.reportContent("post", thread.id, reason);
+    if (success) {
+      alert("Report submitted successfully.");
+      setIsReportModalOpen(false);
+    } else {
+      alert("Failed to submit report. Please try again.");
     }
   };
 
@@ -205,6 +217,17 @@ export default function OriginalPost({
           <span className="hidden sm:inline">{isBookmarked ? "Saved" : "Save"}</span>
         </button>
 
+        {/* Report button */}
+        <button
+          type="button"
+          onClick={() => setIsReportModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-rose-500 hover:bg-background-100 transition-all cursor-pointer"
+          aria-label="Report post"
+        >
+          <i className="ri-flag-line text-sm"></i>
+          <span className="hidden sm:inline">Report</span>
+        </button>
+
         <button
           onClick={onShare}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-foreground-600 hover:bg-background-100 transition-all ml-auto cursor-pointer"
@@ -213,6 +236,12 @@ export default function OriginalPost({
           <span className="hidden sm:inline">Share</span>
         </button>
       </div>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
     </article>
   );
 }

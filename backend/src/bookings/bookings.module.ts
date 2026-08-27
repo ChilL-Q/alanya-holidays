@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { BookingsController } from './bookings.controller';
-import { BookingsAdminController } from './bookings-admin.controller';
+
 import { BookingsRepository } from './bookings.repository';
 import { EmailOutboxRepository } from './email-outbox.repository';
 import { BOOKINGS_REPOSITORY } from './domain';
@@ -19,7 +19,7 @@ import { AuthModule } from '../auth/auth.module';
       useExisting: BookingsRepository,
     },
   ],
-  controllers: [BookingsController, BookingsAdminController],
+  controllers: [BookingsController],
   exports: [BookingsService, BookingsRepository, BOOKINGS_REPOSITORY],
 })
 export class BookingsModule {}

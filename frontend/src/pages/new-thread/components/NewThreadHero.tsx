@@ -28,8 +28,8 @@ export default function NewThreadHero() {
           Start a New Discussion
         </h1>
         <p className="text-sm md:text-base text-foreground-600 max-w-xl mx-auto">
-          Share your question, experience, or insight with the Alanya community. 
-          Pick the right category so the right people can find it.
+          Share your question, experience, or insight with the Alanya community.
+          Pick the right category and, if helpful, a topic so the right people can find it.
         </p>
       </div>
     </section>

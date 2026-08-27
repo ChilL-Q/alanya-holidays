@@ -16,18 +16,21 @@ export default function HeroSection() {
     };
   }, []);
 
-  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 12450;
-  const totalThreads = stats?.totalDiscussions ?? stats?.totalPosts ?? 3820;
-  const questionsAnswered = stats?.questionsAnswered ?? 9400;
-  const localExperts = stats?.localExperts ?? 142;
+  const totalMembers = (stats?.totalMembers || stats?.activeMembers) || 12450;
+  const totalThreads = (stats?.totalDiscussions || stats?.totalPosts) || 3820;
+  const questionsAnswered = stats?.questionsAnswered || 9400;
+  const localExperts = stats?.localExperts || 142;
   return (
     <section className="relative min-h-screen flex items-center">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src="/images/placeholder-business.svg"
+          src="/images/hero-bg.webp"
           alt="Alanya coastline"
           className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/images/hero-bg.jpg";
+          }}
         />
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
@@ -40,19 +43,19 @@ export default function HeroSection() {
           <div className="flex items-center gap-4 mb-8">
             <div className="flex -space-x-3">
               <img
-                src="/images/placeholder-business.svg"
-                alt="Member"
-                className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80"
+                alt="Traveler Sarah"
+                className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm"
               />
               <img
-                src="/images/placeholder-business.svg"
-                alt="Member"
-                className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80"
+                alt="Traveler Alex"
+                className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm"
               />
               <img
-                src="/images/placeholder-business.svg"
-                alt="Member"
-                className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&h=120&q=80"
+                alt="Traveler Elena"
+                className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm"
               />
             </div>
             <span className="text-white/90 text-sm font-medium">

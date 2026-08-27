@@ -25,7 +25,7 @@ import {
 const POST_SELECT = `
     *,
     category:forum_categories(id, name, slug, description, sort_order, parent_id, icon, image_url, accent, created_at, parent:forum_categories(id, name, slug, description, icon, image_url, accent)),
-    author:profiles!forum_posts_author_id_fkey(full_name, avatar_url)
+    author:profiles!forum_posts_author_id_fkey(full_name, avatar_url, bio, role, created_at)
 `;
 
 export const EVENT_SELECT = `
@@ -87,7 +87,12 @@ export class ForumRepository {
       new Set(
         posts
           .filter(
-            (p) => p.category?.parent_id && p.category.parent === undefined,
+            (p) =>
+              p.category?.parent_id &&
+              (!p.category.parent ||
+                !('name' in p.category.parent) ||
+                (Array.isArray(p.category.parent) &&
+                  p.category.parent.length === 0)),
           )
           .map((p) => String(p.category?.parent_id)),
       ),
@@ -99,7 +104,12 @@ export class ForumRepository {
       (data || []).map((c) => [String(c.id), c]),
     );
     for (const p of posts) {
-      if (p.category?.parent_id && p.category.parent === undefined)
+      if (
+        p.category?.parent_id &&
+        (!p.category.parent ||
+          !('name' in p.category.parent) ||
+          (Array.isArray(p.category.parent) && p.category.parent.length === 0))
+      )
         p.category.parent = map.get(String(p.category.parent_id)) || null;
     }
   }
@@ -391,19 +401,37 @@ export class ForumRepository {
   }
 
   async insertPost(data: InsertForumPostDbInput): Promise<ForumPost> {
+    const payload: {
+      title: string;
+      slug: string;
+      body: string;
+      category_id: string | null;
+      author_id: string;
+      post_type: string;
+    } = {
+      title: data.title,
+      slug: data.slug,
+      body: data.body ?? data.content ?? '',
+      category_id: data.category_id || null,
+      author_id: data.author_id,
+      post_type: data.post_type || 'discussion',
+    };
     const { data: post, error } = await this.client
       .from('forum_posts')
-      .insert([data])
+      .insert([payload])
       .select()
       .single();
     if (error) throw new Error(error.message);
     return post as unknown as ForumPost;
   }
 
-  async getPostById(id: string): Promise<ForumPost | null> {
+  async getPostById(
+    id: string,
+    postSelect: string = POST_SELECT,
+  ): Promise<ForumPost | null> {
     const { data, error } = await this.client
       .from('forum_posts')
-      .select('*')
+      .select(postSelect)
       .eq('id', id)
       .single();
     if (error && error.code !== 'PGRST116') {
@@ -416,9 +444,32 @@ export class ForumRepository {
     id: string,
     updates: UpdateForumPostDbInput,
   ): Promise<ForumPost> {
+    const payload: {
+      title?: string;
+      slug?: string;
+      body?: string;
+      category_id?: string | null;
+      is_pinned?: boolean;
+      is_removed?: boolean;
+    } = {};
+    if (updates.title !== undefined) payload.title = updates.title;
+    if (updates.slug !== undefined) payload.slug = updates.slug;
+    if (updates.body !== undefined || updates.content !== undefined) {
+      payload.body = updates.body ?? updates.content;
+    }
+    if (updates.category_id !== undefined) {
+      payload.category_id = updates.category_id;
+    }
+    if (updates.is_pinned !== undefined) {
+      payload.is_pinned = updates.is_pinned;
+    }
+    if (updates.is_removed !== undefined) {
+      payload.is_removed = updates.is_removed;
+    }
+
     const { data, error } = await this.client
       .from('forum_posts')
-      .update(updates)
+      .update(payload)
       .eq('id', id)
       .select()
       .single();
@@ -470,9 +521,13 @@ export class ForumRepository {
     id: string,
     updates: { body?: string; content?: string },
   ): Promise<ForumComment> {
+    const payload: { body?: string } = {};
+    if (updates.body !== undefined || updates.content !== undefined) {
+      payload.body = updates.body ?? updates.content;
+    }
     const { data: comment, error } = await this.client
       .from('forum_comments')
-      .update(updates)
+      .update(payload)
       .eq('id', id)
       .select(
         '*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)',
@@ -503,9 +558,20 @@ export class ForumRepository {
   }
 
   async insertComment(data: InsertForumCommentDbInput): Promise<ForumComment> {
+    const payload: {
+      post_id: string;
+      author_id: string;
+      body: string;
+      parent_id: string | null;
+    } = {
+      post_id: data.post_id,
+      author_id: data.author_id,
+      body: data.body ?? data.content ?? '',
+      parent_id: data.parent_id || null,
+    };
     const { data: comment, error } = await this.client
       .from('forum_comments')
-      .insert([data])
+      .insert([payload])
       .select(
         '*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)',
       )

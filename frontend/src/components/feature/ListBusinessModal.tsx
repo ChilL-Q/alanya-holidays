@@ -55,40 +55,23 @@ const TIERS: TierInfo[] = [
     billing: "per month",
     badge: "Growth",
     badgeColor: "bg-sky-100 text-sky-800 border-sky-200",
-    description: "Ideal for growing businesses seeking higher engagement and bookings.",
+    description: "Boost engagement with direct customer contact channels and analytics.",
     maxPhotos: 50,
+    highlighted: true,
     features: [
       "Priority directory search placement",
       "Direct website & WhatsApp links",
       "Social media integration (IG, FB, TripAdvisor)",
       "Promotional video embed (YouTube/Vimeo)",
       "Direct Instant Booking link",
-      "Up to 50 photo uploads",
-    ],
-  },
-  {
-    id: "signature",
-    name: "Signature",
-    price: "€49",
-    billing: "per month",
-    badge: "Most Popular",
-    badgeColor: "bg-amber-100 text-amber-900 border-amber-300 font-semibold",
-    description: "Premium showcase designed for top-tier establishments and boutique venues.",
-    maxPhotos: 100,
-    highlighted: true,
-    features: [
-      "Top-of-category featured placement",
-      "Signature Collection evocative trust badge",
-      "Promotional banner on Alanya destination guides",
-      "All Voyager features included",
-      "Up to 100 high-res photo gallery",
-      "Dedicated merchant support",
+      "Up to 50 photo gallery uploads",
+      "Full interactive performance analytics",
     ],
   },
   {
     id: "partner",
-    name: "Partner",
-    price: "€99",
+    name: "Custom",
+    price: "~$100",
     billing: "per month",
     badge: "Enterprise",
     badgeColor: "bg-purple-100 text-purple-900 border-purple-300",
@@ -100,6 +83,7 @@ const TIERS: TierInfo[] = [
       "Seasonal editorial campaigns & newsletter inclusion",
       "Dedicated account manager & quarterly reports",
       "Unlimited photos & video showcases",
+      "Custom branded business spotlight page",
     ],
   },
 ];
@@ -334,13 +318,15 @@ export default function ListBusinessModal({
           {/* STEP 1: TIER SELECTION */}
           {step === "tier" && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {TIERS.map((tier) => (
                   <div
                     key={tier.id}
                     className={`rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 border relative ${
-                      tier.highlighted
-                        ? "border-amber-400 bg-amber-50/30 shadow-md ring-2 ring-amber-400/30"
+                      tier.id === "voyager"
+                        ? "border-sky-400 bg-sky-50/20 shadow-md ring-2 ring-sky-400/20"
+                        : tier.id === "partner"
+                        ? "border-purple-200 bg-purple-50/10 hover:border-purple-300 hover:shadow-sm"
                         : "border-background-200 bg-white hover:border-primary-300 hover:shadow-sm"
                     }`}
                   >
@@ -379,11 +365,11 @@ export default function ListBusinessModal({
                       data-testid={`select-tier-${tier.id}`}
                       onClick={() => handleSelectTier(tier.id)}
                       className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm ${
-                        tier.highlighted
-                          ? "bg-amber-500 text-amber-950 hover:bg-amber-400"
-                          : tier.id === "explorer"
-                          ? "bg-foreground-900 text-white hover:bg-foreground-800"
-                          : "bg-primary-500 text-white hover:bg-primary-600"
+                        tier.id === "voyager"
+                          ? "bg-sky-500 text-white hover:bg-sky-600"
+                          : tier.id === "partner"
+                          ? "bg-purple-600 text-white hover:bg-purple-700"
+                          : "bg-foreground-900 text-white hover:bg-foreground-800"
                       }`}
                     >
                       Select {tier.name}

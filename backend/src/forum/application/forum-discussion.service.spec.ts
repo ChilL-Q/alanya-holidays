@@ -199,6 +199,34 @@ describe('ForumDiscussionService', () => {
       );
     });
 
+    it('hides removed post details from public users', async () => {
+      mockRepository.getPostBySlug.mockResolvedValueOnce({
+        id: postId,
+        slug: 'hidden-post',
+        title: 'Hidden',
+        author_id: otherUserId,
+        is_removed: true,
+      });
+
+      const res = await service.getForumPost('hidden-post');
+      expect(res).toBeNull();
+    });
+
+    it('allows admin to view removed post details for moderation', async () => {
+      mockRepository.getPostBySlug.mockResolvedValueOnce({
+        id: postId,
+        slug: 'hidden-post',
+        title: 'Hidden',
+        author_id: otherUserId,
+        is_removed: true,
+      });
+      mockUserRoles.getRole.mockResolvedValueOnce('admin');
+
+      const res = await service.getForumPost('hidden-post', userId);
+      expect(res?.id).toBe(postId);
+      expect(mockRepository.attachCategoryParents).toHaveBeenCalled();
+    });
+
     it('updates post when user is author or admin', async () => {
       mockRepository.getPostById.mockResolvedValueOnce({
         id: postId,

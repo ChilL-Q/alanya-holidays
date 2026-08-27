@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useDarkMode } from "@/components/base/DarkModeContext";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/context/AuthContext";
 import CartDrawer from "@/components/feature/CartDrawer";
@@ -79,7 +78,6 @@ export default function Navbar() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const { totalItems } = useCart();
   const { user, profile, signOut, isAuthenticated } = useAuth();
 
@@ -485,7 +483,7 @@ export default function Navbar() {
               className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
                 isSolidNav
                   ? "bg-background-100 text-foreground-600 hover:bg-background-200"
-                  : "bg-white/15 text-white hover:bg-white/25"
+                   : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
               }`}
               aria-label="Search"
               title="Search"
@@ -506,7 +504,7 @@ export default function Navbar() {
                 className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
                   isSolidNav
                     ? "bg-background-100 text-foreground-600 hover:bg-background-200"
-                    : "bg-white/15 text-white hover:bg-white/25"
+                    : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
                 }`}
                 aria-label="Notifications"
                 title="Notifications"
@@ -618,7 +616,7 @@ export default function Navbar() {
               className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
                 isSolidNav
                   ? "bg-background-100 text-foreground-600 hover:bg-background-200"
-                  : "bg-white/15 text-white hover:bg-white/25"
+                   : "bg-white/25 backdrop-blur-sm text-white hover:bg-white/35"
               }`}
               aria-label="Cart"
               title="Cart"
@@ -631,19 +629,6 @@ export default function Navbar() {
               )}
             </button>
 
-            <button
-              onClick={toggleDarkMode}
-              className={`w-9 h-9 flex items-center justify-center rounded-full transition-all cursor-pointer ${
-                isSolidNav
-                  ? "bg-background-100 text-foreground-600 hover:bg-background-200"
-                  : "bg-white/15 text-white hover:bg-white/25"
-              }`}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              <i className={`text-lg ${isDark ? "ri-sun-line" : "ri-moon-line"}`}></i>
-            </button>
-
             {/* Language Switcher */}
             <LanguageSwitcher isSolidNav={isSolidNav} compact={false} />
 
@@ -652,7 +637,7 @@ export default function Navbar() {
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 isSolidNav
                   ? "bg-primary-500 text-background-50 hover:bg-primary-600 shadow-xs"
-                  : "bg-background-50/20 text-white border border-white/30 hover:bg-background-50/30"
+                   : "bg-white/20 backdrop-blur-sm text-white border border-white/30 hover:bg-white/30"
               }`}
             >
               <i className="ri-edit-line"></i>
@@ -668,7 +653,7 @@ export default function Navbar() {
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold cursor-pointer transition-all overflow-hidden ${
                     isSolidNav
                       ? "bg-primary-500 text-white hover:bg-primary-600"
-                      : "bg-white/20 text-white border border-white/30 hover:bg-white/30"
+                       : "bg-white/25 backdrop-blur-sm text-white border border-white/30 hover:bg-white/35"
                   }`}
                   title={displayName}
                   aria-label="User menu"
@@ -768,17 +753,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Hamburger + Dark Toggle */}
+          {/* Mobile Hamburger */}
           <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={toggleDarkMode}
-              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all cursor-pointer ${
-                isSolidNav ? "text-foreground-600" : "text-white"
-              }`}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              <i className={`text-xl ${isDark ? "ri-sun-line" : "ri-moon-line"}`}></i>
-            </button>
             <button
               aria-expanded={mobileOpen}
               aria-haspopup="true"

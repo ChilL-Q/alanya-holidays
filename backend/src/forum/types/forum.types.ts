@@ -18,6 +18,9 @@ export interface ForumCategory {
 export interface ForumPostAuthor {
   full_name: string | null;
   avatar_url: string | null;
+  bio?: string | null;
+  role?: string | null;
+  created_at?: string | null;
 }
 
 export interface ForumPost {

@@ -4,6 +4,7 @@ import {
   type ModerationAuditLogItem,
   type AuditLogQueryParams,
 } from "@/api-services/admin.service";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 interface AuditLogTabProps {
   onCountUpdate?: (counts: { total: number }) => void;
@@ -64,8 +65,8 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
   const [inspectItem, setInspectItem] = useState<ModerationAuditLogItem | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
+  const fetchLogs = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const params: AuditLogQueryParams = {
@@ -78,7 +79,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
 
-      const result = await adminService.getAuditLogs(params);
+      const result = await adminService.getAuditLogs({ ...params, throwOnError: true });
       setLogs(result.data || []);
       setTotalCount(result.total || 0);
       setTotalPages(result.totalPages || 1);
@@ -95,8 +96,10 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
   }, [currentPage, pageSize, entityType, actionType, searchQuery, startDate, endDate]);
 
   useEffect(() => {
-    fetchLogs();
+    void fetchLogs();
   }, [fetchLogs]);
+
+  useAutoRefresh(() => fetchLogs(true), { intervalMs: 30000 });
 
 
   const handleClearFilters = () => {

@@ -16,6 +16,7 @@ import {
   adminService,
   type PlatformAnalyticsData,
 } from "@/api-services/admin.service";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 const CHANNEL_COLORS: Record<string, string> = {
   whatsapp: "#10b981", // emerald
@@ -29,11 +30,11 @@ export default function PlatformAnalyticsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAnalytics = useCallback(async () => {
-    setLoading(true);
+  const fetchAnalytics = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getPlatformAnalytics(days);
+      const data = await adminService.getPlatformAnalytics(days, { throwOnError: true });
       setAnalytics(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load platform analytics");
@@ -43,8 +44,10 @@ export default function PlatformAnalyticsTab() {
   }, [days]);
 
   useEffect(() => {
-    fetchAnalytics();
+    void fetchAnalytics();
   }, [fetchAnalytics]);
+
+  useAutoRefresh(() => fetchAnalytics(true), { intervalMs: 30000 });
 
   const kpis = analytics?.kpiSummary;
 
@@ -92,7 +95,7 @@ export default function PlatformAnalyticsTab() {
           </div>
           <button
             type="button"
-            onClick={fetchAnalytics}
+            onClick={() => void fetchAnalytics()}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

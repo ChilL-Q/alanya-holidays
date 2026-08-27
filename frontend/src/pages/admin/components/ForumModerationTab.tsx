@@ -8,6 +8,7 @@ import {
   type ForumRemovedCommentItem,
   type ForumStatsAdminItem,
 } from "@/api-services/admin.service";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 interface ForumModerationTabProps {
   onReportCountUpdate?: (counts: { total: number; pending: number }) => void;
@@ -21,6 +22,7 @@ export default function ForumModerationTab({
   const [reports, setReports] = useState<ForumReportAdminItem[]>([]);
   const [removedComments, setRemovedComments] = useState<ForumRemovedCommentItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<ForumReportAdminItem | null>(null);
 
   // Filters
@@ -28,13 +30,14 @@ export default function ForumModerationTab({
   const [targetTypeFilter, setTargetTypeFilter] = useState<"all" | "post" | "comment">("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
+    setError(null);
     try {
       const [fetchedStats, fetchedReports, fetchedRemoved] = await Promise.all([
-        adminService.getForumStats(),
-        adminService.getForumReports({ includeResolved: true }),
-        adminService.getRemovedForumComments(50),
+        adminService.getForumStats({ throwOnError: true }),
+        adminService.getForumReports({ includeResolved: true, throwOnError: true }),
+        adminService.getRemovedForumComments(50, { throwOnError: true }),
       ]);
 
       setStats(fetchedStats);
@@ -49,15 +52,17 @@ export default function ForumModerationTab({
         });
       }
     } catch {
-      // Non-blocking
+      setError("Failed to load forum moderation data. Please try again.");
     } finally {
       setLoading(false);
     }
   }, [onReportCountUpdate]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
+
+  useAutoRefresh(() => fetchData(true), { intervalMs: 15000 });
 
   // Actions
   const handleResolveReport = async (reportId: string) => {
@@ -235,6 +240,12 @@ export default function ForumModerationTab({
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+          {error}
+        </div>
+      )}
 
       {/* View Content */}
       {subView === "reports" ? (

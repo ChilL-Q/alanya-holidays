@@ -97,7 +97,7 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
 
       // Test Paid tier flow
       renderWithProviders(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
-      fireEvent.click(screen.getByTestId("select-tier-signature"));
+      fireEvent.click(screen.getByTestId("select-tier-voyager"));
       fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "Test Luxury Spot" } });
       fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "hotels-accommodation" } });
       fireEvent.change(screen.getByLabelText(/business description/i), { target: { value: "5-Star luxury beachfront experience." } });
@@ -218,7 +218,7 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
   // TIER 3: CROSS-FEATURE & WORKLOAD INTEGRATION
   // ==========================================
   describe("Tier 3 & 4: Cross-Feature Workflow & Real-World Interaction", () => {
-    it("ExplorePage operates 3-way view switcher (List default, Grid, Map) and opens Claim modal", async () => {
+    it("ExplorePage operates 3-way view switcher (Grid default, List, Map) and opens Claim modal", async () => {
       vi.spyOn(directoryService, "getListings").mockResolvedValue({
         data: [mockFullBusiness],
         total: 1,
@@ -229,23 +229,23 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
 
       renderWithProviders(<ExplorePage />);
 
-      // Default view should be List (rendering horizontal cards)
+      // Default view should be Grid (rendering grid cards)
       expect(await screen.findByText("Alanya Panoramic Castle Bistro")).toBeInTheDocument();
       const card = screen.getByTestId("business-card");
-      expect(card).toHaveAttribute("data-layout", "horizontal");
-
-      // Switch to Grid View
-      const gridBtn = screen.getByRole("button", { name: /^grid$/i });
-      fireEvent.click(gridBtn);
       expect(card).toHaveAttribute("data-layout", "grid");
+
+      // Switch to List View
+      const listBtn = screen.getByRole("button", { name: /^list$/i });
+      fireEvent.click(listBtn);
+      expect(card).toHaveAttribute("data-layout", "horizontal");
 
       // Switch to Map View
       const mapBtn = screen.getByRole("button", { name: /^map$/i });
       fireEvent.click(mapBtn);
 
-      // Switch back to List View and click Claim Listing button
-      const listBtn = screen.getByRole("button", { name: /^list$/i });
-      fireEvent.click(listBtn);
+      // Switch back to Grid View and click Claim Listing button
+      const gridBtn = screen.getByRole("button", { name: /^grid$/i });
+      fireEvent.click(gridBtn);
 
       const claimBtn = screen.getByTitle(/claim this listing as owner/i);
       fireEvent.click(claimBtn);
@@ -263,7 +263,7 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
 
       expect(screen.getByText(/choose your business tier/i)).toBeInTheDocument();
       expect(screen.getByText("Explorer")).toBeInTheDocument();
-      expect(screen.getByText("Signature")).toBeInTheDocument();
+      expect(screen.getByText("Custom")).toBeInTheDocument();
     });
   });
 });

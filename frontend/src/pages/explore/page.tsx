@@ -20,7 +20,7 @@ export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "reviews" | "name">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
@@ -278,20 +278,8 @@ export default function ExplorePage() {
               </div>
 
               <div className="flex items-center gap-3 flex-wrap">
-                {/* 3-Way View Switcher: Horizontal List (Default), Grid, Map */}
+                {/* 3-Way View Switcher: Grid (Default), List, Map */}
                 <div className="flex items-center bg-background-100 rounded-full p-1 border border-background-200">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                      viewMode === "list"
-                        ? "bg-white text-foreground-900 shadow-sm"
-                        : "text-foreground-500 hover:text-foreground-700"
-                    }`}
-                  >
-                    <i className="ri-list-check-3 text-sm" />
-                    List
-                  </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}
@@ -303,6 +291,18 @@ export default function ExplorePage() {
                   >
                     <i className="ri-grid-fill text-sm" />
                     Grid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      viewMode === "list"
+                        ? "bg-white text-foreground-900 shadow-sm"
+                        : "text-foreground-500 hover:text-foreground-700"
+                    }`}
+                  >
+                    <i className="ri-list-check-3 text-sm" />
+                    List
                   </button>
                   <button
                     type="button"

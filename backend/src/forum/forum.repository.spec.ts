@@ -238,15 +238,27 @@ describe('ForumRepository', () => {
     });
 
     it('should insert, update, getById, delete, and set pinned / removed on posts', async () => {
-      mockClient.from.mockReturnValue(
-        createQueryChain({ data: { id: 'p-new', title: 'Post' } }),
-      );
+      const queryChain = createQueryChain({
+        data: { id: 'p-new', title: 'Post' },
+      });
+      mockClient.from.mockReturnValue(queryChain);
       const inserted = await repository.insertPost({
         title: 'Post',
         slug: 'post',
+        content: 'My content from editor',
         author_id: 'u-1',
       });
       expect(inserted.id).toBe('p-new');
+      expect(queryChain.insert).toHaveBeenCalledWith([
+        {
+          title: 'Post',
+          slug: 'post',
+          body: 'My content from editor',
+          category_id: null,
+          author_id: 'u-1',
+          post_type: 'discussion',
+        },
+      ]);
 
       const byId = await repository.getPostById('p-new');
       expect(byId?.id).toBe('p-new');

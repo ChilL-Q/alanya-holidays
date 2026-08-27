@@ -71,6 +71,10 @@ export class CreateForumPostDto {
   category_id?: string | null;
 
   @IsOptional()
+  @IsString()
+  subcategory?: string | null;
+
+  @IsOptional()
   @IsIn(['announcement', 'discussion', 'question'])
   post_type?: 'announcement' | 'discussion' | 'question';
 }
@@ -92,6 +96,10 @@ export class UpdateForumPostDto {
   @IsOptional()
   @IsString()
   category_id?: string | null;
+
+  @IsOptional()
+  @IsString()
+  subcategory?: string | null;
 }
 
 export class SetPinnedDto {

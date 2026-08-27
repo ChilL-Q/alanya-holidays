@@ -232,8 +232,45 @@ describe("forum.service", () => {
       const result = await forumService.getThreadById("best-breakfast");
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Best Breakfast");
+      expect(result?.category).toBe("Food & Nightlife");
+      expect(result?.subcategory).toBeUndefined();
       expect(result?.replies).toHaveLength(1);
       expect(result?.replies[0].content).toBe("Great recommendation!");
+    });
+
+    it("should map backend child categories as parent category plus subcategory", async () => {
+      const mockPost = {
+        id: "p2",
+        slug: "best-clinics",
+        title: "Best clinics in Oba",
+        body: "Looking for recommendations",
+        views_count: 80,
+        likes_count: 3,
+        comments_count: 0,
+        created_at: new Date().toISOString(),
+        category: {
+          id: "cat-child",
+          name: "Dentists",
+          slug: "dentists",
+          parent_id: "cat-parent",
+          parent: {
+            id: "cat-parent",
+            name: "Living",
+            slug: "living",
+          },
+        },
+        author: { full_name: "Member" },
+      };
+
+      vi.spyOn(apiClient, "get")
+        .mockResolvedValueOnce(mockPost)
+        .mockResolvedValueOnce([]);
+
+      const result = await forumService.getThreadById("best-clinics");
+      expect(result).not.toBeNull();
+      expect(result?.category).toBe("Living");
+      expect(result?.categoryId).toBe("living");
+      expect(result?.subcategory).toBe("Dentists");
     });
 
     it("should return null on 404 ApiError", async () => {

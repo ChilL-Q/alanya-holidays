@@ -29,7 +29,6 @@ import { MyProductsTab } from "./components/MyProductsTab";
 import { SellerOrdersTab } from "./components/SellerOrdersTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
-import UpgradesAddonsShowcase from "@/components/feature/UpgradesAddonsShowcase";
 import { logger } from "@/lib/logger";
 
 export type DashboardTab =
@@ -37,8 +36,7 @@ export type DashboardTab =
   | "products"
   | "orders"
   | "analytics"
-  | "claims"
-  | "upgrades";
+  | "claims";
 
 export default function MerchantDashboardPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
@@ -298,11 +296,6 @@ export default function MerchantDashboardPage() {
               icon: <ShieldCheck className="w-4 h-4" />,
               count: claims.length,
             },
-            {
-              id: "upgrades" as DashboardTab,
-              label: "Upgrades & Add-Ons",
-              icon: <TrendingUp className="w-4 h-4" />,
-            },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -385,12 +378,6 @@ export default function MerchantDashboardPage() {
 
           {activeTab === "claims" && (
             <ClaimTrackerTab claims={claims} loading={loading} />
-          )}
-
-          {activeTab === "upgrades" && (
-            <UpgradesAddonsShowcase
-              onUpgradeSelect={() => handleOpenUpgrade()}
-            />
           )}
         </div>
       </div>

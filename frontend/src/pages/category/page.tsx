@@ -10,6 +10,7 @@ import ThreadFilters from "./components/ThreadFilters";
 import PaginationControls from "@/components/base/PaginationControls";
 import ErrorState from "@/components/base/ErrorState";
 import { logger } from "@/lib/logger";
+import SubmitContentModal from "@/components/feature/SubmitContentModal";
 
 export default function CategoryPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -27,6 +28,7 @@ export default function CategoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(5);
   const [visibleCount, setVisibleCount] = useState(5);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const ITEMS_PER_LOAD = 5;
 
   const loadCategory = useCallback(async () => {
@@ -208,13 +210,14 @@ export default function CategoryPage() {
                   onSortChange={setSortBy}
                 />
 
-                <Link
-                  to={`/new-thread?category=${category.id}`}
+                <button
+                  type="button"
+                  onClick={() => setIsSubmitModalOpen(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-600 transition-colors cursor-pointer"
                 >
                   <i className="ri-edit-line"></i>
                   Start a Discussion
-                </Link>
+                </button>
               </div>
 
               {/* Thread list */}
@@ -291,7 +294,7 @@ export default function CategoryPage() {
                 .map((c) => (
                   <Link
                     key={c.id}
-                    to={`/category/${c.id}`}
+                    to={`/category/${c.slug || c.id}`}
                     className="group flex items-center gap-3 px-4 py-3 bg-background-50 rounded-xl border border-background-200/70 hover:border-primary-200/60 transition-all"
                   >
                     <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-background-100 group-hover:bg-primary-100 transition-colors">
@@ -312,6 +315,15 @@ export default function CategoryPage() {
         </section>
       </main>
       <Footer />
+      <SubmitContentModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => setIsSubmitModalOpen(false)}
+        initialCategoryId={category.id}
+        initialCategoryName={category.name}
+        initialSubcategory={activeSubcategory || undefined}
+        fallbackPath={`/category/${category.slug || category.id}`}
+        lockCategory
+      />
     </>
   );
 }
