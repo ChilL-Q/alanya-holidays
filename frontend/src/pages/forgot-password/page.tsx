@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
               </button>
               <Link
                 to="/login"
-                className="block w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
+                className="w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
               >
                 Back to Sign In
               </Link>
