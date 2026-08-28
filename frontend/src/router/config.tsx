@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
+import AccessRoute from "./AccessRoute";
 
 const NotFound = lazy(() => import("../pages/NotFound"));
 const Home = lazy(() => import("../pages/home/page"));
@@ -191,7 +192,11 @@ const routes: RouteObject[] = [
   },
   {
     path: "/admin",
-    element: <AdminDashboardPage />,
+    element: (
+      <AccessRoute level="admin">
+        <AdminDashboardPage />
+      </AccessRoute>
+    ),
   },
   {
     path: "/settings",
