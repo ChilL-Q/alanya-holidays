@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ServiceUnavailableException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -247,6 +248,58 @@ describe('AiGuideService', () => {
       const dto = plainToInstance(GenerateItineraryDto, plain);
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('atomic rate limiting', () => {
+    it('allows the first ten guide requests and rejects request eleven with 429', async () => {
+      const dto: AiGuideDto = { userQuestion: 'Where should I go today?' };
+
+      for (let request = 1; request <= 10; request++) {
+        await expect(service.askGuide(dto, 'rate-test-user')).resolves.toEqual(
+          expect.objectContaining({ answer: expect.any(String) }),
+        );
+      }
+
+      await expect(
+        service.askGuide(dto, 'rate-test-user'),
+      ).rejects.toMatchObject({ status: 429 });
+    });
+
+    it('returns 429 when the itinerary limit is exceeded', async () => {
+      jest.spyOn(redisService, 'incrementWithExpiry').mockResolvedValueOnce(11);
+
+      await expect(
+        service.generateItinerary({ days: 2 }, 'limited-user'),
+      ).rejects.toMatchObject({ status: 429 });
+    });
+
+    it('fails closed on a configured Redis command outage without invoking the AI driver', async () => {
+      const failingClient = {
+        status: 'ready',
+        eval: jest.fn().mockRejectedValue(new Error('Redis command outage')),
+        disconnect: jest.fn(),
+      };
+      Object.assign(redisService, {
+        redisConfigured: true,
+        client: failingClient,
+      });
+      const driverSpy = jest.spyOn(driver, 'generateGuideAnswer');
+
+      await expect(
+        service.askGuide({ userQuestion: 'Expensive request' }, 'outage-user'),
+      ).rejects.toEqual(
+        new ServiceUnavailableException(
+          'AI service is temporarily unavailable. Please try again later.',
+        ),
+      );
+      expect(failingClient.eval).toHaveBeenCalledWith(
+        expect.stringContaining("redis.call('INCR', KEYS[1])"),
+        1,
+        expect.stringMatching(/^ai_rate:guide:outage-user:\d+$/),
+        60,
+      );
+      expect(driverSpy).not.toHaveBeenCalled();
     });
   });
 

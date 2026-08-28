@@ -9,6 +9,7 @@ import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
+import { CreateProductDto, UpdateProductDto } from './dto/product-write.dto';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -131,14 +132,22 @@ describe('ProductsService', () => {
           stock: 5,
           category: 'souvenirs',
           images: [],
-        },
+          seller_id: 'attacker',
+          status: 'active',
+        } as unknown as CreateProductDto,
         'user-1',
       );
 
       expect(res).toEqual(mockCreated);
-      expect(mockRepository.insertProduct).toHaveBeenCalledWith(
-        expect.objectContaining({ seller_id: 'user-1' }),
-      );
+      expect(mockRepository.insertProduct).toHaveBeenCalledWith({
+        title: 'Gift Box',
+        description: '',
+        price: 10,
+        stock: 5,
+        category: 'souvenirs',
+        images: [],
+        seller_id: 'user-1',
+      });
     });
   });
 
@@ -172,7 +181,10 @@ describe('ProductsService', () => {
 
       const res = await service.updateProduct(
         'p1',
-        { title: 'Updated Title', seller_id: 'hacked-id' },
+        {
+          title: 'Updated Title',
+          seller_id: 'hacked-id',
+        } as unknown as UpdateProductDto,
         'owner-user',
       );
 

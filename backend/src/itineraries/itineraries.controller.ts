@@ -39,14 +39,8 @@ export class ItinerariesController {
   }
 
   @Get('community')
-  async getCommunityItineraries(@Query() query?: LimitQueryDto | string) {
-    let limit = 20;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || 20;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 20;
-    }
-    return this.itinerariesService.getCommunityItineraries(limit);
+  async getCommunityItineraries(@Query() query?: LimitQueryDto) {
+    return this.itinerariesService.getCommunityItineraries(query?.limit ?? 20);
   }
 
   @Get(':id')

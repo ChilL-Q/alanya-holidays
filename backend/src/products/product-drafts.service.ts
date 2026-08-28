@@ -5,15 +5,11 @@ import {
 } from '@nestjs/common';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
-import { Product } from './products.service';
-
-const IMMUTABLE_PRODUCT_FIELDS = new Set([
-  'id',
-  'seller_id',
-  'artisan_id',
-  'created_at',
-  'updated_at',
-]);
+import {
+  PublishProductDraftDto,
+  SaveProductDraftDto,
+  UpdateProductDto,
+} from './dto/product-write.dto';
 
 @Injectable()
 export class ProductDraftsService {
@@ -23,21 +19,14 @@ export class ProductDraftsService {
   ) {}
 
   async saveProductDraft(
-    data: Partial<Product> & { draftId?: string },
+    data: SaveProductDraftDto,
     userId: string,
   ): Promise<{ id: string }> {
-    const { draftId, ...raw } = data;
-    const safeData: Record<string, unknown> = { ...raw };
-    for (const field of IMMUTABLE_PRODUCT_FIELDS) {
-      delete safeData[field];
-    }
-    if (
-      (typeof safeData.title !== 'string' || safeData.title.trim() === '') &&
-      typeof safeData.name !== 'string'
-    ) {
+    const { draftId } = data;
+    const safeData = this.mapProductFields(data);
+    if (typeof safeData.title !== 'string' || safeData.title.trim() === '') {
       safeData.title = 'Untitled Draft';
     }
-    delete safeData.name;
 
     let productId: string;
     if (draftId) {
@@ -62,7 +51,7 @@ export class ProductDraftsService {
 
   async publishProductDraft(
     id: string,
-    updates: Partial<Product>,
+    updates: PublishProductDraftDto,
     userId: string,
   ): Promise<{ success: boolean }> {
     if (
@@ -75,14 +64,22 @@ export class ProductDraftsService {
 
     await this.assertOwner(id, userId);
 
-    const safeUpdates: Record<string, unknown> = { ...updates };
-    for (const field of IMMUTABLE_PRODUCT_FIELDS) {
-      delete safeUpdates[field];
-    }
+    const safeUpdates = this.mapProductFields(updates);
     safeUpdates.status = 'active';
 
     await this.productsRepository.updateProduct(id, safeUpdates);
     return { success: true };
+  }
+
+  private mapProductFields(data: UpdateProductDto) {
+    const payload: Record<string, unknown> = {};
+    if (data.title !== undefined) payload.title = data.title;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.price !== undefined) payload.price = data.price;
+    if (data.stock !== undefined) payload.stock = data.stock;
+    if (data.category !== undefined) payload.category = data.category;
+    if (data.images !== undefined) payload.images = data.images;
+    return payload;
   }
 
   private async assertOwner(productId: string, userId: string) {

@@ -250,7 +250,8 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
           or: jest.fn().mockReturnThis(),
-          order: jest.fn().mockResolvedValue({ data: [], error: null }),
+          order: jest.fn().mockReturnThis(),
+          range: jest.fn().mockResolvedValue({ data: [], error: null }),
         };
         mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 
@@ -272,7 +273,8 @@ describe('Challenger M2: Adversarial & Edge Case Empirical Suite', () => {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         or: jest.fn().mockReturnThis(),
-        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        order: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({ data: [], error: null }),
       };
       mockSupabaseClient.from.mockReturnValue(mockQueryBuilder);
 

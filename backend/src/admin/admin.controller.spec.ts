@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AdminRepository } from './admin.repository';
 import { ModerationAuditService } from './moderation-audit.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
@@ -28,6 +29,21 @@ describe('AdminController', () => {
     getPlatformAnalytics: jest.fn().mockResolvedValue({
       kpiSummary: { totalViews: 100 },
     }),
+  };
+
+  const mockAdminRepository = {
+    getEnquiries: jest.fn().mockResolvedValue([
+      {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        subject: 'Concierge Request',
+        message: 'Looking for a private yacht tour',
+        status: 'new',
+        enquiry_type: 'yacht',
+        created_at: new Date().toISOString(),
+      },
+    ]),
   };
 
   const mockModerationAuditService = {
@@ -65,6 +81,10 @@ describe('AdminController', () => {
           useValue: mockAdminService,
         },
         {
+          provide: AdminRepository,
+          useValue: mockAdminRepository,
+        },
+        {
           provide: ModerationAuditService,
           useValue: mockModerationAuditService,
         },
@@ -91,12 +111,13 @@ describe('AdminController', () => {
 
   describe('getEnquiries', () => {
     it('should return a list of enquiries with authenticated user id', async () => {
-      const result = await controller.getEnquiries(mockUser);
+      const result = await controller.getEnquiries(
+        { page: 2, limit: 10 },
+        mockUser,
+      );
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('John Doe');
-      expect(mockAdminService.getEnquiries).toHaveBeenCalledWith(
-        'admin-uuid-123',
-      );
+      expect(mockAdminRepository.getEnquiries).toHaveBeenCalledWith(2, 10);
     });
   });
 

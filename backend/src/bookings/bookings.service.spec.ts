@@ -344,7 +344,12 @@ describe('BookingsService', () => {
         },
       ]);
 
-      const result = await service.getUserBookings('client-1');
+      const result = await service.getUserBookings('client-1', 15, 30);
+      expect(mockRepository.getUserBookings).toHaveBeenCalledWith(
+        'client-1',
+        15,
+        30,
+      );
       expect(result).toHaveLength(1);
       expect(result[0].itemTitle).toBe('Ocean Villa');
     });

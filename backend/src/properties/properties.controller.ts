@@ -27,7 +27,7 @@ import {
   UpdatePropertyStatusDto,
   SavePropertyDraftDto,
 } from './dto';
-import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -51,14 +51,10 @@ export class PropertiesController {
   async getPropertiesByLocation(
     @Param('type') type: string,
     @Param('location') location: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number }> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.propertiesService.getPropertiesByLocation(
       type,
       location,
@@ -161,15 +157,10 @@ export class PropertiesController {
   @Get(':id/reviews')
   async getReviews(
     @Param('id') propertyId: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 10 },
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 10;
     return this.propertiesService.getReviews(propertyId, page, limit);
   }
 
@@ -222,14 +213,10 @@ export class PropertiesController {
   @UseGuards(AuthGuard)
   async getFlaggedReviews(
     @CurrentUser() user: AuthUser,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<{ data: Record<string, unknown>[]; total: number | null }> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.propertiesService.getFlaggedReviews(page, limit, user.id);
   }
 
@@ -259,23 +246,6 @@ export class PropertiesController {
     @Body('checkOut') checkOut: string,
   ): Promise<Record<string, unknown>[]> {
     return this.propertiesService.getAvailableProperties(checkIn, checkOut);
-  }
-
-  @Get('admin')
-  @UseGuards(AuthGuard, RolesGuard)
-  @RequireRole('admin')
-  async getAdminProperties(
-    @Query('statusFilter') statusFilter?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
-    @Query() pagination?: PaginationDto,
-  ): Promise<{ data: Record<string, unknown>[]; count: number | null }> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 50 },
-    );
-    return this.propertiesService.getAdminProperties(statusFilter, page, limit);
   }
 
   @Get('host/:hostId')

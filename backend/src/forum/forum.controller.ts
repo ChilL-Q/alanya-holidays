@@ -150,16 +150,10 @@ export class ForumController {
   @Get('posts/hot')
   @UseGuards(OptionalAuthGuard)
   async getHotPosts(
-    @Query() query?: LimitQueryDto | string,
+    @Query() query?: LimitQueryDto,
     @CurrentUser() user?: AuthUser,
   ): Promise<ForumPost[]> {
-    let limit = 8;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || 8;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 8;
-    }
-    return this.discussionService.getHotPosts(limit, user?.id);
+    return this.discussionService.getHotPosts(query?.limit ?? 8, user?.id);
   }
 
   @Get('posts/slug/:slug')
@@ -311,6 +305,8 @@ export class ForumController {
         includeRemoved:
           query.includeRemoved === true ||
           (query.includeRemoved as unknown) === 'true',
+        limit: query.limit ?? 20,
+        offset: query.offset ?? 0,
       },
       user?.id,
     );
@@ -491,16 +487,13 @@ export class ForumController {
   // ============================================================
   @Get('members')
   getForumMembers(
-    @Query() query?: LimitQueryDto | string,
+    @Query() query?: LimitQueryDto,
     @Query('onlineOnly') onlineOnly?: string,
   ): Promise<Record<string, unknown>[]> {
-    let limit: number | undefined;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || undefined;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit);
-    }
-    return this.usersService.getForumMembers(limit, onlineOnly === 'true');
+    return this.usersService.getForumMembers(
+      query?.limit,
+      onlineOnly === 'true',
+    );
   }
 
   @Get('members/:id')

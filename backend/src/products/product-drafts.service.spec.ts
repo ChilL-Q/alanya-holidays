@@ -3,6 +3,10 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ProductDraftsService } from './product-drafts.service';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import {
+  PublishProductDraftDto,
+  SaveProductDraftDto,
+} from './dto/product-write.dto';
 
 describe('ProductDraftsService', () => {
   let service: ProductDraftsService;
@@ -55,7 +59,7 @@ describe('ProductDraftsService', () => {
       {
         title: 'Handmade Bowl',
         seller_id: 'attacker',
-      },
+      } as unknown as SaveProductDraftDto,
       'user-1',
     );
 
@@ -98,7 +102,15 @@ describe('ProductDraftsService', () => {
 
     await service.publishProductDraft(
       '550e8400-e29b-41d4-a716-446655440003',
-      { title: 'Bowl', price: 25, seller_id: 'attacker' },
+      {
+        title: 'Bowl',
+        description: 'Handmade ceramic bowl',
+        price: 25,
+        stock: 2,
+        category: 'souvenirs',
+        images: [],
+        seller_id: 'attacker',
+      } as unknown as PublishProductDraftDto,
       'user-1',
     );
 
@@ -109,7 +121,11 @@ describe('ProductDraftsService', () => {
 
   it('rejects publishing an invalid uuid', async () => {
     await expect(
-      service.publishProductDraft('not-a-uuid', {}, 'user-1'),
+      service.publishProductDraft(
+        'not-a-uuid',
+        {} as PublishProductDraftDto,
+        'user-1',
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 });

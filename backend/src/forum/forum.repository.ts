@@ -546,6 +546,8 @@ export class ForumRepository {
   async getComments(
     postId: string,
     includeRemoved: boolean,
+    limit: number,
+    offset: number,
   ): Promise<ForumComment[]> {
     let q = this.client
       .from('forum_comments')
@@ -553,12 +555,13 @@ export class ForumRepository {
         '*, author:profiles!forum_comments_author_id_fkey(full_name, avatar_url)',
       )
       .eq('post_id', postId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true });
 
     if (!includeRemoved) {
       q = q.eq('is_removed', false);
     }
-    const { data, error } = await q;
+    const { data, error } = await q.range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
     return (data as unknown as ForumComment[]) || [];
   }

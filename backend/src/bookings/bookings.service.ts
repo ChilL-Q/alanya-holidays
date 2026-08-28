@@ -307,8 +307,16 @@ export class BookingsService {
   // Booking Queries (Backward Compatible)
   // ============================================
 
-  async getUserBookings(userId: string) {
-    const bookings = await this.bookingsRepository.getUserBookings(userId);
+  async getUserBookings(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0,
+  ) {
+    const bookings = await this.bookingsRepository.getUserBookings(
+      userId,
+      limit,
+      offset,
+    );
     return bookings || [];
   }
 

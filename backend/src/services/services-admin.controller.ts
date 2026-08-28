@@ -22,17 +22,6 @@ import { UpdateServiceStatusDto } from './dto/update-service-status.dto';
 export class ServicesAdminController {
   constructor(private readonly servicesService: ServicesService) {}
 
-  @Get()
-  async getServicesAdmin(
-    @Query('category') category?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
-  ) {
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    return this.servicesService.getServices(category, page, limit);
-  }
-
   @Get(':id')
   async getServiceAdmin(@Param('id') id: string) {
     return this.servicesService.getService(id);

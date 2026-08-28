@@ -14,6 +14,7 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 
 @Controller('users/admin')
 @UseGuards(AuthGuard, RolesGuard)
@@ -23,22 +24,22 @@ export class UsersAdminController {
 
   @Get()
   async getAllUsers(
-    @Query('role') role?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
+    @Query() query: AdminUsersQueryDto,
     @CurrentUser() user?: AuthUser,
   ) {
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    if (role) {
+    if (query.role) {
       return this.usersService.getUsersByRole(
-        role,
-        page,
-        limit,
+        query.role,
+        query.page,
+        query.limit,
         user?.id ?? '',
       );
     }
-    return this.usersService.getAllUsers(page, limit, user?.id ?? '');
+    return this.usersService.getAllUsers(
+      query.page,
+      query.limit,
+      user?.id ?? '',
+    );
   }
 
   @Get(':id')

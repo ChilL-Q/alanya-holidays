@@ -183,19 +183,29 @@ export class AdminRepository {
     }
   }
 
-  async getEnquiries(): Promise<ConciergeEnquiryRecord[]> {
+  async getEnquiries(page = 1, limit = 20): Promise<ConciergeEnquiryRecord[]> {
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const from = (safePage - 1) * safeLimit;
+    const to = from + safeLimit - 1;
+
     try {
       const { data, error } = await this.client
         .from('concierge_enquiries')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, to);
 
       if (error) {
         // If concierge_enquiries table not found, fallback to messages table
         const { data: msgData, error: msgError } = await this.client
           .from('messages')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: true })
+          .range(from, to);
 
         if (msgError) return [];
         return (msgData || []).map((m: Record<string, unknown>) => ({

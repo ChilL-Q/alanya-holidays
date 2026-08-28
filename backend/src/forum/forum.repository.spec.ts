@@ -284,11 +284,17 @@ describe('ForumRepository', () => {
 
   describe('Comment operations', () => {
     it('should get comments and insert comments', async () => {
-      mockClient.from.mockReturnValueOnce(
-        createQueryChain({ data: [{ id: 'c-1', body: 'Hello' }] }),
-      );
-      const comments = await repository.getComments('p-1', false);
+      const commentsQuery = createQueryChain({
+        data: [{ id: 'c-1', body: 'Hello' }],
+      });
+      mockClient.from.mockReturnValueOnce(commentsQuery);
+      const comments = await repository.getComments('p-1', false, 15, 30);
       expect(comments).toHaveLength(1);
+      expect(commentsQuery.order.mock.calls).toEqual([
+        ['created_at', { ascending: true }],
+        ['id', { ascending: true }],
+      ]);
+      expect(commentsQuery.range).toHaveBeenCalledWith(30, 44);
 
       mockClient.from.mockReturnValueOnce(
         createQueryChain({ data: { id: 'c-1', body: 'Hello' } }),

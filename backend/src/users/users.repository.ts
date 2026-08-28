@@ -12,12 +12,16 @@ export class UsersRepository {
   }
 
   async getAllUsers(page = 1, limit = 20) {
-    const from = (page - 1) * limit;
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const from = (safePage - 1) * safeLimit;
     const { data, error, count } = await this.client
       .from('profiles')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
+      .order('id', { ascending: true })
+      .range(from, from + safeLimit - 1);
 
     if (error) throw new Error(error.message);
     return { data: data ?? [], count: count ?? 0 };
@@ -49,13 +53,17 @@ export class UsersRepository {
   }
 
   async getUsersByRole(targetRole: string, page = 1, limit = 20) {
-    const from = (page - 1) * limit;
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 20;
+    const from = (safePage - 1) * safeLimit;
     const { data, error, count } = await this.client
       .from('profiles')
       .select('*', { count: 'exact' })
       .eq('role', targetRole)
       .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
+      .order('id', { ascending: true })
+      .range(from, from + safeLimit - 1);
 
     if (error) throw new Error(error.message);
     return { data: data ?? [], count: count ?? 0 };

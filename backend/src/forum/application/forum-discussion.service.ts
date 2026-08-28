@@ -554,7 +554,9 @@ export class ForumDiscussionService {
   ): Promise<ForumComment[]> {
     const data = await this.forumRepository.getComments(
       postId,
-      !!options?.includeRemoved,
+      !!options.includeRemoved,
+      options.limit ?? 20,
+      options.offset ?? 0,
     );
     return this.annotateLikes(
       data,

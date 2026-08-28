@@ -281,6 +281,23 @@ describe('ForumDiscussionService', () => {
   });
 
   describe('Comments & Likes', () => {
+    it('passes exact comment pagination to the repository', async () => {
+      mockRepository.getComments.mockResolvedValueOnce([{ id: commentId }]);
+
+      await service.getForumComments(
+        postId,
+        { includeRemoved: false, limit: 11, offset: 22 },
+        userId,
+      );
+
+      expect(mockRepository.getComments).toHaveBeenCalledWith(
+        postId,
+        false,
+        11,
+        22,
+      );
+    });
+
     it('creates comment', async () => {
       mockRepository.insertComment.mockResolvedValueOnce({
         id: commentId,

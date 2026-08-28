@@ -80,7 +80,7 @@ describe('ItinerariesController', () => {
 
   describe('getCommunityItineraries', () => {
     it('should delegate getCommunityItineraries with parsed limit', async () => {
-      const result = await controller.getCommunityItineraries('15');
+      const result = await controller.getCommunityItineraries({ limit: 15 });
 
       expect(result).toEqual([mockItinerary]);
       expect(mockService.getCommunityItineraries).toHaveBeenCalledWith(15);

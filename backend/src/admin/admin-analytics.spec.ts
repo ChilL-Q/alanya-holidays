@@ -158,7 +158,7 @@ describe('Admin Analytics & Hub TDD Suite', () => {
 
       const mockUser: AuthUser = { id: 'admin-uuid-1', role: 'admin' };
 
-      const result = await controller.getAnalytics('90', mockUser);
+      const result = await controller.getAnalytics({ days: 90 }, mockUser);
 
       expect(result).toEqual(mockAnalyticsData);
       expect(mockAdminRepository.getPlatformAnalytics).toHaveBeenCalledWith(90);

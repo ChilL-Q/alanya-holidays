@@ -20,12 +20,16 @@ export class MessagesRepository {
 
   async findUserConversations(
     userId: string,
+    limit: number = 20,
+    offset: number = 0,
   ): Promise<ChatConversationEntity[]> {
     const { data, error } = await this.client
       .from('chat_conversations')
       .select('*')
       .or(`guest_id.eq.${userId},host_id.eq.${userId}`)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw new Error(error.message);
     return (data || []) as unknown as ChatConversationEntity[];
@@ -96,6 +100,7 @@ export class MessagesRepository {
       .select('*')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
       .range(offset, offset + limit - 1);
 
     if (error) throw new Error(error.message);

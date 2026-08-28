@@ -19,6 +19,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { CheckConflictQueryDto } from './dto/check-conflict-query.dto';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 import { UpdatePayoutStatusDto } from './dto/update-payout-status.dto';
+import { UserBookingsQueryDto } from './dto/user-bookings-query.dto';
 
 @Controller('bookings')
 export class BookingsController {
@@ -53,8 +54,15 @@ export class BookingsController {
 
   @Get('my-bookings')
   @UseGuards(AuthGuard)
-  async getUserBookings(@CurrentUser() user: AuthUser) {
-    return this.bookingsService.getUserBookings(user.id);
+  async getUserBookings(
+    @CurrentUser() user: AuthUser,
+    @Query() query: UserBookingsQueryDto,
+  ) {
+    return this.bookingsService.getUserBookings(
+      user.id,
+      query.limit,
+      query.offset,
+    );
   }
 
   @Get('admin')

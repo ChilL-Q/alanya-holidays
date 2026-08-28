@@ -15,9 +15,6 @@ describe('ServicesAdminController', () => {
 
   beforeEach(async () => {
     mockService = {
-      getServices: jest
-        .fn()
-        .mockResolvedValue({ data: [{ id: 's1' }], total: 1 }),
       getService: jest.fn().mockResolvedValue({ id: 's1', title: 'Spa' }),
       updateServiceStatus: jest.fn().mockResolvedValue({ success: true }),
       deleteService: jest.fn().mockResolvedValue({ success: true }),
@@ -50,12 +47,6 @@ describe('ServicesAdminController', () => {
     expect(guards).toContain(RolesGuard);
     const roles = Reflect.getMetadata(ROLE_KEY, ServicesAdminController);
     expect(roles).toEqual(['admin']);
-  });
-
-  it('should delegate getServicesAdmin with parsed params', async () => {
-    const res = await controller.getServicesAdmin('wellness', '2', '10');
-    expect(mockService.getServices).toHaveBeenCalledWith('wellness', 2, 10);
-    expect(res).toEqual({ data: [{ id: 's1' }], total: 1 });
   });
 
   it('should delegate getServiceAdmin by id', async () => {

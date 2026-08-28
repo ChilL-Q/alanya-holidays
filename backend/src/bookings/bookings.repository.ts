@@ -353,12 +353,18 @@ export class BookingsRepository implements IBookingsRepository {
     );
   }
 
-  async getUserBookings(userId: string): Promise<EnrichedBookingRow[]> {
+  async getUserBookings(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<EnrichedBookingRow[]> {
     const { data, error } = await this.client
       .from('bookings')
       .select('*')
       .eq('user_id', userId)
-      .order('check_in', { ascending: true });
+      .order('check_in', { ascending: true })
+      .order('id', { ascending: true })
+      .range(offset, offset + limit - 1);
 
     if (error) throw new Error(error.message);
     return await this.enrichBookingsWithItems(data || []);

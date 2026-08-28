@@ -137,6 +137,8 @@ export interface ForumEventsFilter {
 
 export interface ForumCommentsFilter {
   includeRemoved?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 export interface InsertForumPostDbInput {

@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
+import {
+  GUARDS_METADATA,
+  METHOD_METADATA,
+  PATH_METADATA,
+} from '@nestjs/common/constants';
+import { RequestMethod } from '@nestjs/common';
 import { ServicesController } from './services.controller';
 import { ServicesService } from './services.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -7,6 +12,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { ROLE_KEY } from '../auth/decorators/require-role.decorator';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { AuthUser } from '../auth/types/auth-user.interface';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { AdminServicesQueryDto } from './dto/admin-services-query.dto';
 
 describe('ServicesController', () => {
   let controller: ServicesController;
@@ -186,16 +193,35 @@ describe('ServicesController', () => {
     expect(mockService.getMyPendingEdits).toHaveBeenCalledWith('user-100');
   });
 
+  it.each(['getServiceEditsByService', 'getServiceEdit'] as const)(
+    'should protect %s with AuthGuard',
+    (methodName) => {
+      const handler = Object.getOwnPropertyDescriptor(
+        ServicesController.prototype,
+        methodName,
+      )?.value as object;
+      const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+
+      expect(guards).toContain(AuthGuard);
+    },
+  );
+
   it('should get service edits by service', async () => {
-    const result = await controller.getServiceEditsByService('srv-1');
+    const result = await controller.getServiceEditsByService('srv-1', mockUser);
     expect(result).toEqual([]);
-    expect(mockService.getServiceEditsByService).toHaveBeenCalledWith('srv-1');
+    expect(mockService.getServiceEditsByService).toHaveBeenCalledWith(
+      'srv-1',
+      'user-100',
+    );
   });
 
   it('should get single service edit', async () => {
-    const result = await controller.getServiceEdit('edit-1');
+    const result = await controller.getServiceEdit('edit-1', mockUser);
     expect(result).toEqual({ id: 'edit-1' });
-    expect(mockService.getServiceEdit).toHaveBeenCalledWith('edit-1');
+    expect(mockService.getServiceEdit).toHaveBeenCalledWith(
+      'edit-1',
+      'user-100',
+    );
   });
 
   it('should delete service edit', async () => {
@@ -231,12 +257,15 @@ describe('ServicesController', () => {
   });
 
   it('should call getServices with default pagination when query params are omitted', async () => {
-    await controller.getServices('car', '', '');
+    await controller.getServices('car');
     expect(mockService.getServices).toHaveBeenCalledWith('car', 1, 20);
   });
 
   it('should parse query params and delegate to getServices', async () => {
-    await controller.getServices('car', '2', '10');
+    await controller.getServices(
+      'car',
+      Object.assign(new PaginationDto(), { page: 2, limit: 10 }),
+    );
     expect(mockService.getServices).toHaveBeenCalledWith('car', 2, 10);
   });
 
@@ -254,8 +283,47 @@ describe('ServicesController', () => {
     expect(mockService.getServicesByProvider).toHaveBeenCalledWith('prov-1');
   });
 
+  it('exposes getAdminServices as the canonical GET /services/admin route', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      ServicesController.prototype,
+      'getAdminServices',
+    )?.value as object;
+
+    expect(Reflect.getMetadata(PATH_METADATA, ServicesController)).toBe(
+      'services',
+    );
+    expect(Reflect.getMetadata(PATH_METADATA, handler)).toBe('admin');
+    expect(Reflect.getMetadata(METHOD_METADATA, handler)).toBe(
+      RequestMethod.GET,
+    );
+  });
+
+  it('maps category to a single admin type filter', async () => {
+    await controller.getAdminServices(
+      Object.assign(new AdminServicesQueryDto(), {
+        category: 'wellness',
+        page: 2,
+        limit: 10,
+      }),
+    );
+
+    expect(mockService.getAdminServices).toHaveBeenCalledWith(
+      undefined,
+      ['wellness'],
+      2,
+      10,
+    );
+  });
+
   it('should parse typesFilter JSON string in getAdminServices', async () => {
-    await controller.getAdminServices('pending', '["car","tour"]', '1', '10');
+    await controller.getAdminServices(
+      Object.assign(new AdminServicesQueryDto(), {
+        statusFilter: 'pending',
+        typesFilter: '["car","tour"]',
+        page: 1,
+        limit: 10,
+      }),
+    );
     expect(mockService.getAdminServices).toHaveBeenCalledWith(
       'pending',
       ['car', 'tour'],

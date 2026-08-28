@@ -191,10 +191,14 @@ export class SupabaseServicesRepository implements IServicesRepository {
     if (typesFilter && typesFilter.length > 0)
       query = query.in('type', typesFilter);
 
-    const from = (page - 1) * limit;
+    const safePage = Number.isInteger(page) && page > 0 ? page : 1;
+    const safeLimit =
+      Number.isInteger(limit) && limit > 0 ? Math.min(limit, 100) : 50;
+    const from = (safePage - 1) * safeLimit;
     const { data, error, count } = await query
       .order('created_at', { ascending: false })
-      .range(from, from + limit - 1);
+      .order('id', { ascending: true })
+      .range(from, from + safeLimit - 1);
     if (error) throw new Error(error.message);
     return {
       data: data ?? [],

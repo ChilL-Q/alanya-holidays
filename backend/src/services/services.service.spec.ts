@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { ServicesRepository } from './services.repository';
 import { SERVICES_REPOSITORY } from './domain';
@@ -373,6 +377,84 @@ describe('ServicesService', () => {
         changed_data: { title: 'New Car Title' },
         status: 'pending',
       });
+    });
+
+    it('allows an owner to list edits for their service', async () => {
+      const edits = [{ id: 'edit-1', service_id: 'srv-1' }];
+      mockRepository.getServiceOwnershipInfo.mockResolvedValueOnce({
+        provider_id: 'owner-1',
+        title: 'Service',
+        type: 'tour',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getServiceEditsByService.mockResolvedValueOnce(edits);
+
+      await expect(
+        service.getServiceEditsByService('srv-1', 'owner-1'),
+      ).resolves.toEqual(edits);
+    });
+
+    it('allows an owner to read an individual edit', async () => {
+      const edit = { id: 'edit-1', service_id: 'srv-1' };
+      mockRepository.getServiceEditById.mockResolvedValueOnce({
+        data: edit,
+        error: null,
+      });
+      mockRepository.getServiceOwnershipInfo.mockResolvedValueOnce({
+        provider_id: 'owner-1',
+        title: 'Service',
+        type: 'tour',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.getServiceEdit('edit-1', 'owner-1'),
+      ).resolves.toEqual(edit);
+    });
+
+    it('allows an admin to read any service edits', async () => {
+      const edit = { id: 'edit-1', service_id: 'srv-1' };
+      mockRepository.getServiceEditById.mockResolvedValueOnce({
+        data: edit,
+        error: null,
+      });
+      mockRepository.getServiceOwnershipInfo.mockResolvedValueOnce({
+        provider_id: 'owner-1',
+        title: 'Service',
+        type: 'tour',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+
+      await expect(
+        service.getServiceEdit('edit-1', 'admin-1'),
+      ).resolves.toEqual(edit);
+    });
+
+    it('forbids another authenticated user from reading edits', async () => {
+      mockRepository.getServiceOwnershipInfo.mockResolvedValueOnce({
+        provider_id: 'owner-1',
+        title: 'Service',
+        type: 'tour',
+      });
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.getServiceEditsByService('srv-1', 'other-user'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockRepository.getServiceEditsByService).not.toHaveBeenCalled();
+    });
+
+    it('fails closed when edit ownership cannot be resolved', async () => {
+      mockRepository.getServiceEditById.mockResolvedValueOnce({
+        data: { id: 'edit-1', service_id: 'srv-missing' },
+        error: null,
+      });
+      mockRepository.getServiceOwnershipInfo.mockResolvedValueOnce(null);
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+
+      await expect(service.getServiceEdit('edit-1', 'admin-1')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw UnauthorizedException on approveServiceEdit if not admin', async () => {

@@ -24,7 +24,8 @@ import {
   UpdateServiceStatusDto,
   SaveServiceDraftDto,
 } from './dto';
-import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { AdminServicesQueryDto } from './dto/admin-services-query.dto';
 
 @Controller('services')
 export class ServicesController {
@@ -126,16 +127,18 @@ export class ServicesController {
   @UseGuards(AuthGuard)
   async getServiceEditsByService(
     @Param('serviceId') serviceId: string,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>[]> {
-    return this.servicesService.getServiceEditsByService(serviceId);
+    return this.servicesService.getServiceEditsByService(serviceId, user.id);
   }
 
   @Get('edits/:editId')
   @UseGuards(AuthGuard)
   async getServiceEdit(
     @Param('editId') editId: string,
+    @CurrentUser() user: AuthUser,
   ): Promise<Record<string, unknown>> {
-    return this.servicesService.getServiceEdit(editId);
+    return this.servicesService.getServiceEdit(editId, user.id);
   }
 
   @Delete('edits/:editId')
@@ -201,14 +204,10 @@ export class ServicesController {
   @Get()
   async getServices(
     @Query('type') type?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<ServiceListResponse> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.servicesService.getServices(type, page, limit);
   }
 
@@ -223,30 +222,23 @@ export class ServicesController {
   @UseGuards(AuthGuard, RolesGuard)
   @RequireRole('admin')
   async getAdminServices(
-    @Query('statusFilter') statusFilter?: string,
-    @Query('typesFilter') typesFilter?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
-    @Query() pagination?: PaginationDto,
+    @Query() query: AdminServicesQueryDto,
   ): Promise<{ data: Record<string, unknown>[]; count: number }> {
     let parsedTypes: string[] | undefined;
-    if (typesFilter) {
+    if (query.typesFilter) {
       try {
-        parsedTypes = JSON.parse(typesFilter) as string[];
+        parsedTypes = JSON.parse(query.typesFilter) as string[];
       } catch {
-        parsedTypes = [typesFilter];
+        parsedTypes = [query.typesFilter];
       }
+    } else if (query.category) {
+      parsedTypes = [query.category];
     }
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 50 },
-    );
     return this.servicesService.getAdminServices(
-      statusFilter,
+      query.statusFilter,
       parsedTypes,
-      page,
-      limit,
+      query.page,
+      query.limit ?? 50,
     );
   }
 
