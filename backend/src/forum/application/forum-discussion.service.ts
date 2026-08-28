@@ -425,6 +425,7 @@ export class ForumDiscussionService {
       body: input.body ?? input.content ?? '',
       content: input.content ?? input.body ?? '',
       category_id: resolvedCategoryId,
+      image_url: input.image_url || null,
       author_id: userId,
       post_type: postType,
     });
@@ -447,6 +448,8 @@ export class ForumDiscussionService {
     if (updates.title !== undefined) safe.title = updates.title;
     if (updates.body !== undefined) safe.body = updates.body;
     if (updates.content !== undefined) safe.content = updates.content;
+    if (updates.image_url !== undefined)
+      safe.image_url = updates.image_url || null;
     if (updates.category_id !== undefined) {
       if (updates.category_id) {
         const isUuid =

@@ -680,6 +680,7 @@ export type Database = {
           content?: string | null;
           author_id: string | null;
           category_id: string | null;
+          image_url: string | null;
           view_count: number;
           like_count: number;
           comment_count: number;
@@ -697,6 +698,7 @@ export type Database = {
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          image_url?: string | null;
           view_count?: number;
           like_count?: number;
           comment_count?: number;
@@ -714,6 +716,7 @@ export type Database = {
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          image_url?: string | null;
           view_count?: number;
           like_count?: number;
           comment_count?: number;

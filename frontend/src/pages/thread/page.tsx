@@ -206,9 +206,17 @@ export default function ThreadPage() {
   };
 
 
-  const handleUpdatePost = async (newContent: string) => {
-    await forumService.updatePost(thread.id, { body: newContent });
-    setThread((prev) => (prev ? { ...prev, content: newContent } : null));
+  const handleUpdatePost = async (updates: { body: string; image_url: string | null }) => {
+    await forumService.updatePost(thread.id, updates);
+    setThread((prev) =>
+      prev
+        ? {
+            ...prev,
+            content: updates.body,
+            imageUrl: updates.image_url || undefined,
+          }
+        : null,
+    );
   };
 
   const handleUpdateReply = async (replyId: string, newContent: string) => {

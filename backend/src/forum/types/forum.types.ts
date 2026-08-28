@@ -31,6 +31,7 @@ export interface ForumPost {
   content?: string;
   category_id?: string | null;
   category?: ForumCategory | null;
+  image_url?: string | null;
   author_id: string;
   author?: ForumPostAuthor | null;
   pinned?: boolean;
@@ -144,6 +145,7 @@ export interface InsertForumPostDbInput {
   body?: string;
   content?: string;
   category_id?: string | null;
+  image_url?: string | null;
   author_id: string;
   post_type?: 'announcement' | 'discussion' | 'question';
 }
@@ -154,6 +156,7 @@ export interface UpdateForumPostDbInput {
   body?: string;
   content?: string;
   category_id?: string | null;
+  image_url?: string | null;
   is_pinned?: boolean;
   is_removed?: boolean;
 }

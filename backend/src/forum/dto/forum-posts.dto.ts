@@ -6,6 +6,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -77,6 +79,11 @@ export class CreateForumPostDto {
   @IsOptional()
   @IsIn(['announcement', 'discussion', 'question'])
   post_type?: 'announcement' | 'discussion' | 'question';
+
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
+  image_url?: string | null;
 }
 
 export class UpdateForumPostDto {
@@ -100,6 +107,11 @@ export class UpdateForumPostDto {
   @IsOptional()
   @IsString()
   subcategory?: string | null;
+
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
+  image_url?: string | null;
 }
 
 export class SetPinnedDto {

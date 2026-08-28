@@ -173,6 +173,27 @@ describe('ForumDiscussionService', () => {
       );
     });
 
+    it('persists an optional cover image URL when creating a post', async () => {
+      mockRepository.getPostSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertPost.mockResolvedValueOnce({
+        id: postId,
+        slug: 'post-with-cover',
+      });
+      const input = {
+        title: 'Post with cover',
+        content: 'Body',
+        image_url: 'https://cdn.example.com/forum/cover.webp',
+      };
+
+      await service.createForumPost(input, 'discussion', userId);
+
+      expect(mockRepository.insertPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          image_url: 'https://cdn.example.com/forum/cover.webp',
+        }),
+      );
+    });
+
     it('resolves category slug to UUID when category_id is provided as non-UUID slug', async () => {
       mockRepository.getPostSlugs.mockResolvedValueOnce([]);
       mockRepository.getCategoryBySlug.mockResolvedValueOnce({

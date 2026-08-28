@@ -255,6 +255,7 @@ describe('ForumRepository', () => {
           slug: 'post',
           body: 'My content from editor',
           category_id: null,
+          image_url: null,
           author_id: 'u-1',
           post_type: 'discussion',
         },

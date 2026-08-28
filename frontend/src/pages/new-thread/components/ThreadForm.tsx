@@ -1,10 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
+import { deleteForumImage, uploadForumImage } from "@/api-services/storage.service";
+import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
 import RichTextEditor from "@/components/base/RichTextEditor";
 
+const MAX_COVER_SIZE = 5 * 1024 * 1024;
+const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
 export default function ThreadForm() {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
 
@@ -14,7 +20,10 @@ export default function ThreadForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [createdThread, setCreatedThread] = useState<{ id: string; slug: string; title: string } | null>(null);
@@ -83,6 +92,57 @@ export default function ThreadForm() {
     }
   }, [subcategory, subcategories]);
 
+  useEffect(() => {
+    return () => {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    };
+  }, [coverPreviewUrl]);
+
+  const selectCoverFile = (file: File | undefined) => {
+    if (!file) return;
+
+    if (!ALLOWED_COVER_TYPES.has(file.type)) {
+      setCoverFile(null);
+      setCoverPreviewUrl("");
+      setErrors((prev) => ({
+        ...prev,
+        coverImage: "Please choose a JPG, PNG, or WebP image.",
+      }));
+      return;
+    }
+
+    if (file.size > MAX_COVER_SIZE) {
+      setCoverFile(null);
+      setCoverPreviewUrl("");
+      setErrors((prev) => ({
+        ...prev,
+        coverImage: "Cover image must be 5 MB or smaller.",
+      }));
+      return;
+    }
+
+    const previewUrl = typeof URL.createObjectURL === "function"
+      ? URL.createObjectURL(file)
+      : "";
+    setCoverFile(file);
+    setCoverPreviewUrl(previewUrl);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.coverImage;
+      return next;
+    });
+  };
+
+  const removeCoverFile = () => {
+    setCoverFile(null);
+    setCoverPreviewUrl("");
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.coverImage;
+      return next;
+    });
+  };
+
   const handleCategoryChange = (value: string) => {
     setCategoryId(value);
     setSubcategory("");
@@ -121,12 +181,23 @@ export default function ThreadForm() {
     if (!validate() || isSubmitting) return;
 
     setIsSubmitting(true);
+    let uploadedImageUrl: string | undefined;
     try {
+      if (coverFile) {
+        if (!user?.id) {
+          throw new Error("Please sign in before uploading a forum cover image.");
+        }
+        setIsUploadingImage(true);
+        uploadedImageUrl = await uploadForumImage(coverFile, user.id);
+        setIsUploadingImage(false);
+      }
+
       const res = await forumService.createThread({
         title: title.trim(),
         body: content.trim(),
         category_id: categoryId,
         subcategory: subcategory || undefined,
+        image_url: uploadedImageUrl,
       });
       setCreatedThread({
         id: res.id,
@@ -136,12 +207,18 @@ export default function ThreadForm() {
       setSubmitted(true);
     } catch (err: unknown) {
       logger.warn("Failed to create thread:", err);
+      if (uploadedImageUrl && user?.id) {
+        void deleteForumImage(uploadedImageUrl, user.id).catch((cleanupError) => {
+          logger.warn("Failed to clean up unused forum cover:", cleanupError);
+        });
+      }
       const message =
         err instanceof Error
           ? err.message
           : "Failed to create thread. Please check your inputs and try again.";
       setErrors((prev) => ({ ...prev, submit: message }));
     } finally {
+      setIsUploadingImage(false);
       setIsSubmitting(false);
     }
   };
@@ -196,6 +273,7 @@ export default function ThreadForm() {
               setTitle("");
               setContent("");
               setMediaUrl("");
+              removeCoverFile();
             }}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
@@ -352,6 +430,72 @@ export default function ThreadForm() {
 
         <div>
           <label
+            htmlFor="thread-cover-image"
+            className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
+          >
+            Cover Image <span className="text-xs text-foreground-400">(optional)</span>
+          </label>
+
+          {coverFile ? (
+            <div className="relative overflow-hidden rounded-xl border border-background-200 bg-background-50">
+              {coverPreviewUrl ? (
+                <img
+                  src={coverPreviewUrl}
+                  alt="Cover preview"
+                  className="h-48 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-32 items-center justify-center px-4 text-sm text-foreground-600">
+                  {coverFile.name}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={removeCoverFile}
+                className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-foreground-950/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-foreground-950/85 transition-colors cursor-pointer"
+              >
+                <i className="ri-delete-bin-line"></i>
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label
+              htmlFor="thread-cover-image"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                selectCoverFile(event.dataTransfer.files[0]);
+              }}
+              className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 py-5 text-center transition-colors hover:bg-background-50 ${
+                errors.coverImage ? "border-primary-500 bg-primary-50/40" : "border-background-300"
+              }`}
+            >
+              <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                <i className="ri-image-add-line text-xl"></i>
+              </span>
+              <span className="text-sm font-medium text-foreground-800">
+                Drop an image here or choose a file
+              </span>
+              <span className="mt-1 text-xs text-foreground-400">
+                JPG, PNG or WebP · max 10 MB
+              </span>
+            </label>
+          )}
+
+          <input
+            id="thread-cover-image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={(event) => selectCoverFile(event.target.files?.[0])}
+          />
+          {errors.coverImage && (
+            <p className="mt-2 text-xs text-primary-500">{errors.coverImage}</p>
+          )}
+        </div>
+
+        <div>
+          <label
             htmlFor="thread-media-url"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
           >
@@ -398,7 +542,7 @@ export default function ThreadForm() {
         {isSubmitting ? (
           <>
             <i className="ri-loader-4-line animate-spin"></i>
-            Publishing…
+            {isUploadingImage ? "Uploading image…" : "Publishing…"}
           </>
         ) : (
           <>

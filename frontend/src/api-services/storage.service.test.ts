@@ -22,6 +22,7 @@ vi.mock("@/lib/supabase", () => ({
 
 import {
   deleteBlogImage,
+  deleteForumImage,
   uploadBlogImage,
   uploadForumImage,
   storageService,
@@ -58,17 +59,14 @@ describe("storage.service", () => {
       expect(url).toBe(expectedUrl);
     });
 
-    it("should default userId to anonymous if not provided", async () => {
+    it("rejects uploads without an authenticated owner ID", async () => {
       const mockFile = new File(["dummy"], "screenshot.png", { type: "image/png" });
-      mockUpload.mockResolvedValue({ data: { path: "anonymous/test.png" }, error: null });
-      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: "https://cdn.supabase.co/forum-media/anonymous/test.png" } });
 
-      const url = await uploadForumImage(mockFile);
+      await expect(uploadForumImage(mockFile, " ")).rejects.toThrow(
+        "A user ID is required to upload a forum image",
+      );
 
-      expect(mockFrom).toHaveBeenCalledWith("forum-media");
-      const [uploadPath] = mockUpload.mock.calls[0];
-      expect(uploadPath).toMatch(/^anonymous\/[0-9a-f-]+\.png$/);
-      expect(url).toBe("https://cdn.supabase.co/forum-media/anonymous/test.png");
+      expect(mockUpload).not.toHaveBeenCalled();
     });
 
     it("should sanitize file extensions to lowercase alphanumeric", async () => {
@@ -151,4 +149,39 @@ describe("storage.service", () => {
     });
   });
 
+  describe("deleteForumImage", () => {
+    it("deletes an owned object from the forum-media bucket", async () => {
+      mockRemove.mockResolvedValue({ data: [], error: null });
+
+      const deleted = await deleteForumImage(
+        "https://project.supabase.co/storage/v1/object/public/forum-media/user-1/cover.webp",
+        "user-1",
+      );
+
+      expect(mockFrom).toHaveBeenCalledWith("forum-media");
+      expect(mockRemove).toHaveBeenCalledWith(["user-1/cover.webp"]);
+      expect(deleted).toBe(true);
+    });
+
+    it("refuses to delete another user's object", async () => {
+      const deleted = await deleteForumImage(
+        "https://project.supabase.co/storage/v1/object/public/forum-media/user-2/cover.webp",
+        "user-1",
+      );
+
+      expect(deleted).toBe(false);
+      expect(mockRemove).not.toHaveBeenCalled();
+    });
+
+    it("throws when Supabase fails to delete an owned object", async () => {
+      mockRemove.mockResolvedValue({ data: null, error: new Error("Delete failed") });
+
+      await expect(
+        deleteForumImage(
+          "https://project.supabase.co/storage/v1/object/public/forum-media/user-1/cover.webp",
+          "user-1",
+        ),
+      ).rejects.toThrow("Delete failed");
+    });
+  });
 });

@@ -406,6 +406,7 @@ export class ForumRepository {
       slug: string;
       body: string;
       category_id: string | null;
+      image_url: string | null;
       author_id: string;
       post_type: string;
     } = {
@@ -413,6 +414,7 @@ export class ForumRepository {
       slug: data.slug,
       body: data.body ?? data.content ?? '',
       category_id: data.category_id || null,
+      image_url: data.image_url || null,
       author_id: data.author_id,
       post_type: data.post_type || 'discussion',
     };
@@ -449,6 +451,7 @@ export class ForumRepository {
       slug?: string;
       body?: string;
       category_id?: string | null;
+      image_url?: string | null;
       is_pinned?: boolean;
       is_removed?: boolean;
     } = {};
@@ -459,6 +462,9 @@ export class ForumRepository {
     }
     if (updates.category_id !== undefined) {
       payload.category_id = updates.category_id;
+    }
+    if (updates.image_url !== undefined) {
+      payload.image_url = updates.image_url;
     }
     if (updates.is_pinned !== undefined) {
       payload.is_pinned = updates.is_pinned;

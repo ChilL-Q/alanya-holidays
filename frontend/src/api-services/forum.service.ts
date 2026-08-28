@@ -34,6 +34,8 @@ export interface CategoryThread {
   isBookmarked?: boolean;
   authorId?: string;
   slug?: string;
+  imageUrl?: string;
+  categoryImageUrl?: string;
 }
 
 export interface ThreadReply {
@@ -79,6 +81,8 @@ export interface ThreadDetail {
   isVerified: boolean;
   replies: ThreadReply[];
   slug?: string;
+  imageUrl?: string;
+  categoryImageUrl?: string;
 }
 
 export interface ForumMember {
@@ -234,6 +238,7 @@ export interface CreateThreadInput {
   categoryId?: string;
   subcategory?: string;
   post_type?: "discussion" | "question";
+  image_url?: string;
 }
 
 export interface CreateCommentInput {
@@ -264,6 +269,7 @@ export interface ForumBackendPost {
   slug: string;
   title: string;
   body: string;
+  image_url?: string | null;
   category_id?: string;
   author_id?: string;
   post_type?: "discussion" | "question";
@@ -409,6 +415,8 @@ export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
     isBookmarked: !!(post.bookmarked_by_me || post.is_bookmarked),
     authorId: post.author_id,
     slug: post.slug || post.id,
+    imageUrl: post.image_url || undefined,
+    categoryImageUrl: (hasParent ? parentCat?.image_url : cat?.image_url) || undefined,
   };
 }
 
@@ -508,6 +516,8 @@ export function mapBackendPostToThreadDetail(
     isVerified: true,
     replies,
     slug: post.slug,
+    imageUrl: post.image_url || undefined,
+    categoryImageUrl: (hasParent ? parentCat?.image_url : cat?.image_url) || undefined,
   };
 }
 
@@ -737,6 +747,7 @@ export class ForumService {
       category_id: input.category_id || input.categoryId,
       subcategory: input.subcategory,
       post_type: input.post_type || "discussion",
+      image_url: input.image_url,
     });
 
     return mapBackendPostToThread(response);
@@ -925,7 +936,7 @@ export class ForumService {
    */
   async updatePost(
     postId: string,
-    data: { title?: string; body?: string }
+    data: { title?: string; body?: string; image_url?: string | null }
   ): Promise<CategoryThread> {
     const response = await apiClient.put<ForumBackendPost>(
       `/forum/posts/${postId}`,
@@ -991,7 +1002,10 @@ export const getBookmarkedPosts = (limit?: number, options?: RequestOptions) =>
   forumService.getBookmarkedPosts(limit, options);
 export const getBookmarkedThreads = (limit?: number, options?: RequestOptions) =>
   forumService.getBookmarkedThreads(limit, options);
-export const updatePost = (postId: string, data: { title?: string; body?: string }) =>
+export const updatePost = (
+  postId: string,
+  data: { title?: string; body?: string; image_url?: string | null },
+) =>
   forumService.updatePost(postId, data);
 export const updateComment = (commentId: string, data: { body: string } | string) =>
   forumService.updateComment(commentId, data);

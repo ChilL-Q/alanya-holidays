@@ -310,6 +310,31 @@ describe("forum.service", () => {
       expect(result.slug).toBe("my-new-post");
     });
 
+    it("sends and maps an optional forum cover image URL", async () => {
+      const imageUrl = "https://cdn.example.com/forum/cover.webp";
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
+        id: "new-p2",
+        slug: "post-with-cover",
+        title: "Post with cover",
+        body: "Post body",
+        image_url: imageUrl,
+      });
+      const input = {
+        title: "Post with cover",
+        body: "Post body",
+        category_id: "travel-vacation",
+        image_url: imageUrl,
+      };
+
+      const result = await createThread(input);
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/forum/posts",
+        expect.objectContaining({ image_url: imageUrl }),
+      );
+      expect(result).toEqual(expect.objectContaining({ imageUrl }));
+    });
+
     it("should throw ApiError when createThread API fails", async () => {
       vi.spyOn(apiClient, "post").mockRejectedValueOnce(
         new ApiError("API offline", 500, "Internal Server Error")
@@ -418,13 +443,18 @@ describe("forum.service", () => {
         slug: "edited-post",
         title: "Edited Title",
         body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
       };
 
       vi.spyOn(apiClient, "put").mockResolvedValueOnce(mockUpdated);
 
-      const result = await updatePost("p-edit", { body: "Updated content" });
+      const result = await updatePost("p-edit", {
+        body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
+      });
       expect(apiClient.put).toHaveBeenCalledWith("/forum/posts/p-edit", {
         body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
       });
       expect(result.id).toBe("p-edit");
     });

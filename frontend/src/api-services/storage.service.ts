@@ -10,11 +10,14 @@ import { logger } from "@/lib/logger";
  * Uploads an image for forum threads, replies, or rich text content to the 'forum-media' bucket.
  * 
  * @param file The image File to upload
- * @param userId The ID of the authenticated user or author (defaults to 'anonymous')
+ * @param userId The ID of the authenticated owner
  * @returns The public CDN URL of the uploaded image
  */
-export async function uploadForumImage(file: File, userId: string = "anonymous"): Promise<string> {
-  const sanitizedUserId = userId?.trim() || "anonymous";
+export async function uploadForumImage(file: File, userId: string): Promise<string> {
+  const sanitizedUserId = userId.trim();
+  if (!sanitizedUserId) {
+    throw new Error("A user ID is required to upload a forum image");
+  }
   
   // Extract and sanitize extension
   const parts = file.name.split(".");
@@ -88,7 +91,43 @@ export async function uploadBlogImage(file: File, userId: string): Promise<strin
   return data.publicUrl;
 }
 
+const FORUM_MEDIA_PUBLIC_PATH = "/storage/v1/object/public/forum-media/";
 const BLOG_MEDIA_PUBLIC_PATH = "/storage/v1/object/public/blog-media/";
+
+export async function deleteForumImage(publicUrl: string, userId: string): Promise<boolean> {
+  const ownerId = userId.trim();
+  if (!ownerId) return false;
+
+  let filePath: string;
+  try {
+    const url = new URL(publicUrl);
+    const markerIndex = url.pathname.indexOf(FORUM_MEDIA_PUBLIC_PATH);
+    if (markerIndex < 0) return false;
+
+    filePath = decodeURIComponent(
+      url.pathname.slice(markerIndex + FORUM_MEDIA_PUBLIC_PATH.length),
+    );
+  } catch {
+    return false;
+  }
+
+  const segments = filePath.split("/");
+  if (
+    segments.length < 2 ||
+    segments[0] !== ownerId ||
+    segments.some((segment) => !segment || segment === "." || segment === "..")
+  ) {
+    return false;
+  }
+
+  const { error } = await supabase.storage.from("forum-media").remove([filePath]);
+  if (error) {
+    logger.error("Failed to delete forum image from Supabase storage:", error);
+    throw error;
+  }
+
+  return true;
+}
 
 export async function deleteBlogImage(publicUrl: string, userId: string): Promise<boolean> {
   const ownerId = userId.trim();
@@ -126,6 +165,7 @@ export async function deleteBlogImage(publicUrl: string, userId: string): Promis
 
 export const storageService = {
   uploadForumImage,
+  deleteForumImage,
   uploadBlogImage,
   deleteBlogImage,
 };
