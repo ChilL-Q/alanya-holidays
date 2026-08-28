@@ -5,11 +5,16 @@ import {
   DirectoryClaimRecord,
   VoteResult,
   ClaimRpcResult,
+  ClaimVerificationResult,
 } from './types/directory.types';
+import { createHash } from 'crypto';
 import { UserListingVote } from './dto/directory-vote.dto';
 
 const LISTING_LOCATIONS_SELECT =
   '*, listing_locations(id, location_id, display_order, locations(id, name))';
+const CLAIM_SELECT =
+  'id, listing_id, user_id, email, phone, role, additional_notes, business_name, contact_phone, whatsapp, website, address, description, status, email_verified, verification_expires_at, rejection_reason, created_at, updated_at';
+const CLAIM_WITH_LISTING_SELECT = `${CLAIM_SELECT}, directory_listing:directory_listings(id, name, slug, category_id, gallery, tier, status, location)`;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -364,11 +369,17 @@ export class DirectoryRepository {
     });
   }
 
-  async getDirectoryListingsAdmin(filters?: {
-    status?: string;
-    category?: string;
-    query?: string;
-  }): Promise<DirectoryListingRecord[]> {
+  async getDirectoryListingsAdmin(
+    filters?: {
+      status?: string;
+      category?: string;
+      query?: string;
+    },
+    page = 1,
+    limit = 20,
+  ): Promise<DirectoryListingRecord[]> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     let query = this.client.from('directory_listings').select('*');
 
     if (filters?.status && filters.status !== 'all') {
@@ -388,7 +399,7 @@ export class DirectoryRepository {
       );
     }
 
-    query = query.order('created_at', { ascending: false });
+    query = query.order('created_at', { ascending: false }).range(from, to);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     return (data as DirectoryListingRecord[]) || [];
@@ -397,24 +408,34 @@ export class DirectoryRepository {
   async getDirectoryListingsByStatus(
     status: 'approved' | 'rejected',
     category?: string,
+    page = 1,
+    limit = 20,
   ): Promise<DirectoryListingRecord[]> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     let query = this.client
       .from('directory_listings')
       .select('*')
       .eq('status', status)
       .order('base_score', { ascending: false });
     if (category) query = query.eq('category_id', category);
-    const { data, error } = await query;
+    const { data, error } = await query.range(from, to);
     if (error) throw new Error(error.message);
     return (data as DirectoryListingRecord[]) || [];
   }
 
-  async getPendingDirectoryListings(): Promise<DirectoryListingRecord[]> {
+  async getPendingDirectoryListings(
+    page = 1,
+    limit = 20,
+  ): Promise<DirectoryListingRecord[]> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     const { data, error } = await this.client
       .from('directory_listings')
       .select('*')
       .eq('status', 'pending')
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .range(from, to);
     if (error) throw new Error(error.message);
     return (data as DirectoryListingRecord[]) || [];
   }
@@ -489,36 +510,45 @@ export class DirectoryRepository {
     const { data, error } = await this.client
       .from('listing_claims')
       .insert(claimData)
-      .select()
+      .select(CLAIM_SELECT)
       .single<DirectoryClaimRecord>();
     if (error) throw new Error(error.message);
     return data;
   }
 
-  async verifyClaimEmail(token: string): Promise<DirectoryClaimRecord | null> {
+  async verifyClaimEmail(
+    token: string,
+  ): Promise<ClaimVerificationResult | null> {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
     const res = await this.client.rpc('verify_claim_email', {
-      p_token: token,
+      p_token_hash: tokenHash,
     });
-    const rows = res.data as DirectoryClaimRecord[] | null;
-    if (res.error || !rows || rows.length === 0) return null;
+    if (res.error) throw new Error('Claim verification unavailable');
+    const rows = res.data as ClaimVerificationResult[] | null;
+    if (!rows || rows.length === 0) return null;
     return rows[0] || null;
   }
 
-  async getListingClaims(): Promise<DirectoryClaimRecord[]> {
+  async getListingClaims(
+    page = 1,
+    limit = 20,
+  ): Promise<DirectoryClaimRecord[]> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     try {
       const { data, error } = await this.client
         .from('listing_claims')
-        .select(
-          '*, directory_listing:directory_listings(id, name, slug, category_id, gallery, tier, status, location)',
-        )
-        .order('created_at', { ascending: false });
+        .select(CLAIM_WITH_LISTING_SELECT)
+        .order('created_at', { ascending: false })
+        .range(from, to);
       if (error) {
         const { data: fallbackData, error: fallbackError } = await this.client
           .from('listing_claims')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select(CLAIM_SELECT)
+          .order('created_at', { ascending: false })
+          .range(from, to);
         if (fallbackError) return [];
-        return (fallbackData as unknown as DirectoryClaimRecord[]) || [];
+        return fallbackData || [];
       }
       return (data as unknown as DirectoryClaimRecord[]) || [];
     } catch {
@@ -531,19 +561,17 @@ export class DirectoryRepository {
     try {
       const { data, error } = await this.client
         .from('listing_claims')
-        .select(
-          '*, directory_listing:directory_listings(id, name, slug, category_id, gallery, tier, status, location)',
-        )
+        .select(CLAIM_WITH_LISTING_SELECT)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) {
         const { data: fallbackData, error: fallbackError } = await this.client
           .from('listing_claims')
-          .select('*')
+          .select(CLAIM_SELECT)
           .eq('user_id', userId)
           .order('created_at', { ascending: false });
         if (fallbackError) return [];
-        return (fallbackData as unknown as DirectoryClaimRecord[]) || [];
+        return fallbackData || [];
       }
       return (data as unknown as DirectoryClaimRecord[]) || [];
     } catch {

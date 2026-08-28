@@ -16,7 +16,10 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendChatMessageDto } from './dto/send-chat-message.dto';
 import { ReportChatDto } from './dto/report-chat.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
+import {
+  ConversationMessagesQueryDto,
+  ConversationsQueryDto,
+} from './dto/messages-pagination-query.dto';
 
 @Controller('messages')
 export class MessagesController {
@@ -24,8 +27,15 @@ export class MessagesController {
 
   @Get('conversations')
   @UseGuards(AuthGuard)
-  async getConversations(@CurrentUser() user: AuthUser) {
-    return this.messagesService.getConversations(user.id);
+  async getConversations(
+    @CurrentUser() user: AuthUser,
+    @Query() query: ConversationsQueryDto,
+  ) {
+    return this.messagesService.getConversations(
+      user.id,
+      query.limit,
+      query.offset,
+    );
   }
 
   @Post('conversations')
@@ -41,24 +51,14 @@ export class MessagesController {
   @UseGuards(AuthGuard)
   async getConversationMessages(
     @Param('id') conversationId: string,
-    @Query('limit') limitStr: string | undefined,
-    @Query('offset') offsetStr: string | undefined,
     @CurrentUser() user: AuthUser,
-    @Query() pagination?: PaginationDto,
+    @Query() query: ConversationMessagesQueryDto,
   ) {
-    let limit = pagination?.limit;
-    if (limitStr !== undefined) {
-      limit = parseInt(limitStr, 10);
-    }
-    let offset = pagination?.offset;
-    if (offsetStr !== undefined) {
-      offset = parseInt(offsetStr, 10);
-    }
     return this.messagesService.getConversationMessages(
       user.id,
       conversationId,
-      limit,
-      offset,
+      query.limit,
+      query.offset,
     );
   }
 

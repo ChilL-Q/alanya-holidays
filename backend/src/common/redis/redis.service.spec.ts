@@ -52,6 +52,47 @@ describe('RedisService', () => {
     expect(await service.getJson('directory:cat:food')).not.toBeNull();
   });
 
+  it('should propagate command failures when Redis is configured', async () => {
+    const failingClient = {
+      status: 'ready',
+      eval: jest.fn().mockRejectedValue(new Error('command failed')),
+      disconnect: jest.fn(),
+    };
+    Object.assign(service, {
+      redisConfigured: true,
+      client: failingClient,
+    });
+
+    await expect(
+      service.incrementWithExpiry('rate:configured', 60),
+    ).rejects.toThrow('command failed');
+  });
+
+  it('should atomically increment fallback counters without lost updates', async () => {
+    const counts = await Promise.all(
+      Array.from({ length: 25 }, () =>
+        service.incrementWithExpiry('rate:concurrent', 60),
+      ),
+    );
+
+    expect([...counts].sort((a, b) => a - b)).toEqual(
+      Array.from({ length: 25 }, (_, index) => index + 1),
+    );
+  });
+
+  it('should set fallback counter expiry only on the first increment', async () => {
+    jest.useFakeTimers();
+    try {
+      await expect(service.incrementWithExpiry('rate:ttl', 1)).resolves.toBe(1);
+      jest.advanceTimersByTime(800);
+      await expect(service.incrementWithExpiry('rate:ttl', 1)).resolves.toBe(2);
+      jest.advanceTimersByTime(300);
+      await expect(service.incrementWithExpiry('rate:ttl', 1)).resolves.toBe(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('should handle SWR caching correctly', async () => {
     let callCount = 0;
     const fetcher = async () => {

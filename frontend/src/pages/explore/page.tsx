@@ -2,11 +2,17 @@ import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import BusinessCard from "@/pages/explore/components/BusinessCard";
 import MapView from "@/pages/explore/components/MapView";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
-import { directoryService, businessCategories, type Business } from "@/api-services/directory.service";
+import {
+  directoryService,
+  businessCategories,
+  normalizeBusinessCategory,
+  type Business,
+} from "@/api-services/directory.service";
 import { isAbortError } from "@/lib/api-client";
 import { ErrorState } from "@/components/base/ErrorState";
 import { EmptyState } from "@/components/base/EmptyState";
@@ -20,7 +26,7 @@ export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortBy, setSortBy] = useState<"rating" | "reviews" | "name">("rating");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "map">("grid");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
@@ -36,8 +42,9 @@ export default function ExplorePage() {
   // Read initial category from URL
   useEffect(() => {
     const category = searchParams.get("category");
-    if (category && businessCategories.some((c) => c.id === category)) {
-      setActiveCategory(category);
+    const normalizedCategory = category ? normalizeBusinessCategory(category) : null;
+    if (normalizedCategory && businessCategories.some((c) => c.id === normalizedCategory)) {
+      setActiveCategory(normalizedCategory);
       setShowFavoritesOnly(false);
     }
   }, [searchParams]);
@@ -147,10 +154,9 @@ export default function ExplorePage() {
       <main>
         {/* Hero Section */}
         <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="explore"
             alt="Alanya Business Directory"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70" />
 
@@ -278,20 +284,8 @@ export default function ExplorePage() {
               </div>
 
               <div className="flex items-center gap-3 flex-wrap">
-                {/* 3-Way View Switcher: Horizontal List (Default), Grid, Map */}
+                {/* 3-Way View Switcher: Grid (Default), List, Map */}
                 <div className="flex items-center bg-background-100 rounded-full p-1 border border-background-200">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                      viewMode === "list"
-                        ? "bg-white text-foreground-900 shadow-sm"
-                        : "text-foreground-500 hover:text-foreground-700"
-                    }`}
-                  >
-                    <i className="ri-list-check-3 text-sm" />
-                    List
-                  </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}
@@ -303,6 +297,18 @@ export default function ExplorePage() {
                   >
                     <i className="ri-grid-fill text-sm" />
                     Grid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                      viewMode === "list"
+                        ? "bg-white text-foreground-900 shadow-sm"
+                        : "text-foreground-500 hover:text-foreground-700"
+                    }`}
+                  >
+                    <i className="ri-list-check-3 text-sm" />
+                    List
                   </button>
                   <button
                     type="button"

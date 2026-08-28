@@ -1,4 +1,11 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  HttpException,
+  HttpStatus,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import { RedisService } from '../common/redis/redis.service';
 import { AiGuideDto, ChatMessageDto } from './dto/ai-guide.dto';
@@ -36,23 +43,27 @@ export class AiGuideService {
     private readonly guideDriver: AiGuideDriver,
   ) {}
 
-  /**
-   * Фиксированное окно 60с в Redis. При сбое Redis — fail-open
-   * (не блокируем пользователей из-за инфраструктуры).
-   */
-  private async checkRateLimit(identityKey: string): Promise<boolean> {
+  private async enforceRateLimit(identityKey: string): Promise<void> {
+    const window = Math.floor(Date.now() / 60_000);
+    const rateLimitKey = `ai_rate:${identityKey}:${window}`;
+    let count: number;
+
     try {
-      const window = Math.floor(Date.now() / 60_000);
-      const rlKey = `ai_rate:${identityKey}:${window}`;
-      const current = Number((await this.redisService.get(rlKey)) ?? 0);
-      if (current >= AiGuideService.RATE_LIMIT_PER_MINUTE) return false;
-      await this.redisService.set(rlKey, String(current + 1), 60);
-      return true;
+      count = await this.redisService.incrementWithExpiry(rateLimitKey, 60);
     } catch (err) {
-      this.logger.warn(
-        `Rate limit check failed (fail-open): ${err instanceof Error ? err.message : String(err)}`,
+      this.logger.error(
+        `AI rate limit counter unavailable: ${err instanceof Error ? err.message : String(err)}`,
       );
-      return true;
+      throw new ServiceUnavailableException(
+        'AI service is temporarily unavailable. Please try again later.',
+      );
+    }
+
+    if (count > AiGuideService.RATE_LIMIT_PER_MINUTE) {
+      throw new HttpException(
+        'Too many AI requests. Please wait a minute and try again.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 
@@ -115,14 +126,7 @@ export class AiGuideService {
     dto: AiGuideDto,
     identityKey = 'anonymous',
   ): Promise<{ answer: string; cached: boolean }> {
-    const allowed = await this.checkRateLimit(`guide:${identityKey}`);
-    if (!allowed) {
-      return {
-        answer:
-          "I'm receiving too many requests from you. Please wait a moment and try again! ⏳",
-        cached: false,
-      };
-    }
+    await this.enforceRateLimit(`guide:${identityKey}`);
 
     const sanitized = this.sanitizeGuideDto(dto);
     const hash = this.computeHash(sanitized);
@@ -148,12 +152,7 @@ export class AiGuideService {
     dto: GenerateItineraryDto,
     identityKey = 'anonymous',
   ): Promise<GeneratedItineraryResponse> {
-    const allowed = await this.checkRateLimit(`itinerary:${identityKey}`);
-    if (!allowed) {
-      throw new Error(
-        'Too many itinerary requests. Please wait a minute and try again.',
-      );
-    }
+    await this.enforceRateLimit(`itinerary:${identityKey}`);
     const hash = this.computeItineraryHash(dto);
     const cacheKey = `ai_itinerary:${hash}`;
 

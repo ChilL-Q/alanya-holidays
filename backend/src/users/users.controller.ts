@@ -14,11 +14,7 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import {
-  PaginationDto,
-  LimitQueryDto,
-  parsePagination,
-} from '../common/dto/pagination.dto';
+import { PaginationDto, LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -26,17 +22,13 @@ export class UsersController {
 
   @Get('forum/members')
   async getForumMembers(
-    @Query('limit') limitStr?: string,
-    @Query('onlineOnly') onlineOnly?: string,
     @Query() query?: LimitQueryDto,
+    @Query('onlineOnly') onlineOnly?: string,
   ) {
-    let limit: number | undefined;
-    if (query?.limit !== undefined) {
-      limit = Number(query.limit);
-    } else if (limitStr !== undefined) {
-      limit = parseInt(limitStr, 10);
-    }
-    return this.usersService.getForumMembers(limit, onlineOnly === 'true');
+    return this.usersService.getForumMembers(
+      query?.limit,
+      onlineOnly === 'true',
+    );
   }
 
   @Get('forum/online-count')
@@ -54,16 +46,14 @@ export class UsersController {
   @UseGuards(AuthGuard, RolesGuard)
   @RequireRole('admin')
   async getAllUsers(
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
+    @Query() pagination: PaginationDto,
     @CurrentUser() user?: AuthUser,
-    @Query() pagination?: PaginationDto,
   ) {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
+    return this.usersService.getAllUsers(
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
+      user?.id ?? '',
     );
-    return this.usersService.getAllUsers(page, limit, user?.id ?? '');
   }
 
   @Get('role/:role')
@@ -71,16 +61,15 @@ export class UsersController {
   @RequireRole('admin')
   async getUsersByRole(
     @Param('role') role: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
+    @Query() pagination: PaginationDto,
     @CurrentUser() user?: AuthUser,
-    @Query() pagination?: PaginationDto,
   ) {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
+    return this.usersService.getUsersByRole(
+      role,
+      pagination.page ?? 1,
+      pagination.limit ?? 20,
+      user?.id ?? '',
     );
-    return this.usersService.getUsersByRole(role, page, limit, user?.id ?? '');
   }
 
   // Note: no public GET :id — profile reads are admin-only

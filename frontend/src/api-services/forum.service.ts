@@ -1,4 +1,5 @@
 import { apiClient, ApiError, type RequestOptions } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 export interface Category {
   id: string;
@@ -33,6 +34,8 @@ export interface CategoryThread {
   isBookmarked?: boolean;
   authorId?: string;
   slug?: string;
+  imageUrl?: string;
+  categoryImageUrl?: string;
 }
 
 export interface ThreadReply {
@@ -56,7 +59,7 @@ export interface ThreadDetail {
   title: string;
   category: string;
   categoryId: string;
-  subcategory: string;
+  subcategory?: string;
   author: string;
   authorAvatar: string;
   authorRole: string;
@@ -78,6 +81,8 @@ export interface ThreadDetail {
   isVerified: boolean;
   replies: ThreadReply[];
   slug?: string;
+  imageUrl?: string;
+  categoryImageUrl?: string;
 }
 
 export interface ForumMember {
@@ -233,6 +238,7 @@ export interface CreateThreadInput {
   categoryId?: string;
   subcategory?: string;
   post_type?: "discussion" | "question";
+  image_url?: string;
 }
 
 export interface CreateCommentInput {
@@ -263,12 +269,16 @@ export interface ForumBackendPost {
   slug: string;
   title: string;
   body: string;
+  image_url?: string | null;
   category_id?: string;
   author_id?: string;
   post_type?: "discussion" | "question";
   views_count?: number;
+  view_count?: number;
   likes_count?: number;
+  like_count?: number;
   comments_count?: number;
+  comment_count?: number;
   is_pinned?: boolean;
   is_locked?: boolean;
   is_removed?: boolean;
@@ -289,9 +299,14 @@ export interface ForumBackendPost {
   author?: {
     full_name?: string;
     avatar_url?: string;
+    bio?: string | null;
+    role?: string | null;
+    created_at?: string | null;
   };
   liked_by_me?: boolean;
+  is_liked?: boolean;
   bookmarked_by_me?: boolean;
+  is_bookmarked?: boolean;
 }
 
 export interface ForumBackendComment {
@@ -300,6 +315,7 @@ export interface ForumBackendComment {
   author_id?: string;
   body: string;
   likes_count?: number;
+  like_count?: number;
   is_removed?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -308,6 +324,7 @@ export interface ForumBackendComment {
     avatar_url?: string;
   };
   liked_by_me?: boolean;
+  is_liked?: boolean;
   parent_id?: string | null;
 }
 
@@ -356,28 +373,50 @@ export function mapBackendPostToThread(post: ForumBackendPost): CategoryThread {
   const defaultAvatar =
     "/images/placeholder-business.svg";
 
-  const isHot = (post.views_count ?? 0) > 100 || (post.comments_count ?? 0) > 10;
+  const repliesCount = post.comments_count ?? post.comment_count ?? 0;
+  const viewsCount = post.views_count ?? post.view_count ?? 0;
+  const likesCount = post.likes_count ?? post.like_count ?? 0;
+  const isHot = viewsCount > 100 || repliesCount > 10;
+  const postBody = post.body || "";
+  const clean = postBody.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+
+  const cat = post.category;
+  const hasParent = Boolean(cat?.parent_id || cat?.parent);
+  const parentCat = cat?.parent;
+
+  const categoryName = hasParent
+    ? (parentCat?.name || "General")
+    : (cat?.name || "General");
+
+  const categorySlug = hasParent
+    ? (parentCat?.slug || "general")
+    : (cat?.slug || post.category_id || "general");
+
+  const subcategoryName = hasParent ? cat?.name : undefined;
 
   return {
     id: post.id,
     title: post.title,
-    category: post.category?.name || "General",
-    categoryId: post.category?.slug || post.category_id || "general",
+    category: categoryName,
+    categoryId: categorySlug,
+    subcategory: subcategoryName,
     author: post.author?.full_name || "Alanya Member",
     authorAvatar: post.author?.avatar_url || defaultAvatar,
-    replies: post.comments_count ?? 0,
-    views: post.views_count ?? 0,
-    likes: post.likes_count ?? 0,
+    replies: repliesCount,
+    views: viewsCount,
+    likes: likesCount,
     postedAt: timeAgo(post.created_at),
     isHot,
     excerpt:
-      post.body.length > 150 ? `${post.body.slice(0, 150).trim()}...` : post.body,
+      clean.length > 150 ? `${clean.slice(0, 150).trim()}...` : clean,
     isPinned: !!post.is_pinned,
     isVerified: true,
-    isLiked: !!post.liked_by_me,
-    isBookmarked: !!post.bookmarked_by_me,
+    isLiked: !!(post.liked_by_me || post.is_liked),
+    isBookmarked: !!(post.bookmarked_by_me || post.is_bookmarked),
     authorId: post.author_id,
-    slug: post.slug,
+    slug: post.slug || post.id,
+    imageUrl: post.image_url || undefined,
+    categoryImageUrl: (hasParent ? parentCat?.image_url : cat?.image_url) || undefined,
   };
 }
 
@@ -392,8 +431,8 @@ export function mapBackendCommentToReply(comment: ForumBackendComment): ThreadRe
     authorBadges: ["Community Member"],
     content: comment.body,
     postedAt: timeAgo(comment.created_at),
-    likes: comment.likes_count ?? 0,
-    isLiked: !!comment.liked_by_me,
+    likes: comment.likes_count ?? comment.like_count ?? 0,
+    isLiked: !!(comment.liked_by_me || comment.is_liked),
     authorId: comment.author_id,
     parentId: comment.parent_id || null,
     replies: [],
@@ -408,35 +447,77 @@ export function mapBackendPostToThreadDetail(
     "/images/placeholder-business.svg";
 
   const replies = comments.map(mapBackendCommentToReply);
-  const isHot = (post.views_count ?? 0) > 100 || (post.comments_count ?? 0) > 10;
+  const repliesCount = post.comments_count ?? post.comment_count ?? comments.length;
+  const viewsCount = post.views_count ?? post.view_count ?? 0;
+  const likesCount = post.likes_count ?? post.like_count ?? 0;
+  const isHot = viewsCount > 100 || repliesCount > 10;
+
+  const cat = post.category;
+  const hasParent = Boolean(cat?.parent_id || cat?.parent);
+  const parentCat = cat?.parent;
+
+  const categoryName = hasParent
+    ? (parentCat?.name || "General")
+    : (cat?.name || "General");
+
+  const categorySlug = hasParent
+    ? (parentCat?.slug || "general")
+    : (cat?.slug || post.category_id || "general");
+
+  const subcategoryName = hasParent ? (cat?.name || undefined) : undefined;
+
+  const authorRole =
+    post.author?.role === "admin"
+      ? "Administrator"
+      : post.author?.role === "merchant"
+      ? "Verified Partner"
+      : "Discussion Starter";
+
+  const authorJoinYear = post.author?.created_at
+    ? new Date(post.author.created_at).getFullYear().toString()
+    : "2024";
+
+  const authorBio =
+    post.author?.bio?.trim() || "Alanya Community Member & Traveler";
+
+  const authorBadges: string[] = [];
+  if (post.author?.role === "admin") {
+    authorBadges.push("Admin", "Verified");
+  } else if (post.author?.role === "merchant") {
+    authorBadges.push("Partner", "Verified");
+  } else {
+    authorBadges.push("Verified Traveler");
+  }
 
   return {
     id: post.id,
     title: post.title,
-    category: post.category?.name || "General",
-    categoryId: post.category?.slug || post.category_id || "general",
-    subcategory: post.category?.name || "",
+    category: categoryName,
+    categoryId: categorySlug,
+    subcategory: subcategoryName,
     author: post.author?.full_name || "Community Member",
     authorAvatar: post.author?.avatar_url || defaultAvatar,
-    authorRole: "Discussion Starter",
-    authorBio: "Alanya Community Member & Traveler",
-    authorPosts: post.comments_count ?? 1,
-    authorReputation: (post.likes_count ?? 0) * 10 + 50,
-    authorJoinDate: "2024",
+    authorRole,
+    authorBio,
+    authorPosts: Math.max(1, repliesCount),
+    authorReputation: likesCount * 10 + 50,
+    authorJoinDate: authorJoinYear,
     authorLocation: "Alanya, Türkiye",
-    authorBadges: ["Verified Traveler"],
+    authorBadges,
     content: post.body,
     postedAt: timeAgo(post.created_at),
-    views: post.views_count ?? 0,
-    likes: post.likes_count ?? 0,
-    isLiked: !!post.liked_by_me,
-    isBookmarked: !!post.bookmarked_by_me,
+    views: viewsCount,
+    likes: likesCount,
+    isLiked: !!(post.liked_by_me || post.is_liked),
+    isBookmarked: !!(post.bookmarked_by_me || post.is_bookmarked),
     authorId: post.author_id,
     isPinned: !!post.is_pinned,
     isHot,
     isVerified: true,
     replies,
     slug: post.slug,
+    imageUrl: post.image_url || undefined,
+    categoryImageUrl: (hasParent ? parentCat?.image_url : cat?.image_url) || undefined,
   };
 }
 
@@ -466,22 +547,22 @@ export function mapBackendMemberToForumMember(
 
 export class ForumService {
   /**
-   * Retrieves forum categories directly from backend.
+   * Retrieves the raw forum category tree directly from backend.
    */
-  async getCategories(options?: RequestOptions): Promise<Category[]> {
+  async getCategoryTree(options?: RequestOptions): Promise<ForumBackendCategory[]> {
     try {
       const data = options
         ? await apiClient.get<ForumBackendCategory[]>("/forum/categories/tree", options)
         : await apiClient.get<ForumBackendCategory[]>("/forum/categories/tree");
       if (Array.isArray(data) && data.length > 0) {
-        return data.map(mapBackendCategoryToCategory);
+        return data;
       }
 
       const flatData = options
         ? await apiClient.get<ForumBackendCategory[]>("/forum/categories", options)
         : await apiClient.get<ForumBackendCategory[]>("/forum/categories");
       if (Array.isArray(flatData)) {
-        return flatData.filter((c) => !c.parent_id).map(mapBackendCategoryToCategory);
+        return flatData.filter((c) => !c.parent_id);
       }
       return [];
     } catch (err) {
@@ -490,6 +571,14 @@ export class ForumService {
       }
       throw err;
     }
+  }
+
+  /**
+   * Retrieves forum categories directly from backend.
+   */
+  async getCategories(options?: RequestOptions): Promise<Category[]> {
+    const data = await this.getCategoryTree(options);
+    return data.map(mapBackendCategoryToCategory);
   }
 
   /**
@@ -656,7 +745,9 @@ export class ForumService {
       title: input.title,
       body: input.body,
       category_id: input.category_id || input.categoryId,
+      subcategory: input.subcategory,
       post_type: input.post_type || "discussion",
+      image_url: input.image_url,
     });
 
     return mapBackendPostToThread(response);
@@ -845,7 +936,7 @@ export class ForumService {
    */
   async updatePost(
     postId: string,
-    data: { title?: string; body?: string }
+    data: { title?: string; body?: string; image_url?: string | null }
   ): Promise<CategoryThread> {
     const response = await apiClient.put<ForumBackendPost>(
       `/forum/posts/${postId}`,
@@ -869,10 +960,27 @@ export class ForumService {
     return mapBackendCommentToReply(response);
   }
 
+  /**
+   * Reports a forum post or comment.
+   */
+  async reportContent(targetType: "post" | "comment", targetId: string, reason: string): Promise<boolean> {
+    try {
+      await apiClient.post("/forum/reports", {
+        target_type: targetType,
+        target_id: targetId,
+        reason,
+      });
+      return true;
+    } catch (err) {
+      logger.error("Failed to report content:", err);
+      return false;
+    }
+  }
 }
 
 export const forumService = new ForumService();
 
+export const getCategoryTree = (options?: RequestOptions) => forumService.getCategoryTree(options);
 export const getCategories = (options?: RequestOptions) => forumService.getCategories(options);
 export const getCategoryById = (idOrSlug: string, options?: RequestOptions) =>
   forumService.getCategoryById(idOrSlug, options);
@@ -894,7 +1002,12 @@ export const getBookmarkedPosts = (limit?: number, options?: RequestOptions) =>
   forumService.getBookmarkedPosts(limit, options);
 export const getBookmarkedThreads = (limit?: number, options?: RequestOptions) =>
   forumService.getBookmarkedThreads(limit, options);
-export const updatePost = (postId: string, data: { title?: string; body?: string }) =>
+export const updatePost = (
+  postId: string,
+  data: { title?: string; body?: string; image_url?: string | null },
+) =>
   forumService.updatePost(postId, data);
 export const updateComment = (commentId: string, data: { body: string } | string) =>
   forumService.updateComment(commentId, data);
+export const reportContent = (targetType: "post" | "comment", targetId: string, reason: string) =>
+  forumService.reportContent(targetType, targetId, reason);

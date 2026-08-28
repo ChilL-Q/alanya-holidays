@@ -18,7 +18,8 @@ export interface DirectoryClaimRecord {
   address?: string | null;
   description?: string | null;
   status: string;
-  verification_token?: string;
+  email_verified?: boolean;
+  verification_expires_at?: string;
   directory_listing?: {
     id: string;
     name?: string;
@@ -37,6 +38,13 @@ export interface DirectoryClaimRecord {
 export interface VoteResult {
   net_votes: number;
   user_vote?: number;
+}
+
+export interface ClaimVerificationResult {
+  claim_id: string;
+  listing_id: string;
+  business_name: string;
+  claimant_email: string;
 }
 
 export interface ClaimRpcResult {

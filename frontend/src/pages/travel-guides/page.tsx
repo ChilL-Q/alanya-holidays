@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import GuideModal from "@/pages/travel-guides/components/GuideModal";
 import SubmitGuideModal from "@/pages/travel-guides/components/SubmitGuideModal";
 import {
@@ -103,10 +104,9 @@ export default function TravelGuidesPage() {
       <main>
         {/* Hero Section */}
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="travelGuides"
             alt="Alanya Travel Guides"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/80"></div>
 

@@ -30,9 +30,12 @@ export default function EventFilters({
 }: EventFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-wrap">
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-wrap" role="group" aria-label="Event categories">
         <button
+          type="button"
           onClick={() => onCategoryChange(null)}
+          aria-pressed={activeCategory === null}
+          aria-label="Show all event categories"
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
             activeCategory === null
               ? "bg-primary-500 text-background-50"
@@ -46,7 +49,10 @@ export default function EventFilters({
         {eventCategories.map((cat) => (
           <button
             key={cat}
+            type="button"
             onClick={() => onCategoryChange(cat === activeCategory ? null : cat)}
+            aria-pressed={activeCategory === cat}
+            aria-label={`Filter events by ${cat}`}
             className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all shrink-0 ${
               activeCategory === cat
                 ? "bg-accent-500 text-background-50"
@@ -59,9 +65,12 @@ export default function EventFilters({
         ))}
       </div>
 
-      <div className="flex items-center gap-2 ml-auto shrink-0">
+      <div className="flex items-center gap-2 ml-auto shrink-0" role="group" aria-label="Quick event filters">
         <button
+          type="button"
           onClick={() => onSavedToggle(!showSaved)}
+          aria-pressed={showSaved}
+          aria-label="Show only saved events"
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
             showSaved
               ? "bg-primary-100 text-primary-700"
@@ -72,7 +81,10 @@ export default function EventFilters({
           Saved
         </button>
         <button
+          type="button"
           onClick={() => onFeaturedToggle(!showFeatured)}
+          aria-pressed={showFeatured}
+          aria-label="Show only featured events"
           className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
             showFeatured
               ? "bg-primary-100 text-primary-700"

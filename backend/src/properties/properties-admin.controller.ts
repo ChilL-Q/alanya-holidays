@@ -15,6 +15,7 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { UpdatePropertyStatusDto } from './dto/update-property-status.dto';
+import { AdminPropertiesQueryDto } from './dto/admin-properties-query.dto';
 
 @Controller('properties/admin')
 @UseGuards(AuthGuard, RolesGuard)
@@ -23,14 +24,12 @@ export class PropertiesAdminController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Get()
-  async getPropertiesAdmin(
-    @Query('status') status?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
-  ) {
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    return this.propertiesService.getAdminProperties(status, page, limit);
+  async getPropertiesAdmin(@Query() query: AdminPropertiesQueryDto) {
+    return this.propertiesService.getAdminProperties(
+      query.status,
+      query.page,
+      query.limit,
+    );
   }
 
   @Get(':id')

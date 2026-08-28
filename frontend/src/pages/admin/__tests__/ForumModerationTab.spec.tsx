@@ -170,4 +170,14 @@ describe("ForumModerationTab", () => {
     expect(await screen.findByText("Deleted abusive remark here", {}, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByText("Troll User")).toBeInTheDocument();
   });
+
+  it("should show an explicit error banner when forum moderation data fails to load", async () => {
+    vi.spyOn(adminService, "getForumStats").mockRejectedValueOnce(new Error("API down"));
+
+    render(<ForumModerationTab />);
+
+    expect(
+      await screen.findByText(/Failed to load forum moderation data\. Please try again\./i)
+    ).toBeInTheDocument();
+  });
 });

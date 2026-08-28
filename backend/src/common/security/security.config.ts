@@ -224,6 +224,14 @@ export const FORUM_ANTI_SPAM_RULES: readonly RateLimitRule[] = [
     maxRequests: 20,
     windowSeconds: 3600,
   },
+  // Anonymous contact/enquiry aliases share one budget to prevent route rotation.
+  {
+    id: 'anti-spam:contact-messages',
+    method: 'POST',
+    pattern: /^(\/api)?\/(enquiries|messages(?:\/contact)?)$/,
+    maxRequests: 5,
+    windowSeconds: 3600,
+  },
   // Posts & Questions: max 5 per hour (3600s TTL)
   {
     id: 'anti-spam:posts',
@@ -307,6 +315,7 @@ export function createRateLimitMiddleware(
     }
 
     const clientIp = resolveClientIp(req);
+    const identity = `ip:${clientIp}`;
     const reqMethod = (req.method || 'GET').toUpperCase();
 
     // Check specific route & method rules (anti-spam, etc.)
@@ -327,8 +336,8 @@ export function createRateLimitMiddleware(
       ? matchedRule.windowSeconds
       : windowSeconds;
     const key = matchedRule
-      ? `${clientIp}:${matchedRule.id}:${limit}:${effectiveWindowSeconds}`
-      : `${clientIp}:${limit}`;
+      ? `${identity}:${matchedRule.id}:${limit}:${effectiveWindowSeconds}`
+      : `${identity}:${limit}`;
 
     try {
       const { count, ttl } = await storage.increment(

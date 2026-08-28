@@ -31,9 +31,17 @@ export class MessagesService {
     private readonly emailOutbox: EmailOutboxRepository,
   ) {}
 
-  async getConversations(userId: string): Promise<EnrichedConversation[]> {
+  async getConversations(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<EnrichedConversation[]> {
     const rawConversations =
-      await this.messagesRepository.findUserConversations(userId);
+      await this.messagesRepository.findUserConversations(
+        userId,
+        limit,
+        offset,
+      );
 
     if (!rawConversations.length) {
       return [];

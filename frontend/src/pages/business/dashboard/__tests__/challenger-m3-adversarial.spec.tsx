@@ -277,7 +277,6 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
 
     it("triggers onDeleteListing when confirmed by user", () => {
       const onDelete = vi.fn();
-      vi.spyOn(window, "confirm").mockReturnValue(true);
 
       render(
         <MemoryRouter>
@@ -292,8 +291,9 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
         </MemoryRouter>
       );
 
-      const deleteBtns = screen.getAllByRole("button", { name: /Delete/i });
+      const deleteBtns = screen.getAllByRole("button", { name: /^Delete /i });
       fireEvent.click(deleteBtns[0]);
+      fireEvent.click(screen.getByRole("button", { name: /Delete listing/i }));
       expect(onDelete).toHaveBeenCalledWith(testListings[0].id);
     });
   });
@@ -934,7 +934,6 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
       vi.spyOn(directoryService, "getMyClaims").mockResolvedValue(testClaims);
       vi.spyOn(directoryService, "getOwnerAnalytics").mockResolvedValue(testAnalytics);
       const deleteListingSpy = vi.spyOn(directoryService, "deleteListing").mockResolvedValue({ success: true });
-      vi.spyOn(window, "confirm").mockReturnValue(true);
 
       render(
         <MemoryRouter>
@@ -973,6 +972,7 @@ describe("Empirical Challenger M3 Adversarial Stress Tests", () => {
         name: "Delete Alanya Panoramic Bistro",
       });
       fireEvent.click(deleteBtn);
+      fireEvent.click(screen.getByRole("button", { name: /Delete listing/i }));
 
       await waitFor(() => {
         expect(deleteListingSpy).toHaveBeenCalledWith("biz-live-1");

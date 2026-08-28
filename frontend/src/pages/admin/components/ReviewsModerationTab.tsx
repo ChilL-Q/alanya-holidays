@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService, type AdminReviewItem } from "@/api-services/admin.service";
 import { logger } from "@/lib/logger";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 type ReviewStatus = "pending" | "approved" | "rejected";
 
@@ -24,11 +25,13 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
   const [actingId, setActingId] = useState<string | null>(null);
 
   const loadReviews = useCallback(
-    async (status: ReviewStatus, targetPage: number) => {
-      setLoading(true);
+    async (status: ReviewStatus, targetPage: number, background = false) => {
+      if (!background) setLoading(true);
       setError(null);
       try {
-        const res = await adminService.getModerationReviews(status, targetPage, PAGE_SIZE);
+        const res = await adminService.getModerationReviews(status, targetPage, PAGE_SIZE, {
+          throwOnError: true,
+        });
         setReviews(res.data);
         setTotal(res.total);
         if (onCountUpdate && status === "pending") {
@@ -47,6 +50,8 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
   useEffect(() => {
     void loadReviews(statusTab, page);
   }, [statusTab, page, loadReviews]);
+
+  useAutoRefresh(() => loadReviews(statusTab, page, true), { intervalMs: 20000 });
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setActingId(id);

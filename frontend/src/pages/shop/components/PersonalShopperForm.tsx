@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { adminService } from "@/api-services/admin.service";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 const COUNTRY_CODES = [
   { code: "+90", flag: "🇹🇷", country: "Turkey" },
@@ -193,10 +194,9 @@ export default function PersonalShopperForm() {
         <div className="flex flex-col lg:flex-row bg-white rounded-3xl overflow-hidden border border-background-200/70">
           {/* Left panel — visual side */}
           <div className="lg:w-5/12 relative overflow-hidden min-h-[220px] lg:min-h-[560px]">
-            <img
-              src="/images/placeholder-business.svg"
+            <PageHeroImage
+              page="personalShopper"
               alt="Personal Shopper Service"
-              className="absolute inset-0 w-full h-full object-cover object-top"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground-950/70 via-foreground-950/20 to-foreground-950/10"></div>
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">

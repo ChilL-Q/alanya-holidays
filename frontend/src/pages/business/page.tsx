@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
@@ -120,11 +120,10 @@ function getGalleryForBusiness(businessId: string): string[] {
 export default function BusinessDetailPage() {
   const { businessId } = useParams<{ businessId: string }>();
 
-  const initialBusiness = businessId ? directoryService.getListingByIdSync(businessId) : null;
-  const [business, setBusiness] = useState<Business | null>(initialBusiness);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [reviews, setReviews] = useState<BusinessReview[]>([]);
   const [similarBusinesses, setSimilarBusinesses] = useState<Business[]>([]);
-  const [isLoading, setIsLoading] = useState(!initialBusiness);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
@@ -136,56 +135,57 @@ export default function BusinessDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = businessId ? isFavorite(businessId) : false;
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!businessId) {
+      setBusiness(null);
+      setReviews([]);
+      setSimilarBusinesses([]);
+      setError(null);
       setIsLoading(false);
       return;
     }
-    let isMounted = true;
-    const loadData = async () => {
-      if (!initialBusiness) {
-        setIsLoading(true);
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const [fetchedBiz, fetchedReviews] = await Promise.all([
+        directoryService.getListingById(businessId, { allowSyncFallback: false }),
+        directoryService.getListingReviews(businessId),
+      ]);
+
+      setBusiness(fetchedBiz);
+      setReviews(fetchedReviews ?? []);
+
+      if (fetchedBiz) {
+        try {
+          const similarRes = await directoryService.getListings({
+            category: fetchedBiz.category,
+            limit: 5,
+          });
+
+          setSimilarBusinesses(
+            similarRes?.data?.filter((b) => b.id !== fetchedBiz.id).slice(0, 4) ?? []
+          );
+        } catch {
+          setSimilarBusinesses([]);
+        }
+      } else {
+        setSimilarBusinesses([]);
       }
-      setError(null);
-      try {
-        const [fetchedBiz, fetchedReviews] = await Promise.all([
-          directoryService.getListingById(businessId),
-          directoryService.getListingReviews(businessId),
-        ]);
-        if (isMounted) {
-          if (fetchedBiz) {
-            setBusiness(fetchedBiz);
-            try {
-              const similarRes = await directoryService.getListings({
-                category: fetchedBiz.category,
-                limit: 5,
-              });
-              if (isMounted && similarRes?.data) {
-                setSimilarBusinesses(
-                  similarRes.data.filter((b) => b.id !== fetchedBiz.id).slice(0, 4)
-                );
-              }
-            } catch {
-              // ignore similar fetch error
-            }
-          }
-          if (fetchedReviews) setReviews(fetchedReviews);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : "Failed to load business details");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-    loadData();
-    return () => {
-      isMounted = false;
-    };
-  }, [businessId, initialBusiness]);
+    } catch (err) {
+      setBusiness(null);
+      setReviews([]);
+      setSimilarBusinesses([]);
+      setError(err instanceof Error ? err.message : "Failed to load business details");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [businessId]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const reviewStats = useMemo(() => {
     if (!reviews.length) {
@@ -219,7 +219,11 @@ export default function BusinessDetailPage() {
       <>
         <Navbar />
         <div className="min-h-[60vh] bg-background-50 flex items-center justify-center p-6">
-          <ErrorState message={error} onRetry={() => window.location.reload()} />
+          <ErrorState
+            title="Unable to load business details"
+            message={error}
+            onRetry={loadData}
+          />
         </div>
         <Footer />
       </>

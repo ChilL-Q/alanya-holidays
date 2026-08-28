@@ -19,7 +19,7 @@ export interface GuideContent {
 export const guideContents: Record<string, GuideContent> = {
   "Alanya First-Timer's Guide": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/home/alanya_castle.webp",
     sections: [
       {
         heading: "Getting to Alanya",
@@ -90,7 +90,7 @@ Grab lunch at a harbor-side fish restaurant (the grilled sea bass is reliably ex
   },
   "The Ultimate Food Lover's Alanya": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/home/turkish_cuisine.webp",
     sections: [
       {
         heading: "Turkish Breakfast: The Non-Negotiable Start",
@@ -142,7 +142,7 @@ Rooftop 42 near the Red Tower does Mediterranean fusion with a killer cocktail p
   },
   "Best Day Trips from Alanya": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/home/dim_river.webp",
     sections: [
       {
         heading: "Side: Ancient Ruins Meet the Sea",
@@ -194,7 +194,7 @@ The canyon is managed (small entrance fee, well-maintained paths) so it feels ac
   },
   "Moving to Alanya: Expat Guide": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/categories/accommodations.webp",
     sections: [
       {
         heading: "Visas and Residence Permits",
@@ -258,7 +258,7 @@ Most landlords want 3-6 months upfront for short-term, or a full year contract. 
   },
   "Alanya Beach Guide": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/home/cleopatra_beach.webp",
     sections: [
       {
         heading: "Cleopatra Beach: The Main Event",
@@ -325,7 +325,7 @@ The western end (near Damlataş Cave) is busier and better for families; the eas
   },
   "Alanya Nightlife: Where to Go": {
     heroImage:
-      "/images/placeholder-business.svg",
+      "/images/alanya-bazaar-hero.webp",
     sections: [
       {
         heading: "Rooftop Bars: The Golden Hour Circuit",

@@ -146,6 +146,68 @@ describe('DirectoryRepository', () => {
     });
   });
 
+  describe('claim verification token persistence', () => {
+    it('persists a hash and selects no token columns when creating a claim', async () => {
+      const storedClaim = {
+        id: 'claim-1',
+        listing_id: validUuid,
+        verification_token_hash: undefined,
+      };
+      mockSupabaseClient.single.mockResolvedValueOnce({
+        data: storedClaim,
+        error: null,
+      });
+
+      await repository.insertListingClaim({
+        listing_id: validUuid,
+        verification_token_hash: 'a'.repeat(64),
+      });
+
+      expect(mockSupabaseClient.insert).toHaveBeenCalledWith({
+        listing_id: validUuid,
+        verification_token_hash: 'a'.repeat(64),
+      });
+      const selectProjection = mockSupabaseClient.select.mock
+        .calls[0][0] as string;
+      expect(selectProjection).not.toContain('verification_token');
+    });
+
+    it('hashes the raw token before invoking the backend-only RPC', async () => {
+      mockSupabaseClient.rpc.mockResolvedValueOnce({
+        data: [
+          {
+            claim_id: 'claim-1',
+            listing_id: validUuid,
+            business_name: 'Safe Business',
+            claimant_email: 'owner@example.com',
+          },
+        ],
+        error: null,
+      });
+
+      await repository.verifyClaimEmail('A'.repeat(43));
+
+      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith(
+        'verify_claim_email',
+        {
+          p_token_hash:
+            '0f007385b6f9d4b7eeb2748605afe1a984a0a3bfa3f014d09e2a784ce9e5cd1a',
+        },
+      );
+    });
+
+    it('does not disguise RPC infrastructure failures as invalid tokens', async () => {
+      mockSupabaseClient.rpc.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'database connection details' },
+      });
+
+      await expect(repository.verifyClaimEmail('A'.repeat(43))).rejects.toThrow(
+        'Claim verification unavailable',
+      );
+    });
+  });
+
   describe('getListingClaimById', () => {
     it('should return null immediately for non-UUID id', async () => {
       const res = await repository.getListingClaimById('non-uuid');
@@ -261,6 +323,43 @@ describe('DirectoryRepository', () => {
       });
       expect(res).toBeNull();
       expect(mockSupabaseClient.from).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('admin pagination ranges', () => {
+    it('applies inclusive ranges to listings, status and pending queries', async () => {
+      mockSupabaseClient.range.mockResolvedValue({ data: [], error: null });
+
+      await repository.getDirectoryListingsAdmin({}, 3, 10);
+      await repository.getDirectoryListingsByStatus(
+        'approved',
+        undefined,
+        2,
+        25,
+      );
+      await repository.getPendingDirectoryListings(4, 5);
+
+      expect(mockSupabaseClient.range).toHaveBeenNthCalledWith(1, 20, 29);
+      expect(mockSupabaseClient.range).toHaveBeenNthCalledWith(2, 25, 49);
+      expect(mockSupabaseClient.range).toHaveBeenNthCalledWith(3, 15, 19);
+    });
+
+    it('uses the same range for enriched and fallback claim queries', async () => {
+      mockSupabaseClient.range
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'relationship unavailable' },
+        })
+        .mockResolvedValueOnce({
+          data: [{ id: 'claim-1' }],
+          error: null,
+        });
+
+      const result = await repository.getListingClaims(2, 15);
+
+      expect(mockSupabaseClient.range).toHaveBeenNthCalledWith(1, 15, 29);
+      expect(mockSupabaseClient.range).toHaveBeenNthCalledWith(2, 15, 29);
+      expect(result).toEqual([{ id: 'claim-1' }]);
     });
   });
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import { conciergeService } from "@/api-services/concierge.service";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
 
@@ -71,10 +72,9 @@ export default function LuxuryExperiencePage() {
       <Navbar />
       <main>
         <section className="relative w-full h-[320px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="luxuryExperience"
             alt="Luxury Experiences in Alanya"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/45 via-foreground-950/20 to-foreground-950/70"></div>
 

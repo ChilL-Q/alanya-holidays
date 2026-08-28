@@ -34,7 +34,7 @@ export default function EventSearch({ query, onQueryChange }: EventSearchProps) 
           type="text"
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search by title, location, or host..."
+          placeholder="Search by title, category, description, location, or host..."
           className="w-full pl-10 pr-10 py-2.5 bg-white border border-background-200 rounded-full text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-all"
         />
         {query ? (

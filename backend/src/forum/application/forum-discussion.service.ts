@@ -86,7 +86,9 @@ export class ForumDiscussionService {
       new Set(
         posts
           .filter(
-            (p) => p.category?.parent_id && p.category.parent === undefined,
+            (p) =>
+              p.category?.parent_id &&
+              (!p.category.parent || !('name' in p.category.parent)),
           )
           .map((p) => String(p.category?.parent_id)),
       ),
@@ -99,7 +101,10 @@ export class ForumDiscussionService {
       (data || []).map((c) => [String(c.id), c]),
     );
     for (const p of posts) {
-      if (p.category?.parent_id && p.category.parent === undefined)
+      if (
+        p.category?.parent_id &&
+        (!p.category.parent || !('name' in p.category.parent))
+      )
         p.category.parent = map.get(String(p.category.parent_id)) || null;
     }
   }
@@ -164,8 +169,14 @@ export class ForumDiscussionService {
       });
   }
 
-  async getForumCategory(slug: string): Promise<ForumCategory | null> {
-    const category = await this.forumRepository.getCategoryBySlug(slug);
+  async getForumCategory(slugOrId: string): Promise<ForumCategory | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        slugOrId,
+      );
+    const category = isUuid
+      ? await this.forumRepository.getCategoryById(slugOrId)
+      : await this.forumRepository.getCategoryBySlug(slugOrId);
     if (!category) return null;
 
     const counts = await this.postCountsByCategory();
@@ -267,9 +278,13 @@ export class ForumDiscussionService {
     let categoryIds: string[] | undefined = undefined;
 
     if (filters.categorySlug) {
-      const cat = await this.forumRepository.getCategoryBySlug(
-        filters.categorySlug,
-      );
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          filters.categorySlug,
+        );
+      const cat = isUuid
+        ? await this.forumRepository.getCategoryById(filters.categorySlug)
+        : await this.forumRepository.getCategoryBySlug(filters.categorySlug);
       if (!cat) return { data: [], total: 0 };
       if (cat.parent_id) {
         categoryIds = [cat.id];
@@ -313,9 +328,27 @@ export class ForumDiscussionService {
     return hot;
   }
 
-  async getForumPost(slug: string, userId?: string): Promise<ForumPost | null> {
-    const data = await this.forumRepository.getPostBySlug(slug);
+  async getForumPost(
+    slugOrId: string,
+    userId?: string,
+  ): Promise<ForumPost | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        slugOrId,
+      );
+    const data = isUuid
+      ? await this.forumRepository.getPostById(slugOrId)
+      : await this.forumRepository.getPostBySlug(slugOrId);
     if (!data) return null;
+
+    if (data.is_removed) {
+      const role = userId
+        ? await this.userRolesRepo?.getRole(userId)
+        : undefined;
+      if (role !== 'admin' && data.author_id !== userId) {
+        return null;
+      }
+    }
 
     const [annotated] = await this.annotateLikes(
       [data],
@@ -360,6 +393,29 @@ export class ForumDiscussionService {
         );
         resolvedCategoryId = cat ? cat.id : null;
       }
+
+      if (input.subcategory && resolvedCategoryId) {
+        const isSubUuid =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            input.subcategory,
+          );
+        if (isSubUuid) {
+          resolvedCategoryId = input.subcategory;
+        } else {
+          const childCategories =
+            await this.forumRepository.getChildCategories(resolvedCategoryId);
+          const subName = input.subcategory.trim().toLowerCase();
+          const matchedChild = childCategories?.find(
+            (c) =>
+              c.id === input.subcategory ||
+              c.slug.toLowerCase() === subName ||
+              c.name.toLowerCase() === subName,
+          );
+          if (matchedChild) {
+            resolvedCategoryId = matchedChild.id;
+          }
+        }
+      }
     }
 
     const uniqueSlug = await this.resolveSlug(slugify(input.title));
@@ -369,6 +425,7 @@ export class ForumDiscussionService {
       body: input.body ?? input.content ?? '',
       content: input.content ?? input.body ?? '',
       category_id: resolvedCategoryId,
+      image_url: input.image_url || null,
       author_id: userId,
       post_type: postType,
     });
@@ -391,6 +448,8 @@ export class ForumDiscussionService {
     if (updates.title !== undefined) safe.title = updates.title;
     if (updates.body !== undefined) safe.body = updates.body;
     if (updates.content !== undefined) safe.content = updates.content;
+    if (updates.image_url !== undefined)
+      safe.image_url = updates.image_url || null;
     if (updates.category_id !== undefined) {
       if (updates.category_id) {
         const isUuid =
@@ -404,6 +463,29 @@ export class ForumDiscussionService {
             updates.category_id,
           );
           safe.category_id = cat ? cat.id : null;
+        }
+
+        if (updates.subcategory && safe.category_id) {
+          const isSubUuid =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+              updates.subcategory,
+            );
+          if (isSubUuid) {
+            safe.category_id = updates.subcategory;
+          } else {
+            const childCategories =
+              await this.forumRepository.getChildCategories(safe.category_id);
+            const subName = updates.subcategory.trim().toLowerCase();
+            const matchedChild = childCategories?.find(
+              (c) =>
+                c.id === updates.subcategory ||
+                c.slug.toLowerCase() === subName ||
+                c.name.toLowerCase() === subName,
+            );
+            if (matchedChild) {
+              safe.category_id = matchedChild.id;
+            }
+          }
         }
       } else {
         safe.category_id = null;
@@ -472,7 +554,9 @@ export class ForumDiscussionService {
   ): Promise<ForumComment[]> {
     const data = await this.forumRepository.getComments(
       postId,
-      !!options?.includeRemoved,
+      !!options.includeRemoved,
+      options.limit ?? 20,
+      options.offset ?? 0,
     );
     return this.annotateLikes(
       data,

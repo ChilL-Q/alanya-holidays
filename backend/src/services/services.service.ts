@@ -2,6 +2,7 @@ import {
   Injectable,
   Inject,
   UnauthorizedException,
+  ForbiddenException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -358,7 +359,9 @@ export class ServicesService {
 
   async getServiceEditsByService(
     serviceId: string,
+    userId: string,
   ): Promise<Record<string, unknown>[]> {
+    await this.assertCanReadServiceEdits(serviceId, userId);
     return this.servicesRepository.getServiceEditsByService(serviceId);
   }
 
@@ -366,11 +369,31 @@ export class ServicesService {
     return this.servicesRepository.getMyPendingEdits(userId);
   }
 
-  async getServiceEdit(editId: string): Promise<Record<string, unknown>> {
+  async getServiceEdit(
+    editId: string,
+    userId: string,
+  ): Promise<Record<string, unknown>> {
     const { data, error } =
       await this.servicesRepository.getServiceEditById(editId);
     if (error || !data) throw new NotFoundException('Service edit not found');
+
+    const serviceId =
+      typeof data.service_id === 'string' ? data.service_id : undefined;
+    if (!serviceId) throw new ForbiddenException('Access denied');
+
+    await this.assertCanReadServiceEdits(serviceId, userId);
     return data;
+  }
+
+  private async assertCanReadServiceEdits(serviceId: string, userId: string) {
+    const ownership =
+      await this.servicesRepository.getServiceOwnershipInfo(serviceId);
+    if (!ownership) throw new ForbiddenException('Access denied');
+
+    const role = await this.userRolesRepo.getRole(userId);
+    if (ownership.provider_id !== userId && role !== 'admin') {
+      throw new ForbiddenException('Access denied');
+    }
   }
 
   async deleteServiceEdit(

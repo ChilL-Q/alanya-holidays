@@ -72,8 +72,13 @@ export default function TrendingThreads() {
                   {/* Card Image */}
                   <div className="relative h-40 overflow-hidden">
                     <img
-                      src="/images/placeholder-business.svg"
-                      alt="Thread"
+                      src={
+                        thread.imageUrl ||
+                        thread.categoryImageUrl ||
+                        "/images/placeholder-business.svg"
+                      }
+                      alt=""
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>

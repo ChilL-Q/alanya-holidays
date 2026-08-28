@@ -165,13 +165,11 @@ describe("events.service", () => {
 
       const payload = {
         title: "Sunset Kayak Meetup",
-        category: "Sports Activities",
+        categoryId: "events-sports",
         eventDate: "2026-07-10",
         eventTime: "17:00",
         location: "Cleopatra Beach",
         description: "Kayaking along Cleopatra Beach at dusk.",
-        maxAttendees: 20,
-        hostName: "Captain Jack",
       };
 
       const result = await createEvent(payload);
@@ -179,9 +177,31 @@ describe("events.service", () => {
         title: "Sunset Kayak Meetup",
         location: "Cleopatra Beach",
         description: "Kayaking along Cleopatra Beach at dusk.",
+        category_id: "events-sports",
       }));
       expect(result).not.toBeNull();
       expect(result.title).toBe("Sunset Kayak Meetup");
+    });
+
+    it("should slugify category label when only display category is provided", async () => {
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
+        id: "ev-new-2",
+        title: "Beach Coding Session",
+        event_date: "2026-08-05T09:00:00Z",
+      });
+
+      await createEvent({
+        title: "Beach Coding Session",
+        category: "Digital Nomad Events",
+        eventDate: "2026-08-05",
+        eventTime: "09:00",
+        location: "Cleopatra Beach",
+        description: "Bring your laptop and join a casual coworking meetup by the sea.",
+      });
+
+      expect(apiClient.post).toHaveBeenCalledWith("/forum/events", expect.objectContaining({
+        category_id: "digital-nomad-events",
+      }));
     });
 
     it("should throw ApiError when createEvent API fails", async () => {

@@ -57,11 +57,11 @@ export default function LanguageSwitcher({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label="Language selector"
+        aria-label={`Language selector: ${currentLang.shortLabel} (${currentLang.label})`}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none ${
           isSolidNav
             ? "bg-background-100/80 hover:bg-background-200/90 text-foreground-800 border border-background-200"
-            : "bg-white/15 hover:bg-white/25 text-white border border-white/20"
+            : "bg-white/25 backdrop-blur-sm hover:bg-white/35 text-white border border-white/20"
         }`}
       >
         <span className="text-sm">{currentLang.flag}</span>

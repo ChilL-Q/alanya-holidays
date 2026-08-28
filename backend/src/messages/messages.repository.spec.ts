@@ -29,6 +29,43 @@ describe('MessagesRepository - getLastMessagesAndUnreadCounts', () => {
     repository = module.get<MessagesRepository>(MessagesRepository);
   });
 
+  it('applies an inclusive range to user conversations', async () => {
+    const range = jest.fn().mockResolvedValue({ data: [], error: null });
+    const orderedQuery = { order: jest.fn(), range };
+    orderedQuery.order.mockReturnValue(orderedQuery);
+    const or = jest.fn().mockReturnValue(orderedQuery);
+    const select = jest.fn().mockReturnValue({ or });
+    mockFrom.mockReturnValue({ select });
+
+    await repository.findUserConversations('user-1', 20, 40);
+
+    expect(mockFrom).toHaveBeenCalledWith('chat_conversations');
+    expect(or).toHaveBeenCalledWith('guest_id.eq.user-1,host_id.eq.user-1');
+    expect(orderedQuery.order.mock.calls).toEqual([
+      ['updated_at', { ascending: false }],
+      ['id', { ascending: false }],
+    ]);
+    expect(range).toHaveBeenCalledWith(40, 59);
+  });
+
+  it('applies an inclusive range to conversation messages', async () => {
+    const range = jest.fn().mockResolvedValue({ data: [], error: null });
+    const orderedQuery = { order: jest.fn(), range };
+    orderedQuery.order.mockReturnValue(orderedQuery);
+    const eq = jest.fn().mockReturnValue(orderedQuery);
+    const select = jest.fn().mockReturnValue({ eq });
+    mockFrom.mockReturnValue({ select });
+
+    await repository.findMessagesByConversationId('conv-1', 10, 5);
+
+    expect(eq).toHaveBeenCalledWith('conversation_id', 'conv-1');
+    expect(orderedQuery.order.mock.calls).toEqual([
+      ['created_at', { ascending: true }],
+      ['id', { ascending: true }],
+    ]);
+    expect(range).toHaveBeenCalledWith(5, 14);
+  });
+
   it('should return empty object if conversationIds is empty', async () => {
     const result = await repository.getLastMessagesAndUnreadCounts([], 'u1');
     expect(result).toEqual({});

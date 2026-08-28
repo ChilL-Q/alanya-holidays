@@ -1,60 +1,56 @@
 import { test, expect } from '@playwright/test';
 import { seedAuthSession, mockSupabaseRest, mockBlogData } from './utils/mock-utils';
 
-test.describe('Blog Submission Flow', () => {
-  test('should redirect unauthenticated user away from blog/submit', async ({ page }) => {
+test.describe('Blog flow', () => {
+  test('redirects an unauthenticated user from the submission page', async ({ page }) => {
     await page.goto('/blog/submit');
-    await page.waitForLoadState('networkidle');
-    // AuthRoute redirects to home "/"
-    await expect(page).toHaveURL('/');
+
+    await expect(page).toHaveURL('/login');
   });
 
-  test('should load blog/submit page when authenticated', async ({ page }) => {
+  test('submits a complete blog post for review', async ({ page }) => {
     await seedAuthSession(page);
     await mockSupabaseRest(page);
     await mockBlogData(page);
-
-    // Mock the blog_submissions insert
-    await page.route('**/rest/v1/blog_submissions**', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 201,
-          body: JSON.stringify([{ id: 'sub-1' }]),
-          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-        });
-      } else {
-        await route.fulfill({
-          status: 200,
-          body: JSON.stringify([]),
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    });
-
     await page.goto('/blog/submit');
-    await page.waitForLoadState('networkidle');
 
-    // Stays on the submit page (not redirected)
-    await expect(page).toHaveURL('/blog/submit');
-    // Form is rendered
-    await expect(page.locator('body')).toContainText(/submit|title|article|blog/i);
+    await expect(page.getByRole('heading', { name: 'Submit Blog Post' })).toBeVisible();
+    await page.getByPlaceholder('e.g., Hidden Gems in Alanya Old Town').fill('A Local Guide to Alanya');
+    await page
+      .getByPlaceholder('Write your blog post content here. Share your experiences, tips, and recommendations...')
+      .fill('A detailed local guide with practical recommendations for first-time visitors.');
+
+    const submissionRequest = page.waitForRequest(
+      (request) => request.method() === 'POST' && request.url().includes('/api/blog/submissions'),
+    );
+    await page.getByRole('button', { name: 'Submit Post' }).click();
+
+    const request = await submissionRequest;
+    expect(request.postDataJSON()).toMatchObject({
+      title: 'A Local Guide to Alanya',
+      content: 'A detailed local guide with practical recommendations for first-time visitors.',
+      category: 'Guides',
+      tags: [],
+    });
+    await expect(page.getByRole('heading', { name: 'Post Submitted for Review!' })).toBeVisible();
   });
 
-  test('should view blog listing page', async ({ page }) => {
+  test('renders the mocked post in the blog listing', async ({ page }) => {
     await mockBlogData(page);
-
     await page.goto('/blog');
-    await page.waitForLoadState('networkidle');
 
-    await expect(page).toHaveURL('/blog');
-    await expect(page.locator('body')).toContainText(/blog|article|alanya/i);
+    await expect(page.getByRole('heading', { name: 'Travel Blog' })).toBeVisible();
+    const postLink = page.getByRole('link', { name: /Top Places in Alanya/ });
+    await expect(postLink).toBeVisible();
+    await expect(postLink).toContainText('Discover the best spots in Alanya.');
   });
 
-  test('should open blog post by direct slug', async ({ page }) => {
+  test('opens a blog post by slug and renders its content', async ({ page }) => {
     await mockBlogData(page);
     await page.goto('/blog/top-places-alanya');
-    await page.waitForLoadState('networkidle');
-    // Page renders (even if post not found, the SPA route resolves)
-    await expect(page).toHaveURL('/blog/top-places-alanya');
+
+    await expect(page.getByRole('heading', { name: 'Top Places in Alanya', level: 1 })).toBeVisible();
+    await expect(page.getByText('Alanya is a beautiful city.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Post Not Found' })).not.toBeVisible();
   });
 });

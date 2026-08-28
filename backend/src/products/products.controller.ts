@@ -13,18 +13,30 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductDraftsService } from './product-drafts.service';
-import type { Product, ProductVariant } from './products.service';
+
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { GetShopCatalogQueryDto } from './dto/get-shop-catalog-query.dto';
 import {
+  ProductPaginationQueryDto,
+  ProductVariantsQueryDto,
+} from './dto/product-pagination-query.dto';
+import {
   CreateSellerProductDto,
   UpdateSellerProductDto,
 } from './dto/seller-product.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { LimitQueryDto } from '../common/dto/pagination.dto';
+import {
+  CreateProductDto,
+  CreateProductVariantDto,
+  PublishProductDraftDto,
+  SaveProductDraftDto,
+  UpdateProductDto,
+  UpdateProductVariantDto,
+} from './dto/product-write.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -117,20 +129,17 @@ export class ProductsController {
   // --- Products Endpoints ---
 
   @Get()
-  async getProducts(@Query('category') category?: string) {
-    return this.productsService.getProducts(category);
+  async getProducts(@Query() query: ProductPaginationQueryDto) {
+    return this.productsService.getProducts(
+      query.category,
+      query.page ?? 1,
+      query.limit ?? 20,
+    );
   }
 
   @Get('featured')
-  async getFeaturedProducts(@Query() query?: LimitQueryDto | string) {
-    let limit = 8;
-    if (typeof query === 'string') {
-      const parsed = Number.parseInt(query, 10);
-      limit = Number.isNaN(parsed) ? 8 : parsed;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 8;
-    }
-    return this.productsService.getFeaturedProducts(limit);
+  async getFeaturedProducts(@Query() query?: LimitQueryDto) {
+    return this.productsService.getFeaturedProducts(query?.limit ?? 8);
   }
 
   @Get(':id')
@@ -140,14 +149,17 @@ export class ProductsController {
 
   @Post()
   @UseGuards(AuthGuard)
-  async createProduct(@Body() data: Product, @CurrentUser() user: AuthUser) {
+  async createProduct(
+    @Body() data: CreateProductDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.productsService.createProduct(data, user.id);
   }
 
   @Post('draft')
   @UseGuards(AuthGuard)
   async saveProductDraft(
-    @Body() data: Partial<Product> & { draftId?: string },
+    @Body() data: SaveProductDraftDto,
     @CurrentUser() user: AuthUser,
   ): Promise<{ id: string }> {
     return this.productDraftsService.saveProductDraft(data, user.id);
@@ -157,7 +169,7 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   async publishProductDraft(
     @Param('id') id: string,
-    @Body() updates: Partial<Product>,
+    @Body() updates: PublishProductDraftDto,
     @CurrentUser() user: AuthUser,
   ): Promise<{ success: boolean }> {
     return this.productDraftsService.publishProductDraft(id, updates, user.id);
@@ -167,7 +179,7 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   async updateProduct(
     @Param('id') id: string,
-    @Body() updates: Partial<Product>,
+    @Body() updates: UpdateProductDto,
     @CurrentUser() user: AuthUser,
   ) {
     return this.productsService.updateProduct(id, updates, user.id);
@@ -182,15 +194,22 @@ export class ProductsController {
   // --- Variants Endpoints ---
 
   @Get(':id/variants')
-  async getProductVariants(@Param('id') id: string) {
-    return this.productsService.getProductVariants(id);
+  async getProductVariants(
+    @Param('id') id: string,
+    @Query() query: ProductVariantsQueryDto,
+  ) {
+    return this.productsService.getProductVariants(
+      id,
+      query.page ?? 1,
+      query.limit ?? 20,
+    );
   }
 
   @Post(':id/variants')
   @UseGuards(AuthGuard)
   async createProductVariant(
     @Param('id') id: string,
-    @Body() data: Omit<ProductVariant, 'id' | 'product_id' | 'created_at'>,
+    @Body() data: CreateProductVariantDto,
     @CurrentUser() user: AuthUser,
   ) {
     return this.productsService.createProductVariant(id, data, user.id);
@@ -200,7 +219,7 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   async updateProductVariant(
     @Param('variantId') variantId: string,
-    @Body() updates: Partial<ProductVariant>,
+    @Body() updates: UpdateProductVariantDto,
     @CurrentUser() user: AuthUser,
   ) {
     return this.productsService.updateProductVariant(

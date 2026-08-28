@@ -86,23 +86,11 @@ test.describe('Authentication Flow', () => {
     expect(isOnRegisterOrConfirm).toBeTruthy();
   });
 
-  test('should protect private routes and redirect to home if not logged in', async ({ page }) => {
+  test('should redirect a guest from the admin dashboard to login', async ({ page }) => {
     await mockAllSupabaseRequests(page);
 
-    // Ensure no session
-    await page.route('**/auth/v1/session', async (route) => {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify({ data: { session: null }, error: null }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    });
+    await page.goto('/admin');
 
-    await page.goto('/inbox');
-
-    // Should be redirected or show access denied
-    // Based on current app behavior, it might just stay on the page but with empty content or redirect.
-    // Let's just verify we can at least load the page without crashing.
-    await expect(page).toHaveURL(/\/|inbox/);
+    await expect(page).toHaveURL('/login');
   });
 });

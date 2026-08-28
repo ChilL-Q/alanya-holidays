@@ -21,6 +21,12 @@ import {
   UpdateSellerProductDto,
 } from './dto/seller-product.dto';
 import type { SellerOrderStatus } from './dto/update-order-status.dto';
+import {
+  CreateProductDto,
+  CreateProductVariantDto,
+  UpdateProductDto,
+  UpdateProductVariantDto,
+} from './dto/product-write.dto';
 import { Money } from '../common/domain/value-objects/money.vo';
 
 export interface Product {
@@ -70,14 +76,26 @@ export class ProductsService {
     private readonly userRolesRepo: UserRolesRepository,
   ) {}
 
-  async createProduct(data: Product, requestUserId: string) {
-    const insertData = { ...data, seller_id: requestUserId };
+  async createProduct(data: CreateProductDto, requestUserId: string) {
+    const insertData = {
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      stock: data.stock,
+      category: data.category,
+      images: data.images,
+      seller_id: requestUserId,
+    };
     const product = await this.productsRepository.insertProduct(insertData);
     return product as Product;
   }
 
-  async getProducts(category?: string) {
-    const data = await this.productsRepository.getProducts(category);
+  async getProducts(category?: string, page = 1, limit = 20) {
+    const data = await this.productsRepository.getProducts(
+      category,
+      page,
+      limit,
+    );
     return data as Product[];
   }
 
@@ -110,13 +128,25 @@ export class ProductsService {
 
   async updateProduct(
     id: string,
-    updates: Partial<Product>,
+    updates: UpdateProductDto,
     requestUserId: string,
   ) {
     await this.checkOwnership(id, requestUserId);
-    const { seller_id: _seller_id, ...safeUpdates } = updates;
+    const safeUpdates = this.mapProductUpdates(updates);
     await this.productsRepository.updateProduct(id, safeUpdates);
     return { success: true };
+  }
+
+  private mapProductUpdates(updates: UpdateProductDto) {
+    const payload: Record<string, unknown> = {};
+    if (updates.title !== undefined) payload.title = updates.title;
+    if (updates.description !== undefined)
+      payload.description = updates.description;
+    if (updates.price !== undefined) payload.price = updates.price;
+    if (updates.stock !== undefined) payload.stock = updates.stock;
+    if (updates.category !== undefined) payload.category = updates.category;
+    if (updates.images !== undefined) payload.images = updates.images;
+    return payload;
   }
 
   async deleteProduct(id: string, requestUserId: string) {
@@ -126,19 +156,26 @@ export class ProductsService {
   }
 
   // Variants
-  async getProductVariants(productId: string) {
-    const data = await this.productsRepository.getProductVariants(productId);
+  async getProductVariants(productId: string, page = 1, limit = 20) {
+    const data = await this.productsRepository.getProductVariants(
+      productId,
+      page,
+      limit,
+    );
     return data as ProductVariant[];
   }
 
   async createProductVariant(
     productId: string,
-    data: Omit<ProductVariant, 'id' | 'product_id' | 'created_at'>,
+    data: CreateProductVariantDto,
     requestUserId: string,
   ) {
     await this.checkOwnership(productId, requestUserId);
     const variant = await this.productsRepository.insertProductVariant({
-      ...data,
+      size_label: data.size_label,
+      price: data.price,
+      stock: data.stock,
+      sku: data.sku ?? null,
       product_id: productId,
     });
     return variant as ProductVariant;
@@ -146,7 +183,7 @@ export class ProductsService {
 
   async updateProductVariant(
     variantId: string,
-    updates: Partial<ProductVariant>,
+    updates: UpdateProductVariantDto,
     requestUserId: string,
   ) {
     const productId =
@@ -155,12 +192,12 @@ export class ProductsService {
 
     await this.checkOwnership(productId, requestUserId);
 
-    const {
-      id: _id,
-      product_id: _productId,
-      created_at: _createdAt,
-      ...safeUpdates
-    } = updates as Record<string, unknown>;
+    const safeUpdates: Record<string, unknown> = {};
+    if (updates.size_label !== undefined)
+      safeUpdates.size_label = updates.size_label;
+    if (updates.price !== undefined) safeUpdates.price = updates.price;
+    if (updates.stock !== undefined) safeUpdates.stock = updates.stock;
+    if (updates.sku !== undefined) safeUpdates.sku = updates.sku;
     await this.productsRepository.updateProductVariant(variantId, safeUpdates);
     return { success: true };
   }

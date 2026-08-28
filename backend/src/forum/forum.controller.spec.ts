@@ -196,10 +196,10 @@ describe('ForumController', () => {
 
     it('should delegate getHotPosts and getForumPost with and without user', async () => {
       const user: AuthUser = { id: 'usr-1' };
-      await controller.getHotPosts('12', user);
+      await controller.getHotPosts({ limit: 12 }, user);
       expect(mockService.getHotPosts).toHaveBeenCalledWith(12, 'usr-1');
 
-      await controller.getHotPosts('12', undefined);
+      await controller.getHotPosts({ limit: 12 }, undefined);
       expect(mockService.getHotPosts).toHaveBeenCalledWith(12, undefined);
 
       await controller.getForumPost('my-post-slug', user);
@@ -325,10 +325,14 @@ describe('ForumController', () => {
   describe('Comments routes', () => {
     it('should delegate getForumComments and createForumComment', async () => {
       const user: AuthUser = { id: 'usr-1' };
-      await controller.getForumComments('p-1', { includeRemoved: true }, user);
+      await controller.getForumComments(
+        'p-1',
+        { includeRemoved: true, limit: 10, offset: 20 },
+        user,
+      );
       expect(mockService.getForumComments).toHaveBeenCalledWith(
         'p-1',
-        { includeRemoved: true },
+        { includeRemoved: true, limit: 10, offset: 20 },
         'usr-1',
       );
 
@@ -339,7 +343,7 @@ describe('ForumController', () => {
       );
       expect(mockService.getForumComments).toHaveBeenCalledWith(
         'p-1',
-        { includeRemoved: false },
+        { includeRemoved: false, limit: 20, offset: 0 },
         undefined,
       );
 
@@ -511,7 +515,7 @@ describe('ForumController', () => {
       await controller.getForumMembers({ limit: 6 });
       expect(mockUsersService.getForumMembers).toHaveBeenCalledWith(6, false);
 
-      await controller.getForumMembers('10', 'true');
+      await controller.getForumMembers({ limit: 10 }, 'true');
       expect(mockUsersService.getForumMembers).toHaveBeenCalledWith(10, true);
     });
 

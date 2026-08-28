@@ -60,6 +60,8 @@ describe('MessagesService', () => {
       expect(result).toEqual([]);
       expect(mockRepository.findUserConversations).toHaveBeenCalledWith(
         'user-1',
+        20,
+        0,
       );
     });
 
@@ -107,8 +109,13 @@ describe('MessagesService', () => {
         },
       });
 
-      const result = await service.getConversations('user-1');
+      const result = await service.getConversations('user-1', 10, 30);
 
+      expect(mockRepository.findUserConversations).toHaveBeenCalledWith(
+        'user-1',
+        10,
+        30,
+      );
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('conv-1');
       expect(result[0].other_user?.id).toBe('user-2');

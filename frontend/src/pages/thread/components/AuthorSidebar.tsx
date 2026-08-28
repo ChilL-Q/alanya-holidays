@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { ThreadDetail } from "@/api-services/forum.service";
 
 interface AuthorSidebarProps {
@@ -10,17 +11,38 @@ export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
       <div className="bg-background-50 rounded-xl border border-background-200/70 overflow-hidden sticky top-24">
         {/* Author card */}
         <div className="p-5 text-center">
-          <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-background-200 mb-3">
-            <img
-              src={thread.authorAvatar}
-              alt={thread.author}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-          <p className="font-heading text-sm text-foreground-900 font-semibold block">
-            {thread.author}
-          </p>
+          {thread.authorId ? (
+            <Link
+              to={`/member/${thread.authorId}`}
+              className="inline-block group cursor-pointer focus:outline-hidden"
+            >
+              <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-background-200 mb-3 ring-2 ring-transparent group-hover:ring-primary-400 transition-all">
+                <img
+                  src={thread.authorAvatar}
+                  alt={thread.author}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+              </div>
+              <p className="font-heading text-sm text-foreground-900 font-semibold block group-hover:text-primary-600 transition-colors">
+                {thread.author}
+              </p>
+            </Link>
+          ) : (
+            <div>
+              <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-background-200 mb-3">
+                <img
+                  src={thread.authorAvatar}
+                  alt={thread.author}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <p className="font-heading text-sm text-foreground-900 font-semibold block">
+                {thread.author}
+              </p>
+            </div>
+          )}
           <p className="text-xs text-foreground-500 mt-0.5">{thread.authorRole}</p>
         </div>
 
@@ -81,18 +103,6 @@ export default function AuthorSidebar({ thread }: AuthorSidebarProps) {
               </span>
             ))}
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="px-5 py-3 border-t border-background-200/70 space-y-2">
-          <button className="w-full px-3 py-2 rounded-lg bg-background-100 text-foreground-600 text-xs font-medium hover:bg-background-200/70 transition-colors flex items-center justify-center gap-1.5">
-            <i className="ri-user-follow-line"></i>
-            Follow Author
-          </button>
-          <button className="w-full px-3 py-2 rounded-lg bg-background-100 text-foreground-600 text-xs font-medium hover:bg-background-200/70 transition-colors flex items-center justify-center gap-1.5">
-            <i className="ri-message-2-line"></i>
-            Message
-          </button>
         </div>
       </div>
     </aside>

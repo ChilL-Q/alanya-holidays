@@ -35,6 +35,58 @@ describe('BookingsRepository - transitionStatus Atomic RPC', () => {
     repository = module.get<BookingsRepository>(BookingsRepository);
   });
 
+  it('ranges user bookings before enriching the selected rows', async () => {
+    const range = jest.fn().mockResolvedValue({
+      data: [
+        {
+          id: 'b-21',
+          user_id: 'user-1',
+          item_id: 'property-1',
+          item_type: 'property',
+        },
+      ],
+      error: null,
+    });
+    const orderedQuery = { order: jest.fn(), range };
+    orderedQuery.order.mockReturnValue(orderedQuery);
+    const eq = jest.fn().mockReturnValue(orderedQuery);
+    const bookingSelect = jest.fn().mockReturnValue({ eq });
+    const propertyIn = jest.fn().mockResolvedValue({
+      data: [{ id: 'property-1', title: 'Ranged villa' }],
+    });
+    const serviceIn = jest.fn().mockResolvedValue({ data: [] });
+    const profileIn = jest.fn().mockResolvedValue({
+      data: [{ id: 'user-1', full_name: 'Guest' }],
+    });
+
+    mockClient.from.mockImplementation((table: string) => {
+      if (table === 'bookings') return { select: bookingSelect };
+      if (table === 'properties') {
+        return { select: jest.fn().mockReturnValue({ in: propertyIn }) };
+      }
+      if (table === 'services') {
+        return { select: jest.fn().mockReturnValue({ in: serviceIn }) };
+      }
+      return { select: jest.fn().mockReturnValue({ in: profileIn }) };
+    });
+
+    const result = await repository.getUserBookings('user-1', 10, 20);
+
+    expect(orderedQuery.order.mock.calls).toEqual([
+      ['check_in', { ascending: true }],
+      ['id', { ascending: true }],
+    ]);
+    expect(range).toHaveBeenCalledWith(20, 29);
+    expect(propertyIn).toHaveBeenCalledWith('id', ['property-1']);
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 'b-21',
+        itemTitle: 'Ranged villa',
+        property: expect.objectContaining({ id: 'property-1' }),
+      }),
+    ]);
+  });
+
   it('should successfully transition status and return structured result', async () => {
     mockRpc.mockResolvedValueOnce({
       data: {

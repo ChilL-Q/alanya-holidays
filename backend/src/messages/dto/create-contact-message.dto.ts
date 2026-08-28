@@ -1,8 +1,10 @@
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
 } from 'class-validator';
 
@@ -12,6 +14,9 @@ export class CreateContactMessageDto {
   @MaxLength(200)
   name!: string;
 
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(320)
@@ -32,8 +37,12 @@ export class CreateContactMessageDto {
   @MaxLength(100)
   visa_type?: string;
 
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @IsOptional()
   @MaxLength(50)
+  @Matches(/^\+?[0-9()\-\s]{7,50}$/)
   phone?: string;
 }

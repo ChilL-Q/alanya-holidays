@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type ForumStats } from "@/api-services/forum.service";
 
+import PageHeroImage from "@/components/base/PageHeroImage";
+
 export default function MemberHero() {
   const [stats, setStats] = useState<ForumStats | null>(null);
 
@@ -21,10 +23,9 @@ export default function MemberHero() {
 
   return (
     <section className="relative w-full h-[280px] md:h-[340px] overflow-hidden">
-      <img
-        src="/images/placeholder-business.svg"
+      <PageHeroImage
+        page="members"
         alt="Alanya Holidays Community"
-        className="absolute inset-0 w-full h-full object-cover object-top"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/35 to-foreground-950/75"></div>
 

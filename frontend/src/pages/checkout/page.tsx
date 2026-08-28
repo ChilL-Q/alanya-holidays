@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useMemo, type FormEvent, useEffect } fro
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/hooks/useToast";
 import { Money } from "@/domain/money.vo";
@@ -179,10 +180,9 @@ export default function CheckoutPage() {
 
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-        <img
-          src="/images/placeholder-business.svg"
+        <PageHeroImage
+          page="checkout"
           alt="Checkout"
-          className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 

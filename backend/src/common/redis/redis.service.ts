@@ -10,13 +10,34 @@ import Redis from 'ioredis';
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RedisService.name);
   private client: Redis | null = null;
+  private redisConfigured = false;
   private memoryFallback = new Map<
     string,
     { value: string; expiresAt?: number }
   >();
+  private readonly rateLimitFallback = new Map<
+    string,
+    { count: number; expiresAt: number }
+  >();
+  private static readonly MAX_RATE_LIMIT_FALLBACK_KEYS = 10_000;
+  private static readonly INCREMENT_WITH_EXPIRY_SCRIPT = `
+    local count = redis.call('INCR', KEYS[1])
+    if count == 1 then
+      redis.call('EXPIRE', KEYS[1], ARGV[1])
+    end
+    return count
+  `;
 
   onModuleInit() {
-    const host = process.env.REDIS_HOST || 'localhost';
+    const host = process.env.REDIS_HOST;
+    if (!host) {
+      this.logger.log(
+        'Redis is not configured. Using in-memory cache fallback.',
+      );
+      return;
+    }
+
+    this.redisConfigured = true;
     const port = parseInt(process.env.REDIS_PORT || '6379', 10);
     const password = process.env.REDIS_PASSWORD || undefined;
 
@@ -32,19 +53,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.client.on('error', (err) => {
-        this.logger.warn(
-          `Redis connection warning: ${err.message}. Using memory fallback.`,
-        );
+        this.logger.warn(`Redis connection warning: ${err.message}`);
       });
 
-      this.client.connect().catch(() => {
+      this.client.connect().catch((err: unknown) => {
         this.logger.warn(
-          'Redis connection failed on startup. Operating in in-memory fallback mode.',
+          `Redis connection failed on startup: ${err instanceof Error ? err.message : String(err)}`,
         );
       });
-    } catch {
-      this.logger.warn(
-        'Redis initialization skipped. Operating in in-memory fallback mode.',
+    } catch (err: unknown) {
+      this.logger.error(
+        `Redis initialization failed: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
   }
@@ -89,6 +108,44 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
     const expiresAt = ttlSeconds ? Date.now() + ttlSeconds * 1000 : undefined;
     this.memoryFallback.set(key, { value, expiresAt });
+  }
+
+  async incrementWithExpiry(key: string, ttlSeconds: number): Promise<number> {
+    if (this.redisConfigured) {
+      if (!this.client || this.client.status !== 'ready') {
+        throw new Error('Redis rate-limit counter is not ready');
+      }
+
+      const count = await this.client.eval(
+        RedisService.INCREMENT_WITH_EXPIRY_SCRIPT,
+        1,
+        key,
+        ttlSeconds,
+      );
+      return Number(count);
+    }
+
+    const now = Date.now();
+    const current = this.rateLimitFallback.get(key);
+    if (current && current.expiresAt > now) {
+      current.count += 1;
+      return current.count;
+    }
+
+    if (current) this.rateLimitFallback.delete(key);
+    if (
+      !this.rateLimitFallback.has(key) &&
+      this.rateLimitFallback.size >= RedisService.MAX_RATE_LIMIT_FALLBACK_KEYS
+    ) {
+      const oldestKey = this.rateLimitFallback.keys().next().value;
+      if (oldestKey) this.rateLimitFallback.delete(oldestKey);
+    }
+
+    this.rateLimitFallback.set(key, {
+      count: 1,
+      expiresAt: now + ttlSeconds * 1000,
+    });
+    return 1;
   }
 
   async del(key: string): Promise<void> {

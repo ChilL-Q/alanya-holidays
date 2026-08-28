@@ -6,12 +6,19 @@ import { forumService, type ForumStats } from "@/api-services/forum.service";
 export default function CommunityPulse() {
   const [pulseEvents, setPulseEvents] = useState<ForumEvent[]>([]);
   const [stats, setStats] = useState<ForumStats | null>(null);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    eventsService.getEvents({ limit: 3 }).then((data) => {
-      if (mounted) setPulseEvents(data);
-    }).catch(() => {});
+    eventsService
+      .getEvents({ upcomingOnly: true, limit: 3 })
+      .then((data) => {
+        if (mounted) setPulseEvents(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (mounted) setIsLoadingEvents(false);
+      });
 
     forumService.getForumStats().then((data) => {
       if (mounted) setStats(data);
@@ -22,22 +29,20 @@ export default function CommunityPulse() {
     };
   }, []);
 
-  const activeCount = stats?.activeMembers ?? 1240;
-
   return (
     <section id="events" className="py-16 md:py-24">
       <div className="flex flex-col lg:flex-row">
         {/* Left Side - Image */}
         <div className="relative w-full lg:w-1/2 h-80 lg:h-auto lg:min-h-[600px]">
           <img
-            src="/images/placeholder-business.svg"
-            alt="Alanya Harbor"
+            src="/images/home/alanya_castle.webp"
+            alt="Alanya Castle at sunset"
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
           {/* Label */}
           <span className="absolute top-6 left-6 text-white/80 text-xs font-medium tracking-wider uppercase">
-            This Week
+            Discover what's next
           </span>
           {/* Title */}
           <div className="absolute bottom-6 left-6 right-6">
@@ -55,17 +60,43 @@ export default function CommunityPulse() {
           </h3>
 
           <p className="text-foreground-600 text-sm md:text-base leading-relaxed mb-8">
-            {activeCount.toLocaleString()} members were active this
-            week. Join the conversations, attend meetups, and be part of the
-            growing Alanya community.
+            {stats
+              ? `${stats.activeMembers.toLocaleString()} members are part of the conversation. `
+              : ""}
+            Join the conversations, attend meetups, and be part of the growing
+            Alanya community.
           </p>
 
           {/* Events List */}
-          <div className="space-y-4">
-            {pulseEvents.slice(0, 3).map((event) => (
+          <div className="space-y-4 min-h-60">
+            {isLoadingEvents && (
+              <div className="space-y-4" aria-label="Loading upcoming events">
+                {[0, 1, 2].map((item) => (
+                  <div key={item} className="flex items-center gap-4 p-3 animate-pulse">
+                    <div className="w-16 h-16 rounded-lg bg-background-200 flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/5 rounded bg-background-200" />
+                      <div className="h-3 w-3/5 rounded bg-background-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!isLoadingEvents && pulseEvents.length === 0 && (
+              <div className="min-h-60 flex items-center justify-center rounded-xl border border-dashed border-background-300 bg-background-50 px-6 text-center">
+                <div>
+                  <i className="ri-calendar-event-line text-3xl text-primary-400" />
+                  <p className="mt-3 font-heading text-foreground-900">More events are coming soon</p>
+                  <p className="mt-1 text-sm text-foreground-500">Check the events page for new community meetups.</p>
+                </div>
+              </div>
+            )}
+
+            {!isLoadingEvents && pulseEvents.slice(0, 3).map((event) => (
               <Link
                 key={event.id}
-                to="/events"
+                to={`/events?q=${encodeURIComponent(event.title)}`}
                 className="flex items-center gap-4 p-3 rounded-lg hover:bg-background-50 transition-colors group cursor-pointer"
               >
                 <img

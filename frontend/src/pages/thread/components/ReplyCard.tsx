@@ -4,6 +4,7 @@ import { sanitizeForumHtml } from "@/utils/sanitizeHtml";
 import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
 import { logger } from "@/lib/logger";
+import ReportModal from "./ReportModal";
 
 interface ReplyCardProps {
   reply: ThreadReply;
@@ -20,6 +21,7 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
   const [content, setContent] = useState(reply.content);
   const [editContent, setEditContent] = useState(reply.content);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const maxDepth = 4;
 
   useEffect(() => {
@@ -57,6 +59,16 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
   const handleCancel = () => {
     setEditContent(content);
     setIsEditing(false);
+  };
+
+  const handleReportSubmit = async (reason: string) => {
+    const success = await forumService.reportContent("comment", reply.id, reason);
+    if (success) {
+      alert("Report submitted successfully.");
+      setIsReportModalOpen(false);
+    } else {
+      alert("Failed to submit report. Please try again.");
+    }
   };
 
   return (
@@ -169,6 +181,17 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
               Reply
             </button>
           )}
+
+          {/* Report button */}
+          <button
+            type="button"
+            onClick={() => setIsReportModalOpen(true)}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-medium text-foreground-400 hover:text-rose-500 hover:bg-background-100 transition-all cursor-pointer"
+            aria-label="Report reply"
+          >
+            <i className="ri-flag-line text-xs"></i>
+            <span>Report</span>
+          </button>
         </div>
       </div>
 
@@ -208,6 +231,12 @@ export default function ReplyCard({ reply, depth = 0, onLike, onReply, onUpdate 
           )}
         </div>
       )}
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }

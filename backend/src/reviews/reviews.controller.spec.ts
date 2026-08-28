@@ -5,6 +5,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import { SubmitReviewDto } from './dto/submit-review.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 describe('ReviewsController', () => {
   let controller: ReviewsController;
@@ -55,12 +56,15 @@ describe('ReviewsController', () => {
   });
 
   it('should pass pagination params to getListingReviews', async () => {
-    await controller.getListingReviews('list-1', '2', '15');
+    await controller.getListingReviews(
+      'list-1',
+      Object.assign(new PaginationDto(), { page: 2, limit: 15 }),
+    );
     expect(mockService.getListingReviews).toHaveBeenCalledWith('list-1', 2, 15);
   });
 
   it('should use default values when pagination params are undefined in getListingReviews', async () => {
-    await controller.getListingReviews('list-1', undefined, undefined);
+    await controller.getListingReviews('list-1');
     expect(mockService.getListingReviews).toHaveBeenCalledWith('list-1', 1, 20);
   });
 
@@ -88,7 +92,10 @@ describe('ReviewsController', () => {
 
   it('should pass req.user.id and pagination to getPendingReviews', async () => {
     const user = createMockUser('admin-1');
-    await controller.getPendingReviews(user, '2', '25');
+    await controller.getPendingReviews(
+      user,
+      Object.assign(new PaginationDto(), { page: 2, limit: 25 }),
+    );
     expect(mockService.getPendingReviews).toHaveBeenCalledWith(
       2,
       25,
@@ -98,7 +105,11 @@ describe('ReviewsController', () => {
 
   it('should pass req.user.id and query params to getReviewsByStatus', async () => {
     const user = createMockUser('admin-1');
-    await controller.getReviewsByStatus('approved', user, '3', '10');
+    await controller.getReviewsByStatus(
+      'approved',
+      user,
+      Object.assign(new PaginationDto(), { page: 3, limit: 10 }),
+    );
     expect(mockService.getReviewsByStatus).toHaveBeenCalledWith(
       'approved',
       3,

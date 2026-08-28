@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { forumService, type ThreadDetail, type ThreadReply } from "@/api-services/forum.service";
+import Navbar from "@/pages/home/components/Navbar";
+import Footer from "@/pages/home/components/Footer";
 import ThreadHero from "./components/ThreadHero";
 import OriginalPost from "./components/OriginalPost";
 import ReplyCard from "./components/ReplyCard";
@@ -51,24 +53,32 @@ export default function ThreadPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background-50 flex flex-col items-center justify-center p-8">
-        <div className="w-full max-w-2xl bg-white rounded-2xl border border-background-200/70 p-8 text-center animate-pulse space-y-4">
-          <div className="h-6 bg-background-200 rounded w-2/3 mx-auto" />
-          <div className="h-4 bg-background-100 rounded w-1/3 mx-auto" />
-          <div className="h-32 bg-background-100 rounded w-full mt-4" />
+      <div className="min-h-screen bg-background-50 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          <div className="w-full max-w-2xl bg-white rounded-2xl border border-background-200/70 p-8 text-center animate-pulse space-y-4">
+            <div className="h-6 bg-background-200 rounded w-2/3 mx-auto" />
+            <div className="h-4 bg-background-100 rounded w-1/3 mx-auto" />
+            <div className="h-32 bg-background-100 rounded w-full mt-4" />
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (fetchError) {
     return (
-      <div className="min-h-screen bg-background-50 flex flex-col items-center justify-center p-8">
-        <ErrorState
-          title="Failed to load thread"
-          message={fetchError}
-          onRetry={loadThread}
-        />
+      <div className="min-h-screen bg-background-50 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          <ErrorState
+            title="Failed to load thread"
+            message={fetchError}
+            onRetry={loadThread}
+          />
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -76,6 +86,7 @@ export default function ThreadPage() {
   if (!thread) {
     return (
       <div className="min-h-screen bg-background-50 flex flex-col">
+        <Navbar />
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-background-100 rounded-full">
@@ -94,6 +105,7 @@ export default function ThreadPage() {
             </Link>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -106,7 +118,13 @@ export default function ThreadPage() {
     setLikeCount((c) => (nextLiked ? c + 1 : Math.max(0, c - 1)));
 
     try {
-      await forumService.toggleLike("post", thread.id);
+      const res = await forumService.toggleLike("post", thread.id);
+      if (res && typeof res.liked === "boolean") {
+        setLiked(res.liked);
+        if (typeof res.likesCount === "number") {
+          setLikeCount(res.likesCount);
+        }
+      }
     } catch (err) {
       logger.warn("Failed to toggle post like, rolling back:", err);
       setLiked(prevLiked);
@@ -188,9 +206,17 @@ export default function ThreadPage() {
   };
 
 
-  const handleUpdatePost = async (newContent: string) => {
-    await forumService.updatePost(thread.id, { body: newContent });
-    setThread((prev) => (prev ? { ...prev, content: newContent } : null));
+  const handleUpdatePost = async (updates: { body: string; image_url: string | null }) => {
+    await forumService.updatePost(thread.id, updates);
+    setThread((prev) =>
+      prev
+        ? {
+            ...prev,
+            content: updates.body,
+            imageUrl: updates.image_url || undefined,
+          }
+        : null,
+    );
   };
 
   const handleUpdateReply = async (replyId: string, newContent: string) => {
@@ -215,6 +241,8 @@ export default function ThreadPage() {
 
   return (
     <div className="min-h-screen bg-background-50 flex flex-col">
+      <Navbar />
+
       {/* Toast */}
       {shareToast && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-foreground-900 text-background-50 px-5 py-3 rounded-full text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease-out]">
@@ -315,6 +343,8 @@ export default function ThreadPage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }

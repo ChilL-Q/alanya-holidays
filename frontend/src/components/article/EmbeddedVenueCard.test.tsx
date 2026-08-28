@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import EmbeddedVenueCard from "./EmbeddedVenueCard";
-import type { Business } from "@/api-services/directory.service";
+import { directoryService, type Business } from "@/api-services/directory.service";
 
 const mockBusiness: Business = {
   id: "biz-001",
@@ -27,6 +27,10 @@ const mockBusiness: Business = {
 };
 
 describe("EmbeddedVenueCard Component", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("Tier 1: Core Functional Rendering (Card Layout)", () => {
     it("renders full venue details including name, rating, reviews, price range, and image", () => {
       render(
@@ -95,28 +99,35 @@ describe("EmbeddedVenueCard Component", () => {
   });
 
   describe("Tier 3: Lookup by ID and Fallback Handling", () => {
-    it("resolves venue details automatically when venueId is passed instead of full venue object", () => {
+    it("resolves venue details automatically when venueId is passed instead of full venue object", async () => {
+      vi.spyOn(directoryService, "getListingById").mockResolvedValue(mockBusiness);
+
       render(
         <MemoryRouter>
           <EmbeddedVenueCard venueId="biz-001" />
         </MemoryRouter>
       );
 
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(screen.getByText(/loading venue details/i)).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
       expect(screen.getByText("4.8")).toBeInTheDocument();
+      expect(directoryService.getListingById).toHaveBeenCalledWith("biz-001", {
+        allowSyncFallback: false,
+      });
     });
 
-    it("renders graceful fallback UI when venueId is not found in directory", () => {
+    it("renders graceful fallback UI when venueId is not found in directory", async () => {
+      vi.spyOn(directoryService, "getListingById").mockResolvedValue(null);
+
       render(
         <MemoryRouter>
           <EmbeddedVenueCard venueId="non-existent-venue-999" />
         </MemoryRouter>
       );
 
-      // Should render a non-crashing fallback notice or placeholder
       expect(screen.queryByText("Kale Panorama Restaurant")).not.toBeInTheDocument();
       expect(
-        screen.getByText(/venue not found|listing unavailable|explore directory/i)
+        await screen.findByText(/venue not found|listing unavailable|explore directory/i)
       ).toBeInTheDocument();
     });
   });

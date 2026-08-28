@@ -54,7 +54,7 @@ export default function CategoriesGrid() {
               return (
                 <Link
                   key={category.id}
-                  to={`/category/${category.id}`}
+                  to={`/category/${category.slug || category.id}`}
                   className="group relative bg-foreground-900 rounded-xl p-5 h-48 flex flex-col justify-between hover:shadow-xl transition-all duration-300 overflow-hidden"
                 >
                   <div className="relative z-10">
@@ -80,7 +80,7 @@ export default function CategoriesGrid() {
               return (
                 <Link
                   key={category.id}
-                  to={`/category/${category.id}`}
+                  to={`/category/${category.slug || category.id}`}
                   className="group relative rounded-xl h-48 overflow-hidden hover:shadow-xl transition-all duration-300"
                 >
                   <img
@@ -111,7 +111,7 @@ export default function CategoriesGrid() {
             return (
               <Link
                 key={category.id}
-                to={`/category/${category.id}`}
+                to={`/category/${category.slug || category.id}`}
                 className="group bg-white rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 h-48 flex flex-col"
               >
                 <div className="p-4 flex-1">

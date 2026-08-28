@@ -8,6 +8,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { ROLE_KEY } from '../auth/decorators/require-role.decorator';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { AuthUser } from '../auth/types/auth-user.interface';
+import { UserBookingsQueryDto } from './dto/user-bookings-query.dto';
 
 describe('BookingsController', () => {
   let controller: BookingsController;
@@ -95,8 +96,12 @@ describe('BookingsController', () => {
 
   it('should pass req.user.id to getUserBookings', async () => {
     const user: AuthUser = { id: 'usr-7' };
-    await controller.getUserBookings(user);
-    expect(mockService.getUserBookings).toHaveBeenCalledWith('usr-7');
+    const query = Object.assign(new UserBookingsQueryDto(), {
+      limit: 25,
+      offset: 50,
+    });
+    await controller.getUserBookings(user, query);
+    expect(mockService.getUserBookings).toHaveBeenCalledWith('usr-7', 25, 50);
   });
 
   it('should pass req.user.id and status to getAdminBookings', async () => {

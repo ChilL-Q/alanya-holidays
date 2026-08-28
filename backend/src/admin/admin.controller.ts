@@ -16,12 +16,14 @@ import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthUser } from '../auth/types/auth-user.interface';
 import {
+  AdminRepository,
   ConciergeEnquiryRecord,
   PlatformAnalyticsData,
 } from './admin.repository';
 import { DaysQueryDto } from '../common/dto/pagination.dto';
 import { UpdateEnquiryStatusDto } from './dto/update-enquiry-status.dto';
 import { AssignEnquiryDto } from './dto/assign-enquiry.dto';
+import { AdminEnquiriesQueryDto } from './dto/admin-enquiries-query.dto';
 import {
   GetAuditLogsQueryDto,
   PaginatedAuditLogsResult,
@@ -35,13 +37,19 @@ export class AdminController {
     private readonly adminService: AdminService,
     @Optional()
     private readonly moderationAuditService?: ModerationAuditService,
+    @Optional()
+    private readonly adminRepository?: AdminRepository,
   ) {}
 
   @Get('enquiries')
   async getEnquiries(
-    @CurrentUser() user: AuthUser,
+    @Query() query: AdminEnquiriesQueryDto,
+    @CurrentUser() _user: AuthUser,
   ): Promise<ConciergeEnquiryRecord[]> {
-    return await this.adminService.getEnquiries(user.id);
+    if (this.adminRepository) {
+      return await this.adminRepository.getEnquiries(query.page, query.limit);
+    }
+    return await this.adminService.getEnquiries(_user.id);
   }
 
   @Patch('enquiries/:id/status')
@@ -72,20 +80,13 @@ export class AdminController {
 
   @Get('analytics')
   async getAnalytics(
-    @Query() query: DaysQueryDto | string,
+    @Query() query: DaysQueryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<PlatformAnalyticsData> {
-    let days = 30;
-    if (typeof query === 'string') {
-      days = parseInt(query, 10) || 30;
-    } else if (
-      typeof query === 'object' &&
-      query !== null &&
-      query.days !== undefined
-    ) {
-      days = Number(query.days) || 30;
-    }
-    return await this.adminService.getPlatformAnalytics(days, user.id);
+    return await this.adminService.getPlatformAnalytics(
+      query.days ?? 30,
+      user.id,
+    );
   }
 
   @Get('audit-logs')

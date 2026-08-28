@@ -5,9 +5,12 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ mode, onChange }: ViewToggleProps) {
   return (
-    <div className="inline-flex items-center bg-background-100 rounded-full p-1">
+    <div className="inline-flex items-center bg-background-100 rounded-full p-1" role="group" aria-label="Event view mode">
       <button
+        type="button"
         onClick={() => onChange("list")}
+        aria-pressed={mode === "list"}
+        aria-label="Show events as a list"
         className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
           mode === "list"
             ? "bg-white text-foreground-900 shadow-sm"
@@ -18,7 +21,10 @@ export default function ViewToggle({ mode, onChange }: ViewToggleProps) {
         List
       </button>
       <button
+        type="button"
         onClick={() => onChange("map")}
+        aria-pressed={mode === "map"}
+        aria-label="Show events on a map"
         className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
           mode === "map"
             ? "bg-white text-foreground-900 shadow-sm"

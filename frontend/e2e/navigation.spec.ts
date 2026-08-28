@@ -1,26 +1,28 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation Flow', () => {
-  test('should navigate to Blog from navbar', async ({ page }) => {
+  test('should navigate to Blog from the Discover menu', async ({ page }) => {
     await page.goto('/');
 
-    // Desktop nav has: Directory, Blog, Shop — use filter({ visible: true }) to exclude mobile duplicates
-    const blogLink = page.locator('nav').getByRole('link', { name: 'Blog' }).filter({ visible: true }).first();
-    await expect(blogLink).toBeVisible({ timeout: 10000 });
+    await page.locator('nav').getByRole('button', { name: 'Discover' }).first().hover();
+    const blogLink = page.locator('nav a[href="/blog"]').filter({ visible: true }).first();
+    await expect(blogLink).toBeVisible();
     await blogLink.click();
+
     await expect(page).toHaveURL('/blog');
   });
 
-  test('should load visa consult page', async ({ page }) => {
-    await page.goto('/visa-consult');
+  test('should load travel guides', async ({ page }) => {
+    await page.goto('/travel-guides');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page).toHaveURL('/visa-consult');
-    await expect(page.locator('body')).toContainText(/visa|consult|legal/i);
+    await expect(page).toHaveURL('/travel-guides');
+    await expect(page.locator('body')).toContainText(/travel|guide|alanya/i);
   });
 
-  test('should load services page with categories', async ({ page }) => {
-    await page.goto('/services');
+  test('should load the explore directory', async ({ page }) => {
+    await page.goto('/explore');
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('body')).toContainText(/service|car|wellness|tour/i);
+    await expect(page).toHaveURL('/explore');
+    await expect(page.locator('body')).toContainText(/explore|discover|business/i);
   });
 });

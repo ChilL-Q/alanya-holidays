@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { loginSchema } from "@/lib/validation/auth.schemas";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -73,10 +74,9 @@ export default function LoginPage() {
     <main className="min-h-screen bg-background-50">
       {/* Hero */}
       <section className="relative w-full h-[220px] md:h-[280px] overflow-hidden">
-        <img
-          src="/images/placeholder-business.svg"
+        <PageHeroImage
+          page="login"
           alt="Alanya Sunset"
-          className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/50 via-foreground-950/25 to-foreground-950/70"></div>
 

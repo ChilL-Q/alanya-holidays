@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { checkoutSchema } from "./checkout.schemas";
-import { loginSchema, registerSchema, forgotPasswordSchema } from "./auth.schemas";
+import {
+  businessRegistrationSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+} from "./auth.schemas";
 
 describe("Validation Schemas", () => {
   describe("checkoutSchema", () => {
@@ -121,6 +126,52 @@ describe("Validation Schemas", () => {
       if (!result.success) {
         expect(result.error.issues[0].message).toContain("Passwords don't match");
       }
+    });
+  });
+
+  describe("businessRegistrationSchema", () => {
+    const valid = {
+      businessName: "  Alanya Services  ",
+      accountType: "service_provider",
+      contactPhone: "  +90 555 123 4567  ",
+      website: "  https://example.com  ",
+    };
+
+    it("trims and accepts business details matching database constraints", () => {
+      expect(businessRegistrationSchema.parse(valid)).toEqual({
+        businessName: "Alanya Services",
+        accountType: "service_provider",
+        contactPhone: "+90 555 123 4567",
+        website: "https://example.com",
+      });
+    });
+
+    it.each([
+      [{ ...valid, businessName: "X" }, "businessName"],
+      [{ ...valid, businessName: "X".repeat(121) }, "businessName"],
+      [{ ...valid, accountType: "admin" }, "accountType"],
+      [{ ...valid, contactPhone: "123456" }, "contactPhone"],
+      [{ ...valid, contactPhone: "1".repeat(33) }, "contactPhone"],
+      [{ ...valid, website: "javascript:alert(1)" }, "website"],
+      [{ ...valid, website: `https://example.com/${"x".repeat(2040)}` }, "website"],
+    ])("rejects invalid constrained business data", (input, path) => {
+      const result = businessRegistrationSchema.safeParse(input);
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0].path).toContain(path);
+    });
+
+    it("normalizes blank optional values to undefined", () => {
+      expect(businessRegistrationSchema.parse({
+        businessName: "Alanya Services",
+        accountType: "seller",
+        contactPhone: "  ",
+        website: "",
+      })).toEqual({
+        businessName: "Alanya Services",
+        accountType: "seller",
+        contactPhone: undefined,
+        website: undefined,
+      });
     });
   });
 

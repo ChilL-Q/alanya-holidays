@@ -1,20 +1,23 @@
 import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
+import { logger } from "@/lib/logger";
 
 export default function PopularNow() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [allEvents, setAllEvents] = useState<ForumEvent[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const scrollStateRef = useRef({ left: false, right: true });
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollStateRef = useRef({ left: false, right: false });
 
   useEffect(() => {
     let mounted = true;
-    eventsService.getEvents().then((data) => {
+    eventsService.getEvents({ upcomingOnly: true }).then((data) => {
       if (mounted && data) setAllEvents(data);
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.warn("Failed to load popular events:", err);
+    });
     return () => {
       mounted = false;
     };
@@ -41,6 +44,14 @@ export default function PopularNow() {
     }
   }, []);
 
+  useEffect(() => {
+    if (popularEvents.length === 0) return;
+
+    updateScrollState();
+    window.addEventListener("resize", updateScrollState);
+    return () => window.removeEventListener("resize", updateScrollState);
+  }, [popularEvents.length, updateScrollState]);
+
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
@@ -52,7 +63,7 @@ export default function PopularNow() {
 
   // requestAnimationFrame-based auto-scroll — no jank, no stacked animations
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const el = scrollRef.current;
     if (!el) return;
 
@@ -73,9 +84,11 @@ export default function PopularNow() {
         el.scrollLeft += px;
         remainder -= px;
 
-        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 2) {
-          el.scrollLeft = 0;
-          remainder = 0;
+        const maxScrollLeft = el.scrollWidth - el.clientWidth;
+        if (el.scrollLeft >= maxScrollLeft - 2) {
+          el.scrollLeft = maxScrollLeft;
+          updateScrollState();
+          return;
         }
       }
 
@@ -85,14 +98,23 @@ export default function PopularNow() {
 
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [isPaused, updateScrollState]);
+  }, [isPaused, popularEvents.length, updateScrollState]);
 
   if (popularEvents.length === 0) return null;
 
   return (
     <section className="relative z-20 -mt-6 mb-0">
       <div className="max-w-full mx-auto px-4 md:px-8 lg:px-12">
-        <div className="bg-white rounded-2xl shadow-sm border border-background-200/70 px-5 py-4">
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-background-200/70 px-5 py-4"
+          onFocusCapture={() => setIsPaused(true)}
+          onBlurCapture={(event) => {
+            const nextTarget = event.relatedTarget;
+            if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+              setIsPaused(false);
+            }
+          }}
+        >
           {/* Header Row */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -146,7 +168,7 @@ export default function PopularNow() {
             {popularEvents.map((event, index) => (
               <Link
                 key={event.id}
-                to="/events"
+                to={`/events?q=${encodeURIComponent(event.title)}`}
                 className="flex-shrink-0 w-[280px] group cursor-pointer"
               >
                 <div className="flex items-center gap-3 p-2.5 rounded-xl bg-background-50 hover:bg-background-100 transition-colors border border-transparent hover:border-background-200/70">

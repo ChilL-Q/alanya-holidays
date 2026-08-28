@@ -10,6 +10,7 @@ import { ClaimTrackerTab } from "../components/ClaimTrackerTab";
 import { UpgradeModal } from "../components/UpgradeModal";
 import { directoryService } from "@/api-services/directory.service";
 import { billingService } from "@/api-services/billing.service";
+import { businessApplicationsService } from "@/api-services/business-applications.service";
 import type { Business } from "@/mocks/businesses";
 import type { DirectoryClaim, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 
@@ -278,6 +279,33 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
 
       expect(screen.getByText("Alanya Sunset Cafe")).toBeInTheDocument();
     });
+
+    it("opens an in-app confirmation dialog before deleting a listing", () => {
+      const onDelete = vi.fn();
+
+      render(
+        <MemoryRouter>
+          <MyListingsTab
+            listings={sampleListings}
+            loading={false}
+            onEditListing={vi.fn()}
+            onResumeDraft={vi.fn()}
+            onDeleteListing={onDelete}
+            onUpgradeTier={vi.fn()}
+          />
+        </MemoryRouter>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /Delete Alanya Sunset Cafe/i }));
+
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toBeInTheDocument();
+      expect(screen.getByText(/Delete this listing\?/i)).toBeInTheDocument();
+      expect(dialog).toHaveTextContent("Alanya Sunset Cafe");
+
+      fireEvent.click(screen.getByRole("button", { name: /Delete listing/i }));
+      expect(onDelete).toHaveBeenCalledWith("biz-1");
+    });
   });
 
   describe("PerformanceAnalyticsTab", () => {
@@ -318,6 +346,26 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
 
       fireEvent.click(screen.getByText("Upgrade Subscription"));
       expect(onUpgrade).toHaveBeenCalled();
+    });
+
+    it("keeps current analytics visible while refreshing timeframe data", () => {
+      render(
+        <PerformanceAnalyticsTab
+          analytics={sampleAnalytics}
+          userListings={sampleListings}
+          highestTier="signature"
+          loading={true}
+          error={null}
+          days={30}
+          onDaysChange={vi.fn()}
+          onOpenUpgradeModal={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText("Performance & Engagement Analytics")).toBeInTheDocument();
+      expect(screen.getByText("Refreshing analytics for the selected timeframe...")).toBeInTheDocument();
+      expect(screen.getByText("3,200")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "7 Days" })).toBeDisabled();
     });
   });
 
@@ -382,12 +430,30 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       vi.spyOn(directoryService, "getMyListings").mockResolvedValue(sampleListings);
       vi.spyOn(directoryService, "getMyClaims").mockResolvedValue(sampleClaims);
       vi.spyOn(directoryService, "getOwnerAnalytics").mockResolvedValue(sampleAnalytics);
+      vi.spyOn(businessApplicationsService, "getMine").mockResolvedValue({
+        id: "application-1",
+        userId: mockUser.id,
+        accountType: "seller",
+        businessName: "Alanya Crafts",
+        contactEmail: mockUser.email,
+        contactPhone: null,
+        website: null,
+        status: "withdrawn",
+        rejectionReason: null,
+        reviewedBy: null,
+        reviewedAt: null,
+        createdAt: "2026-08-28T10:00:00Z",
+        updatedAt: "2026-08-28T10:00:00Z",
+      });
 
       render(
         <MemoryRouter>
           <MerchantDashboardPage />
         </MemoryRouter>
       );
+
+      expect(await screen.findByText("Alanya Crafts")).toBeInTheDocument();
+      expect(screen.getByText("withdrawn")).toBeInTheDocument();
 
       // R1. Return link
       const returnLink = screen.getByRole("link", { name: /Return to Main Site/i });

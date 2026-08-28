@@ -448,5 +448,89 @@ describe('security.config', () => {
         expect(statusMock).not.toHaveBeenCalled();
       });
     });
+
+    describe('Enquiry and contact anti-spam limits', () => {
+      const createResponse = () => {
+        const status = jest.fn().mockReturnThis();
+        const json = jest.fn();
+        const setHeader = jest.fn();
+        return {
+          response: { status, json, setHeader } as unknown as Response,
+          status,
+          json,
+          setHeader,
+        };
+      };
+
+      const createRequest = (method: string, path: string, ip: string) =>
+        ({
+          method,
+          path,
+          ip,
+          socket: { remoteAddress: ip },
+        }) as unknown as Request;
+
+      it('shares a strict five-per-hour POST budget across all aliases', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const { response, status, json, setHeader } = createResponse();
+        const paths = [
+          '/api/enquiries',
+          '/api/messages/contact',
+          '/api/messages',
+          '/api/enquiries',
+          '/api/messages/contact',
+        ];
+
+        for (const path of paths) {
+          await middleware(
+            createRequest('POST', path, '192.0.2.10'),
+            response,
+            next,
+          );
+        }
+        await middleware(
+          createRequest('POST', '/api/messages', '192.0.2.10'),
+          response,
+          next,
+        );
+
+        expect(next).toHaveBeenCalledTimes(5);
+        expect(status).toHaveBeenCalledWith(429);
+        expect(setHeader).toHaveBeenCalledWith(
+          'Retry-After',
+          expect.any(String),
+        );
+        expect(json).toHaveBeenCalledWith({
+          statusCode: 429,
+          message: 'Too many requests',
+          error: 'Too Many Requests',
+        });
+      });
+
+      it('does not consume the contact POST budget for GET requests', async () => {
+        const middleware = createRateLimitMiddleware();
+        const next = jest.fn() as NextFunction;
+        const { response, status } = createResponse();
+
+        for (let request = 0; request < 10; request++) {
+          await middleware(
+            createRequest('GET', '/api/enquiries', '192.0.2.20'),
+            response,
+            next,
+          );
+        }
+        for (let request = 0; request < 5; request++) {
+          await middleware(
+            createRequest('POST', '/api/enquiries', '192.0.2.20'),
+            response,
+            next,
+          );
+        }
+
+        expect(next).toHaveBeenCalledTimes(15);
+        expect(status).not.toHaveBeenCalled();
+      });
+    });
   });
 });

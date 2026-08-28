@@ -34,6 +34,9 @@ BEGIN
   END IF;
 END $$;
 
+ALTER ROLE service_role BYPASSRLS;
+ALTER ROLE supabase_admin BYPASSRLS;
+
 -- Mock Auth Schema
 CREATE SCHEMA IF NOT EXISTS auth;
 
@@ -41,28 +44,36 @@ CREATE TABLE IF NOT EXISTS auth.users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text,
   role text DEFAULT 'authenticated',
+  raw_user_meta_data jsonb DEFAULT '{}'::jsonb,
   created_at timestamptz DEFAULT now()
 );
 
-CREATE OR REPLACE FUNCTION auth.uid() 
-RETURNS uuid AS $$ 
-  SELECT null::uuid 
+CREATE OR REPLACE FUNCTION auth.jwt()
+RETURNS jsonb AS $$
+  SELECT COALESCE(
+    NULLIF(current_setting('request.jwt.claims', true), ''),
+    '{}'
+  )::jsonb
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION auth.role() 
-RETURNS text AS $$ 
-  SELECT 'authenticated'::text 
+CREATE OR REPLACE FUNCTION auth.uid()
+RETURNS uuid AS $$
+  SELECT NULLIF(auth.jwt()->>'sub', '')::uuid
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION auth.email() 
-RETURNS text AS $$ 
-  SELECT 'test@example.com'::text 
+CREATE OR REPLACE FUNCTION auth.role()
+RETURNS text AS $$
+  SELECT COALESCE(auth.jwt()->>'role', 'authenticated')
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION auth.jwt() 
-RETURNS jsonb AS $$ 
-  SELECT '{}'::jsonb 
+CREATE OR REPLACE FUNCTION auth.email()
+RETURNS text AS $$
+  SELECT COALESCE(auth.jwt()->>'email', 'test@example.com')
 $$ LANGUAGE sql STABLE;
+
+GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION auth.jwt(), auth.uid(), auth.role(), auth.email()
+  TO anon, authenticated, service_role;
 
 -- Mock pg_cron Schema
 CREATE SCHEMA IF NOT EXISTS cron;
@@ -143,7 +154,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   phone text,
   company_name text,
   role text DEFAULT 'user',
-  is_admin boolean DEFAULT false,
   bio text,
   iban text,
   bank_name text,
@@ -154,6 +164,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at timestamptz DEFAULT now()
 );
 
+GRANT SELECT, UPDATE ON TABLE public.profiles
+  TO authenticated, service_role, supabase_admin;
+
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE plpgsql
@@ -162,8 +175,8 @@ SET search_path = public
 AS $$
 BEGIN
   RETURN EXISTS (
-    SELECT 1 FROM public.profiles 
-    WHERE id = auth.uid() AND (role = 'admin' OR is_admin = true)
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
   );
 END;
 $$;

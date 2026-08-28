@@ -1,10 +1,18 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import ArticleContentRenderer from "./ArticleContentRenderer";
 import type { ArticleBlockNode } from "./types";
+import { directoryService } from "@/api-services/directory.service";
+import { businesses } from "@/domain/directory-businesses";
 
 describe("ArticleContentRenderer Component", () => {
+  beforeEach(() => {
+    vi.spyOn(directoryService, "getListingById").mockImplementation(async (id) =>
+      businesses.find((business) => business.id === id) ?? null
+    );
+  });
+
   describe("Tier 1: Markdown & Basic Content Rendering", () => {
     it("renders plain paragraph blocks", () => {
       const rawText = "Alanya has over 300 days of sunshine each year.";
@@ -35,7 +43,7 @@ describe("ArticleContentRenderer Component", () => {
   });
 
   describe("Tier 2: In-Article Interactive Embeds (Venue & CTA)", () => {
-    it("renders embedded venue cards from [venue id='...'] shortcode", () => {
+    it("renders embedded venue cards from [venue id='...'] shortcode", async () => {
       const rawContent = `
 Explore our featured rooftop dining spot:
 
@@ -51,11 +59,11 @@ Continue reading about Mediterranean flavors.
       );
 
       expect(screen.getByText("Explore our featured rooftop dining spot:")).toBeInTheDocument();
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
       expect(screen.getByText("Continue reading about Mediterranean flavors.")).toBeInTheDocument();
     });
 
-    it("renders embedded compact venue cards from [venue layout='compact'] shortcode", () => {
+    it("renders embedded compact venue cards from [venue layout='compact'] shortcode", async () => {
       const rawContent = `
 Recommended quick stop:
 
@@ -68,7 +76,7 @@ Recommended quick stop:
         </MemoryRouter>
       );
 
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
       expect(screen.getByText("4.8")).toBeInTheDocument();
     });
 
@@ -93,7 +101,7 @@ Recommended quick stop:
   });
 
   describe("Tier 3: Pre-Parsed AST Node Array Rendering", () => {
-    it("renders directly from pre-parsed ArticleBlockNode array", () => {
+    it("renders directly from pre-parsed ArticleBlockNode array", async () => {
       const nodes: ArticleBlockNode[] = [
         { type: "heading", level: 2, content: "Custom Parsed Section" },
         { type: "paragraph", content: "Directly passing parsed AST objects for performance." },
@@ -114,7 +122,7 @@ Recommended quick stop:
 
       expect(screen.getByRole("heading", { level: 2, name: "Custom Parsed Section" })).toBeInTheDocument();
       expect(screen.getByText("Directly passing parsed AST objects for performance.")).toBeInTheDocument();
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
       expect(screen.getByText("Book Alanya Hotels")).toBeInTheDocument();
     });
   });
@@ -243,7 +251,7 @@ Watch our video guide:
       expect(screen.getByText(/Ancient Emperor/i)).toBeInTheDocument();
     });
 
-    it("renders a full mixed multimedia article with all 7 block types", () => {
+    it("renders a full mixed multimedia article with all 7 block types", async () => {
       const fullDoc = `
 ## A Complete Traveler's Guide to Alanya
 
@@ -273,7 +281,7 @@ Alanya offers an unforgettable blend of history and beaches.
       ).toBeInTheDocument();
       expect(screen.getByText("Quick Summary")).toBeInTheDocument();
       expect(screen.getByText("Alanya Castle at sunset")).toBeInTheDocument();
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
       expect(screen.getByText("Video Tour")).toBeInTheDocument();
       expect(screen.getByText(/The most beautiful coast in Turkey\./i)).toBeInTheDocument();
       expect(screen.getByText("View Top Restaurants")).toBeInTheDocument();

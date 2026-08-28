@@ -6,3 +6,5 @@ export * from './create-blog-tag.dto';
 export * from './reject-blog-submission.dto';
 export * from './get-blog-submissions-query.dto';
 export * from './create-blog-comment.dto';
+export * from './get-blog-comments-query.dto';
+export * from './blog-limit-query.dto';

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 
 jest.mock('sanitize-html', () => {
   return jest.fn((dirty: string) => dirty || '');
@@ -7,6 +8,7 @@ jest.mock('sanitize-html', () => {
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { AuthUser } from '../auth/types/auth-user.interface';
@@ -20,6 +22,7 @@ import {
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
   CreateBlogTagDto,
+  GetBlogCommentsQueryDto,
   GetBlogQueryDto,
   GetBlogSubmissionsQueryDto,
   RejectBlogSubmissionDto,
@@ -147,6 +150,8 @@ describe('BlogController', () => {
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(OptionalAuthGuard)
+      .useValue({ canActivate: () => true })
       .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
       .compile();
@@ -155,6 +160,22 @@ describe('BlogController', () => {
   });
 
   describe('GET /blog endpoints', () => {
+    it.each(['getBlogPosts', 'getBlogPost', 'getBlogComments'] as const)(
+      'should protect %s with OptionalAuthGuard',
+      (methodName) => {
+        const handler = Object.getOwnPropertyDescriptor(
+          BlogController.prototype,
+          methodName,
+        )?.value as object;
+        const guards = Reflect.getMetadata(
+          GUARDS_METADATA,
+          handler,
+        ) as unknown[];
+
+        expect(guards).toContain(OptionalAuthGuard);
+      },
+    );
+
     it('should delegate getBlogPosts call to service with optional user ID', async () => {
       const query: GetBlogQueryDto = { category: 'news', page: 1, limit: 10 };
       const user: AuthUser = { id: 'user-1' };
@@ -183,28 +204,58 @@ describe('BlogController', () => {
     });
 
     it('should delegate getFeaturedBlogPosts with limit parameter', async () => {
-      const res = await controller.getFeaturedBlogPosts('5');
+      const res = await controller.getFeaturedBlogPosts({ limit: 5 });
       expect(res).toHaveLength(1);
       expect(mockService.getFeaturedBlogPosts).toHaveBeenCalledWith(5);
     });
 
-    it('should delegate getBlogPost with incrementViews flag and user ID', async () => {
-      const res = await controller.getBlogPost('test-slug', 'false', undefined);
+    it('should delegate getBlogPost with incrementViews flag and authenticated user ID', async () => {
+      const res = await controller.getBlogPost('test-slug', 'false', mockUser);
       expect(res.slug).toBe('test-post');
       expect(mockService.getBlogPost).toHaveBeenCalledWith(
         'test-slug',
         false,
+        'user-1',
+      );
+    });
+
+    it('should forward no user ID for an anonymous or invalid optional identity', async () => {
+      await controller.getBlogPost('test-slug', undefined, undefined);
+
+      expect(mockService.getBlogPost).toHaveBeenCalledWith(
+        'test-slug',
+        true,
         undefined,
       );
     });
 
     it('should delegate getRelatedPosts with category and limit', async () => {
-      const res = await controller.getRelatedPosts('post-1', 'Guides', '4');
+      const res = await controller.getRelatedPosts('post-1', 'Guides', {
+        limit: 4,
+      });
       expect(res).toHaveLength(1);
       expect(mockService.getRelatedPosts).toHaveBeenCalledWith(
         'post-1',
         'Guides',
         4,
+      );
+    });
+
+    it('should forward valid and absent identities when reading comments', async () => {
+      const query: GetBlogCommentsQueryDto = { limit: 10, offset: 0 };
+
+      await controller.getBlogComments('post-1', query, mockUser);
+      expect(mockService.getBlogComments).toHaveBeenLastCalledWith(
+        'post-1',
+        query,
+        'user-1',
+      );
+
+      await controller.getBlogComments('post-1', query, undefined);
+      expect(mockService.getBlogComments).toHaveBeenLastCalledWith(
+        'post-1',
+        query,
+        undefined,
       );
     });
   });
@@ -275,10 +326,14 @@ describe('BlogController', () => {
       );
     });
 
-    it('should delegate getUserBlogSubmissions for current user', async () => {
-      const res = await controller.getUserBlogSubmissions(mockUser);
+    it('should delegate paginated getUserBlogSubmissions for current user', async () => {
+      const query: GetBlogSubmissionsQueryDto = { limit: 10, offset: 20 };
+      const res = await controller.getUserBlogSubmissions(query, mockUser);
       expect(res).toHaveLength(1);
-      expect(mockService.getUserBlogSubmissions).toHaveBeenCalledWith('user-1');
+      expect(mockService.getUserBlogSubmissions).toHaveBeenCalledWith(
+        query,
+        'user-1',
+      );
     });
 
     it('should delegate approveBlogSubmission', async () => {

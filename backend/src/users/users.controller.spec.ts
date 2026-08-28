@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -39,7 +40,7 @@ describe('UsersController', () => {
   });
 
   it('should parse limit and onlineOnly flag in getForumMembers', async () => {
-    await controller.getForumMembers('10', 'true');
+    await controller.getForumMembers({ limit: 10 }, 'true');
     expect(mockService.getForumMembers).toHaveBeenCalledWith(10, true);
   });
 
@@ -57,13 +58,20 @@ describe('UsersController', () => {
 
   it('should pass pagination and req.user.id to getAllUsers', async () => {
     const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
-    await controller.getAllUsers('2', '10', adminUser);
+    await controller.getAllUsers(
+      Object.assign(new PaginationDto(), { page: 2, limit: 10 }),
+      adminUser,
+    );
     expect(mockService.getAllUsers).toHaveBeenCalledWith(2, 10, 'admin-1');
   });
 
   it('should pass role, pagination, and req.user.id to getUsersByRole', async () => {
     const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
-    await controller.getUsersByRole('business_owner', '1', '20', adminUser);
+    await controller.getUsersByRole(
+      'business_owner',
+      Object.assign(new PaginationDto(), { page: 1, limit: 20 }),
+      adminUser,
+    );
     expect(mockService.getUsersByRole).toHaveBeenCalledWith(
       'business_owner',
       1,

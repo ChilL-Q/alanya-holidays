@@ -61,7 +61,7 @@ jobs:
       run: pnpm lint
 
     - name: Frontend Tests
-      run: pnpm --filter @alanya-holidays/frontend test -- --run
+      run: pnpm --filter @alanya-holidays/frontend test --run
 
     - name: Backend Tests
       run: pnpm --filter @alanya-holidays/backend test
@@ -155,3 +155,27 @@ jobs:
         PGPASSWORD: postgrespassword
       run: |
         psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_rls_security.sql
+
+    - name: Verify Listing Claim Approval Integrity
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_listing_claim_approval.sql
+
+    - name: Verify Listing Claim Token Security
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_listing_claim_token_security.sql
+
+    - name: Verify Atomic Blog Comment Likes
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_atomic_blog_comment_likes.sql
+
+    - name: Verify Business Account Registration Foundation
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_business_account_registration.sql

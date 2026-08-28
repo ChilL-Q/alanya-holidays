@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { blogService, type BlogTag } from "@/api-services/blog.service";
+import { useAuth } from "@/context/AuthContext";
+import RichTextEditor from "@/components/base/RichTextEditor";
 
 interface SubmitGuideModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ export default function SubmitGuideModal({
   tags = [],
   onSubmitted,
 }: SubmitGuideModalProps) {
+  const { user, profile, isAuthenticated } = useAuth();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Essential");
   const [authorName, setAuthorName] = useState("");
@@ -24,7 +27,13 @@ export default function SubmitGuideModal({
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (isAuthenticated) {
+        setAuthorName((prev) => prev || profile?.full_name || profile?.username || "");
+        setAuthorEmail((prev) => prev || user?.email || "");
+      }
+    } else {
+      // Reset form on close
       setTitle("");
       setCategory(tags[0]?.name || "Essential");
       setAuthorName("");
@@ -34,7 +43,7 @@ export default function SubmitGuideModal({
       setSubmittedSuccess(false);
       setErrorMsg("");
     }
-  }, [isOpen, tags]);
+  }, [isOpen, tags, isAuthenticated, profile, user]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +57,8 @@ export default function SubmitGuideModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) {
+    const strippedContent = content.replace(/<[^>]*>?/gm, "").trim();
+    if (!title.trim() || !strippedContent) {
       setErrorMsg("Please provide both a title and guide content.");
       return;
     }
@@ -211,10 +221,15 @@ export default function SubmitGuideModal({
                 </label>
                 <input
                   type="email"
+                  readOnly={isAuthenticated}
                   value={authorEmail}
                   onChange={(e) => setAuthorEmail(e.target.value)}
                   placeholder="For notifications when published"
-                  className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all"
+                  className={`w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 placeholder:text-foreground-400 transition-all ${
+                    isAuthenticated
+                      ? "bg-slate-50 text-slate-500 cursor-not-allowed"
+                      : "bg-white"
+                  }`}
                 />
               </div>
 
@@ -222,13 +237,11 @@ export default function SubmitGuideModal({
                 <label className="block text-xs font-semibold text-foreground-700 uppercase tracking-wider mb-1.5">
                   Guide Content & Recommendations <span className="text-rose-500">*</span>
                 </label>
-                <textarea
-                  required
-                  rows={6}
+                <RichTextEditor
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={setContent}
                   placeholder="Share directions, tips, what to pack, pricing, and why travelers should visit..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-background-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-sm text-foreground-900 bg-white placeholder:text-foreground-400 transition-all resize-y"
+                  userId={user?.id}
                 />
               </div>
 

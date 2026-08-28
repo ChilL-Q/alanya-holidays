@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, screen, act, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 import { apiClient, ApiError } from "@/lib/api-client";
 import { directoryService } from "@/api-services/directory.service";
 import { conciergeService } from "@/api-services/concierge.service";
@@ -32,6 +32,11 @@ vi.mock("@/pages/home/components/Navbar", () => ({
 vi.mock("@/pages/home/components/Footer", () => ({
   default: () => <div data-testid="mock-footer">Footer</div>,
 }));
+
+function LocationSearchSpy() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
 
 describe("Challenger 2 Empirical Verification: Mock Elimination & Error Resilience", () => {
   beforeEach(() => {
@@ -163,6 +168,156 @@ describe("Challenger 2 Empirical Verification: Mock Elimination & Error Resilien
   /* =========================================================================
    * 3. Optimistic Mutation Rollback on API Error
    * ========================================================================= */
+  describe("URL State Sync — Shareable Events Filters", () => {
+    it("Events page restores filters and view mode from query params", async () => {
+      const categoryMatchEvent = {
+        id: "ev-url-1",
+        title: "Sunrise Gathering",
+        date: "2026-09-10",
+        day: "10",
+        month: "SEP",
+        time: "07:00",
+        location: "Cleopatra Beach",
+        category: "Beach Gatherings",
+        attendees: 12,
+        maxAttendees: 40,
+        host: "Alanya Crew",
+        hostAvatar: "https://example.com/avatar-1.jpg",
+        description: "Start the day together by the sea.",
+        image: "https://example.com/event-1.jpg",
+        isFeatured: true,
+        going_by_me: false,
+      };
+
+      const otherEvent = {
+        id: "ev-url-2",
+        title: "Community Meetup",
+        date: "2026-09-12",
+        day: "12",
+        month: "SEP",
+        time: "18:00",
+        location: "Oba Center",
+        category: "Expat Socials",
+        attendees: 8,
+        maxAttendees: 25,
+        host: "Local Friends",
+        hostAvatar: "https://example.com/avatar-2.jpg",
+        description: "Friendly networking night for remote workers and founders.",
+        image: "https://example.com/event-2.jpg",
+        isFeatured: false,
+        going_by_me: false,
+      };
+
+      vi.spyOn(eventsService, "getEvents").mockResolvedValue([
+        categoryMatchEvent,
+        otherEvent,
+      ]);
+
+      render(
+        <AuthProvider>
+          <MemoryRouter initialEntries={["/events?view=map&category=Beach%20Gatherings&date=2026-09-10&q=sunrise&featured=1"]}>
+            <Routes>
+              <Route path="/events" element={<><EventsPage /><LocationSearchSpy /></>} />
+            </Routes>
+          </MemoryRouter>
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue("sunrise")).toBeInTheDocument();
+        expect(screen.getByText("Sunrise Gathering")).toBeInTheDocument();
+      });
+
+      expect(screen.getByText("Sunrise Gathering")).toBeInTheDocument();
+      expect(screen.queryByText("Community Meetup")).not.toBeInTheDocument();
+      expect(screen.getByTestId("location-search").textContent).toContain("view=map");
+      expect(screen.getByTestId("location-search").textContent).toContain("category=Beach%20Gatherings");
+      expect(screen.getByTestId("location-search").textContent).toContain("date=2026-09-10");
+      expect(screen.getByTestId("location-search").textContent).toContain("q=sunrise");
+      expect(screen.getByTestId("location-search").textContent).toContain("featured=1");
+    });
+  });
+
+  describe("Search Behavior — Relevant Event Discovery", () => {
+    it("Events page finds events by category and description, not only title/location/host", async () => {
+      const categoryMatchEvent = {
+        id: "ev-search-1",
+        title: "Sunrise Gathering",
+        date: "2026-09-10",
+        day: "10",
+        month: "SEP",
+        time: "07:00",
+        location: "Cleopatra Beach",
+        category: "Beach Gatherings",
+        attendees: 12,
+        maxAttendees: 40,
+        host: "Alanya Crew",
+        hostAvatar: "https://example.com/avatar-1.jpg",
+        description: "Start the day together by the sea.",
+        image: "https://example.com/event-1.jpg",
+        isFeatured: false,
+        going_by_me: false,
+      };
+
+      const descriptionMatchEvent = {
+        id: "ev-search-2",
+        title: "Community Meetup",
+        date: "2026-09-12",
+        day: "12",
+        month: "SEP",
+        time: "18:00",
+        location: "Oba Center",
+        category: "Expat Socials",
+        attendees: 8,
+        maxAttendees: 25,
+        host: "Local Friends",
+        hostAvatar: "https://example.com/avatar-2.jpg",
+        description: "Friendly networking night for remote workers and founders.",
+        image: "https://example.com/event-2.jpg",
+        isFeatured: false,
+        going_by_me: false,
+      };
+
+      vi.spyOn(eventsService, "getEvents").mockResolvedValue([
+        categoryMatchEvent,
+        descriptionMatchEvent,
+      ]);
+
+      render(
+        <AuthProvider>
+          <MemoryRouter>
+            <EventsPage />
+          </MemoryRouter>
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Sunrise Gathering")).toBeInTheDocument();
+        expect(screen.getByText("Community Meetup")).toBeInTheDocument();
+      });
+
+      const searchInput = screen.getByPlaceholderText(/Search by title, category, description, location, or host/i);
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "beach gatherings" } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Sunrise Gathering")).toBeInTheDocument();
+        expect(screen.queryByText("Community Meetup")).not.toBeInTheDocument();
+      });
+
+      await act(async () => {
+        fireEvent.change(searchInput, { target: { value: "remote workers" } });
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Community Meetup")).toBeInTheDocument();
+        expect(screen.queryByText("Sunrise Gathering")).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe("Optimistic Mutations — State Rollback on Server Error", () => {
     it("Events page rolls back RSVP attendee count and shows error toast when toggleRsvp fails", async () => {
       const mockEvent = {
@@ -201,8 +356,8 @@ describe("Challenger 2 Empirical Verification: Mock Elimination & Error Resilien
         expect(screen.getByText("Sunset Beach Cleanup")).toBeInTheDocument();
       });
 
-      // Find the RSVP button for the event card
-      const rsvpButton = screen.getByRole("button", { name: /RSVP Now/i });
+      // Find the RSVP button for the event card by its accessible name
+      const rsvpButton = screen.getByRole("button", { name: /RSVP for Sunset Beach Cleanup/i });
       expect(rsvpButton).toBeInTheDocument();
 
       // Click RSVP (triggers optimistic update then fails and rolls back)
@@ -215,8 +370,8 @@ describe("Challenger 2 Empirical Verification: Mock Elimination & Error Resilien
         expect(screen.getByText(/RSVP Failed/i)).toBeInTheDocument();
       });
 
-      // Verify button rolled back to "RSVP Now" rather than staying in "Going" state
-      expect(screen.getByRole("button", { name: /RSVP Now/i })).toBeInTheDocument();
+      // Verify button rolled back to the RSVP accessible state rather than staying in the going state
+      expect(screen.getByRole("button", { name: /RSVP for Sunset Beach Cleanup/i })).toBeInTheDocument();
     });
 
     it("Thread page rolls back post like count when toggleLike fails", async () => {

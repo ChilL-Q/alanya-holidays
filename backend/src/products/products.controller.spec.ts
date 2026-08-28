@@ -104,8 +104,12 @@ describe('ProductsController', () => {
 
   describe('Legacy Endpoints', () => {
     it('should pass category query to getProducts', async () => {
-      await controller.getProducts('souvenirs');
-      expect(mockService.getProducts).toHaveBeenCalledWith('souvenirs');
+      await controller.getProducts({
+        category: 'souvenirs',
+        page: 2,
+        limit: 10,
+      });
+      expect(mockService.getProducts).toHaveBeenCalledWith('souvenirs', 2, 10);
     });
 
     it('should pass req.user.id to createProduct', async () => {
@@ -190,7 +194,7 @@ describe('ProductsController', () => {
     });
 
     it('GET /products/featured should return featured products', async () => {
-      const res = await controller.getFeaturedProducts('4');
+      const res = await controller.getFeaturedProducts({ limit: 4 });
       expect(mockService.getFeaturedProducts).toHaveBeenCalledWith(4);
       expect(res).toEqual([]);
     });

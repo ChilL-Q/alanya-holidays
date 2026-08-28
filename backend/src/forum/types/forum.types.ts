@@ -18,6 +18,9 @@ export interface ForumCategory {
 export interface ForumPostAuthor {
   full_name: string | null;
   avatar_url: string | null;
+  bio?: string | null;
+  role?: string | null;
+  created_at?: string | null;
 }
 
 export interface ForumPost {
@@ -28,6 +31,7 @@ export interface ForumPost {
   content?: string;
   category_id?: string | null;
   category?: ForumCategory | null;
+  image_url?: string | null;
   author_id: string;
   author?: ForumPostAuthor | null;
   pinned?: boolean;
@@ -133,6 +137,8 @@ export interface ForumEventsFilter {
 
 export interface ForumCommentsFilter {
   includeRemoved?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 export interface InsertForumPostDbInput {
@@ -141,6 +147,7 @@ export interface InsertForumPostDbInput {
   body?: string;
   content?: string;
   category_id?: string | null;
+  image_url?: string | null;
   author_id: string;
   post_type?: 'announcement' | 'discussion' | 'question';
 }
@@ -151,6 +158,7 @@ export interface UpdateForumPostDbInput {
   body?: string;
   content?: string;
   category_id?: string | null;
+  image_url?: string | null;
   is_pinned?: boolean;
   is_removed?: boolean;
 }

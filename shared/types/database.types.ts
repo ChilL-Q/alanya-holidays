@@ -482,6 +482,7 @@ export type Database = {
           category?: string | null;
           video_url?: string | null;
           media_urls?: string[] | null;
+          tag_ids: string[];
           status: 'pending_review' | 'approved' | 'rejected' | string | null;
           payment_details?: Json | null;
           rejection_reason?: string | null;
@@ -499,6 +500,7 @@ export type Database = {
           category?: string | null;
           video_url?: string | null;
           media_urls?: string[] | null;
+          tag_ids?: string[];
           status?: 'pending_review' | 'approved' | 'rejected' | string | null;
           payment_details?: Json | null;
           rejection_reason?: string | null;
@@ -516,6 +518,7 @@ export type Database = {
           category?: string | null;
           video_url?: string | null;
           media_urls?: string[] | null;
+          tag_ids?: string[];
           status?: 'pending_review' | 'approved' | 'rejected' | string | null;
           payment_details?: Json | null;
           rejection_reason?: string | null;
@@ -677,6 +680,7 @@ export type Database = {
           content?: string | null;
           author_id: string | null;
           category_id: string | null;
+          image_url: string | null;
           view_count: number;
           like_count: number;
           comment_count: number;
@@ -694,6 +698,7 @@ export type Database = {
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          image_url?: string | null;
           view_count?: number;
           like_count?: number;
           comment_count?: number;
@@ -711,6 +716,7 @@ export type Database = {
           content?: string | null;
           author_id?: string | null;
           category_id?: string | null;
+          image_url?: string | null;
           view_count?: number;
           like_count?: number;
           comment_count?: number;

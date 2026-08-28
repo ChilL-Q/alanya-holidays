@@ -20,15 +20,22 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
   const shareBtnRef = useRef<HTMLButtonElement>(null);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const effectiveAttendees = isRsvpd ? event.attendees + 1 : event.attendees;
-  const spotsLeft = event.maxAttendees - effectiveAttendees;
-  const fillPercent = (effectiveAttendees / event.maxAttendees) * 100;
+  const effectiveAttendees = event.attendees;
+  const safeMaxAttendees = Math.max(1, event.maxAttendees);
+  const spotsLeft = Math.max(0, safeMaxAttendees - effectiveAttendees);
+  const fillPercent = (effectiveAttendees / safeMaxAttendees) * 100;
   const isAlmostFull = fillPercent >= 80;
-  const isFull = fillPercent >= 100 && !isRsvpd;
+  const isFull = effectiveAttendees >= safeMaxAttendees && !isRsvpd;
 
   // Click-outside close
   useEffect(() => {
     if (!showShareMenu) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowShareMenu(false);
+        shareBtnRef.current?.focus();
+      }
+    };
     const handleClickOutside = (e: MouseEvent) => {
       if (
         shareMenuRef.current &&
@@ -40,7 +47,11 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [showShareMenu]);
 
   useEffect(() => {
@@ -150,13 +161,15 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             {event.category}
           </span>
           <button
+            type="button"
             onClick={handleBookmarkClick}
             className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-all cursor-pointer ${
               isSaved
                 ? "bg-primary-500 text-white"
                 : "bg-foreground-950/40 text-white/70 hover:bg-foreground-950/60 hover:text-white"
             }`}
-            aria-label={isSaved ? "Remove bookmark" : "Bookmark event"}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
           >
             <i className={`${isSaved ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
           </button>
@@ -204,7 +217,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
         <div className="space-y-2 mb-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-foreground-500">
-              <span className="font-semibold text-foreground-900">{effectiveAttendees}</span> / {event.maxAttendees} attending
+              <span className="font-semibold text-foreground-900">{effectiveAttendees}</span> / {safeMaxAttendees} attending
             </span>
             {isFull ? (
               <span className="text-accent-600 font-medium">Full</span>
@@ -229,34 +242,39 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
         {/* Action buttons row */}
         <div className="relative flex items-center gap-1 mb-3 pb-3 border-b border-background-200">
           <button
+            type="button"
             onClick={handleBookmarkClick}
             className={`w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer ${
               isSaved
                 ? "bg-primary-100 text-primary-600"
                 : "text-foreground-400 hover:bg-background-100 hover:text-foreground-600"
             }`}
-            aria-label={isSaved ? "Remove bookmark" : "Bookmark event"}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
             title={isSaved ? "Saved" : "Save event"}
           >
             <i className={`${isSaved ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
           </button>
           <button
+            type="button"
             onClick={handleGoogleCalendar}
             className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-600 transition-all cursor-pointer"
-            aria-label="Add to Google Calendar"
+            aria-label={`Add ${event.title} to Google Calendar`}
             title="Add to Google Calendar"
           >
             <i className="ri-google-line text-sm"></i>
           </button>
           <button
+            type="button"
             onClick={handleIcalDownload}
             className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-600 transition-all cursor-pointer"
-            aria-label="Download iCal file"
+            aria-label={`Download ${event.title} as an iCal file`}
             title="Download .ics file"
           >
             <i className="ri-calendar-2-line text-sm"></i>
           </button>
           <button
+            type="button"
             ref={shareBtnRef}
             onClick={handleShareClick}
             className={`w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer ${
@@ -264,7 +282,10 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 ? "bg-accent-100 text-accent-600"
                 : "text-foreground-400 hover:bg-background-100 hover:text-foreground-600"
             }`}
-            aria-label="Share event"
+            aria-haspopup="menu"
+            aria-expanded={showShareMenu}
+            aria-controls={`share-menu-${event.id}`}
+            aria-label={`Share ${event.title}`}
             title="Share event"
           >
             <i className="ri-share-forward-line text-sm"></i>
@@ -273,13 +294,18 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
           {/* Share dropdown */}
           {showShareMenu && (
             <div
+              id={`share-menu-${event.id}`}
               ref={shareMenuRef}
               className="absolute left-0 bottom-full mb-2 w-56 bg-background-50 border border-background-200 rounded-xl shadow-lg z-20 overflow-hidden"
+              role="menu"
+              aria-label={`Share options for ${event.title}`}
             >
               {/* Copy link */}
               <button
+                type="button"
                 onClick={handleCopyLink}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
+                role="menuitem"
               >
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 shrink-0">
                   <i className={`${copied ? "ri-check-line text-accent-500" : "ri-link text-foreground-500"} text-sm`}></i>
@@ -289,8 +315,10 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
 
               {/* WhatsApp */}
               <button
+                type="button"
                 onClick={handleWhatsapp}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
+                role="menuitem"
               >
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-accent-100 shrink-0">
                   <i className="ri-whatsapp-line text-accent-600 text-sm"></i>
@@ -300,8 +328,10 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
 
               {/* Telegram */}
               <button
+                type="button"
                 onClick={handleTelegram}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer"
+                role="menuitem"
               >
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-accent-100 shrink-0">
                   <i className="ri-telegram-line text-accent-600 text-sm"></i>
@@ -314,8 +344,11 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
 
         {/* RSVP button */}
         <button
+          type="button"
           onClick={handleRsvpClick}
           disabled={isFull && !isRsvpd}
+          aria-pressed={isRsvpd}
+          aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
           className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer whitespace-nowrap ${
             isRsvpd
               ? "bg-accent-100 text-accent-700 hover:bg-accent-200 border border-accent-200"

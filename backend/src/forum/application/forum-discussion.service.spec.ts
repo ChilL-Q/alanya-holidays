@@ -173,6 +173,27 @@ describe('ForumDiscussionService', () => {
       );
     });
 
+    it('persists an optional cover image URL when creating a post', async () => {
+      mockRepository.getPostSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertPost.mockResolvedValueOnce({
+        id: postId,
+        slug: 'post-with-cover',
+      });
+      const input = {
+        title: 'Post with cover',
+        content: 'Body',
+        image_url: 'https://cdn.example.com/forum/cover.webp',
+      };
+
+      await service.createForumPost(input, 'discussion', userId);
+
+      expect(mockRepository.insertPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          image_url: 'https://cdn.example.com/forum/cover.webp',
+        }),
+      );
+    });
+
     it('resolves category slug to UUID when category_id is provided as non-UUID slug', async () => {
       mockRepository.getPostSlugs.mockResolvedValueOnce([]);
       mockRepository.getCategoryBySlug.mockResolvedValueOnce({
@@ -197,6 +218,34 @@ describe('ForumDiscussionService', () => {
           category_id: '11111111-2222-3333-4444-555555555555',
         }),
       );
+    });
+
+    it('hides removed post details from public users', async () => {
+      mockRepository.getPostBySlug.mockResolvedValueOnce({
+        id: postId,
+        slug: 'hidden-post',
+        title: 'Hidden',
+        author_id: otherUserId,
+        is_removed: true,
+      });
+
+      const res = await service.getForumPost('hidden-post');
+      expect(res).toBeNull();
+    });
+
+    it('allows admin to view removed post details for moderation', async () => {
+      mockRepository.getPostBySlug.mockResolvedValueOnce({
+        id: postId,
+        slug: 'hidden-post',
+        title: 'Hidden',
+        author_id: otherUserId,
+        is_removed: true,
+      });
+      mockUserRoles.getRole.mockResolvedValueOnce('admin');
+
+      const res = await service.getForumPost('hidden-post', userId);
+      expect(res?.id).toBe(postId);
+      expect(mockRepository.attachCategoryParents).toHaveBeenCalled();
     });
 
     it('updates post when user is author or admin', async () => {
@@ -232,6 +281,23 @@ describe('ForumDiscussionService', () => {
   });
 
   describe('Comments & Likes', () => {
+    it('passes exact comment pagination to the repository', async () => {
+      mockRepository.getComments.mockResolvedValueOnce([{ id: commentId }]);
+
+      await service.getForumComments(
+        postId,
+        { includeRemoved: false, limit: 11, offset: 22 },
+        userId,
+      );
+
+      expect(mockRepository.getComments).toHaveBeenCalledWith(
+        postId,
+        false,
+        11,
+        22,
+      );
+    });
+
     it('creates comment', async () => {
       mockRepository.insertComment.mockResolvedValueOnce({
         id: commentId,

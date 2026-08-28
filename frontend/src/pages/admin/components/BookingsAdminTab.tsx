@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService, type AdminBookingItem } from "@/api-services/admin.service";
 import { logger } from "@/lib/logger";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 const STATUS_FILTERS = ["all", "pending", "confirmed", "completed", "cancelled", "rejected"] as const;
 
@@ -24,14 +25,20 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
   const [actingId, setActingId] = useState<string | null>(null);
 
   const loadBookings = useCallback(
-    async (filter: string) => {
-      setLoading(true);
+    async (filter: string, background = false) => {
+      if (!background) setLoading(true);
       setError(null);
       try {
-        const res = await adminService.getAdminBookings(filter === "all" ? undefined : filter);
+        const res = await adminService.getAdminBookings(
+          filter === "all" ? undefined : filter,
+          { throwOnError: true }
+        );
         setBookings(res);
         if (!onCountUpdate) return;
-        const source = filter === "all" ? res : await adminService.getAdminBookings();
+        const source =
+          filter === "all"
+            ? res
+            : await adminService.getAdminBookings(undefined, { throwOnError: true });
         onCountUpdate({ total: source.length, pending: source.filter((b) => b.status === "pending").length });
       } catch (err) {
         logger.error("Failed to load admin bookings:", err);
@@ -46,6 +53,8 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
   useEffect(() => {
     void loadBookings(statusFilter);
   }, [statusFilter, loadBookings]);
+
+  useAutoRefresh(() => loadBookings(statusFilter, true), { intervalMs: 20000 });
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setActingId(id);

@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { forumService, type ThreadDetail } from "@/api-services/forum.service";
+import { deleteForumImage, uploadForumImage } from "@/api-services/storage.service";
 import { sanitizeForumHtml } from "@/utils/sanitizeHtml";
 import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
 import { logger } from "@/lib/logger";
+import ReportModal from "./ReportModal";
+
+const MAX_COVER_SIZE = 5 * 1024 * 1024;
+const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+type PostUpdates = { body: string; image_url: string | null };
 
 interface OriginalPostProps {
   thread: ThreadDetail;
@@ -11,7 +18,7 @@ interface OriginalPostProps {
   onShare: () => void;
   onScrollToReplies: () => void;
   onBookmark?: () => void;
-  onUpdate?: (newContent: string) => Promise<void> | void;
+  onUpdate?: (updates: PostUpdates) => Promise<void> | void;
 }
 
 export default function OriginalPost({
@@ -26,8 +33,13 @@ export default function OriginalPost({
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(thread.content);
   const [editContent, setEditContent] = useState(thread.content);
+  const [imageUrl, setImageUrl] = useState(thread.imageUrl);
+  const [editImageUrl, setEditImageUrl] = useState(thread.imageUrl);
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [coverError, setCoverError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(Boolean(thread.isBookmarked));
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     setContent(thread.content);
@@ -38,6 +50,11 @@ export default function OriginalPost({
     setIsBookmarked(Boolean(thread.isBookmarked));
   }, [thread.isBookmarked]);
 
+  useEffect(() => {
+    setImageUrl(thread.imageUrl);
+    setEditImageUrl(thread.imageUrl);
+  }, [thread.imageUrl]);
+
   const isAuthor = Boolean(
     (user?.id && thread.authorId && user.id === thread.authorId) ||
     (thread.author && (profile?.full_name === thread.author || (user?.user_metadata?.full_name as string) === thread.author))
@@ -46,20 +63,47 @@ export default function OriginalPost({
   const canEdit = isAuthor || isAdmin;
 
   const handleSave = async () => {
-    if (!editContent.trim() || editContent === "<p></p>") return;
+    if (!editContent.trim() || editContent === "<p></p>" || coverError) return;
     const prevContent = content;
-    setContent(editContent);
+    let uploadedImageUrl: string | undefined;
     setIsSaving(true);
     try {
-      if (onUpdate) {
-        await onUpdate(editContent);
-      } else {
-        await forumService.updatePost(thread.id, { body: editContent });
+      if (editCoverFile) {
+        if (!user?.id) {
+          throw new Error("Please sign in before uploading a forum cover image.");
+        }
+        uploadedImageUrl = await uploadForumImage(editCoverFile, user.id);
       }
+      const nextImageUrl = uploadedImageUrl || editImageUrl;
+      const updates: PostUpdates = {
+        body: editContent,
+        image_url: nextImageUrl || null,
+      };
+
+      if (onUpdate) {
+        await onUpdate(updates);
+      } else {
+        await forumService.updatePost(thread.id, updates);
+      }
+      setContent(editContent);
+      setImageUrl(nextImageUrl);
+      setEditImageUrl(nextImageUrl);
+      setEditCoverFile(null);
       setIsEditing(false);
+
+      if (imageUrl && imageUrl !== nextImageUrl && user?.id) {
+        void deleteForumImage(imageUrl, user.id).catch((err) => {
+          logger.warn("Failed to clean up previous forum cover:", err);
+        });
+      }
     } catch (err) {
       logger.error("Failed to update post:", err);
       setContent(prevContent);
+      if (uploadedImageUrl && user?.id) {
+        void deleteForumImage(uploadedImageUrl, user.id).catch((cleanupError) => {
+          logger.warn("Failed to clean up unused forum cover:", cleanupError);
+        });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -67,7 +111,27 @@ export default function OriginalPost({
 
   const handleCancel = () => {
     setEditContent(content);
+    setEditImageUrl(imageUrl);
+    setEditCoverFile(null);
+    setCoverError("");
     setIsEditing(false);
+  };
+
+  const handleCoverSelection = (file: File | undefined) => {
+    if (!file) return;
+    if (!ALLOWED_COVER_TYPES.has(file.type)) {
+      setCoverError("Please choose a JPG, PNG, or WebP image.");
+      setEditCoverFile(null);
+      return;
+    }
+    if (file.size > MAX_COVER_SIZE) {
+      setCoverError("Cover image must be 5 MB or smaller.");
+      setEditCoverFile(null);
+      return;
+    }
+
+    setEditCoverFile(file);
+    setCoverError("");
   };
 
   const handleToggleBookmark = async () => {
@@ -82,6 +146,16 @@ export default function OriginalPost({
     } catch (err) {
       logger.warn("Failed to toggle bookmark:", err);
       setIsBookmarked(!nextState);
+    }
+  };
+
+  const handleReportSubmit = async (reason: string) => {
+    const success = await forumService.reportContent("post", thread.id, reason);
+    if (success) {
+      alert("Report submitted successfully.");
+      setIsReportModalOpen(false);
+    } else {
+      alert("Failed to submit report. Please try again.");
     }
   };
 
@@ -119,6 +193,9 @@ export default function OriginalPost({
             type="button"
             onClick={() => {
               setEditContent(content);
+              setEditImageUrl(imageUrl);
+              setEditCoverFile(null);
+              setCoverError("");
               setIsEditing(true);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-600 hover:text-primary-600 hover:bg-background-100 border border-background-200 transition-colors cursor-pointer"
@@ -130,10 +207,64 @@ export default function OriginalPost({
         )}
       </div>
 
+      {imageUrl && (
+        <div className="px-4 md:px-5 pt-4">
+          <div className="overflow-hidden rounded-xl bg-background-100">
+            <img
+              src={imageUrl}
+              alt={`${thread.title} cover`}
+              className="max-h-[32rem] w-full object-cover"
+              decoding="async"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Post content or Edit Mode */}
       <div className="px-4 md:px-5 py-4">
         {isEditing ? (
           <div className="space-y-3">
+            <div className="rounded-xl border border-background-200 bg-background-50 p-3">
+              {(editCoverFile || editImageUrl) && (
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground-700">Current cover</p>
+                    <p className="truncate text-xs text-foreground-400">
+                      {editCoverFile?.name || editImageUrl}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCoverFile(null);
+                      setEditImageUrl(undefined);
+                      setCoverError("");
+                    }}
+                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    aria-label="Remove cover"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              <label
+                htmlFor="edit-post-cover"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-background-200 bg-white px-3 py-2 text-xs font-medium text-foreground-700 hover:bg-background-100 transition-colors"
+              >
+                <i className="ri-image-edit-line"></i>
+                {editCoverFile || editImageUrl ? "Replace cover image" : "Add cover image"}
+              </label>
+              <input
+                id="edit-post-cover"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                aria-label="Replace cover image"
+                onChange={(event) => handleCoverSelection(event.target.files?.[0])}
+              />
+              {coverError && <p className="mt-2 text-xs text-red-600">{coverError}</p>}
+            </div>
+
             <RichTextEditor
               value={editContent}
               onChange={setEditContent}
@@ -152,7 +283,7 @@ export default function OriginalPost({
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={isSaving || !editContent.trim()}
+                disabled={isSaving || !editContent.trim() || Boolean(coverError)}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary-500 text-white text-xs font-medium hover:bg-primary-600 disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
               >
                 {isSaving && <i className="ri-loader-4-line animate-spin text-sm"></i>}
@@ -205,6 +336,17 @@ export default function OriginalPost({
           <span className="hidden sm:inline">{isBookmarked ? "Saved" : "Save"}</span>
         </button>
 
+        {/* Report button */}
+        <button
+          type="button"
+          onClick={() => setIsReportModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-rose-500 hover:bg-background-100 transition-all cursor-pointer"
+          aria-label="Report post"
+        >
+          <i className="ri-flag-line text-sm"></i>
+          <span className="hidden sm:inline">Report</span>
+        </button>
+
         <button
           onClick={onShare}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-foreground-600 hover:bg-background-100 transition-all ml-auto cursor-pointer"
@@ -213,6 +355,12 @@ export default function OriginalPost({
           <span className="hidden sm:inline">Share</span>
         </button>
       </div>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+      />
     </article>
   );
 }

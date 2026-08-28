@@ -4,6 +4,7 @@ import { adminService, type BlogSubmissionAdminItem } from "@/api-services/admin
 import ContentSubmissionPreviewModal from "./ContentSubmissionPreviewModal";
 import BulkActionsToolbar from "./BulkActionsToolbar";
 import RejectReasonModal from "./RejectReasonModal";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 interface ContentModerationTabProps {
   onContentCountUpdate?: (counts: { total: number; pending: number }) => void;
@@ -32,12 +33,13 @@ export default function ContentModerationTab({
     onContentCountUpdateRef.current = onContentCountUpdate;
   }, [onContentCountUpdate]);
 
-  const fetchSubmissions = useCallback(async () => {
-    setLoading(true);
+  const fetchSubmissions = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     try {
       const data = await adminService.getContentSubmissions({
         status: statusFilter !== "all" ? statusFilter : undefined,
         search: searchQuery.trim() || undefined,
+        throwOnError: true,
       });
       setSubmissions(data || []);
 
@@ -54,8 +56,10 @@ export default function ContentModerationTab({
   }, [statusFilter, searchQuery]);
 
   useEffect(() => {
-    fetchSubmissions();
+    void fetchSubmissions();
   }, [fetchSubmissions]);
+
+  useAutoRefresh(() => fetchSubmissions(true), { intervalMs: 20000 });
 
   // Clear selection on filter or search query change
   useEffect(() => {

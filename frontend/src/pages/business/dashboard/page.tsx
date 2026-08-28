@@ -14,6 +14,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/useToast";
 import {
   directoryService,
   type DirectoryClaim,
@@ -29,19 +30,22 @@ import { MyProductsTab } from "./components/MyProductsTab";
 import { SellerOrdersTab } from "./components/SellerOrdersTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
-import UpgradesAddonsShowcase from "@/components/feature/UpgradesAddonsShowcase";
 import { logger } from "@/lib/logger";
+import {
+  businessApplicationsService,
+  type BusinessApplication,
+} from "@/api-services/business-applications.service";
 
 export type DashboardTab =
   | "listings"
   | "products"
   | "orders"
   | "analytics"
-  | "claims"
-  | "upgrades";
+  | "claims";
 
 export default function MerchantDashboardPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
+  const { showToast, ToastContainer } = useToast();
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("listings");
   const [listingsFilter, setListingsFilter] = useState<string>("all");
@@ -51,8 +55,12 @@ export default function MerchantDashboardPage() {
   const [claims, setClaims] = useState<DirectoryClaim[]>([]);
   const [analytics, setAnalytics] = useState<OwnerAnalyticsSummary | null>(null);
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState<boolean>(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [businessApplication, setBusinessApplication] = useState<BusinessApplication | null>(null);
+  const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
 
   // Modal States
   const [isListModalOpen, setIsListModalOpen] = useState(false);
@@ -62,29 +70,65 @@ export default function MerchantDashboardPage() {
 
   const fetchDashboardData = useCallback(async () => {
     if (!isAuthenticated && !user) return;
-    setLoading(true);
-    setError(null);
+
+    setDashboardLoading(true);
+    setDashboardError(null);
+
     try {
-      const [fetchedListings, fetchedClaims, fetchedAnalytics] = await Promise.all([
+      const [fetchedListings, fetchedClaims] = await Promise.all([
         directoryService.getMyListings(),
         directoryService.getMyClaims(),
-        directoryService.getOwnerAnalytics(days),
       ]);
 
       setListings(fetchedListings);
       setClaims(fetchedClaims);
-      setAnalytics(fetchedAnalytics);
     } catch (err) {
       logger.error("Failed to load merchant dashboard data:", err);
-      setError(err instanceof Error ? err.message : "Failed to load dashboard data");
+      setDashboardError(err instanceof Error ? err.message : "Failed to load dashboard data");
     } finally {
-      setLoading(false);
+      setDashboardLoading(false);
     }
-  }, [isAuthenticated, user, days]);
+  }, [isAuthenticated, user]);
+
+  const fetchAnalytics = useCallback(async (selectedDays: number) => {
+    if (!isAuthenticated && !user) return;
+
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+
+    try {
+      const fetchedAnalytics = await directoryService.getOwnerAnalytics(selectedDays);
+      setAnalytics(fetchedAnalytics);
+    } catch (err) {
+      logger.error("Failed to load merchant analytics:", err);
+      setAnalyticsError(err instanceof Error ? err.message : "Failed to load analytics");
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [isAuthenticated, user]);
+
+  const refreshDashboard = useCallback(async () => {
+    await Promise.all([fetchDashboardData(), fetchAnalytics(days)]);
+  }, [fetchDashboardData, fetchAnalytics, days]);
 
   useEffect(() => {
-    fetchDashboardData();
+    void fetchDashboardData();
   }, [fetchDashboardData]);
+
+  useEffect(() => {
+    void fetchAnalytics(days);
+  }, [fetchAnalytics, days]);
+
+  useEffect(() => {
+    if (!isAuthenticated && !user) return;
+
+    void businessApplicationsService
+      .getMine()
+      .then(setBusinessApplication)
+      .catch((err: unknown) => {
+        logger.warn("Failed to load business application status:", err);
+      });
+  }, [isAuthenticated, user]);
 
   // Determine highest tier
   const highestTier = listings.reduce<string>((highest, curr) => {
@@ -130,13 +174,14 @@ export default function MerchantDashboardPage() {
           <div className="pt-2 flex flex-col gap-2.5">
             <Link
               to="/login"
+              state={{ from: { pathname: "/business/dashboard" } }}
               className="w-full py-3 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
             >
               <LogIn className="w-4 h-4" />
               <span>Sign In to Merchant Hub</span>
             </Link>
             <Link
-              to="/register"
+              to="/business/register"
               className="w-full py-3 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors"
             >
               Create Business Account
@@ -146,6 +191,13 @@ export default function MerchantDashboardPage() {
       </div>
     );
   }
+
+  const applicationStatusStyles = {
+    pending: "bg-amber-50 text-amber-800 border-amber-200",
+    approved: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    rejected: "bg-red-50 text-red-800 border-red-200",
+    withdrawn: "bg-slate-100 text-slate-700 border-slate-300",
+  } as const;
 
   // Handlers
   const handleOpenCreateModal = () => {
@@ -164,12 +216,28 @@ export default function MerchantDashboardPage() {
   };
 
   const handleDeleteListing = async (id: string) => {
+    if (deletingListingId === id) return;
+
+    const listingToDelete = listings.find((item) => item.id === id);
+    setDeletingListingId(id);
+
     try {
       await directoryService.deleteListing(id);
       setListings((prev) => prev.filter((item) => item.id !== id));
+      showToast(
+        "Listing deleted",
+        listingToDelete?.name ? `${listingToDelete.name} was removed from your dashboard.` : "The listing was removed successfully.",
+        "success"
+      );
     } catch (err) {
       logger.error("Failed to delete listing:", err);
-      alert("Failed to delete listing. Please try again.");
+      showToast(
+        "Delete failed",
+        err instanceof Error ? err.message : "Could not delete the listing. Please try again.",
+        "error"
+      );
+    } finally {
+      setDeletingListingId(null);
     }
   };
 
@@ -247,15 +315,35 @@ export default function MerchantDashboardPage() {
           }}
         />
 
-        {error && (
+        {businessApplication && (
+          <section
+            aria-label="Business application status"
+            className={`rounded-2xl border p-4 ${applicationStatusStyles[businessApplication.status]}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide">Business application</p>
+                <p className="font-semibold">{businessApplication.businessName}</p>
+              </div>
+              <span className="rounded-full border border-current/20 px-3 py-1 text-xs font-bold capitalize">
+                {businessApplication.status}
+              </span>
+            </div>
+            {businessApplication.status === "rejected" && businessApplication.rejectionReason && (
+              <p className="mt-2 text-sm">{businessApplication.rejectionReason}</p>
+            )}
+          </section>
+        )}
+
+        {dashboardError && (
           <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-rose-500" />
-              <span>{error}</span>
+              <span>{dashboardError}</span>
             </div>
             <button
               type="button"
-              onClick={fetchDashboardData}
+              onClick={() => void refreshDashboard()}
               className="text-xs font-semibold underline hover:no-underline"
             >
               Retry
@@ -297,11 +385,6 @@ export default function MerchantDashboardPage() {
               label: "Ownership Claim Tracker",
               icon: <ShieldCheck className="w-4 h-4" />,
               count: claims.length,
-            },
-            {
-              id: "upgrades" as DashboardTab,
-              label: "Upgrades & Add-Ons",
-              icon: <TrendingUp className="w-4 h-4" />,
             },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
@@ -356,7 +439,7 @@ export default function MerchantDashboardPage() {
           {activeTab === "listings" && (
             <MyListingsTab
               listings={listings}
-              loading={loading}
+              loading={dashboardLoading}
               filter={listingsFilter}
               onFilterChange={setListingsFilter}
               onEditListing={handleEditListing}
@@ -364,6 +447,7 @@ export default function MerchantDashboardPage() {
               onDeleteListing={handleDeleteListing}
               onUpgradeTier={handleOpenUpgrade}
               onListNewBusiness={handleOpenCreateModal}
+              deletingListingId={deletingListingId}
             />
           )}
 
@@ -372,10 +456,12 @@ export default function MerchantDashboardPage() {
               analytics={analytics}
               userListings={listings}
               highestTier={highestTier}
-              loading={loading}
+              loading={analyticsLoading}
+              error={analyticsError}
               days={days}
               onDaysChange={(newDays) => setDays(newDays)}
               onOpenUpgradeModal={() => handleOpenUpgrade()}
+              onRetry={() => fetchAnalytics(days)}
             />
           )}
 
@@ -384,13 +470,7 @@ export default function MerchantDashboardPage() {
           {activeTab === "orders" && <SellerOrdersTab />}
 
           {activeTab === "claims" && (
-            <ClaimTrackerTab claims={claims} loading={loading} />
-          )}
-
-          {activeTab === "upgrades" && (
-            <UpgradesAddonsShowcase
-              onUpgradeSelect={() => handleOpenUpgrade()}
-            />
+            <ClaimTrackerTab claims={claims} loading={dashboardLoading} />
           )}
         </div>
       </div>
@@ -402,7 +482,7 @@ export default function MerchantDashboardPage() {
           onClose={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
           draftId={draftToResume?.id}
           initialData={
@@ -426,15 +506,17 @@ export default function MerchantDashboardPage() {
           onListingCreated={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
           onDraftSaved={() => {
             setIsListModalOpen(false);
             setDraftToResume(null);
-            fetchDashboardData();
+            void refreshDashboard();
           }}
         />
       )}
+
+      <ToastContainer />
 
       {/* Tier Upgrade Modal */}
       {isUpgradeModalOpen && (

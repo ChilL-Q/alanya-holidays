@@ -7,6 +7,7 @@ import {
 import ClaimDetailModal from "./ClaimDetailModal";
 import RejectReasonModal from "./RejectReasonModal";
 import BulkActionsToolbar from "./BulkActionsToolbar";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 type ClaimStatusFilter = "all" | "pending" | "approved" | "rejected";
 
@@ -56,12 +57,13 @@ export default function ClaimsQueueTab({
   const [detailClaim, setDetailClaim] = useState<DirectoryClaim | null>(null);
   const [rejectingClaim, setRejectingClaim] = useState<DirectoryClaim | null>(null);
 
-  const fetchClaims = useCallback(async () => {
-    setLoading(true);
+  const fetchClaims = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const data = await adminService.getClaimsQueue(
-        statusFilter !== "all" ? statusFilter : undefined
+        statusFilter !== "all" ? statusFilter : undefined,
+        { throwOnError: true }
       );
       setClaims(data || []);
 
@@ -77,8 +79,10 @@ export default function ClaimsQueueTab({
   }, [statusFilter]);
 
   useEffect(() => {
-    fetchClaims();
+    void fetchClaims();
   }, [fetchClaims]);
+
+  useAutoRefresh(() => fetchClaims(true), { intervalMs: 20000 });
 
   // Clear selection on filter or search query change
   useEffect(() => {
@@ -318,7 +322,9 @@ export default function ClaimsQueueTab({
           </div>
           <button
             type="button"
-            onClick={fetchClaims}
+            onClick={() => {
+              void fetchClaims();
+            }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

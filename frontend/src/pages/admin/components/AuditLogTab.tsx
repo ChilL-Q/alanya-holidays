@@ -4,6 +4,7 @@ import {
   type ModerationAuditLogItem,
   type AuditLogQueryParams,
 } from "@/api-services/admin.service";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 interface AuditLogTabProps {
   onCountUpdate?: (counts: { total: number }) => void;
@@ -64,8 +65,8 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
   const [inspectItem, setInspectItem] = useState<ModerationAuditLogItem | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
+  const fetchLogs = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const params: AuditLogQueryParams = {
@@ -78,7 +79,7 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
 
-      const result = await adminService.getAuditLogs(params);
+      const result = await adminService.getAuditLogs({ ...params, throwOnError: true });
       setLogs(result.data || []);
       setTotalCount(result.total || 0);
       setTotalPages(result.totalPages || 1);
@@ -95,8 +96,10 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
   }, [currentPage, pageSize, entityType, actionType, searchQuery, startDate, endDate]);
 
   useEffect(() => {
-    fetchLogs();
+    void fetchLogs();
   }, [fetchLogs]);
+
+  useAutoRefresh(() => fetchLogs(true), { intervalMs: 30000 });
 
 
   const handleClearFilters = () => {
@@ -213,7 +216,9 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={fetchLogs}
+            onClick={() => {
+              void fetchLogs();
+            }}
             disabled={loading}
             className="px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             title="Refresh audit logs"
@@ -354,7 +359,9 @@ export default function AuditLogTab({ onCountUpdate }: AuditLogTabProps) {
           </div>
           <button
             type="button"
-            onClick={fetchLogs}
+            onClick={() => {
+              void fetchLogs();
+            }}
             className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition-colors"
           >
             Retry

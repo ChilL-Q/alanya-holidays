@@ -12,12 +12,8 @@ export default defineConfig({
     css: true,
     fileParallelism: false,
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true,
-        isolate: false,
-      },
-    },
+    singleThread: true,
+    isolate: true,
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '.claude', 'e2e/**', '**/*.integration.test.ts'],
     coverage: {
       provider: 'v8',

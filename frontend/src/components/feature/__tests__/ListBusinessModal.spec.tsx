@@ -23,7 +23,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     expect(screen.getByText(/choose your business tier/i)).toBeInTheDocument();
     expect(screen.getByText("Explorer")).toBeInTheDocument();
     expect(screen.getByText("Voyager")).toBeInTheDocument();
-    expect(screen.getByText("Signature")).toBeInTheDocument();
+    expect(screen.getByText("Custom")).toBeInTheDocument();
   });
 
   it("does not render when isOpen is false", () => {
@@ -53,9 +53,9 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
   it("unlocks social links, video URL, and instant booking when Paid tier is selected", async () => {
     render(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 
-    // Click Signature (Paid) tier
-    const signatureSelectBtn = screen.getByTestId("select-tier-signature");
-    fireEvent.click(signatureSelectBtn);
+    // Click Voyager (Paid) tier
+    const voyagerSelectBtn = screen.getByTestId("select-tier-voyager");
+    fireEvent.click(voyagerSelectBtn);
 
     // Paid tier fields should be accessible
     expect(await screen.findByLabelText(/instagram url/i)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const createSpy = vi.spyOn(directoryService, "createListing").mockResolvedValue({
       id: "biz-free-1",
       name: "Alanya Cozy Cafe",
-      category: "restaurants-cafes",
+      category: "restaurants",
       subcategory: "Cafe",
       description: "Cozy neighborhood cafe with fresh coffee.",
       address: "Ataturk Cad. No:10, Alanya",
@@ -95,7 +95,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       target: { value: "Alanya Cozy Cafe" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "restaurants-cafes" },
+      target: { value: "restaurants" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "Cozy neighborhood cafe with fresh coffee and pastries." },
@@ -132,7 +132,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const createSpy = vi.spyOn(directoryService, "createListing").mockResolvedValue({
       id: "biz-paid-1",
       name: "Alanya Grand Luxury Hotel",
-      category: "hotels-accommodation",
+      category: "hotels",
       subcategory: "5-Star Resort",
       description: "Exclusive luxury beachfront resort.",
       address: "D400 Karayolu No:100, Alanya",
@@ -152,15 +152,15 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
 
     render(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
 
-    // Select Signature tier
-    fireEvent.click(screen.getByTestId("select-tier-signature"));
+    // Select Voyager tier
+    fireEvent.click(screen.getByTestId("select-tier-voyager"));
 
     // Fill form
     fireEvent.change(screen.getByLabelText(/business name/i), {
       target: { value: "Alanya Grand Luxury Hotel" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "hotels-accommodation" },
+      target: { value: "hotels" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "Exclusive luxury beachfront resort with 5-star amenities." },
@@ -182,7 +182,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "Alanya Grand Luxury Hotel",
-          tier: "signature",
+          tier: "voyager",
         })
       );
     });
@@ -261,7 +261,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const savedDraftData = {
       formData: {
         name: "Restored Coffee House",
-        category: "restaurants-cafes",
+        category: "restaurants",
         description: "Specialty coffee roastery in Alanya center.",
         address: "Iskele Cad. 22",
         tier: "explorer",
@@ -347,7 +347,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       target: { value: "Failing Listing Cafe" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "restaurants-cafes" },
+      target: { value: "restaurants" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "A wonderful cafe with scenic views." },

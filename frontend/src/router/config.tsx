@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { Navigate, type RouteObject } from "react-router-dom";
+import AccessRoute from "./AccessRoute";
 
 const NotFound = lazy(() => import("../pages/NotFound"));
 const Home = lazy(() => import("../pages/home/page"));
@@ -11,6 +12,7 @@ const NewThreadPage = lazy(() => import("../pages/new-thread/page"));
 const LoginPage = lazy(() => import("../pages/login/page"));
 const RegisterPage = lazy(() => import("../pages/register/page"));
 const ForgotPasswordPage = lazy(() => import("../pages/forgot-password/page"));
+const VerifyClaimPage = lazy(() => import("../pages/verify-claim/page"));
 const AboutPage = lazy(() => import("../pages/about/page"));
 const PrivacyPage = lazy(() => import("../pages/privacy/page"));
 const TermsPage = lazy(() => import("../pages/terms/page"));
@@ -23,6 +25,7 @@ const ShopPage = lazy(() => import("../pages/shop/page"));
 const ProductDetailPage = lazy(() => import("../pages/product-detail/page"));
 const BusinessDetailPage = lazy(() => import("../pages/business/page"));
 const BusinessDashboardPage = lazy(() => import("../pages/business/dashboard/page"));
+const BusinessRegisterPage = lazy(() => import("../pages/business/register/page"));
 const ComparePage = lazy(() => import("../pages/compare/page"));
 const ContactPage = lazy(() => import("../pages/contact/page"));
 const YachtChartersPage = lazy(() => import("../pages/yacht-charters/page"));
@@ -170,8 +173,16 @@ const routes: RouteObject[] = [
     element: <ForgotPasswordPage />,
   },
   {
+    path: "/verify-claim",
+    element: <VerifyClaimPage />,
+  },
+  {
     path: "/business/dashboard",
     element: <BusinessDashboardPage />,
+  },
+  {
+    path: "/business/register",
+    element: <BusinessRegisterPage />,
   },
   {
     path: "/business/:businessId",
@@ -191,7 +202,11 @@ const routes: RouteObject[] = [
   },
   {
     path: "/admin",
-    element: <AdminDashboardPage />,
+    element: (
+      <AccessRoute level="admin">
+        <AdminDashboardPage />
+      </AccessRoute>
+    ),
   },
   {
     path: "/settings",

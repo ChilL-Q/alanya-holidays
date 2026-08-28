@@ -232,8 +232,45 @@ describe("forum.service", () => {
       const result = await forumService.getThreadById("best-breakfast");
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Best Breakfast");
+      expect(result?.category).toBe("Food & Nightlife");
+      expect(result?.subcategory).toBeUndefined();
       expect(result?.replies).toHaveLength(1);
       expect(result?.replies[0].content).toBe("Great recommendation!");
+    });
+
+    it("should map backend child categories as parent category plus subcategory", async () => {
+      const mockPost = {
+        id: "p2",
+        slug: "best-clinics",
+        title: "Best clinics in Oba",
+        body: "Looking for recommendations",
+        views_count: 80,
+        likes_count: 3,
+        comments_count: 0,
+        created_at: new Date().toISOString(),
+        category: {
+          id: "cat-child",
+          name: "Dentists",
+          slug: "dentists",
+          parent_id: "cat-parent",
+          parent: {
+            id: "cat-parent",
+            name: "Living",
+            slug: "living",
+          },
+        },
+        author: { full_name: "Member" },
+      };
+
+      vi.spyOn(apiClient, "get")
+        .mockResolvedValueOnce(mockPost)
+        .mockResolvedValueOnce([]);
+
+      const result = await forumService.getThreadById("best-clinics");
+      expect(result).not.toBeNull();
+      expect(result?.category).toBe("Living");
+      expect(result?.categoryId).toBe("living");
+      expect(result?.subcategory).toBe("Dentists");
     });
 
     it("should return null on 404 ApiError", async () => {
@@ -271,6 +308,31 @@ describe("forum.service", () => {
       });
       expect(result.id).toBe("new-p1");
       expect(result.slug).toBe("my-new-post");
+    });
+
+    it("sends and maps an optional forum cover image URL", async () => {
+      const imageUrl = "https://cdn.example.com/forum/cover.webp";
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({
+        id: "new-p2",
+        slug: "post-with-cover",
+        title: "Post with cover",
+        body: "Post body",
+        image_url: imageUrl,
+      });
+      const input = {
+        title: "Post with cover",
+        body: "Post body",
+        category_id: "travel-vacation",
+        image_url: imageUrl,
+      };
+
+      const result = await createThread(input);
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/forum/posts",
+        expect.objectContaining({ image_url: imageUrl }),
+      );
+      expect(result).toEqual(expect.objectContaining({ imageUrl }));
     });
 
     it("should throw ApiError when createThread API fails", async () => {
@@ -381,13 +443,18 @@ describe("forum.service", () => {
         slug: "edited-post",
         title: "Edited Title",
         body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
       };
 
       vi.spyOn(apiClient, "put").mockResolvedValueOnce(mockUpdated);
 
-      const result = await updatePost("p-edit", { body: "Updated content" });
+      const result = await updatePost("p-edit", {
+        body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
+      });
       expect(apiClient.put).toHaveBeenCalledWith("/forum/posts/p-edit", {
         body: "Updated content",
+        image_url: "https://cdn.example.com/forum/updated.webp",
       });
       expect(result.id).toBe("p-edit");
     });

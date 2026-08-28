@@ -7,6 +7,10 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendChatMessageDto } from './dto/send-chat-message.dto';
 import { ReportChatDto } from './dto/report-chat.dto';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
+import {
+  ConversationMessagesQueryDto,
+  ConversationsQueryDto,
+} from './dto/messages-pagination-query.dto';
 
 describe('MessagesController', () => {
   let controller: MessagesController;
@@ -49,10 +53,18 @@ describe('MessagesController', () => {
     it('should delegate getConversations call to MessagesService with user id', async () => {
       mockService.getConversations.mockResolvedValue([]);
 
-      const res = await controller.getConversations(mockUser);
+      const query = Object.assign(new ConversationsQueryDto(), {
+        limit: 10,
+        offset: 20,
+      });
+      const res = await controller.getConversations(mockUser, query);
 
       expect(res).toEqual([]);
-      expect(mockService.getConversations).toHaveBeenCalledWith('user-123');
+      expect(mockService.getConversations).toHaveBeenCalledWith(
+        'user-123',
+        10,
+        20,
+      );
     });
   });
 
@@ -79,11 +91,14 @@ describe('MessagesController', () => {
     it('should delegate getConversationMessages call to MessagesService with pagination', async () => {
       mockService.getConversationMessages.mockResolvedValue([]);
 
+      const query = Object.assign(new ConversationMessagesQueryDto(), {
+        limit: 20,
+        offset: 5,
+      });
       const res = await controller.getConversationMessages(
         'conv-1',
-        '20',
-        '0',
         mockUser,
+        query,
       );
 
       expect(res).toEqual([]);
@@ -91,7 +106,7 @@ describe('MessagesController', () => {
         'user-123',
         'conv-1',
         20,
-        0,
+        5,
       );
     });
   });

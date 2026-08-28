@@ -142,7 +142,9 @@ export class ProductsRepository {
     return data;
   }
 
-  async getProducts(category?: string) {
+  async getProducts(category?: string, page = 1, limit = 20) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
     let query = this.client.from('products').select(`
         id, 
         title, 
@@ -160,9 +162,12 @@ export class ProductsRepository {
       query = query.eq('category', category);
     }
 
-    const { data, error } = await query.order('created_at', {
-      ascending: false,
-    });
+    const { data, error } = await query
+      .order('created_at', {
+        ascending: false,
+      })
+      .order('id', { ascending: false })
+      .range(from, to);
     if (error) throw new Error(error.message);
     return data;
   }
@@ -230,14 +235,18 @@ export class ProductsRepository {
     if (error) throw new Error(error.message);
   }
 
-  async getProductVariants(productId: string) {
+  async getProductVariants(productId: string, page = 1, limit = 20) {
     if (!this.isValidUuid(productId)) return [];
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
     const { data, error } = await this.client
       .from('product_variants')
       .select('*')
       .eq('product_id', productId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to);
 
     if (error) {
       if (error.code === 'PGRST116' || error.code === '22P02') return [];
@@ -338,15 +347,30 @@ export class ProductsRepository {
       }
     }
 
-    const [productsRes, categoriesRes, variantsRes] = await Promise.all([
-      productsQuery.order('created_at', { ascending: true }),
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const [productsRes, categoriesRes] = await Promise.all([
+      productsQuery
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to),
       this.getShopCategories(),
-      this.client
-        .from('product_variants')
-        .select('id, product_id, size_label, price, stock, sku'),
     ]);
 
     if (productsRes.error) throw new Error(productsRes.error.message);
+
+    const rawProducts = (productsRes.data as unknown as ProductItemRow[]) || [];
+    const productIds = rawProducts.map((product) => product.id);
+    const variantsRes =
+      productIds.length === 0
+        ? { data: [], error: null }
+        : await this.client
+            .from('product_variants')
+            .select('id, product_id, size_label, price, stock, sku')
+            .in('product_id', productIds);
+    if (variantsRes.error) throw new Error(variantsRes.error.message);
 
     const variantCounts: Record<string | number, number> = {};
     if (variantsRes.data) {
@@ -357,7 +381,6 @@ export class ProductsRepository {
       }
     }
 
-    const rawProducts = (productsRes.data as unknown as ProductItemRow[]) || [];
     const products = rawProducts.map((p) => ({
       ...p,
       variant_count: variantCounts[p.id] || undefined,

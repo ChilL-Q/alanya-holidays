@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -31,6 +32,8 @@ export interface UploadedFile {
 
 @Injectable()
 export class MediaProcessingService {
+  private static readonly INVALID_IMAGE_MESSAGE = 'Invalid image content';
+  private static readonly PROCESSING_FAILED_MESSAGE = 'Unable to process image';
   private readonly logger = new Logger(MediaProcessingService.name);
 
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -38,10 +41,15 @@ export class MediaProcessingService {
   async convertToWebp(inputBuffer: Buffer, quality = 80): Promise<Buffer> {
     try {
       return await sharp(inputBuffer).webp({ quality }).toBuffer();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error(`WebP conversion failed: ${msg}`);
-      throw err;
+    } catch (error: unknown) {
+      this.logger.error('Invalid image content', {
+        operation: 'convert',
+        sizeBytes: inputBuffer.length,
+        error: this.describeError(error),
+      });
+      throw new BadRequestException(
+        MediaProcessingService.INVALID_IMAGE_MESSAGE,
+      );
     }
   }
 
@@ -53,13 +61,17 @@ export class MediaProcessingService {
     const maxFullWidth = options.maxFullWidth ?? 1920;
     const maxThumbWidth = options.maxThumbWidth ?? 300;
 
+    let operation = 'validate';
+
     try {
-      // 1. Process full resolution WebP image first
+      // 1. Decode and process full resolution WebP image first
       const pipeline = sharp(file.buffer);
       const fullBuffer = await pipeline
         .resize({ width: maxFullWidth, withoutEnlargement: true })
         .webp({ quality })
         .toBuffer();
+
+      operation = 'process';
 
       // 2. Downscale thumbnail from already downscaled fullBuffer (bounded RAM & fast transform)
       const thumbBuffer = await sharp(fullBuffer)
@@ -72,6 +84,8 @@ export class MediaProcessingService {
       const folderPrefix = options.folder ? `${options.folder}/` : '';
       const fullPath = `${folderPrefix}${fileId}-full.webp`;
       const thumbPath = `${folderPrefix}${fileId}-thumb.webp`;
+
+      operation = 'upload';
 
       // 4. Upload to Supabase Storage
       const storage = this.supabaseService
@@ -113,14 +127,44 @@ export class MediaProcessingService {
         sizeBytes: fullBuffer.length,
       };
     } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes('Storage bucket')) {
-        throw error;
+      const context = {
+        operation,
+        originalName: this.sanitizeLogValue(file.originalname),
+        mimeType: this.sanitizeLogValue(file.mimetype),
+        sizeBytes: file.buffer.length,
+        error: this.describeError(error),
+      };
+
+      if (this.isMalformedImageError(error)) {
+        this.logger.error('Invalid image content', context);
+        throw new BadRequestException(
+          MediaProcessingService.INVALID_IMAGE_MESSAGE,
+        );
       }
-      const msg =
-        error instanceof Error
-          ? error.message
-          : 'Image processing or storage upload failed';
-      throw new InternalServerErrorException(msg);
+
+      this.logger.error('Image processing failed', context);
+      throw new InternalServerErrorException(
+        MediaProcessingService.PROCESSING_FAILED_MESSAGE,
+      );
     }
+  }
+
+  private isMalformedImageError(error: unknown): boolean {
+    if (!(error instanceof Error)) return false;
+
+    return /unsupported image format|invalid image|corrupt|bad header|premature end|unexpected end|not enough data|vipsforeignload/i.test(
+      error.message,
+    );
+  }
+
+  private describeError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.stack ?? error.message;
+    }
+    return String(error);
+  }
+
+  private sanitizeLogValue(value: string): string {
+    return value.replace(/[\r\n\t]/g, ' ').slice(0, 255);
   }
 }

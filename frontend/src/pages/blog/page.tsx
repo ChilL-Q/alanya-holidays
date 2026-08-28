@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import PaginationControls from "@/components/base/PaginationControls";
+import { BLOG_CATEGORIES } from "@/pages/blog/blog.constants";
 import { blogService, type BlogPostItem, type BlogTag } from "@/api-services/blog.service";
 import { logger } from "@/lib/logger";
 
@@ -12,11 +14,21 @@ export default function BlogPage() {
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(6);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const pageSize = 6;
 
   const activeCategory = searchParams.get("category") || "All";
+  const activeTag = searchParams.get("tag") || "All";
   const searchQuery = searchParams.get("search") || "";
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,13 +52,21 @@ export default function BlogPage() {
     setIsLoading(true);
 
     const categoryParam = activeCategory === "All" ? undefined : activeCategory;
-    const searchParam = searchQuery.trim() || undefined;
+    const tagParam = activeTag === "All" ? undefined : activeTag;
+    const searchParam = debouncedSearchQuery.trim() || undefined;
 
     blogService
-      .getPosts({ category: categoryParam, search: searchParam })
+      .getPosts({
+        page: currentPage,
+        limit: pageSize,
+        category: categoryParam,
+        tag: tagParam,
+        search: searchParam,
+      })
       .then((res) => {
         if (isMounted) {
           setPosts(res?.posts || []);
+          setTotalPosts(res?.total || 0);
           setIsLoading(false);
         }
       })
@@ -58,13 +78,12 @@ export default function BlogPage() {
     return () => {
       isMounted = false;
     };
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, activeTag, currentPage, debouncedSearchQuery]);
 
   // Reset pagination on filter change
   useEffect(() => {
     setCurrentPage(1);
-    setVisibleCount(pageSize);
-  }, [activeCategory, searchQuery, pageSize]);
+  }, [activeCategory, activeTag, debouncedSearchQuery]);
 
   const setCategory = (cat: string) => {
     const next = new URLSearchParams(searchParams);
@@ -72,6 +91,16 @@ export default function BlogPage() {
       next.delete("category");
     } else {
       next.set("category", cat);
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const setTag = (tagId: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (tagId === "All") {
+      next.delete("tag");
+    } else {
+      next.set("tag", tagId);
     }
     setSearchParams(next, { replace: true });
   };
@@ -86,18 +115,7 @@ export default function BlogPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const paginatedPosts = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return posts.slice(startIndex, startIndex + pageSize);
-  }, [posts, currentPage, pageSize]);
-
-  const totalPages = Math.ceil(posts.length / pageSize) || 1;
-  const hasMore = visibleCount < posts.length;
-
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + pageSize);
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
+  const totalPages = Math.ceil(totalPosts / pageSize) || 1;
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -112,10 +130,9 @@ export default function BlogPage() {
       <main>
         {/* Hero Section */}
         <section className="print-hide relative w-full h-[320px] md:h-[420px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="blog"
             alt="Alanya Travel Blog"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/60 via-foreground-950/40 to-foreground-950/80"></div>
 
@@ -167,17 +184,17 @@ export default function BlogPage() {
                 >
                   All Categories
                 </button>
-                {tags.map((t) => (
+                {BLOG_CATEGORIES.map((blogCategory) => (
                   <button
-                    key={t.id}
-                    onClick={() => setCategory(t.name)}
+                    key={blogCategory}
+                    onClick={() => setCategory(blogCategory)}
                     className={`px-4 py-2 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
-                      activeCategory === t.name
+                      activeCategory === blogCategory
                         ? "bg-primary-500 text-white shadow-sm"
                         : "bg-white border border-foreground-200 text-foreground-700 hover:border-primary-300 hover:text-primary-600"
                     }`}
                   >
-                    {t.name}
+                    {blogCategory}
                   </button>
                 ))}
               </div>
@@ -202,6 +219,37 @@ export default function BlogPage() {
                 )}
               </div>
             </div>
+
+            {tags.length > 0 && (
+              <div className="mb-10 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                <span className="mr-1 text-xs font-semibold uppercase tracking-wider text-foreground-500">
+                  Tags
+                </span>
+                <button
+                  onClick={() => setTag("All")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    activeTag === "All"
+                      ? "bg-accent-500 text-white"
+                      : "bg-white border border-foreground-200 text-foreground-600 hover:border-accent-300"
+                  }`}
+                >
+                  All Tags
+                </button>
+                {tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    onClick={() => setTag(tag.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                      activeTag === tag.id
+                        ? "bg-accent-500 text-white"
+                        : "bg-white border border-foreground-200 text-foreground-600 hover:border-accent-300"
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Posts Grid */}
             {isLoading && posts.length === 0 ? (
@@ -228,7 +276,7 @@ export default function BlogPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                  {paginatedPosts.map((post) => {
+                  {posts.map((post) => {
                     const tag = post.tag || post.category || "General";
                     const readTime = post.readTime || "5 min read";
                     const description = post.description || post.excerpt || "";
@@ -275,13 +323,11 @@ export default function BlogPage() {
                     <PaginationControls
                       currentPage={currentPage}
                       totalPages={totalPages}
-                      totalItems={posts.length}
+                      totalItems={totalPosts}
                       pageSize={pageSize}
                       showItemCount={true}
                       itemName="posts"
-                      mode="both"
-                      hasMore={hasMore}
-                      onLoadMore={handleLoadMore}
+                      mode="numbered"
                       onPageChange={handlePageChange}
                     />
                   </div>

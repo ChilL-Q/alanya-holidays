@@ -86,6 +86,7 @@ export interface BlogSubmission {
   category?: string | null;
   video_url?: string | null;
   media_urls?: string[];
+  tag_ids?: string[];
   status: 'pending_review' | 'approved' | 'rejected' | (string & {});
   payment_details?: Record<string, unknown> | null;
   rejection_reason?: string | null;
@@ -135,6 +136,7 @@ export interface InsertBlogSubmissionPayload {
   category?: string;
   video_url?: string | null;
   media_urls?: string[];
+  tag_ids?: string[];
   status: string;
   payment_details?: Record<string, unknown> | null;
 }
@@ -154,6 +156,8 @@ export interface GetBlogPostsFilter {
 export interface GetBlogSubmissionsFilter {
   status?: string;
   userId?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface SuccessResponse {

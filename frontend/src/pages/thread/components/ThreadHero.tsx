@@ -70,11 +70,15 @@ export default function ThreadHero({ thread }: ThreadHeroProps) {
               Verified
             </span>
           )}
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-background-100 text-foreground-500 text-xs rounded-full">
-            {thread.subcategory}
-          </span>
+          {thread.subcategory && (
+            <>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-background-100 text-foreground-500 text-xs rounded-full">
+                {thread.subcategory}
+              </span>
 
-          <span className="text-foreground-300 text-xs hidden sm:inline">·</span>
+              <span className="text-foreground-300 text-xs hidden sm:inline">·</span>
+            </>
+          )}
 
           {/* Stats */}
           <span className="flex items-center gap-1 text-xs text-foreground-400">

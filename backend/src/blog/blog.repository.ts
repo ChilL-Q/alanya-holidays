@@ -51,10 +51,14 @@ export class BlogRepository {
     userRole: string,
     requestUserId?: string,
   ): Promise<{ data: RawBlogPostRow[]; count: number }> {
+    const tagsRelation = filters.tag
+      ? 'tags:blog_post_tags!inner(tag_id, tag:blog_tags(id, name, slug))'
+      : 'tags:blog_post_tags(tag:blog_tags(id, name, slug))';
+
     let query = this.client
       .from('blog_posts')
       .select(
-        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), tags:blog_post_tags(tag:blog_tags(id, name, slug))`,
+        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), ${tagsRelation}`,
         { count: 'exact' },
       );
 
@@ -70,6 +74,7 @@ export class BlogRepository {
     }
 
     if (filters.category) query = query.eq('category', filters.category);
+    if (filters.tag) query = query.eq('tags.tag_id', filters.tag);
     if (filters.is_featured === 'true') query = query.eq('is_featured', true);
     if (filters.authorId) query = query.eq('author_id', filters.authorId);
     if (filters.search) {
@@ -320,7 +325,9 @@ export class BlogRepository {
   }
 
   async getBlogSubmissions(
-    filters?: GetBlogSubmissionsFilter,
+    filters: GetBlogSubmissionsFilter,
+    limit: number,
+    offset: number,
   ): Promise<BlogSubmission[]> {
     let query = this.client
       .from('blog_submissions')
@@ -328,19 +335,24 @@ export class BlogRepository {
         `*, user:profiles!blog_submissions_user_id_fkey(full_name, email)`,
       )
       .order('created_at', { ascending: false });
-    if (filters?.status) query = query.eq('status', filters.status);
-    if (filters?.userId) query = query.eq('user_id', filters.userId);
-    const { data, error } = await query;
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.userId) query = query.eq('user_id', filters.userId);
+    const { data, error } = await query.range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
     return (data as unknown as BlogSubmission[]) || [];
   }
 
-  async getUserBlogSubmissions(userId: string): Promise<BlogSubmission[]> {
+  async getUserBlogSubmissions(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<BlogSubmission[]> {
     const { data, error } = await this.client
       .from('blog_submissions')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
     return (data as unknown as BlogSubmission[]) || [];
   }
@@ -386,6 +398,8 @@ export class BlogRepository {
 
   async getBlogComments(
     postId: string,
+    limit: number,
+    offset: number,
     userId?: string,
   ): Promise<BlogComment[]> {
     const { data, error } = await this.client
@@ -394,7 +408,8 @@ export class BlogRepository {
         '*, author:profiles!blog_comments_user_id_fkey(full_name, avatar_url)',
       )
       .eq('post_id', postId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
+      .range(offset, offset + limit - 1);
     if (error) throw new Error(error.message);
     const comments = (data as unknown as BlogComment[]) || [];
 
@@ -460,26 +475,18 @@ export class BlogRepository {
     commentId: string,
     userId: string,
   ): Promise<boolean> {
-    const { data: existing } = await this.client
-      .from('blog_comment_likes')
-      .select('comment_id')
-      .eq('comment_id', commentId)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (existing) {
-      await this.client
-        .from('blog_comment_likes')
-        .delete()
-        .eq('comment_id', commentId)
-        .eq('user_id', userId);
-      return false;
-    } else {
-      await this.client
-        .from('blog_comment_likes')
-        .insert({ comment_id: commentId, user_id: userId });
-      return true;
+    const { data, error } = (await this.client.rpc('toggle_blog_comment_like', {
+      p_comment_id: commentId,
+      p_user_id: userId,
+    })) as {
+      data: boolean | null;
+      error: { message: string } | null;
+    };
+    if (error) throw new Error(error.message);
+    if (typeof data !== 'boolean') {
+      throw new Error('toggle_blog_comment_like returned no state');
     }
+    return data;
   }
 
   async getBlogCommentById(id: string): Promise<BlogComment | null> {

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { parseArticleContent } from "./parser";
 import ArticleContentRenderer from "./ArticleContentRenderer";
@@ -31,6 +31,10 @@ const sampleVenue: Business = {
 };
 
 describe("Article Subsystem Adversarial & Stress Testing", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // =========================================================================
   // SUITE 1: AST Parser Malformed Shortcode & Pathological Grammar Tests
   // =========================================================================
@@ -254,7 +258,7 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
   // SUITE 3: EmbeddedVenueCard Chaos & Boundary Testing
   // =========================================================================
   describe("Suite 3: EmbeddedVenueCard Component Chaos Testing", () => {
-    it("renders fallback UI without crashing when venueId is empty string, nullish, or invalid", () => {
+    it("renders fallback UI without crashing when venueId is empty string, nullish, or invalid", async () => {
       const { unmount } = render(
         <MemoryRouter>
           <EmbeddedVenueCard venueId="" />
@@ -264,12 +268,14 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
       expect(screen.getByRole("link", { name: /browse directory/i })).toHaveAttribute("href", "/explore");
       unmount();
 
+      vi.spyOn(directoryService, "getListingById").mockResolvedValue(null);
+
       render(
         <MemoryRouter>
           <EmbeddedVenueCard venueId="totally-bogus-venue-id-99999" />
         </MemoryRouter>
       );
-      expect(screen.getByText(/venue not found or listing unavailable/i)).toBeInTheDocument();
+      expect(await screen.findByText(/venue not found or listing unavailable/i)).toBeInTheDocument();
     });
 
     it("handles image load failure gracefully by switching to fallback image without error", () => {
@@ -479,8 +485,8 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
       expect(screen.getByText("Shop 49")).toBeInTheDocument();
     });
 
-    it("renders 25 concurrent ArticleContentRenderer instances simultaneously on the same screen", () => {
-      vi.spyOn(directoryService, "getListingByIdSync").mockReturnValue(sampleVenue);
+    it("renders 25 concurrent ArticleContentRenderer instances simultaneously on the same screen", async () => {
+      vi.spyOn(directoryService, "getListingById").mockResolvedValue(sampleVenue);
       const instances = Array.from({ length: 25 }, (_, i) => ({
         id: i,
         content: `## Article ${i}\n\n[venue id="biz-001" layout="compact"]\n\n[cta category="restaurants-cafes" label="CTA ${i}"]`,
@@ -496,7 +502,7 @@ describe("Article Subsystem Adversarial & Stress Testing", () => {
         </MemoryRouter>
       );
 
-      expect(screen.getAllByText("Kale Panorama Restaurant")).toHaveLength(25);
+      expect((await screen.findAllByText("Kale Panorama Restaurant")).length).toBe(25);
       expect(screen.getByRole("heading", { level: 2, name: "Article 0" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { level: 2, name: "Article 24" })).toBeInTheDocument();
     });

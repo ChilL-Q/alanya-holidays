@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { GoogleMap, InfoWindowF, MarkerF, useJsApiLoader } from "@react-google-maps/api";
 import type { ForumEvent } from "@/api-services/events.service";
+import { ALANYA_CENTER, resolveEventLocationMeta, type EventLocationMeta } from "../locationCoords";
 
 interface MapViewProps {
   events: ForumEvent[];
@@ -8,29 +10,36 @@ interface MapViewProps {
   onCancelRsvp: (eventId: string) => void;
 }
 
-const locationCoords: Record<string, { lat: number; lng: number; label: string }> = {
-  "Cleopatra Beach, Alanya": { lat: 36.5483, lng: 31.9987, label: "Cleopatra Beach" },
-  "Cleopatra Beach Courts": { lat: 36.5488, lng: 31.9992, label: "Cleopatra Beach Courts" },
-  "Alanya Harbor": { lat: 36.5358, lng: 31.9986, label: "Alanya Harbor" },
-  "The Local Pub, Alanya": { lat: 36.5442, lng: 32.0015, label: "The Local Pub" },
-  "Taurus Mountains Trailhead": { lat: 36.5900, lng: 32.1200, label: "Taurus Trailhead" },
-  "Coworking Alanya, Oba": { lat: 36.5240, lng: 32.0010, label: "Coworking Oba" },
-  "Keykubat Beach, Alanya": { lat: 36.5400, lng: 31.9900, label: "Keykubat Beach" },
-  "Zeynep's Kitchen, Alanya": { lat: 36.5470, lng: 32.0050, label: "Zeynep's Kitchen" },
-  "Alanya Castle Entrance": { lat: 36.5337, lng: 31.9925, label: "Alanya Castle" },
-  "Coffice Alanya, Mahmutlar": { lat: 36.4900, lng: 32.0900, label: "Coffice Mahmutlar" },
-  "İncekum Beach, Alanya": { lat: 36.5600, lng: 31.9600, label: "İncekum Beach" },
-  "Rooftop Restaurant, Alanya Center": { lat: 36.5450, lng: 32.0000, label: "Rooftop Restaurant" },
-  "Alanya Dive Center, Harbor": { lat: 36.5360, lng: 31.9970, label: "Dive Center" },
-  "Ahmet's Tea Garden, Alanya": { lat: 36.5460, lng: 32.0030, label: "Ahmet's Tea Garden" },
-  "Innovation Hub, Alanya": { lat: 36.5480, lng: 32.0080, label: "Innovation Hub" },
-  "Alanya Central Park": { lat: 36.5475, lng: 32.0020, label: "Central Park" },
-  "Beachfront Plaza, Alanya": { lat: 36.5420, lng: 31.9950, label: "Beachfront Plaza" },
-  "Departure from Alanya Center": { lat: 36.5450, lng: 31.9990, label: "Alanya Center" },
-};
+const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
+const GOOGLE_MAP_LIBRARIES: ["places"] = ["places"];
+
+function getMapFallbackMessage(missingKey: boolean, loadError: unknown, markerCount: number) {
+  if (missingKey) {
+    return "Set VITE_GOOGLE_MAPS_API_KEY to enable the interactive map with event markers.";
+  }
+
+  if (loadError) {
+    return "Google Maps could not be loaded right now. The event locations list is still available below.";
+  }
+
+  if (markerCount === 0) {
+    return "No mapped coordinates are available for the currently filtered events yet.";
+  }
+
+  return null;
+}
 
 export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: MapViewProps) {
   const [activeLocation, setActiveLocation] = useState<string | null>(null);
+  const mapRef = useRef<any>(null);
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const hasGoogleMapsApiKey = googleMapsApiKey.trim().length > 0;
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: "events-google-map",
+    googleMapsApiKey,
+    libraries: GOOGLE_MAP_LIBRARIES,
+  });
 
   const locationGroups = useMemo(() => {
     const groups: Record<string, ForumEvent[]> = {};
@@ -43,57 +52,280 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
     return Object.entries(groups).sort(([, a], [, b]) => b.length - a.length);
   }, [events]);
 
+  const mappedLocations = useMemo(() => {
+    return locationGroups
+      .map(([location, locationEvents]) => {
+        const coord = resolveEventLocationMeta(location);
+        if (!coord) return null;
+
+        return {
+          location,
+          label: coord.label,
+          coord,
+          events: locationEvents,
+          totalAttendees: locationEvents.reduce((sum, event) => sum + event.attendees, 0),
+        };
+      })
+      .filter((item): item is {
+        location: string;
+        label: string;
+        coord: EventLocationMeta;
+        events: ForumEvent[];
+        totalAttendees: number;
+      } => item !== null);
+  }, [locationGroups]);
+
+  const unmappedLocationCount = locationGroups.length - mappedLocations.length;
+  const activeMapLocation = mappedLocations.find((location) => location.location === activeLocation) ?? null;
+  const fallbackMessage = getMapFallbackMessage(!hasGoogleMapsApiKey, loadError, mappedLocations.length);
+
+  useEffect(() => {
+    if (!isLoaded || !mapRef.current) return;
+
+    const googleMaps = (window as Window & { google?: any }).google;
+    if (!googleMaps?.maps) return;
+
+    if (activeMapLocation) {
+      mapRef.current.panTo({
+        lat: activeMapLocation.coord.lat,
+        lng: activeMapLocation.coord.lng,
+      });
+      mapRef.current.setZoom(14);
+      return;
+    }
+
+    if (mappedLocations.length === 0) {
+      mapRef.current.panTo({ lat: ALANYA_CENTER.lat, lng: ALANYA_CENTER.lng });
+      mapRef.current.setZoom(12);
+      return;
+    }
+
+    if (mappedLocations.length === 1) {
+      mapRef.current.panTo({
+        lat: mappedLocations[0].coord.lat,
+        lng: mappedLocations[0].coord.lng,
+      });
+      mapRef.current.setZoom(14);
+      return;
+    }
+
+    const bounds = new googleMaps.maps.LatLngBounds();
+    mappedLocations.forEach((location) => {
+      bounds.extend({ lat: location.coord.lat, lng: location.coord.lng });
+    });
+    mapRef.current.fitBounds(bounds, 56);
+  }, [activeMapLocation, isLoaded, mappedLocations]);
+
   const handleLocationClick = (location: string) => {
     setActiveLocation((prev) => (prev === location ? null : location));
   };
 
+  const renderEventRow = (event: ForumEvent) => {
+    const isRsvpd = rsvpdEvents.has(event.id);
+    const isFull = event.attendees >= event.maxAttendees && !isRsvpd;
+
+    return (
+      <div
+        key={event.id}
+        className="flex items-start gap-3 p-3 rounded-lg bg-background-50 border border-background-100"
+      >
+        <img
+          src={event.image}
+          alt={event.title}
+          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <h5 className="font-heading text-sm text-foreground-900 mb-0.5 line-clamp-1">
+            {event.title}
+          </h5>
+          <div className="flex items-center gap-2 text-[11px] text-foreground-500 mb-1.5">
+            <span className="flex items-center gap-1">
+              <i className="ri-calendar-line text-xs"></i>
+              {event.month} {event.day}
+            </span>
+            <span className="flex items-center gap-1">
+              <i className="ri-time-line text-xs"></i>
+              {event.time}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => (isRsvpd ? onCancelRsvp(event.id) : onRsvp(event.id))}
+              disabled={isFull}
+              aria-pressed={isRsvpd}
+              aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
+              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                isRsvpd
+                  ? "bg-accent-100 text-accent-700 hover:bg-accent-200"
+                  : isFull
+                    ? "bg-background-200 text-foreground-400 cursor-not-allowed"
+                    : "bg-primary-500 text-white hover:bg-primary-600"
+              }`}
+            >
+              {isRsvpd ? (
+                <>
+                  <i className="ri-check-line text-xs"></i>
+                  Going
+                </>
+              ) : isFull ? (
+                "Full"
+              ) : (
+                "RSVP"
+              )}
+            </button>
+            <span className="text-[11px] text-foreground-400 flex items-center gap-1">
+              <i className="ri-user-line text-xs"></i>
+              {event.attendees}/{event.maxAttendees}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
-      {/* Map Section */}
-      <div className="rounded-2xl overflow-hidden border border-background-200 mb-6">
+      <div className="rounded-2xl overflow-hidden border border-background-200 mb-6 bg-background-50">
         <div className="relative w-full h-[400px] md:h-[500px]">
-          <iframe
-            src="https://maps.google.com/maps?q=Alanya+Antalya+Turkey&z=13&output=embed"
-            width="100%"
-            height="100%"
-            className="absolute inset-0 border-0"
-            title="Alanya Events Map"
-            loading="lazy"
-            allowFullScreen
-          ></iframe>
+          {hasGoogleMapsApiKey && isLoaded && mappedLocations.length > 0 ? (
+            <GoogleMap
+              mapContainerStyle={MAP_CONTAINER_STYLE}
+              center={{ lat: ALANYA_CENTER.lat, lng: ALANYA_CENTER.lng }}
+              zoom={12}
+              onLoad={(map) => {
+                mapRef.current = map;
+              }}
+              onUnmount={() => {
+                mapRef.current = null;
+              }}
+              options={{
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: true,
+                clickableIcons: false,
+              }}
+            >
+              {mappedLocations.map((location) => (
+                <MarkerF
+                  key={location.location}
+                  position={{ lat: location.coord.lat, lng: location.coord.lng }}
+                  title={`${location.label} · ${location.events.length} ${location.events.length === 1 ? "event" : "events"}`}
+                  label={{
+                    text: String(location.events.length),
+                    color: "#ffffff",
+                    fontWeight: "700",
+                  }}
+                  onClick={() => setActiveLocation(location.location)}
+                />
+              ))}
+
+              {activeMapLocation && (
+                <InfoWindowF
+                  position={{ lat: activeMapLocation.coord.lat, lng: activeMapLocation.coord.lng }}
+                  onCloseClick={() => setActiveLocation(null)}
+                >
+                  <div className="min-w-[220px] max-w-[280px] pr-2">
+                    <h4 className="font-heading text-sm text-foreground-900 mb-1">
+                      {activeMapLocation.label}
+                    </h4>
+                    <p className="text-xs text-foreground-500 mb-3">
+                      {activeMapLocation.events.length} {activeMapLocation.events.length === 1 ? "event" : "events"} · {activeMapLocation.totalAttendees} going
+                    </p>
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {activeMapLocation.events.map((event) => {
+                        const isRsvpd = rsvpdEvents.has(event.id);
+                        return (
+                          <div key={event.id} className="rounded-lg border border-background-200 px-3 py-2 bg-white">
+                            <p className="text-sm font-medium text-foreground-900 line-clamp-1">{event.title}</p>
+                            <p className="text-xs text-foreground-500 mb-2">{event.month} {event.day} · {event.time}</p>
+                            <button
+                              type="button"
+                              onClick={() => (isRsvpd ? onCancelRsvp(event.id) : onRsvp(event.id))}
+                              aria-pressed={isRsvpd}
+                              aria-label={isRsvpd ? `Cancel RSVP for ${event.title}` : `RSVP for ${event.title}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                                isRsvpd
+                                  ? "bg-accent-100 text-accent-700"
+                                  : "bg-primary-500 text-white"
+                              }`}
+                            >
+                              {isRsvpd ? "Going" : "RSVP"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </InfoWindowF>
+              )}
+            </GoogleMap>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center bg-gradient-to-br from-background-100 via-background-50 to-background-100">
+              <div className="w-14 h-14 rounded-full bg-accent-100 text-accent-700 flex items-center justify-center">
+                <i className="ri-map-pin-2-fill text-2xl"></i>
+              </div>
+              <div>
+                <h3 className="font-heading text-lg text-foreground-900 mb-1">Interactive event map</h3>
+                <p className="text-sm text-foreground-500 max-w-xl">
+                  {fallbackMessage}
+                </p>
+                {unmappedLocationCount > 0 && (
+                  <p className="text-xs text-foreground-400 mt-2">
+                    {unmappedLocationCount} filtered {unmappedLocationCount === 1 ? "location does" : "locations do"} not have saved coordinates yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Location Cards Grid */}
+      {unmappedLocationCount > 0 && (
+        <div className="mb-6 rounded-xl border border-background-200 bg-background-50 px-4 py-3 text-sm text-foreground-600">
+          <span className="font-medium text-foreground-900">Map coverage note:</span>{" "}
+          {unmappedLocationCount} {unmappedLocationCount === 1 ? "location is" : "locations are"} shown in the list below but not yet pinned on the map because coordinates are missing.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {locationGroups.map(([location, locationEvents]) => {
-          const coord = locationCoords[location];
+          const coord = resolveEventLocationMeta(location);
           const isActive = activeLocation === location;
-          const totalAttendees = locationEvents.reduce((sum, e) => sum + e.attendees, 0);
+          const totalAttendees = locationEvents.reduce((sum, event) => sum + event.attendees, 0);
 
           return (
             <div
               key={location}
-              className="bg-white rounded-xl border border-background-200 overflow-hidden transition-all hover:border-background-300"
+              className={`bg-white rounded-xl border overflow-hidden transition-all ${
+                isActive ? "border-accent-300 shadow-sm" : "border-background-200 hover:border-background-300"
+              }`}
             >
-              {/* Location Header */}
               <button
+                type="button"
                 onClick={() => handleLocationClick(location)}
                 className="w-full px-4 py-3 flex items-center gap-3 text-left cursor-pointer hover:bg-background-50 transition-colors"
+                aria-expanded={isActive}
+                aria-controls={`location-events-${location}`}
+                aria-label={`${isActive ? "Collapse" : "Expand"} events for ${coord?.label ?? location}`}
               >
-                <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
-                  <i className="ri-map-pin-line text-accent-600 text-lg"></i>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${coord ? "bg-accent-100" : "bg-background-100"}`}>
+                  <i className={`${coord ? "ri-map-pin-line text-accent-600" : "ri-route-line text-foreground-400"} text-lg`}></i>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-heading text-sm text-foreground-900 truncate">
                     {coord?.label ?? location}
                   </h4>
                   <p className="text-xs text-foreground-500">
-                    {locationEvents.length} {locationEvents.length === 1 ? "event" : "events"} &middot;{" "}
-                    {totalAttendees} going
+                    {locationEvents.length} {locationEvents.length === 1 ? "event" : "events"} &middot; {totalAttendees} going
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {!coord && (
+                    <span className="text-[10px] bg-background-100 text-foreground-500 font-medium px-2 py-0.5 rounded-full">
+                      No pin
+                    </span>
+                  )}
                   <span className="text-xs bg-accent-100 text-accent-700 font-medium px-2 py-0.5 rounded-full">
                     {locationEvents.length}
                   </span>
@@ -105,72 +337,14 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                 </div>
               </button>
 
-              {/* Event List (expandable) */}
               <div
+                id={`location-events-${location}`}
                 className={`overflow-hidden transition-all duration-300 ${
                   isActive ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
                 }`}
               >
                 <div className="px-4 pb-4 space-y-3">
-                  {locationEvents.map((event) => {
-                    const isRsvpd = rsvpdEvents.has(event.id);
-                    const isFull = event.attendees >= event.maxAttendees && !isRsvpd;
-                    return (
-                      <div
-                        key={event.id}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-background-50 border border-background-100"
-                      >
-                        <img
-                          src={event.image}
-                          alt={event.title}
-                          className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-heading text-sm text-foreground-900 mb-0.5 line-clamp-1">
-                            {event.title}
-                          </h5>
-                          <div className="flex items-center gap-2 text-[11px] text-foreground-500 mb-1.5">
-                            <span className="flex items-center gap-1">
-                              <i className="ri-calendar-line text-xs"></i>
-                              {event.month} {event.day}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <i className="ri-time-line text-xs"></i>
-                              {event.time}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => (isRsvpd ? onCancelRsvp(event.id) : onRsvp(event.id))}
-                              disabled={isFull}
-                              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
-                                isRsvpd
-                                  ? "bg-accent-100 text-accent-700 hover:bg-accent-200"
-                                  : isFull
-                                    ? "bg-background-200 text-foreground-400 cursor-not-allowed"
-                                    : "bg-primary-500 text-white hover:bg-primary-600"
-                              }`}
-                            >
-                              {isRsvpd ? (
-                                <>
-                                  <i className="ri-check-line text-xs"></i>
-                                  Going
-                                </>
-                              ) : isFull ? (
-                                "Full"
-                              ) : (
-                                "RSVP"
-                              )}
-                            </button>
-                            <span className="text-[11px] text-foreground-400 flex items-center gap-1">
-                              <i className="ri-user-line text-xs"></i>
-                              {event.attendees}/{event.maxAttendees}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {locationEvents.map(renderEventRow)}
                 </div>
               </div>
             </div>

@@ -99,6 +99,17 @@ const MONTH_NAMES = [
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
 
+function toCategoryIdentifier(category?: string | null): string | null {
+  if (!category) return null;
+  const trimmed = category.trim();
+  if (!trimmed) return null;
+
+  return trimmed
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || null;
+}
+
 export function formatEventDateParts(dateStr?: string | null): {
   date: string;
   day: string;
@@ -262,7 +273,11 @@ export class EventsService {
       location: payload.location || null,
       event_date: combinedDate,
       image_url: payload.image_url || payload.image || null,
-      category_id: payload.category_id || payload.categoryId || null,
+      category_id:
+        payload.category_id ||
+        payload.categoryId ||
+        toCategoryIdentifier(payload.category) ||
+        null,
       is_published: payload.is_published ?? true,
     });
 

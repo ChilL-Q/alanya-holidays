@@ -54,13 +54,16 @@ describe('UsersAdminController', () => {
   });
 
   it('should delegate getAllUsers when role is not provided', async () => {
-    const res = await controller.getAllUsers(undefined, '2', '10', adminUser);
+    const res = await controller.getAllUsers({ page: 2, limit: 10 }, adminUser);
     expect(mockService.getAllUsers).toHaveBeenCalledWith(2, 10, 'admin-1');
     expect(res).toEqual({ data: [{ id: 'u1' }], pagination: { total: 1 } });
   });
 
   it('should delegate getUsersByRole when role filter is provided', async () => {
-    const res = await controller.getAllUsers('host', '1', '20', adminUser);
+    const res = await controller.getAllUsers(
+      { role: 'host', page: 1, limit: 20 },
+      adminUser,
+    );
     expect(mockService.getUsersByRole).toHaveBeenCalledWith(
       'host',
       1,

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PageHeroImage from "@/components/base/PageHeroImage";
 
 export default function NewThreadHero() {
   return (
@@ -6,8 +7,8 @@ export default function NewThreadHero() {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background-100 to-background-50" />
       <div className="absolute inset-0">
-        <img
-          src="/images/placeholder-business.svg"
+        <PageHeroImage
+          page="newThread"
           alt=""
           className="w-full h-full object-cover object-top"
         />
@@ -28,8 +29,8 @@ export default function NewThreadHero() {
           Start a New Discussion
         </h1>
         <p className="text-sm md:text-base text-foreground-600 max-w-xl mx-auto">
-          Share your question, experience, or insight with the Alanya community. 
-          Pick the right category so the right people can find it.
+          Share your question, experience, or insight with the Alanya community.
+          Pick the right category and, if helpful, a topic so the right people can find it.
         </p>
       </div>
     </section>

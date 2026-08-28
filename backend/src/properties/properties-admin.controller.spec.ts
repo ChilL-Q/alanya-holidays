@@ -55,7 +55,11 @@ describe('PropertiesAdminController', () => {
   });
 
   it('should delegate getPropertiesAdmin with parsed params', async () => {
-    const res = await controller.getPropertiesAdmin('pending', '2', '10');
+    const res = await controller.getPropertiesAdmin({
+      status: 'pending',
+      page: 2,
+      limit: 10,
+    });
     expect(mockService.getAdminProperties).toHaveBeenCalledWith(
       'pending',
       2,

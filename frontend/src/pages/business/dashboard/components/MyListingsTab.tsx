@@ -31,6 +31,7 @@ export interface MyListingsTabProps {
   onListNewBusiness?: () => void;
   filter?: string;
   onFilterChange?: (filter: string) => void;
+  deletingListingId?: string | null;
 }
 
 // Status normalization helpers to handle common status aliases safely
@@ -64,9 +65,11 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
   onListNewBusiness,
   filter: externalFilter,
   onFilterChange,
+  deletingListingId = null,
 }) => {
   const [internalFilter, setInternalFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [listingPendingDelete, setListingPendingDelete] = useState<Business | null>(null);
 
   const activeFilter = externalFilter !== undefined ? externalFilter : internalFilter;
 
@@ -350,6 +353,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
             const isPending = isPendingStatus(listing.status);
             const isApproved = isLiveStatus(listing.status);
             const isRejected = isRejectedStatus(listing.status);
+            const isDeleting = deletingListingId === listing.id;
 
             const tier = (listing as unknown as { tier?: string }).tier || "explorer";
             const isSignature = tier === "signature";
@@ -468,7 +472,8 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                         onClick={() => onResumeDraft(listing)}
                         aria-label={`Resume draft for ${displayName}`}
                         title={`Resume draft for ${displayName}`}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        disabled={isDeleting}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         <PlayCircle className="w-3.5 h-3.5" />
                         <span>Resume Draft</span>
@@ -480,7 +485,8 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                           onClick={() => onEditListing(listing)}
                           aria-label={`Edit ${displayName}`}
                           title={`Edit ${displayName}`}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          disabled={isDeleting}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                         >
                           <Edit className="w-3.5 h-3.5" />
                           <span>Edit</span>
@@ -490,7 +496,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                           to={`/business/${listing.id}`}
                           aria-label={`View live listing for ${displayName}`}
                           title={`View live listing for ${displayName}`}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 ${isDeleting ? "pointer-events-none opacity-60" : ""}`}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           <span>View</span>
@@ -504,7 +510,8 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                         onClick={() => onUpgradeTier(listing)}
                         aria-label={`Upgrade tier for ${displayName}`}
                         title={`Upgrade tier for ${displayName}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        disabled={isDeleting}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         <Zap className="w-3 h-3 text-amber-500" />
                         <span>Upgrade</span>
@@ -514,21 +521,74 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to delete '${displayName}'?`)) {
-                        onDeleteListing(listing.id);
-                      }
-                    }}
-                    aria-label={`Delete ${displayName}`}
-                    title={`Delete ${displayName}`}
-                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400"
+                    onClick={() => setListingPendingDelete(listing)}
+                    aria-label={isDeleting ? `Deleting ${displayName}` : `Delete ${displayName}`}
+                    title={isDeleting ? `Deleting ${displayName}` : `Delete ${displayName}`}
+                    disabled={isDeleting}
+                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {isDeleting ? (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold">
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-rose-300 border-t-rose-500 animate-spin" />
+                        <span className="hidden sm:inline">Deleting...</span>
+                      </span>
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+      {listingPendingDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-listing-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 shadow-2xl p-6 space-y-5">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                <Trash2 className="w-3.5 h-3.5" />
+                Confirm deletion
+              </div>
+              <h3
+                id="delete-listing-dialog-title"
+                className="text-lg font-bold text-secondary-900 dark:text-white"
+              >
+                Delete this listing?
+              </h3>
+              <p className="text-sm text-secondary-500 dark:text-slate-400 leading-relaxed">
+                You are about to remove <strong className="text-secondary-900 dark:text-white">{listingPendingDelete.name || "this listing"}</strong> from your dashboard. This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setListingPendingDelete(null)}
+                disabled={deletingListingId === listingPendingDelete.id}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void onDeleteListing(listingPendingDelete.id);
+                  setListingPendingDelete(null);
+                }}
+                disabled={deletingListingId === listingPendingDelete.id}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete listing
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

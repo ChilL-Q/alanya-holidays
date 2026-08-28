@@ -20,7 +20,7 @@ import {
   PaginatedReviewsResponse,
   ReviewOperationResult,
 } from './types/review.types';
-import { PaginationDto, parsePagination } from '../common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('reviews')
 export class ReviewsController {
@@ -29,14 +29,10 @@ export class ReviewsController {
   @Get('listing/:id')
   async getListingReviews(
     @Param('id') id: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.reviewsService.getListingReviews(id, page, limit);
   }
 
@@ -69,15 +65,10 @@ export class ReviewsController {
   @RequireRole('admin')
   async getPendingReviews(
     @CurrentUser() user: AuthUser,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 50 },
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 50;
     return this.reviewsService.getPendingReviews(page, limit, user.id);
   }
 
@@ -87,15 +78,10 @@ export class ReviewsController {
   async getReviewsByStatus(
     @Param('status') status: string,
     @CurrentUser() user: AuthUser,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ): Promise<PaginatedReviewsResponse> {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 50 },
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 50;
     return this.reviewsService.getReviewsByStatus(status, page, limit, user.id);
   }
 

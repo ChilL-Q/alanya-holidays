@@ -7,6 +7,7 @@ import {
 import ListingDetailPreviewModal from "./ListingDetailPreviewModal";
 import RejectReasonModal from "./RejectReasonModal";
 import BulkActionsToolbar from "./BulkActionsToolbar";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "draft";
 
@@ -96,14 +97,15 @@ export default function ListingsModerationTab({
   const [previewListing, setPreviewListing] = useState<ModerationListing | null>(null);
   const [rejectingListing, setRejectingListing] = useState<ModerationListing | null>(null);
 
-  const fetchListings = useCallback(async () => {
-    setLoading(true);
+  const fetchListings = useCallback(async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const data = await adminService.getModerationListings({
         status: statusFilter,
         category: categoryFilter !== "all" ? categoryFilter : undefined,
         query: searchQuery.trim() || undefined,
+        throwOnError: true,
       });
       setListings(data || []);
 
@@ -119,8 +121,10 @@ export default function ListingsModerationTab({
   }, [statusFilter, categoryFilter, searchQuery]);
 
   useEffect(() => {
-    fetchListings();
+    void fetchListings();
   }, [fetchListings]);
+
+  useAutoRefresh(() => fetchListings(true), { intervalMs: 20000 });
 
   // Clear multi-selection when status filter, category, or search query changes
   useEffect(() => {
@@ -563,7 +567,9 @@ export default function ListingsModerationTab({
           </div>
           <button
             type="button"
-            onClick={fetchListings}
+            onClick={() => {
+              void fetchListings();
+            }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
             Retry

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
+import PageHeroImage from "@/components/base/PageHeroImage";
 import { forumService, type ForumStats, type ForumMember } from "@/api-services/forum.service";
 
 const values = [
@@ -93,10 +94,9 @@ export default function AboutPage() {
       <main>
         {/* Hero */}
         <section className="relative w-full h-[280px] md:h-[380px] overflow-hidden">
-          <img
-            src="/images/placeholder-business.svg"
+          <PageHeroImage
+            page="about"
             alt="Alanya Holidays — About Us"
-            className="absolute inset-0 w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/55 via-foreground-950/30 to-foreground-950/75"></div>
 
