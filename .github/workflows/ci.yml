@@ -61,7 +61,7 @@ jobs:
       run: pnpm lint
 
     - name: Frontend Tests
-      run: pnpm --filter @alanya-holidays/frontend test -- --run
+      run: pnpm --filter @alanya-holidays/frontend test --run
 
     - name: Backend Tests
       run: pnpm --filter @alanya-holidays/backend test

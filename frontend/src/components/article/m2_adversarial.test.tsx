@@ -9,8 +9,16 @@ import PullQuote from "./PullQuote";
 import LeadParagraph from "./LeadParagraph";
 import ArticleContentRenderer from "./ArticleContentRenderer";
 import type { ArticleBlockNode } from "./types";
+import { directoryService } from "@/api-services/directory.service";
+import { businesses } from "@/domain/directory-businesses";
 
 describe("Milestone 2 Adversarial & Stress Testing Suite", () => {
+  beforeEach(() => {
+    vi.spyOn(directoryService, "getListingById").mockImplementation(async (id) =>
+      businesses.find((business) => business.id === id) ?? null
+    );
+  });
+
   // =========================================================================
   // SUITE 1: VideoEmbed Malformed URLs, Attack Vectors & Edge Cases
   // =========================================================================
@@ -451,7 +459,7 @@ describe("Milestone 2 Adversarial & Stress Testing Suite", () => {
   // SUITE 4: Full Article Content Flow with Complex Multi-Media Document
   // =========================================================================
   describe("Suite 4: Master ArticleContentRenderer Rich Media Composition", () => {
-    it("renders a publication-grade editorial article combining all 9 block types flawlessly", () => {
+    it("renders a publication-grade editorial article combining all 9 block types flawlessly", async () => {
       const richMarkdownDoc = `
 ## The Ultimate Guide to Alanya Castle & Historic Peninsula
 
@@ -510,7 +518,7 @@ Perched atop a rugged 250-meter rocky promontory jutting into the turquoise Medi
       expect(screen.getByText("(Alanya Tourism Board)")).toBeInTheDocument();
 
       // Verify Embedded Venue Card
-      expect(screen.getByText("Kale Panorama Restaurant")).toBeInTheDocument();
+      expect(await screen.findByText("Kale Panorama Restaurant")).toBeInTheDocument();
 
       // Verify Pull Quote
       expect(
