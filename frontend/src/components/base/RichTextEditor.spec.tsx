@@ -16,6 +16,10 @@ let lastQuillOptions: any = null;
 let lastQuillInstance: any = null;
 let textChangeCallbacks: Array<() => void> = [];
 
+const captureQuillInstance = (instance: unknown) => {
+  lastQuillInstance = instance;
+};
+
 vi.mock('quill', () => {
   return {
     default: class MockQuill {
@@ -38,7 +42,7 @@ vi.mock('quill', () => {
         this.container = container;
         this.options = options;
         lastQuillOptions = options;
-        lastQuillInstance = this;
+        captureQuillInstance(this);
 
         this.root = document.createElement('div');
         this.root.className = 'ql-editor';
