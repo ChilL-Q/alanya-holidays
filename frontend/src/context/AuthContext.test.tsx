@@ -53,6 +53,23 @@ const TestConsumer: React.FC = () => {
   );
 };
 
+const SignUpConsumer: React.FC = () => {
+  const { signUp } = useAuth();
+  return (
+    <button
+      onClick={() => signUp({
+        email: ' business@example.com ',
+        password: 'password123',
+        fullName: 'Business Owner',
+        metadata: { registration_path: 'business' },
+        emailRedirectTo: 'https://example.com/base/business/dashboard',
+      })}
+    >
+      Sign Up
+    </button>
+  );
+};
+
 const PasswordAndProfileConsumer: React.FC = () => {
   const { profile, updatePassword, updateProfile } = useAuth();
 
@@ -168,6 +185,35 @@ describe('AuthContext', () => {
     expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
+    });
+  });
+
+  it('passes signup metadata and email confirmation destination exactly to Supabase', async () => {
+    (supabase.auth.signUp as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { user: null, session: null },
+      error: null,
+    });
+
+    render(
+      <AuthProvider>
+        <SignUpConsumer />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Sign Up').click();
+    });
+
+    expect(supabase.auth.signUp).toHaveBeenCalledWith({
+      email: 'business@example.com',
+      password: 'password123',
+      options: {
+        data: {
+          full_name: 'Business Owner',
+          registration_path: 'business',
+        },
+        emailRedirectTo: 'https://example.com/base/business/dashboard',
+      },
     });
   });
 

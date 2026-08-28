@@ -23,6 +23,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 import { BillingModule } from './billing/billing.module';
 import { ItinerariesModule } from './itineraries/itineraries.module';
+import { BusinessApplicationsModule } from './business-applications/business-applications.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ItinerariesModule } from './itineraries/itineraries.module';
     AdminModule,
     BillingModule,
     ItinerariesModule,
+    BusinessApplicationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

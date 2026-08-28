@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AdminDashboardPage from "../page";
 import { adminService } from "@/api-services/admin.service";
+import { businessApplicationsService } from "@/api-services/business-applications.service";
 
 vi.mock("@/context/AuthContext", () => ({
   useAuth: () => ({
@@ -221,6 +222,12 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
     vi.spyOn(adminService, "approveClaim").mockResolvedValue(true);
     vi.spyOn(adminService, "rejectClaim").mockResolvedValue(true);
     vi.spyOn(adminService, "updateEnquiryStatus").mockResolvedValue(true);
+    vi.spyOn(businessApplicationsService, "listAdmin").mockResolvedValue({
+      items: [],
+      page: 1,
+      limit: 20,
+      total: 0,
+    });
   });
 
   it("renders the 7-tab control navigation with count badges", async () => {
@@ -239,6 +246,18 @@ describe("AdminDashboardPage (4-Tab Control Center)", () => {
       expect(screen.getByRole("tab", { name: /Platform Analytics/i })).toBeInTheDocument();
       expect(screen.getByRole("tab", { name: /Concierge Enquiries/i })).toBeInTheDocument();
     });
+  });
+
+  it("opens the Business Applications queue from its URL tab", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin?tab=business-applications"]}>
+        <AdminDashboardPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Business Applications" })).toBeInTheDocument();
+    expect(screen.getByText("No pending business applications")).toBeInTheDocument();
+    expect(businessApplicationsService.listAdmin).toHaveBeenCalledWith(1, 20);
   });
 
   it("switches to Audit Log tab and displays audit history", async () => {

@@ -25,6 +25,7 @@ const ShopPage = lazy(() => import("../pages/shop/page"));
 const ProductDetailPage = lazy(() => import("../pages/product-detail/page"));
 const BusinessDetailPage = lazy(() => import("../pages/business/page"));
 const BusinessDashboardPage = lazy(() => import("../pages/business/dashboard/page"));
+const BusinessRegisterPage = lazy(() => import("../pages/business/register/page"));
 const ComparePage = lazy(() => import("../pages/compare/page"));
 const ContactPage = lazy(() => import("../pages/contact/page"));
 const YachtChartersPage = lazy(() => import("../pages/yacht-charters/page"));
@@ -178,6 +179,10 @@ const routes: RouteObject[] = [
   {
     path: "/business/dashboard",
     element: <BusinessDashboardPage />,
+  },
+  {
+    path: "/business/register",
+    element: <BusinessRegisterPage />,
   },
   {
     path: "/business/:businessId",

@@ -173,3 +173,9 @@ jobs:
         PGPASSWORD: postgrespassword
       run: |
         psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_atomic_blog_comment_likes.sql
+
+    - name: Verify Business Account Registration Foundation
+      env:
+        PGPASSWORD: postgrespassword
+      run: |
+        psql -h localhost -U postgres -d alanya_holidays -v ON_ERROR_STOP=1 -f db_scripts/verify_business_account_registration.sql

@@ -31,6 +31,10 @@ import { SellerOrdersTab } from "./components/SellerOrdersTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
 import { logger } from "@/lib/logger";
+import {
+  businessApplicationsService,
+  type BusinessApplication,
+} from "@/api-services/business-applications.service";
 
 export type DashboardTab =
   | "listings"
@@ -55,6 +59,7 @@ export default function MerchantDashboardPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const [businessApplication, setBusinessApplication] = useState<BusinessApplication | null>(null);
   const [deletingListingId, setDeletingListingId] = useState<string | null>(null);
 
   // Modal States
@@ -114,6 +119,17 @@ export default function MerchantDashboardPage() {
     void fetchAnalytics(days);
   }, [fetchAnalytics, days]);
 
+  useEffect(() => {
+    if (!isAuthenticated && !user) return;
+
+    void businessApplicationsService
+      .getMine()
+      .then(setBusinessApplication)
+      .catch((err: unknown) => {
+        logger.warn("Failed to load business application status:", err);
+      });
+  }, [isAuthenticated, user]);
+
   // Determine highest tier
   const highestTier = listings.reduce<string>((highest, curr) => {
     const t = (curr as unknown as { tier?: string }).tier?.toLowerCase() || "explorer";
@@ -158,13 +174,14 @@ export default function MerchantDashboardPage() {
           <div className="pt-2 flex flex-col gap-2.5">
             <Link
               to="/login"
+              state={{ from: { pathname: "/business/dashboard" } }}
               className="w-full py-3 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
             >
               <LogIn className="w-4 h-4" />
               <span>Sign In to Merchant Hub</span>
             </Link>
             <Link
-              to="/register"
+              to="/business/register"
               className="w-full py-3 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors"
             >
               Create Business Account
@@ -174,6 +191,13 @@ export default function MerchantDashboardPage() {
       </div>
     );
   }
+
+  const applicationStatusStyles = {
+    pending: "bg-amber-50 text-amber-800 border-amber-200",
+    approved: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    rejected: "bg-red-50 text-red-800 border-red-200",
+    withdrawn: "bg-slate-100 text-slate-700 border-slate-300",
+  } as const;
 
   // Handlers
   const handleOpenCreateModal = () => {
@@ -290,6 +314,26 @@ export default function MerchantDashboardPage() {
             setActiveTab("analytics");
           }}
         />
+
+        {businessApplication && (
+          <section
+            aria-label="Business application status"
+            className={`rounded-2xl border p-4 ${applicationStatusStyles[businessApplication.status]}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide">Business application</p>
+                <p className="font-semibold">{businessApplication.businessName}</p>
+              </div>
+              <span className="rounded-full border border-current/20 px-3 py-1 text-xs font-bold capitalize">
+                {businessApplication.status}
+              </span>
+            </div>
+            {businessApplication.status === "rejected" && businessApplication.rejectionReason && (
+              <p className="mt-2 text-sm">{businessApplication.rejectionReason}</p>
+            )}
+          </section>
+        )}
 
         {dashboardError && (
           <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-sm text-rose-800 dark:text-rose-300 flex items-center justify-between">

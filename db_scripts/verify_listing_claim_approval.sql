@@ -40,16 +40,15 @@ BEGIN
     (v_first_user_id, 'claim-first@example.test'),
     (v_second_user_id, 'claim-second@example.test');
 
-  INSERT INTO public.profiles (id, email, role, is_admin)
+  INSERT INTO public.profiles (id, email, role)
   VALUES
-    (v_admin_id, 'claim-admin@example.test', 'admin', true),
-    (v_first_user_id, 'claim-first@example.test', 'user', false),
-    (v_second_user_id, 'claim-second@example.test', 'user', false)
+    (v_admin_id, 'claim-admin@example.test', 'admin'),
+    (v_first_user_id, 'claim-first@example.test', 'user'),
+    (v_second_user_id, 'claim-second@example.test', 'user')
   ON CONFLICT (id) DO UPDATE
   SET
     email = EXCLUDED.email,
-    role = EXCLUDED.role,
-    is_admin = EXCLUDED.is_admin;
+    role = EXCLUDED.role;
 
   INSERT INTO public.directory_listings (id, name, title, slug, status)
   VALUES

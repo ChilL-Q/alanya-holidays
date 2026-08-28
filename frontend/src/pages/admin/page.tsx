@@ -14,6 +14,7 @@ import ConciergeTab from "./components/ConciergeTab";
 import BookingsAdminTab from "./components/BookingsAdminTab";
 import ReviewsModerationTab from "./components/ReviewsModerationTab";
 import UsersAdminTab from "./components/UsersAdminTab";
+import BusinessApplicationsTab from "./components/BusinessApplicationsTab";
 import { adminService } from "@/api-services/admin.service";
 import { useToast } from "@/hooks/useToast";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -26,6 +27,7 @@ export default function AdminDashboardPage() {
   const rawTab = searchParams.get("tab");
   const activeTab: AdminTab =
     rawTab === "claims" ||
+    rawTab === "business-applications" ||
     rawTab === "content" ||
     rawTab === "forum" ||
     rawTab === "bookings" ||
@@ -234,6 +236,16 @@ export default function AdminDashboardPage() {
             <ClaimsQueueTab
               onClaimCountUpdate={handleClaimCountUpdate}
             />
+          </div>
+        )}
+
+        {activeTab === "business-applications" && (
+          <div
+            id="admin-tabpanel-business-applications"
+            role="tabpanel"
+            aria-labelledby="admin-tab-business-applications"
+          >
+            <BusinessApplicationsTab />
           </div>
         )}
 

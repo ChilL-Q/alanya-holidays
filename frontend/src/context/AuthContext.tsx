@@ -12,6 +12,7 @@ export interface SignUpParams {
   password: string;
   fullName?: string;
   metadata?: Record<string, unknown>;
+  emailRedirectTo?: string;
 }
 
 export interface AuthContextType {
@@ -201,7 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const signUp = useCallback(
-    async ({ email, password, fullName, metadata = {} }: SignUpParams) => {
+    async ({ email, password, fullName, metadata = {}, emailRedirectTo }: SignUpParams) => {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -210,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: fullName,
             ...metadata,
           },
+          ...(emailRedirectTo ? { emailRedirectTo } : {}),
         },
       });
 

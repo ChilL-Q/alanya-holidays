@@ -10,6 +10,7 @@ import { ClaimTrackerTab } from "../components/ClaimTrackerTab";
 import { UpgradeModal } from "../components/UpgradeModal";
 import { directoryService } from "@/api-services/directory.service";
 import { billingService } from "@/api-services/billing.service";
+import { businessApplicationsService } from "@/api-services/business-applications.service";
 import type { Business } from "@/mocks/businesses";
 import type { DirectoryClaim, OwnerAnalyticsSummary } from "@/api-services/directory.service";
 
@@ -429,12 +430,30 @@ describe("Merchant Dashboard Unit & Component Tests", () => {
       vi.spyOn(directoryService, "getMyListings").mockResolvedValue(sampleListings);
       vi.spyOn(directoryService, "getMyClaims").mockResolvedValue(sampleClaims);
       vi.spyOn(directoryService, "getOwnerAnalytics").mockResolvedValue(sampleAnalytics);
+      vi.spyOn(businessApplicationsService, "getMine").mockResolvedValue({
+        id: "application-1",
+        userId: mockUser.id,
+        accountType: "seller",
+        businessName: "Alanya Crafts",
+        contactEmail: mockUser.email,
+        contactPhone: null,
+        website: null,
+        status: "withdrawn",
+        rejectionReason: null,
+        reviewedBy: null,
+        reviewedAt: null,
+        createdAt: "2026-08-28T10:00:00Z",
+        updatedAt: "2026-08-28T10:00:00Z",
+      });
 
       render(
         <MemoryRouter>
           <MerchantDashboardPage />
         </MemoryRouter>
       );
+
+      expect(await screen.findByText("Alanya Crafts")).toBeInTheDocument();
+      expect(screen.getByText("withdrawn")).toBeInTheDocument();
 
       // R1. Return link
       const returnLink = screen.getByRole("link", { name: /Return to Main Site/i });

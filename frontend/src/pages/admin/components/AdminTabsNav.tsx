@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AdminTab = "listings" | "claims" | "content" | "forum" | "bookings" | "reviews" | "users" | "audit" | "analytics" | "concierge";
+export type AdminTab = "listings" | "claims" | "business-applications" | "content" | "forum" | "bookings" | "reviews" | "users" | "audit" | "analytics" | "concierge";
 
 interface AdminTabsNavProps {
   activeTab: AdminTab;
@@ -43,6 +43,11 @@ export default function AdminTabsNav({
       icon: "ri-shield-check-line",
       badge: counts?.pendingClaims,
       badgeColor: "bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+    },
+    {
+      id: "business-applications",
+      label: "Business Applications",
+      icon: "ri-briefcase-4-line",
     },
     {
       id: "content",
