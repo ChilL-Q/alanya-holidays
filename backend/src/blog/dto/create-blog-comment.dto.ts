@@ -1,11 +1,18 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateBlogCommentDto {
   @IsString()
+  @IsNotEmpty()
   @MaxLength(5000)
   body!: string;
 
   @IsOptional()
-  @IsString()
+  @IsUUID('4')
   parentId?: string | null;
 }

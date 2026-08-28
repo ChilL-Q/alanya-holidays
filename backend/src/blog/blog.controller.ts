@@ -244,7 +244,7 @@ export class BlogController {
   @UseGuards(AuthGuard)
   async updateBlogComment(
     @Param('id') id: string,
-    @Body() body: { body: string },
+    @Body() body: CreateBlogCommentDto,
     @CurrentUser() user: AuthUser,
   ): Promise<BlogComment> {
     return this.blogService.updateBlogComment(id, body.body, user.id);

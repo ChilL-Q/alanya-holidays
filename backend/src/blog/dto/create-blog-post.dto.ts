@@ -1,55 +1,72 @@
 import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateBlogPostDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(150)
   title!: string;
 
   @IsString()
+  @MaxLength(180)
   @IsOptional()
   slug?: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(10)
+  @MaxLength(100000)
   content!: string;
 
   @IsString()
+  @MaxLength(500)
   @IsOptional()
   excerpt?: string;
 
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
   @IsOptional()
   cover_image?: string;
 
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
   @IsOptional()
   cover_image_url?: string;
 
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
   @IsOptional()
   video_url?: string;
 
   @IsString()
+  @MaxLength(80)
   @IsOptional()
   category?: string;
 
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(5)
+  @IsUUID('4', { each: true })
   @IsOptional()
   tags?: string[];
 
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(5)
+  @IsUUID('4', { each: true })
   @IsOptional()
   tag_ids?: string[];
 
-  @IsString()
+  @IsIn(['draft', 'published', 'archived'])
   @IsOptional()
   status?: string;
 

@@ -13,6 +13,8 @@ export default function BlogPostPage() {
   const [post, setPost] = useState<BlogPostDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!slug) return;
@@ -20,6 +22,7 @@ export default function BlogPostPage() {
 
     setIsLoading(true);
     setNotFound(false);
+    setLoadError(false);
 
     blogService
       .getPostBySlug(slug)
@@ -36,7 +39,7 @@ export default function BlogPostPage() {
       .catch((err) => {
         logger.warn("Failed to fetch blog post:", err);
         if (isMounted) {
-          setNotFound(true);
+          setLoadError(true);
           setIsLoading(false);
         }
       });
@@ -44,7 +47,7 @@ export default function BlogPostPage() {
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [retryCount, slug]);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -77,6 +80,34 @@ export default function BlogPostPage() {
             <div className="text-center">
               <i className="ri-loader-4-line animate-spin text-4xl text-primary-500 mb-4 block mx-auto"></i>
               <p className="text-foreground-500 text-sm">Loading post...</p>
+            </div>
+          </div>
+        ) : loadError ? (
+          <div className="min-h-[60vh] flex items-center justify-center px-4">
+            <div className="max-w-md text-center">
+              <i className="ri-wifi-off-line text-6xl text-foreground-300 mb-4 block"></i>
+              <h1 className="font-heading text-2xl text-foreground-900 mb-2">
+                Unable to Load Post
+              </h1>
+              <p className="text-sm text-foreground-500 mb-6">
+                We could not load this article. Check your connection and try again.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRetryCount((count) => count + 1)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors"
+                >
+                  <i className="ri-refresh-line text-base"></i>
+                  Try Again
+                </button>
+                <Link
+                  to="/blog"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-foreground-200 text-foreground-700 hover:bg-background-100 text-sm font-medium transition-colors"
+                >
+                  Back to Blog
+                </Link>
+              </div>
             </div>
           </div>
         ) : notFound || !post ? (

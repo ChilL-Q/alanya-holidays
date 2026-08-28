@@ -4,18 +4,27 @@ import {
   IsOptional,
   IsEmail,
   IsArray,
+  IsUUID,
+  ArrayMaxSize,
+  IsUrl,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateBlogSubmissionDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(150)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(10)
+  @MaxLength(100000)
   content!: string;
 
   @IsString()
+  @MaxLength(100)
   @IsOptional()
   author_name?: string;
 
@@ -24,20 +33,27 @@ export class CreateBlogSubmissionDto {
   author_email?: string;
 
   @IsString()
+  @MaxLength(80)
   @IsOptional()
   category?: string;
 
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(5)
+  @IsUUID('4', { each: true })
   @IsOptional()
   tags?: string[];
 
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(2048)
   @IsOptional()
   video_url?: string;
 
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(10)
+  @IsUrl(
+    { protocols: ['http', 'https'], require_protocol: true },
+    { each: true },
+  )
   @IsOptional()
   media_urls?: string[];
 

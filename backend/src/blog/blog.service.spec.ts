@@ -2,13 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
   UnauthorizedException,
+  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 
 jest.mock('sanitize-html', () => {
-  return jest.fn((dirty: string) =>
-    dirty ? dirty.replace(/<script.*?>.*?<\/script>/gi, '') : '',
-  );
+  return jest.fn((dirty: string, options?: { allowedTags?: string[] }) => {
+    if (!dirty) return '';
+    const withoutScripts = dirty.replace(/<script.*?>.*?<\/script>/gi, '');
+    if (options?.allowedTags?.length === 0) {
+      return withoutScripts.replace(/<[^>]*>/g, '');
+    }
+    return withoutScripts.replace(/\s+on\w+=("[^"]*"|'[^']*')/gi, '');
+  });
 });
 
 import { BlogService } from './blog.service';
@@ -325,6 +331,45 @@ describe('BlogService', () => {
       ]);
     });
 
+    it('should sanitize post content and excerpt before insertion', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertBlogPost.mockResolvedValueOnce(mockBlogPost);
+
+      await service.createBlogPost(
+        {
+          title: 'Safe Post',
+          content:
+            '<p onclick="alert(1)">Safe content</p><script>alert(1)</script>',
+          excerpt: '<strong>Safe excerpt</strong><script>alert(2)</script>',
+        },
+        'author-1',
+      );
+
+      expect(mockRepository.insertBlogPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: '<p>Safe content</p>',
+          excerpt: 'Safe excerpt',
+        }),
+      );
+    });
+
+    it('should reject direct publication by a non-admin user', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+
+      await expect(
+        service.createBlogPost(
+          {
+            title: 'Bypass moderation',
+            content: 'Content that should require moderation.',
+            status: 'published',
+          },
+          'user-1',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockRepository.insertBlogPost).not.toHaveBeenCalled();
+    });
+
     it('should resolve conflicting slug by incrementing counter', async () => {
       mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getSlugs.mockResolvedValueOnce([
@@ -354,7 +399,7 @@ describe('BlogService', () => {
     });
 
     it('should correctly transliterate Turkish diacritics into ASCII without stripping characters', async () => {
-      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getSlugs.mockResolvedValueOnce([]);
       mockRepository.insertBlogPost.mockImplementationOnce(
         (payload: InsertBlogPostPayload) =>
@@ -406,6 +451,20 @@ describe('BlogService', () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
+    it('should reject publication status changes by a non-admin author', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getBlogPostById.mockResolvedValueOnce({
+        author_id: 'user-1',
+        status: 'draft',
+        slug: 'draft-post',
+      });
+
+      await expect(
+        service.updateBlogPost('post-1', { status: 'published' }, 'user-1'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockRepository.updateBlogPost).not.toHaveBeenCalled();
+    });
+
     it('should allow admin to update post, featured status and update tags', async () => {
       mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogPostById.mockResolvedValueOnce({
@@ -441,6 +500,52 @@ describe('BlogService', () => {
       expect(mockRepository.insertBlogPostTags).toHaveBeenCalledWith([
         { post_id: 'post-1', tag_id: 'tag-3' },
       ]);
+    });
+
+    it('should sanitize updated content and generated excerpt', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getBlogPostById.mockResolvedValueOnce({
+        author_id: 'user-1',
+        status: 'draft',
+        slug: 'draft-post',
+      });
+      mockRepository.updateBlogPost.mockResolvedValueOnce(mockBlogPost);
+
+      await service.updateBlogPost(
+        'post-1',
+        {
+          content:
+            '<p onmouseover="alert(1)">Updated content</p><script>alert(1)</script>',
+        },
+        'user-1',
+      );
+
+      expect(mockRepository.updateBlogPost).toHaveBeenCalledWith('post-1', {
+        content: '<p>Updated content</p>',
+        excerpt: 'Updated content',
+      });
+    });
+
+    it('should sanitize an explicitly updated excerpt without adding content', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+      mockRepository.getBlogPostById.mockResolvedValueOnce({
+        author_id: 'user-1',
+        status: 'draft',
+        slug: 'draft-post',
+      });
+      mockRepository.updateBlogPost.mockResolvedValueOnce(mockBlogPost);
+
+      await service.updateBlogPost(
+        'post-1',
+        {
+          excerpt: '<em>Updated excerpt</em><script>alert(1)</script>',
+        },
+        'user-1',
+      );
+
+      expect(mockRepository.updateBlogPost).toHaveBeenCalledWith('post-1', {
+        excerpt: 'Updated excerpt',
+      });
     });
   });
 
@@ -541,6 +646,10 @@ describe('BlogService', () => {
         author_name: 'Ruslan',
         author_email: 'ruslan@test.com',
         category: 'Guides',
+        tags: [
+          '11111111-1111-4111-8111-111111111111',
+          '22222222-2222-4222-8222-222222222222',
+        ],
       };
 
       const result = await service.createBlogSubmission(dto, 'user-1');
@@ -552,6 +661,10 @@ describe('BlogService', () => {
           author_name: 'Ruslan',
           author_email: 'ruslan@test.com',
           category: 'Guides',
+          tag_ids: [
+            '11111111-1111-4111-8111-111111111111',
+            '22222222-2222-4222-8222-222222222222',
+          ],
         }),
       );
     });
@@ -663,6 +776,45 @@ describe('BlogService', () => {
           category: 'Food & Drink',
         }),
       );
+    });
+
+    it('should attach submission tags to the published post', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+      mockRepository.getBlogSubmissionById.mockResolvedValueOnce({
+        id: 'sub-tags-1',
+        user_id: 'author-1',
+        title: 'Tagged Story',
+        content: 'Tagged content',
+        category: 'Beaches',
+        tag_ids: [
+          '11111111-1111-4111-8111-111111111111',
+          '22222222-2222-4222-8222-222222222222',
+        ],
+        status: 'pending_review',
+      });
+      mockRepository.updateBlogSubmissionStatus.mockResolvedValueOnce([
+        { id: 'sub-tags-1' },
+      ]);
+      mockRepository.getSlugs.mockResolvedValueOnce([]);
+      mockRepository.insertBlogPost.mockResolvedValueOnce({
+        id: 'post-tags-1',
+        title: 'Tagged Story',
+        slug: 'tagged-story',
+      });
+      mockRepository.getProfileForNotification.mockResolvedValueOnce(null);
+
+      await service.approveBlogSubmission('sub-tags-1', 'admin-1');
+
+      expect(mockRepository.insertBlogPostTags).toHaveBeenCalledWith([
+        {
+          post_id: 'post-tags-1',
+          tag_id: '11111111-1111-4111-8111-111111111111',
+        },
+        {
+          post_id: 'post-tags-1',
+          tag_id: '22222222-2222-4222-8222-222222222222',
+        },
+      ]);
     });
 
     it('should rollback submission status if post insertion fails', async () => {

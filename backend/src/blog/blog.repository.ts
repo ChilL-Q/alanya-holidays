@@ -51,10 +51,14 @@ export class BlogRepository {
     userRole: string,
     requestUserId?: string,
   ): Promise<{ data: RawBlogPostRow[]; count: number }> {
+    const tagsRelation = filters.tag
+      ? 'tags:blog_post_tags!inner(tag_id, tag:blog_tags(id, name, slug))'
+      : 'tags:blog_post_tags(tag:blog_tags(id, name, slug))';
+
     let query = this.client
       .from('blog_posts')
       .select(
-        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), tags:blog_post_tags(tag:blog_tags(id, name, slug))`,
+        `*, author:profiles!blog_posts_author_id_fkey(full_name, avatar_url), ${tagsRelation}`,
         { count: 'exact' },
       );
 
@@ -70,6 +74,7 @@ export class BlogRepository {
     }
 
     if (filters.category) query = query.eq('category', filters.category);
+    if (filters.tag) query = query.eq('tags.tag_id', filters.tag);
     if (filters.is_featured === 'true') query = query.eq('is_featured', true);
     if (filters.authorId) query = query.eq('author_id', filters.authorId);
     if (filters.search) {
@@ -468,16 +473,18 @@ export class BlogRepository {
       .maybeSingle();
 
     if (existing) {
-      await this.client
+      const { error } = await this.client
         .from('blog_comment_likes')
         .delete()
         .eq('comment_id', commentId)
         .eq('user_id', userId);
+      if (error) throw new Error(error.message);
       return false;
     } else {
-      await this.client
+      const { error } = await this.client
         .from('blog_comment_likes')
         .insert({ comment_id: commentId, user_id: userId });
+      if (error) throw new Error(error.message);
       return true;
     }
   }

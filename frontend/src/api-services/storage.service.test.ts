@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockUpload, mockGetPublicUrl, mockFrom } = vi.hoisted(() => {
+const { mockUpload, mockRemove, mockGetPublicUrl, mockFrom } = vi.hoisted(() => {
   const mockUpload = vi.fn();
+  const mockRemove = vi.fn();
   const mockGetPublicUrl = vi.fn();
   const mockFrom = vi.fn(() => ({
     upload: mockUpload,
+    remove: mockRemove,
     getPublicUrl: mockGetPublicUrl,
   }));
-  return { mockUpload, mockGetPublicUrl, mockFrom };
+  return { mockUpload, mockRemove, mockGetPublicUrl, mockFrom };
 });
 
 vi.mock("@/lib/supabase", () => ({
@@ -18,7 +20,12 @@ vi.mock("@/lib/supabase", () => ({
   },
 }));
 
-import { uploadForumImage, storageService } from "./storage.service";
+import {
+  deleteBlogImage,
+  uploadBlogImage,
+  uploadForumImage,
+  storageService,
+} from "./storage.service";
 
 describe("storage.service", () => {
   beforeEach(() => {
@@ -97,6 +104,51 @@ describe("storage.service", () => {
     it("should export storageService object with uploadForumImage", () => {
       expect(storageService).toBeDefined();
       expect(typeof storageService.uploadForumImage).toBe("function");
+      expect(typeof storageService.uploadBlogImage).toBe("function");
+      expect(typeof storageService.deleteBlogImage).toBe("function");
     });
   });
+
+  describe("blog images", () => {
+    it("uploads an owned image to the blog-media bucket", async () => {
+      const file = new File(["cover"], "alanya.webp", { type: "image/webp" });
+      const expectedUrl =
+        "https://project.supabase.co/storage/v1/object/public/blog-media/user-1/cover.webp";
+      mockUpload.mockResolvedValue({ data: { path: "user-1/cover.webp" }, error: null });
+      mockGetPublicUrl.mockReturnValue({ data: { publicUrl: expectedUrl } });
+
+      const url = await uploadBlogImage(file, "user-1");
+
+      expect(mockFrom).toHaveBeenCalledWith("blog-media");
+      const [path, uploadedFile, options] = mockUpload.mock.calls[0];
+      expect(path).toMatch(/^user-1\/[0-9a-f-]+\.webp$/);
+      expect(uploadedFile).toBe(file);
+      expect(options).toEqual({ cacheControl: "3600", upsert: false });
+      expect(url).toBe(expectedUrl);
+    });
+
+    it("deletes an owned image from the blog-media bucket", async () => {
+      mockRemove.mockResolvedValue({ data: [], error: null });
+
+      const deleted = await deleteBlogImage(
+        "https://project.supabase.co/storage/v1/object/public/blog-media/user-1/cover.webp",
+        "user-1"
+      );
+
+      expect(mockFrom).toHaveBeenCalledWith("blog-media");
+      expect(mockRemove).toHaveBeenCalledWith(["user-1/cover.webp"]);
+      expect(deleted).toBe(true);
+    });
+
+    it("refuses to delete another user's blog image", async () => {
+      const deleted = await deleteBlogImage(
+        "https://project.supabase.co/storage/v1/object/public/blog-media/user-2/cover.webp",
+        "user-1"
+      );
+
+      expect(deleted).toBe(false);
+      expect(mockRemove).not.toHaveBeenCalled();
+    });
+  });
+
 });

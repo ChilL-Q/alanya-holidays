@@ -56,8 +56,78 @@ export async function uploadForumImage(file: File, userId: string = "anonymous")
   }
 }
 
+export async function uploadBlogImage(file: File, userId: string): Promise<string> {
+  const ownerId = userId.trim();
+  if (!ownerId) throw new Error("A user ID is required to upload a blog image");
+
+  const parts = file.name.split(".");
+  const rawExt = parts.length > 1 ? parts.pop()?.toLowerCase() || "png" : "png";
+  const sanitizedExt = rawExt.replace(/[^a-z0-9]/g, "") || "png";
+  const uniqueId = typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const filePath = `${ownerId}/${uniqueId}.${sanitizedExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("blog-media")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    logger.error("Failed to upload blog image to Supabase storage:", uploadError);
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage.from("blog-media").getPublicUrl(filePath);
+  if (!data?.publicUrl) {
+    throw new Error("Failed to generate public URL for uploaded blog image");
+  }
+
+  return data.publicUrl;
+}
+
+const BLOG_MEDIA_PUBLIC_PATH = "/storage/v1/object/public/blog-media/";
+
+export async function deleteBlogImage(publicUrl: string, userId: string): Promise<boolean> {
+  const ownerId = userId.trim();
+  if (!ownerId) return false;
+
+  let filePath: string;
+  try {
+    const url = new URL(publicUrl);
+    const markerIndex = url.pathname.indexOf(BLOG_MEDIA_PUBLIC_PATH);
+    if (markerIndex < 0) return false;
+    filePath = decodeURIComponent(
+      url.pathname.slice(markerIndex + BLOG_MEDIA_PUBLIC_PATH.length),
+    );
+  } catch {
+    return false;
+  }
+
+  const segments = filePath.split("/");
+  if (
+    segments.length < 2 ||
+    segments[0] !== ownerId ||
+    segments.some((segment) => !segment || segment === "." || segment === "..")
+  ) {
+    return false;
+  }
+
+  const { error } = await supabase.storage.from("blog-media").remove([filePath]);
+  if (error) {
+    logger.error("Failed to delete blog image from Supabase storage:", error);
+    throw error;
+  }
+
+  return true;
+}
+
 export const storageService = {
   uploadForumImage,
+  uploadBlogImage,
+  deleteBlogImage,
 };
 
 export default storageService;

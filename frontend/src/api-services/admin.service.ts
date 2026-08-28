@@ -1168,6 +1168,7 @@ export interface BlogSubmissionAdminItem {
   category?: string | null;
   video_url?: string | null;
   media_urls?: string[];
+  tag_ids?: string[];
   status: "pending_review" | "approved" | "rejected" | string;
   payment_details?: {
     method: "iban" | "crypto" | "wise" | "credits" | string;

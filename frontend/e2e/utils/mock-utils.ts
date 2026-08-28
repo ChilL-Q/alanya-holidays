@@ -260,31 +260,31 @@ export async function mockBlogData(page: Page) {
     tags: [],
   };
 
-  await page.route('**/rest/v1/blog_posts*', async (route) => {
-    const accept = route.request().headers()['accept'] || '';
-    const isSingle = accept.includes('pgrst.object');
+  await page.route('**/api/blog/**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const path = url.pathname;
+    let body: unknown;
+
+    if (request.method() === 'POST' && path.endsWith('/blog/submissions')) {
+      body = { submissionId: 'sub-1' };
+    } else if (path.endsWith('/blog/tags')) {
+      body = [{ id: '11111111-1111-4111-8111-111111111111', name: 'Essential', slug: 'essential' }];
+    } else if (path.endsWith('/blog/posts')) {
+      body = { data: [mockPost], total: 1 };
+    } else if (/\/blog\/post\/[^/]+$/.test(path)) {
+      body = mockPost;
+    } else if (/\/blog\/posts\/[^/]+\/comments$/.test(path)) {
+      body = [];
+    } else {
+      body = [];
+    }
+
     await route.fulfill({
-      status: 200,
-      body: JSON.stringify(isSingle ? mockPost : [mockPost]),
+      status: request.method() === 'POST' ? 201 : 200,
+      body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
     });
-  });
-
-  await page.route('**/rest/v1/blog_submissions*', async (route) => {
-    const method = route.request().method();
-    if (method === 'POST') {
-      await route.fulfill({
-        status: 201,
-        body: JSON.stringify([{ id: 'sub-1' }]),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        body: JSON.stringify([]),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
   });
 }
 

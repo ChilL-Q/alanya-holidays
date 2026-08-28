@@ -13,25 +13,33 @@ function CommentItem({
   comment,
   postId,
   onReply,
+  replyTo,
+  onCommentCreated,
   depth = 0,
 }: {
   comment: BlogComment;
   postId: string;
   onReply: (parentId: string) => void;
+  replyTo: string | null;
+  onCommentCreated: (comment: BlogComment) => void;
   depth?: number;
 }) {
   const { isAuthenticated } = useAuth();
   const [liked, setLiked] = useState(comment.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(comment.like_count ?? 0);
+  const [isLiking, setIsLiking] = useState(false);
 
   const handleLike = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isLiking) return;
+    setIsLiking(true);
     try {
       const res = await blogService.toggleCommentLike(comment.id);
       setLiked(res.liked);
-      setLikeCount((prev) => (res.liked ? prev + 1 : prev - 1));
+      setLikeCount((prev) => (res.liked ? prev + 1 : Math.max(0, prev - 1)));
     } catch {
       logger.warn("Failed to toggle like");
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -87,8 +95,11 @@ function CommentItem({
             />
             <div className="flex items-center gap-4 mt-2">
               <button
+                type="button"
                 onClick={handleLike}
-                className={`inline-flex items-center gap-1 text-xs transition-colors cursor-pointer ${
+                disabled={!isAuthenticated || isLiking}
+                aria-label={liked ? "Unlike comment" : "Like comment"}
+                className={`inline-flex items-center gap-1 text-xs transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
                   liked ? "text-red-500" : "text-foreground-400 hover:text-red-400"
                 }`}
               >
@@ -107,6 +118,16 @@ function CommentItem({
             </div>
           </div>
         </div>
+        {replyTo === comment.id && (
+          <div className="ml-11 mb-4">
+            <CommentForm
+              postId={postId}
+              parentId={comment.id}
+              onCancel={() => onReply(comment.id)}
+              onCreated={onCommentCreated}
+            />
+          </div>
+        )}
       </div>
       {comment.children?.map((child) => (
         <CommentItem
@@ -114,6 +135,8 @@ function CommentItem({
           comment={child}
           postId={postId}
           onReply={onReply}
+          replyTo={replyTo}
+          onCommentCreated={onCommentCreated}
           depth={depth + 1}
         />
       ))}
@@ -263,21 +286,13 @@ export default function BlogComments({ postId }: BlogCommentsProps) {
               <CommentItem
                 comment={comment}
                 postId={postId}
-                onReply={(id) => setReplyTo(replyTo === id ? null : id)}
+                onReply={(id) => setReplyTo((current) => current === id ? null : id)}
+                replyTo={replyTo}
+                onCommentCreated={(createdComment) => {
+                  handleNewComment(createdComment);
+                  setReplyTo(null);
+                }}
               />
-              {replyTo === comment.id && (
-                <div className="ml-6 md:ml-10 mb-4">
-                  <CommentForm
-                    postId={postId}
-                    parentId={comment.id}
-                    onCancel={() => setReplyTo(null)}
-                    onCreated={(c) => {
-                      handleNewComment(c);
-                      setReplyTo(null);
-                    }}
-                  />
-                </div>
-              )}
             </div>
           ))}
         </div>

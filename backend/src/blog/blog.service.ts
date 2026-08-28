@@ -2,6 +2,7 @@ import {
   Injectable,
   Logger,
   UnauthorizedException,
+  ForbiddenException,
   NotFoundException,
   BadRequestException,
   Optional,
@@ -43,6 +44,9 @@ const generateExcerpt = (
   if (stripped.length <= maxLength) return stripped;
   return stripped.slice(0, maxLength).trimEnd() + '\u2026';
 };
+
+const sanitizeExcerpt = (excerpt: string): string =>
+  sanitizeHtml(excerpt, { allowedTags: [], allowedAttributes: {} }).trim();
 
 @Injectable()
 export class BlogService {
@@ -150,17 +154,28 @@ export class BlogService {
     userId: string,
   ): Promise<BlogPost> {
     const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin' && data.status && data.status !== 'draft') {
+      throw new ForbiddenException(
+        'Only admins can publish or archive blog posts directly',
+      );
+    }
+    if (role !== 'admin' && data.is_featured) {
+      throw new ForbiddenException('Only admins can feature blog posts');
+    }
 
     const baseSlug = data.slug || slugify(data.title);
     const uniqueSlug = await this.resolveSlug(baseSlug);
-    const excerpt = data.excerpt || generateExcerpt(data.content || null);
+    const sanitizedContent = sanitizeHtml(data.content);
+    const excerpt = data.excerpt
+      ? sanitizeExcerpt(data.excerpt)
+      : generateExcerpt(sanitizedContent);
     const publishedAt =
       data.status === 'published' ? new Date().toISOString() : null;
 
     const post = await this.blogRepository.insertBlogPost({
       title: data.title,
       slug: uniqueSlug,
-      content: data.content,
+      content: sanitizedContent,
       excerpt,
       video_url: data.video_url || null,
       cover_image_url: data.cover_image_url || data.cover_image || null,
@@ -188,6 +203,18 @@ export class BlogService {
     userId: string,
   ): Promise<BlogPost> {
     const { role, existing } = await this.checkPostOwnership(id, userId);
+    if (
+      role !== 'admin' &&
+      updates.status !== undefined &&
+      updates.status !== existing.status
+    ) {
+      throw new ForbiddenException(
+        'Only admins can change blog publication status',
+      );
+    }
+    if (role !== 'admin' && updates.is_featured !== undefined) {
+      throw new ForbiddenException('Only admins can feature blog posts');
+    }
 
     const safe: UpdateBlogPostPayload = {};
     if (updates.title !== undefined) {
@@ -196,10 +223,14 @@ export class BlogService {
         safe.slug = await this.resolveSlug(slugify(updates.title));
     }
     if (updates.slug !== undefined) safe.slug = updates.slug;
-    if (updates.content !== undefined) safe.content = updates.content;
-    if (updates.excerpt !== undefined) safe.excerpt = updates.excerpt;
-    else if (updates.content !== undefined)
-      safe.excerpt = generateExcerpt(updates.content);
+    if (updates.content !== undefined) {
+      safe.content = sanitizeHtml(updates.content);
+    }
+    if (updates.excerpt !== undefined) {
+      safe.excerpt = sanitizeExcerpt(updates.excerpt);
+    } else if (safe.content !== undefined) {
+      safe.excerpt = generateExcerpt(safe.content);
+    }
     if (updates.video_url !== undefined)
       safe.video_url = updates.video_url || null;
     if (
@@ -381,6 +412,7 @@ export class BlogService {
       category: data.category,
       video_url: data.video_url || null,
       media_urls: data.media_urls || [],
+      tag_ids: data.tags || [],
       status: 'pending_review',
       payment_details: data.payment_details || null,
     });
@@ -420,7 +452,7 @@ export class BlogService {
       throw new BadRequestException('Already processed');
 
     const coverImageUrl = submission.media_urls?.[0] || null;
-    let post: BlogPost;
+    let post: BlogPost | undefined;
     let uniqueSlug = '';
 
     try {
@@ -438,13 +470,29 @@ export class BlogService {
         is_featured: false,
         published_at: new Date().toISOString(),
       });
+
+      if (submission.tag_ids && submission.tag_ids.length > 0) {
+        await this.blogRepository.insertBlogPostTags(
+          submission.tag_ids.map((tagId) => ({
+            post_id: post!.id,
+            tag_id: tagId,
+          })),
+        );
+      }
     } catch (err) {
+      if (post?.id) {
+        await this.blogRepository.deleteBlogPost(post.id);
+      }
       await this.blogRepository.updateBlogSubmissionStatus(
         submissionId,
         'pending_review',
         'approved',
       );
       throw err;
+    }
+
+    if (!post) {
+      throw new BadRequestException('Failed to publish submission');
     }
 
     const authorProfile = await this.blogRepository.getProfileForNotification(
