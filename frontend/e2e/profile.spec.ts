@@ -27,27 +27,22 @@ test.describe('Profile Flow', () => {
     await expect(page.locator('body')).toContainText(/Test User/i, { timeout: 10000 });
   });
 
-  test('should navigate to settings tab and render personal info form', async ({ page }) => {
+  test('should update personal information from the default profile tab', async ({ page }) => {
     await page.goto('/profile');
     await page.waitForLoadState('networkidle');
 
-    // Settings tab button in ProfileSidebar
-    const settingsTab = page.getByRole('button', { name: /^settings$/i });
-    await expect(settingsTab).toBeVisible({ timeout: 10000 });
-    await settingsTab.click();
+    await expect(page.getByRole('heading', { name: /Personal Information/i })).toBeVisible({ timeout: 10000 });
 
-    // Settings form heading
-    await expect(page.locator('body')).toContainText(/Personal Information/i, { timeout: 5000 });
-
-    // First text input in the form is the name field
-    const nameInput = page.locator('form input[type="text"]').first();
-    await expect(nameInput).toBeVisible({ timeout: 5000 });
+    const nameInput = page.getByRole('textbox', { name: /Full Name/i });
+    await expect(nameInput).toBeVisible();
     await nameInput.fill('Updated Name');
 
-    // Save Changes button (locale key: profile.save = "Save Changes")
+    const updateRequest = page.waitForRequest((request) =>
+      request.method() === 'PATCH' && request.url().includes('/rest/v1/profiles'),
+    );
     await page.getByRole('button', { name: /save changes/i }).click();
 
-    // Toast success (locale key: profile.save_success = "Profile updated successfully")
-    await expect(page.locator('body')).toContainText(/Profile updated successfully/i, { timeout: 8000 });
+    const request = await updateRequest;
+    expect(request.postDataJSON()).toMatchObject({ full_name: 'Updated Name' });
   });
 });
