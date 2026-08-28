@@ -1,3 +1,8 @@
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MediaProcessingService } from './media-processing.service';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -11,8 +16,12 @@ describe('MediaProcessingService', () => {
   };
   let uploadMock: jest.Mock;
   let getPublicUrlMock: jest.Mock;
+  let loggerErrorSpy: jest.SpyInstance;
 
   beforeEach(async () => {
+    loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
     uploadMock = jest
       .fn()
       .mockResolvedValue({ data: { path: 'test.webp' }, error: null });
@@ -117,7 +126,7 @@ describe('MediaProcessingService', () => {
     expect(result.format).toBe('webp');
   });
 
-  it('should throw an error if file upload to Supabase fails', async () => {
+  it('returns a sanitized 500 and logs storage failures server-side', async () => {
     uploadMock.mockResolvedValueOnce({
       data: null,
       error: new Error('Storage bucket full'),
@@ -134,16 +143,122 @@ describe('MediaProcessingService', () => {
       .png()
       .toBuffer();
 
-    await expect(
-      service.processAndUploadImage(
-        {
-          buffer: inputBuffer,
-          originalname: 'fail.png',
-          mimetype: 'image/png',
-        },
-        { bucket: 'properties' },
-      ),
-    ).rejects.toThrow('Storage bucket full');
+    const processing = service.processAndUploadImage(
+      {
+        buffer: inputBuffer,
+        originalname: 'fail.png',
+        mimetype: 'image/png',
+      },
+      { bucket: 'properties' },
+    );
+
+    await expect(processing).rejects.toEqual(
+      new InternalServerErrorException('Unable to process image'),
+    );
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      'Image processing failed',
+      expect.objectContaining({
+        operation: 'upload',
+        originalName: 'fail.png',
+        error: expect.stringContaining('Storage bucket full'),
+      }),
+    );
+  });
+
+  it('returns a stable sanitized 400 for invalid image content', async () => {
+    const processing = service.processAndUploadImage(
+      {
+        buffer: Buffer.from('not an image'),
+        originalname: 'invalid.png',
+        mimetype: 'image/png',
+      },
+      { bucket: 'properties' },
+    );
+
+    await expect(processing).rejects.toEqual(
+      new BadRequestException('Invalid image content'),
+    );
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      'Invalid image content',
+      expect.objectContaining({
+        operation: 'validate',
+        originalName: 'invalid.png',
+        error: expect.any(String),
+      }),
+    );
+  });
+
+  it('returns a generic 500 for an operational failure in the initial Sharp pipeline', async () => {
+    const inputBuffer = await sharp({
+      create: {
+        width: 10,
+        height: 10,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const processing = service.processAndUploadImage(
+      {
+        buffer: inputBuffer,
+        originalname: 'operational.png',
+        mimetype: 'image/png',
+      },
+      { bucket: 'properties', maxFullWidth: 0 },
+    );
+
+    await expect(processing).rejects.toEqual(
+      new InternalServerErrorException('Unable to process image'),
+    );
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      'Image processing failed',
+      expect.objectContaining({
+        operation: 'validate',
+        originalName: 'operational.png',
+        error: expect.stringContaining('Expected positive integer'),
+      }),
+    );
+    expect(uploadMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a stable generic 500 for unexpected failures', async () => {
+    supabaseServiceMock.getClient.mockImplementation(() => {
+      throw new Error('/var/run/secrets/storage-client.sock unavailable');
+    });
+
+    const inputBuffer = await sharp({
+      create: {
+        width: 10,
+        height: 10,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    const processing = service.processAndUploadImage(
+      {
+        buffer: inputBuffer,
+        originalname: 'unexpected.png',
+        mimetype: 'image/png',
+      },
+      { bucket: 'properties' },
+    );
+
+    await expect(processing).rejects.toEqual(
+      new InternalServerErrorException('Unable to process image'),
+    );
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      'Image processing failed',
+      expect.objectContaining({
+        operation: 'upload',
+        originalName: 'unexpected.png',
+        error: expect.stringContaining('/var/run/secrets'),
+      }),
+    );
   });
 
   it('should convert raw image buffer into WebP format', async () => {
