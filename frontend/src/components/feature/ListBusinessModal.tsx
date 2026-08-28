@@ -479,7 +479,7 @@ export default function ListBusinessModal({
                       onChange={(e) => updateField("category", e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 focus:outline-none focus:border-primary-500"
                     >
-                      {businessCategories.map((c) => (
+                      {businessCategories.filter((c) => c.id !== "all").map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>

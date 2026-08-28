@@ -81,7 +81,7 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
       // Test Free tier flow
       fireEvent.click(screen.getByTestId("select-tier-explorer"));
       fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "Test Free Spot" } });
-      fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "restaurants-cafes" } });
+      fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "restaurants" } });
       fireEvent.change(screen.getByLabelText(/business description/i), { target: { value: "A lovely local restaurant." } });
       fireEvent.change(screen.getByLabelText(/address/i), { target: { value: "Ataturk Cad No:1" } });
       fireEvent.change(screen.getByLabelText(/contact phone/i), { target: { value: "+90 532 111 2233" } });
@@ -99,7 +99,7 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
       renderWithProviders(<ListBusinessModal isOpen={true} onClose={vi.fn()} />);
       fireEvent.click(screen.getByTestId("select-tier-voyager"));
       fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "Test Luxury Spot" } });
-      fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "hotels-accommodation" } });
+      fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "hotels" } });
       fireEvent.change(screen.getByLabelText(/business description/i), { target: { value: "5-Star luxury beachfront experience." } });
       fireEvent.change(screen.getByLabelText(/address/i), { target: { value: "D400 No:50" } });
       fireEvent.change(screen.getByLabelText(/contact phone/i), { target: { value: "+90 532 999 8877" } });

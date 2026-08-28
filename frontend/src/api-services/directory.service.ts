@@ -27,16 +27,29 @@ export interface BusinessReview {
 
 export const businessCategories: BusinessCategory[] = [
   { id: "all", name: "All Businesses", icon: "ri-store-2-line" },
-  { id: "restaurants-cafes", name: "Restaurants & Cafés", icon: "ri-restaurant-2-line" },
-  { id: "hotels-accommodation", name: "Hotels & Accommodation", icon: "ri-hotel-line" },
-  { id: "tours-activities", name: "Tours & Activities", icon: "ri-ship-line" },
+  { id: "restaurants", name: "Restaurants & Cafés", icon: "ri-restaurant-2-line" },
+  { id: "hotels", name: "Hotels & Accommodation", icon: "ri-hotel-line" },
+  { id: "activities", name: "Tours & Activities", icon: "ri-compass-3-line" },
+  { id: "boat-tours", name: "Boat & Yacht Tours", icon: "ri-sailboat-line" },
+  { id: "water-sports", name: "Water Sports", icon: "ri-swimming-line" },
   { id: "real-estate", name: "Real Estate", icon: "ri-home-4-line" },
   { id: "car-rental", name: "Car & Scooter Rental", icon: "ri-car-line" },
-  { id: "health-wellness", name: "Health & Wellness", icon: "ri-heart-pulse-line" },
+  { id: "wellness", name: "Health & Wellness", icon: "ri-heart-pulse-line" },
   { id: "shopping", name: "Shopping", icon: "ri-shopping-bag-3-line" },
   { id: "services", name: "Professional Services", icon: "ri-briefcase-line" },
   { id: "nightlife", name: "Nightlife & Bars", icon: "ri-goblet-line" },
 ];
+
+const legacyBusinessCategoryAliases: Record<string, string> = {
+  "restaurants-cafes": "restaurants",
+  "hotels-accommodation": "hotels",
+  "tours-activities": "activities",
+  "health-wellness": "wellness",
+};
+
+export function normalizeBusinessCategory(category: string): string {
+  return legacyBusinessCategoryAliases[category] ?? category;
+}
 
 export interface BackendReview {
   id: string;
@@ -184,7 +197,7 @@ export function mapBackendListingToBusiness(
   return {
     id: item.id || item.slug || "biz-unknown",
     name: item.name || "Unnamed Business",
-    category: item.category_id || item.category || "all",
+    category: normalizeBusinessCategory(item.category_id || item.category || "all"),
     subcategory: item.subcategory || "",
     description: item.description || item.short_description || "",
     address: item.address || "",
@@ -249,7 +262,8 @@ export class DirectoryService {
         ...extraParams,
         page,
         limit,
-        category: category && category !== "all" ? category : undefined,
+        category:
+          category && category !== "all" ? normalizeBusinessCategory(category) : undefined,
         sortBy,
       },
     });
@@ -304,7 +318,8 @@ export class DirectoryService {
       params: {
         ...extraParams,
         query,
-        category: category && category !== "all" ? category : undefined,
+        category:
+          category && category !== "all" ? normalizeBusinessCategory(category) : undefined,
         location,
         page,
         limit,

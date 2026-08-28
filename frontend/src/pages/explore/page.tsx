@@ -7,7 +7,12 @@ import BusinessCard from "@/pages/explore/components/BusinessCard";
 import MapView from "@/pages/explore/components/MapView";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
-import { directoryService, businessCategories, type Business } from "@/api-services/directory.service";
+import {
+  directoryService,
+  businessCategories,
+  normalizeBusinessCategory,
+  type Business,
+} from "@/api-services/directory.service";
 import { isAbortError } from "@/lib/api-client";
 import { ErrorState } from "@/components/base/ErrorState";
 import { EmptyState } from "@/components/base/EmptyState";
@@ -37,8 +42,9 @@ export default function ExplorePage() {
   // Read initial category from URL
   useEffect(() => {
     const category = searchParams.get("category");
-    if (category && businessCategories.some((c) => c.id === category)) {
-      setActiveCategory(category);
+    const normalizedCategory = category ? normalizeBusinessCategory(category) : null;
+    if (normalizedCategory && businessCategories.some((c) => c.id === normalizedCategory)) {
+      setActiveCategory(normalizedCategory);
       setShowFavoritesOnly(false);
     }
   }, [searchParams]);

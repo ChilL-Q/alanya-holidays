@@ -67,7 +67,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const createSpy = vi.spyOn(directoryService, "createListing").mockResolvedValue({
       id: "biz-free-1",
       name: "Alanya Cozy Cafe",
-      category: "restaurants-cafes",
+      category: "restaurants",
       subcategory: "Cafe",
       description: "Cozy neighborhood cafe with fresh coffee.",
       address: "Ataturk Cad. No:10, Alanya",
@@ -95,7 +95,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       target: { value: "Alanya Cozy Cafe" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "restaurants-cafes" },
+      target: { value: "restaurants" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "Cozy neighborhood cafe with fresh coffee and pastries." },
@@ -132,7 +132,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const createSpy = vi.spyOn(directoryService, "createListing").mockResolvedValue({
       id: "biz-paid-1",
       name: "Alanya Grand Luxury Hotel",
-      category: "hotels-accommodation",
+      category: "hotels",
       subcategory: "5-Star Resort",
       description: "Exclusive luxury beachfront resort.",
       address: "D400 Karayolu No:100, Alanya",
@@ -160,7 +160,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       target: { value: "Alanya Grand Luxury Hotel" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "hotels-accommodation" },
+      target: { value: "hotels" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "Exclusive luxury beachfront resort with 5-star amenities." },
@@ -261,7 +261,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
     const savedDraftData = {
       formData: {
         name: "Restored Coffee House",
-        category: "restaurants-cafes",
+        category: "restaurants",
         description: "Specialty coffee roastery in Alanya center.",
         address: "Iskele Cad. 22",
         tier: "explorer",
@@ -347,7 +347,7 @@ describe("ListBusinessModal Component (Milestone M3 / R3)", () => {
       target: { value: "Failing Listing Cafe" },
     });
     fireEvent.change(screen.getByLabelText(/^category/i), {
-      target: { value: "restaurants-cafes" },
+      target: { value: "restaurants" },
     });
     fireEvent.change(screen.getByLabelText(/business description/i), {
       target: { value: "A wonderful cafe with scenic views." },

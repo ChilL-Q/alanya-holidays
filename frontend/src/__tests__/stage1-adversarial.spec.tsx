@@ -58,7 +58,7 @@ describe("Tier 5: Adversarial & Stress Testing", () => {
 
     fireEvent.click(screen.getByTestId("select-tier-explorer"));
     fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "Concurrency Test Cafe" } });
-    fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "restaurants-cafes" } });
+    fireEvent.change(screen.getByLabelText(/^category/i), { target: { value: "restaurants" } });
     fireEvent.change(screen.getByLabelText(/business description/i), { target: { value: "Concurrency testing." } });
     fireEvent.change(screen.getByLabelText(/address/i), { target: { value: "Address 123" } });
     fireEvent.change(screen.getByLabelText(/contact phone/i), { target: { value: "+90 532 000 0000" } });

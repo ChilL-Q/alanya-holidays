@@ -5,7 +5,7 @@ import {
   mapBackendReviewToBusinessReview,
   getListings,
   getCategories,
-  businessCategories,
+  normalizeBusinessCategory,
   type DirectoryListingRecord,
   type BackendReview,
   type SubmitClaimPayload,
@@ -44,7 +44,7 @@ describe("directory.service", () => {
       const result = mapBackendListingToBusiness(backendListing);
       expect(result.id).toBe("biz-uuid-1");
       expect(result.name).toBe("Kale Panorama");
-      expect(result.category).toBe("restaurants-cafes");
+      expect(result.category).toBe("restaurants");
       expect(result.subcategory).toBe("Turkish Cuisine");
       expect(result.description).toBe("Top restaurant in Alanya");
       expect(result.rating).toBe(4.9);
@@ -124,7 +124,7 @@ describe("directory.service", () => {
         params: {
           page: 1,
           limit: 20,
-          category: "restaurants-cafes",
+          category: "restaurants",
           sortBy: undefined,
         },
       });
@@ -183,7 +183,7 @@ describe("directory.service", () => {
       expect(apiClient.get).toHaveBeenCalledWith("/directory/search", {
         params: {
           query: "Cafe",
-          category: "restaurants-cafes",
+          category: "restaurants",
           location: undefined,
           page: 1,
           limit: 40,
@@ -386,10 +386,45 @@ describe("directory.service", () => {
     });
   });
 
+  describe("category taxonomy", () => {
+    it.each([
+      ["restaurants-cafes", "restaurants"],
+      ["hotels-accommodation", "hotels"],
+      ["tours-activities", "activities"],
+      ["health-wellness", "wellness"],
+      ["boat-tours", "boat-tours"],
+    ])("normalizes legacy category %s to %s", (category, expected) => {
+      expect(normalizeBusinessCategory(category)).toBe(expected);
+    });
+
+    it("normalizes legacy categories while mapping backend listings", () => {
+      const business = mapBackendListingToBusiness({
+        id: "legacy-1",
+        name: "Legacy Hotel",
+        category_id: "hotels-accommodation",
+      });
+
+      expect(business.category).toBe("hotels");
+    });
+  });
+
   describe("getCategories", () => {
-    it("should return business categories", async () => {
+    it("should return the canonical backend directory category IDs", async () => {
       const categories = await directoryService.getCategories();
-      expect(categories).toEqual(businessCategories);
+      expect(categories.map((category) => category.id)).toEqual([
+        "all",
+        "restaurants",
+        "hotels",
+        "activities",
+        "boat-tours",
+        "water-sports",
+        "real-estate",
+        "car-rental",
+        "wellness",
+        "shopping",
+        "services",
+        "nightlife",
+      ]);
     });
   });
 
