@@ -79,6 +79,18 @@ describe('PropertiesController', () => {
     controller = module.get<PropertiesController>(PropertiesController);
   });
 
+  it('should protect the admin property feed by role', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      PropertiesController.prototype,
+      'getAdminProperties',
+    )?.value as object;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+
+    expect(guards).toContain(AuthGuard);
+    expect(guards).toContain(RolesGuard);
+    expect(Reflect.getMetadata(ROLE_KEY, handler)).toEqual(['admin']);
+  });
+
   it('should delegate getPropertyTypes to service', async () => {
     const res = await controller.getPropertyTypes();
     expect(res).toEqual(['villa', 'apartment']);

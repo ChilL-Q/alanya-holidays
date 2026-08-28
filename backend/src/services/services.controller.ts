@@ -108,7 +108,8 @@ export class ServicesController {
   }
 
   @Get('edits/admin/pending')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getPendingServiceEdits(): Promise<Record<string, unknown>[]> {
     return this.servicesService.getPendingServiceEdits();
   }
@@ -219,7 +220,8 @@ export class ServicesController {
   }
 
   @Get('admin')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getAdminServices(
     @Query('statusFilter') statusFilter?: string,
     @Query('typesFilter') typesFilter?: string,

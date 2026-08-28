@@ -159,6 +159,21 @@ describe('ServicesController', () => {
     );
   });
 
+  it.each(['getPendingServiceEdits', 'getAdminServices'] as const)(
+    'should protect %s by admin role',
+    (methodName) => {
+      const handler = Object.getOwnPropertyDescriptor(
+        ServicesController.prototype,
+        methodName,
+      )?.value as object;
+      const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+
+      expect(guards).toContain(AuthGuard);
+      expect(guards).toContain(RolesGuard);
+      expect(Reflect.getMetadata(ROLE_KEY, handler)).toEqual(['admin']);
+    },
+  );
+
   it('should get pending service edits', async () => {
     const result = await controller.getPendingServiceEdits();
     expect(result).toEqual([]);

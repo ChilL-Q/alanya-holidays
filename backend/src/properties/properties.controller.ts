@@ -262,7 +262,8 @@ export class PropertiesController {
   }
 
   @Get('admin')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @RequireRole('admin')
   async getAdminProperties(
     @Query('statusFilter') statusFilter?: string,
     @Query('page') pageStr?: string,

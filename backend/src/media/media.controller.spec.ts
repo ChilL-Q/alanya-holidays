@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MediaController } from './media.controller';
 import { MediaProcessingService } from './media-processing.service';
 import { BadRequestException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { AuthGuard } from '../auth/auth.guard';
 
 describe('MediaController', () => {
   let controller: MediaController;
@@ -28,7 +30,10 @@ describe('MediaController', () => {
           useValue: serviceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<MediaController>(MediaController);
   });
@@ -41,10 +46,14 @@ describe('MediaController', () => {
       size: 1024,
     } as Express.Multer.File;
 
-    const result = await controller.uploadMedia(mockFile, {
-      bucket: 'properties',
-      folder: 'house-12',
-    });
+    const result = await controller.uploadMedia(
+      mockFile,
+      {
+        bucket: 'blog-media',
+        folder: 'house-12',
+      },
+      { id: 'user-1' },
+    );
 
     expect(serviceMock.processAndUploadImage).toHaveBeenCalledWith(
       {
@@ -53,8 +62,8 @@ describe('MediaController', () => {
         mimetype: 'image/png',
       },
       {
-        bucket: 'properties',
-        folder: 'house-12',
+        bucket: 'blog-media',
+        folder: 'user-1/house-12',
       },
     );
 
@@ -69,9 +78,35 @@ describe('MediaController', () => {
 
   it('should throw BadRequestException if no file is provided', async () => {
     await expect(
-      controller.uploadMedia(undefined as unknown as Express.Multer.File, {
-        bucket: 'properties',
-      }),
+      controller.uploadMedia(
+        undefined as unknown as Express.Multer.File,
+        { bucket: 'blog-media' },
+        { id: 'user-1' },
+      ),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should require authentication for uploads', () => {
+    const handler = Object.getOwnPropertyDescriptor(
+      MediaController.prototype,
+      'uploadMedia',
+    )?.value as object;
+    const guards = Reflect.getMetadata(GUARDS_METADATA, handler) as unknown[];
+
+    expect(guards).toContain(AuthGuard);
+  });
+
+  it('should reject unsupported image types before processing', async () => {
+    const file = {
+      buffer: Buffer.from('not-an-image'),
+      originalname: 'payload.svg',
+      mimetype: 'image/svg+xml',
+      size: 128,
+    } as Express.Multer.File;
+
+    await expect(
+      controller.uploadMedia(file, { bucket: 'blog-media' }, { id: 'user-1' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(serviceMock.processAndUploadImage).not.toHaveBeenCalled();
   });
 });
