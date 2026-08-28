@@ -7,6 +7,7 @@ interface MockSupabaseClient {
   eq: jest.Mock;
   order: jest.Mock;
   range: jest.Mock;
+  rpc: jest.Mock;
 }
 
 describe('BlogRepository', () => {
@@ -20,6 +21,7 @@ describe('BlogRepository', () => {
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+      rpc: jest.fn(),
     };
 
     const supabaseService = {
@@ -41,83 +43,94 @@ describe('BlogRepository', () => {
     expect(client.eq).toHaveBeenCalledWith('tags.tag_id', tagId);
   });
 
+  describe('bounded growing queries', () => {
+    it('uses the exact requested ranges for submissions', async () => {
+      await repository.getBlogSubmissions({ status: 'pending_review' }, 10, 20);
+      expect(client.range).toHaveBeenLastCalledWith(20, 29);
+
+      await repository.getUserBlogSubmissions('user-1', 7, 14);
+      expect(client.range).toHaveBeenLastCalledWith(14, 20);
+    });
+
+    it('limits likes lookup to current-page blog comment IDs', async () => {
+      const commentQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        range: jest.fn().mockResolvedValue({
+          data: [{ id: 'page-comment-1' }, { id: 'page-comment-2' }],
+          error: null,
+        }),
+      };
+      const likesQuery = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        in: jest.fn().mockResolvedValue({
+          data: [{ comment_id: 'page-comment-2' }],
+          error: null,
+        }),
+      };
+      client.from
+        .mockReturnValueOnce(commentQuery)
+        .mockReturnValueOnce(likesQuery);
+
+      const comments = await repository.getBlogComments(
+        'post-1',
+        2,
+        4,
+        'user-1',
+      );
+
+      expect(commentQuery.range).toHaveBeenCalledWith(4, 5);
+      expect(likesQuery.in).toHaveBeenCalledWith('comment_id', [
+        'page-comment-1',
+        'page-comment-2',
+      ]);
+      expect(comments).toEqual([
+        { id: 'page-comment-1', isLiked: false },
+        { id: 'page-comment-2', isLiked: true },
+      ]);
+    });
+  });
+
   describe('toggleBlogCommentLike', () => {
     const commentId = 'comment-1';
     const userId = 'user-1';
 
-    const mockLikeQueries = (
-      existing: { comment_id: string } | null,
-      mutationResult: { error: { message: string } | null },
-    ) => {
-      const lookupQuery = {
-        select: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        maybeSingle: jest.fn().mockResolvedValue({
-          data: existing,
-          error: null,
-        }),
-      };
-      const mutationQuery = {
-        insert: jest.fn().mockResolvedValue(mutationResult),
-        delete: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        then: (
-          resolve: (value: typeof mutationResult) => void,
-        ): Promise<void> => Promise.resolve(mutationResult).then(resolve),
-      };
-      client.from
-        .mockReturnValueOnce(lookupQuery)
-        .mockReturnValueOnce(mutationQuery);
-      return mutationQuery;
-    };
+    it.each([true, false])(
+      'returns the exact persisted state from one atomic RPC when liked=%s',
+      async (liked) => {
+        client.rpc.mockResolvedValue({ data: liked, error: null });
 
-    it('should insert a missing like and return true', async () => {
-      const mutationQuery = mockLikeQueries(null, { error: null });
+        await expect(
+          repository.toggleBlogCommentLike(commentId, userId),
+        ).resolves.toBe(liked);
+        expect(client.rpc).toHaveBeenCalledTimes(1);
+        expect(client.rpc).toHaveBeenCalledWith('toggle_blog_comment_like', {
+          p_comment_id: commentId,
+          p_user_id: userId,
+        });
+        expect(client.from).not.toHaveBeenCalled();
+      },
+    );
 
-      await expect(
-        repository.toggleBlogCommentLike(commentId, userId),
-      ).resolves.toBe(true);
-      expect(mutationQuery.insert).toHaveBeenCalledWith({
-        comment_id: commentId,
-        user_id: userId,
+    it('propagates an atomic RPC failure', async () => {
+      client.rpc.mockResolvedValue({
+        data: null,
+        error: { message: 'toggle failed' },
       });
-    });
-
-    it('should throw when inserting a like fails', async () => {
-      mockLikeQueries(null, { error: { message: 'insert failed' } });
 
       await expect(
         repository.toggleBlogCommentLike(commentId, userId),
-      ).rejects.toThrow('insert failed');
+      ).rejects.toThrow('toggle failed');
     });
 
-    it('should delete an existing like and return false', async () => {
-      const mutationQuery = mockLikeQueries(
-        { comment_id: commentId },
-        { error: null },
-      );
+    it('rejects a missing RPC result instead of inventing state', async () => {
+      client.rpc.mockResolvedValue({ data: null, error: null });
 
       await expect(
         repository.toggleBlogCommentLike(commentId, userId),
-      ).resolves.toBe(false);
-      expect(mutationQuery.delete).toHaveBeenCalledTimes(1);
-      expect(mutationQuery.eq).toHaveBeenNthCalledWith(
-        1,
-        'comment_id',
-        commentId,
-      );
-      expect(mutationQuery.eq).toHaveBeenNthCalledWith(2, 'user_id', userId);
-    });
-
-    it('should throw when deleting a like fails', async () => {
-      mockLikeQueries(
-        { comment_id: commentId },
-        { error: { message: 'delete failed' } },
-      );
-
-      await expect(
-        repository.toggleBlogCommentLike(commentId, userId),
-      ).rejects.toThrow('delete failed');
+      ).rejects.toThrow('toggle_blog_comment_like returned no state');
     });
   });
 });

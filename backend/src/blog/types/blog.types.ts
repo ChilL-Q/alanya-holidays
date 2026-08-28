@@ -156,6 +156,8 @@ export interface GetBlogPostsFilter {
 export interface GetBlogSubmissionsFilter {
   status?: string;
   userId?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export interface SuccessResponse {

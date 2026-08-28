@@ -30,6 +30,7 @@ import {
   CreateBlogCommentDto,
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
+  GetBlogCommentsQueryDto,
   GetBlogQueryDto,
   GetBlogSubmissionsQueryDto,
   UpdateBlogPostDto,
@@ -329,9 +330,15 @@ export class BlogService {
 
   async getBlogComments(
     postId: string,
+    query: GetBlogCommentsQueryDto,
     userId?: string,
   ): Promise<BlogComment[]> {
-    return this.blogRepository.getBlogComments(postId, userId);
+    return this.blogRepository.getBlogComments(
+      postId,
+      query.limit ?? 20,
+      query.offset ?? 0,
+      userId,
+    );
   }
 
   async createBlogComment(
@@ -425,11 +432,22 @@ export class BlogService {
     userId: string,
   ): Promise<BlogSubmission[]> {
     await this.checkAdmin(userId);
-    return this.blogRepository.getBlogSubmissions(filters);
+    return this.blogRepository.getBlogSubmissions(
+      filters,
+      filters.limit ?? 20,
+      filters.offset ?? 0,
+    );
   }
 
-  async getUserBlogSubmissions(userId: string): Promise<BlogSubmission[]> {
-    return this.blogRepository.getUserBlogSubmissions(userId);
+  async getUserBlogSubmissions(
+    query: GetBlogSubmissionsQueryDto,
+    userId: string,
+  ): Promise<BlogSubmission[]> {
+    return this.blogRepository.getUserBlogSubmissions(
+      userId,
+      query.limit ?? 20,
+      query.offset ?? 0,
+    );
   }
 
   async approveBlogSubmission(

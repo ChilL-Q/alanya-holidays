@@ -675,18 +675,28 @@ describe('BlogService', () => {
       mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
       mockRepository.getBlogSubmissions.mockResolvedValueOnce([]);
 
-      const query: GetBlogSubmissionsQueryDto = { status: 'pending_review' };
+      const query: GetBlogSubmissionsQueryDto = {
+        status: 'pending_review',
+        limit: 7,
+        offset: 14,
+      };
       const res = await service.getBlogSubmissions(query, 'admin-1');
       expect(res).toEqual([]);
-      expect(mockRepository.getBlogSubmissions).toHaveBeenCalledWith(query);
+      expect(mockRepository.getBlogSubmissions).toHaveBeenCalledWith(
+        query,
+        7,
+        14,
+      );
     });
 
-    it('should get current user submissions', async () => {
+    it('should get a bounded default page of current user submissions', async () => {
       mockRepository.getUserBlogSubmissions.mockResolvedValueOnce([]);
-      const res = await service.getUserBlogSubmissions('user-1');
+      const res = await service.getUserBlogSubmissions({}, 'user-1');
       expect(res).toEqual([]);
       expect(mockRepository.getUserBlogSubmissions).toHaveBeenCalledWith(
         'user-1',
+        20,
+        0,
       );
     });
   });
@@ -907,11 +917,17 @@ describe('BlogService', () => {
         { id: 'c-1', post_id: 'p-1', body: 'Nice post', isLiked: true },
       ]);
 
-      const res = await service.getBlogComments('p-1', 'user-1');
+      const res = await service.getBlogComments(
+        'p-1',
+        { limit: 12, offset: 24 },
+        'user-1',
+      );
       expect(res).toHaveLength(1);
       expect(res[0].isLiked).toBe(true);
       expect(mockRepository.getBlogComments).toHaveBeenCalledWith(
         'p-1',
+        12,
+        24,
         'user-1',
       );
     });

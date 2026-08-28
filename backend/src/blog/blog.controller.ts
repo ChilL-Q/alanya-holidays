@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { AuthGuard } from '../auth/auth.guard';
+import { OptionalAuthGuard } from '../auth/optional-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { RequireRole } from '../auth/decorators/require-role.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -27,22 +28,24 @@ import {
   SuccessResponse,
 } from './types/blog.types';
 import {
+  BlogLimitQueryDto,
   CreateBlogCommentDto,
   CreateBlogPostDto,
   CreateBlogSubmissionDto,
   CreateBlogTagDto,
+  GetBlogCommentsQueryDto,
   GetBlogQueryDto,
   GetBlogSubmissionsQueryDto,
   RejectBlogSubmissionDto,
   UpdateBlogPostDto,
 } from './dto';
-import { LimitQueryDto } from '../common/dto/pagination.dto';
 
 @Controller('blog')
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get(['', 'posts'])
+  @UseGuards(OptionalAuthGuard)
   async getBlogPosts(
     @Query() query: GetBlogQueryDto,
     @CurrentUser() user?: AuthUser,
@@ -52,15 +55,9 @@ export class BlogController {
 
   @Get('featured')
   async getFeaturedBlogPosts(
-    @Query() query?: LimitQueryDto | string,
+    @Query() query: BlogLimitQueryDto = {},
   ): Promise<BlogPostSummary[]> {
-    let limit = 3;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || 3;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 3;
-    }
-    return this.blogService.getFeaturedBlogPosts(limit);
+    return this.blogService.getFeaturedBlogPosts(query.limit ?? 3);
   }
 
   @Get('tags')
@@ -105,9 +102,10 @@ export class BlogController {
   @Get('submissions/me')
   @UseGuards(AuthGuard)
   async getUserBlogSubmissions(
+    @Query() query: GetBlogSubmissionsQueryDto,
     @CurrentUser() user: AuthUser,
   ): Promise<BlogSubmission[]> {
-    return this.blogService.getUserBlogSubmissions(user.id);
+    return this.blogService.getUserBlogSubmissions(query, user.id);
   }
 
   @Post('submissions')
@@ -145,6 +143,7 @@ export class BlogController {
   }
 
   @Get('post/:slug')
+  @UseGuards(OptionalAuthGuard)
   async getBlogPost(
     @Param('slug') slug: string,
     @Query('incrementViews') incrementViews?: string,
@@ -160,16 +159,14 @@ export class BlogController {
   @Get('related/:id')
   async getRelatedPosts(
     @Param('id') id: string,
-    @Query('category') category?: string,
-    @Query() query?: LimitQueryDto | string,
+    @Query('category') category: string | undefined,
+    @Query() query: BlogLimitQueryDto = {},
   ): Promise<BlogPostSummary[]> {
-    let limit = 3;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || 3;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 3;
-    }
-    return this.blogService.getRelatedPosts(id, category || '', limit);
+    return this.blogService.getRelatedPosts(
+      id,
+      category || '',
+      query.limit ?? 3,
+    );
   }
 
   @Post()
@@ -223,11 +220,13 @@ export class BlogController {
   // ── Blog Comments ────────────────────────────────────────────
 
   @Get('posts/:postId/comments')
+  @UseGuards(OptionalAuthGuard)
   async getBlogComments(
     @Param('postId') postId: string,
+    @Query() query: GetBlogCommentsQueryDto,
     @CurrentUser() user?: AuthUser,
   ): Promise<BlogComment[]> {
-    return this.blogService.getBlogComments(postId, user?.id);
+    return this.blogService.getBlogComments(postId, query, user?.id);
   }
 
   @Post('posts/:postId/comments')
