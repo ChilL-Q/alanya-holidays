@@ -17,6 +17,11 @@ import { AuthUser } from '../../auth/types/auth-user.interface';
 import { DirectoryListingService } from '../application/directory-listing.service';
 import { ListingClaimService } from '../application/listing-claim.service';
 import { CurateListingScoreDto } from '../dto/curate-listing.dto';
+import {
+  AdminDirectoryListingsQueryDto,
+  AdminDirectoryStatusQueryDto,
+  AdminPaginationQueryDto,
+} from '../dto/admin-directory-query.dto';
 import { ModerationAuditService } from '../../admin/moderation-audit.service';
 
 @Controller('directory/admin')
@@ -30,32 +35,69 @@ export class DirectoryAdminController {
     private readonly moderationAuditService?: ModerationAuditService,
   ) {}
 
+  async getDirectoryListingsAdmin(
+    query: AdminDirectoryListingsQueryDto,
+    user: AuthUser,
+  ): Promise<unknown>;
+  async getDirectoryListingsAdmin(
+    status: string | undefined,
+    category: string | undefined,
+    q: string | undefined,
+    query: string | undefined,
+    user: AuthUser,
+  ): Promise<unknown>;
   @Get('listings')
   async getDirectoryListingsAdmin(
-    @Query('status') status: string | undefined,
-    @Query('category') category: string | undefined,
-    @Query('q') q: string | undefined,
-    @Query('query') query: string | undefined,
-    @CurrentUser() user: AuthUser,
+    @Query() queryOrStatus: AdminDirectoryListingsQueryDto | string | undefined,
+    @CurrentUser() userOrCategory: AuthUser | string | undefined,
+    legacyQ?: string,
+    legacyQuery?: string,
+    legacyUser?: AuthUser,
   ) {
-    const searchQuery = query || q;
+    const query =
+      typeof queryOrStatus === 'object' && queryOrStatus !== null
+        ? queryOrStatus
+        : {
+            status: queryOrStatus,
+            category:
+              typeof userOrCategory === 'string' ? userOrCategory : undefined,
+            q: legacyQ,
+            query: legacyQuery,
+            page: 1,
+            limit: 20,
+          };
+    const user = legacyUser ?? (userOrCategory as AuthUser);
     return this.listingService.getDirectoryListingsAdmin(
-      { status, category, query: searchQuery },
+      {
+        status: query.status,
+        category: query.category,
+        query: query.query || query.q,
+      },
       user.id,
+      query.page ?? 1,
+      query.limit ?? 20,
     );
   }
 
   @Get('status/:status')
   async getDirectoryListingsByStatus(
     @Param('status') status: 'approved' | 'rejected',
-    @Query('category') category?: string,
+    @Query() query: AdminDirectoryStatusQueryDto,
   ) {
-    return this.listingService.getDirectoryListingsByStatus(status, category);
+    return this.listingService.getDirectoryListingsByStatus(
+      status,
+      query.category,
+      query.page ?? 1,
+      query.limit ?? 20,
+    );
   }
 
   @Get('pending')
-  async getPendingDirectoryListings() {
-    return this.listingService.getPendingDirectoryListings();
+  async getPendingDirectoryListings(@Query() query: AdminPaginationQueryDto) {
+    return this.listingService.getPendingDirectoryListings(
+      query.page ?? 1,
+      query.limit ?? 20,
+    );
   }
 
   @Post(':id/approve')
@@ -101,9 +143,26 @@ export class DirectoryAdminController {
     return result;
   }
 
+  async getListingClaims(user: AuthUser): Promise<unknown>;
+  async getListingClaims(
+    query: AdminPaginationQueryDto,
+    user: AuthUser,
+  ): Promise<unknown>;
   @Get('claims')
-  async getListingClaims(@CurrentUser() user: AuthUser) {
-    return this.claimService.getListingClaims(user.id);
+  async getListingClaims(
+    @Query() queryOrUser: AdminPaginationQueryDto | AuthUser,
+    @CurrentUser() currentUser?: AuthUser,
+  ) {
+    const legacyCall = currentUser === undefined;
+    const user = legacyCall ? (queryOrUser as AuthUser) : currentUser;
+    const query = legacyCall
+      ? undefined
+      : (queryOrUser as AdminPaginationQueryDto);
+    return this.claimService.getListingClaims(
+      user.id,
+      query?.page ?? 1,
+      query?.limit ?? 20,
+    );
   }
 
   @Post('claims/:id/approve')

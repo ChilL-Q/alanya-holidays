@@ -15,13 +15,13 @@ import { AuthGuard } from '../../auth/auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthUser } from '../../auth/types/auth-user.interface';
 import { SubmitClaimDto } from '../dto/submit-claim.dto';
+import { VerifyClaimDto } from '../dto/verify-claim.dto';
 import { SaveListingDraftDto } from '../dto/save-listing-draft.dto';
 import { DirectoryListingRecord } from '../types/directory.types';
 import {
   PaginationDto,
   LimitQueryDto,
   DaysQueryDto,
-  parsePagination,
 } from '../../common/dto/pagination.dto';
 
 @Controller('directory')
@@ -33,16 +33,12 @@ export class DirectoryController {
 
   @Get()
   async getDirectoryListings(
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query('category') category?: string,
     @Query('sortBy') sortBy?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.listingService.getDirectoryListings(
       page,
       limit,
@@ -52,15 +48,9 @@ export class DirectoryController {
   }
 
   @Get('restaurants')
-  async getRestaurantsListings(
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
-    @Query() pagination?: PaginationDto,
-  ) {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-    );
+  async getRestaurantsListings(@Query() pagination?: PaginationDto) {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
     return this.listingService.getDirectoryListings(page, limit, 'restaurants');
   }
 
@@ -69,15 +59,10 @@ export class DirectoryController {
     @Query('query') query: string,
     @Query('category') categoryId?: string,
     @Query('location') location?: string,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string,
     @Query() pagination?: PaginationDto,
   ) {
-    const { page, limit } = parsePagination(
-      { page: pageStr, limit: limitStr },
-      pagination,
-      { limit: 40 },
-    );
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 40;
     return this.listingService.searchDirectoryListings(
       query,
       categoryId,
@@ -106,14 +91,8 @@ export class DirectoryController {
   }
 
   @Get('landing/recent')
-  async getRecentlyClaimedListings(@Query() query?: LimitQueryDto | string) {
-    let limit = 6;
-    if (typeof query === 'string') {
-      limit = parseInt(query, 10) || 6;
-    } else if (query?.limit !== undefined) {
-      limit = Number(query.limit) || 6;
-    }
-    return this.listingService.getRecentlyClaimedListings(limit);
+  async getRecentlyClaimedListings(@Query() query?: LimitQueryDto) {
+    return this.listingService.getRecentlyClaimedListings(query?.limit ?? 6);
   }
 
   // ---------------------------------------------------------------------------
@@ -122,32 +101,24 @@ export class DirectoryController {
   @Get('analytics/owner')
   @UseGuards(AuthGuard)
   async getDirectoryAnalyticsForOwner(
-    @Query('days') daysParam: string | undefined,
     @CurrentUser() user: AuthUser,
     @Query() query?: DaysQueryDto,
   ) {
-    let days = 30;
-    if (query?.days !== undefined) {
-      days = Number(query.days);
-    } else if (daysParam !== undefined) {
-      days = parseInt(daysParam, 10) || 30;
-    }
-    return this.listingService.getDirectoryAnalyticsForOwner(days, user.id);
+    return this.listingService.getDirectoryAnalyticsForOwner(
+      query?.days ?? 30,
+      user.id,
+    );
   }
 
   @Get('analytics/category/:categoryId')
   async getCategoryAnalyticsAverage(
     @Param('categoryId') categoryId: string,
-    @Query('days') daysParam?: string,
     @Query() query?: DaysQueryDto,
   ) {
-    let days = 30;
-    if (query?.days !== undefined) {
-      days = Number(query.days);
-    } else if (daysParam !== undefined) {
-      days = parseInt(daysParam, 10) || 30;
-    }
-    return this.listingService.getCategoryAnalyticsAverage(categoryId, days);
+    return this.listingService.getCategoryAnalyticsAverage(
+      categoryId,
+      query?.days ?? 30,
+    );
   }
 
   @Post(':id/track/view')
@@ -206,9 +177,9 @@ export class DirectoryController {
     return this.claimService.submitListingClaim(claim, user.id);
   }
 
-  @Get('claims/verify')
-  async verifyClaimEmail(@Query('token') token: string) {
-    return this.claimService.verifyClaimEmail(token);
+  @Post('claims/verify')
+  async verifyClaimEmail(@Body() verification: VerifyClaimDto) {
+    return this.claimService.verifyClaimEmail(verification.token);
   }
 
   // ---------------------------------------------------------------------------

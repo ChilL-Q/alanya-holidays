@@ -386,6 +386,22 @@ describe("directory.service", () => {
     });
   });
 
+  describe("verifyClaim", () => {
+    it("posts the token in the JSON body and never in the URL", async () => {
+      const mockVerification = { success: true };
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce(mockVerification);
+
+      const result = await directoryService.verifyClaim("claim/token?secret=yes");
+
+      expect(apiClient.post).toHaveBeenCalledWith("/directory/claims/verify", {
+        token: "claim/token?secret=yes",
+      });
+      expect(result).toEqual(mockVerification);
+      expect(apiClient.post).not.toHaveBeenCalledWith(expect.stringContaining("claim%2Ftoken"), expect.anything());
+      expect(apiClient.post).not.toHaveBeenCalledWith(expect.stringContaining("secret"), expect.anything());
+    });
+  });
+
   describe("category taxonomy", () => {
     it.each([
       ["restaurants-cafes", "restaurants"],

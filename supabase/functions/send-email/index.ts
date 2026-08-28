@@ -288,6 +288,11 @@ const getHtmlTemplate = (title: string, content: string, actionLink?: string, ac
 `;
 
 // ponytail: data-driven claim email templates instead of 4 case statements
+const claimSiteUrl =
+  (typeof Deno !== 'undefined' ? Deno.env.get('SITE_URL') : undefined) ||
+  (typeof process !== 'undefined' ? process.env.SITE_URL : undefined) ||
+  'https://alanyaholidays.com';
+
 const claimEmailTemplates = {
   listing_claim_verification: {
     subject: '✅ Verify Your Listing Claim',
@@ -298,7 +303,7 @@ const claimEmailTemplates = {
       <p>To complete the verification, click the button below to confirm your email address:</p>
       <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 24px;">Once verified, our team will review your claim and contact you within 24 hours.</p>
     `,
-    link: (d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/verify-claim?token=${escapeHtml(d.verificationToken)}`,
+    link: (d: any) => `${claimSiteUrl}/verify-claim#token=${encodeURIComponent(d.verificationToken)}`,
     buttonText: 'Verify Email',
   },
   admin_claim_notification: {
@@ -313,7 +318,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to the admin panel to review and approve or reject this claim.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/admin/directory`,
+    link: (_d: any) => `${claimSiteUrl}/admin/directory`,
     buttonText: 'Review Claim',
   },
   listing_claim_approved: {
@@ -327,7 +332,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">Log in to your account to view and update your listing.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/directory`,
+    link: (_d: any) => `${claimSiteUrl}/directory`,
     buttonText: 'View Your Listing',
   },
   listing_claim_rejected: {
@@ -341,7 +346,7 @@ const claimEmailTemplates = {
       </div>
       <p style="text-align: center; color: #64748b; font-size: 14px;">If you believe this is a mistake, please contact us for more information.</p>
     `,
-    link: (_d: any) => `${process.env.SITE_URL || 'https://alanyaholidays.com'}/contact`,
+    link: (_d: any) => `${claimSiteUrl}/contact`,
     buttonText: 'Contact Support',
   },
 } as const;

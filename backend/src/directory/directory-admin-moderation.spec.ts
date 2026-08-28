@@ -170,7 +170,7 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
       expect(mockUserRolesRepo.getRole).toHaveBeenCalledWith('admin-uuid-1');
       expect(
         mockDirectoryRepository.getDirectoryListingsAdmin,
-      ).toHaveBeenCalledWith(filters);
+      ).toHaveBeenCalledWith(filters, 1, 20);
       expect(result).toHaveLength(3);
     });
   });
@@ -185,20 +185,27 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
       const user: AuthUser = { id: 'admin-uuid-1', role: 'admin' };
 
       const result = await controller.getDirectoryListingsAdmin(
-        'pending',
-        'restaurants',
-        'sunset',
-        undefined,
+        {
+          status: 'pending',
+          category: 'restaurants',
+          q: 'sunset',
+          page: 2,
+          limit: 10,
+        },
         user,
       );
 
       expect(
         mockDirectoryRepository.getDirectoryListingsAdmin,
-      ).toHaveBeenCalledWith({
-        status: 'pending',
-        category: 'restaurants',
-        query: 'sunset',
-      });
+      ).toHaveBeenCalledWith(
+        {
+          status: 'pending',
+          category: 'restaurants',
+          query: 'sunset',
+        },
+        2,
+        10,
+      );
       expect(result).toEqual(mockListings);
     });
   });
@@ -209,7 +216,10 @@ describe('Directory Admin Moderation & Claims TDD Suite', () => {
       mockDirectoryRepository.getListingClaims.mockResolvedValue(mockClaims);
 
       const result = await claimService.getListingClaims('admin-uuid-1');
-      expect(mockDirectoryRepository.getListingClaims).toHaveBeenCalled();
+      expect(mockDirectoryRepository.getListingClaims).toHaveBeenCalledWith(
+        1,
+        20,
+      );
       expect(result).toEqual(mockClaims);
       expect(result[0].directory_listing?.name).toBe(
         'Sunset Restaurant & Lounge',

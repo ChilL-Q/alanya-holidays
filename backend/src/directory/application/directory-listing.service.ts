@@ -701,26 +701,39 @@ export class DirectoryListingService {
   async getDirectoryListingsAdmin(
     filters: { status?: string; category?: string; query?: string },
     userId?: string,
+    page = 1,
+    limit = 20,
   ): Promise<DirectoryListingRecord[]> {
     if (userId) {
       const role = await this.userRolesRepo.getRole(userId);
       if (role !== 'admin') throw new UnauthorizedException('Not authorized');
     }
-    return this.directoryRepository.getDirectoryListingsAdmin(filters);
+    return this.directoryRepository.getDirectoryListingsAdmin(
+      filters,
+      page,
+      limit,
+    );
   }
 
   async getDirectoryListingsByStatus(
     status: 'approved' | 'rejected',
     category?: string,
+    page = 1,
+    limit = 20,
   ): Promise<DirectoryListingRecord[]> {
     return this.directoryRepository.getDirectoryListingsByStatus(
       status,
       category,
+      page,
+      limit,
     );
   }
 
-  async getPendingDirectoryListings(): Promise<DirectoryListingRecord[]> {
-    return this.directoryRepository.getPendingDirectoryListings();
+  async getPendingDirectoryListings(
+    page = 1,
+    limit = 20,
+  ): Promise<DirectoryListingRecord[]> {
+    return this.directoryRepository.getPendingDirectoryListings(page, limit);
   }
 
   async approveDirectoryListing(

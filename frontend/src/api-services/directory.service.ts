@@ -497,6 +497,16 @@ export class DirectoryService {
   }
 
   /**
+   * Exchanges a listing-claim email token without exposing it in the request URL.
+   */
+  async verifyClaim(token: string): Promise<{ success?: boolean; [key: string]: unknown }> {
+    return apiClient.post<{ success?: boolean; [key: string]: unknown }>(
+      "/directory/claims/verify",
+      { token }
+    );
+  }
+
+  /**
    * Единственный билдер payload листинга для create/draft/publish/update.
    */
   private buildListingFields(

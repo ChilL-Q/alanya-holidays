@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { RequestMethod } from '@nestjs/common';
 import { DirectoryController } from './directory.controller';
 import { DirectoryAdminController } from './presentation/directory-admin.controller';
 import { DirectoryListingService } from './application/directory-listing.service';
@@ -6,6 +8,8 @@ import { ListingClaimService } from './application/listing-claim.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { AuthUser } from '../auth/types/auth-user.interface';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { VerifyClaimDto } from './dto/verify-claim.dto';
 
 describe('DirectoryController & DirectoryAdminController', () => {
   let controller: DirectoryController;
@@ -107,8 +111,7 @@ describe('DirectoryController & DirectoryAdminController', () => {
         'beach',
         'cat-1',
         'Alanya',
-        '2',
-        '20',
+        Object.assign(new PaginationDto(), { page: 2, limit: 20 }),
       );
       expect(mockService.searchDirectoryListings).toHaveBeenCalledWith(
         'beach',
@@ -187,6 +190,22 @@ describe('DirectoryController & DirectoryAdminController', () => {
       );
     });
 
+    it('should accept claim verification token from a DTO body', async () => {
+      const dto = Object.assign(new VerifyClaimDto(), {
+        token: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      });
+
+      const result = await controller.verifyClaimEmail(dto);
+      const handler = DirectoryController.prototype.verifyClaimEmail;
+
+      expect(Reflect.getMetadata(PATH_METADATA, handler)).toBe('claims/verify');
+      expect(Reflect.getMetadata(METHOD_METADATA, handler)).toBe(
+        RequestMethod.POST,
+      );
+      expect(result).toEqual({ success: true });
+      expect(mockService.verifyClaimEmail).toHaveBeenCalledWith(dto.token);
+    });
+
     it('should pass req.user.id to getMyListingClaims', async () => {
       const user: AuthUser = { id: 'usr-claimant-1' };
       const claims = [
@@ -202,7 +221,11 @@ describe('DirectoryController & DirectoryAdminController', () => {
     });
 
     it('should delegate getDirectoryListings with parsed parameters', async () => {
-      await controller.getDirectoryListings('2', '10', 'hotels', 'rating');
+      await controller.getDirectoryListings(
+        'hotels',
+        'rating',
+        Object.assign(new PaginationDto(), { page: 2, limit: 10 }),
+      );
       expect(mockService.getDirectoryListings).toHaveBeenCalledWith(
         2,
         10,
@@ -212,7 +235,9 @@ describe('DirectoryController & DirectoryAdminController', () => {
     });
 
     it('should delegate getRestaurantsListings', async () => {
-      await controller.getRestaurantsListings('1', '20');
+      await controller.getRestaurantsListings(
+        Object.assign(new PaginationDto(), { page: 1, limit: 20 }),
+      );
       expect(mockService.getDirectoryListings).toHaveBeenCalledWith(
         1,
         20,
@@ -231,7 +256,7 @@ describe('DirectoryController & DirectoryAdminController', () => {
 
     it('should pass parsed days and req.user.id to getDirectoryAnalyticsForOwner', async () => {
       const ownerUser: AuthUser = { id: 'owner-1' };
-      await controller.getDirectoryAnalyticsForOwner('60', ownerUser);
+      await controller.getDirectoryAnalyticsForOwner(ownerUser, { days: 60 });
       expect(mockService.getDirectoryAnalyticsForOwner).toHaveBeenCalledWith(
         60,
         'owner-1',
@@ -262,15 +287,20 @@ describe('DirectoryController & DirectoryAdminController', () => {
     it('should pass filters and req.user.id to getDirectoryListingsAdmin', async () => {
       const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
       await adminController.getDirectoryListingsAdmin(
-        'pending',
-        'hotels',
-        undefined,
-        'sunset',
+        {
+          status: 'pending',
+          category: 'hotels',
+          query: 'sunset',
+          page: 3,
+          limit: 25,
+        },
         adminUser,
       );
       expect(mockService.getDirectoryListingsAdmin).toHaveBeenCalledWith(
         { status: 'pending', category: 'hotels', query: 'sunset' },
         'admin-1',
+        3,
+        25,
       );
     });
 
@@ -299,8 +329,12 @@ describe('DirectoryController & DirectoryAdminController', () => {
 
     it('should delegate getListingClaims to listingClaimService', async () => {
       const adminUser: AuthUser = { id: 'admin-1', role: 'admin' };
-      await adminController.getListingClaims(adminUser);
-      expect(mockService.getListingClaims).toHaveBeenCalledWith('admin-1');
+      await adminController.getListingClaims({ page: 2, limit: 15 }, adminUser);
+      expect(mockService.getListingClaims).toHaveBeenCalledWith(
+        'admin-1',
+        2,
+        15,
+      );
     });
 
     it('should delegate approveListingClaim to listingClaimService', async () => {
