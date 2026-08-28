@@ -38,6 +38,9 @@ describe("LanguageSwitcher Component", () => {
 
     expect(i18n.language).toBe("ru");
     expect(handleLanguageChange).toHaveBeenCalledWith("ru");
+    expect(
+      screen.getByRole("button", { name: "Language selector: RU (Русский)" }),
+    ).toBeInTheDocument();
   });
 
   it("renders compact mode correctly", () => {

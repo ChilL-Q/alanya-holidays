@@ -25,6 +25,7 @@ interface NavDropdown {
 const discoverItems = [
   { label: "Explore", href: "/explore", icon: "ri-compass-3-line" },
   { label: "Travel Guides", href: "/travel-guides", icon: "ri-book-open-line" },
+  { label: "Blog", href: "/blog", icon: "ri-article-line" },
 ];
 
 const communityItems = [
@@ -758,15 +759,17 @@ export default function Navbar() {
             <button
               aria-expanded={mobileOpen}
               aria-haspopup="true"
+              aria-controls="mobile-navigation"
               className="w-10 h-10 flex items-center justify-center cursor-pointer"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
               <i
-                className={`text-2xl ${isSolidNav ? "text-foreground-900" : "text-white"}`}
-              >
-                {mobileOpen ? "ri-close-line" : "ri-menu-line"}
-              </i>
+                aria-hidden="true"
+                className={`${mobileOpen ? "ri-close-line" : "ri-menu-line"} text-2xl ${
+                  isSolidNav ? "text-foreground-900" : "text-white"
+                }`}
+              />
             </button>
           </div>
         </div>
@@ -774,7 +777,10 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-background-50/95 backdrop-blur-md border-t border-background-200/50">
+        <div
+          id="mobile-navigation"
+          className="md:hidden bg-background-50/95 backdrop-blur-md border-t border-background-200/50"
+        >
           <div className="px-4 py-4 space-y-1">
             {mainLinks.map((link) => {
               if (link.children) {

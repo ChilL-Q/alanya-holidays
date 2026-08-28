@@ -151,6 +151,39 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     });
   });
 
+  it("renders Blog in the Discover menu", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Discover/i })[0]);
+
+    const blogLinks = screen.getAllByRole("link", { name: /^Blog$/i });
+    expect(blogLinks[0]).toHaveAttribute("href", "/blog");
+  });
+
+  it("connects the mobile menu button to the controlled navigation region", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    const menuButton = screen.getByRole("button", { name: /Open menu/i });
+    expect(menuButton).toHaveAttribute("aria-controls", "mobile-navigation");
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(menuButton);
+
+    expect(screen.getByRole("button", { name: /Close menu/i })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(document.getElementById("mobile-navigation")).toBeInTheDocument();
+  });
+
   it("renders Shop dropdown with Shop Marketplace link", () => {
     mockAuthState = {
       user: null,
