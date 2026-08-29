@@ -40,7 +40,6 @@ export interface GetEventsOptions extends RequestOptions {
 
 export interface CreateEventPayload {
   title: string;
-  category?: string;
   categoryId?: string;
   category_id?: string;
   eventDate?: string;
@@ -98,17 +97,6 @@ const MONTH_NAMES = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
-
-function toCategoryIdentifier(category?: string | null): string | null {
-  if (!category) return null;
-  const trimmed = category.trim();
-  if (!trimmed) return null;
-
-  return trimmed
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || null;
-}
 
 export function formatEventDateParts(dateStr?: string | null): {
   date: string;
@@ -276,7 +264,6 @@ export class EventsService {
       category_id:
         payload.category_id ||
         payload.categoryId ||
-        toCategoryIdentifier(payload.category) ||
         null,
       is_published: payload.is_published ?? true,
     });

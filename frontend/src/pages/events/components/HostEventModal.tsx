@@ -41,7 +41,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
             ...category,
             slug: category.slug || category.id,
           }))
-          .filter((category) => category.slug)
+          .filter((category) => category.id)
           .sort((a, b) => a.name.localeCompare(b.name));
 
         setAvailableCategories(normalized);
@@ -66,7 +66,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
   }, [isOpen]);
 
   const selectedCategoryLabel = useMemo(() => {
-    return availableCategories.find((item) => (item.slug || item.id) === category)?.name || category;
+    return availableCategories.find((item) => item.id === category)?.name || category;
   }, [availableCategories, category]);
 
   if (!isOpen) return null;
@@ -267,7 +267,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
                       {isLoadingCategories ? "Loading categories..." : availableCategories.length > 0 ? "Select a category..." : "No categories available"}
                     </option>
                     {availableCategories.map((cat) => (
-                      <option key={cat.slug || cat.id} value={cat.slug || cat.id}>
+                      <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
                     ))}
@@ -380,7 +380,7 @@ export default function HostEventModal({ isOpen, onClose, onEventCreated }: Host
               <div className="flex items-center gap-2 text-xs text-foreground-500 bg-background-100/70 rounded-lg px-4 py-2.5">
                 <i className="ri-information-line"></i>
                 <span>
-                  This admin flow publishes the event immediately using supported backend fields and real forum category slugs.
+                  This admin flow publishes the event immediately using supported backend fields and real forum category identifiers.
                 </span>
               </div>
 

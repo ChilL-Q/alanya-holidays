@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -56,7 +57,7 @@ export class CreateForumEventDto {
   host_id?: string | null;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   category_id?: string | null;
 
   @IsOptional()
@@ -91,7 +92,7 @@ export class UpdateForumEventDto {
   host_id?: string | null;
 
   @IsOptional()
-  @IsString()
+  @IsUUID()
   category_id?: string | null;
 
   @IsOptional()

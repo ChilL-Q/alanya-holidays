@@ -31,7 +31,7 @@ const faqItems = [
   },
   {
     q: "How do events work on Alanya Holidays?",
-    a: "Any registered member can create an event. Head to the Events page, fill out the date, time, location, and description, and it'll be listed publicly. Other members can RSVP, comment, and share events. You can also sync events to your personal calendar.",
+    a: "Events are managed and published by administrators. Other members can browse events, RSVP, comment, and share them. You can also sync events to your personal calendar.",
   },
   {
     q: "Is the marketplace safe to use?",
