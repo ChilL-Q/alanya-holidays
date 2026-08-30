@@ -141,8 +141,10 @@ export class AdminRepository {
       const enquiryId =
         typeof data?.id === 'number' ? data.id : Number(data?.id) || Date.now();
       return { id: enquiryId, success: true };
-    } catch {
-      return { id: Date.now(), success: true };
+    } catch (error) {
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to submit enquiry');
     }
   }
 

@@ -6,6 +6,14 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import routes from "./config";
 
 describe("Router Canonical Redirects", () => {
+  it.each([
+    ["/members", "/members"],
+    ["/member/:memberId", "/member/:memberId"],
+    ["/planner", "/planner"],
+  ])("registers the active frontend route %s", (path, expectedPath) => {
+    expect(routes.find((route) => route.path === path)?.path).toBe(expectedPath);
+  });
+
   it("declares business registration before the dynamic business detail route", () => {
     const registerIndex = routes.findIndex((route) => route.path === "/business/register");
     const detailIndex = routes.findIndex((route) => route.path === "/business/:businessId");

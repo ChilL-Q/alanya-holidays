@@ -122,6 +122,16 @@ describe("properties.service", () => {
   });
 
   describe("getProperties", () => {
+    it("serializes property types through the backend-supported filters contract", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce({ data: [], count: 0 });
+
+      await propertiesService.getProperties({ type: "villa" });
+
+      expect(apiClient.get).toHaveBeenCalledWith("/properties", {
+        params: { filters: JSON.stringify({ types: ["villa"] }) },
+      });
+    });
+
     it("should return mapped properties and total when API returns object with data array and count", async () => {
       const mockApiResponse = {
         data: [

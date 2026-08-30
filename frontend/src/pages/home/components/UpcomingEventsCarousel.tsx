@@ -2,9 +2,6 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 
-const TODAY_WINDOW_START = new Date("2026-06-05");
-const TODAY_WINDOW_END = new Date("2026-06-12");
-
 export default function UpcomingEventsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [allEvents, setAllEvents] = useState<ForumEvent[]>(() => eventsService.getEventsSync());
@@ -22,10 +19,15 @@ export default function UpcomingEventsCarousel() {
   }, []);
 
   const thisWeekEvents = useMemo(() => {
+    const windowStart = new Date();
+    windowStart.setHours(0, 0, 0, 0);
+    const windowEnd = new Date(windowStart);
+    windowEnd.setDate(windowEnd.getDate() + 7);
+
     return allEvents
       .filter((e) => {
         const eventDate = new Date(e.date + "T00:00:00");
-        return eventDate >= TODAY_WINDOW_START && eventDate < TODAY_WINDOW_END;
+        return eventDate >= windowStart && eventDate < windowEnd;
       })
       .sort((a, b) => new Date(a.date + "T00:00:00").getTime() - new Date(b.date + "T00:00:00").getTime());
   }, [allEvents]);

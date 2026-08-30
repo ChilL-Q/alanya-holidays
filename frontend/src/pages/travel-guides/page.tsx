@@ -70,6 +70,7 @@ export default function TravelGuidesPage() {
       .catch((err) => {
         logger.warn("Failed to fetch guides:", err);
         if (isMounted) {
+          setGuides(selectedTag === "All" && !searchParam ? mockTravelGuides : []);
           setIsLoading(false);
         }
       });

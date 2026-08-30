@@ -2,11 +2,32 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import UpcomingEventsCarousel from "./UpcomingEventsCarousel";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
+
+const currentEvent: ForumEvent = {
+  id: "current-event",
+  title: "Alanya Summer Community Picnic",
+  date: "2026-08-30",
+  day: "30",
+  month: "AUG",
+  time: "5:00 PM",
+  location: "Alanya Castle",
+  category: "Traveler Meetups",
+  attendees: 12,
+  maxAttendees: 30,
+  host: "Community Team",
+  hostAvatar: "/images/placeholder-business.svg",
+  description: "A current community event.",
+  image: "/images/placeholder-business.svg",
+  isFeatured: true,
+};
 
 describe("UpcomingEventsCarousel Component", () => {
   const originalScrollBy = Element.prototype.scrollBy;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-08T12:00:00+03:00"));
     Element.prototype.scrollBy = vi.fn();
     vi.restoreAllMocks();
   });
@@ -14,6 +35,23 @@ describe("UpcomingEventsCarousel Component", () => {
   afterEach(() => {
     Element.prototype.scrollBy = originalScrollBy;
     vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("renders events from the current seven-day window instead of a fixed historical week", () => {
+    vi.setSystemTime(new Date("2026-08-30T12:00:00+03:00"));
+    vi.spyOn(eventsService, "getEventsSync").mockReturnValue([currentEvent]);
+    vi.spyOn(eventsService, "getEvents").mockImplementation(
+      () => new Promise<ForumEvent[]>(() => {})
+    );
+
+    render(
+      <MemoryRouter>
+        <UpcomingEventsCarousel />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Alanya Summer Community Picnic")).toBeInTheDocument();
   });
 
   it("renders This Week's Events heading with count badge", () => {

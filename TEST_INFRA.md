@@ -1,31 +1,35 @@
-# E2E Test Infra: Alanya Holidays Platform
+# Test and release evidence
 
-## Test Philosophy
-- Opaque-box, requirement-driven, regression prevention.
-- Methodology: Category-Partition + Boundary Value Analysis + Pairwise Combinatorial + Real-World Workload Testing.
+This file records the checks that currently protect the launchable product. It deliberately does
+not publish hard-coded suite or test counts, because those become stale as soon as coverage changes.
 
-## Feature Inventory & Test Mapping
-| # | Feature | Source (Requirement) | Tier 1 (Smoke) | Tier 2 (Core) | Tier 3 (Extended) | Tier 4 (Live E2E) |
-|---|---------|----------------------|:--------------:|:-------------:|:-----------------:|:-----------------:|
-| 1 | Auth & Session Management | R1.1, R2.4, Auth Flows | `auth.spec.ts` | `profile.spec.ts`, `rbac.spec.ts` | `roles-and-permissions.spec.ts` | Complete Auth Cycle |
-| 2 | Stays & Properties Catalog | R1.3, R2.2 | `booking.spec.ts` | `host-property.spec.ts` | `reviews.spec.ts` | Real DB Query & Filter |
-| 3 | Cart & Gift Order Checkout | R2.3, R2.4 | `checkout.spec.ts` | `booking-full-flow.spec.ts` | `stripe-checkout.spec.ts` | Full Order Placement |
-| 4 | Multilingual Localization | R2.5 | `localization.spec.ts` | `navigation.spec.ts` | `home.spec.ts` | Language Toggle Live |
-| 5 | Directory & Community Forum | R1.2, R1.3, R2.2 | `directory-voting.spec.ts` | `favorites.spec.ts` | `blog.spec.ts`, `chat.spec.ts` | Live Voting & Comments |
-| 6 | Services, Itineraries & eSIM | Backlog | `esim.spec.ts` | `ai-planner.spec.ts` | `new-features.spec.ts` | Service Request Flow |
+## Launch scope
 
-## Test Architecture
-- **Backend Unit & Integration Runner**: Jest (`pnpm --filter @alanya-holidays/backend test`)
-- **Backend E2E Runner**: Jest + Supertest (`pnpm --filter @alanya-holidays/backend run test:e2e`)
-- **Frontend Unit & Component Runner**: Vitest (`pnpm --filter @alanya-holidays/frontend exec vitest run`)
-- **Frontend E2E Runner**: Playwright (`pnpm --filter @alanya-holidays/frontend exec playwright test`)
-- **Type Checker**: TypeScript Compiler (`pnpm run type-check`)
-- **Linter**: ESLint 9 (`pnpm run lint`)
-- **Production Bundler**: Vite / NestJS CLI / Turborepo (`pnpm run build`)
+The current release is frontend-led. Its supported public flows are navigation, authentication,
+community/member pages, events, directory, shop/cart checkout, trip planner, curated luxury
+catalogues, and concierge enquiries. Luxury requests end at an enquiry confirmation; direct guest
+accommodation booking and payment remain dormant. Backend modules for those future workflows stay
+in the repository but are not advertised as launched functionality.
 
-## Coverage Thresholds
-- **Backend Test Pass Rate**: 100% (86/86 suites, 1,039+ tests passing)
-- **Frontend Test Pass Rate**: 100% (76/76 files, 1,012+ tests passing)
-- **Type Safety**: 0 errors across all workspaces under strict TypeScript
-- **Linter**: 0 errors, 0 warnings
-- **Production Builds**: Clean exit code 0 across `@alanya-holidays/shared`, `@alanya-holidays/backend`, `@alanya-holidays/frontend`
+## Required gates
+
+Run from the repository root:
+
+```bash
+pnpm type-check
+pnpm lint
+pnpm --filter @alanya-holidays/frontend test --run
+pnpm --filter @alanya-holidays/backend test
+pnpm build
+```
+
+The frontend smoke suite is the exact list in `.github/workflows/e2e-smoke.yml`. It covers the home
+page, navigation, authentication, gift checkout, and a mocked end-to-end villa enquiry. The smoke
+suite must not refer to dormant booking specs or silently rely on missing files.
+
+## Evidence policy
+
+- A gate is green only when its command exits successfully in the current revision.
+- Mocked browser tests prove frontend contracts and transitions, not production integrations.
+- Real database, Stripe, email, deployment, and observability checks must be reported separately.
+- Skipped or unavailable checks are named in the release handoff; they are never counted as passed.

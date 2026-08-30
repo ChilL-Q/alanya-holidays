@@ -51,22 +51,22 @@ export default function BookingConfirmationPage() {
 
   const timelineSteps = [
     {
-      icon: "ri-mail-check-line",
-      title: "Confirmation sent",
-      description: `A copy of your enquiry has been sent to ${inquiry.email}. Check your inbox for reference.`,
-      time: "Instantly",
+      icon: "ri-file-list-3-line",
+      title: "Request recorded",
+      description: `We have recorded your enquiry and the contact email ${inquiry.email}.`,
+      time: "Complete",
     },
     {
       icon: "ri-user-star-line",
-      title: "Concierge assigned",
-      description: "One of our Alanya-based concierge specialists will personally review your request and prepare a tailored response.",
-      time: "Within 6 hours",
+      title: "Team review",
+      description: "Our Alanya-based team will review the details and check the relevant options.",
+      time: "Next",
     },
     {
       icon: "ri-message-3-line",
       title: "Personalised reply",
-      description: "You will receive a detailed email with availability, pricing, and recommendations specific to your enquiry — nothing generic, nothing automated.",
-      time: "Within 24 hours",
+      description: "We will reply using your preferred contact details with the available options and pricing.",
+      time: "After review",
     },
   ];
 
@@ -98,7 +98,7 @@ export default function BookingConfirmationPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-background-200/70 mt-3">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
               <span className="text-sm text-foreground-600">
-                Expected response: <strong className="text-foreground-900">under 24 hours</strong>
+                Status: <strong className="text-foreground-900">queued for review</strong>
               </span>
             </div>
           </div>

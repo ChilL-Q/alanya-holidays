@@ -69,6 +69,17 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     vi.restoreAllMocks();
   });
 
+  it("does not advertise unfinished language variants", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText("Русский")).not.toBeInTheDocument();
+    expect(screen.queryByText("Türkçe")).not.toBeInTheDocument();
+  });
+
   it("renders Sign In and Join Community links when unauthenticated", () => {
     mockAuthState = {
       user: null,

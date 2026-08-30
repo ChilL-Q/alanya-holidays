@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/context/AuthContext";
 import CartDrawer from "@/components/feature/CartDrawer";
-import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import {
   getNotifications,
   markAsRead,
@@ -630,9 +629,6 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Language Switcher */}
-            <LanguageSwitcher isSolidNav={isSolidNav} compact={false} />
-
             <Link
               to="/new-thread"
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
@@ -908,14 +904,6 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
-
-              <div className="py-2.5 flex items-center justify-between border-t border-background-200/40">
-                <span className="text-sm font-medium text-foreground-600 flex items-center">
-                  <i className="ri-global-line mr-2 text-foreground-400"></i>
-                  Language
-                </span>
-                <LanguageSwitcher isSolidNav={true} compact={false} />
-              </div>
             </div>
             <div className="pt-3 border-t border-background-200/50 flex flex-col gap-2">
               <Link

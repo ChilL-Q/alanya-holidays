@@ -191,6 +191,44 @@ describe("ConciergeService", () => {
 
 
   describe("Category Convenience Getters", () => {
+    it.each([
+      ["private jets", getPrivateJets, "jet-001"],
+      ["helicopter tours", getHelicopterTours, "helitour-001"],
+      ["wine tastings", getWineTastings, "wine-001"],
+      ["hammam experiences", getHammamSpaExperiences, "spa-001"],
+      ["photography excursions", getPhotographyExcursions, "photo-001"],
+      ["golf vacations", getGolfVacations, "golf-001"],
+      ["personal chefs", getPersonalChefs, "chef-001"],
+      ["personal drivers", getPersonalDrivers, "driver-001"],
+      ["personal shoppers", getPersonalShoppers, "shopper-001"],
+    ])("returns curated %s when the parked services backend is empty", async (_name, getter, firstId) => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([]);
+
+      const items = await getter();
+
+      expect(items[0]?.id).toBe(firstId);
+    });
+
+    it.each([
+      ["private jets", getPrivateJets, "jet-001"],
+      ["helicopter tours", getHelicopterTours, "helitour-001"],
+      ["wine tastings", getWineTastings, "wine-001"],
+      ["hammam experiences", getHammamSpaExperiences, "spa-001"],
+      ["photography excursions", getPhotographyExcursions, "photo-001"],
+      ["golf vacations", getGolfVacations, "golf-001"],
+      ["personal chefs", getPersonalChefs, "chef-001"],
+      ["personal drivers", getPersonalDrivers, "driver-001"],
+      ["personal shoppers", getPersonalShoppers, "shopper-001"],
+    ])("returns curated %s when the parked services backend is unavailable", async (_name, getter, firstId) => {
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(
+        new ApiError("Service unavailable", 503, "Service Unavailable")
+      );
+
+      const items = await getter();
+
+      expect(items[0]?.id).toBe(firstId);
+    });
+
     it("getYachts should call API for yachts and filter by type if provided", async () => {
       const mockYachtsList = [
         { id: "y-1", name: "Gulet 1", type: "Gulet" },

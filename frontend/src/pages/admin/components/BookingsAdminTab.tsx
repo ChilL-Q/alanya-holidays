@@ -125,9 +125,6 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
             const st = booking.status?.toLowerCase() || "pending";
             const payout = booking.payout_status?.toLowerCase();
             const isActing = actingId === booking.id;
-            const canRefund =
-              (st === "confirmed" || st === "completed") &&
-              booking.payment_status?.toLowerCase() === "paid";
 
             return (
               <div
@@ -198,17 +195,6 @@ const BookingsAdminTab: React.FC<{ onCountUpdate?: (c: { total: number; pending:
                       </button>
                     </>
                   )}
-                  {canRefund && (
-                    <button
-                      type="button"
-                      disabled={isActing}
-                      onClick={() => act(booking.id, () => adminService.refundBooking(booking.id))}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 dark:hover:bg-rose-900 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors disabled:opacity-50 cursor-pointer"
-                    >
-                      Refund &amp; Cancel
-                    </button>
-                  )}
-
                   <label className="ml-auto flex items-center gap-1.5 text-xs text-secondary-500 dark:text-slate-400">
                     Payout:
                     <select
