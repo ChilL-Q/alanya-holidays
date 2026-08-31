@@ -51,8 +51,15 @@ BEGIN
     RAISE EXCEPTION 'service_role cannot execute verify_claim_email';
   END IF;
 
-  INSERT INTO public.directory_listings (id, name, title, slug, status)
-  VALUES (v_listing_id, 'Token Security Listing', 'Token Security Listing', 'claim-token-security-test', 'approved');
+  INSERT INTO public.directory_listings (id, name, title, slug, status, creation_source)
+  VALUES (
+    v_listing_id,
+    'Token Security Listing',
+    'Token Security Listing',
+    'claim-token-security-test',
+    'approved',
+    'admin'
+  );
 
   INSERT INTO public.listing_claims (
     id, listing_id, email, phone, role, business_name, contact_phone,
