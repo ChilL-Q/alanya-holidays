@@ -166,7 +166,39 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 10. FINAL SUMMARY
+-- 10. VERIFY LISTING CLAIMS CANNOT BYPASS THE BACKEND
+-- ============================================================================
+DO $$
+BEGIN
+  IF has_table_privilege('anon', 'public.listing_claims', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.listing_claims', 'INSERT') THEN
+    RAISE EXCEPTION 'Direct listing_claims INSERT remains granted to a public API role';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'listing_claims'
+      AND cmd = 'INSERT'
+      AND (
+        roles @> ARRAY['anon']::name[]
+        OR roles @> ARRAY['authenticated']::name[]
+        OR roles @> ARRAY['public']::name[]
+      )
+  ) THEN
+    RAISE EXCEPTION 'Direct listing_claims INSERT policy remains available to a public API role';
+  END IF;
+
+  IF NOT has_table_privilege('service_role', 'public.listing_claims', 'INSERT') THEN
+    RAISE EXCEPTION 'Backend service_role lost listing_claims INSERT access';
+  END IF;
+
+  RAISE NOTICE '✓ Listing claims can only be inserted through the backend service role';
+END $$;
+
+-- ============================================================================
+-- 11. FINAL SUMMARY
 -- ============================================================================
 SELECT 
   'RLS Security Verification' as check_name,
