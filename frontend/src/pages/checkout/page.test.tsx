@@ -6,8 +6,34 @@ import { MemoryRouter } from "react-router-dom";
 import CheckoutPage from "./page";
 import { ordersService } from "@/api-services/orders.service";
 
+vi.mock("@/api-services/orders.service", () => ({
+  ordersService: {
+    createOrder: vi.fn(),
+  },
+}));
+
+vi.mock("@/hooks/useToast", () => ({
+  useToast: () => ({
+    showToast: vi.fn(),
+    ToastContainer: () => null,
+  }),
+}));
+
+vi.mock("@/pages/home/components/Navbar", () => ({ default: () => <nav /> }));
+vi.mock("@/pages/home/components/Footer", () => ({ default: () => <footer /> }));
+vi.mock("@/components/base/PageHeroImage", () => ({ default: () => null }));
+
 const mockClearCart = vi.fn();
-let mockCartItems = [
+type MockCartItem = {
+  id: string;
+  productName: string;
+  price: string;
+  quantity: number;
+  icon: string;
+  imageUrl?: string;
+};
+
+let mockCartItems: MockCartItem[] = [
   {
     id: "prod-1",
     productName: "Luxury Yacht Voucher",
@@ -45,7 +71,7 @@ vi.mock("react-router-dom", async () => {
 
 describe("CheckoutPage Component", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
     mockClearCart.mockClear();
     mockNavigate.mockClear();
     mockCartItems = [
@@ -60,7 +86,7 @@ describe("CheckoutPage Component", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should render order summary and form fields when cart has items", () => {
@@ -80,6 +106,20 @@ describe("CheckoutPage Component", () => {
     expect(screen.getByLabelText(/Your Email/i)).toBeInTheDocument();
   });
 
+  it("should render a product image in the order summary when available", () => {
+    mockCartItems[0].imageUrl = "https://example.com/yacht-voucher.jpg";
+
+    render(
+      <MemoryRouter>
+        <CheckoutPage />
+      </MemoryRouter>
+    );
+
+    expect(
+      screen.getByRole("img", { name: "Luxury Yacht Voucher" }),
+    ).toHaveAttribute("src", "https://example.com/yacht-voucher.jpg");
+  });
+
   it("should redirect to /shop if cart is empty and not completed", () => {
     mockCartItems = [];
     render(
@@ -92,7 +132,7 @@ describe("CheckoutPage Component", () => {
   });
 
   it("should submit order via ordersService.createOrder and show order confirmation", async () => {
-    const createOrderSpy = vi.spyOn(ordersService, "createOrder").mockResolvedValueOnce({
+    const createOrderSpy = vi.mocked(ordersService.createOrder).mockResolvedValueOnce({
       success: true,
       orderId: 98765,
     });
@@ -155,7 +195,7 @@ describe("CheckoutPage Component", () => {
   });
 
   it("should display error message when order creation fails", async () => {
-    vi.spyOn(ordersService, "createOrder").mockRejectedValueOnce(
+    vi.mocked(ordersService.createOrder).mockRejectedValueOnce(
       new Error("Payment service unavailable")
     );
 

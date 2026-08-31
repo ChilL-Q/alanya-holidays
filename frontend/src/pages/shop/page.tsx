@@ -108,10 +108,14 @@ export default function ShopPage() {
 
   const handleAddToCart = useCallback(
     (product: ShopProduct) => {
+      const imageUrl = product.media?.find(
+        (media) => media.type === "image" && media.url,
+      )?.url;
       addToCart({
         name: product.name,
         price: formatPrice(product),
         icon: getCategoryIcon(product),
+        imageUrl,
       });
       showToast(t("public.addToCart"), product.name, "success");
     },

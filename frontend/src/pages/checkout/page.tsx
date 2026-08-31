@@ -269,8 +269,18 @@ export default function CheckoutPage() {
                           key={item.productName}
                           className="flex items-start gap-3 p-3 rounded-xl bg-background-50 border border-background-100"
                         >
-                          <div className="w-9 h-9 flex items-center justify-center rounded-lg bg-secondary-100 shrink-0">
+                          <div className="relative w-9 h-9 flex items-center justify-center rounded-lg bg-secondary-100 shrink-0 overflow-hidden">
                             <i className={`${item.icon} text-secondary-600 text-base`}></i>
+                            {item.imageUrl && (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.productName}
+                                className="absolute inset-0 w-full h-full object-cover bg-background-100"
+                                onError={(event) => {
+                                  event.currentTarget.hidden = true;
+                                }}
+                              />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium text-foreground-900 leading-snug mb-0.5">
