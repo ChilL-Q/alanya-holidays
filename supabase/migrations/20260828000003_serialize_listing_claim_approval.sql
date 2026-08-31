@@ -1,3 +1,14 @@
+-- Compatibility repair for environments where the email-verification
+-- migration is recorded as applied but its listing_claims changes are absent.
+ALTER TABLE public.listing_claims
+  ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS verification_token UUID NOT NULL DEFAULT gen_random_uuid(),
+  ADD COLUMN IF NOT EXISTS verification_expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '7 days'),
+  ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_listing_claims_verification_token
+  ON public.listing_claims (verification_token);
+
 -- Serialize listing claim approval and enforce one approved claim per listing.
 -- If historical data contains duplicate approved claims, preserve exactly one:
 -- prefer the claim matching the listing's current owner, then the oldest claim

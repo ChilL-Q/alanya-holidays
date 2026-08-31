@@ -59,6 +59,82 @@ jobs:
             fi
             cd "$TARGET_DIR"
 
+            verify_schema_readiness() {
+              if docker compose --env-file .env.production -f docker-compose.prod.yml exec -T backend node -e '
+                const supabaseUrl = process.env.SUPABASE_URL;
+                const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+                const maxAttempts = 3;
+                const timeoutMs = 5000;
+                const retryDelayMs = 1000;
+                if (!supabaseUrl || !serviceRoleKey) {
+                  console.error("Required Supabase environment is unavailable inside the backend container.");
+                  process.exit(1);
+                }
+                const endpoint = supabaseUrl.replace(/\/+$/, "") +
+                  "/rest/v1/business_account_applications?select=*&limit=0";
+                const delay = (milliseconds) =>
+                  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+                async function probeSchema() {
+                  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                    try {
+                      const response = await fetch(endpoint, {
+                        headers: {
+                          apikey: serviceRoleKey,
+                          Authorization: "Bearer " + serviceRoleKey,
+                        },
+                        signal: controller.signal,
+                      });
+                      if (response.ok) {
+                        console.log("✓ Required production schema is ready.");
+                        return true;
+                      }
+                      const isTransient = response.status === 408 ||
+                        response.status === 429 || response.status >= 500;
+                      if (!isTransient) {
+                        console.error("Required production schema is not ready (HTTP " + response.status + ").");
+                        return false;
+                      }
+                      if (attempt === maxAttempts) {
+                        console.error("Schema readiness remained unavailable after bounded retries.");
+                        return false;
+                      }
+                      console.error("Schema readiness returned a transient HTTP error; retrying.");
+                    } catch {
+                      if (attempt === maxAttempts) {
+                        console.error("Schema readiness request failed after bounded retries.");
+                        return false;
+                      }
+                      console.error("Schema readiness request failed transiently; retrying.");
+                    } finally {
+                      clearTimeout(timeout);
+                    }
+                    await delay(retryDelayMs);
+                  }
+                  return false;
+                }
+
+                probeSchema()
+                  .then((ready) => {
+                    if (!ready) process.exit(1);
+                  })
+                  .catch(() => {
+                    console.error("Required production schema readiness probe failed.");
+                    process.exit(1);
+                  });
+              '; then
+                return 0
+              fi
+              return 1
+            }
+
+            if ! verify_schema_readiness; then
+              echo "Pre-deployment schema readiness failed; aborting before stack mutation."
+              exit 1
+            fi
+
             PREVIOUS_COMMIT="$(git rev-parse HEAD 2>/dev/null || true)"
             git fetch origin main
             TARGET_COMMIT="$(git rev-parse origin/main)"
@@ -96,6 +172,13 @@ jobs:
                 docker compose -f docker-compose.prod.yml logs --tail=50 frontend || true
                 exit 1
               fi
+              # git reset may replace the bind-mounted config inode. Recreate
+              # Nginx so Docker binds the file from the deployed commit.
+              if ! docker compose --env-file .env.production -f docker-compose.prod.yml up -d --force-recreate --no-deps nginx; then
+                echo "❌ Nginx recreation failed after the stack update."
+                docker compose -f docker-compose.prod.yml logs --tail=50 nginx || true
+                exit 1
+              fi
             }
 
             verify_health() {
@@ -109,6 +192,23 @@ jobs:
                 sleep 5
               done
               return 1
+            }
+
+            verify_csp() {
+              if docker compose -f docker-compose.prod.yml exec -T nginx sh -c \
+                'wget -q --no-check-certificate -S -O /dev/null https://127.0.0.1/ 2>&1 |
+                  grep -i "^[[:space:]]*Content-Security-Policy:" |
+                  grep -Fq "https://plausible.io"'; then
+                echo "✓ Live Content-Security-Policy includes Plausible."
+                return 0
+              fi
+              echo "Live Content-Security-Policy is missing the required Plausible source."
+              return 1
+            }
+
+            verify_post_deploy() {
+              verify_health || return 1
+              verify_csp || return 1
             }
 
             deploy_stack
@@ -149,8 +249,8 @@ jobs:
               exit 1
             fi
 
-            if ! verify_health; then
-              echo "Deployment health check failed. Initiating automated rollback..."
+            if ! verify_post_deploy; then
+              echo "Post-deployment verification failed. Initiating automated rollback..."
               if [ -n "$PREVIOUS_COMMIT" ] && [ "$PREVIOUS_COMMIT" != "$TARGET_COMMIT" ]; then
                 echo "Rolling back to previous commit $PREVIOUS_COMMIT..."
                 git reset --hard "$PREVIOUS_COMMIT"
