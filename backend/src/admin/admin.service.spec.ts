@@ -67,9 +67,20 @@ describe('AdminService', () => {
   });
 
   describe('getRecentEnquiries', () => {
-    it('should return recent enquiries with specified limit', async () => {
+    it('returns only anonymized public summaries with allow-listed categories', async () => {
       const result = await service.getRecentEnquiries(5);
-      expect(result).toHaveLength(1);
+
+      expect(result).toEqual([
+        {
+          display_name: 'Community member',
+          category: 'General Enquiry',
+          submitted_at: expect.any(String),
+        },
+      ]);
+      expect(result[0]).not.toHaveProperty('name');
+      expect(result[0]).not.toHaveProperty('email');
+      expect(result[0]).not.toHaveProperty('phone');
+      expect(result[0]).not.toHaveProperty('message');
       expect(mockAdminRepository.getRecentEnquiries).toHaveBeenCalledWith(5);
     });
 
@@ -77,6 +88,34 @@ describe('AdminService', () => {
       const result = await service.getRecentEnquiries();
       expect(result).toHaveLength(1);
       expect(mockAdminRepository.getRecentEnquiries).toHaveBeenCalledWith(8);
+    });
+
+    it('allows known shopper categories and rejects attacker-controlled labels', async () => {
+      mockAdminRepository.getRecentEnquiries.mockResolvedValueOnce([
+        {
+          subject: 'Personal Shopper Request — Gift Items',
+          created_at: '2026-08-30T10:00:00.000Z',
+        },
+        {
+          subject: 'Personal Shopper Request — <script>alert(1)</script>',
+          created_at: '2026-08-30T09:00:00.000Z',
+        },
+      ]);
+
+      const result = await service.getRecentEnquiries();
+
+      expect(result).toEqual([
+        {
+          display_name: 'Community member',
+          category: 'Gift Items',
+          submitted_at: '2026-08-30T10:00:00.000Z',
+        },
+        {
+          display_name: 'Community member',
+          category: 'General Enquiry',
+          submitted_at: '2026-08-30T09:00:00.000Z',
+        },
+      ]);
     });
   });
 

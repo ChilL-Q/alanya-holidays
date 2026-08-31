@@ -3,22 +3,6 @@ import { useTranslation } from "react-i18next";
 import "@/i18n";
 import { productsService, type ConciergeEnquiryEntry as RecentEnquiry } from "@/api-services/products.service";
 
-function parseCategory(subject?: string | null): string {
-  if (!subject) return "General Enquiry";
-  const match = subject.match(/Personal Shopper Request\s*[—–-]\s*(.+)/i);
-  return match ? match[1].trim() : "General Enquiry";
-}
-
-function anonymizeName(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0 || !parts[0]) return "Anonymous Shopper";
-  const first = parts[0];
-  if (parts.length === 1) return first;
-  // Take first name + last initial
-  const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
-  return `${first} ${lastInitial}.`;
-}
-
 function timeAgo(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -105,13 +89,12 @@ export default function RecentEnquiriesSidebar() {
         </div>
 
         <div className="space-y-2.5">
-          {enquiries.map((enquiry) => {
-            const category = parseCategory(enquiry.subject);
-            const icon = CATEGORY_ICONS[category] || "ri-shopping-bag-line";
+          {enquiries.map((enquiry, index) => {
+            const icon = CATEGORY_ICONS[enquiry.category] || "ri-shopping-bag-line";
 
             return (
               <div
-                key={enquiry.id}
+                key={`${enquiry.submitted_at}-${index}`}
                 className="bg-white rounded-xl p-3.5 border border-background-200/70 hover:border-accent-200/60 transition-colors cursor-default"
               >
                 <div className="flex items-start gap-2.5">
@@ -120,13 +103,13 @@ export default function RecentEnquiriesSidebar() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-foreground-800 truncate">
-                      {anonymizeName(enquiry.name)}
+                      {enquiry.display_name}
                     </p>
                     <p className="text-xs text-foreground-500 truncate mt-0.5">
-                      {category}
+                      {enquiry.category}
                     </p>
                     <p className="text-[11px] text-foreground-300 mt-1">
-                      {timeAgo(enquiry.created_at)}
+                      {timeAgo(enquiry.submitted_at)}
                     </p>
                   </div>
                 </div>

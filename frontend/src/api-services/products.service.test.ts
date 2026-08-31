@@ -76,11 +76,10 @@ describe("products.service (Clean Architecture)", () => {
       expect(getSpy).toHaveBeenCalledWith("/products/catalog");
     });
 
-    it("should fallback gracefully to empty lists when catalog API fails", async () => {
+    it("should surface catalog API failures so the shop can show an error state", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Service unavailable"));
 
-      const result = await productsService.getShopCatalog();
-      expect(result).toEqual({ products: [], categories: [] });
+      await expect(productsService.getShopCatalog()).rejects.toThrow("Service unavailable");
     });
   });
 
@@ -136,11 +135,10 @@ describe("products.service (Clean Architecture)", () => {
       expect(getSpy).toHaveBeenCalledWith("/products/items/101");
     });
 
-    it("should return null product and empty lists on details API error", async () => {
+    it("should surface details API failures instead of reporting a missing product", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Not found"));
 
-      const result = await productsService.getProductDetails(999);
-      expect(result).toEqual({ product: null, variants: [], skus: [] });
+      await expect(productsService.getProductDetails(999)).rejects.toThrow("Not found");
     });
   });
 
@@ -206,11 +204,9 @@ describe("products.service (Clean Architecture)", () => {
     it("should fetch recent enquiries via /enquiries/recent with limit param", async () => {
       const mockEnquiries = [
         {
-          id: 1,
-          name: "Alice Smith",
-          email: "alice@example.com",
-          subject: "Private Yacht Tour",
-          created_at: "2026-08-18T12:00:00Z",
+          display_name: "Community member",
+          category: "Travel Experiences",
+          submitted_at: "2026-08-18T12:00:00Z",
         },
       ];
 

@@ -18,10 +18,10 @@ export default function HeroSection() {
     };
   }, []);
 
-  const totalMembers = (stats?.totalMembers || stats?.activeMembers) || 12450;
-  const totalThreads = (stats?.totalDiscussions || stats?.totalPosts) || 3820;
-  const questionsAnswered = stats?.questionsAnswered || 9400;
-  const localExperts = stats?.localExperts || 142;
+  const totalMembers = stats?.totalMembers ?? stats?.activeMembers ?? 0;
+  const totalThreads = stats?.totalDiscussions ?? stats?.totalPosts ?? 0;
+  const totalReplies = stats?.questionsAnswered ?? stats?.totalComments ?? 0;
+  const onlineMembers = stats?.onlineMembers ?? 0;
   return (
     <section className="relative min-h-screen flex items-center">
       {/* Background Image */}
@@ -105,19 +105,19 @@ export default function HeroSection() {
               <p className="text-white text-2xl md:text-3xl font-bold">
                 {totalThreads.toLocaleString()}
               </p>
-              <p className="text-white/60 text-sm">{t("home.experiences", "Experiences")}</p>
+              <p className="text-white/60 text-sm">{t("home.discussions", "Discussions")}</p>
             </div>
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {questionsAnswered.toLocaleString()}
+                {totalReplies.toLocaleString()}
               </p>
-              <p className="text-white/60 text-sm">{t("home.reviews", "Reviews")}</p>
+              <p className="text-white/60 text-sm">{t("home.replies", "Replies")}</p>
             </div>
             <div>
               <p className="text-white text-2xl md:text-3xl font-bold">
-                {localExperts.toLocaleString()}
+                {onlineMembers.toLocaleString()}
               </p>
-              <p className="text-white/60 text-sm">{t("home.localExperts", "Local Experts")}</p>
+              <p className="text-white/60 text-sm">{t("home.onlineNow", "Online Now")}</p>
             </div>
           </div>
         </div>

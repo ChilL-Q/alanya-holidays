@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import NewThreadHero from "./components/NewThreadHero";
 import ThreadForm from "./components/ThreadForm";
 import { useTranslation } from "react-i18next";
@@ -6,6 +8,21 @@ import "@/i18n";
 
 export default function NewThreadPage() {
   const { t } = useTranslation();
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/register", {
+        replace: true,
+        state: { from: location },
+      });
+    }
+  }, [loading, location, navigate, user]);
+
+  if (loading || !user) return null;
+
   return (
     <div className="min-h-screen bg-background-50 flex flex-col">
       <NewThreadHero />

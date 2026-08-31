@@ -64,6 +64,23 @@ describe("forum.service", () => {
       expect(result[0].subcategories).toContain("Subcategory 1");
     });
 
+    it("uses a thematic local image when a category has no uploaded image", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([
+        {
+          id: "beaches",
+          name: "Beaches & Nature",
+          slug: "beaches-nature",
+          image_url: null,
+          children: [],
+        },
+      ]);
+
+      const result = await forumService.getCategories();
+
+      expect(result[0].image).toBe("/images/categories/nature.webp");
+      expect(result[0].image).not.toBe("/images/placeholder-business.svg");
+    });
+
     it("should return empty array on 404 ApiError", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("Not found", 404, "Not Found")
@@ -116,11 +133,11 @@ describe("forum.service", () => {
   describe("getForumStats", () => {
     it("should return aggregated stats from GET /forum/stats", async () => {
       vi.spyOn(apiClient, "get").mockResolvedValueOnce({
-        totalPosts: 120,
+        totalTopics: 120,
         totalMembers: 450,
-        totalComments: 890,
-        localExperts: 15,
-        totalCategories: 8,
+        totalReplies: 890,
+        usersOnline: 15,
+        latestMember: "Elena",
       });
 
       const stats = await getForumStats();
@@ -128,7 +145,7 @@ describe("forum.service", () => {
       expect(stats.totalDiscussions).toBe(120);
       expect(stats.activeMembers).toBe(450);
       expect(stats.questionsAnswered).toBe(890);
-      expect(stats.localExperts).toBe(15);
+      expect(stats.onlineMembers).toBe(15);
     });
   });
 

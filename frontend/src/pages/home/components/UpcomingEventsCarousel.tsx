@@ -77,7 +77,35 @@ export default function UpcomingEventsCarousel() {
     setTimeout(checkScroll, 350);
   };
 
-  if (thisWeekEvents.length === 0) return null;
+  if (thisWeekEvents.length === 0) {
+    return (
+      <div className="mt-10 w-full">
+        <div className="mb-4 flex items-center gap-2">
+          <i className="ri-calendar-event-line text-lg text-white/80"></i>
+          <h3 className="font-heading text-lg text-white">This Week&apos;s Events</h3>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/50">0</span>
+        </div>
+        <div className="flex flex-col gap-4 rounded-xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80">
+              <i className="ri-calendar-line text-lg"></i>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">No events scheduled this week</p>
+              <p className="text-xs text-white/60">Check the full calendar for newly added community events.</p>
+            </div>
+          </div>
+          <Link
+            to="/events"
+            className="inline-flex shrink-0 items-center justify-center gap-1 rounded-full bg-white px-4 py-2 text-sm font-medium text-foreground-900 transition-colors hover:bg-white/90"
+          >
+            Browse all events
+            <i className="ri-arrow-right-line"></i>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mt-10">

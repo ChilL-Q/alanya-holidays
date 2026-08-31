@@ -46,6 +46,7 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.scrollTo = vi.fn();
   });
 
   // ==========================================
@@ -254,6 +255,72 @@ describe("Stage 1 Overhaul Comprehensive E2E & Multi-Tier Test Suite", () => {
       // ClaimListingModal should open
       expect(screen.getByText("Claim Listing")).toBeInTheDocument();
       expect(screen.getByDisplayValue("Alanya Panoramic Castle Bistro")).toBeInTheDocument();
+    });
+
+    it("ExplorePage exposes the backend total and loads every server page", async () => {
+      const secondPageBusiness = {
+        ...mockFullBusiness,
+        id: "biz-e2e-page-2",
+        name: "Second Page Business",
+      };
+      const listingsSpy = vi
+        .spyOn(directoryService, "getListings")
+        .mockImplementation(async ({ page = 1 } = {}) => ({
+          data: page === 2 ? [secondPageBusiness] : [mockFullBusiness],
+          total: 95,
+          page,
+          limit: 20,
+          totalPages: 5,
+        }));
+
+      renderWithProviders(<ExplorePage />);
+
+      expect(await screen.findByText("95 businesses found")).toBeInTheDocument();
+      expect(screen.getByText("Showing 1–20 of 95 businesses")).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "2" }));
+
+      expect(await screen.findByText("Second Page Business")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(listingsSpy).toHaveBeenLastCalledWith(
+          expect.objectContaining({ page: 2, limit: 20 })
+        );
+      });
+      expect(screen.getByText("Showing 21–40 of 95 businesses")).toBeInTheDocument();
+    });
+
+    it("ExplorePage trusts server search results instead of hiding matches client-side", async () => {
+      const serverMatchedBusiness = {
+        ...mockFullBusiness,
+        id: "biz-server-search-match",
+        name: "Server Search Match",
+        description: "The mapped description does not contain the query.",
+      };
+      vi.spyOn(directoryService, "getListings").mockResolvedValue({
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      });
+      vi.spyOn(directoryService, "searchListings").mockResolvedValue({
+        data: [serverMatchedBusiness],
+        total: 1,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      });
+
+      renderWithProviders(<ExplorePage />);
+      expect(await screen.findByText("0 businesses found")).toBeInTheDocument();
+      fireEvent.change(
+        screen.getByPlaceholderText("Search businesses by name, category, or keyword..."),
+        { target: { value: "backend-only-match" } }
+      );
+
+      expect(await screen.findByText("Server Search Match")).toBeInTheDocument();
+      expect(screen.getByText("1 business found")).toBeInTheDocument();
+      expect(screen.queryByText("Top Rated")).not.toBeInTheDocument();
     });
 
     it("ExplorePage opens ListBusinessModal when 'List Your Business' hero button is clicked", () => {

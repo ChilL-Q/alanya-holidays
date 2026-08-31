@@ -200,6 +200,37 @@ END $$;
 -- ============================================================================
 -- 11. FINAL SUMMARY
 -- ============================================================================
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'concierge_enquiries'
+      AND policyname = 'concierge_enquiries_public_select'
+  ) THEN
+    RAISE EXCEPTION 'Public SELECT policy still exposes concierge enquiries';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.concierge_enquiries', 'SELECT')
+     OR has_table_privilege('authenticated', 'public.concierge_enquiries', 'SELECT') THEN
+    RAISE EXCEPTION 'Public roles still have SELECT privilege on concierge enquiries';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'concierge_enquiries'
+      AND policyname = 'concierge_enquiries_public_insert'
+      AND cmd = 'INSERT'
+  ) THEN
+    RAISE EXCEPTION 'Public enquiry submission policy is missing';
+  END IF;
+
+  RAISE NOTICE '✓ Concierge enquiries allow public submission without public reads';
+END $$;
+
 SELECT 
   'RLS Security Verification' as check_name,
   CASE 

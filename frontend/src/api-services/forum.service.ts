@@ -209,6 +209,7 @@ export interface ForumStats {
   activeMembers: number;
   questionsAnswered: number;
   localExperts: number;
+  onlineMembers?: number;
   totalPosts?: number;
   totalMembers?: number;
   totalCategories?: number;
@@ -348,6 +349,24 @@ function timeAgo(dateString?: string | null): string {
   return `${Math.floor(diffMonths / 12)}y ago`;
 }
 
+const CATEGORY_FALLBACK_IMAGES: Array<[RegExp, string]> = [
+  [/beach|nature|attraction/, "/images/categories/nature.webp"],
+  [/food|nightlife|restaurant/, "/images/home/turkish_cuisine.webp"],
+  [/thing|event|meetup/, "/images/categories/tours.webp"],
+  [/real[ -]?estate|investment/, "/images/categories/real-estate.webp"],
+  [/deal|market|business|shopping/, "/images/categories/shopping.webp"],
+  [/support|help|visa/, "/images/categories/visa.webp"],
+  [/expat|nomad|local|culture|new[ -]?member/, "/images/home/dim_river.webp"],
+  [/travel|vacation/, "/images/home/alanya_castle.webp"],
+  [/trend/, "/images/home/cleopatra_beach.webp"],
+];
+
+function getCategoryFallbackImage(cat: ForumBackendCategory): string {
+  const categoryKey = `${cat.slug || ""} ${cat.name}`.toLowerCase();
+  return CATEGORY_FALLBACK_IMAGES.find(([pattern]) => pattern.test(categoryKey))?.[1]
+    || "/images/categories/placeholder.jpg";
+}
+
 export function mapBackendCategoryToCategory(cat: ForumBackendCategory): Category {
   const subcategories = Array.isArray(cat.children)
     ? cat.children.map((c) => c.name)
@@ -364,7 +383,7 @@ export function mapBackendCategoryToCategory(cat: ForumBackendCategory): Categor
     color: cat.accent || "from-primary-500 to-primary-700",
     image:
       cat.image_url ||
-      "/images/placeholder-business.svg",
+      getCategoryFallbackImage(cat),
     slug: cat.slug || cat.id,
   };
 }
@@ -609,10 +628,11 @@ export class ForumService {
       ? await apiClient.get<Record<string, number>>("/forum/stats", options)
       : await apiClient.get<Record<string, number>>("/forum/stats");
     return {
-      totalDiscussions: data.totalPosts ?? data.totalDiscussions ?? 0,
+      totalDiscussions: data.totalTopics ?? data.totalPosts ?? data.totalDiscussions ?? 0,
       activeMembers: data.totalMembers ?? data.activeMembers ?? 0,
-      questionsAnswered: data.totalComments ?? data.questionsAnswered ?? 0,
+      questionsAnswered: data.totalReplies ?? data.totalComments ?? data.questionsAnswered ?? 0,
       localExperts: data.localExperts ?? 0,
+      onlineMembers: data.usersOnline ?? 0,
       totalPosts: data.totalPosts,
       totalMembers: data.totalMembers,
       totalCategories: data.totalCategories,

@@ -3,8 +3,39 @@ import {
   AdminRepository,
   ConciergeEnquiryRecord,
   PlatformAnalyticsData,
+  RecentEnquirySource,
 } from './admin.repository';
 import { CreateEnquiryDto } from './dto/create-enquiry.dto';
+import { PublicEnquirySummaryDto } from './dto/public-enquiry-summary.dto';
+
+const PUBLIC_ENQUIRY_CATEGORIES = new Set([
+  'Clothing & Apparel',
+  'Home Decor & Ceramics',
+  'Turkish Delight & Food',
+  'Textiles & Towels',
+  'Leather Goods',
+  'Jewelry & Accessories',
+  'Gift Items',
+  'Travel Experiences',
+]);
+
+function toPublicEnquirySummary(
+  enquiry: RecentEnquirySource,
+): PublicEnquirySummaryDto {
+  const match = enquiry.subject?.match(
+    /Personal Shopper Request\s*[—–-]\s*(.+)/i,
+  );
+  const candidate = match?.[1]?.trim();
+
+  return {
+    display_name: 'Community member',
+    category:
+      candidate && PUBLIC_ENQUIRY_CATEGORIES.has(candidate)
+        ? candidate
+        : 'General Enquiry',
+    submitted_at: enquiry.created_at,
+  };
+}
 
 @Injectable()
 export class AdminService {
@@ -21,8 +52,9 @@ export class AdminService {
     };
   }
 
-  async getRecentEnquiries(limit = 8): Promise<ConciergeEnquiryRecord[]> {
-    return this.adminRepository.getRecentEnquiries(limit);
+  async getRecentEnquiries(limit = 8): Promise<PublicEnquirySummaryDto[]> {
+    const enquiries = await this.adminRepository.getRecentEnquiries(limit);
+    return enquiries.map(toPublicEnquirySummary);
   }
 
   async getEnquiries(_userId?: string): Promise<ConciergeEnquiryRecord[]> {

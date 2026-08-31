@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import type { UserProfile } from "@/context/AuthContext";
 import i18n from "@/i18n";
@@ -54,6 +54,12 @@ vi.mock("@/context/CartContext", () => ({
   }),
 }));
 
+function RouteDestination() {
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+  return <div data-testid="route-destination">{location.pathname}|{from || ""}</div>;
+}
+
 // Mock compare hook
 vi.mock("@/hooks/useCompare", () => ({
   useCompare: () => ({
@@ -100,6 +106,49 @@ describe("Navbar Component (Milestone 5 — R4)", () => {
     const signInLinks = screen.getAllByRole("link", { name: /Sign In/i });
     expect(signInLinks.length).toBeGreaterThan(0);
     expect(signInLinks[0]).toHaveAttribute("href", "/login");
+    expect(signInLinks[0]).toHaveClass("bg-white/15", "backdrop-blur-sm");
+  });
+
+  it("sends guests from New Thread to registration with a return path", () => {
+    mockAuthState = {
+      user: null,
+      profile: null,
+      loading: false,
+      isAuthenticated: false,
+      signOut: mockSignOut,
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route path="/" element={<Navbar />} />
+          <Route path="/register" element={<RouteDestination />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: /New Thread/i }));
+
+    expect(screen.getByTestId("route-destination")).toHaveTextContent(
+      "/register|/new-thread",
+    );
+  });
+
+  it("uses the Alanya coastal brand mark in the home link", () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    const homeLink = screen.getByRole("link", { name: "Alanya Holidays" });
+    const brandImage = homeLink.querySelector("img");
+    expect(brandImage).toHaveAttribute(
+      "src",
+      "/images/alanya-holidays-brand-mark-transparent.png",
+    );
+    expect(brandImage).not.toHaveClass("mix-blend-multiply");
+    expect(brandImage?.parentElement).not.toHaveClass("bg-white");
   });
 
   it("renders authenticated user avatar and opens dropdown with Settings & Favorites", async () => {

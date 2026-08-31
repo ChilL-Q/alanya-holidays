@@ -35,6 +35,6 @@ async function bootstrap() {
     origin: createCorsOriginDelegate(allowedOrigins),
     credentials: true,
   });
-  await app.listen(process.env.PORT ?? 4000, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 4000, process.env.HOST ?? '0.0.0.0');
 }
 void bootstrap();

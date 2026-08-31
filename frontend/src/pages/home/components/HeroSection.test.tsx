@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { forumService } from "@/api-services/forum.service";
 import HeroSection from "./HeroSection";
 
 describe("HeroSection Component", () => {
@@ -48,7 +49,7 @@ describe("HeroSection Component", () => {
     );
   });
 
-  it("displays community statistics bar with members, experiences, and reviews", () => {
+  it("displays community statistics bar with members, discussions, and replies", () => {
     render(
       <MemoryRouter>
         <HeroSection />
@@ -56,7 +57,34 @@ describe("HeroSection Component", () => {
     );
 
     expect(screen.getAllByText(/travelers/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Experiences/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reviews/i)).toBeInTheDocument();
+    expect(screen.getByText(/Discussions/i)).toBeInTheDocument();
+    expect(screen.getByText(/Replies/i)).toBeInTheDocument();
+  });
+
+  it("renders honest live community metrics from the forum stats endpoint", async () => {
+    vi.spyOn(forumService, "getForumStats").mockResolvedValue({
+      totalDiscussions: 8,
+      activeMembers: 27,
+      questionsAnswered: 19,
+      localExperts: 0,
+      onlineMembers: 3,
+      totalMembers: 27,
+    });
+
+    render(
+      <MemoryRouter>
+        <HeroSection />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("27 travelers discovering Alanya")).toBeInTheDocument();
+    expect(screen.getByText("27")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
+    expect(screen.getByText("19")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("Discussions")).toBeInTheDocument();
+    expect(screen.getByText("Replies")).toBeInTheDocument();
+    expect(screen.getByText("Online Now")).toBeInTheDocument();
+    expect(screen.queryByText("Local Experts")).not.toBeInTheDocument();
   });
 });

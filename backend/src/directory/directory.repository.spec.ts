@@ -8,6 +8,8 @@ interface MockSupabaseClient {
   update: jest.Mock;
   delete: jest.Mock;
   eq: jest.Mock;
+  in: jest.Mock;
+  or: jest.Mock;
   order: jest.Mock;
   range: jest.Mock;
   single: jest.Mock;
@@ -31,6 +33,8 @@ describe('DirectoryRepository', () => {
       update: jest.fn().mockReturnThis(),
       delete: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      or: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockReturnThis(),
       single: jest.fn(),
@@ -43,6 +47,75 @@ describe('DirectoryRepository', () => {
     } as unknown as SupabaseService;
 
     repository = new DirectoryRepository(mockSupabaseService);
+  });
+
+  describe('public category groups', () => {
+    it('uses a unique tie-breaker for deterministic pages over an unchanged result set', async () => {
+      await repository.getDirectoryListings(2, 20);
+
+      expect(mockSupabaseClient.order).toHaveBeenLastCalledWith('id', {
+        ascending: true,
+      });
+      expect(mockSupabaseClient.range).toHaveBeenCalledWith(20, 39);
+    });
+
+    it('sorts the complete paginated result set alphabetically for name order', async () => {
+      await repository.getDirectoryListings(1, 20, undefined, 'name');
+
+      expect(mockSupabaseClient.order).toHaveBeenNthCalledWith(1, 'name', {
+        ascending: true,
+      });
+      expect(mockSupabaseClient.order).toHaveBeenNthCalledWith(2, 'id', {
+        ascending: true,
+      });
+    });
+
+    it('filters paginated listings by every raw category in a canonical group', async () => {
+      await repository.getDirectoryListings(
+        1,
+        20,
+        'restaurants,restaurants-cafes,cafes',
+      );
+
+      expect(mockSupabaseClient.in).toHaveBeenCalledWith('category_id', [
+        'restaurants',
+        'restaurants-cafes',
+        'cafes',
+      ]);
+      expect(mockSupabaseClient.range).toHaveBeenCalledWith(0, 19);
+    });
+
+    it('applies the same category group before paginating search results', async () => {
+      await repository.searchDirectoryListings(
+        'coffee',
+        'restaurants,restaurants-cafes,cafes',
+        undefined,
+        2,
+        20,
+      );
+
+      expect(mockSupabaseClient.in).toHaveBeenCalledWith('category_id', [
+        'restaurants',
+        'restaurants-cafes',
+        'cafes',
+      ]);
+      expect(mockSupabaseClient.range).toHaveBeenCalledWith(20, 39);
+    });
+
+    it('uses the same unique tie-breaker for paginated search results', async () => {
+      await repository.searchDirectoryListings(
+        'coffee',
+        undefined,
+        undefined,
+        2,
+        20,
+      );
+
+      expect(mockSupabaseClient.order).toHaveBeenLastCalledWith('id', {
+        ascending: true,
+      });
+      expect(mockSupabaseClient.range).toHaveBeenCalledWith(20, 39);
+    });
   });
 
   describe('getDirectoryListingById', () => {

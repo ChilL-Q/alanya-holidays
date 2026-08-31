@@ -20,9 +20,19 @@ function Destination() {
   return <div data-testid="destination">{location.pathname}{from ? `|${from}` : ""}</div>;
 }
 
-function renderRegistration(variant: "regular" | "business") {
+function renderRegistration(
+  variant: "regular" | "business",
+  returnPath?: string,
+) {
   return render(
-    <MemoryRouter initialEntries={[variant === "business" ? "/business/register" : "/register"]}>
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: variant === "business" ? "/business/register" : "/register",
+          state: returnPath ? { from: { pathname: returnPath } } : null,
+        },
+      ]}
+    >
       <Routes>
         <Route path="/register" element={<RegistrationPage variant="regular" />} />
         <Route path="/business/register" element={<RegistrationPage variant="business" />} />
@@ -46,6 +56,29 @@ describe("RegistrationPage", () => {
     signInWithOAuth.mockReset();
   });
 
+  it.each([
+    ["regular", "Personal account", "Business account"],
+    ["business", "Business account", "Personal account"],
+  ] as const)(
+    "makes the %s registration path explicit and links to the alternative account type",
+    (variant, activeLabel, alternativeLabel) => {
+      renderRegistration(variant);
+
+      const personalLink = screen.getByRole("link", { name: "Personal account" });
+      const businessLink = screen.getByRole("link", { name: "Business account" });
+
+      expect(personalLink).toHaveAttribute("href", "/register");
+      expect(businessLink).toHaveAttribute("href", "/business/register");
+      expect(screen.getByRole("link", { name: activeLabel })).toHaveAttribute(
+        "aria-current",
+        "page"
+      );
+      expect(screen.getByRole("link", { name: alternativeLabel })).not.toHaveAttribute(
+        "aria-current"
+      );
+    }
+  );
+
   it("keeps regular registration metadata business-free and redirects a session to home", async () => {
     signUp.mockResolvedValue({ user: { id: "user-1" }, session: { access_token: "token" }, error: null });
     renderRegistration("regular");
@@ -62,13 +95,44 @@ describe("RegistrationPage", () => {
     await waitFor(() => expect(screen.getByTestId("destination")).toHaveTextContent("/"));
   });
 
+  it("returns to the requested page after registration and preserves it for Sign In", async () => {
+    signUp.mockResolvedValue({
+      user: { id: "user-1" },
+      session: { access_token: "token" },
+      error: null,
+    });
+    const firstRender = renderRegistration("regular", "/new-thread");
+
+    const signInLinks = screen.getAllByRole("link", { name: /Sign In/i });
+    fireEvent.click(signInLinks[0]);
+    expect(screen.getByTestId("destination")).toHaveTextContent("/login|/new-thread");
+    firstRender.unmount();
+
+    renderRegistration("regular", "/new-thread");
+    completeSharedFields();
+    fireEvent.click(screen.getByRole("button", { name: "Create Account" }));
+
+    await waitFor(() => expect(signUp).toHaveBeenCalledTimes(1));
+    expect(signUp).toHaveBeenCalledWith({
+      email: "ada@example.com",
+      password: "password123",
+      fullName: "Ada Lovelace",
+      emailRedirectTo: `${window.location.origin}/new-thread`,
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("destination")).toHaveTextContent("/new-thread"),
+    );
+  });
+
   it("submits exact non-authoritative business metadata once and redirects a session to the dashboard", async () => {
     signUp.mockResolvedValue({ user: { id: "user-2" }, session: { access_token: "token" }, error: null });
     renderRegistration("business");
 
     completeSharedFields();
     fireEvent.change(screen.getByLabelText(/business name/i), { target: { value: "  Analytical Engines Ltd  " } });
-    fireEvent.change(screen.getByLabelText(/account type/i), { target: { value: "service_provider" } });
+    fireEvent.change(screen.getByLabelText(/^account type$/i, { selector: "select" }), {
+      target: { value: "service_provider" },
+    });
     fireEvent.change(screen.getByLabelText(/contact phone/i), { target: { value: "  +90 555 123 4567  " } });
     fireEvent.change(screen.getByLabelText(/website/i), { target: { value: "  https://example.com  " } });
     fireEvent.click(screen.getByRole("button", { name: "Create Business Account" }));

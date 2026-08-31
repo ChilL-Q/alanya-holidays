@@ -1049,7 +1049,7 @@ export class ForumRepository {
 
     const membersRes = await this.client
       .from('profiles')
-      .select('full_name')
+      .select('full_name', { count: 'exact' })
       .order('created_at', { ascending: false })
       .limit(1);
     if (membersRes.error)
@@ -1062,6 +1062,7 @@ export class ForumRepository {
     return {
       totalTopics: topicsRes.count ?? 0,
       totalReplies: repliesRes.count ?? 0,
+      totalMembers: membersRes.count ?? 0,
       usersOnline: onlineRes.count ?? 0,
       latestMember: memberData?.[0]?.full_name || null,
     };

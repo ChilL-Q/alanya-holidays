@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import {
   businessRegistrationSchema,
@@ -33,6 +33,31 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
 
   const { signUp, signInWithOAuth } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedPath = (
+    location.state as { from?: { pathname?: unknown } } | null
+  )?.from?.pathname;
+  const safeReturnPath =
+    typeof requestedPath === "string" &&
+    requestedPath.startsWith("/") &&
+    !requestedPath.startsWith("//")
+      ? requestedPath
+      : null;
+  const postAuthPath = isBusiness
+    ? "/business/dashboard"
+    : safeReturnPath || "/";
+  const requestedReturnState = safeReturnPath
+    ? { from: { pathname: safeReturnPath } }
+    : undefined;
+  const postAuthReturnState = postAuthPath !== "/"
+    ? { from: { pathname: postAuthPath } }
+    : undefined;
+
+  const getAbsoluteAppUrl = (path: string) => {
+    if (typeof window === "undefined") return undefined;
+    const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
+    return `${window.location.origin}${basePath}${path}`;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -82,9 +107,8 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             ...(businessDetails.website ? { website: businessDetails.website } : {}),
           }
         : undefined;
-      const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
-      const emailRedirectTo = isBusiness && typeof window !== "undefined"
-        ? `${window.location.origin}${basePath}/business/dashboard`
+      const emailRedirectTo = postAuthPath !== "/"
+        ? getAbsoluteAppUrl(postAuthPath)
         : undefined;
 
       const { user, session, error: authError } = await signUp({
@@ -105,7 +129,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
         setNeedsConfirmation(true);
       } else {
         // Auto-logged in
-        navigate(isBusiness ? "/business/dashboard" : "/", { replace: true });
+        navigate(postAuthPath, { replace: true });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -119,7 +143,12 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
     setError("");
     setIsSocialSubmitting(true);
     try {
-      const { error: authError } = await signInWithOAuth(provider);
+      const oauthRedirectTo = postAuthPath !== "/"
+        ? getAbsoluteAppUrl(postAuthPath)
+        : undefined;
+      const { error: authError } = oauthRedirectTo
+        ? await signInWithOAuth(provider, oauthRedirectTo)
+        : await signInWithOAuth(provider);
       if (authError) {
         setError(authError.message || `Failed to sign in with ${provider}.`);
       }
@@ -175,7 +204,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             </p>
             <Link
               to="/login"
-              state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
+              state={postAuthReturnState}
               className="w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
             >
               {t("auth.goToSignIn", "Go to Sign In")}
@@ -219,11 +248,11 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
       <section className="w-full max-w-md mx-auto px-4 -mt-8 relative z-10 pb-20">
         <div className="bg-background-50 rounded-2xl p-6 md:p-8 border border-background-200/70">
           {/* Tab Switcher */}
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center justify-center mb-6">
             <div className="inline-flex items-center bg-background-100 rounded-full px-1 py-1">
               <Link
                 to="/login"
-                state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
+                state={postAuthReturnState}
                 className="px-6 py-2 rounded-full text-sm font-medium text-foreground-500 hover:text-foreground-700 transition-colors cursor-pointer"
               >
                 {t("nav.signIn", "Sign In")}
@@ -233,6 +262,40 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
               </span>
             </div>
           </div>
+
+          <nav aria-label="Account type" className="mb-8">
+            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-foreground-400">
+              Choose account type
+            </p>
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-background-100 p-1.5">
+              <Link
+                to="/register"
+                state={requestedReturnState}
+                aria-current={!isBusiness ? "page" : undefined}
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors ${
+                  !isBusiness
+                    ? "bg-background-50 text-foreground-900 shadow-sm ring-1 ring-background-200"
+                    : "text-foreground-500 hover:bg-background-50/70 hover:text-foreground-700"
+                }`}
+              >
+                <i className="ri-user-line" aria-hidden="true"></i>
+                Personal account
+              </Link>
+              <Link
+                to="/business/register"
+                state={requestedReturnState}
+                aria-current={isBusiness ? "page" : undefined}
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors ${
+                  isBusiness
+                    ? "bg-background-50 text-foreground-900 shadow-sm ring-1 ring-background-200"
+                    : "text-foreground-500 hover:bg-background-50/70 hover:text-foreground-700"
+                }`}
+              >
+                <i className="ri-store-2-line" aria-hidden="true"></i>
+                Business account
+              </Link>
+            </div>
+          </nav>
 
           {error && (
             <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-accent-100/70 border border-accent-300/50 mb-5">
@@ -424,7 +487,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             {t("auth.alreadyHaveAccount", "Already have an account?")} {" "}
             <Link
               to="/login"
-              state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
+              state={postAuthReturnState}
               className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
               {t("nav.signIn", "Sign in")}
             </Link>

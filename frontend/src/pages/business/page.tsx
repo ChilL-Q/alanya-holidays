@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import {
@@ -15,6 +15,7 @@ import TrustBadge from "@/components/common/TrustBadge";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+import { useAuth } from "@/context/AuthContext";
 
 const priceRangeLabel: Record<string, string> = {
   "$": "Budget",
@@ -122,6 +123,8 @@ function getGalleryForBusiness(businessId: string): string[] {
 export default function BusinessDetailPage() {
   const { t } = useTranslation();
   const { businessId } = useParams<{ businessId: string }>();
+  const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [reviews, setReviews] = useState<BusinessReview[]>([]);
@@ -263,6 +266,18 @@ export default function BusinessDetailPage() {
   const categoryIcon = getCategoryIcon(business.category);
   const mapUrl = buildMapUrl(business);
   const galleryExtras = getGalleryForBusiness(business.id);
+  const handleFavoriteToggle = () => {
+    if (authLoading) return;
+
+    if (!isAuthenticated) {
+      navigate("/register", {
+        state: { from: { pathname: `/business/${business.id}` } },
+      });
+      return;
+    }
+
+    toggleFavorite(business.id);
+  };
 
   return (
     <>
@@ -317,8 +332,11 @@ export default function BusinessDetailPage() {
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => businessId && toggleFavorite(businessId)}
-                    className={`w-11 h-11 flex items-center justify-center rounded-full border backdrop-blur-sm transition-all cursor-pointer ${
+                    type="button"
+                    onClick={handleFavoriteToggle}
+                    disabled={authLoading}
+                    aria-label={favorited ? "Remove from favorites" : "Save to favorites"}
+                    className={`w-11 h-11 flex items-center justify-center rounded-full border backdrop-blur-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-wait ${
                       favorited
                         ? "bg-accent-500/20 border-accent-400/40 text-white"
                         : "bg-white/10 border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/20"

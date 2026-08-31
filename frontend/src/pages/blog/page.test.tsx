@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import BlogPage from "./page";
@@ -177,5 +177,26 @@ describe("BlogPage pagination", () => {
         search: undefined,
       });
     });
+  });
+
+  it("shows the filterable category on each card instead of its first tag", async () => {
+    vi.mocked(blogService.getPosts).mockResolvedValue({
+      posts: [
+        {
+          ...createPost(1),
+          category: "Beaches",
+          tag: "Essential",
+        },
+      ],
+      total: 1,
+    });
+
+    renderPage();
+
+    const title = await screen.findByText("Blog post 1");
+    const card = title.closest("a");
+    expect(card).not.toBeNull();
+    expect(within(card!).getByText("Beaches")).toBeInTheDocument();
+    expect(within(card!).queryByText("Essential")).not.toBeInTheDocument();
   });
 });

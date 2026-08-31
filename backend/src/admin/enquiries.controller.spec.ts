@@ -14,14 +14,9 @@ describe('EnquiriesController', () => {
     }),
     getRecentEnquiries: jest.fn().mockResolvedValue([
       {
-        id: 1,
-        name: 'Elena Rostova',
-        email: 'elena@example.com',
-        subject: 'VIP Concierge',
-        message: 'Need yacht charter',
-        status: 'new',
-        enquiry_type: 'yacht',
-        created_at: new Date().toISOString(),
+        display_name: 'Community member',
+        category: 'General Enquiry',
+        submitted_at: '2026-08-30T10:00:00.000Z',
       },
     ]),
   };
@@ -74,7 +69,13 @@ describe('EnquiriesController', () => {
   describe('getRecent (GET /enquiries/recent)', () => {
     it('should return recent enquiries with default limit 8', async () => {
       const result = await controller.getRecent();
-      expect(result).toHaveLength(1);
+      expect(result).toEqual([
+        {
+          display_name: 'Community member',
+          category: 'General Enquiry',
+          submitted_at: '2026-08-30T10:00:00.000Z',
+        },
+      ]);
       expect(mockAdminService.getRecentEnquiries).toHaveBeenCalledWith(8);
     });
 

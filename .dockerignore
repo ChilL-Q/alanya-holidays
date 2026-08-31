@@ -1,0 +1,7 @@
+.git
+.pnpm-store
+.turbo
+.venv
+**/node_modules
+**/dist
+**/coverage

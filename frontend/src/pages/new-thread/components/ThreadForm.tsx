@@ -16,6 +16,7 @@ export default function ThreadForm() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
+  const initialSubcategory = searchParams.get("subcategory") || "";
 
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
@@ -81,6 +82,13 @@ export default function ThreadForm() {
     () => selectedCategory?.subcategories ?? [],
     [selectedCategory]
   );
+
+  useEffect(() => {
+    if (!initialSubcategory || subcategories.length === 0) return;
+    if (subcategories.includes(initialSubcategory)) {
+      setSubcategory(initialSubcategory);
+    }
+  }, [initialSubcategory, subcategories]);
 
   useEffect(() => {
     if (subcategories.length === 0) {

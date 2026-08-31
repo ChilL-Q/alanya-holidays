@@ -112,7 +112,7 @@ describe('ProductsRepository pagination', () => {
     });
     const categories = builder({ data: [], error: null });
     categories.order.mockResolvedValue({ data: [], error: null });
-    const variants = builder({
+    const skus = builder({
       data: [{ product_id: 21 }, { product_id: 21 }],
       error: null,
     });
@@ -120,7 +120,7 @@ describe('ProductsRepository pagination', () => {
       from: jest.fn((table: string) => {
         if (table === 'product_items') return products;
         if (table === 'product_categories') return categories;
-        return variants;
+        return skus;
       }),
     };
     const repository = new ProductsRepository({
@@ -134,10 +134,55 @@ describe('ProductsRepository pagination', () => {
       ['id', { ascending: true }],
     ]);
     expect(products.range).toHaveBeenCalledWith(20, 29);
-    expect(variants.in).toHaveBeenCalledWith('product_id', [21, 22]);
+    expect(client.from).toHaveBeenCalledWith('product_skus');
+    expect(client.from).not.toHaveBeenCalledWith('product_variants');
+    expect(skus.in).toHaveBeenCalledWith('product_id', [21, 22]);
     expect(result.products).toEqual([
       { id: 21, variant_count: 2 },
       { id: 22, variant_count: undefined },
     ]);
+  });
+
+  it('loads numeric catalog item details without querying UUID product variants', async () => {
+    const product = {
+      select: jest.fn(),
+      eq: jest.fn(),
+      maybeSingle: jest.fn().mockResolvedValue({
+        data: { id: 1, name: 'Catalog item' },
+        error: null,
+      }),
+    };
+    product.select.mockReturnValue(product);
+    product.eq.mockReturnValue(product);
+
+    const skus = {
+      select: jest.fn(),
+      eq: jest.fn(),
+      order: jest.fn().mockResolvedValue({
+        data: [{ id: 10, product_id: 1, label: 'Standard' }],
+        error: null,
+      }),
+    };
+    skus.select.mockReturnValue(skus);
+    skus.eq.mockReturnValue(skus);
+
+    const client = {
+      from: jest.fn((table: string) =>
+        table === 'product_items' ? product : skus,
+      ),
+    };
+    const repository = new ProductsRepository({
+      getClient: () => client,
+    } as unknown as SupabaseService);
+
+    const result = await repository.getShopProductDetails(1);
+
+    expect(client.from).not.toHaveBeenCalledWith('product_variants');
+    expect(skus.eq).toHaveBeenCalledWith('product_id', 1);
+    expect(result).toEqual({
+      product: { id: 1, name: 'Catalog item' },
+      variants: [],
+      skus: [{ id: 10, product_id: 1, label: 'Standard' }],
+    });
   });
 });

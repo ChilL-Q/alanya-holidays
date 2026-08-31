@@ -75,6 +75,44 @@ describe("blog.service", () => {
       expect(result.posts[0].tag).toBe("Nightlife");
     });
 
+    it("maps legacy posts without a category to the Guides category", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([
+        {
+          id: "post-legacy-guide",
+          title: "Legacy Alanya Guide",
+          slug: "legacy-alanya-guide",
+          excerpt: "Published before blog categories were required.",
+          category: null,
+          tags: [],
+        },
+      ]);
+
+      const result = await getPosts();
+
+      expect(result.posts[0].category).toBe("Guides");
+      expect(result.posts[0].tag).toBe("Guides");
+    });
+
+    it.each(["", "   ", " Guides "])(
+      "does not disguise a malformed category %j as Guides",
+      async (category) => {
+        vi.spyOn(apiClient, "get").mockResolvedValueOnce([
+          {
+            id: "post-malformed-category",
+            title: "Malformed Category Post",
+            slug: "malformed-category-post",
+            category,
+            tags: [],
+          },
+        ]);
+
+        const result = await getPosts();
+
+        expect(result.posts[0].category).toBe("Uncategorized");
+        expect(result.posts[0].tag).toBe("Uncategorized");
+      }
+    );
+
     it("should throw ApiError when API fails", async () => {
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(
         new ApiError("API offline", 500, "Internal Server Error")

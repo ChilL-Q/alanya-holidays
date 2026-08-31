@@ -5,6 +5,7 @@ interface MockSupabaseClient {
   from: jest.Mock;
   select: jest.Mock;
   eq: jest.Mock;
+  or: jest.Mock;
   order: jest.Mock;
   range: jest.Mock;
   limit: jest.Mock;
@@ -20,6 +21,7 @@ describe('BlogRepository', () => {
       from: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      or: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
       limit: jest.fn().mockResolvedValue({ data: [], error: null }),
@@ -134,6 +136,21 @@ describe('BlogRepository', () => {
     expect(recentQuery.eq).toHaveBeenCalledWith('content_type', 'blog');
     expect(categoryQuery.limit).toHaveBeenCalledWith(2);
     expect(recentQuery.limit).toHaveBeenCalledWith(3);
+  });
+
+  it('includes uncategorized legacy posts in the Guides category', async () => {
+    await repository.getBlogPosts({ category: 'Guides' }, 6, 0, 'anon');
+
+    expect(client.or).toHaveBeenCalledWith(
+      'category.eq.Guides,category.is.null',
+    );
+    expect(client.eq).not.toHaveBeenCalledWith('category', 'Guides');
+  });
+
+  it('keeps exact matching for every other category', async () => {
+    await repository.getBlogPosts({ category: 'Beaches' }, 6, 0, 'anon');
+
+    expect(client.eq).toHaveBeenCalledWith('category', 'Beaches');
   });
 
   describe('bounded growing queries', () => {

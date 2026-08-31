@@ -22,6 +22,25 @@ describe("directory.service", () => {
   });
 
   describe("Mappers", () => {
+    it.each([
+      ["restaurants", "restaurants"],
+      ["cafes", "restaurants"],
+      ["accommodations", "hotels"],
+      ["apartments", "hotels"],
+      ["villas", "hotels"],
+      ["tours", "activities"],
+      ["nature", "nature"],
+      ["transport", "transport"],
+      ["car-rental", "transport"],
+      ["medical", "wellness"],
+      ["spa-hamam", "wellness"],
+      ["hair-beauty", "wellness"],
+      ["real-estate", "real-estate"],
+      ["shopping", "shopping"],
+    ])("normalizes raw directory category %s to %s", (raw, canonical) => {
+      expect(normalizeBusinessCategory(raw)).toBe(canonical);
+    });
+
     it("mapBackendListingToBusiness should format raw backend listing properly", () => {
       const backendListing: DirectoryListingRecord = {
         id: "biz-uuid-1",
@@ -126,7 +145,7 @@ describe("directory.service", () => {
         params: {
           page: 1,
           limit: 20,
-          category: "restaurants",
+          category: "restaurants,restaurants-cafes,cafes",
           sortBy: undefined,
         },
       });
@@ -185,7 +204,7 @@ describe("directory.service", () => {
       expect(apiClient.get).toHaveBeenCalledWith("/directory/search", {
         params: {
           query: "Cafe",
-          category: "restaurants",
+          category: "restaurants,restaurants-cafes,cafes",
           location: undefined,
           page: 1,
           limit: 40,
@@ -434,15 +453,24 @@ describe("directory.service", () => {
         "restaurants",
         "hotels",
         "activities",
+        "nature",
         "boat-tours",
         "water-sports",
+        "transport",
         "real-estate",
-        "car-rental",
         "wellness",
         "shopping",
         "services",
         "nightlife",
       ]);
+    });
+
+    it("uses an available Remix Icon for Water Sports", async () => {
+      const categories = await directoryService.getCategories();
+
+      expect(categories.find((category) => category.id === "water-sports")?.icon).toBe(
+        "ri-water-flash-line"
+      );
     });
   });
 

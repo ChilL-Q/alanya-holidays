@@ -19,6 +19,11 @@ export interface ConciergeEnquiryRecord {
   updated_at?: string;
 }
 
+export interface RecentEnquirySource {
+  subject: string | null;
+  created_at: string;
+}
+
 export interface PlatformKPIs {
   totalViews: number;
   totalClicks: number;
@@ -148,30 +153,24 @@ export class AdminRepository {
     }
   }
 
-  async getRecentEnquiries(limit = 8): Promise<ConciergeEnquiryRecord[]> {
+  async getRecentEnquiries(limit = 8): Promise<RecentEnquirySource[]> {
     try {
       const { data, error } = await this.client
         .from('concierge_enquiries')
-        .select('*')
+        .select('subject, created_at')
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) {
         const { data: msgData, error: msgError } = await this.client
           .from('messages')
-          .select('*')
+          .select('subject, created_at')
           .order('created_at', { ascending: false })
           .limit(limit);
 
         if (msgError) return [];
         return (msgData || []).map((m: Record<string, unknown>) => ({
-          id: typeof m.id === 'number' ? m.id : Number(m.id) || 0,
-          name: typeof m.name === 'string' ? m.name : 'Anonymous',
-          email: typeof m.email === 'string' ? m.email : '',
-          subject: typeof m.subject === 'string' ? m.subject : 'Enquiry',
-          message: typeof m.message === 'string' ? m.message : '',
-          status: typeof m.status === 'string' ? m.status : 'new',
-          enquiry_type: 'general',
+          subject: typeof m.subject === 'string' ? m.subject : null,
           created_at:
             typeof m.created_at === 'string'
               ? m.created_at
@@ -179,7 +178,7 @@ export class AdminRepository {
         }));
       }
 
-      return (data || []) as ConciergeEnquiryRecord[];
+      return data || [];
     } catch {
       return [];
     }

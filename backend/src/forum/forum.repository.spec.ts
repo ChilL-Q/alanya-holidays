@@ -519,6 +519,7 @@ describe('ForumRepository', () => {
     });
 
     it('should calculate aggregated stats from multiple queries', async () => {
+      let profileQueryCount = 0;
       mockClient.from.mockImplementation((table: string) => {
         if (table === 'forum_posts') {
           return createQueryChain({ count: 12 });
@@ -527,8 +528,12 @@ describe('ForumRepository', () => {
           return createQueryChain({ count: 48 });
         }
         if (table === 'profiles') {
+          profileQueryCount += 1;
+          if (profileQueryCount === 1) {
+            return createQueryChain({ count: 7 });
+          }
           return createQueryChain({
-            count: 7,
+            count: 126,
             data: [{ full_name: 'Serena' }],
           });
         }
@@ -539,6 +544,7 @@ describe('ForumRepository', () => {
       expect(stats.totalTopics).toBe(12);
       expect(stats.totalReplies).toBe(48);
       expect(stats.usersOnline).toBe(7);
+      expect(stats.totalMembers).toBe(126);
       expect(stats.latestMember).toBe('Serena');
     });
   });

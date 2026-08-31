@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import UpcomingEventsCarousel from "./UpcomingEventsCarousel";
-import { eventsService } from "@/api-services/events.service";
+import { eventsService, type ForumEvent } from "@/api-services/events.service";
 
 describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
   const originalScrollBy = Element.prototype.scrollBy;
@@ -23,24 +23,27 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
   });
 
   describe("Edge Case 1: 0 events in date window", () => {
-    it("renders null and attaches no DOM listeners when event list is empty", () => {
+    it("renders an empty state and attaches no scroll listeners when event list is empty", () => {
       vi.spyOn(eventsService, "getEventsSync").mockReturnValue([]);
-      vi.spyOn(eventsService, "getEvents").mockResolvedValue([]);
+      vi.spyOn(eventsService, "getEvents").mockImplementation(
+        () => new Promise<ForumEvent[]>(() => {})
+      );
 
       const windowAddListenerSpy = vi.spyOn(window, "addEventListener");
 
-      const { container } = render(
+      render(
         <MemoryRouter>
           <UpcomingEventsCarousel />
         </MemoryRouter>
       );
 
-      expect(container.firstChild).toBeNull();
-      expect(screen.queryByText(/This Week's Events/i)).not.toBeInTheDocument();
+      expect(screen.getByText(/This Week's Events/i)).toBeInTheDocument();
+      expect(screen.getByText("No events scheduled this week")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Browse all events" })).toHaveAttribute("href", "/events");
       expect(windowAddListenerSpy).not.toHaveBeenCalled();
     });
 
-    it("renders null when all events fall outside the target week (2026-06-05 to 2026-06-12)", () => {
+    it("renders the empty state when all events fall outside the target week (2026-06-05 to 2026-06-12)", () => {
       const outsideEvents = [
         {
           id: "past-1",
@@ -79,20 +82,27 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
       ];
 
       vi.spyOn(eventsService, "getEventsSync").mockReturnValue(outsideEvents);
-      vi.spyOn(eventsService, "getEvents").mockResolvedValue(outsideEvents);
+      vi.spyOn(eventsService, "getEvents").mockImplementation(
+        () => new Promise<ForumEvent[]>(() => {})
+      );
 
-      const { container } = render(
+      render(
         <MemoryRouter>
           <UpcomingEventsCarousel />
         </MemoryRouter>
       );
 
-      expect(container.firstChild).toBeNull();
+      expect(screen.getByText("No events scheduled this week")).toBeInTheDocument();
+      expect(screen.queryByText("Past Event")).not.toBeInTheDocument();
+      expect(screen.queryByText("Future Event")).not.toBeInTheDocument();
     });
   });
 
   describe("Edge Case 2: 1 event on wide desktop container", () => {
     it("renders heading and cards but hides both left and right scroll buttons on 1440px viewport", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-06-05T12:00:00Z"));
+
       const singleEvent = [
         {
           id: "single-1",

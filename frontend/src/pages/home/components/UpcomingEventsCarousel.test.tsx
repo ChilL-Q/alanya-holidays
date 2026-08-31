@@ -54,6 +54,27 @@ describe("UpcomingEventsCarousel Component", () => {
     expect(screen.getByText("Alanya Summer Community Picnic")).toBeInTheDocument();
   });
 
+  it("keeps the events entry point visible when the current week has no events", () => {
+    vi.setSystemTime(new Date("2026-08-31T12:00:00+03:00"));
+    vi.spyOn(eventsService, "getEventsSync").mockReturnValue([]);
+    vi.spyOn(eventsService, "getEvents").mockImplementation(
+      () => new Promise<ForumEvent[]>(() => {})
+    );
+
+    render(
+      <MemoryRouter>
+        <UpcomingEventsCarousel />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/This Week's Events/i)).toBeInTheDocument();
+    expect(screen.getByText("No events scheduled this week")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Browse all events" })).toHaveAttribute(
+      "href",
+      "/events"
+    );
+  });
+
   it("renders This Week's Events heading with count badge", () => {
     render(
       <MemoryRouter>

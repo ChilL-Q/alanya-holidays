@@ -98,6 +98,7 @@ shared/types/*.d.ts
 
 # Agent customization and knowledge graph artifacts
 .agents/
+.codex/
 graphify-out/
 
 # Database backup archives & manifests

@@ -18,6 +18,18 @@ const CLAIM_WITH_LISTING_SELECT = `${CLAIM_SELECT}, directory_listing:directory_
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function parseCategoryIds(category?: string): string[] {
+  if (!category) return [];
+  return Array.from(
+    new Set(
+      category
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  ).slice(0, 20);
+}
+
 @Injectable()
 export class DirectoryRepository {
   constructor(private readonly supabaseService: SupabaseService) {}
@@ -48,14 +60,21 @@ export class DirectoryRepository {
       newest: 'created_at',
     };
     const orderColumn = SORT_COLUMN_MAP[sortBy] ?? 'base_score';
+    const ascending = orderColumn === 'name';
 
     let query = this.client
       .from('directory_listings')
       .select('*', { count: 'exact' })
       .eq('status', 'approved')
-      .order(orderColumn, { ascending: false });
+      .order(orderColumn, { ascending })
+      .order('id', { ascending: true });
 
-    if (category) query = query.eq('category_id', category);
+    const categoryIds = parseCategoryIds(category);
+    if (categoryIds.length === 1) {
+      query = query.eq('category_id', categoryIds[0]);
+    } else if (categoryIds.length > 1) {
+      query = query.in('category_id', categoryIds);
+    }
 
     const { data, error, count } = await query.range(from, to);
     if (error) throw new Error(error.message);
@@ -157,7 +176,12 @@ export class DirectoryRepository {
         .replace(/,/g, ' ');
       q = q.or(`name.ilike.%${safe}%,short_description.ilike.%${safe}%`);
     }
-    if (categoryId) q = q.eq('category_id', categoryId);
+    const categoryIds = parseCategoryIds(categoryId);
+    if (categoryIds.length === 1) {
+      q = q.eq('category_id', categoryIds[0]);
+    } else if (categoryIds.length > 1) {
+      q = q.in('category_id', categoryIds);
+    }
     if (location) {
       const safeLoc = location.trim().replace(/%/g, '\\%').replace(/_/g, '\\_');
       if (safeLoc) q = q.ilike('location', `%${safeLoc}%`);
@@ -168,6 +192,7 @@ export class DirectoryRepository {
       .order('is_featured', { ascending: false })
       .order('net_votes', { ascending: false, nullsFirst: false })
       .order('name', { ascending: true })
+      .order('id', { ascending: true })
       .range((page - 1) * limit, page * limit - 1);
 
     const { data, error, count } = await q;

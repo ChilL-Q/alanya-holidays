@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { forumService, type Category, type CategoryThread } from "@/api-services/forum.service";
+import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import CategoryHeader from "./components/CategoryHeader";
@@ -17,6 +18,8 @@ import "@/i18n";
 export default function CategoryPage() {
   const { t } = useTranslation();
   const { categoryId } = useParams<{ categoryId: string }>();
+  const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Category state
   const [category, setCategory] = useState<Category | null>(null);
@@ -186,6 +189,27 @@ export default function CategoryPage() {
     );
   }
 
+  const handleStartDiscussion = () => {
+    if (authLoading) return;
+
+    if (!isAuthenticated) {
+      const searchParams = new URLSearchParams({
+        category: category.slug || category.id,
+      });
+      if (activeSubcategory) {
+        searchParams.set("subcategory", activeSubcategory);
+      }
+      const returnPath = `/new-thread?${searchParams.toString()}`;
+
+      navigate("/register", {
+        state: { from: { pathname: returnPath } },
+      });
+      return;
+    }
+
+    setIsSubmitModalOpen(true);
+  };
+
   return (
     <>
       <Navbar />
@@ -215,8 +239,9 @@ export default function CategoryPage() {
 
                 <button
                   type="button"
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-600 transition-colors cursor-pointer"
+                  onClick={handleStartDiscussion}
+                  disabled={authLoading}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-600 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                 >
                   <i className="ri-edit-line"></i>
                   {t("public.startDiscussion")}
