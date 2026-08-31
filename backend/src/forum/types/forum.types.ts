@@ -252,6 +252,7 @@ export interface ForumRsvpResponse {
 export interface ForumStatsResponse {
   totalTopics: number;
   totalReplies: number;
+  totalMembers: number;
   usersOnline: number;
   latestMember: string | null;
 }

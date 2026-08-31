@@ -239,6 +239,16 @@ function calculateReadTime(text?: string | null): string {
 }
 
 function mapBackendPostToItem(post: BackendBlogPostItem): BlogPostItem {
+  const hasCleanCategory =
+    typeof post.category === "string" &&
+    post.category.length > 0 &&
+    post.category.trim() === post.category;
+  const category =
+    post.category == null
+      ? "Guides"
+      : hasCleanCategory
+        ? post.category
+        : "Uncategorized";
   const normalizedTags: BlogTag[] = Array.isArray(post.tags)
     ? post.tags.map((t) => {
         if (typeof t === "string") {
@@ -251,7 +261,7 @@ function mapBackendPostToItem(post: BackendBlogPostItem): BlogPostItem {
   const mainTag =
     normalizedTags.length > 0
       ? normalizedTags[0].name
-      : post.category || "Guide";
+      : category;
 
   return {
     id: post.id,
@@ -260,7 +270,7 @@ function mapBackendPostToItem(post: BackendBlogPostItem): BlogPostItem {
     excerpt: post.excerpt || "",
     description: post.excerpt || post.content?.slice(0, 160) || "",
     content: post.content,
-    category: post.category || "General",
+    category,
     cover_image_url:
       post.cover_image_url ||
       "/images/placeholder-business.svg",

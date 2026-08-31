@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { FavoritesProvider, useFavorites } from "./useFavorites";
 import { favoritesService } from "@/api-services/favorites.service";
+import { AuthContext, type AuthContextType } from "@/context/AuthContext";
 
 describe("useFavorites Hook (Instant UI & Resilient Cloud Sync)", () => {
   const STORAGE_KEY = "alanya_favorites";
@@ -65,6 +66,32 @@ describe("useFavorites Hook (Instant UI & Resilient Cloud Sync)", () => {
     expect(result.current.favoriteCount).toBe(0);
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")).not.toContain("biz-201");
     expect(removeSpy).toHaveBeenCalledWith("biz-201");
+  });
+
+  it("does not expose or change favorites for guests", () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(["biz-existing"]));
+    const addSpy = vi.spyOn(favoritesService, "addFavorite").mockResolvedValue({ success: true });
+    const authValue = {
+      isAuthenticated: false,
+    } as unknown as AuthContextType;
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <AuthContext.Provider value={authValue}>
+        <FavoritesProvider>{children}</FavoritesProvider>
+      </AuthContext.Provider>
+    );
+
+    const { result } = renderHook(() => useFavorites(), { wrapper });
+
+    expect(result.current.isFavorite("biz-existing")).toBe(false);
+    expect(result.current.favoriteCount).toBe(0);
+
+    act(() => {
+      result.current.toggleFavorite("biz-guest");
+    });
+
+    expect(result.current.isFavorite("biz-guest")).toBe(false);
+    expect(addSpy).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")).toEqual([]);
   });
 
   it("should sync with cloud in background on mount and merge records", async () => {

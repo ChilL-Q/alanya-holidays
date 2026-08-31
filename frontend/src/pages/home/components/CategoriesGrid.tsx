@@ -1,8 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type SyntheticEvent } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type Category } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
 import { useTranslation } from "react-i18next";
+
+const categoryImageFallback = "/images/categories/placeholder.jpg";
+
+function handleCategoryImageError(event: SyntheticEvent<HTMLImageElement>) {
+  if (!event.currentTarget.src.endsWith(categoryImageFallback)) {
+    event.currentTarget.src = categoryImageFallback;
+  }
+}
 
 export default function CategoriesGrid() {
   const { t } = useTranslation();
@@ -58,6 +66,13 @@ export default function CategoriesGrid() {
                   to={`/category/${category.slug || category.id}`}
                   className="group relative bg-foreground-900 rounded-xl p-5 h-48 flex flex-col justify-between hover:shadow-xl transition-all duration-300 overflow-hidden"
                 >
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    onError={handleCategoryImageError}
+                    className="absolute inset-0 h-full w-full object-cover opacity-100 transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/10"></div>
                   <div className="relative z-10">
                     <div className="w-10 h-10 flex items-center justify-center bg-foreground-700 rounded-full mb-4">
                       <i className={`${category.icon} text-white text-lg`}></i>
@@ -87,6 +102,7 @@ export default function CategoriesGrid() {
                   <img
                     src={category.image}
                     alt={category.name}
+                    onError={handleCategoryImageError}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
@@ -127,6 +143,7 @@ export default function CategoriesGrid() {
                   <img
                     src={category.image}
                     alt={category.name}
+                    onError={handleCategoryImageError}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>

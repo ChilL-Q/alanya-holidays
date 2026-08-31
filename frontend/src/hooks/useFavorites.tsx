@@ -19,6 +19,7 @@ const FavoritesContext = createContext<FavoritesContextValue>({
 });
 
 const STORAGE_KEY = "alanya_favorites";
+const EMPTY_FAVORITES = new Set<string>();
 
 function loadFavorites(): Set<string> {
   try {
@@ -47,10 +48,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Set<string>>(loadFavorites);
   const auth = useContext(AuthContext);
   const isAuthenticated = auth === undefined ? true : auth.isAuthenticated;
+  const authLoading = auth?.loading ?? false;
 
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
+
+  useEffect(() => {
+    if (authLoading || isAuthenticated) return;
+    setFavorites(new Set());
+    saveFavorites(EMPTY_FAVORITES);
+  }, [authLoading, isAuthenticated]);
 
   const syncWithCloud = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -96,12 +104,19 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated]);
 
+  const visibleFavorites = useMemo(
+    () => (isAuthenticated ? favorites : EMPTY_FAVORITES),
+    [favorites, isAuthenticated]
+  );
+
   const isFavorite = useCallback(
-    (businessId: string) => favorites.has(businessId),
-    [favorites]
+    (businessId: string) => visibleFavorites.has(businessId),
+    [visibleFavorites]
   );
 
   const toggleFavorite = useCallback((businessId: string) => {
+    if (!isAuthenticated) return;
+
     setFavorites((prev) => {
       const isRemoving = prev.has(businessId);
       const next = new Set<string>(prev);
@@ -129,13 +144,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const value: FavoritesContextValue = useMemo(
     () => ({
-      favorites,
+      favorites: visibleFavorites,
       isFavorite,
       toggleFavorite,
-      favoriteCount: favorites.size,
+      favoriteCount: visibleFavorites.size,
       syncWithCloud,
     }),
-    [favorites, isFavorite, toggleFavorite, syncWithCloud]
+    [visibleFavorites, isFavorite, toggleFavorite, syncWithCloud]
   );
 
   return (

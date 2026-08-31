@@ -270,6 +270,24 @@ describe("ThreadForm Success Navigation", () => {
     expect(topicSelect).toBeEnabled();
   });
 
+  it("preselects the initial topic from the query param", async () => {
+    const { container } = render(
+      <MemoryRouter
+        initialEntries={["/new-thread?category=general&subcategory=Alanya+Tips"]}
+      >
+        <ThreadForm />
+      </MemoryRouter>
+    );
+
+    const categorySelect = container.querySelector('select[name="category"]')!;
+    const topicSelect = container.querySelector('select[name="subcategory"]')!;
+
+    await waitFor(() => {
+      expect(categorySelect).toHaveValue("cat-1");
+      expect(topicSelect).toHaveValue("Alanya Tips");
+    });
+  });
+
   it("displays error message and does not show success screen when createThread fails", async () => {
     vi.spyOn(forumService, "createThread").mockRejectedValue(
       new Error("Server validation error")

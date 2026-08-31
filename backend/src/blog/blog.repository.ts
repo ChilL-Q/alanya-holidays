@@ -74,7 +74,11 @@ export class BlogRepository {
       query = query.eq('status', 'published');
     }
 
-    if (filters.category) query = query.eq('category', filters.category);
+    if (filters.category === 'Guides') {
+      query = query.or('category.eq.Guides,category.is.null');
+    } else if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
     if (filters.content_type) {
       query = query.eq('content_type', filters.content_type);
     } else if (userRole !== 'admin') {

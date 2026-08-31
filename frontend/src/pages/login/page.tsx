@@ -19,7 +19,20 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectPath = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
+  const requestedPath = (
+    location.state as { from?: { pathname?: unknown } } | null
+  )?.from?.pathname;
+  const redirectPath =
+    typeof requestedPath === "string" &&
+    requestedPath.startsWith("/") &&
+    !requestedPath.startsWith("//")
+      ? requestedPath
+      : "/";
+  const getOAuthRedirectUrl = () => {
+    if (redirectPath === "/" || typeof window === "undefined") return undefined;
+    const basePath = import.meta.env.BASE_URL.replace(/\/+$/, "");
+    return `${window.location.origin}${basePath}${redirectPath}`;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,7 +73,10 @@ export default function LoginPage() {
     setError("");
     setIsSocialSubmitting(true);
     try {
-      const { error: authError } = await signInWithOAuth(provider);
+      const oauthRedirectTo = getOAuthRedirectUrl();
+      const { error: authError } = oauthRedirectTo
+        ? await signInWithOAuth(provider, oauthRedirectTo)
+        : await signInWithOAuth(provider);
       if (authError) {
         setError(authError.message || `Failed to sign in with ${provider}.`);
       }

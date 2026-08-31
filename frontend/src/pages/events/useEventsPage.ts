@@ -59,7 +59,7 @@ export function useEventsPage() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      const data = await eventsService.getEvents();
+      const data = await eventsService.getEvents({ upcomingOnly: true });
       setEvents(data);
       const myRsvps = new Set<string>();
       data.forEach((event) => {

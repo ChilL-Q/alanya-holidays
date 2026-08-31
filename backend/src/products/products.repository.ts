@@ -468,21 +468,22 @@ export class ProductsRepository {
 
     const rawProducts = (productsRes.data as unknown as ProductItemRow[]) || [];
     const productIds = rawProducts.map((product) => product.id);
-    const variantsRes =
+    const skusRes =
       productIds.length === 0
         ? { data: [], error: null }
         : await this.client
-            .from('product_variants')
-            .select('id, product_id, size_label, price, stock, sku')
+            .from('product_skus')
+            .select('id, product_id')
             .in('product_id', productIds);
-    if (variantsRes.error) throw new Error(variantsRes.error.message);
+    if (skusRes.error) throw new Error(skusRes.error.message);
 
     const variantCounts: Record<string | number, number> = {};
-    if (variantsRes.data) {
-      for (const v of variantsRes.data as Array<{
+    if (skusRes.data) {
+      for (const sku of skusRes.data as Array<{
         product_id: string | number;
       }>) {
-        variantCounts[v.product_id] = (variantCounts[v.product_id] || 0) + 1;
+        variantCounts[sku.product_id] =
+          (variantCounts[sku.product_id] || 0) + 1;
       }
     }
 
@@ -501,7 +502,7 @@ export class ProductsRepository {
     productId: string | number,
   ): Promise<ProductDetailResult> {
     const numId = Number(productId);
-    const [productRes, variantRes, skuRes] = await Promise.all([
+    const [productRes, skuRes] = await Promise.all([
       this.client
         .from('product_items')
         .select(
@@ -510,10 +511,6 @@ export class ProductsRepository {
         .eq('id', Number.isNaN(numId) ? productId : numId)
         .maybeSingle(),
       this.client
-        .from('product_variants')
-        .select('id, product_id, size_label, price, stock, sku')
-        .eq('product_id', String(productId)),
-      this.client
         .from('product_skus')
         .select('id, product_id, label, options, price, stock')
         .eq('product_id', Number.isNaN(numId) ? productId : numId)
@@ -521,11 +518,12 @@ export class ProductsRepository {
     ]);
 
     if (productRes.error) throw new Error(productRes.error.message);
+    if (skuRes.error) throw new Error(skuRes.error.message);
 
     return {
       product: (productRes.data as unknown as ProductItemRow) || null,
-      variants: variantRes.data || [],
-      skus: (skuRes.data as ProductSkuRow[]) || [],
+      variants: [],
+      skus: skuRes.data || [],
     };
   }
 

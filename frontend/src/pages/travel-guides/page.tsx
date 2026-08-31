@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
 import GuideModal from "@/pages/travel-guides/components/GuideModal";
 import SubmitGuideModal from "@/pages/travel-guides/components/SubmitGuideModal";
+import { useAuth } from "@/context/AuthContext";
 import {
   blogService,
   mockTravelGuides,
@@ -16,6 +17,9 @@ import { useTranslation } from "react-i18next";
 
 export default function TravelGuidesPage() {
   const { t } = useTranslation();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [guides, setGuides] = useState<BlogPostItem[]>([]);
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -100,6 +104,17 @@ export default function TravelGuidesPage() {
     }, 200);
   };
 
+  const handleSubmitGuide = () => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      navigate("/login", {
+        state: { from: location },
+      });
+      return;
+    }
+    setIsSubmitModalOpen(true);
+  };
+
   return (
     <>
       <div className="print-hide">
@@ -137,8 +152,9 @@ export default function TravelGuidesPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium transition-all shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap"
+                  onClick={handleSubmitGuide}
+                  disabled={authLoading}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium transition-all shadow-md hover:shadow-lg cursor-pointer whitespace-nowrap disabled:cursor-wait disabled:opacity-70"
                 >
                   <i className="ri-quill-pen-line text-base"></i>
                   {t("public.guides.submit")}

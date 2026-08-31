@@ -136,6 +136,11 @@ export default function Navbar() {
   const isShopActive =
     shopItems.some((item) => isActive(item.href)) ||
     location.pathname.startsWith("/shop");
+  const canCreateThread = isAuthenticated && Boolean(user);
+  const newThreadTarget = canCreateThread ? "/new-thread" : "/register";
+  const newThreadState = canCreateThread
+    ? undefined
+    : { from: { pathname: "/new-thread" } };
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -450,8 +455,13 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-primary-500 rounded-lg shadow-xs">
-              <i className="ri-community-line text-white text-lg md:text-xl"></i>
+            <div className="h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-xl">
+              <img
+                src="/images/alanya-holidays-brand-mark-transparent.png"
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full scale-[1.55] object-cover contrast-125 saturate-125"
+              />
             </div>
             <span
               className={`font-heading text-xl md:text-2xl font-bold transition-colors ${
@@ -654,7 +664,8 @@ export default function Navbar() {
             </button>
 
             <Link
-              to="/new-thread"
+              to={newThreadTarget}
+              state={newThreadState}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                 isSolidNav
                   ? "bg-primary-500 text-background-50 hover:bg-primary-600 shadow-xs"
@@ -751,7 +762,7 @@ export default function Navbar() {
                   className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                     isSolidNav
                       ? "text-foreground-700 border border-foreground-200 hover:bg-background-100"
-                      : "text-white border border-white/30 hover:bg-white/10"
+                      : "bg-white/15 text-white border border-white/30 backdrop-blur-sm hover:bg-white/25"
                   }`}
                 >
                   {t("nav.signIn")}
@@ -924,7 +935,8 @@ export default function Navbar() {
             </div>
             <div className="pt-3 border-t border-background-200/50 flex flex-col gap-2">
               <Link
-                to="/new-thread"
+                to={newThreadTarget}
+                state={newThreadState}
                 className="block text-center text-sm font-medium py-2.5 rounded-full bg-primary-500 text-background-50"
                 onClick={closeAllMobile}
               >

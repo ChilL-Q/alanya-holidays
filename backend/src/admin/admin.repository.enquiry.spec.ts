@@ -39,4 +39,69 @@ describe('AdminRepository enquiry persistence', () => {
     expect(client.from).toHaveBeenNthCalledWith(1, 'concierge_enquiries');
     expect(client.from).toHaveBeenNthCalledWith(2, 'messages');
   });
+
+  it('selects only fields needed for the public recent-enquiry feed', async () => {
+    const builder = {
+      select: jest.fn(),
+      order: jest.fn(),
+      limit: jest.fn(),
+    };
+    builder.select.mockReturnValue(builder);
+    builder.order.mockReturnValue(builder);
+    builder.limit.mockResolvedValue({
+      data: [
+        {
+          subject: 'Personal Shopper Request — Gift Items',
+          created_at: '2026-08-30T10:00:00.000Z',
+        },
+      ],
+      error: null,
+    });
+    const client = { from: jest.fn().mockReturnValue(builder) };
+    const repository = new AdminRepository({
+      getClient: () => client,
+    } as unknown as SupabaseService);
+
+    await repository.getRecentEnquiries(5);
+
+    expect(builder.select).toHaveBeenCalledWith('subject, created_at');
+  });
+
+  it('uses the same safe projection for the legacy messages fallback', async () => {
+    const primary = {
+      select: jest.fn(),
+      order: jest.fn(),
+      limit: jest.fn(),
+    };
+    primary.select.mockReturnValue(primary);
+    primary.order.mockReturnValue(primary);
+    primary.limit.mockResolvedValue({
+      data: null,
+      error: { message: 'table unavailable' },
+    });
+
+    const fallback = {
+      select: jest.fn(),
+      order: jest.fn(),
+      limit: jest.fn(),
+    };
+    fallback.select.mockReturnValue(fallback);
+    fallback.order.mockReturnValue(fallback);
+    fallback.limit.mockResolvedValue({ data: [], error: null });
+
+    const client = {
+      from: jest
+        .fn()
+        .mockReturnValueOnce(primary)
+        .mockReturnValueOnce(fallback),
+    };
+    const repository = new AdminRepository({
+      getClient: () => client,
+    } as unknown as SupabaseService);
+
+    await repository.getRecentEnquiries(5);
+
+    expect(primary.select).toHaveBeenCalledWith('subject, created_at');
+    expect(fallback.select).toHaveBeenCalledWith('subject, created_at');
+  });
 });

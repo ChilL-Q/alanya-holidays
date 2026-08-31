@@ -1,10 +1,19 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import CategoryPage from "./page";
 import { forumService, type Category } from "@/api-services/forum.service";
 
 const submitModalSpy = vi.fn();
+const authState = vi.hoisted(() => ({
+  user: null as { id: string } | null,
+  isAuthenticated: false,
+  loading: false,
+}));
+
+vi.mock("@/context/AuthContext", () => ({
+  useAuth: () => authState,
+}));
 
 vi.mock("@/api-services/forum.service", async () => {
   const actual = await vi.importActual<typeof import("@/api-services/forum.service")>(
@@ -105,11 +114,21 @@ const generalCategory: Category = {
   image: "/images/placeholder-business.svg",
 };
 
+function RegistrationDestination() {
+  const location = useLocation();
+  const returnPath = (
+    location.state as { from?: { pathname?: string } } | null
+  )?.from?.pathname;
+
+  return <div>Register destination: {returnPath}</div>;
+}
+
 const renderPage = () =>
   render(
     <MemoryRouter initialEntries={["/category/general"]}>
       <Routes>
         <Route path="/category/:categoryId" element={<CategoryPage />} />
+        <Route path="/register" element={<RegistrationDestination />} />
       </Routes>
     </MemoryRouter>
   );
@@ -117,6 +136,9 @@ const renderPage = () =>
 describe("CategoryPage modal integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authState.user = null;
+    authState.isAuthenticated = false;
+    authState.loading = false;
     vi.mocked(forumService.getCategoryById).mockResolvedValue(generalCategory);
     vi.mocked(forumService.getCategories).mockResolvedValue([
       generalCategory,
@@ -135,6 +157,8 @@ describe("CategoryPage modal integration", () => {
   });
 
   it("passes parent category and active topic into SubmitContentModal", async () => {
+    authState.user = { id: "user-1" };
+    authState.isAuthenticated = true;
     renderPage();
 
     await waitFor(() => {
@@ -152,5 +176,23 @@ describe("CategoryPage modal integration", () => {
     expect(screen.getByText("topic:Tips & Tricks")).toBeInTheDocument();
     expect(screen.getByText("fallback:/category/general")).toBeInTheDocument();
     expect(screen.getByText("locked:true")).toBeInTheDocument();
+  });
+
+  it("sends guests to registration while preserving the selected category and topic", async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(forumService.getCategoryById).toHaveBeenCalledWith("general");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Tips & Tricks" }));
+    fireEvent.click(screen.getByRole("button", { name: /start a discussion/i }));
+
+    expect(
+      screen.getByText(
+        "Register destination: /new-thread?category=general&subcategory=Tips+%26+Tricks"
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: /share a post/i })).not.toBeInTheDocument();
   });
 });

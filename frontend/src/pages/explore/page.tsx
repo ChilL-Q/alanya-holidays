@@ -17,10 +17,13 @@ import { isAbortError } from "@/lib/api-client";
 import { ErrorState } from "@/components/base/ErrorState";
 import { EmptyState } from "@/components/base/EmptyState";
 import LoadingSpinner from "@/components/base/LoadingSpinner";
+import PaginationControls from "@/components/base/PaginationControls";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare } from "@/hooks/useCompare";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
+
+const PAGE_SIZE = 20;
 
 export default function ExplorePage() {
   const { t } = useTranslation();
@@ -33,6 +36,9 @@ export default function ExplorePage() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalBusinesses, setTotalBusinesses] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [claimBusiness, setClaimBusiness] = useState<Business | null>(null);
@@ -48,6 +54,7 @@ export default function ExplorePage() {
     const normalizedCategory = category ? normalizeBusinessCategory(category) : null;
     if (normalizedCategory && businessCategories.some((c) => c.id === normalizedCategory)) {
       setActiveCategory(normalizedCategory);
+      setCurrentPage(1);
       setShowFavoritesOnly(false);
     }
   }, [searchParams]);
@@ -57,15 +64,21 @@ export default function ExplorePage() {
     setError(null);
     try {
       const res = searchQuery.trim()
-        ? await directoryService.searchListings(searchQuery.trim(), {
-            category: activeCategory !== "all" ? activeCategory : undefined,
-          })
-        : await directoryService.getListings({
-            category: activeCategory !== "all" ? activeCategory : undefined,
-            sortBy,
-          });
+          ? await directoryService.searchListings(searchQuery.trim(), {
+              category: activeCategory !== "all" ? activeCategory : undefined,
+              page: currentPage,
+              limit: PAGE_SIZE,
+            })
+          : await directoryService.getListings({
+              category: activeCategory !== "all" ? activeCategory : undefined,
+              sortBy,
+              page: currentPage,
+              limit: PAGE_SIZE,
+            });
 
       setAllBusinesses(res?.data || []);
+      setTotalBusinesses(res?.total || 0);
+      setTotalPages(res?.totalPages || 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load directory listings");
     } finally {
@@ -84,15 +97,21 @@ export default function ExplorePage() {
         const res = searchQuery.trim()
           ? await directoryService.searchListings(searchQuery.trim(), {
               category: activeCategory !== "all" ? activeCategory : undefined,
+              page: currentPage,
+              limit: PAGE_SIZE,
               signal: controller.signal,
             })
           : await directoryService.getListings({
               category: activeCategory !== "all" ? activeCategory : undefined,
               sortBy,
+              page: currentPage,
+              limit: PAGE_SIZE,
               signal: controller.signal,
             });
 
         setAllBusinesses(res?.data || []);
+        setTotalBusinesses(res?.total || 0);
+        setTotalPages(res?.totalPages || 1);
       } catch (err) {
         if (isAbortError(err)) return;
         setError(err instanceof Error ? err.message : "Failed to load directory listings");
@@ -108,48 +127,36 @@ export default function ExplorePage() {
     return () => {
       controller.abort();
     };
-  }, [activeCategory, searchQuery, sortBy]);
+  }, [activeCategory, currentPage, searchQuery, sortBy]);
 
   const filteredBusinesses = useMemo(() => {
-    let results: Business[] = allBusinesses;
+    if (!showFavoritesOnly) return allBusinesses;
 
-    // Category filter
-    if (activeCategory !== "all") {
-      results = results.filter((b) => b.category === activeCategory);
-    }
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      results = results.filter(
-        (b) =>
-          b.name.toLowerCase().includes(query) ||
-          b.description.toLowerCase().includes(query) ||
-          b.subcategory.toLowerCase().includes(query) ||
-          b.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          b.address.toLowerCase().includes(query)
-      );
-    }
-
-    // Favorites filter
-    if (showFavoritesOnly) {
-      results = results.filter((b) => isFavorite(b.id));
-    }
-
-    // Sort
-    if (sortBy === "rating") {
-      results = [...results].sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === "reviews") {
-      results = [...results].sort((a, b) => b.reviewCount - a.reviewCount);
-    } else {
-      results = [...results].sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return results;
-  }, [allBusinesses, searchQuery, activeCategory, sortBy, showFavoritesOnly, isFavorite]);
+    const favorites = allBusinesses.filter((business) => isFavorite(business.id));
+    if (sortBy === "rating") return favorites.sort((a, b) => b.rating - a.rating);
+    if (sortBy === "reviews") return favorites.sort((a, b) => b.reviewCount - a.reviewCount);
+    return favorites.sort((a, b) => a.name.localeCompare(b.name));
+  }, [allBusinesses, sortBy, showFavoritesOnly, isFavorite]);
 
   const currentCategory = businessCategories.find((c) => c.id === activeCategory);
   const sortLabel = sortBy === "rating" ? t("public.topRated") : sortBy === "reviews" ? t("public.mostReviewed") : "A-Z";
+  const displayedTotal = showFavoritesOnly ? filteredBusinesses.length : totalBusinesses;
+
+  const selectCategory = (category: string) => {
+    setActiveCategory(category);
+    setShowFavoritesOnly(false);
+    setCurrentPage(1);
+  };
+
+  const updateSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 420, behavior: "smooth" });
+  };
 
   return (
     <>
@@ -198,14 +205,14 @@ export default function ExplorePage() {
                   type="text"
                   placeholder={t("public.directorySearch")}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => updateSearch(e.target.value)}
                   className="flex-1 text-sm text-foreground-900 placeholder:text-foreground-400 py-3 bg-transparent border-none outline-none"
                 />
               </div>
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => updateSearch("")}
                   className="w-9 h-9 flex items-center justify-center rounded-full bg-background-100 text-foreground-500 hover:bg-background-200 transition-colors cursor-pointer shrink-0"
                 >
                   <i className="ri-close-line text-lg" />
@@ -230,7 +237,7 @@ export default function ExplorePage() {
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => { setActiveCategory(cat.id); setShowFavoritesOnly(false); }}
+                  onClick={() => selectCategory(cat.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                     activeCategory === cat.id && !showFavoritesOnly
                       ? "bg-primary-500 text-white shadow-sm"
@@ -244,7 +251,11 @@ export default function ExplorePage() {
               <div className="w-px h-8 bg-background-200 mx-1" />
               <button
                 type="button"
-                onClick={() => { setShowFavoritesOnly(!showFavoritesOnly); setActiveCategory("all"); }}
+                onClick={() => {
+                  setShowFavoritesOnly(!showFavoritesOnly);
+                  setActiveCategory("all");
+                  setCurrentPage(1);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
                   showFavoritesOnly
                     ? "bg-accent-500 text-white shadow-sm"
@@ -278,7 +289,7 @@ export default function ExplorePage() {
                       : t("public.allBusinesses")}
                 </h2>
                 <p className="text-sm text-foreground-500">
-                  {t(filteredBusinesses.length === 1 ? "public.businessFound" : "public.businessesFound", { count: filteredBusinesses.length })}
+                  {t(displayedTotal === 1 ? "public.businessFound" : "public.businessesFound", { count: displayedTotal })}
                   {showFavoritesOnly && t("public.inFavorites")}
                   {searchQuery && (
                     <span> for &quot;{searchQuery}&quot;</span>
@@ -344,7 +355,7 @@ export default function ExplorePage() {
                 )}
 
                 {/* Sort dropdown */}
-                {viewMode !== "map" && (
+                {viewMode !== "map" && !searchQuery.trim() && (
                   <div className="relative">
                     <button
                       type="button"
@@ -362,7 +373,7 @@ export default function ExplorePage() {
                         <div className="absolute right-0 top-full mt-2 w-44 rounded-xl bg-white border border-background-200/80 shadow-lg overflow-hidden z-20">
                           <button
                             type="button"
-                            onClick={() => { setSortBy("rating"); setShowSortDropdown(false); }}
+                            onClick={() => { setSortBy("rating"); setCurrentPage(1); setShowSortDropdown(false); }}
                             className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors cursor-pointer ${sortBy === "rating" ? "bg-primary-50 text-primary-700 font-semibold" : "text-foreground-700 hover:bg-background-100"}`}
                           >
                             <i className="ri-star-line text-sm" />
@@ -370,7 +381,7 @@ export default function ExplorePage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setSortBy("reviews"); setShowSortDropdown(false); }}
+                            onClick={() => { setSortBy("reviews"); setCurrentPage(1); setShowSortDropdown(false); }}
                             className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors cursor-pointer ${sortBy === "reviews" ? "bg-primary-50 text-primary-700 font-semibold" : "text-foreground-700 hover:bg-background-100"}`}
                           >
                             <i className="ri-message-3-line text-sm" />
@@ -378,7 +389,7 @@ export default function ExplorePage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setSortBy("name"); setShowSortDropdown(false); }}
+                            onClick={() => { setSortBy("name"); setCurrentPage(1); setShowSortDropdown(false); }}
                             className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors cursor-pointer ${sortBy === "name" ? "bg-primary-50 text-primary-700 font-semibold" : "text-foreground-700 hover:bg-background-100"}`}
                           >
                             <i className="ri-sort-alphabet-asc text-sm" />
@@ -427,6 +438,7 @@ export default function ExplorePage() {
                     onClick: () => {
                       setSearchQuery("");
                       setActiveCategory("all");
+                      setCurrentPage(1);
                       setShowFavoritesOnly(false);
                     },
                     icon: <i className="ri-refresh-line text-sm" />,
@@ -468,6 +480,7 @@ export default function ExplorePage() {
                     onClick: () => {
                       setSearchQuery("");
                       setActiveCategory("all");
+                      setCurrentPage(1);
                       setShowFavoritesOnly(false);
                     },
                     icon: <i className="ri-refresh-line text-sm" />,
@@ -491,10 +504,27 @@ export default function ExplorePage() {
                 businesses={filteredBusinesses}
                 searchQuery={searchQuery}
                 activeCategory={activeCategory}
-                onSearchChange={setSearchQuery}
-                onCategoryChange={setActiveCategory}
+                onSearchChange={updateSearch}
+                onCategoryChange={selectCategory}
               />
             )}
+          </section>
+        )}
+
+        {!error && !isLoading && !showFavoritesOnly && totalPages > 1 && (
+          <section className="w-full px-4 md:px-8 lg:px-12 pb-16 bg-background-50">
+            <div className="max-w-7xl mx-auto">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalBusinesses}
+                pageSize={PAGE_SIZE}
+                showItemCount
+                itemName="businesses"
+                mode="numbered"
+                onPageChange={handlePageChange}
+              />
+            </div>
           </section>
         )}
 

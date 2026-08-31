@@ -9,6 +9,7 @@ export interface BusinessCategory {
   id: string;
   name: string;
   icon: string;
+  sourceIds: readonly string[];
 }
 
 export type TaxonomyCategory = BusinessCategory;
@@ -26,29 +27,96 @@ export interface BusinessReview {
 }
 
 export const businessCategories: BusinessCategory[] = [
-  { id: "all", name: "All Businesses", icon: "ri-store-2-line" },
-  { id: "restaurants", name: "Restaurants & Cafés", icon: "ri-restaurant-2-line" },
-  { id: "hotels", name: "Hotels & Accommodation", icon: "ri-hotel-line" },
-  { id: "activities", name: "Tours & Activities", icon: "ri-compass-3-line" },
-  { id: "boat-tours", name: "Boat & Yacht Tours", icon: "ri-sailboat-line" },
-  { id: "water-sports", name: "Water Sports", icon: "ri-swimming-line" },
-  { id: "real-estate", name: "Real Estate", icon: "ri-home-4-line" },
-  { id: "car-rental", name: "Car & Scooter Rental", icon: "ri-car-line" },
-  { id: "wellness", name: "Health & Wellness", icon: "ri-heart-pulse-line" },
-  { id: "shopping", name: "Shopping", icon: "ri-shopping-bag-3-line" },
-  { id: "services", name: "Professional Services", icon: "ri-briefcase-line" },
-  { id: "nightlife", name: "Nightlife & Bars", icon: "ri-goblet-line" },
+  { id: "all", name: "All Businesses", icon: "ri-store-2-line", sourceIds: [] },
+  {
+    id: "restaurants",
+    name: "Restaurants & Cafés",
+    icon: "ri-restaurant-2-line",
+    sourceIds: ["restaurants", "restaurants-cafes", "cafes"],
+  },
+  {
+    id: "hotels",
+    name: "Hotels & Accommodation",
+    icon: "ri-hotel-line",
+    sourceIds: ["hotels", "hotels-accommodation", "accommodations", "apartments", "villas"],
+  },
+  {
+    id: "activities",
+    name: "Tours & Activities",
+    icon: "ri-compass-3-line",
+    sourceIds: ["activities", "tours-activities", "tours"],
+  },
+  {
+    id: "nature",
+    name: "Nature & Attractions",
+    icon: "ri-landscape-line",
+    sourceIds: ["nature"],
+  },
+  {
+    id: "boat-tours",
+    name: "Boat & Yacht Tours",
+    icon: "ri-sailboat-line",
+    sourceIds: ["boat-tours"],
+  },
+  {
+    id: "water-sports",
+    name: "Water Sports",
+    icon: "ri-water-flash-line",
+    sourceIds: ["water-sports"],
+  },
+  {
+    id: "transport",
+    name: "Transport & Transfers",
+    icon: "ri-car-line",
+    sourceIds: ["transport", "car-rental"],
+  },
+  {
+    id: "real-estate",
+    name: "Real Estate",
+    icon: "ri-home-4-line",
+    sourceIds: ["real-estate"],
+  },
+  {
+    id: "wellness",
+    name: "Health & Wellness",
+    icon: "ri-heart-pulse-line",
+    sourceIds: ["wellness", "health-wellness", "medical", "spa-hamam", "hair-beauty"],
+  },
+  {
+    id: "shopping",
+    name: "Shopping",
+    icon: "ri-shopping-bag-3-line",
+    sourceIds: ["shopping"],
+  },
+  {
+    id: "services",
+    name: "Professional Services",
+    icon: "ri-briefcase-line",
+    sourceIds: ["services"],
+  },
+  {
+    id: "nightlife",
+    name: "Nightlife & Bars",
+    icon: "ri-goblet-line",
+    sourceIds: ["nightlife"],
+  },
 ];
 
-const legacyBusinessCategoryAliases: Record<string, string> = {
-  "restaurants-cafes": "restaurants",
-  "hotels-accommodation": "hotels",
-  "tours-activities": "activities",
-  "health-wellness": "wellness",
-};
+const businessCategoryBySourceId = new Map(
+  businessCategories.flatMap((category) =>
+    category.sourceIds.map((sourceId) => [sourceId, category.id] as const)
+  )
+);
 
 export function normalizeBusinessCategory(category: string): string {
-  return legacyBusinessCategoryAliases[category] ?? category;
+  return businessCategoryBySourceId.get(category) ?? category;
+}
+
+function getBusinessCategoryFilter(category?: string): string | undefined {
+  if (!category || category === "all") return undefined;
+  const canonicalCategory = normalizeBusinessCategory(category);
+  const group = businessCategories.find((item) => item.id === canonicalCategory);
+  return group?.sourceIds.join(",") || canonicalCategory;
 }
 
 export interface BackendReview {
@@ -263,8 +331,7 @@ export class DirectoryService {
         ...extraParams,
         page,
         limit,
-        category:
-          category && category !== "all" ? normalizeBusinessCategory(category) : undefined,
+        category: getBusinessCategoryFilter(category),
         sortBy,
       },
     });
@@ -319,8 +386,7 @@ export class DirectoryService {
       params: {
         ...extraParams,
         query,
-        category:
-          category && category !== "all" ? normalizeBusinessCategory(category) : undefined,
+        category: getBusinessCategoryFilter(category),
         location,
         page,
         limit,

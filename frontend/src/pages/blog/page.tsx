@@ -280,7 +280,7 @@ export default function BlogPage() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                   {posts.map((post) => {
-                    const tag = post.tag || post.category || "General";
+                    const category = post.category || "Guides";
                     const readTime = post.readTime || "5 min read";
                     const description = post.description || post.excerpt || "";
 
@@ -300,7 +300,7 @@ export default function BlogPage() {
                         <div className="p-6 flex flex-col flex-1">
                           <div className="flex items-center gap-2 mb-3">
                             <span className="px-2.5 py-0.5 rounded-full bg-accent-100 text-accent-700 text-xs font-medium whitespace-nowrap">
-                              {tag}
+                              {category}
                             </span>
                             <span className="text-xs text-foreground-400">{readTime}</span>
                           </div>

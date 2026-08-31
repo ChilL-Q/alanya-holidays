@@ -78,17 +78,9 @@ export interface CreateProductOrderResult {
 }
 
 export interface ConciergeEnquiryEntry {
-  id: number;
-  name: string;
-  email: string;
-  subject?: string | null;
-  phone?: string | null;
-  service_type?: string | null;
-  enquiry_type?: string | null;
-  dates?: string | null;
-  duration?: string | null;
-  party_size?: number | null;
-  created_at: string;
+  display_name: "Community member";
+  category: string;
+  submitted_at: string;
 }
 
 export interface ShopCatalogResponse {
@@ -161,12 +153,12 @@ class ProductsService {
       if (response && Array.isArray(response.products) && Array.isArray(response.categories)) {
         return response;
       }
+      throw new Error("Invalid shop catalog response");
     } catch (err: unknown) {
       if (isAbortError(err)) throw err;
       logger.warn("Failed to fetch shop catalog via API:", err);
+      throw err;
     }
-
-    return { products: [], categories: [] };
   }
 
   /**
@@ -206,12 +198,12 @@ class ProductsService {
           skus: Array.isArray(response.skus) ? response.skus : [],
         };
       }
+      throw new Error("Invalid product details response");
     } catch (err: unknown) {
       if (isAbortError(err)) throw err;
       logger.warn(`Failed to fetch product details for ${productId} via API:`, err);
+      throw err;
     }
-
-    return { product: null, variants: [], skus: [] };
   }
 
   /**

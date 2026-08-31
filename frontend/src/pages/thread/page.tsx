@@ -9,6 +9,7 @@ import ReplyCard from "./components/ReplyCard";
 import ReplyInput from "./components/ReplyInput";
 import AuthorSidebar from "./components/AuthorSidebar";
 import ErrorState from "@/components/base/ErrorState";
+import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
 import { useTranslation } from "react-i18next";
 import "@/i18n";
@@ -16,6 +17,7 @@ import "@/i18n";
 export default function ThreadPage() {
   const { t } = useTranslation();
   const { threadId } = useParams<{ threadId: string }>();
+  const { user } = useAuth();
 
   const [thread, setThread] = useState<ThreadDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -306,12 +308,44 @@ export default function ThreadPage() {
 
             {/* Reply input at bottom */}
             <div ref={replySectionRef}>
-              <ReplyInput
-                replyTo={replyTarget?.id ?? null}
-                replyToAuthor={replyTarget?.author}
-                onSubmit={handleSubmitReply}
-                onCancel={() => setReplyTarget(null)}
-              />
+              {user ? (
+                <ReplyInput
+                  replyTo={replyTarget?.id ?? null}
+                  replyToAuthor={replyTarget?.author}
+                  onSubmit={handleSubmitReply}
+                  onCancel={() => setReplyTarget(null)}
+                />
+              ) : (
+                <section
+                  aria-labelledby="guest-reply-heading"
+                  className="rounded-xl border border-background-200/70 bg-background-50 p-5 text-center md:p-6"
+                >
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                    <i className="ri-lock-line text-lg" aria-hidden="true"></i>
+                  </div>
+                  <h3 id="guest-reply-heading" className="font-heading text-lg text-foreground-900">
+                    Sign in to join the discussion
+                  </h3>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-foreground-500">
+                    Only registered community members can post comments and reply to others.
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                    <Link
+                      to="/login"
+                      state={{ from: { pathname: `/thread/${thread.slug || thread.id}` } }}
+                      className="inline-flex items-center justify-center rounded-full bg-primary-500 px-5 py-2.5 text-sm font-medium text-background-50 transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                    >
+                      Sign in to comment
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center rounded-full border border-background-200 px-5 py-2.5 text-sm font-medium text-foreground-700 transition-colors hover:bg-background-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-300"
+                    >
+                      Create an account
+                    </Link>
+                  </div>
+                </section>
+              )}
             </div>
           </div>
 
