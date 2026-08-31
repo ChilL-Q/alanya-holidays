@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import type { GiftCardCollection, GiftCardTier } from "../data/giftCardsData";
 import GiftCardCard from "./GiftCardCard";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface GiftCardGridProps {
   collections: GiftCardCollection[];
@@ -17,6 +19,7 @@ export default function GiftCardGrid({
   onAddToCart,
   onResetFilters,
 }: GiftCardGridProps) {
+  const { t } = useTranslation();
   const filteredCollections = useMemo(() => {
     return collections.filter((c) => {
       const matchesCategory =
@@ -49,20 +52,16 @@ export default function GiftCardGrid({
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-4 border-b border-background-200">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-primary-600">
-            Featured Experiences
+            {t("services.gifts.featured")}
           </span>
           <h2 className="font-heading text-2xl sm:text-3xl font-bold text-foreground-900 mt-1">
             {selectedCategory === "All Experiences"
-              ? "All Curated Gift Collections"
+              ? t("services.gifts.allCollections")
               : selectedCategory}
           </h2>
         </div>
         <div className="text-xs sm:text-sm text-foreground-500 font-medium">
-          Showing{" "}
-          <span className="font-bold text-foreground-900">
-            {filteredCollections.length}
-          </span>{" "}
-          of {collections.length} collections
+          {t("services.gifts.showing", { shown: filteredCollections.length, total: collections.length })}
         </div>
       </div>
 
@@ -83,12 +82,10 @@ export default function GiftCardGrid({
             <i className="ri-search-eye-line"></i>
           </div>
           <h3 className="text-lg font-heading font-bold text-foreground-900 mb-2">
-            No gift cards match your filter
+          {t("services.gifts.noMatch")}
           </h3>
           <p className="text-sm text-foreground-600 mb-6">
-            We couldn't find any experiences matching "
-            {searchQuery || selectedCategory}". Try clearing your filters or
-            searching for different culinary treats.
+            {t("services.gifts.noMatchDesc", { query: searchQuery || selectedCategory })}
           </p>
           <button
             type="button"
@@ -96,7 +93,7 @@ export default function GiftCardGrid({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary-600 text-white font-medium text-sm hover:bg-primary-700 transition-colors shadow-sm cursor-pointer"
           >
             <i className="ri-refresh-line"></i>
-            Reset All Filters
+            {t("services.gifts.resetAll")}
           </button>
         </div>
       )}

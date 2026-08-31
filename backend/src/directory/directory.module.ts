@@ -8,9 +8,10 @@ import { DirectoryListingService } from './application/directory-listing.service
 import { ListingClaimService } from './application/listing-claim.service';
 import { DirectoryRepository } from './directory.repository';
 import { EmailOutboxRepository } from '../bookings/email-outbox.repository';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
-  imports: [AuthModule, AdminModule, WebhooksModule],
+  imports: [AuthModule, AdminModule, WebhooksModule, BillingModule],
   controllers: [DirectoryAdminController, DirectoryController],
   providers: [
     DirectoryListingService,

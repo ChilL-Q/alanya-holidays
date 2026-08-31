@@ -13,8 +13,11 @@ import {
   type ShopProduct,
   type ProductCategory as Category,
 } from "@/api-services/products.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function ShopPage() {
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const { showToast, ToastContainer } = useToast();
   const [products, setProducts] = useState<ShopProduct[]>([]);
@@ -110,9 +113,9 @@ export default function ShopPage() {
         price: formatPrice(product),
         icon: getCategoryIcon(product),
       });
-      showToast("Added to cart", product.name, "success");
+      showToast(t("public.addToCart"), product.name, "success");
     },
-    [addToCart, showToast],
+    [addToCart, showToast, t],
   );
 
   return (
@@ -132,14 +135,14 @@ export default function ShopPage() {
                 to="/"
                 className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
               >
-                Home
+                {t("nav.home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Shop</span>
+              <span className="text-white/90 text-sm">{t("public.shop")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Forum Shop</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("public.forumShop")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Authentic Turkish goods, community merch, and travel essentials — every purchase supports the AlanyaHolidays community.
+              {t("public.shopDescription")}
             </p>
           </div>
         </section>
@@ -149,11 +152,11 @@ export default function ShopPage() {
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-store-2-line text-accent-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">Community Shop</span>
+                <span className="text-sm font-medium text-foreground-700">{t("public.communityShop")}</span>
               </div>
-              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">All Products</h2>
+              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">{t("public.allProducts")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                Every purchase helps keep AlanyaHolidays running — from server costs to community events.
+                {t("public.shopSupportDescription")}
               </p>
             </div>
 
@@ -172,7 +175,7 @@ export default function ShopPage() {
                       : "bg-white text-foreground-600 border border-background-200 hover:border-foreground-300 hover:text-foreground-900"
                   }`}
                 >
-                  All
+                {t("public.allProducts")}
                 </button>
                 {categories.map((cat) => (
                   <button
@@ -193,13 +196,13 @@ export default function ShopPage() {
             {loading && (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-10 h-10 border-4 border-background-200 border-t-accent-500 rounded-full animate-spin"></div>
-                <p className="text-foreground-500 text-sm">Loading products...</p>
+                <p className="text-foreground-500 text-sm">{t("public.loadingProducts")}</p>
               </div>
             )}
 
             {error && !loading && (
               <ErrorState
-                title="Unable to load shop catalog"
+                title={t("public.shopLoadError")}
                 message={error}
                 onRetry={loadCatalog}
                 className="py-20"
@@ -211,13 +214,13 @@ export default function ShopPage() {
                 <div className="w-14 h-14 flex items-center justify-center rounded-full bg-background-100 mx-auto mb-4">
                   <i className="ri-store-2-line text-foreground-300 text-2xl"></i>
                 </div>
-                <p className="text-foreground-500 text-sm">No products in this category yet.</p>
+                <p className="text-foreground-500 text-sm">{t("public.noProducts")}</p>
                 <button
                   onClick={() => setActiveCategory(null)}
                   className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   <i className="ri-arrow-left-line"></i>
-                  Show All Products
+                  {t("public.showAllProducts")}
                 </button>
               </div>
             )}
@@ -257,7 +260,7 @@ export default function ShopPage() {
                     <div className="p-5 md:p-6 flex flex-col flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs text-foreground-400">
-                          {product.product_categories?.name || "General"}
+                          {product.product_categories?.name || t("public.general")}
                         </span>
                       </div>
                       <h3 className="font-heading text-base text-foreground-900 mb-2 leading-snug">
@@ -270,7 +273,7 @@ export default function ShopPage() {
                         <span className="text-lg font-semibold text-primary-600 whitespace-nowrap">
                           {formatPrice(product)}
                         </span>
-                        <button
+                          <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -278,7 +281,7 @@ export default function ShopPage() {
                           }}
                           className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                         >
-                          Add to Cart
+                          {t("public.addToCart")}
                           <i className="ri-shopping-cart-line text-sm"></i>
                         </button>
                       </div>

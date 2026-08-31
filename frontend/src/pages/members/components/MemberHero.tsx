@@ -3,8 +3,11 @@ import { Link } from "react-router-dom";
 import { forumService, type ForumStats } from "@/api-services/forum.service";
 
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function MemberHero() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<ForumStats | null>(null);
 
   useEffect(() => {
@@ -33,20 +36,19 @@ export default function MemberHero() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-4">
           <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-            Home
+            {t("nav.home")}
           </Link>
           <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-          <span className="text-white/90 text-sm">Members</span>
+          <span className="text-white/90 text-sm">{t("public.members")}</span>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">
-              Our Community
+              {t("public.ourCommunity")}
             </h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Meet the travelers, expats, locals, and digital nomads who make Alanya Holidays the
-              go-to place for everything Antalya.
+              {t("public.communityDescription")}
             </p>
           </div>
 
@@ -56,7 +58,7 @@ export default function MemberHero() {
               <p className="text-white text-xl md:text-2xl font-semibold">
                 {totalMembers.toLocaleString()}
               </p>
-              <p className="text-white/50 text-xs">Members</p>
+              <p className="text-white/50 text-xs">{t("public.members")}</p>
             </div>
             <div className="w-px h-8 bg-white/20"></div>
             <div className="text-center">
@@ -66,14 +68,14 @@ export default function MemberHero() {
                   {onlineNow.toLocaleString()}
                 </p>
               </div>
-              <p className="text-white/50 text-xs">Online Now</p>
+              <p className="text-white/50 text-xs">{t("public.onlineNow")}</p>
             </div>
             <div className="w-px h-8 bg-white/20"></div>
             <div className="text-center">
               <p className="text-white text-xl md:text-2xl font-semibold">
                 {activeThisWeek.toLocaleString()}
               </p>
-              <p className="text-white/50 text-xs">Active This Week</p>
+              <p className="text-white/50 text-xs">{t("public.activeThisWeek")}</p>
             </div>
           </div>
         </div>

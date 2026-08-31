@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import { Link } from "react-router-dom";
 import {
   Building,
@@ -67,6 +69,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
   onFilterChange,
   deletingListingId = null,
 }) => {
+  const { t } = useTranslation();
   const [internalFilter, setInternalFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [listingPendingDelete, setListingPendingDelete] = useState<Business | null>(null);
@@ -154,15 +157,15 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search listings by title or category..."
-                aria-label="Search listings by title or category"
+                placeholder={t("merchant.searchListings")}
+                aria-label={t("merchant.searchListings")}
                 className="w-full pl-9 pr-9 py-2.5 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-800 text-secondary-900 dark:text-white placeholder:text-secondary-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 shadow-sm"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("merchant.clearSearch")}
                   className="p-1 rounded-full text-secondary-400 hover:text-secondary-700 dark:hover:text-slate-200 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -178,7 +181,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-md shadow-amber-500/15 cursor-pointer shrink-0"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Create New Listing / Draft</span>
+                <span>{t("merchant.createListingDraft")}</span>
               </button>
             )}
           </div>
@@ -186,11 +189,11 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
           {/* Status Filter Chips */}
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: "all", label: "All Items", count: countByStatus.all },
-              { id: "active", label: "Active", count: countByStatus.active },
-              { id: "pending", label: "In Review", count: countByStatus.pending },
-              { id: "draft", label: "Drafts", count: countByStatus.draft },
-              { id: "rejected", label: "Rejected", count: countByStatus.rejected },
+              { id: "all", label: t("merchant.allItems"), count: countByStatus.all },
+              { id: "active", label: t("merchant.active"), count: countByStatus.active },
+              { id: "pending", label: t("merchant.inReview"), count: countByStatus.pending },
+              { id: "draft", label: t("merchant.drafts"), count: countByStatus.draft },
+              { id: "rejected", label: t("merchant.rejected"), count: countByStatus.rejected },
             ].map((f) => (
               <button
                 key={f.id}
@@ -229,13 +232,13 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <Building className="w-3.5 h-3.5" />
-              <span>No businesses or drafts found</span>
+              <span>{t("merchant.noBusinesses")}</span>
             </div>
             <h2 className="text-2xl font-bold font-display text-secondary-900 dark:text-white tracking-tight">
-              Start Listing Your Alanya Business
+              {t("merchant.startListing")}
             </h2>
             <p className="text-sm text-secondary-500 dark:text-slate-400 leading-relaxed">
-              Connect with thousands of visitors looking for hotels, dining, yacht tours, wellness, and local services in Alanya. Publish your business in 3 quick steps:
+              {t("merchant.listingIntro")}
             </p>
           </div>
 
@@ -249,10 +252,10 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 <Building className="w-5 h-5 text-secondary-400" />
               </div>
               <h3 className="text-sm font-bold text-secondary-900 dark:text-white">
-                1. Business Details
+                {t("merchant.businessDetails")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400">
-                Provide your business title, category, contact phone, website, and neighborhood address in Alanya.
+                {t("merchant.businessDetailsDescription")}
               </p>
             </div>
 
@@ -264,10 +267,10 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 <Sparkles className="w-5 h-5 text-secondary-400" />
               </div>
               <h3 className="text-sm font-bold text-secondary-900 dark:text-white">
-                2. Photos & Tier Perks
+                {t("merchant.photosTier")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400">
-                Upload showcase gallery photos, select price ranges, and pick your preferred merchant visibility tier.
+                {t("merchant.photosTierDescription")}
               </p>
             </div>
 
@@ -279,10 +282,10 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-secondary-400" />
               </div>
               <h3 className="text-sm font-bold text-secondary-900 dark:text-white">
-                3. Publish & Receive Leads
+                {t("merchant.publishLeads")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400">
-                Submit your listing live, get verified, and start receiving direct customer calls and WhatsApp inquiries.
+                {t("merchant.publishLeadsDescription")}
               </p>
             </div>
           </div>
@@ -296,7 +299,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02] cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>+ List Your Business Now</span>
+                <span>{t("merchant.listNow")}</span>
               </button>
             )}
 
@@ -305,7 +308,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors"
             >
               <Compass className="w-4 h-4 text-amber-500" />
-              <span>← Explore Directory / Вернуться на главную</span>
+              <span>{t("merchant.exploreDirectory")}</span>
             </Link>
           </div>
         </div>
@@ -317,7 +320,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
           </div>
           <div className="max-w-md mx-auto space-y-1.5">
             <h3 className="text-lg font-bold text-secondary-900 dark:text-white">
-              No businesses or drafts found
+              {t("merchant.noBusinesses")}
             </h3>
             <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400">
               {searchQuery
@@ -331,7 +334,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
               onClick={handleClearFilters}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              <span>Clear Search & Filters</span>
+              <span>{t("merchant.clearFilters")}</span>
             </button>
             {onListNewBusiness && (
               <button
@@ -340,7 +343,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-sm cursor-pointer"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>+ List New Business</span>
+                <span>{t("merchant.listNew")}</span>
               </button>
             )}
           </div>
@@ -385,13 +388,13 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                       {isApproved && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/90 text-white shadow-sm backdrop-blur-sm">
                           <CheckCircle2 className="w-3 h-3" />
-                          Live & Active
+                          {t("merchant.liveActive")}
                         </span>
                       )}
                       {isPending && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/90 text-slate-950 shadow-sm backdrop-blur-sm">
                           <Clock className="w-3 h-3" />
-                          Pending Review
+                          {t("merchant.pendingReview")}
                         </span>
                       )}
                       {isDraft && (
@@ -403,7 +406,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                       {isRejected && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600/90 text-white shadow-sm backdrop-blur-sm">
                           <XCircle className="w-3 h-3" />
-                          Needs Revision
+                          {t("merchant.needsRevision")}
                         </span>
                       )}
                     </div>
@@ -433,13 +436,13 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                   {/* Body Content */}
                   <div className="p-5 space-y-4">
                     <p className="text-xs text-secondary-600 dark:text-slate-400 line-clamp-2">
-                      {typeof listing.description === "string" ? listing.description : "No description provided."}
+                          {typeof listing.description === "string" ? listing.description : t("merchant.noDescription")}
                     </p>
 
                     {/* Quick performance metrics */}
                     <div className="grid grid-cols-3 gap-2 py-3 px-3.5 rounded-xl bg-secondary-50 dark:bg-slate-800/50 border border-secondary-100 dark:border-slate-800 text-center">
                       <div>
-                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">Rating</span>
+                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">{t("merchant.rating")}</span>
                         <span className="text-xs font-bold text-secondary-900 dark:text-white flex items-center justify-center gap-0.5">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                           {typeof listing.rating === "number" || typeof listing.rating === "string"
@@ -448,13 +451,13 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">Reviews</span>
+                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">{t("merchant.reviews")}</span>
                         <span className="text-xs font-bold text-secondary-900 dark:text-white">
                           {typeof listing.reviewCount === "number" ? listing.reviewCount : 0}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">Category</span>
+                        <span className="text-[10px] text-secondary-400 dark:text-slate-400 block">{t("merchant.category")}</span>
                         <span className="text-xs font-bold text-secondary-900 dark:text-white truncate block">
                           {typeof listing.category === "string" ? listing.category : "General"}
                         </span>
@@ -476,7 +479,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         <PlayCircle className="w-3.5 h-3.5" />
-                        <span>Resume Draft</span>
+                          <span>{t("merchant.resumeDraft")}</span>
                       </button>
                     ) : (
                       <>
@@ -489,7 +492,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                         >
                           <Edit className="w-3.5 h-3.5" />
-                          <span>Edit</span>
+                          <span>{t("merchant.edit")}</span>
                         </button>
 
                         <Link
@@ -499,7 +502,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 ${isDeleting ? "pointer-events-none opacity-60" : ""}`}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                          <span>View</span>
+                          <span>{t("merchant.view")}</span>
                         </Link>
                       </>
                     )}
@@ -514,7 +517,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
                         <Zap className="w-3 h-3 text-amber-500" />
-                        <span>Upgrade</span>
+                        <span>{t("merchant.upgrade")}</span>
                       </button>
                     )}
                   </div>
@@ -530,7 +533,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                     {isDeleting ? (
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold">
                         <span className="w-3.5 h-3.5 rounded-full border-2 border-rose-300 border-t-rose-500 animate-spin" />
-                        <span className="hidden sm:inline">Deleting...</span>
+                        <span className="hidden sm:inline">{t("merchant.deleting")}</span>
                       </span>
                     ) : (
                       <Trash2 className="w-4 h-4" />
@@ -553,16 +556,16 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                 <Trash2 className="w-3.5 h-3.5" />
-                Confirm deletion
+                {t("merchant.confirmDeletion")}
               </div>
               <h3
                 id="delete-listing-dialog-title"
                 className="text-lg font-bold text-secondary-900 dark:text-white"
               >
-                Delete this listing?
+                {t("merchant.deleteListingQuestion")}
               </h3>
               <p className="text-sm text-secondary-500 dark:text-slate-400 leading-relaxed">
-                You are about to remove <strong className="text-secondary-900 dark:text-white">{listingPendingDelete.name || "this listing"}</strong> from your dashboard. This action cannot be undone.
+                {t("merchant.deleteListingDescription", { name: listingPendingDelete.name || t("merchant.general") })}
               </p>
             </div>
 
@@ -573,7 +576,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 disabled={deletingListingId === listingPendingDelete.id}
                 className="px-4 py-2 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed text-secondary-800 dark:text-slate-200 transition-colors cursor-pointer"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -585,7 +588,7 @@ export const MyListingsTab: React.FC<MyListingsTabProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-rose-600 hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed text-white transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete listing
+                {t("merchant.deleteListing")}
               </button>
             </div>
           </div>

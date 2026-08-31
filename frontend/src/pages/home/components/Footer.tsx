@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { adminService } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,18 +43,18 @@ export default function Footer() {
 
   const footerLinks = {
     explore: [
-      { label: "Travel & Vacation", href: "/category/travel-vacation" },
-      { label: "Beaches & Nature", href: "/category/beaches-nature" },
-      { label: "Food & Nightlife", href: "/category/food-nightlife" },
-      { label: "Things to Do", href: "/category/things-to-do" },
-      { label: "Expats & Nomads", href: "/category/expats-nomads" },
-      { label: "Real Estate", href: "/category/real-estate" },
+      { label: "home.footer.travelVacation", href: "/category/travel-vacation" },
+      { label: "home.footer.beachesNature", href: "/category/beaches-nature" },
+      { label: "home.footer.foodNightlife", href: "/category/food-nightlife" },
+      { label: "home.footer.thingsToDo", href: "/category/things-to-do" },
+      { label: "home.footer.expatsNomads", href: "/category/expats-nomads" },
+      { label: "home.footer.realEstate", href: "/category/real-estate" },
     ],
     community: [
-      { label: "Start a Discussion", href: "/new-thread" },
-      { label: "Events", href: "/events" },
-      { label: "Marketplace", href: "/category/marketplace" },
-      { label: "Support", href: "/help" },
+      { label: "home.footer.startDiscussion", href: "/new-thread" },
+      { label: "home.footer.events", href: "/events" },
+      { label: "home.footer.marketplace", href: "/category/marketplace" },
+      { label: "home.footer.support", href: "/help" },
     ],
   };
 
@@ -67,8 +69,7 @@ export default function Footer() {
               Alanya Holidays
             </h3>
             <p className="text-white/60 text-sm leading-relaxed mb-8">
-              The community for travelers, expats, and locals. Discover,
-              connect, and share your Alanya story.
+              {t("home.footerDescription", "The community for travelers, expats, and locals. Discover, connect, and share your Alanya story.")}
             </p>
             {/* Newsletter */}
             <form
@@ -76,13 +77,13 @@ export default function Footer() {
               className="space-y-3"
             >
               <p className="text-white/80 text-sm font-medium">
-                Stay updated
+                {t("home.stayUpdated", "Stay updated")}
               </p>
               <div className="flex gap-2">
                 <input
                   type="email"
                   name="email"
-                  placeholder="Your email"
+                  placeholder={t("home.emailPlaceholder", "Your email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -97,11 +98,11 @@ export default function Footer() {
                 {submitStatus === "loading" ? (
                   <>
                     <i className="ri-loader-4-line animate-spin"></i>
-                    Subscribing...
+                    {t("home.subscribing", "Subscribing...")}
                   </>
                 ) : (
                   <>
-                    Subscribe
+                    {t("home.subscribe", "Subscribe")}
                     <i className="ri-arrow-right-line"></i>
                   </>
                 )}
@@ -111,13 +112,13 @@ export default function Footer() {
               {submitStatus === "success" && (
                 <p className="text-green-400 text-xs flex items-center gap-1">
                   <i className="ri-check-line"></i>
-                  You're subscribed! Check your inbox.
+                  {t("home.subscribed", "You're subscribed! Check your inbox.")}
                 </p>
               )}
               {submitStatus === "error" && (
                 <p className="text-red-400 text-xs flex items-center gap-1">
                   <i className="ri-error-warning-line"></i>
-                  Something went wrong. Please try again.
+                  {t("home.subscriptionError", "Something went wrong. Please try again.")}
                 </p>
               )}
             </form>
@@ -126,7 +127,7 @@ export default function Footer() {
           {/* Middle - Explore */}
           <div>
             <h4 className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-4">
-              Explore
+              {t("home.categoriesExplore", "Explore")}
             </h4>
             <ul className="space-y-3">
               {footerLinks.explore.map((link) => (
@@ -135,7 +136,7 @@ export default function Footer() {
                     to={link.href}
                     className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
                   >
-                    {link.label}
+                    {t(link.label, link.label)}
                   </Link>
                 </li>
               ))}
@@ -145,7 +146,7 @@ export default function Footer() {
           {/* Right - Community & Stats */}
           <div>
             <h4 className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-4">
-              Community
+              {t("nav.community", "Community")}
             </h4>
             <ul className="space-y-3 mb-8">
               {footerLinks.community.map((link) => (
@@ -154,13 +155,13 @@ export default function Footer() {
                     to={link.href}
                     className="text-white/60 text-sm hover:text-white transition-colors underline underline-offset-2"
                   >
-                    {link.label}
+                    {t(link.label, link.label)}
                   </Link>
                 </li>
               ))}
             </ul>
             <h4 className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-4">
-              Contact
+              {t("home.contact", "Contact")}
             </h4>
             <p className="text-white/60 text-sm">
               contact@alanyaholidays.com
@@ -212,19 +213,19 @@ export default function Footer() {
               to="/privacy"
               className="text-white/60 text-xs hover:text-white transition-colors underline"
             >
-              Privacy
+              {t("home.privacy", "Privacy")}
             </Link>
             <Link
               to="/terms"
               className="text-white/60 text-xs hover:text-white transition-colors underline"
             >
-              Terms
+              {t("home.terms", "Terms")}
             </Link>
             <Link
               to="/admin"
               className="text-white/60 text-xs hover:text-white transition-colors underline"
             >
-              Admin
+              {t("home.admin", "Admin")}
             </Link>
           </div>
         </div>

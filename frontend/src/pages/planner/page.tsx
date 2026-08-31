@@ -21,6 +21,8 @@ import {
   PrintPlanModal,
 } from "./components/PlanModals";
 import { type GenerateItineraryResult } from "@/api-services/ai-guide.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type ViewMode = "list" | "detail";
 
@@ -41,6 +43,7 @@ function getEventUrl(_id: string): string {
 }
 
 export default function PlannerPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const planIdFromUrl = searchParams.get("plan") || "";
   const quickstartId = searchParams.get("quickstart") || "";
@@ -407,16 +410,16 @@ export default function PlannerPage() {
                 to="/"
                 className="text-foreground-400 hover:text-foreground-600 text-xs transition-colors underline underline-offset-2"
               >
-                Home
+                {t("nav.home", "Home")}
               </Link>
               <i className="ri-arrow-right-s-line text-foreground-300 text-xs"></i>
-              <span className="text-foreground-600 text-xs">My Planner</span>
+              <span className="text-foreground-600 text-xs">{t("public.myPlanner", "My Planner")}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h1 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-1">
-                  {viewMode === "detail" && selectedPlan ? selectedPlan.name : "My Planner"}
+                  {viewMode === "detail" && selectedPlan ? selectedPlan.name : t("public.myPlanner", "My Planner")}
                 </h1>
                 <p className="text-sm text-foreground-500">
                   {viewMode === "detail" && selectedPlan
@@ -437,28 +440,28 @@ export default function PlannerPage() {
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-primary-500 to-accent-500 text-white text-sm font-medium hover:opacity-95 shadow-xs transition-all whitespace-nowrap cursor-pointer"
                     >
                       <i className="ri-sparkling-fill text-sm"></i>
-                      Ask AI Concierge
+                      {t("public.askAi", "Ask AI Concierge")}
                     </button>
                     <button
                       onClick={() => setShowAddItemModal(true)}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer shadow-xs"
                     >
                       <i className="ri-add-line text-sm"></i>
-                      Add Item
+                      {t("public.addItem", "Add Item")}
                     </button>
                     <button
                       onClick={() => setShowPrintModal(true)}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer bg-white"
                     >
                       <i className="ri-printer-line text-sm"></i>
-                      Print
+                      {t("common.print", "Print")}
                     </button>
                     <button
                       onClick={openEditModal}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer bg-white"
                     >
                       <i className="ri-edit-line text-sm"></i>
-                      Edit
+                      {t("public.edit", "Edit")}
                     </button>
                     <button
                       onClick={() => {
@@ -468,7 +471,7 @@ export default function PlannerPage() {
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground-200 text-sm text-foreground-700 font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer bg-white"
                     >
                       <i className="ri-arrow-left-line text-sm"></i>
-                      All Plans
+                      {t("public.allPlans", "All Plans")}
                     </button>
                     {selectedPlan.items.length > 0 && !isPlanShared(selectedPlan.id) && (
                       <button
@@ -476,7 +479,7 @@ export default function PlannerPage() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer shadow-xs"
                       >
                         <i className="ri-share-forward-line text-sm"></i>
-                        Share as Template
+                        {t("public.shareTemplate", "Share as Template")}
                       </button>
                     )}
                     {isPlanShared(selectedPlan.id) && (
@@ -485,8 +488,8 @@ export default function PlannerPage() {
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-accent-300 bg-accent-50 text-sm text-accent-700 font-medium hover:bg-accent-100 transition-colors whitespace-nowrap cursor-pointer"
                       >
                         <i className="ri-share-forward-line text-sm"></i>
-                        Shared
-                        <span className="text-accent-500 ml-1 text-xs">(click to unshare)</span>
+                        {t("public.shared", "Shared")}
+                        <span className="text-accent-500 ml-1 text-xs">({t("public.clickUnshare", "click to unshare")})</span>
                       </button>
                     )}
                   </>
@@ -500,14 +503,14 @@ export default function PlannerPage() {
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 text-white text-sm font-medium hover:opacity-95 shadow-sm shadow-primary-500/20 transition-all whitespace-nowrap cursor-pointer"
                     >
                       <i className="ri-sparkling-fill text-sm"></i>
-                      Generate AI Itinerary
+                      {t("public.generateItinerary", "Generate AI Itinerary")}
                     </button>
                     <button
                       onClick={() => setShowCreateModal(true)}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-foreground-200 bg-white text-foreground-800 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
                     >
                       <i className="ri-add-line text-sm"></i>
-                      New Plan
+                      {t("public.newPlan", "New Plan")}
                     </button>
                   </>
                 )}
@@ -551,22 +554,22 @@ export default function PlannerPage() {
                     <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-accent-100">
                       <i className="ri-calendar-todo-line text-accent-500 text-2xl"></i>
                     </div>
-                    <h2 className="font-heading text-xl text-foreground-900 mb-2">No plans yet</h2>
+                    <h2 className="font-heading text-xl text-foreground-900 mb-2">{t("public.noPlans", "No plans yet")}</h2>
                     <p className="text-sm text-foreground-500 max-w-sm mx-auto mb-6">
-                      Create your first plan to organize the businesses, events, and activities you are interested in.
+                      {t("public.createPlanDescription", "Create your first plan to organize the businesses, events, and activities you are interested in.")}
                     </p>
                     <button
                       onClick={() => setShowCreateModal(true)}
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer shadow-xs"
                     >
                       <i className="ri-add-line"></i>
-                      Create Your First Plan
+                      {t("public.createFirstPlan", "Create Your First Plan")}
                     </button>
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-heading text-lg font-semibold text-foreground-900">My Itineraries</h2>
+                      <h2 className="font-heading text-lg font-semibold text-foreground-900">{t("public.myItineraries", "My Itineraries")}</h2>
                       <span className="text-xs text-foreground-500">
                         {plans.length} {plans.length === 1 ? "saved plan" : "saved plans"}
                       </span>

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import type { ForumEvent } from "@/api-services/events.service";
 import { generateGoogleCalendarUrl, downloadIcalFile } from "../calendarExport";
 import { copyEventLink, shareViaWhatsapp, shareViaTelegram } from "../shareUtils";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface EventCardProps {
   event: ForumEvent;
@@ -14,6 +16,7 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsvp, onSave, onUnsave }: EventCardProps) {
+  const { t } = useTranslation();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareMenuRef = useRef<HTMLDivElement>(null);
@@ -209,24 +212,24 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             />
           </div>
           <span className="text-xs text-foreground-500">
-            Hosted by <span className="text-foreground-700 font-medium">{event.host}</span>
+            {t("events.hostedBy", "Hosted by")} <span className="text-foreground-700 font-medium">{event.host}</span>
           </span>
         </div>
 
         {/* Attendees bar */}
         <div className="space-y-2 mb-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-foreground-500">
-              <span className="font-semibold text-foreground-900">{effectiveAttendees}</span> / {safeMaxAttendees} attending
+              <span className="text-foreground-500">
+              <span className="font-semibold text-foreground-900">{effectiveAttendees}</span> / {safeMaxAttendees} {t("events.attending", "attending")}
             </span>
             {isFull ? (
-              <span className="text-accent-600 font-medium">Full</span>
+              <span className="text-accent-600 font-medium">{t("events.full", "Full")}</span>
             ) : isRsvpd ? (
-              <span className="text-accent-500 font-medium">You going!</span>
+              <span className="text-accent-500 font-medium">{t("events.going", "You going!")}</span>
             ) : isAlmostFull ? (
-              <span className="text-primary-500 font-medium">{spotsLeft} spots left</span>
+              <span className="text-primary-500 font-medium">{spotsLeft} {t("events.spotsLeft", "spots left")}</span>
             ) : (
-              <span className="text-foreground-400">{spotsLeft} spots available</span>
+              <span className="text-foreground-400">{spotsLeft} {t("events.spotsAvailable", "spots available")}</span>
             )}
           </div>
           <div className="h-1.5 bg-background-200 rounded-full overflow-hidden">
@@ -251,7 +254,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             }`}
             aria-pressed={isSaved}
             aria-label={isSaved ? `Remove ${event.title} from saved events` : `Save ${event.title}`}
-            title={isSaved ? "Saved" : "Save event"}
+            title={isSaved ? t("events.saved", "Saved") : t("events.save", "Save event")}
           >
             <i className={`${isSaved ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
           </button>
@@ -260,7 +263,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             onClick={handleGoogleCalendar}
             className="w-8 h-8 flex items-center justify-center rounded-full text-foreground-400 hover:bg-background-100 hover:text-foreground-600 transition-all cursor-pointer"
             aria-label={`Add ${event.title} to Google Calendar`}
-            title="Add to Google Calendar"
+            title={t("events.addToCalendar", "Add to Google Calendar")}
           >
             <i className="ri-google-line text-sm"></i>
           </button>
@@ -286,7 +289,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
             aria-expanded={showShareMenu}
             aria-controls={`share-menu-${event.id}`}
             aria-label={`Share ${event.title}`}
-            title="Share event"
+            title={t("events.share", "Share event")}
           >
             <i className="ri-share-forward-line text-sm"></i>
           </button>
@@ -310,7 +313,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-background-100 shrink-0">
                   <i className={`${copied ? "ri-check-line text-accent-500" : "ri-link text-foreground-500"} text-sm`}></i>
                 </span>
-                <span className="flex-1 text-left">{copied ? "Copied!" : "Copy event link"}</span>
+                <span className="flex-1 text-left">{copied ? t("events.copied", "Copied!") : t("events.copyLink", "Copy event link")}</span>
               </button>
 
               {/* WhatsApp */}
@@ -323,7 +326,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-accent-100 shrink-0">
                   <i className="ri-whatsapp-line text-accent-600 text-sm"></i>
                 </span>
-                <span className="flex-1 text-left">Share via WhatsApp</span>
+                <span className="flex-1 text-left">{t("events.shareWhatsApp", "Share via WhatsApp")}</span>
               </button>
 
               {/* Telegram */}
@@ -336,7 +339,7 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
                 <span className="w-8 h-8 flex items-center justify-center rounded-full bg-accent-100 shrink-0">
                   <i className="ri-telegram-line text-accent-600 text-sm"></i>
                 </span>
-                <span className="flex-1 text-left">Share via Telegram</span>
+                <span className="flex-1 text-left">{t("events.shareTelegram", "Share via Telegram")}</span>
               </button>
             </div>
           )}
@@ -360,12 +363,12 @@ export default function EventCard({ event, isRsvpd, isSaved, onRsvp, onCancelRsv
           {isRsvpd ? (
             <span className="inline-flex items-center gap-1.5">
               <i className="ri-check-line"></i>
-              You're Going
+              {t("events.youAreGoing", "You're Going")}
             </span>
           ) : isFull ? (
-            "Event Full"
+            t("events.eventFull", "Event Full")
           ) : (
-            "RSVP Now"
+            t("events.rsvpNow", "RSVP Now")
           )}
         </button>
       </div>

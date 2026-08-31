@@ -67,7 +67,7 @@ describe("BusinessApplicationsTab", () => {
     render(<BusinessApplicationsTab />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Reject Alanya Crafts" }));
-    fireEvent.change(screen.getByLabelText("Rejection reason for Alanya Crafts"), {
+    fireEvent.change(screen.getByLabelText(/Rejection Reason and Feedback.*Alanya Crafts/i), {
       target: { value: "Too short" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));
@@ -75,7 +75,7 @@ describe("BusinessApplicationsTab", () => {
     expect(await screen.findByText("Rejection reason must be at least 10 characters.")).toBeInTheDocument();
     expect(businessApplicationsService.reject).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText("Rejection reason for Alanya Crafts"), {
+    fireEvent.change(screen.getByLabelText(/Rejection Reason and Feedback.*Alanya Crafts/i), {
       target: { value: "Registration details do not match." },
     });
     fireEvent.click(screen.getByRole("button", { name: "Confirm rejection" }));

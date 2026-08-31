@@ -38,6 +38,7 @@ describe("directory.service", () => {
         reviews_count: 120,
         gallery: ["https://example.com/kale.jpg"],
         is_featured: true,
+        can_claim: true,
         price_level: 3,
       };
 
@@ -52,6 +53,7 @@ describe("directory.service", () => {
       expect(result.image).toBe("https://example.com/kale.jpg");
       expect(result.tags).toEqual([]);
       expect(result.featured).toBe(true);
+      expect(result.can_claim).toBe(true);
       expect(result.priceRange).toBe("$$$");
       expect(result.lat).toBe(36.5437);
       expect(result.lng).toBe(31.9998);

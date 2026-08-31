@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { GoogleMap, InfoWindowF, MarkerF, useJsApiLoader } from "@react-google-maps/api";
 import type { ForumEvent } from "@/api-services/events.service";
 import { ALANYA_CENTER, resolveEventLocationMeta, type EventLocationMeta } from "../locationCoords";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface MapViewProps {
   events: ForumEvent[];
@@ -30,6 +32,7 @@ function getMapFallbackMessage(missingKey: boolean, loadError: unknown, markerCo
 }
 
 export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: MapViewProps) {
+  const { t } = useTranslation();
   const [activeLocation, setActiveLocation] = useState<string | null>(null);
   const mapRef = useRef<any>(null);
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -266,7 +269,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
                 <i className="ri-map-pin-2-fill text-2xl"></i>
               </div>
               <div>
-                <h3 className="font-heading text-lg text-foreground-900 mb-1">Interactive event map</h3>
+                <h3 className="font-heading text-lg text-foreground-900 mb-1">{t("events.interactiveMap")}</h3>
                 <p className="text-sm text-foreground-500 max-w-xl">
                   {fallbackMessage}
                 </p>
@@ -283,7 +286,7 @@ export default function MapView({ events, rsvpdEvents, onRsvp, onCancelRsvp }: M
 
       {unmappedLocationCount > 0 && (
         <div className="mb-6 rounded-xl border border-background-200 bg-background-50 px-4 py-3 text-sm text-foreground-600">
-          <span className="font-medium text-foreground-900">Map coverage note:</span>{" "}
+          <span className="font-medium text-foreground-900">{t("events.mapCoverageNote")}:</span>{" "}
           {unmappedLocationCount} {unmappedLocationCount === 1 ? "location is" : "locations are"} shown in the list below but not yet pinned on the map because coordinates are missing.
         </div>
       )}

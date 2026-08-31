@@ -5,6 +5,8 @@ import Footer from "@/pages/home/components/Footer";
 import { forumService, type CategoryThread, type ForumMember } from "@/api-services/forum.service";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export type ResultTab = "all" | "threads" | "members" | "events";
 
@@ -40,6 +42,7 @@ export function HighlightMatch({ text, query }: { text: string; query: string })
 }
 
 export default function SearchPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTab, setActiveTab] = useState<ResultTab>("all");
@@ -138,10 +141,10 @@ export default function SearchPage() {
               <i className="ri-search-line text-secondary-600 text-xl md:text-2xl"></i>
             </div>
             <h1 className="font-heading text-2xl md:text-4xl text-foreground-900 mb-2">
-              Search the Forum
+              {t("public.search.title")}
             </h1>
             <p className="text-foreground-500 text-sm md:text-base mb-6">
-              Find discussions, members, and events across the entire Alanya community.
+              {t("public.search.description")}
             </p>
 
             {/* Search Input Box */}
@@ -156,7 +159,7 @@ export default function SearchPage() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search threads, members, events..."
+                  placeholder={t("public.search.placeholder")}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="flex-1 bg-transparent px-3 py-3.5 text-foreground-900 placeholder:text-foreground-400 text-sm outline-none"
@@ -166,7 +169,7 @@ export default function SearchPage() {
                   <button
                     type="button"
                     onClick={() => setQuery("")}
-                    aria-label="Clear search"
+                    aria-label={t("public.clearSearch")}
                     data-testid="clear-search-btn"
                     className="pr-4 cursor-pointer text-foreground-400 hover:text-foreground-600 transition-colors"
                   >
@@ -183,7 +186,7 @@ export default function SearchPage() {
           {isSearching && (
             <div className="text-center py-16" data-testid="search-loading">
               <div className="w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-foreground-500 text-sm">Searching...</p>
+              <p className="text-foreground-500 text-sm">{t("public.search.searching")}</p>
             </div>
           )}
 
@@ -193,17 +196,17 @@ export default function SearchPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <p className="text-sm text-foreground-500">
                   {totalResults === 0
-                    ? "No results found"
-                    : `Found ${totalResults} result${totalResults !== 1 ? "s" : ""} for "${debouncedQuery}"`}
+                    ? t("public.search.noResults")
+                    : t(totalResults === 1 ? "public.search.foundOne" : "public.search.foundMany", { count: totalResults, query: debouncedQuery })}
                 </p>
 
                 {hasResults && (
                   <div className="inline-flex items-center bg-background-100 rounded-full p-1">
                     {([
-                      { key: "all", label: "All" },
-                      { key: "threads", label: `Threads (${threads.length})` },
-                      { key: "members", label: `Members (${members.length})` },
-                      { key: "events", label: `Events (${events.length})` },
+                      { key: "all", label: t("public.search.all") },
+                      { key: "threads", label: t("public.search.threads", { count: threads.length }) },
+                      { key: "members", label: t("public.search.members", { count: members.length }) },
+                      { key: "events", label: t("public.search.events", { count: events.length }) },
                     ] as { key: ResultTab; label: string }[]).map((tab) => (
                       <button
                         key={tab.key}
@@ -227,9 +230,9 @@ export default function SearchPage() {
                   <div className="w-16 h-16 flex items-center justify-center rounded-full bg-background-100 mx-auto mb-4">
                     <i className="ri-search-line text-foreground-300 text-2xl"></i>
                   </div>
-                  <p className="text-foreground-600 font-medium mb-1">No results found</p>
+                  <p className="text-foreground-600 font-medium mb-1">{t("public.search.noResults")}</p>
                   <p className="text-foreground-400 text-sm">
-                    Try different keywords or check your spelling.
+                    {t("public.search.tryDifferent")}
                   </p>
                 </div>
               )}
@@ -240,7 +243,7 @@ export default function SearchPage() {
                   {activeTab === "all" && (
                     <h2 className="font-heading text-lg text-foreground-900 mb-4 flex items-center gap-2">
                       <i className="ri-chat-3-line text-foreground-400"></i>
-                      Discussions
+                      {t("public.discussions")}
                     </h2>
                   )}
                   <div className="space-y-3">
@@ -283,7 +286,7 @@ export default function SearchPage() {
                   {activeTab === "all" && (
                     <h2 className="font-heading text-lg text-foreground-900 mb-4 flex items-center gap-2">
                       <i className="ri-user-line text-foreground-400"></i>
-                      Members
+                      {t("public.members")}
                     </h2>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -319,7 +322,7 @@ export default function SearchPage() {
                   {activeTab === "all" && (
                     <h2 className="font-heading text-lg text-foreground-900 mb-4 flex items-center gap-2">
                       <i className="ri-calendar-event-line text-foreground-400"></i>
-                      Events
+                      {t("events.title")}
                     </h2>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -365,13 +368,22 @@ export default function SearchPage() {
                 <i className="ri-search-line text-secondary-500 text-3xl"></i>
               </div>
               <h2 className="font-heading text-xl text-foreground-900 mb-2">
-                Search across the entire forum
+                {t("public.search.initialTitle")}
               </h2>
               <p className="text-foreground-500 text-sm max-w-md mx-auto mb-8">
-                Type above to find discussions, community members, and upcoming events. We search through everything.
+                {t("public.search.initialDescription")}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg mx-auto">
-                {["Alanya beaches", "residence permit", "digital nomad", "Turkish breakfast", "coworking", "hiking trails"].map((suggestion) => (
+                {[
+                  "public.search.suggestion.beaches",
+                  "public.search.suggestion.residence",
+                  "public.search.suggestion.nomad",
+                  "public.search.suggestion.breakfast",
+                  "public.search.suggestion.coworking",
+                  "public.search.suggestion.hiking",
+                ].map((suggestionKey) => {
+                  const suggestion = t(suggestionKey);
+                  return (
                   <button
                     key={suggestion}
                     onClick={() => setQuery(suggestion)}
@@ -379,7 +391,8 @@ export default function SearchPage() {
                   >
                     {suggestion}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

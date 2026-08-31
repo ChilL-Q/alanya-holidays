@@ -241,7 +241,7 @@ describe("Settings Hub (Milestone 3)", () => {
       expect(handleTabChange).toHaveBeenCalledWith("security");
     });
 
-    it("renders Merchant Dashboard quick-action link pointing to /business/dashboard", () => {
+    it("renders Dashboard quick-action link pointing to /business/dashboard", () => {
       render(
         <MemoryRouter>
           <SettingsHero
@@ -253,7 +253,7 @@ describe("Settings Hub (Milestone 3)", () => {
         </MemoryRouter>
       );
 
-      const merchantLink = screen.getByRole("link", { name: /Merchant Dashboard/i });
+      const merchantLink = screen.getByRole("link", { name: /^Dashboard$/i });
       expect(merchantLink).toBeInTheDocument();
       expect(merchantLink).toHaveAttribute("href", "/business/dashboard");
     });

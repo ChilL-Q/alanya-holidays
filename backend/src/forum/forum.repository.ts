@@ -336,7 +336,6 @@ export class ForumRepository {
     if (filters.search && filters.search.trim()) {
       q = q.ilike('title', `%${filters.search.trim()}%`);
     }
-
     if (filters.sort === 'popular') {
       q = q
         .order('is_pinned', { ascending: false })
@@ -735,6 +734,11 @@ export class ForumRepository {
     if (filters.search && filters.search.trim()) {
       q = q.ilike('title', `%${filters.search.trim()}%`);
     }
+    if (filters.ownerId) {
+      q = q.or(
+        `host_id.eq.${filters.ownerId},created_by.eq.${filters.ownerId}`,
+      );
+    }
 
     const { data, error } = await q
       .order('event_date', { ascending: true })
@@ -768,6 +772,20 @@ export class ForumRepository {
     return (data || []).map((e) => String(e.slug));
   }
 
+  async getEventOwnership(id: string): Promise<{
+    host_id: string | null;
+    created_by: string | null;
+    is_published: boolean;
+  } | null> {
+    const { data, error } = await this.client
+      .from('forum_events')
+      .select('host_id, created_by, is_published')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
   async insertEvent(data: InsertForumEventDbInput): Promise<ForumEvent> {
     const { data: event, error } = await this.client
       .from('forum_events')
@@ -781,23 +799,29 @@ export class ForumRepository {
   async updateEvent(
     id: string,
     updates: UpdateForumEventDbInput,
-  ): Promise<ForumEvent> {
-    const { data, error } = await this.client
-      .from('forum_events')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    merchantOwnerId?: string,
+  ): Promise<ForumEvent | null> {
+    let query = this.client.from('forum_events').update(updates).eq('id', id);
+    if (merchantOwnerId) {
+      query = query
+        .eq('is_published', false)
+        .or(`host_id.eq.${merchantOwnerId},created_by.eq.${merchantOwnerId}`);
+    }
+    const { data, error } = await query.select().maybeSingle();
     if (error) throw new Error(error.message);
-    return data as unknown as ForumEvent;
+    return (data as unknown as ForumEvent) ?? null;
   }
 
-  async deleteEvent(id: string): Promise<void> {
-    const { error } = await this.client
-      .from('forum_events')
-      .delete()
-      .eq('id', id);
+  async deleteEvent(id: string, merchantOwnerId?: string): Promise<boolean> {
+    let query = this.client.from('forum_events').delete().eq('id', id);
+    if (merchantOwnerId) {
+      query = query
+        .eq('is_published', false)
+        .or(`host_id.eq.${merchantOwnerId},created_by.eq.${merchantOwnerId}`);
+    }
+    const { data, error } = await query.select('id').maybeSingle();
     if (error) throw new Error(error.message);
+    return data !== null;
   }
 
   async getEventRsvpAttendees(

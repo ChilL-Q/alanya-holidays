@@ -9,11 +9,14 @@ describe("Adversarial Stress Test: UpcomingEventsCarousel", () => {
   const originalResizeObserver = globalThis.ResizeObserver;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-08T12:00:00.000Z"));
     Element.prototype.scrollBy = vi.fn();
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     Element.prototype.scrollBy = originalScrollBy;
     globalThis.ResizeObserver = originalResizeObserver;
     vi.restoreAllMocks();

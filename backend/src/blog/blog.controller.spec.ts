@@ -96,6 +96,15 @@ describe('BlogController', () => {
       deleteBlogTag: jest.fn().mockResolvedValue({ success: true }),
       getBlogSubmissions: jest.fn().mockResolvedValue([mockSubmission]),
       getUserBlogSubmissions: jest.fn().mockResolvedValue([mockSubmission]),
+      getUserBlogPosts: jest.fn().mockResolvedValue({
+        data: [mockBlogPost],
+        total: 1,
+      }),
+      updateUserBlogSubmission: jest.fn().mockResolvedValue(mockSubmission),
+      resubmitUserBlogSubmission: jest.fn().mockResolvedValue({
+        ...mockSubmission,
+        status: 'pending_review',
+      }),
       createBlogSubmission: jest.fn().mockResolvedValue({
         submissionId: 'sub-1',
       }),

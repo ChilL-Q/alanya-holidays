@@ -73,4 +73,8 @@ export class CreateBlogPostDto {
   @IsBoolean()
   @IsOptional()
   is_featured?: boolean;
+
+  @IsIn(['blog', 'guide'])
+  @IsOptional()
+  content_type?: 'blog' | 'guide';
 }

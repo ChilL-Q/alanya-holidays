@@ -1,11 +1,13 @@
 import React from "react";
 import { OFFICIAL_DATA_SOURCES, type DataSourceCitation } from "../data/regionalData";
+import { useTranslation } from "react-i18next";
 
 interface OfficialSourcesFooterProps {
   sources?: DataSourceCitation[];
 }
 
 export default function OfficialSourcesFooter({ sources = OFFICIAL_DATA_SOURCES }: OfficialSourcesFooterProps) {
+  const { t } = useTranslation();
   return (
     <section id="sources" className="py-12 md:py-16 border-t border-background-200 dark:border-background-800 bg-background-100/50 dark:bg-background-900/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,10 +15,10 @@ export default function OfficialSourcesFooter({ sources = OFFICIAL_DATA_SOURCES 
         <div className="max-w-3xl mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-3">
             <i className="ri-shield-check-line" />
-            <span>Open Data Governance & Attribution</span>
+            <span>{t("insights.openData")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground-900 dark:text-foreground-50 tracking-tight">
-            Official Data Sources & Registry Citations
+            {t("insights.officialDataSources")}
           </h2>
           <p className="text-sm sm:text-base text-foreground-600 dark:text-foreground-400 mt-2">
             All demographic counts, international residency statistics, tourism volumes, and eco-certifications featured on this dashboard are compiled directly from primary Turkish governmental and international regulatory bodies.
@@ -49,8 +51,8 @@ export default function OfficialSourcesFooter({ sources = OFFICIAL_DATA_SOURCES 
                   </div>
                 </div>
 
-                <div className="text-xs font-semibold text-foreground-800 dark:text-foreground-200 mb-2">
-                  Dataset: {source.reportName}
+                  <div className="text-xs font-semibold text-foreground-800 dark:text-foreground-200 mb-2">
+                  {t("insights.dataset")}: {source.reportName}
                 </div>
 
                 <p className="text-xs text-foreground-600 dark:text-foreground-300 leading-relaxed">
@@ -59,14 +61,14 @@ export default function OfficialSourcesFooter({ sources = OFFICIAL_DATA_SOURCES 
               </div>
 
               <div className="mt-5 pt-4 border-t border-background-100 dark:border-background-700/60 flex items-center justify-between">
-                <span className="text-[11px] text-foreground-500">Official Portal Registry</span>
+                <span className="text-[11px] text-foreground-500">{t("insights.officialPortal")}</span>
                 <a
                   href={source.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
                 >
-                  <span>Visit {source.institution.split(" ")[0]}</span>
+                  <span>{t("insights.visit")} {source.institution.split(" ")[0]}</span>
                   <i className="ri-external-link-line" />
                 </a>
               </div>
@@ -78,7 +80,7 @@ export default function OfficialSourcesFooter({ sources = OFFICIAL_DATA_SOURCES 
         <div className="rounded-2xl p-6 bg-white dark:bg-background-800 border border-background-200 dark:border-background-700 text-xs text-foreground-600 dark:text-foreground-300 leading-relaxed shadow-sm">
           <div className="flex items-center gap-2 font-bold text-foreground-900 dark:text-foreground-50 text-sm mb-2">
             <i className="ri-information-line text-primary-500 text-base" />
-            <span>Methodological Note & Data Integrity</span>
+            <span>{t("insights.methodology")}</span>
           </div>
           <p>
             Population figures are governed by TÜİK&apos;s Address Based Population Registration System (ADNKS), which records Turkish citizens and foreign nationals holding valid residence permits of at least 3 months. Tourism arrival volumes are compiled by the Ministry of Culture and Tourism through automated border gate passport control terminals at Antalya Airport (AYT) and Gazipaşa-Alanya Airport (GZP). Blue Flag beach certifications are audited annually by TÜRÇEV under Foundation for Environmental Education (FEE) global criteria.

@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -23,6 +25,7 @@ import {
   AdminPaginationQueryDto,
 } from '../dto/admin-directory-query.dto';
 import { ModerationAuditService } from '../../admin/moderation-audit.service';
+import { AdminListingWriteDto } from '../dto/admin-listing-write.dto';
 
 @Controller('directory/admin')
 @UseGuards(AuthGuard, RolesGuard)
@@ -98,6 +101,31 @@ export class DirectoryAdminController {
       query.page ?? 1,
       query.limit ?? 20,
     );
+  }
+
+  @Post('listings')
+  async createDirectoryListing(
+    @Body() body: AdminListingWriteDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.listingService.createAdminDirectoryListing(body, user.id);
+  }
+
+  @Patch('listings/:id')
+  async updateDirectoryListing(
+    @Param('id') id: string,
+    @Body() body: AdminListingWriteDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.listingService.updateAdminDirectoryListing(id, body, user.id);
+  }
+
+  @Delete('listings/:id')
+  async deleteDirectoryListing(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.listingService.deleteDirectoryListing(id, user.id);
   }
 
   @Post(':id/approve')

@@ -6,6 +6,8 @@ import {
 } from "@/api-services/directory.service";
 import { logger } from "@/lib/logger";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface ClaimListingModalProps {
   business: Business | null;
@@ -20,6 +22,7 @@ export default function ClaimListingModal({
   onClose,
   onClaimSubmitted,
 }: ClaimListingModalProps) {
+  const { t } = useTranslation();
   const [claimantName, setClaimantName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,24 +60,24 @@ export default function ClaimListingModal({
     const nextErrors: Record<string, string> = {};
 
     if (!claimantName.trim()) {
-      nextErrors.claimantName = "Claimant name is required";
+      nextErrors.claimantName = t("public.claimantNameRequired");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim() || !emailRegex.test(email.trim())) {
-      nextErrors.email = "Valid official email is required";
+      nextErrors.email = t("public.officialEmailRequired");
     }
 
     if (!phone.trim()) {
-      nextErrors.phone = "Contact phone is required";
+      nextErrors.phone = t("public.contactPhoneRequired");
     }
 
     if (!role.trim()) {
-      nextErrors.role = "Role in business is required";
+      nextErrors.role = t("public.businessRoleRequired");
     }
 
     if (!agreed) {
-      nextErrors.agreed = "You must confirm you are authorized to represent this business";
+      nextErrors.agreed = t("public.authorizedRepresentativeRequired");
     }
 
     setErrors(nextErrors);
@@ -111,7 +114,7 @@ export default function ClaimListingModal({
     } catch (err) {
       logger.error("Claim submission failed:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to submit claim. Please try again.";
+        err instanceof Error ? err.message : t("public.claimSubmitError");
       setSubmitError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -138,10 +141,10 @@ export default function ClaimListingModal({
             </div>
             <div>
               <h2 id="claim-modal-title" className="font-heading text-lg sm:text-xl font-bold text-foreground-900">
-                Claim Listing
+                {t("public.claimListing")}
               </h2>
               <p className="text-xs text-foreground-500">
-                Verify ownership to update information and unlock merchant tools
+                {t("public.verifyOwnership")}
               </p>
             </div>
           </div>
@@ -149,7 +152,7 @@ export default function ClaimListingModal({
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-full bg-background-100 text-foreground-500 hover:bg-background-200 hover:text-foreground-800 flex items-center justify-center transition-colors cursor-pointer"
-            aria-label="Close dialog"
+            aria-label={t("common.close")}
           >
             <i className="ri-close-line text-lg" />
           </button>
@@ -162,20 +165,20 @@ export default function ClaimListingModal({
               <i className="ri-checkbox-circle-fill" />
             </div>
             <h3 className="font-heading text-2xl font-bold text-foreground-900 mb-2">
-              Claim Request Submitted!
+              {t("public.claimSubmitted")}
             </h3>
             <p className="text-sm text-foreground-600 max-w-md mx-auto mb-6 leading-relaxed">
-              We have received your ownership claim for <strong className="text-foreground-900 font-semibold">{business.name}</strong>. A verification notice has been queued for our moderation team.
+              {t("public.claimReceived", { name: business.name })}
             </p>
             <div className="bg-background-50 rounded-2xl p-4 max-w-md mx-auto mb-6 text-left border border-background-200/70">
               <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-foreground-700">
                 <i className="ri-information-fill text-primary-500 text-sm" />
-                What happens next?
+                {t("public.whatHappensNext")}
               </div>
               <ul className="text-xs text-foreground-600 space-y-1.5 list-disc pl-5">
-                <li>Our operations team will review your business credentials within 24-48 hours.</li>
-                <li>You will receive an email confirmation at <span className="font-medium text-foreground-900">{email}</span>.</li>
-                <li>Once approved, you will gain full administrative control over this profile.</li>
+                <li>{t("public.claimReviewTime")}</li>
+                <li>{t("public.claimConfirmation", { email })}</li>
+                <li>{t("public.claimApprovalControl")}</li>
               </ul>
             </div>
             <button
@@ -183,7 +186,7 @@ export default function ClaimListingModal({
               onClick={onClose}
               className="px-6 py-2.5 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors shadow-sm cursor-pointer"
             >
-              Done
+              {t("common.done")}
             </button>
           </div>
         ) : (
@@ -203,7 +206,7 @@ export default function ClaimListingModal({
               />
               <div className="min-w-0 flex-1">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-primary-600">
-                  Target Listing
+                  {t("public.targetListing")}
                 </span>
                 <h4 className="font-heading text-base font-bold text-foreground-900 truncate">
                   {business.name}
@@ -219,14 +222,14 @@ export default function ClaimListingModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="claimant-name" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Your Full Name <span className="text-red-500">*</span>
+                  {t("public.fullName")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="claimant-name"
                   type="text"
                   value={claimantName}
                   onChange={(e) => setClaimantName(e.target.value)}
-                  placeholder="e.g. Mehmet Demir"
+                  placeholder={t("public.claimNamePlaceholder")}
                   className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                     errors.claimantName ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                   }`}
@@ -238,7 +241,7 @@ export default function ClaimListingModal({
 
               <div>
                 <label htmlFor="claimant-role" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Your Role <span className="text-red-500">*</span>
+                  {t("public.yourRole")} <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="claimant-role"
@@ -248,11 +251,11 @@ export default function ClaimListingModal({
                     errors.role ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                   }`}
                 >
-                  <option value="Owner">Business Owner</option>
-                  <option value="General Manager">General Manager</option>
-                  <option value="Marketing Director">Marketing Director</option>
-                  <option value="Authorized Agent">Authorized Agent</option>
-                  <option value="Other">Other</option>
+                  <option value="Owner">{t("public.businessOwner")}</option>
+                  <option value="General Manager">{t("public.generalManager")}</option>
+                  <option value="Marketing Director">{t("public.marketingDirector")}</option>
+                  <option value="Authorized Agent">{t("public.authorizedAgent")}</option>
+                  <option value="Other">{t("public.other")}</option>
                 </select>
                 {errors.role && (
                   <p className="text-[11px] text-red-500 mt-1">{errors.role}</p>
@@ -261,14 +264,14 @@ export default function ClaimListingModal({
 
               <div>
                 <label htmlFor="claimant-email" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Official Business Email <span className="text-red-500">*</span>
+                  {t("public.officialBusinessEmail")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="claimant-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  placeholder={t("public.businessEmailPlaceholder")}
                   className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                     errors.email ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                   }`}
@@ -280,14 +283,14 @@ export default function ClaimListingModal({
 
               <div>
                 <label htmlFor="claimant-phone" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Contact Phone <span className="text-red-500">*</span>
+                  {t("public.contactPhone")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="claimant-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+90 532 000 0000"
+                  placeholder={t("public.phonePlaceholder")}
                   className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                     errors.phone ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                   }`}
@@ -302,7 +305,7 @@ export default function ClaimListingModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="business-name" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Business Name
+                  {t("public.businessName")}
                 </label>
                 <input
                   id="business-name"
@@ -315,7 +318,7 @@ export default function ClaimListingModal({
 
               <div>
                 <label htmlFor="business-address" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Registered Business Address
+                  {t("public.registeredAddress")}
                 </label>
                 <input
                   id="business-address"
@@ -331,21 +334,21 @@ export default function ClaimListingModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="claimant-whatsapp" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  WhatsApp (Optional)
+                  {t("public.whatsappOptional")}
                 </label>
                 <input
                   id="claimant-whatsapp"
                   type="tel"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="+90 532 000 0000"
+                  placeholder={t("public.phonePlaceholder")}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                 />
               </div>
 
               <div>
                 <label htmlFor="claimant-website" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                  Business Website (Optional)
+                  {t("public.businessWebsiteOptional")}
                 </label>
                 <input
                   id="claimant-website"
@@ -359,14 +362,14 @@ export default function ClaimListingModal({
 
             <div>
               <label htmlFor="claimant-notes" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                Verification Notes / Document Proof Links
+                {t("public.verificationNotes")}
               </label>
               <textarea
                 id="claimant-notes"
                 rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Mention business registration number, official website domain verification, or government tax document links..."
+                placeholder={t("public.verificationPlaceholder")}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500 resize-none"
               />
             </div>
@@ -381,7 +384,7 @@ export default function ClaimListingModal({
                   className="mt-0.5 w-4 h-4 rounded text-primary-500 focus:ring-primary-400 border-foreground-300"
                 />
                 <span className="text-xs text-foreground-600 leading-snug">
-                  I confirm that I am an authorized representative of this business and have legal permission to manage its listing on Alanya Holidays.
+                  {t("public.authorizedConfirmation")}
                 </span>
               </label>
               {errors.agreed && (
@@ -396,7 +399,7 @@ export default function ClaimListingModal({
                 onClick={onClose}
                 className="px-5 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-xs sm:text-sm font-medium hover:bg-background-50 transition-colors cursor-pointer"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="submit"
@@ -406,12 +409,12 @@ export default function ClaimListingModal({
                 {isSubmitting ? (
                   <>
                     <i className="ri-loader-4-line animate-spin text-sm" />
-                    Submitting...
+                    {t("public.sending")}
                   </>
                 ) : (
                   <>
                     <i className="ri-shield-check-fill text-sm" />
-                    Submit Claim
+                    {t("public.submitClaim")}
                   </>
                 )}
               </button>

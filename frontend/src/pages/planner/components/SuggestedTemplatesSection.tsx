@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import type { SuggestedPlan } from "@/domain/itinerary-templates";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface SuggestedTemplatesSectionProps {
   suggestedPlans: SuggestedPlan[];
@@ -14,6 +16,7 @@ export const SuggestedTemplatesSection: React.FC<SuggestedTemplatesSectionProps>
   onSelectCategory,
   onCopyPlan,
 }) => {
+  const { t } = useTranslation();
   const suggestedCategories = useMemo(
     () => ["All", ...new Set(suggestedPlans.map((sp) => sp.category))],
     [suggestedPlans],
@@ -33,8 +36,8 @@ export const SuggestedTemplatesSection: React.FC<SuggestedTemplatesSectionProps>
     <div className="mb-10">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-heading text-lg font-semibold text-foreground-900">Suggested Plans</h2>
-          <p className="text-xs text-foreground-500 mt-0.5">Pre-built itineraries — copy one to get started instantly</p>
+          <h2 className="font-heading text-lg font-semibold text-foreground-900">{t("public.suggestedPlans")}</h2>
+          <p className="text-xs text-foreground-500 mt-0.5">{t("public.suggestedPlansDescription")}</p>
         </div>
       </div>
 
@@ -76,7 +79,7 @@ export const SuggestedTemplatesSection: React.FC<SuggestedTemplatesSectionProps>
           <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-background-100">
             <i className="ri-search-line text-foreground-300 text-xl"></i>
           </div>
-          <h3 className="font-heading text-base text-foreground-800 mb-1">No plans in this category</h3>
+          <h3 className="font-heading text-base text-foreground-800 mb-1">{t("public.noPlansInCategory")}</h3>
           <p className="text-sm text-foreground-500 mb-4">
             No suggested plans match the "{activeCategory}" category yet.
           </p>

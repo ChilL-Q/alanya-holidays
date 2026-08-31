@@ -1,5 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import '@/i18n';
 
 export interface PaginationControlsProps {
   currentPage?: number;
@@ -50,6 +52,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
   itemName = 'items',
   className = '',
 }) => {
+  const { t } = useTranslation();
   const showNumbered = mode === 'numbered' || mode === 'both';
   const showLoadMore = mode === 'load-more' || mode === 'both';
 
@@ -60,13 +63,13 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('common.pagination')}
       className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-4 ${className}`}
     >
       {/* Item count summary */}
       {showItemCount && totalItems !== undefined && (
         <div className="text-xs md:text-sm text-foreground-500 font-medium">
-          Showing {totalItems > 0 ? `${startItem}–${endItem}` : 0} of {totalItems} {itemName}
+          {t('common.showing', { range: totalItems > 0 ? `${startItem}–${endItem}` : 0, total: totalItems, items: itemName })}
         </div>
       )}
 
@@ -76,13 +79,13 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
           {/* Previous button */}
           <button
             type="button"
-            aria-label="Previous page"
+            aria-label={t('common.previous')}
             disabled={currentPage <= 1}
             onClick={() => onPageChange?.(currentPage - 1)}
             className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-background-200 text-xs md:text-sm font-medium text-foreground-700 hover:bg-background-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
-            <span>Previous</span>
+            <span>{t('common.previous')}</span>
           </button>
 
           {/* Page numbers */}
@@ -120,12 +123,12 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
           {/* Next button */}
           <button
             type="button"
-            aria-label="Next page"
+            aria-label={t('common.next')}
             disabled={currentPage >= totalPages}
             onClick={() => onPageChange?.(currentPage + 1)}
             className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-background-200 text-xs md:text-sm font-medium text-foreground-700 hover:bg-background-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            <span>Next</span>
+            <span>{t('common.next')}</span>
             <ChevronRight className="w-4 h-4 ml-1" />
           </button>
         </div>

@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import {
   Store,
   PlusCircle,
@@ -34,6 +36,7 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
   onFilterDrafts,
   onSelectAnalytics,
 }) => {
+  const { t } = useTranslation();
   const formattedTier = tier
     ? tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase()
     : "Explorer";
@@ -56,7 +59,7 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
           <div className="space-y-1.5 min-w-0">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
               <Store className="w-3.5 h-3.5 text-amber-400" />
-              Merchant Dashboard
+              {t("merchant.dashboard")}
             </div>
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-display font-semibold text-white tracking-tight truncate">
@@ -64,11 +67,11 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
                 <Sparkles className="w-3 h-3 text-amber-300" />
-                Verified Business Owner
+                {t("merchant.verifiedOwner")}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                 <Award className="w-3 h-3 text-indigo-300" />
-                Tier: {formattedTier}
+                {t("merchant.tier", { tier: formattedTier })}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 truncate">{email}</p>
@@ -82,12 +85,12 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
             <button
               type="button"
               onClick={onFilterActive}
-              aria-label={`View ${activeListingsCount} Active Listings`}
+              aria-label={t("merchant.viewActiveListings", { count: activeListingsCount })}
               className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/50"
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>
-                <strong className="text-white font-semibold">{activeListingsCount}</strong> Active
+                <strong className="text-white font-semibold">{activeListingsCount}</strong> {t("merchant.active")}
               </span>
             </button>
 
@@ -96,12 +99,12 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
             <button
               type="button"
               onClick={onFilterDrafts}
-              aria-label={`View ${draftsCount} Draft Listings`}
+              aria-label={t("merchant.viewDraftListings", { count: draftsCount })}
               className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/50"
             >
               <FileText className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
-                <strong className="text-white font-semibold">{draftsCount}</strong> Drafts
+                <strong className="text-white font-semibold">{draftsCount}</strong> {t("merchant.drafts")}
               </span>
             </button>
 
@@ -110,11 +113,11 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
             <button
               type="button"
               onClick={onSelectAnalytics}
-              aria-label="View Performance Analytics"
+              aria-label={t("merchant.viewAnalytics")}
               className="flex items-center gap-2 text-xs sm:text-sm text-slate-300 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/50"
             >
               <TrendingUp className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>Analytics Ready</span>
+              <span>{t("merchant.analyticsReady")}</span>
             </button>
           </div>
 
@@ -125,17 +128,17 @@ export const MerchantHero: React.FC<MerchantHeroProps> = ({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-300"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>List New Business</span>
+            <span>{t("merchant.listNewBusiness")}</span>
           </button>
 
           {/* Secondary Exploration Action */}
           <Link
             to="/explore"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
-            title="Browse Live Directory"
+            title={t("merchant.browseDirectory")}
           >
             <Eye className="w-4 h-4 text-amber-300" />
-            <span>Browse Directory</span>
+            <span>{t("merchant.browseDirectory")}</span>
           </Link>
         </div>
       </div>

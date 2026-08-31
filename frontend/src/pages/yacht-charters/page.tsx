@@ -9,6 +9,8 @@ import { formatAmenity } from "@/utils/format-amenity";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const typeIconMap: Record<string, string> = {
   "Gulet": "ri-anchor-line",
@@ -19,6 +21,7 @@ const typeIconMap: Record<string, string> = {
 };
 
 export default function YachtChartersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const initialYachts = conciergeService.getYachtsSync();
   const [yachts, setYachts] = useState<Yacht[]>(initialYachts);
@@ -41,11 +44,11 @@ export default function YachtChartersPage() {
       const data = await conciergeService.getYachts();
       setYachts(data);
     } catch {
-      setFetchError("Failed to load yacht listings. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.yachts") }));
     } finally {
       setIsLoading(false);
     }
-  }, [initialYachts.length]);
+  }, [initialYachts.length, t]);
 
   useEffect(() => {
     loadYachts();
@@ -58,10 +61,10 @@ export default function YachtChartersPage() {
   // Validation helpers
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your full name.";
+    if (name === "name" && !value.trim()) return t("services.validation.fullName");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
     return "";
   };
@@ -87,7 +90,7 @@ export default function YachtChartersPage() {
   const handleDateChange = (value: string) => {
     setCharterDate(value);
     if (value && value < tomorrow) {
-      setDateError("Please select a date from tomorrow onward");
+      setDateError(t("services.service.pleaseSelectDate"));
     } else {
       setDateError("");
     }
@@ -133,10 +136,10 @@ export default function YachtChartersPage() {
   }, [activeType, sortBy, yachts]);
 
   const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated",
-    "price-low": "Price: Low to High",
-    "price-high": "Price: High to Low",
-    "capacity": "Largest Capacity",
+    "rating": t("services.topRated"),
+    "price-low": t("services.priceLow"),
+    "price-high": t("services.priceHigh"),
+    "capacity": t("services.mostCapacity"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -154,7 +157,7 @@ export default function YachtChartersPage() {
     setFieldErrors({ name: nameErr, email: emailErr });
     setTouchedFields({ name: true, email: true });
     if (nameErr || emailErr) {
-      setFormError("Please fix the errors below before sending.");
+      setFormError(t("services.validation.fixErrors"));
       return;
     }
 
@@ -205,10 +208,10 @@ export default function YachtChartersPage() {
         form.reset();
         navigate("/booking-confirmation", { state: confirmationState });
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -237,15 +240,15 @@ export default function YachtChartersPage() {
 
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Yacht Charters</span>
+              <span className="text-white/90 text-sm">{t("services.yacht.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Private Yacht Charters</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.yacht.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Cruise the Turquoise Coast aboard your own private yacht. Gulets, motor yachts, catamarans, and sailing yachts — handpicked for quality and crewed by the best.
+              {t("services.yacht.hero")}
             </p>
           </div>
         </section>
@@ -316,7 +319,7 @@ export default function YachtChartersPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load yacht charters"
+                title={t("services.yacht.unable")}
                 message={fetchError}
                 onRetry={loadYachts}
               />
@@ -336,11 +339,11 @@ export default function YachtChartersPage() {
               </div>
             ) : filteredYachts.length === 0 ? (
               <EmptyState
-                title="No yachts found"
-                description="Try selecting a different yacht category or clear your filters."
+                title={t("services.yacht.none")}
+                description={t("services.yacht.noneDesc")}
                 icon="ri-ship-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveType("all");
                     setSortBy("rating");
@@ -443,7 +446,7 @@ export default function YachtChartersPage() {
                           className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer"
                         >
                           <i className="ri-ship-line text-sm"></i>
-                          View Details
+                          {t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -506,7 +509,7 @@ export default function YachtChartersPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedYacht.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedYacht.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedYacht.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
 
@@ -518,22 +521,22 @@ export default function YachtChartersPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-ruler-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Length</p>
+                    <p className="text-xs text-foreground-500">{t("services.length")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedYacht.length}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-team-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Capacity</p>
+                    <p className="text-xs text-foreground-500">{t("services.capacity")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedYacht.capacity} guests</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-hotel-bed-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Cabins</p>
+                    <p className="text-xs text-foreground-500">{t("services.cabins")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedYacht.cabins}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-calendar-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Year</p>
+                    <p className="text-xs text-foreground-500">{t("services.year")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedYacht.year}</p>
                   </div>
                 </div>
@@ -542,11 +545,11 @@ export default function YachtChartersPage() {
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Full Day Charter</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.fullDayCharter")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedYacht.pricePerDay.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Half Day Charter</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.halfDayCharter")}</p>
                       <p className="text-lg font-semibold text-foreground-700">€{selectedYacht.halfDayPrice.toLocaleString()}</p>
                     </div>
                   </div>
@@ -554,12 +557,12 @@ export default function YachtChartersPage() {
                     {selectedYacht.crewIncluded ? (
                       <>
                         <i className="ri-checkbox-circle-fill text-green-500"></i>
-                        <span>Crew included in price</span>
+                        <span>{t("services.crewIncluded")}</span>
                       </>
                     ) : (
                       <>
                         <i className="ri-information-line text-amber-500"></i>
-                        <span>Skipper required — available at €150/day</span>
+                        <span>{t("services.skipperRequired")}</span>
                       </>
                     )}
                   </div>
@@ -567,7 +570,7 @@ export default function YachtChartersPage() {
 
                 {/* Amenities */}
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Amenities & Equipment</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.amenitiesEquipment")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedYacht.amenities.map((amenity) => (
                       <span key={amenity} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">
@@ -619,7 +622,7 @@ export default function YachtChartersPage() {
 
                 {/* Available Routes */}
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Available Routes</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.availableRoutes")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedYacht.availableRoutes.map((route) => (
                       <span key={route} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap">
@@ -632,8 +635,8 @@ export default function YachtChartersPage() {
 
                 {/* Date Picker */}
                 <div className="mb-6 p-5 rounded-xl bg-background-50 border border-background-200/70">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-1">Select Your Charter Date</h4>
-                  <p className="text-xs text-foreground-500 mb-4">Pick the day you would like to set sail</p>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-1">{t("services.selectCharterDate")}</h4>
+                  <p className="text-xs text-foreground-500 mb-4">{t("services.pickSailDay")}</p>
 
                   <div className={`relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${charterDate && !dateError ? "border-primary-400 bg-primary-50/40" : dateError ? "border-red-300 bg-red-50/40" : "border-background-200 bg-white"}`}>
                     <div className="w-10 h-10 flex items-center justify-center shrink-0 rounded-full bg-white border border-background-200 text-foreground-500">
@@ -648,7 +651,7 @@ export default function YachtChartersPage() {
                         className="w-full bg-transparent text-sm text-foreground-900 font-medium outline-none cursor-pointer [color-scheme:light]"
                       />
                       {!charterDate && (
-                        <p className="text-xs text-foreground-400 mt-0.5">Click to choose your preferred date</p>
+                        <p className="text-xs text-foreground-400 mt-0.5">{t("services.clickChooseDate")}</p>
                       )}
                       {charterDate && !dateError && (
                         <p className="text-xs text-primary-600 mt-0.5 font-medium flex items-center gap-1">
@@ -667,7 +670,7 @@ export default function YachtChartersPage() {
                       <button
                         onClick={() => { setCharterDate(""); setDateError(""); }}
                         className="w-8 h-8 flex items-center justify-center shrink-0 rounded-full hover:bg-background-200 text-foreground-400 hover:text-foreground-600 transition-colors cursor-pointer"
-                        title="Clear date"
+                        title={t("services.clearDate")}
                       >
                         <i className="ri-close-line text-sm"></i>
                       </button>
@@ -677,8 +680,8 @@ export default function YachtChartersPage() {
 
                 {/* Charter Duration Selector */}
                 <div className="mb-6 p-5 rounded-xl bg-background-50 border border-background-200/70">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-1">Choose Your Trip Duration</h4>
-                  <p className="text-xs text-foreground-500 mb-4">Half day, full day, or a multi-day voyage</p>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-1">{t("services.chooseTripDuration")}</h4>
+                  <p className="text-xs text-foreground-500 mb-4">{t("services.tripDurationHelp")}</p>
 
                   <div className="grid grid-cols-3 gap-3">
                     {/* Half Day */}
@@ -700,9 +703,9 @@ export default function YachtChartersPage() {
                       <span className={`text-sm font-semibold transition-colors ${
                         charterDuration === "half-day" ? "text-primary-700" : "text-foreground-700"
                       }`}>
-                        Half Day
+                        {t("services.halfDay")}
                       </span>
-                      <span className="text-xs text-foreground-500">4 hours</span>
+                      <span className="text-xs text-foreground-500">4 {t("services.service.hours")}</span>
                       <span className={`text-sm font-bold transition-colors ${
                         charterDuration === "half-day" ? "text-primary-600" : "text-foreground-500"
                       }`}>
@@ -729,9 +732,9 @@ export default function YachtChartersPage() {
                       <span className={`text-sm font-semibold transition-colors ${
                         charterDuration === "full-day" ? "text-primary-700" : "text-foreground-700"
                       }`}>
-                        Full Day
+                        {t("services.fullDay")}
                       </span>
-                      <span className="text-xs text-foreground-500">8 hours</span>
+                      <span className="text-xs text-foreground-500">8 {t("services.service.hours")}</span>
                       <span className={`text-sm font-bold transition-colors ${
                         charterDuration === "full-day" ? "text-primary-600" : "text-foreground-500"
                       }`}>
@@ -758,9 +761,9 @@ export default function YachtChartersPage() {
                       <span className={`text-sm font-semibold transition-colors ${
                         charterDuration === "multi-day" ? "text-primary-700" : "text-foreground-700"
                       }`}>
-                        Multi-Day
+                        {t("services.multiDay")}
                       </span>
-                      <span className="text-xs text-foreground-500">2+ days</span>
+                      <span className="text-xs text-foreground-500">2+ {t("services.service.days")}</span>
                       <span className={`text-sm font-bold transition-colors ${
                         charterDuration === "multi-day" ? "text-primary-600" : "text-foreground-500"
                       }`}>
@@ -779,21 +782,21 @@ export default function YachtChartersPage() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-foreground-900">
-                          {charterDuration === "half-day" && `Half Day · €${selectedYacht.halfDayPrice.toLocaleString()}`}
-                          {charterDuration === "full-day" && `Full Day · €${selectedYacht.pricePerDay.toLocaleString()}`}
-                          {charterDuration === "multi-day" && `Multi-Day · from €${selectedYacht.pricePerDay.toLocaleString()} / day`}
+                          {charterDuration === "half-day" && `${t("services.halfDay")} · €${selectedYacht.halfDayPrice.toLocaleString()}`}
+                          {charterDuration === "full-day" && `${t("services.fullDay")} · €${selectedYacht.pricePerDay.toLocaleString()}`}
+                          {charterDuration === "multi-day" && `${t("services.multiDay")} · ${t("services.fromPrice")} €${selectedYacht.pricePerDay.toLocaleString()} / ${t("services.service.days")}`}
                         </p>
                         <p className="text-xs text-foreground-500">
-                          {charterDuration === "half-day" && "4-hour charter"}
-                          {charterDuration === "full-day" && "8-hour charter"}
-                          {charterDuration === "multi-day" && "Exact pricing confirmed after concierge review"}
+                          {charterDuration === "half-day" && t("services.form.fourHourCharter")}
+                          {charterDuration === "full-day" && t("services.form.eightHourCharter")}
+                          {charterDuration === "multi-day" && t("services.form.exactPricing")}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setCharterDuration(null)}
                       className="shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-accent-200/60 text-foreground-400 hover:text-foreground-600 transition-colors cursor-pointer"
-                      title="Clear duration"
+                      title={t("services.clearDuration")}
                     >
                       <i className="ri-close-line text-sm"></i>
                     </button>
@@ -809,7 +812,7 @@ export default function YachtChartersPage() {
                     {charterDuration && <input type="hidden" name="duration" value={charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"} />}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <input name="name" type="text" placeholder="Your full name" required
+                        <input name="name" type="text" placeholder={t("services.fullName")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -825,7 +828,7 @@ export default function YachtChartersPage() {
                         )}
                       </div>
                       <div>
-                        <input name="email" type="email" placeholder="Your email address" required
+                        <input name="email" type="email" placeholder={t("services.emailAddress")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -864,29 +867,29 @@ export default function YachtChartersPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Number of guests, preferred route, or special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.yachtNotes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -907,29 +910,29 @@ export default function YachtChartersPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.form.sending")}
                           </>
                         ) : charterDate && !dateError ? (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
                             {charterDuration
-                              ? `Request ${charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"} Charter for ${formatShortDate(charterDate)}`
-                              : `Request Availability for ${formatShortDate(charterDate)}`}
+                              ? t("services.form.requestCharterDate", { duration: charterDuration === "half-day" ? t("services.halfDay") : charterDuration === "full-day" ? t("services.fullDay") : t("services.multiDay"), date: formatShortDate(charterDate) })
+                              : t("services.form.requestAvailabilityDate", { date: formatShortDate(charterDate) })}
                           </>
                         ) : charterDuration ? (
                           <>
                             <i className="ri-calendar-line text-sm"></i>
-                            Request {charterDuration === "half-day" ? "Half Day" : charterDuration === "full-day" ? "Full Day" : "Multi-Day"} Charter
+                            {t("services.form.requestCharter", { duration: charterDuration === "half-day" ? t("services.halfDay") : charterDuration === "full-day" ? t("services.fullDay") : t("services.multiDay") })}
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-line text-sm"></i>
-                            Request Availability
+                            {t("services.form.requestAvailability")}
                           </>
                         )}
                       </button>
                       <button type="button" onClick={handleCloseModal} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">
-                        Close
+                        {t("services.close")}
                       </button>
                     </div>
                   </form>

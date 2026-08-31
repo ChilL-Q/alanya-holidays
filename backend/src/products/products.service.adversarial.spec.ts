@@ -4,6 +4,7 @@ import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
 import { SupabaseService } from '../supabase/supabase.service';
+import { BillingService } from '../billing/billing.service';
 
 describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () => {
   describe('ProductsService Order Retrieval & Authorization Boundary Challenges', () => {
@@ -35,6 +36,12 @@ describe('ProductsService & ProductsRepository - Adversarial Orders Tests', () =
           {
             provide: UserRolesRepository,
             useValue: mockUserRolesRepo,
+          },
+          {
+            provide: BillingService,
+            useValue: {
+              hasActivePremiumAccess: jest.fn().mockResolvedValue(true),
+            },
           },
         ],
       }).compile();

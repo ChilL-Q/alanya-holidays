@@ -8,8 +8,11 @@ import { conciergeService, golfStyles, type GolfVacation } from "@/api-services/
 import { formatAmenity } from "@/utils/format-amenity";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function GolfVacationsPage() {
+  const { t } = useTranslation();
   const [golfVacations, setGolfVacations] = useState<GolfVacation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -31,11 +34,11 @@ export default function GolfVacationsPage() {
       const data = await conciergeService.getGolfVacations();
       setGolfVacations(data);
     } catch {
-      setFetchError("Failed to load golf vacations. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.golfVacations") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadVacations();
@@ -43,10 +46,10 @@ export default function GolfVacationsPage() {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your full name.";
+    if (name === "name" && !value.trim()) return t("services.validation.fullName");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
     return "";
   };
@@ -90,7 +93,7 @@ export default function GolfVacationsPage() {
   }, [golfVacations, activeStyle, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
+    "rating": t("services.topRated"), "price-low": t("services.priceLow"), "price-high": t("services.priceHigh"), "duration": t("services.shortestFirst"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -108,7 +111,7 @@ export default function GolfVacationsPage() {
     setFieldErrors({ name: nameErr, email: emailErr });
     setTouchedFields({ name: true, email: true });
     if (nameErr || emailErr) {
-      setFormError("Please fix the errors below before sending.");
+      setFormError(t("services.validation.fixErrors"));
       return;
     }
 
@@ -142,10 +145,10 @@ export default function GolfVacationsPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -163,15 +166,15 @@ export default function GolfVacationsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/20 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Golf Vacations</span>
+              <span className="text-white/90 text-sm">{t("services.golf.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Luxury Golf Vacations</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.golf.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Tee off at world-class championship courses in Belek, the golf capital of the Turkish Riviera. All-inclusive packages with five-star accommodation, just minutes from Alanya.
+              {t("services.golf.hero")}
             </p>
           </div>
         </section>
@@ -207,7 +210,7 @@ export default function GolfVacationsPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredVacations.length} {filteredVacations.length === 1 ? "package" : "packages"} available</p>
+              <p className="text-sm text-foreground-500">{t("services.service.available", { count: filteredVacations.length, item: filteredVacations.length === 1 ? t("services.service.package") : t("services.service.packages") })}</p>
             )}
           </div>
         </section>
@@ -216,7 +219,7 @@ export default function GolfVacationsPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load golf vacation packages"
+                title={t("services.golf.unable")}
                 message={fetchError}
                 onRetry={loadVacations}
               />
@@ -236,11 +239,11 @@ export default function GolfVacationsPage() {
               </div>
             ) : filteredVacations.length === 0 ? (
               <EmptyState
-                title="No golf vacations found"
-                description="Try selecting a different vacation style or clear your filters."
+                title={t("services.golf.none")}
+                description={t("services.golf.noneDesc")}
                 icon="ri-golf-ball-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveStyle("all");
                     setSortBy("rating");
@@ -255,7 +258,7 @@ export default function GolfVacationsPage() {
                       <img src={vacation.image} alt={vacation.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {vacation.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -263,7 +266,7 @@ export default function GolfVacationsPage() {
                       </div>
                       <div className="absolute bottom-3 left-3">
                         <span className="px-2.5 py-1 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-xs font-medium whitespace-nowrap flex items-center gap-1">
-                          <i className="ri-golf-ball-line text-[10px]"></i>{vacation.holes || 18} Holes
+                          <i className="ri-golf-ball-line text-[10px]"></i>{vacation.holes || 18} {t("services.service.holes")}
                         </span>
                       </div>
                     </div>
@@ -278,8 +281,8 @@ export default function GolfVacationsPage() {
                       </div>
                       <p className="text-sm text-foreground-500 leading-relaxed mb-4 line-clamp-2">{vacation.description}</p>
                       <div className="flex items-center gap-3 mb-4 text-xs text-foreground-500">
-                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{vacation.club || vacation.course || "Alanya Golf Club"}</span>
-                        <span className="flex items-center gap-1"><i className="ri-signal-wifi-line text-foreground-400"></i>{vacation.difficulty || "All Levels"}</span>
+                        <span className="flex items-center gap-1"><i className="ri-building-line text-foreground-400"></i>{vacation.club || vacation.course || t("services.service.golfClub")}</span>
+                        <span className="flex items-center gap-1"><i className="ri-signal-wifi-line text-foreground-400"></i>{vacation.difficulty || t("services.service.allLevels")}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 mb-5">
                         {(vacation.courses || [vacation.course]).filter(Boolean).slice(0, 2).map((c) => (
@@ -290,10 +293,10 @@ export default function GolfVacationsPage() {
                       <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                         <div>
                           <span className="text-lg font-bold text-foreground-900">€{(vacation.pricePerPerson || vacation.packagePrice || 0).toLocaleString()}</span>
-                          <span className="text-sm text-foreground-500"> / person</span>
+                          <span className="text-sm text-foreground-500"> / {t("services.person")}</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedVacation(vacation); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                          <i className="ri-golf-ball-line text-sm"></i>View Details
+                        <i className="ri-golf-ball-line text-sm"></i>{t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -315,7 +318,7 @@ export default function GolfVacationsPage() {
                 <img src={selectedVacation.image} alt={selectedVacation.name} className="w-full h-full object-cover object-top" />
                 {selectedVacation.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -330,46 +333,46 @@ export default function GolfVacationsPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedVacation.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedVacation.reviewCount} reviews)</span>
+                      <span className="text-sm text-foreground-500">({selectedVacation.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedVacation.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Duration</p>
+                      <p className="text-xs text-foreground-500">{t("services.duration")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.duration || "3 Days / 2 Nights"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-group-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Group Size</p>
+                      <p className="text-xs text-foreground-500">{t("services.groupSize")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVacation.groupSize || "1-4 players"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Location</p>
+                      <p className="text-xs text-foreground-500">{t("services.location")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{(selectedVacation.location || "Alanya").split("—")[0].trim()}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-global-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Language</p>
-                    <p className="font-semibold text-foreground-900 text-xs">{selectedVacation.language || "English, Turkish"}</p>
+                      <p className="text-xs text-foreground-500">{t("services.language")}</p>
+                    <p className="font-semibold text-foreground-900 text-xs">{selectedVacation.language || t("services.service.languagePair")}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perPerson")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{(selectedVacation.pricePerPerson || selectedVacation.packagePrice || 0).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Difficulty</p>
-                      <span className="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold whitespace-nowrap">{selectedVacation.difficulty || "All Levels"}</span>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.service.difficulty")}</p>
+                      <span className="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold whitespace-nowrap">{selectedVacation.difficulty || t("services.service.allLevels")}</span>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Courses</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.courses")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {(selectedVacation.courses || [selectedVacation.course]).filter(Boolean).map((c) => (
                       <span key={c} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap flex items-center gap-1.5">
@@ -379,7 +382,7 @@ export default function GolfVacationsPage() {
                   </div>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">Amenities</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-2">{t("services.amenities")}</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {(selectedVacation.amenities || selectedVacation.courseFeatures || []).map((a) => (
                       <span key={a} className="px-2.5 py-1 rounded-full bg-background-100 border border-background-200 text-foreground-600 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
@@ -387,7 +390,7 @@ export default function GolfVacationsPage() {
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.whatsIncluded")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {(selectedVacation.priceIncludes || selectedVacation.includes || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -402,15 +405,15 @@ export default function GolfVacationsPage() {
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
                         {contactMethod === 'whatsapp' ? (
-                          <>Enquiry sent! We'll WhatsApp you soon.</>
+                          <>{t("services.form.sentWhatsapp")}</>
                         ) : contactMethod === 'phone_call' ? (
-                          <>Enquiry sent! We'll call you soon.</>
+                          <>{t("services.form.sentPhone")}</>
                         ) : (
-                          <>Enquiry sent! We'll email you soon.</>
+                          <>{t("services.form.sentEmail")}</>
                         )}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedVacation(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedVacation(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
@@ -418,7 +421,7 @@ export default function GolfVacationsPage() {
                     <input type="hidden" name="vacation_name" value={selectedVacation.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <input name="name" type="text" placeholder="Your full name" required
+                        <input name="name" type="text" placeholder={t("services.fullName")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -434,7 +437,7 @@ export default function GolfVacationsPage() {
                         )}
                       </div>
                       <div>
-                        <input name="email" type="email" placeholder="Your email address" required
+                        <input name="email" type="email" placeholder={t("services.emailAddress")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -473,29 +476,29 @@ export default function GolfVacationsPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Preferred dates, group size, handicap level, or any special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.preferredDates")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -508,16 +511,16 @@ export default function GolfVacationsPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.form.sending")}
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Enquire Now
+                            {t("services.enquireNow")}
                           </>
                         )}
                       </button>
-                      <button type="button" onClick={() => setSelectedVacation(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedVacation(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

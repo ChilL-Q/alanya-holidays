@@ -8,6 +8,8 @@ import ListingDetailPreviewModal from "./ListingDetailPreviewModal";
 import RejectReasonModal from "./RejectReasonModal";
 import BulkActionsToolbar from "./BulkActionsToolbar";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type StatusFilter = "all" | "pending" | "approved" | "rejected" | "draft";
 
@@ -75,6 +77,7 @@ const categoriesList = [
 export default function ListingsModerationTab({
   onListingCountUpdate,
 }: ListingsModerationTabProps) {
+  const { t } = useTranslation();
   const [listings, setListings] = useState<ModerationListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,11 +117,11 @@ export default function ListingsModerationTab({
         onListingCountUpdateRef.current({ total: data?.length || 0, pending: pendingCount });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load listings");
+      setError(err instanceof Error ? err.message : t("admin.listingsLoadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, categoryFilter, searchQuery]);
+  }, [statusFilter, categoryFilter, searchQuery, t]);
 
   useEffect(() => {
     void fetchListings();
@@ -195,7 +198,7 @@ export default function ListingsModerationTab({
     try {
       const ok = await adminService.approveListing(id);
       if (ok) {
-        toast.success("Listing approved successfully");
+        toast.success(t("admin.listingApproved"));
         setListings((prev) =>
           prev.map((l) => (l.id === id ? { ...l, status: "approved" } : l))
         );
@@ -205,7 +208,7 @@ export default function ListingsModerationTab({
           return next;
         });
       } else {
-        toast.error("Failed to approve listing");
+        toast.error(t("admin.listingApproveFailed"));
       }
     } finally {
       setActionLoadingId(null);
@@ -219,7 +222,7 @@ export default function ListingsModerationTab({
     try {
       const ok = await adminService.rejectListing(id, reason);
       if (ok) {
-        toast.success("Listing rejected with feedback");
+        toast.success(t("admin.listingRejected"));
         setListings((prev) =>
           prev.map((l) =>
             l.id === id ? { ...l, status: "rejected", rejection_reason: reason } : l
@@ -231,7 +234,7 @@ export default function ListingsModerationTab({
           return next;
         });
       } else {
-        toast.error("Failed to reject listing");
+        toast.error(t("admin.listingRejectFailed"));
       }
     } finally {
       setActionLoadingId(null);
@@ -247,7 +250,7 @@ export default function ListingsModerationTab({
     try {
       const ok = await adminService.deleteListing(id);
       if (ok) {
-        toast.success("Listing deleted");
+        toast.success(t("admin.listingDeleted"));
         setListings((prev) => prev.filter((l) => l.id !== id));
         setSelectedIds((prev) => {
           const next = new Set(prev);
@@ -255,7 +258,7 @@ export default function ListingsModerationTab({
           return next;
         });
       } else {
-        toast.error("Failed to delete listing");
+        toast.error(t("admin.listingDeleteFailed"));
       }
     } finally {
       setActionLoadingId(null);
@@ -279,12 +282,12 @@ export default function ListingsModerationTab({
         toast.success(`Batch approved ${res.successful.length} listing(s)`);
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to approve ${res.failed.length} listing(s)`);
+        toast.error(t("admin.batchListingApproveFailed", { count: res.failed.length }));
         await fetchListings();
       }
       setSelectedIds(new Set());
     } catch {
-      toast.error("Error during batch approval");
+      toast.error(t("admin.batchApprovalFailed"));
       await fetchListings();
     } finally {
       setIsBulkLoading(false);
@@ -311,13 +314,13 @@ export default function ListingsModerationTab({
         toast.success(`Batch rejected ${res.successful.length} listing(s)`);
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to reject ${res.failed.length} listing(s)`);
+        toast.error(t("admin.batchListingRejectFailed", { count: res.failed.length }));
         await fetchListings();
       }
       setSelectedIds(new Set());
       setIsBulkRejectModalOpen(false);
     } catch {
-      toast.error("Error during batch rejection");
+      toast.error(t("admin.batchRejectionFailed"));
       await fetchListings();
     } finally {
       setIsBulkLoading(false);
@@ -337,19 +340,19 @@ export default function ListingsModerationTab({
     try {
       const ok = await adminService.toggleListingFeature(id, nextFeatured);
       if (ok) {
-        toast.success(nextFeatured ? "Listing marked as featured" : "Listing unfeatured");
+        toast.success(nextFeatured ? t("admin.listingFeatured") : t("admin.listingUnfeatured"));
       } else {
         // Rollback
         setListings((prev) =>
           prev.map((l) => (l.id === id ? { ...l, is_featured: previous } : l))
         );
-        toast.error("Failed to update featured status");
+        toast.error(t("admin.featuredUpdateFailed"));
       }
     } catch {
       setListings((prev) =>
         prev.map((l) => (l.id === id ? { ...l, is_featured: previous } : l))
       );
-      toast.error("Network error while updating featured status");
+      toast.error(t("admin.featuredNetworkError"));
     } finally {
       setActionLoadingId(null);
     }
@@ -367,19 +370,19 @@ export default function ListingsModerationTab({
     try {
       const ok = await adminService.toggleListingVerify(id, nextVerified);
       if (ok) {
-        toast.success(nextVerified ? "Listing verified" : "Listing unverified");
+        toast.success(nextVerified ? t("admin.listingVerified") : t("admin.listingUnverified"));
       } else {
         // Rollback
         setListings((prev) =>
           prev.map((l) => (l.id === id ? { ...l, is_verified: previous } : l))
         );
-        toast.error("Failed to update verification status");
+        toast.error(t("admin.verificationUpdateFailed"));
       }
     } catch {
       setListings((prev) =>
         prev.map((l) => (l.id === id ? { ...l, is_verified: previous } : l))
       );
-      toast.error("Network error while updating verification status");
+      toast.error(t("admin.verificationNetworkError"));
     } finally {
       setActionLoadingId(null);
     }
@@ -395,7 +398,7 @@ export default function ListingsModerationTab({
 
     const num = Number(input.trim());
     if (isNaN(num) || num < 0 || num > 100) {
-      toast.error("Score must be a number between 0 and 100");
+      toast.error(t("admin.scoreRangeError"));
       return;
     }
 
@@ -414,13 +417,13 @@ export default function ListingsModerationTab({
         setListings((prev) =>
           prev.map((l) => (l.id === listing.id ? { ...l, base_score: currentScore } : l))
         );
-        toast.error("Failed to update listing score");
+        toast.error(t("admin.scoreUpdateFailed"));
       }
     } catch {
       setListings((prev) =>
         prev.map((l) => (l.id === listing.id ? { ...l, base_score: currentScore } : l))
       );
-      toast.error("Network error while updating score");
+      toast.error(t("admin.scoreNetworkError"));
     } finally {
       setActionLoadingId(null);
     }
@@ -442,12 +445,12 @@ export default function ListingsModerationTab({
         toast.success(`Batch featured ${res.successful.length} listing(s)`);
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to feature ${res.failed.length} listing(s)`);
+        toast.error(t("admin.batchListingFeatureFailed", { count: res.failed.length }));
         await fetchListings();
       }
       setSelectedIds(new Set());
     } catch {
-      toast.error("Error during batch feature");
+      toast.error(t("admin.batchFeatureFailed"));
       await fetchListings();
     } finally {
       setIsBulkLoading(false);
@@ -470,12 +473,12 @@ export default function ListingsModerationTab({
         toast.success(`Batch verified ${res.successful.length} listing(s)`);
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to verify ${res.failed.length} listing(s)`);
+        toast.error(t("admin.batchListingVerifyFailed", { count: res.failed.length }));
         await fetchListings();
       }
       setSelectedIds(new Set());
     } catch {
-      toast.error("Error during batch verify");
+      toast.error(t("admin.batchVerifyFailed"));
       await fetchListings();
     } finally {
       setIsBulkLoading(false);
@@ -527,13 +530,13 @@ export default function ListingsModerationTab({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by business name, location, email, or slug..."
+              placeholder={t("admin.listingsSearchPlaceholder")}
               className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-secondary-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 dark:focus:ring-accent-950 outline-none transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t("admin.clearSearch")}
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 dark:text-slate-500 dark:hover:text-slate-300 text-base p-1"
               >
@@ -550,7 +553,7 @@ export default function ListingsModerationTab({
             >
               {categoriesList.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.label}
+                  {t(`admin.categoryFilter.${cat.id}`, { defaultValue: cat.label })}
                 </option>
               ))}
             </select>
@@ -572,7 +575,7 @@ export default function ListingsModerationTab({
             }}
             className="text-xs font-semibold text-rose-700 dark:text-rose-300 underline hover:no-underline cursor-pointer"
           >
-            Retry
+            {t("admin.retry")}
           </button>
         </div>
       )}
@@ -597,10 +600,10 @@ export default function ListingsModerationTab({
             <i className="ri-folder-open-line" />
           </div>
           <h3 className="text-base font-bold text-secondary-800 dark:text-white">
-            No listings found
+            {t("admin.noListingsFound")}
           </h3>
           <p className="text-sm text-secondary-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
-            No listings match the current filters. Try changing your search query or status filter.
+            {t("admin.noListingsMatch")}
           </p>
         </div>
       ) : (
@@ -613,7 +616,7 @@ export default function ListingsModerationTab({
                   <th className="w-12 px-4 py-3.5 text-center">
                     <input
                       type="checkbox"
-                      aria-label="Select all listings"
+                      aria-label={t("admin.selectAllListings")}
                       checked={isAllSelected}
                       onChange={(e) => {
                         if (e.target.checked) selectAllFiltered();
@@ -623,19 +626,19 @@ export default function ListingsModerationTab({
                     />
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Business / Listing
+                    {t("admin.businessListing")}
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Category & Tier
+                    {t("admin.categoryTier")}
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Submitted Date
+                    {t("admin.submittedDate")}
                   </th>
                   <th className="px-6 py-3.5 text-right text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                    Actions
+                    {t("admin.actions")}
                   </th>
                 </tr>
               </thead>
@@ -669,7 +672,7 @@ export default function ListingsModerationTab({
                       <td className="w-12 px-4 py-4 text-center">
                         <input
                           type="checkbox"
-                          aria-label={`Select ${listing.name}`}
+                            aria-label={t("admin.selectListing", { name: listing.name })}
                           checked={isSelected}
                           onChange={() => toggleSelect(listing.id)}
                           className="w-4 h-4 rounded border-secondary-300 dark:border-slate-600 text-accent-600 focus:ring-accent-500 cursor-pointer"
@@ -694,7 +697,7 @@ export default function ListingsModerationTab({
                               {listing.name}
                             </span>
                             <span className="text-xs text-secondary-500 dark:text-slate-400 block truncate">
-                              {listing.location || "Alanya, Turkey"}
+                              {listing.location || t("admin.alanyaTurkey")}
                             </span>
                           </div>
                         </div>
@@ -703,12 +706,12 @@ export default function ListingsModerationTab({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="space-y-1">
                           <span className="text-xs font-medium text-secondary-700 dark:text-slate-300 block capitalize">
-                            {listing.category || listing.category_id || "Directory"}
+                            {listing.category || listing.category_id || t("admin.directory")}
                           </span>
                           <span
                             className={`inline-block px-2 py-0.5 rounded-md text-xs font-bold ${tierStyle.bg} ${tierStyle.text}`}
                           >
-                            {tierStyle.label}
+                            {t(`admin.listingTier.${listing.tier || "explorer"}`, { defaultValue: tierStyle.label })}
                           </span>
                         </div>
                       </td>
@@ -718,18 +721,18 @@ export default function ListingsModerationTab({
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${statusStyle.bg} ${statusStyle.text}`}
                           >
-                            {statusStyle.label}
+                            {t(`admin.listingStatus.${listing.status}`, { defaultValue: statusStyle.label })}
                           </span>
                           <button
                             type="button"
                             data-testid={`score-btn-${listing.id}`}
                             onClick={() => handleUpdateScore(listing)}
                             disabled={isActionLoading}
-                            aria-label={`Score: ${listing.base_score || 0} for ${listing.name}`}
-                            title={`Curation Base Score: ${listing.base_score || 0} / 100 (Click to edit)`}
+                            aria-label={t("admin.scoreFor", { score: listing.base_score || 0, name: listing.name })}
+                            title={t("admin.curationScoreTitle", { score: listing.base_score || 0 })}
                             className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border border-secondary-200 dark:border-slate-700 bg-secondary-50 dark:bg-slate-800 text-secondary-700 dark:text-slate-300 hover:border-accent-500 hover:text-accent-600 transition-colors cursor-pointer"
                           >
-                            <span className="text-[10px] text-secondary-400 dark:text-slate-500 mr-1 font-normal">Score:</span>
+                            <span className="text-[10px] text-secondary-400 dark:text-slate-500 mr-1 font-normal">{t("admin.scoreLabel")}:</span>
                             <span>{listing.base_score || 0}</span>
                           </button>
                         </div>
@@ -753,8 +756,8 @@ export default function ListingsModerationTab({
                             data-testid={`feature-toggle-${listing.id}`}
                             onClick={() => handleToggleFeature(listing.id, !listing.is_featured)}
                             disabled={isActionLoading}
-                            aria-label={listing.is_featured ? `Unfeature ${listing.name}` : `Feature ${listing.name}`}
-                            title={listing.is_featured ? "Featured on Homepage / Category (Click to unfeature)" : "Not Featured (Click to feature)"}
+                            aria-label={t(listing.is_featured ? "admin.unfeatureListing" : "admin.featureListing", { name: listing.name })}
+                            title={t(listing.is_featured ? "admin.featuredTitle" : "admin.notFeaturedTitle")}
                             className={`p-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50 ${
                               listing.is_featured
                                 ? "text-amber-500 hover:text-amber-600 bg-amber-50 dark:bg-amber-950/40"
@@ -770,8 +773,8 @@ export default function ListingsModerationTab({
                             data-testid={`verify-toggle-${listing.id}`}
                             onClick={() => handleToggleVerify(listing.id, !listing.is_verified)}
                             disabled={isActionLoading}
-                            aria-label={listing.is_verified ? `Unverify ${listing.name}` : `Verify ${listing.name}`}
-                            title={listing.is_verified ? "Verified Business Badge (Click to unverify)" : "Unverified (Click to verify)"}
+                            aria-label={t(listing.is_verified ? "admin.unverifyListing" : "admin.verifyListing", { name: listing.name })}
+                            title={t(listing.is_verified ? "admin.verifiedTitle" : "admin.unverifiedTitle")}
                             className={`p-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50 ${
                               listing.is_verified
                                 ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40"
@@ -785,7 +788,7 @@ export default function ListingsModerationTab({
                           <button
                             type="button"
                             onClick={() => setPreviewListing(listing)}
-                            title="Quick Preview"
+                              title={t("admin.quickPreview")}
                             className="p-1.5 text-secondary-500 dark:text-slate-400 hover:text-secondary-900 dark:hover:text-white hover:bg-secondary-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                           >
                             <i className="ri-eye-line text-lg" />
@@ -798,7 +801,7 @@ export default function ListingsModerationTab({
                               data-testid={`approve-listing-${listing.id}`}
                               onClick={() => handleApprove(listing.id)}
                               disabled={isActionLoading}
-                              title="Approve Listing"
+                              title={t("admin.approveListing")}
                               className="p-1.5 text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                             >
                               <i className="ri-checkbox-circle-line text-lg" />
@@ -811,7 +814,7 @@ export default function ListingsModerationTab({
                               type="button"
                               onClick={() => setRejectingListing(listing)}
                               disabled={isActionLoading}
-                              title="Reject with Reason"
+                              title={t("admin.rejectWithReason")}
                               className="p-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                             >
                               <i className="ri-close-circle-line text-lg" />
@@ -823,7 +826,7 @@ export default function ListingsModerationTab({
                             type="button"
                             onClick={() => handleDelete(listing.id, listing.name)}
                             disabled={isActionLoading}
-                            title="Delete Listing"
+                            title={t("admin.deleteListing")}
                             className="p-1.5 text-secondary-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
                           >
                             <i className="ri-delete-bin-line text-lg" />
@@ -851,10 +854,10 @@ export default function ListingsModerationTab({
         onBatchVerify={handleBatchVerify}
         isLoading={isBulkLoading}
         itemLabel="listings"
-        approveLabel="Approve Selected"
-        rejectLabel="Reject Selected"
-        featureLabel="Feature Selected"
-        verifyLabel="Verify Selected"
+        approveLabel={t("admin.approveSelected")}
+        rejectLabel={t("admin.rejectSelected")}
+        featureLabel={t("admin.featureSelected")}
+        verifyLabel={t("admin.verifySelected")}
       />
 
       {/* Preview Modal */}
@@ -871,7 +874,7 @@ export default function ListingsModerationTab({
         isOpen={Boolean(rejectingListing)}
         onClose={() => setRejectingListing(null)}
         onConfirm={handleConfirmReject}
-        title="Reject Directory Listing"
+        title={t("admin.rejectDirectoryListing")}
         itemName={rejectingListing?.name || "this listing"}
       />
 
@@ -880,7 +883,7 @@ export default function ListingsModerationTab({
         isOpen={isBulkRejectModalOpen}
         onClose={() => setIsBulkRejectModalOpen(false)}
         onConfirm={handleConfirmBatchReject}
-        title="Batch Reject Listings"
+        title={t("admin.batchRejectListings")}
         itemName={`${selectedIds.size} selected listings`}
       />
     </div>

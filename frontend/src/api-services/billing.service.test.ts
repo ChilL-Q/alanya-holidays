@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { billingService } from "./billing.service";
+import { billingService, hasActivePremiumAccess } from "./billing.service";
 import { apiClient, ApiError } from "@/lib/api-client";
 
 describe("billing.service", () => {
@@ -75,5 +75,27 @@ describe("billing.service", () => {
 
     expect(postSpy).toHaveBeenCalledWith("/billing/subscription/portal");
     expect(res.url).toBe("https://billing.stripe.com/portal");
+  });
+
+  it("uses the same active, trialing, and expiry predicate as the server", () => {
+    const base = {
+      plan: "monthly",
+      tier: "voyager",
+      stripe_subscription_id: "sub-1",
+      stripe_customer_id: "cus-1",
+      current_period_end: "2026-09-25T00:00:00Z",
+      cancel_at_period_end: false,
+    };
+    const now = Date.parse("2026-09-01T00:00:00Z");
+
+    expect(hasActivePremiumAccess({ ...base, status: "active" }, now)).toBe(true);
+    expect(hasActivePremiumAccess({ ...base, status: "trialing" }, now)).toBe(true);
+    expect(hasActivePremiumAccess({ ...base, status: "cancelled" }, now)).toBe(false);
+    expect(
+      hasActivePremiumAccess(
+        { ...base, status: "active", current_period_end: "2026-08-01T00:00:00Z" },
+        now
+      )
+    ).toBe(false);
   });
 });

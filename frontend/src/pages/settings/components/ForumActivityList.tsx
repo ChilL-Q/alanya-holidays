@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { MessageSquare, Eye, ThumbsUp, MessageCircle, AlertCircle, RefreshCw, ChevronRight, Flame } from "lucide-react";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export function ForumActivityList() {
+  const { t } = useTranslation();
   const [threads, setThreads] = useState<CategoryThread[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +19,11 @@ export function ForumActivityList() {
       setThreads(res && Array.isArray(res.threads) ? res.threads : []);
     } catch (err: unknown) {
       logger.error("Failed to load forum activity:", err);
-      setError("Unable to load forum activity. Please try again.");
+      setError(t("settings.loadForumError", { defaultValue: "Unable to load forum activity. Please try again." }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void fetchThreads();
@@ -65,7 +67,7 @@ export function ForumActivityList() {
         <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-4">
           <MessageSquare className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">No forum discussions yet</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{t("settings.noForum")}</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
           You haven't started any discussions or asked questions in the community forum yet.
         </p>

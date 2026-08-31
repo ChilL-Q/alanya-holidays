@@ -24,6 +24,7 @@ describe('Blog DTO validation', () => {
         video_url: 'https://www.youtube.com/watch?v=example',
         media_urls: ['https://cdn.example.com/cover.webp'],
         tags: ['11111111-1111-4111-8111-111111111111'],
+        content_type: 'guide',
       });
 
       expect(await errorProperties(dto)).toEqual([]);
@@ -37,10 +38,17 @@ describe('Blog DTO validation', () => {
         media_urls: Array.from({ length: 11 }, (_, index) =>
           index === 0 ? 'not-a-url' : `https://cdn.example.com/${index}.webp`,
         ),
+        content_type: 'advertorial',
       });
 
       expect(await errorProperties(dto)).toEqual(
-        expect.arrayContaining(['title', 'content', 'video_url', 'media_urls']),
+        expect.arrayContaining([
+          'title',
+          'content',
+          'video_url',
+          'media_urls',
+          'content_type',
+        ]),
       );
     });
   });

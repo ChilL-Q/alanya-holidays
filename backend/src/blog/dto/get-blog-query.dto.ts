@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsUUID,
   IsInt,
+  IsIn,
   Max,
   MaxLength,
   Min,
@@ -58,6 +59,10 @@ export class GetBlogQueryDto {
   @IsOptional()
   @IsString()
   is_featured?: string;
+
+  @IsOptional()
+  @IsIn(['blog', 'guide'])
+  content_type?: 'blog' | 'guide';
 }
 
 export { GetBlogQueryDto as GetBlogPostsQueryDto };

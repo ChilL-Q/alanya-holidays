@@ -37,6 +37,37 @@ const createBuilder = () => {
 };
 
 describe('BusinessApplicationsRepository', () => {
+  it.each([
+    [{ id: row.id }, true],
+    [null, false],
+  ])(
+    'returns approved business capability from the authoritative application row %#',
+    async (approvedRow, expected) => {
+      const builder = createBuilder();
+      builder.maybeSingle.mockResolvedValue({ data: approvedRow, error: null });
+      const client = {
+        from: jest.fn().mockReturnValue(builder),
+        rpc: jest.fn(),
+      };
+      const repository = new BusinessApplicationsRepository({
+        getClient: () => client,
+      } as unknown as SupabaseService);
+
+      await expect(
+        repository.hasApprovedBusinessAccount('user-1'),
+      ).resolves.toBe(expected);
+      expect(client.from).toHaveBeenCalledWith('business_account_applications');
+      expect(builder.select).toHaveBeenCalledWith('id');
+      expect(builder.eq).toHaveBeenNthCalledWith(
+        1,
+        'applicant_user_id',
+        'user-1',
+      );
+      expect(builder.eq).toHaveBeenNthCalledWith(2, 'status', 'approved');
+      expect(builder.limit).toHaveBeenCalledWith(1);
+    },
+  );
+
   it('returns the deterministic latest application for the applicant', async () => {
     const builder = createBuilder();
     builder.maybeSingle.mockResolvedValue({ data: row, error: null });

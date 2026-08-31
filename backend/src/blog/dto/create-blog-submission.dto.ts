@@ -9,9 +9,14 @@ import {
   IsUrl,
   MaxLength,
   MinLength,
+  IsIn,
 } from 'class-validator';
 
 export class CreateBlogSubmissionDto {
+  @IsIn(['blog', 'guide'])
+  @IsOptional()
+  content_type?: 'blog' | 'guide';
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(150)

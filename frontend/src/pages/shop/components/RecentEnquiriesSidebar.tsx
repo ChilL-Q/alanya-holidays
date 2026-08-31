@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import { productsService, type ConciergeEnquiryEntry as RecentEnquiry } from "@/api-services/products.service";
 
 function parseCategory(subject?: string | null): string {
@@ -46,6 +48,7 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export default function RecentEnquiriesSidebar() {
+  const { t } = useTranslation();
   const [enquiries, setEnquiries] = useState<RecentEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -96,7 +99,7 @@ export default function RecentEnquiriesSidebar() {
             <i className="ri-history-line text-accent-600 text-sm"></i>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground-900">Recently Submitted</h3>
+            <h3 className="text-sm font-semibold text-foreground-900">{t("shop.recentlySubmitted")}</h3>
             <p className="text-xs text-foreground-400">{enquiries.length} recent enquiries</p>
           </div>
         </div>

@@ -133,6 +133,7 @@ export interface ForumEventsFilter {
   limit?: number;
   includeUnpublished?: boolean;
   search?: string;
+  ownerId?: string;
 }
 
 export interface ForumCommentsFilter {

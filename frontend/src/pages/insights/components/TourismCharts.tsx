@@ -19,6 +19,7 @@ import {
   type MonthlyTourismSeasonality,
   type SourceCountryTourism,
 } from "../data/regionalData";
+import { useTranslation } from "react-i18next";
 
 interface SeasonalityTooltipProps {
   active?: boolean;
@@ -29,6 +30,7 @@ interface SeasonalityTooltipProps {
 }
 
 function SeasonalityTooltip({ active, payload }: SeasonalityTooltipProps) {
+  const { t } = useTranslation();
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload;
     if (!data) return null;
@@ -45,22 +47,22 @@ function SeasonalityTooltip({ active, payload }: SeasonalityTooltipProps) {
                 : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
             }`}
           >
-            {data.season} Season
+            {data.season} {t("insights.season")}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-700 dark:text-foreground-200 mb-1">
-          <span>Estimated Arrivals:</span>
+          <span>{t("insights.estimatedArrivals")}</span>
           <span className="font-semibold text-primary-600 dark:text-primary-400">
             {data.tourists.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 mb-2">
-          <span>Annual Volume Share:</span>
+          <span>{t("insights.annualShare")}</span>
           <span className="font-semibold">{data.share}%</span>
         </div>
         <div className="grid grid-cols-2 gap-2 text-[11px] text-foreground-600 dark:text-foreground-300 border-t border-background-100 dark:border-background-700 pt-2">
-          <div>Avg Air: <span className="font-semibold">{data.tempAvgC}°C</span></div>
-          <div>Avg Sea: <span className="font-semibold">{data.seaTempC}°C</span></div>
+          <div>{t("insights.avgAir")} <span className="font-semibold">{data.tempAvgC}°C</span></div>
+          <div>{t("insights.avgSea")} <span className="font-semibold">{data.seaTempC}°C</span></div>
         </div>
       </div>
     );
@@ -77,6 +79,7 @@ interface CountryTooltipProps {
 }
 
 function SourceCountryTooltip({ active, payload }: CountryTooltipProps) {
+  const { t } = useTranslation();
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload;
     if (!data) return null;
@@ -87,17 +90,17 @@ function SourceCountryTooltip({ active, payload }: CountryTooltipProps) {
           <span>{data.country}</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-700 dark:text-foreground-200 mb-1">
-          <span>Inbound Visitors:</span>
+          <span>{t("insights.inboundVisitors")}</span>
           <span className="font-semibold text-primary-600 dark:text-primary-400">
             {data.visitors.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 mb-1">
-          <span>Market Share:</span>
+          <span>{t("insights.marketShare")}</span>
           <span className="font-semibold">{data.share}%</span>
         </div>
         <div className="flex items-center justify-between gap-4 text-foreground-600 dark:text-foreground-400 border-t border-background-100 dark:border-background-700 pt-1.5">
-          <span>YoY Growth:</span>
+          <span>{t("insights.yoyGrowth")}</span>
           <span className="font-semibold text-emerald-600 dark:text-emerald-400">{data.growthRate}</span>
         </div>
       </div>
@@ -107,6 +110,7 @@ function SourceCountryTooltip({ active, payload }: CountryTooltipProps) {
 }
 
 export default function TourismCharts() {
+  const { t } = useTranslation();
   const [selectedSeasonFilter, setSelectedSeasonFilter] = useState<"All" | "Peak" | "Shoulder" | "Low">("All");
 
   const filteredMonthly = selectedSeasonFilter === "All"
@@ -120,7 +124,7 @@ export default function TourismCharts() {
         <div className="max-w-3xl mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-100 dark:bg-secondary-950/80 border border-secondary-200 dark:border-secondary-800/60 text-secondary-800 dark:text-secondary-300 text-xs font-semibold uppercase tracking-wider mb-3">
             <i className="ri-flight-takeoff-line" />
-            <span>Tourism Flow & Seasonality Dynamics</span>
+            <span>{t("insights.tourismDynamics")}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground-900 dark:text-foreground-50 tracking-tight">
             16.9M Annual Mediterranean Visitors

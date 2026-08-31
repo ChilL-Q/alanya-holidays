@@ -11,8 +11,11 @@ import PaginationControls from "@/components/base/PaginationControls";
 import ErrorState from "@/components/base/ErrorState";
 import { logger } from "@/lib/logger";
 import SubmitContentModal from "@/components/feature/SubmitContentModal";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function CategoryPage() {
+  const { t } = useTranslation();
   const { categoryId } = useParams<{ categoryId: string }>();
 
   // Category state
@@ -43,11 +46,11 @@ export default function CategoryPage() {
       setCategory(cat);
       if (cats) setAllCategories(cats);
     } catch {
-      setCategoryError("Unable to load category details. Please try again.");
+    setCategoryError(t("public.categoryLoadFailed"));
     } finally {
       setCategoryLoading(false);
     }
-  }, [categoryId]);
+  }, [categoryId, t]);
 
   useEffect(() => {
     loadCategory();
@@ -146,7 +149,7 @@ export default function CategoryPage() {
         <Navbar />
         <main className="min-h-[60vh] flex flex-col items-center justify-center p-8">
           <ErrorState
-            title="Failed to load category"
+            title={t("public.categoryLoadFailed")}
             message={categoryError}
             onRetry={loadCategory}
           />
@@ -165,17 +168,17 @@ export default function CategoryPage() {
             <i className="ri-error-warning-line text-foreground-400 text-3xl"></i>
           </div>
           <h2 className="font-heading text-2xl text-foreground-900">
-            Category Not Found
+            {t("public.categoryNotFound")}
           </h2>
           <p className="text-foreground-500 text-sm">
-            The category you are looking for does not exist or has been moved.
+            {t("public.categoryMissing")}
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium hover:bg-primary-600 transition-colors"
           >
             <i className="ri-arrow-left-line"></i>
-            Back to Home
+            {t("public.backHome")}
           </Link>
         </div>
         <Footer />
@@ -216,7 +219,7 @@ export default function CategoryPage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-500 text-background-50 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-600 transition-colors cursor-pointer"
                 >
                   <i className="ri-edit-line"></i>
-                  Start a Discussion
+                  {t("public.startDiscussion")}
                 </button>
               </div>
 
@@ -235,12 +238,12 @@ export default function CategoryPage() {
                     <i className="ri-chat-off-line text-foreground-400 text-2xl"></i>
                   </div>
                   <h3 className="font-heading text-lg text-foreground-900 mb-2">
-                    No discussions yet
+                    {t("public.noDiscussionsYet")}
                   </h3>
                   <p className="text-foreground-500 text-sm mb-6">
                     {activeSubcategory
-                      ? `No threads in "${activeSubcategory}". Try a different topic or clear the filter.`
-                      : "Be the first to start a discussion in this category!"}
+                      ? t("public.noThreadsInTopic", { topic: activeSubcategory })
+                      : t("public.beFirstDiscussion")}
                   </p>
                   {activeSubcategory && (
                     <button
@@ -248,7 +251,7 @@ export default function CategoryPage() {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-background-100 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-200 transition-colors cursor-pointer"
                     >
                       <i className="ri-filter-off-line"></i>
-                      Clear Filter
+                      {t("public.clearFilter")}
                     </button>
                   )}
                 </div>
@@ -281,11 +284,11 @@ export default function CategoryPage() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-stack-line text-accent-500 text-lg"></i>
               <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">
-                Discover More
+                {t("public.discoverMore")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-6">
-              Explore Other Categories
+              {t("public.exploreOtherCategories")}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {allCategories

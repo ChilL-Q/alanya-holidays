@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { BlogSubmissionAdminItem } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ContentSubmissionPreviewModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ export default function ContentSubmissionPreviewModal({
   onReject,
   isProcessing = false,
 }: ContentSubmissionPreviewModalProps) {
+  const { t } = useTranslation();
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
@@ -44,7 +47,7 @@ export default function ContentSubmissionPreviewModal({
 
   const handleConfirmReject = () => {
     if (!rejectReason.trim()) {
-      setRejectError("Please provide a rejection reason.");
+      setRejectError(t("adminQueue.rejectionRequired"));
       return;
     }
     onReject(submission.id, rejectReason.trim());
@@ -86,7 +89,7 @@ export default function ContentSubmissionPreviewModal({
                     submission.status
                   )}`}
                 >
-                  {submission.status}
+                  {t(`adminQueue.${submission.status === "pending_review" ? "pendingReview" : submission.status === "approved" ? "claimApproved" : "claimRejected"}`)}
                 </span>
                 {submission.category && (
                   <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary-100 text-secondary-700 dark:bg-slate-800 dark:text-slate-300">
@@ -105,7 +108,7 @@ export default function ContentSubmissionPreviewModal({
           <button
             onClick={onClose}
             className="w-9 h-9 flex items-center justify-center rounded-full text-secondary-400 hover:text-secondary-700 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            aria-label="Close preview"
+            aria-label={t("adminQueue.closePreview")}
           >
             <i className="ri-close-line text-xl" />
           </button>
@@ -117,35 +120,35 @@ export default function ContentSubmissionPreviewModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-secondary-50 dark:bg-slate-950 border border-secondary-100 dark:border-slate-800 text-sm">
             <div>
               <span className="text-xs font-medium text-secondary-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                Creator / Author
+                {t("adminQueue.creatorAuthor")}
               </span>
               <p className="font-semibold text-secondary-900 dark:text-white">
-                {submission.author_name || submission.user?.full_name || "Anonymous Creator"}
+                {submission.author_name || submission.user?.full_name || t("adminQueue.anonymousCreator")}
               </p>
               <p className="text-xs text-secondary-600 dark:text-slate-300">
-                {submission.author_email || submission.user?.email || "No email provided"}
+                {submission.author_email || submission.user?.email || t("adminQueue.noEmail")}
               </p>
             </div>
 
             <div>
               <span className="text-xs font-medium text-secondary-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                Payout Details
+                {t("adminQueue.payoutDetails")}
               </span>
               {submission.payment_details ? (
                 <div className="text-xs space-y-0.5 text-secondary-700 dark:text-slate-300">
                   <p>
-                    <strong className="text-secondary-900 dark:text-white">Method:</strong>{" "}
+                    <strong className="text-secondary-900 dark:text-white">{t("adminQueue.method")}</strong>{" "}
                     {submission.payment_details.method?.toUpperCase()}
                   </p>
                   <p>
-                    <strong className="text-secondary-900 dark:text-white">Account:</strong>{" "}
+                    <strong className="text-secondary-900 dark:text-white">{t("adminQueue.account")}</strong>{" "}
                     <span className="font-mono bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-secondary-200 dark:border-slate-700">
                       {submission.payment_details.handle}
                     </span>
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-secondary-500 dark:text-slate-400 italic">No payout details provided</p>
+                <p className="text-xs text-secondary-500 dark:text-slate-400 italic">{t("adminQueue.noPayout")}</p>
               )}
             </div>
           </div>
@@ -153,7 +156,7 @@ export default function ContentSubmissionPreviewModal({
           {/* Submission Story Content */}
           <div>
             <h3 className="text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              Story / Content Text
+              {t("adminQueue.storyContent")}
             </h3>
             <div className="p-4 rounded-xl border border-secondary-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-secondary-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
               {submission.content}
@@ -164,7 +167,7 @@ export default function ContentSubmissionPreviewModal({
           {(submission.video_url || (submission.media_urls && submission.media_urls.length > 0)) && (
             <div className="space-y-3">
               <h3 className="text-xs font-bold text-secondary-500 dark:text-slate-400 uppercase tracking-wider">
-                Attached Media & Video
+                {t("adminQueue.attachedMedia")}
               </h3>
               {submission.video_url && (
                 <div className="p-3 rounded-xl border border-secondary-200 dark:border-slate-800 bg-secondary-50 dark:bg-slate-950 flex items-center justify-between">
@@ -180,7 +183,7 @@ export default function ContentSubmissionPreviewModal({
                     </a>
                   </div>
                   <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-accent-100 dark:bg-accent-950 text-accent-700 dark:text-accent-300">
-                    Video
+                    {t("adminQueue.video")}
                   </span>
                 </div>
               )}
@@ -197,11 +200,11 @@ export default function ContentSubmissionPreviewModal({
                     >
                       <img
                         src={url}
-                        alt={`Attachment ${idx + 1}`}
+                        alt={t("adminQueue.attachment", { number: idx + 1 })}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                       <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                        View Image
+                        {t("adminQueue.viewImage")}
                       </div>
                     </a>
                   ))}
@@ -217,7 +220,7 @@ export default function ContentSubmissionPreviewModal({
                 htmlFor="rejection-reason-input"
                 className="block text-xs font-bold text-rose-900 dark:text-rose-200 uppercase tracking-wider"
               >
-                Rejection Reason (Feedback for Creator) *
+                {t("adminQueue.rejectionReason")}
               </label>
               <textarea
                 id="rejection-reason-input"
@@ -227,7 +230,7 @@ export default function ContentSubmissionPreviewModal({
                   setRejectReason(e.target.value);
                   if (rejectError) setRejectError("");
                 }}
-                placeholder="Enter reason for rejection (e.g., promotional spam, low resolution photos, not Alanya-focused)..."
+                placeholder={t("adminQueue.rejectionPlaceholder")}
                 className="w-full px-3 py-2 text-sm rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
               {rejectError && (
@@ -241,7 +244,7 @@ export default function ContentSubmissionPreviewModal({
                   onClick={() => setShowRejectInput(false)}
                   className="px-3 py-1.5 text-xs font-medium text-secondary-600 dark:text-slate-400 hover:text-secondary-900 dark:hover:text-white rounded-lg hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("adminQueue.cancel")}
                 </button>
                 <button
                   type="button"
@@ -249,7 +252,7 @@ export default function ContentSubmissionPreviewModal({
                   disabled={isProcessing}
                   className="px-4 py-1.5 text-xs font-bold rounded-lg bg-rose-600 text-white hover:bg-rose-700 active:scale-95 transition-all shadow-xs cursor-pointer disabled:opacity-50"
                 >
-                  Confirm Rejection
+                  {t("adminQueue.confirmRejection")}
                 </button>
               </div>
             </div>
@@ -259,7 +262,7 @@ export default function ContentSubmissionPreviewModal({
           {submission.status === "rejected" && submission.rejection_reason && (
             <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
               <span className="text-xs font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wider block mb-1">
-                Previous Rejection Reason:
+                {t("adminQueue.previousRejection")}
               </span>
               <p className="text-xs text-rose-700 dark:text-rose-200">
                 {submission.rejection_reason}
@@ -275,7 +278,7 @@ export default function ContentSubmissionPreviewModal({
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-secondary-600 dark:text-slate-300 hover:text-secondary-900 dark:hover:text-white rounded-xl hover:bg-secondary-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            Close
+            {t("adminQueue.close")}
           </button>
 
           <div className="flex items-center gap-3">
@@ -287,7 +290,7 @@ export default function ContentSubmissionPreviewModal({
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer disabled:opacity-50"
               >
                 <i className="ri-close-circle-line" />
-                <span>Reject Submission</span>
+                <span>{t("adminQueue.rejectSubmission")}</span>
               </button>
             )}
 
@@ -299,7 +302,7 @@ export default function ContentSubmissionPreviewModal({
                 className="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-50"
               >
                 <i className="ri-check-line text-base" />
-                <span>Approve & Publish</span>
+                <span>{t("adminQueue.approvePublish")}</span>
               </button>
             )}
           </div>

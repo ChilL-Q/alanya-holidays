@@ -13,17 +13,20 @@ import GiftCardHero from "./components/GiftCardHero";
 import GiftCardGrid from "./components/GiftCardGrid";
 import RedemptionGuide from "./components/RedemptionGuide";
 import GiftCardFaq from "./components/GiftCardFaq";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function GiftCardsPage() {
+  const { t } = useTranslation();
   const { addToCart } = useCart();
   const { showToast, ToastContainer } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string>("All Experiences");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
-    document.title = "Gift Cards Hub | Alanya Holidays";
+    document.title = t("services.gifts.title");
     window.scrollTo(0, 0);
-  }, []);
+  }, [t]);
 
   const handleAddToCart = useCallback(
     (collection: GiftCardCollection, tier: GiftCardTier) => {
@@ -38,9 +41,9 @@ export default function GiftCardsPage() {
         quantity: 1,
       });
 
-      showToast("Added to cart", `${collection.title} - ${tier.name}`, "success");
+      showToast(t("services.gifts.added"), `${collection.title} - ${tier.name}`, "success");
     },
-    [addToCart, showToast],
+    [addToCart, showToast, t],
   );
 
   const handleResetFilters = useCallback(() => {

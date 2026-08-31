@@ -1,5 +1,7 @@
 import React from "react";
 import type { ModerationListing } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ListingDetailPreviewModalProps {
   listing: ModerationListing | null;
@@ -62,6 +64,7 @@ export default function ListingDetailPreviewModal({
   onApprove,
   onRequestReject,
 }: ListingDetailPreviewModalProps) {
+  const { t } = useTranslation();
   if (!isOpen || !listing) return null;
 
   const statusStyle = statusBadgeConfig[listing.status] || {
@@ -90,12 +93,12 @@ export default function ListingDetailPreviewModal({
             <span
               className={`px-2.5 py-1 rounded-full text-xs font-bold border ${statusStyle.bg} ${statusStyle.text}`}
             >
-              {statusStyle.label}
+              {t(`admin.listingStatus.${listing.status}`, { defaultValue: statusStyle.label })}
             </span>
             <span
               className={`px-2.5 py-1 rounded-full text-xs font-bold ${tierStyle.bg} ${tierStyle.text}`}
             >
-              {tierStyle.label}
+              {t(`admin.listingTier.${listing.tier || "explorer"}`, { defaultValue: tierStyle.label })}
             </span>
           </div>
           <button
@@ -120,7 +123,7 @@ export default function ListingDetailPreviewModal({
             <div className="flex flex-wrap items-center gap-3 text-sm text-secondary-500 dark:text-slate-400 mt-1">
               <span className="capitalize font-medium text-secondary-700 dark:text-slate-300">
                 <i className="ri-price-tag-3-line mr-1 text-accent-500" />
-                {listing.category || listing.category_id || "Uncategorized"}
+                {listing.category || listing.category_id || t("admin.uncategorized")}
               </span>
               {listing.location && (
                 <span>
@@ -131,7 +134,7 @@ export default function ListingDetailPreviewModal({
               {listing.created_at && (
                 <span>
                   <i className="ri-time-line mr-1 text-secondary-400 dark:text-slate-500" />
-                  Submitted {new Date(listing.created_at).toLocaleDateString()}
+                  {t("admin.submittedOn", { date: new Date(listing.created_at).toLocaleDateString() })}
                 </span>
               )}
             </div>
@@ -142,7 +145,7 @@ export default function ListingDetailPreviewModal({
             <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-800 dark:text-rose-200 text-sm">
               <div className="font-semibold flex items-center mb-1">
                 <i className="ri-error-warning-line mr-1.5 text-rose-600" />
-                Rejection Reason:
+                {t("admin.rejectionReasonLabel")}
               </div>
               <p>{listing.rejection_reason}</p>
             </div>
@@ -152,7 +155,7 @@ export default function ListingDetailPreviewModal({
           {listing.gallery && listing.gallery.length > 0 ? (
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-400 dark:text-slate-500 mb-2">
-                Gallery Photos ({listing.gallery.length})
+                {t("admin.galleryPhotos", { count: listing.gallery.length })}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {listing.gallery.map((url, idx) => (
@@ -171,7 +174,7 @@ export default function ListingDetailPreviewModal({
             </div>
           ) : (
             <div className="p-4 bg-secondary-50 dark:bg-slate-950 border border-dashed border-secondary-200 dark:border-slate-800 rounded-xl text-center text-xs text-secondary-400 dark:text-slate-500">
-              No gallery images uploaded.
+              {t("admin.noGalleryImages")}
             </div>
           )}
 
@@ -180,7 +183,7 @@ export default function ListingDetailPreviewModal({
             {listing.short_description && (
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-400 dark:text-slate-500 mb-1">
-                  Short Tagline
+                  {t("admin.shortTagline")}
                 </h3>
                 <p className="text-sm text-secondary-700 dark:text-slate-300 bg-secondary-50 dark:bg-slate-950 p-3 rounded-xl">
                   {listing.short_description}
@@ -190,7 +193,7 @@ export default function ListingDetailPreviewModal({
             {listing.description && (
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-400 dark:text-slate-500 mb-1">
-                  Full Description
+                  {t("admin.fullDescription")}
                 </h3>
                 <div className="text-sm text-secondary-700 dark:text-slate-300 whitespace-pre-line bg-secondary-50 dark:bg-slate-950 p-4 rounded-xl leading-relaxed">
                   {listing.description}
@@ -202,7 +205,7 @@ export default function ListingDetailPreviewModal({
           {/* Contact & Links Grid */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-secondary-400 dark:text-slate-500 mb-2">
-              Contact & Links
+              {t("admin.contactLinks")}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               {listing.email && (
@@ -254,9 +257,9 @@ export default function ListingDetailPreviewModal({
 
           {/* Metadata */}
           <div className="pt-2 text-xs text-secondary-400 dark:text-slate-500 flex flex-wrap gap-x-6 gap-y-1">
-            <span>Listing ID: {listing.id}</span>
-            {listing.owner_user_id && <span>Owner ID: {listing.owner_user_id}</span>}
-            {listing.slug && <span>Slug: {listing.slug}</span>}
+            <span>{t("admin.listingId", { id: listing.id })}</span>
+            {listing.owner_user_id && <span>{t("admin.ownerId", { id: listing.owner_user_id })}</span>}
+            {listing.slug && <span>{t("admin.slug", { slug: listing.slug })}</span>}
           </div>
         </div>
 
@@ -267,7 +270,7 @@ export default function ListingDetailPreviewModal({
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-secondary-700 dark:text-slate-300 hover:bg-secondary-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
           >
-            Close Preview
+            {t("admin.closePreview")}
           </button>
           <div className="flex items-center space-x-3">
             {onRequestReject && listing.status !== "rejected" && (
@@ -280,7 +283,7 @@ export default function ListingDetailPreviewModal({
                 className="px-4 py-2 text-sm font-semibold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/60 hover:bg-rose-200 dark:hover:bg-rose-900/60 rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer"
               >
                 <i className="ri-close-circle-line" />
-                <span>Reject</span>
+                <span>{t("admin.reject")}</span>
               </button>
             )}
             {onApprove && listing.status !== "approved" && (
@@ -293,7 +296,7 @@ export default function ListingDetailPreviewModal({
                 className="px-5 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
               >
                 <i className="ri-checkbox-circle-line" />
-                <span>Approve Listing</span>
+                <span>{t("admin.approveListing")}</span>
               </button>
             )}
           </div>

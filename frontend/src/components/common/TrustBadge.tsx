@@ -197,13 +197,13 @@ function extractReviewCount(input: ResolveTrustBadgeInput): number {
 function extractTags(input: ResolveTrustBadgeInput): string[] {
   if (!input || typeof input !== "object" || !input.tags) return [];
   if (Array.isArray(input.tags)) {
-    return input.tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+    return input.tags.map(function normalizeTag(t) { return String(t).trim().toLowerCase(); }).filter(Boolean);
   }
   if (typeof input.tags === "string") {
     try {
       const parsed = JSON.parse(input.tags);
       if (Array.isArray(parsed)) {
-        return parsed.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+        return parsed.map(function normalizeTag(t) { return String(t).trim().toLowerCase(); }).filter(Boolean);
       }
     } catch {
       // not JSON string

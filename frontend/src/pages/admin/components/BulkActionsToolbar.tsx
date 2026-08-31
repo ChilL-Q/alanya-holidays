@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface BulkActionsToolbarProps {
   selectedCount: number;
@@ -27,12 +29,18 @@ export default function BulkActionsToolbar({
   onBatchFeature,
   onBatchVerify,
   isLoading = false,
-  itemLabel = "items",
-  approveLabel = "Batch Approve",
-  rejectLabel = "Batch Reject",
-  featureLabel = "Feature Selected",
-  verifyLabel = "Verify Selected",
+  itemLabel,
+  approveLabel,
+  rejectLabel,
+  featureLabel,
+  verifyLabel,
 }: BulkActionsToolbarProps) {
+  const { t } = useTranslation();
+  const resolvedItemLabel = itemLabel ?? t("merchant.items");
+  const resolvedApproveLabel = approveLabel ?? t("admin.batchApprove");
+  const resolvedRejectLabel = rejectLabel ?? t("admin.batchReject");
+  const resolvedFeatureLabel = featureLabel ?? t("admin.featureSelected");
+  const resolvedVerifyLabel = verifyLabel ?? t("admin.verifySelected");
   if (selectedCount === 0) return null;
 
   const isAllSelected = selectedCount === totalCount && totalCount > 0;
@@ -46,7 +54,7 @@ export default function BulkActionsToolbar({
         <span className="w-2.5 h-2.5 rounded-full bg-accent-500 animate-pulse" />
         <span className="text-xs sm:text-sm font-semibold text-slate-200">
           <strong className="text-white font-bold">{selectedCount}</strong> of{" "}
-          {totalCount} {itemLabel} selected
+          {t("admin.itemsSelected", { selected: selectedCount, total: totalCount, itemLabel: resolvedItemLabel })}
         </span>
       </div>
 
@@ -58,7 +66,7 @@ export default function BulkActionsToolbar({
         onClick={isAllSelected ? onDeselectAll : onSelectAll}
         className="text-xs font-semibold text-slate-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
       >
-        {isAllSelected ? "Deselect All" : `Select All (${totalCount})`}
+        {isAllSelected ? t("admin.deselectAll") : t("admin.selectAll", { total: totalCount })}
       </button>
 
       {/* Action Buttons */}
@@ -72,7 +80,7 @@ export default function BulkActionsToolbar({
             className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
           >
             <i className="ri-star-fill text-sm" />
-            <span>{featureLabel}</span>
+            <span>{resolvedFeatureLabel}</span>
           </button>
         )}
 
@@ -85,7 +93,7 @@ export default function BulkActionsToolbar({
             className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
           >
             <i className="ri-checkbox-circle-fill text-sm" />
-            <span>{verifyLabel}</span>
+            <span>{resolvedVerifyLabel}</span>
           </button>
         )}
 
@@ -102,7 +110,7 @@ export default function BulkActionsToolbar({
             ) : (
               <i className="ri-checkbox-circle-line text-sm" />
             )}
-            <span>{approveLabel}</span>
+            <span>{resolvedApproveLabel}</span>
           </button>
         )}
 
@@ -115,15 +123,15 @@ export default function BulkActionsToolbar({
             className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
           >
             <i className="ri-close-circle-line text-sm" />
-            <span>{rejectLabel}</span>
+            <span>{resolvedRejectLabel}</span>
           </button>
         )}
 
         <button
           type="button"
           onClick={onDeselectAll}
-          title="Clear Selection"
-          aria-label="Clear Selection"
+          title={t("admin.clearSelection")}
+          aria-label={t("admin.clearSelection")}
           className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/50 transition-colors cursor-pointer"
         >
           <i className="ri-close-line text-lg" />

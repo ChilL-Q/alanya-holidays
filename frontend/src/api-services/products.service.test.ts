@@ -253,14 +253,11 @@ describe("products.service (Clean Architecture)", () => {
       expect(result).toEqual(mockProducts);
     });
 
-    it("getMyProducts should return empty array on API error", async () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Unauthorized 401"));
+    it("getMyProducts should preserve explicit authorization errors", async () => {
+      const error = new Error("Forbidden 403");
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(error);
 
-      const result = await productsService.getMyProducts();
-
-      expect(result).toEqual([]);
-      expect(warnSpy).toHaveBeenCalled();
+      await expect(productsService.getMyProducts()).rejects.toBe(error);
     });
 
     it("createMyProduct should POST /products/mine with the draft payload", async () => {
@@ -288,6 +285,17 @@ describe("products.service (Clean Architecture)", () => {
 
       expect(patchSpy).toHaveBeenCalledWith("/products/mine/10", updates);
       expect(result).toEqual(mockUpdated);
+    });
+
+    it("deleteMyProduct should DELETE only the merchant product endpoint", async () => {
+      const deleteSpy = vi
+        .spyOn(apiClient, "delete")
+        .mockResolvedValueOnce({ success: true });
+
+      await expect(productsService.deleteMyProduct(10)).resolves.toEqual({
+        success: true,
+      });
+      expect(deleteSpy).toHaveBeenCalledWith("/products/mine/10");
     });
   });
 });

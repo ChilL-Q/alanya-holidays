@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface SubcategorySidebarProps {
   subcategories: string[];
@@ -13,6 +15,7 @@ export default function SubcategorySidebar({
   activeSubcategory,
   onSelect,
 }: SubcategorySidebarProps) {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -24,7 +27,7 @@ export default function SubcategorySidebar({
           onClick={() => setCollapsed(!collapsed)}
         >
           <span className="text-sm font-semibold text-foreground-900">
-            {activeSubcategory || "All Topics"}
+            {activeSubcategory || t("public.allTopics")}
           </span>
           <i
             className={`ri-arrow-down-s-line text-foreground-500 transition-transform ${
@@ -38,9 +41,9 @@ export default function SubcategorySidebar({
           <div className="bg-background-50 rounded-xl border border-background-200/70 overflow-hidden">
             {/* Header */}
             <div className="px-5 py-4 border-b border-background-200/50">
-              <h3 className="font-heading text-base text-foreground-900">Topics</h3>
+            <h3 className="font-heading text-base text-foreground-900">{t("public.topics")}</h3>
               <p className="text-foreground-500 text-xs mt-0.5">
-                {subcategories.length} subcategories
+                {t("public.subcategoryCount", { count: subcategories.length })}
               </p>
             </div>
 
@@ -57,7 +60,7 @@ export default function SubcategorySidebar({
               >
                 <div className="flex items-center gap-2">
                   <i className="ri-apps-2-line text-base"></i>
-                  All Topics
+                  {t("public.allTopics")}
                 </div>
               </button>
 
@@ -83,24 +86,24 @@ export default function SubcategorySidebar({
           {/* Quick stats card */}
           <div className="mt-4 bg-accent-100/80 rounded-xl p-5">
             <h4 className="font-heading text-sm text-accent-900 mb-3">
-              Why Join {categoryName}?
+              {t("public.whyJoin", { category: categoryName })}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-2 text-xs text-foreground-700">
                 <i className="ri-check-line text-accent-500 mt-0.5"></i>
-                Connect with like-minded people
+                {t("public.connectLikeMinded")}
               </li>
               <li className="flex items-start gap-2 text-xs text-foreground-700">
                 <i className="ri-check-line text-accent-500 mt-0.5"></i>
-                Get expert local advice
+                {t("public.expertLocalAdvice")}
               </li>
               <li className="flex items-start gap-2 text-xs text-foreground-700">
                 <i className="ri-check-line text-accent-500 mt-0.5"></i>
-                Share your experiences
+                {t("public.shareExperiences")}
               </li>
               <li className="flex items-start gap-2 text-xs text-foreground-700">
                 <i className="ri-check-line text-accent-500 mt-0.5"></i>
-                Stay updated on trends
+                {t("public.stayUpdated")}
               </li>
             </ul>
           </div>

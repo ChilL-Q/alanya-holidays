@@ -4,6 +4,8 @@ import {
   getEvents,
   getEventBySlug,
   createEvent,
+  getMyEvents,
+  updateEvent,
   toggleRsvp,
   getAttendees,
   formatEventDateParts,
@@ -218,6 +220,66 @@ describe("events.service", () => {
       };
 
       await expect(createEvent(payload)).rejects.toThrow(ApiError);
+    });
+  });
+
+  describe("merchant event ownership endpoints", () => {
+    it("loads only the authenticated user's events from /forum/events/mine", async () => {
+      vi.spyOn(apiClient, "get").mockResolvedValueOnce([
+        {
+          id: "event-owned-draft",
+          title: "Owned draft",
+          event_date: "2026-09-12T18:00:00Z",
+          host_id: "merchant-1",
+          created_by: "merchant-1",
+          is_published: false,
+        },
+        {
+          id: "event-owned-published",
+          title: "Owned published meetup",
+          event_date: "2026-09-13T18:00:00Z",
+          host_id: "merchant-1",
+          created_by: "merchant-1",
+          is_published: true,
+        },
+      ]);
+
+      const result = await getMyEvents();
+
+      expect(apiClient.get).toHaveBeenCalledWith("/forum/events/mine");
+      expect(result).toEqual([
+        expect.objectContaining({
+          id: "event-owned-draft",
+          hostId: "merchant-1",
+          createdBy: "merchant-1",
+          isPublished: false,
+        }),
+        expect.objectContaining({
+          id: "event-owned-published",
+          hostId: "merchant-1",
+          createdBy: "merchant-1",
+          isPublished: true,
+        }),
+      ]);
+    });
+
+    it("updates an event through the owner-checked endpoint without sending host_id", async () => {
+      vi.spyOn(apiClient, "put").mockResolvedValueOnce({
+        id: "event-owned",
+        title: "Updated meetup",
+        event_date: "2026-09-12T18:00:00Z",
+      });
+
+      await updateEvent("event-owned", {
+        title: "Updated meetup",
+        location: "Harbor",
+        host_id: "forged-owner",
+      });
+
+      expect(apiClient.put).toHaveBeenCalledWith("/forum/events/event-owned", {
+        title: "Updated meetup",
+        location: "Harbor",
+      });
     });
   });
 

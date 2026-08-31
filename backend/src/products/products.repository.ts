@@ -86,6 +86,7 @@ export interface CatalogItemRow {
   seller_id: string | null;
   created_at: string;
   updated_at?: string;
+  product_categories?: { id: number; name: string } | null;
 }
 
 @Injectable()
@@ -168,6 +169,110 @@ export class ProductsRepository {
       })
       .order('id', { ascending: false })
       .range(from, to);
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async getProductsAdmin(
+    categoryId?: number,
+    page = 1,
+    limit = 20,
+    search?: string,
+  ) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    let query = this.client.from('product_items').select(
+      `
+        id,
+        name,
+        description,
+        price,
+        currency,
+        stock,
+        status,
+        media,
+        category_id,
+        seller_id,
+        created_at,
+        updated_at,
+        product_categories(id, name)
+      `,
+      { count: 'exact' },
+    );
+
+    if (categoryId) query = query.eq('category_id', categoryId);
+    const safeSearch = search
+      ?.trim()
+      .replace(/%/g, '\\%')
+      .replace(/_/g, '\\_')
+      .replace(/,/g, ' ');
+    if (safeSearch) {
+      query = query.or(
+        `name.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`,
+      );
+    }
+
+    const { data, error, count } = await query
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to);
+    if (error) throw new Error(error.message);
+    return { items: data ?? [], page, limit, total: count ?? 0 };
+  }
+
+  async getCatalogItemAdmin(itemId: number): Promise<CatalogItemRow | null> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at, product_categories(id, name)',
+      )
+      .eq('id', itemId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data as unknown as CatalogItemRow | null;
+  }
+
+  async createCatalogItemAdmin(
+    item: Record<string, unknown>,
+  ): Promise<CatalogItemRow> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .insert(item)
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at',
+      )
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async updateCatalogItemAdmin(
+    itemId: number,
+    updates: Record<string, unknown>,
+  ): Promise<CatalogItemRow | null> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .update(updates)
+      .eq('id', itemId)
+      .select(
+        'id, name, description, price, currency, stock, status, media, category_id, seller_id, created_at, updated_at',
+      )
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async deleteCatalogItemAdmin(itemId: number): Promise<{ id: number } | null> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .delete()
+      .eq('id', itemId)
+      .select('id')
+      .maybeSingle();
+
     if (error) throw new Error(error.message);
     return data;
   }
@@ -627,6 +732,22 @@ export class ProductsRepository {
 
     if (error) throw new Error(error.message);
     // Empty result means the item does not exist or is not owned by the seller.
+    return data;
+  }
+
+  async deleteCatalogItem(
+    itemId: number,
+    sellerId: string,
+  ): Promise<{ id: number } | null> {
+    const { data, error } = await this.client
+      .from('product_items')
+      .delete()
+      .eq('id', itemId)
+      .eq('seller_id', sellerId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
     return data;
   }
 

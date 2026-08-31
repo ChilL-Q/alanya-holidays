@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { DirectoryRepository } from '../directory.repository';
 import { UserRolesRepository } from '../../common/auth/user-roles.repository';
@@ -30,6 +31,7 @@ import {
   normalizePriceLevel,
   DEFAULT_UNPRIVILEGED_LISTING_FLAGS,
 } from '../domain/listing-input.schema';
+import { BillingService } from '../../billing/billing.service';
 
 @Injectable()
 export class DirectoryListingService {
@@ -43,6 +45,7 @@ export class DirectoryListingService {
     @Optional()
     @Inject(PAYMENT_GATEWAY)
     private readonly paymentGateway?: PaymentGateway,
+    @Optional() private readonly billingService?: BillingService,
   ) {}
 
   private async enqueueAdminNotification(
@@ -264,6 +267,88 @@ export class DirectoryListingService {
   // ---------------------------------------------------------------------------
   // Owner Lifecycle & CRUD
   // ---------------------------------------------------------------------------
+  async createAdminDirectoryListing(
+    listing: Partial<DirectoryListingRecord>,
+    userId: string,
+  ): Promise<DirectoryListingRecord> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+
+    const normalized = normalizeListingInput(listing);
+    const name = normalized.name?.trim();
+    const categoryId = normalized.category_id?.trim();
+    if (!name || !categoryId) {
+      throw new BadRequestException('Name and category are required');
+    }
+
+    const gallery = Array.isArray(listing.gallery) ? listing.gallery : [];
+    const tier = (listing.tier as string) || 'explorer';
+    validatePhotoLimit(tier, gallery);
+    const status = ['draft', 'pending', 'approved', 'rejected'].includes(
+      String(listing.status),
+    )
+      ? String(listing.status)
+      : 'approved';
+
+    const data = await this.directoryRepository.insertDirectoryListing({
+      name,
+      short_description: normalized.short_description,
+      description: normalized.description,
+      category_id: categoryId,
+      website: normalized.website,
+      whatsapp: normalized.whatsapp,
+      gallery,
+      location: normalized.location,
+      google_map_url: normalized.google_map_url,
+      video_url: normalized.video_url,
+      booking_url: normalized.booking_url,
+      phone: typeof listing.phone === 'string' ? listing.phone : null,
+      email: typeof listing.email === 'string' ? listing.email : null,
+      tier,
+      status,
+      base_score: 0,
+      owner_user_id: null,
+      claimed_at: null,
+      creation_source: 'admin',
+      ...DEFAULT_UNPRIVILEGED_LISTING_FLAGS,
+    });
+    await this.redisService.delByPattern('directory:*');
+    return data;
+  }
+
+  async updateAdminDirectoryListing(
+    id: string,
+    updates: Partial<DirectoryListingRecord>,
+    userId: string,
+  ): Promise<DirectoryListingRecord> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role !== 'admin') throw new UnauthorizedException('Not authorized');
+    if (!UUID_RE.test(id)) throw new NotFoundException('Listing not found');
+
+    const requestedSource = updates.creation_source;
+    if (
+      requestedSource !== undefined &&
+      !['admin', 'merchant', 'import'].includes(requestedSource)
+    ) {
+      throw new BadRequestException('Invalid listing creation source');
+    }
+    const allowed = stripProtectedFields(updates as Record<string, unknown>, [
+      'status',
+    ]);
+    if (requestedSource !== undefined) {
+      allowed.creation_source = requestedSource;
+    }
+    delete allowed.can_claim;
+    delete allowed.claimed_at;
+    const data = await this.directoryRepository.updateDirectoryListing(
+      id,
+      allowed,
+    );
+    if (!data) throw new NotFoundException('Listing not found');
+    await this.redisService.delByPattern('directory:*');
+    return data;
+  }
+
   async getMyDirectoryListings(
     userId: string,
     status?: string,
@@ -302,6 +387,7 @@ export class DirectoryListingService {
       base_score: 0,
       status: 'draft',
       owner_user_id: userId,
+      creation_source: 'merchant',
       phone: typeof listing.phone === 'string' ? listing.phone : null,
       email: typeof listing.email === 'string' ? listing.email : null,
       ...(normalized.price_level !== undefined
@@ -487,6 +573,7 @@ export class DirectoryListingService {
       descriptions: normalized.descriptions ?? {},
       status: 'pending',
       owner_user_id: userId,
+      creation_source: 'merchant',
       phone: typeof listing.phone === 'string' ? listing.phone : null,
       email: typeof listing.email === 'string' ? listing.email : null,
       ...(normalized.slug ? { slug: normalized.slug } : {}),
@@ -620,6 +707,16 @@ export class DirectoryListingService {
     days = 30,
     userId: string,
   ): Promise<Record<string, unknown>[]> {
+    const role = await this.userRolesRepo.getRole(userId);
+    const hasAccess =
+      role === 'admin' ||
+      (this.billingService &&
+        (await this.billingService.hasActivePremiumAccess(userId)));
+    if (!hasAccess) {
+      throw new ForbiddenException(
+        'An active premium subscription is required to view analytics',
+      );
+    }
     return this.directoryRepository.getDirectoryAnalyticsForOwner(userId, days);
   }
 

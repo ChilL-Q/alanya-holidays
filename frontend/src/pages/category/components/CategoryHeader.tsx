@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import type { Category } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface CategoryHeaderProps {
   category: Category;
 }
 
 export default function CategoryHeader({ category }: CategoryHeaderProps) {
+  const { t } = useTranslation();
   return (
     <section className="relative w-full h-[300px] md:h-[380px] overflow-hidden">
       <img
@@ -22,7 +25,7 @@ export default function CategoryHeader({ category }: CategoryHeaderProps) {
             to="/"
             className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2"
           >
-            Home
+            {t("nav.home")}
           </Link>
           <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
           <span className="text-white/90 text-sm">{category.name}</span>
@@ -49,21 +52,21 @@ export default function CategoryHeader({ category }: CategoryHeaderProps) {
               <p className="text-white text-lg md:text-xl font-semibold">
                 {category.threadCount.toLocaleString()}
               </p>
-              <p className="text-white/50 text-xs">Discussions</p>
+              <p className="text-white/50 text-xs">{t("public.discussions")}</p>
             </div>
             <div className="w-px h-8 bg-white/20"></div>
             <div className="text-center">
               <p className="text-white text-lg md:text-xl font-semibold">
                 {category.memberCount.toLocaleString()}
               </p>
-              <p className="text-white/50 text-xs">Members</p>
+              <p className="text-white/50 text-xs">{t("public.members")}</p>
             </div>
             <div className="w-px h-8 bg-white/20"></div>
             <div className="text-center">
               <p className="text-white text-lg md:text-xl font-semibold">
                 {category.subcategories.length}
               </p>
-              <p className="text-white/50 text-xs">Topics</p>
+              <p className="text-white/50 text-xs">{t("public.topics")}</p>
             </div>
           </div>
         </div>

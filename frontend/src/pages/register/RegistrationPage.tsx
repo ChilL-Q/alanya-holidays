@@ -6,6 +6,7 @@ import {
   registerSchema,
 } from "@/lib/validation/auth.schemas";
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
 
 export type RegistrationVariant = "regular" | "business";
 
@@ -14,6 +15,7 @@ interface RegistrationPageProps {
 }
 
 export default function RegistrationPage({ variant = "regular" }: RegistrationPageProps) {
+  const { t } = useTranslation();
   const isBusiness = variant === "business";
   const [name, setName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -142,16 +144,16 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-8">
             <div className="flex items-center gap-2 mb-3">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-                Home
+                {t("nav.home", "Home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">{isBusiness ? "Business Registration" : "Register"}</span>
+              <span className="text-white/90 text-sm">{isBusiness ? t("auth.businessRegistration", "Business Registration") : t("nav.register", "Register")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-4xl text-white">Check Your Inbox</h1>
+            <h1 className="font-heading text-3xl md:text-4xl text-white">{t("auth.checkYourInbox", "Check Your Inbox")}</h1>
             <p className="text-white/65 text-sm md:text-base mt-1 max-w-md">
               {isBusiness
-                ? "We’ve sent a confirmation link to continue setting up your business account"
-                : "We’ve sent a confirmation link to finalize your registration"}
+                ? t("auth.businessConfirmation", "We’ve sent a confirmation link to continue setting up your business account")
+                : t("auth.registrationConfirmation", "We’ve sent a confirmation link to finalize your registration")}
             </p>
           </div>
         </section>
@@ -162,21 +164,21 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
               <i className="ri-mail-check-line text-2xl text-primary-600"></i>
             </div>
             <h2 className="font-heading text-xl text-foreground-900 mb-2">
-              {isBusiness ? "Confirm your business account email" : "Confirm your email"}
+              {isBusiness ? t("auth.confirmBusinessEmail", "Confirm your business account email") : t("auth.confirmEmail", "Confirm your email")}
             </h2>
             <p className="text-sm text-foreground-500 mb-2">
-              We have sent a verification link to:
+              {t("auth.verificationLinkSent", "We have sent a verification link to:")}
             </p>
             <p className="text-sm font-medium text-foreground-800 mb-6">{email}</p>
             <p className="text-xs text-foreground-400 mb-6 leading-relaxed">
-              Please click the link in that email to activate your account. If you don&apos;t see it, check your spam or junk folder.
+              {t("auth.verificationHelp", "Please click the link in that email to activate your account. If you don't see it, check your spam or junk folder.")}
             </p>
             <Link
               to="/login"
               state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
               className="w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
             >
-              Go to Sign In
+              {t("auth.goToSignIn", "Go to Sign In")}
             </Link>
           </div>
         </section>
@@ -197,18 +199,18 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
         <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-8">
           <div className="flex items-center gap-2 mb-3">
             <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-              Home
+              {t("nav.home", "Home")}
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-            <span className="text-white/90 text-sm">{isBusiness ? "Business Registration" : "Register"}</span>
+            <span className="text-white/90 text-sm">{isBusiness ? t("auth.businessRegistration", "Business Registration") : t("nav.register", "Register")}</span>
           </div>
           <h1 className="font-heading text-3xl md:text-4xl text-white">
-            {isBusiness ? "Create Your Business Account" : "Join the Community"}
+            {isBusiness ? t("auth.createBusinessAccount", "Create Your Business Account") : t("auth.joinCommunity", "Join the Community")}
           </h1>
           <p className="text-white/65 text-sm md:text-base mt-1 max-w-md">
             {isBusiness
-              ? "Join the Alanya Holidays merchant community and manage your business"
-              : "Create your account and start connecting with locals and expats in Alanya"}
+              ? t("auth.businessSubtitle", "Join the Alanya Holidays merchant community and manage your business")
+              : t("auth.registerSubtitle", "Create your account and start connecting with locals and expats in Alanya")}
           </p>
         </div>
       </section>
@@ -224,10 +226,10 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                 state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
                 className="px-6 py-2 rounded-full text-sm font-medium text-foreground-500 hover:text-foreground-700 transition-colors cursor-pointer"
               >
-                Sign In
+                {t("nav.signIn", "Sign In")}
               </Link>
               <span className="px-6 py-2 rounded-full text-sm font-medium bg-background-50 text-foreground-900 cursor-pointer">
-                Register
+                {t("nav.register", "Register")}
               </span>
             </div>
           </div>
@@ -243,7 +245,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             {/* Name */}
             <div>
               <label htmlFor="register-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                {isBusiness ? "Representative full name" : "Full name"}
+                {isBusiness ? t("auth.representativeName", "Representative full name") : t("auth.fullName", "Full name")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -255,7 +257,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={isBusiness ? "Representative’s full name" : "Your full name"}
+                  placeholder={isBusiness ? t("auth.representativeName") : t("auth.fullNamePlaceholder")}
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
               </div>
@@ -265,26 +267,26 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
               <>
                 <div>
                   <label htmlFor="register-business-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                    Business name
+                    {t("auth.businessName", "Business name")}
                   </label>
-                  <input id="register-business-name" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Your business name" className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
+                  <input id="register-business-name" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder={t("auth.businessNamePlaceholder")} className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
                 </div>
                 <div>
-                  <label htmlFor="register-account-type" className="block text-sm font-medium text-foreground-700 mb-1.5">Account type</label>
+                    <label htmlFor="register-account-type" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("auth.accountType", "Account type")}</label>
                   <select id="register-account-type" required value={businessAccountType} onChange={(e) => setBusinessAccountType(e.target.value)} className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all">
-                    <option value="seller">Seller</option>
-                    <option value="service_provider">Service provider</option>
-                    <option value="property_host">Property host</option>
-                    <option value="directory_owner">Directory owner</option>
+                    <option value="seller">{t("auth.seller", "Seller")}</option>
+                    <option value="service_provider">{t("auth.serviceProvider", "Service provider")}</option>
+                    <option value="property_host">{t("auth.propertyHost", "Property host")}</option>
+                    <option value="directory_owner">{t("auth.directoryOwner", "Directory owner")}</option>
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="register-contact-phone" className="block text-sm font-medium text-foreground-700 mb-1.5">Contact phone <span className="text-foreground-400">(optional)</span></label>
-                  <input id="register-contact-phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+90 555 123 4567" className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
+                  <label htmlFor="register-contact-phone" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("auth.contactPhone", "Contact phone")} <span className="text-foreground-400">{t("auth.optional", "(optional)")}</span></label>
+                  <input id="register-contact-phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder={t("auth.phonePlaceholder")} className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
                 </div>
                 <div>
-                  <label htmlFor="register-website" className="block text-sm font-medium text-foreground-700 mb-1.5">Website <span className="text-foreground-400">(optional)</span></label>
-                  <input id="register-website" type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://example.com" className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
+                  <label htmlFor="register-website" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("auth.website", "Website")} <span className="text-foreground-400">{t("auth.optional", "(optional)")}</span></label>
+                  <input id="register-website" type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder={t("auth.websitePlaceholder")} className="w-full h-11 px-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all" />
                 </div>
               </>
             )}
@@ -292,7 +294,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             {/* Email */}
             <div>
               <label htmlFor="register-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                Email address
+                {t("auth.email", "Email address")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -304,7 +306,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
               </div>
@@ -313,7 +315,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
             {/* Password */}
             <div>
               <label htmlFor="register-password" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                Password
+                {t("auth.password", "Password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -325,7 +327,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder={t("auth.passwordRequirementPlaceholder")}
                   className="w-full h-11 pl-10 pr-11 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
                 <button
@@ -342,14 +344,14 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                 </button>
               </div>
               <p className="text-xs text-foreground-400 mt-1.5">
-                Must be at least 8 characters
+                {t("auth.passwordRequirement", "Must be at least 8 characters")}
               </p>
             </div>
 
             {/* Confirm Password */}
             <div>
               <label htmlFor="register-confirm-password" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                Confirm password
+                {t("auth.confirmPassword", "Confirm password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -361,7 +363,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter your password"
+                  placeholder={t("auth.confirmPasswordPlaceholder")}
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
               </div>
@@ -376,10 +378,10 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
               {isSubmitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin text-sm"></i>
-                  Creating account...
+                  {t("auth.creatingAccount", "Creating account...")}
                 </>
               ) : (
-                isBusiness ? "Create Business Account" : "Create Account"
+                isBusiness ? t("auth.createBusinessAccount", "Create Business Account") : t("auth.registerBtn", "Create Account")
               )}
             </button>
           </form>
@@ -389,7 +391,7 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-background-200"></div>
-            <span className="text-xs text-foreground-400">or sign up with</span>
+            <span className="text-xs text-foreground-400">{t("auth.orSignUpWith", "or sign up with")}</span>
             <div className="flex-1 h-px bg-background-200"></div>
           </div>
 
@@ -419,12 +421,12 @@ export default function RegistrationPage({ variant = "regular" }: RegistrationPa
 
           {/* Login Link */}
           <p className="text-center text-sm text-foreground-500 mt-6">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount", "Already have an account?")} {" "}
             <Link
               to="/login"
               state={isBusiness ? { from: { pathname: "/business/dashboard" } } : undefined}
               className="text-primary-500 hover:text-primary-600 font-medium transition-colors">
-              Sign in
+              {t("nav.signIn", "Sign in")}
             </Link>
           </p>
         </div>

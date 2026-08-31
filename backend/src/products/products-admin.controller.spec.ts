@@ -15,14 +15,21 @@ describe('ProductsAdminController', () => {
 
   beforeEach(async () => {
     mockService = {
+      getProductsAdmin: jest.fn().mockResolvedValue({
+        items: [{ id: 'pr-1', title: 'Silk Scarf' }],
+        page: 2,
+        limit: 20,
+        total: 21,
+      }),
       getProducts: jest
         .fn()
         .mockResolvedValue([{ id: 'pr-1', title: 'Silk Scarf' }]),
-      getProduct: jest
+      getAdminProduct: jest
         .fn()
-        .mockResolvedValue({ id: 'pr-1', title: 'Silk Scarf' }),
-      updateProduct: jest.fn().mockResolvedValue({ success: true }),
-      deleteProduct: jest.fn().mockResolvedValue({ success: true }),
+        .mockResolvedValue({ id: 1, name: 'Silk Scarf' }),
+      createAdminProduct: jest.fn().mockResolvedValue({ id: 2 }),
+      updateAdminProduct: jest.fn().mockResolvedValue({ id: 1 }),
+      deleteAdminProduct: jest.fn().mockResolvedValue({ success: true }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -54,35 +61,68 @@ describe('ProductsAdminController', () => {
     expect(roles).toEqual(['admin']);
   });
 
-  it('should delegate getProductsAdmin with category filter', async () => {
-    const res = await controller.getProductsAdmin('textiles');
-    expect(mockService.getProducts).toHaveBeenCalledWith('textiles');
-    expect(res).toEqual([{ id: 'pr-1', title: 'Silk Scarf' }]);
+  it('should delegate paginated searchable admin product queries', async () => {
+    const res = await controller.getProductsAdmin({
+      category_id: 7,
+      page: 2,
+      limit: 20,
+      search: 'scarf',
+    });
+    expect(mockService.getProductsAdmin).toHaveBeenCalledWith(
+      7,
+      2,
+      20,
+      'scarf',
+    );
+    expect(res).toEqual({
+      items: [{ id: 'pr-1', title: 'Silk Scarf' }],
+      page: 2,
+      limit: 20,
+      total: 21,
+    });
   });
 
   it('should delegate getProductAdmin by id', async () => {
-    const res = await controller.getProductAdmin('pr-1');
-    expect(mockService.getProduct).toHaveBeenCalledWith('pr-1');
-    expect(res).toEqual({ id: 'pr-1', title: 'Silk Scarf' });
+    const res = await controller.getProductAdmin(1);
+    expect(mockService.getAdminProduct).toHaveBeenCalledWith(1);
+    expect(res).toEqual({ id: 1, name: 'Silk Scarf' });
+  });
+
+  it('should delegate create and full update with the authenticated admin id', async () => {
+    const create = {
+      name: 'Copper Lamp',
+      description: 'Handmade lamp',
+      price: 120,
+      stock: 4,
+      category_id: 7,
+      currency: 'EUR',
+      media: [{ url: 'https://example.com/lamp.jpg', type: 'image' }],
+    };
+    await expect(controller.createProduct(create, adminUser)).resolves.toEqual({
+      id: 2,
+    });
+    expect(mockService.createAdminProduct).toHaveBeenCalledWith(
+      create,
+      'admin-1',
+    );
+
+    await controller.updateProduct(1, { name: 'Updated Lamp' });
+    expect(mockService.updateAdminProduct).toHaveBeenCalledWith(1, {
+      name: 'Updated Lamp',
+    });
   });
 
   it('should delegate updateProductStatus with status and userId', async () => {
-    const res = await controller.updateProductStatus(
-      'pr-1',
-      'archived',
-      adminUser,
-    );
-    expect(mockService.updateProduct).toHaveBeenCalledWith(
-      'pr-1',
-      { status: 'archived' },
-      'admin-1',
-    );
-    expect(res).toEqual({ success: true });
+    const res = await controller.updateProductStatus(1, { status: 'inactive' });
+    expect(mockService.updateAdminProduct).toHaveBeenCalledWith(1, {
+      status: 'inactive',
+    });
+    expect(res).toEqual({ id: 1 });
   });
 
   it('should delegate deleteProduct with id and userId', async () => {
-    const res = await controller.deleteProduct('pr-1', adminUser);
-    expect(mockService.deleteProduct).toHaveBeenCalledWith('pr-1', 'admin-1');
+    const res = await controller.deleteProduct(1);
+    expect(mockService.deleteAdminProduct).toHaveBeenCalledWith(1);
     expect(res).toEqual({ success: true });
   });
 });

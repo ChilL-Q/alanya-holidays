@@ -1,4 +1,6 @@
 import { GIFT_CARD_CATEGORIES } from "../data/giftCardsData";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface GiftCardHeroProps {
   selectedCategory: string;
@@ -13,6 +15,7 @@ export default function GiftCardHero({
   searchQuery,
   onSearchChange,
 }: GiftCardHeroProps) {
+  const { t } = useTranslation();
   return (
     <div className="relative w-full bg-gradient-to-b from-foreground-900 via-foreground-800 to-foreground-900 text-white pt-24 md:pt-32 pb-16 md:pb-24 overflow-hidden">
       {/* Background Decorative Elements */}
@@ -25,22 +28,20 @@ export default function GiftCardHero({
         <div className="flex items-center justify-center mb-4">
           <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-primary-500/20 text-primary-300 border border-primary-500/30 backdrop-blur-xs">
             <i className="ri-gift-2-line text-sm text-primary-400"></i>
-            Alanya Experience Gifts
+            {t("services.gifts.experienceGifts")}
           </span>
         </div>
 
         {/* Hero Title & Subtitle */}
         <div className="text-center max-w-3xl mx-auto mb-8 md:mb-12">
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 text-white">
-            Curated Culinary & Cultural{" "}
+            {t("services.gifts.culinaryTitle")} {" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-primary-300 to-accent-400">
-              Gift Cards
+              {t("services.gifts.giftCards")}
             </span>
           </h1>
           <p className="text-white/70 text-base sm:text-lg md:text-xl leading-relaxed">
-            Give the gift of unforgettable experiences — from mountain village
-            feasts to harbour roasteries and beachfront champagne brunches.
-            Delivered instantly with 12-month validity.
+            {t("services.gifts.description")}
           </p>
         </div>
 
@@ -48,19 +49,19 @@ export default function GiftCardHero({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto mb-10 text-xs sm:text-sm">
           <div className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <i className="ri-flashlight-line text-primary-400 text-base"></i>
-            <span className="text-white/80 font-medium">Instant Digital Delivery</span>
+            <span className="text-white/80 font-medium">{t("services.gifts.instantDelivery")}</span>
           </div>
           <div className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <i className="ri-calendar-check-line text-primary-400 text-base"></i>
-            <span className="text-white/80 font-medium">12-Month Validity</span>
+            <span className="text-white/80 font-medium">{t("services.gifts.validity")}</span>
           </div>
           <div className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <i className="ri-repeat-line text-primary-400 text-base"></i>
-            <span className="text-white/80 font-medium">Flexible Free Exchanges</span>
+            <span className="text-white/80 font-medium">{t("services.gifts.exchanges")}</span>
           </div>
           <div className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <i className="ri-shield-check-line text-primary-400 text-base"></i>
-            <span className="text-white/80 font-medium">Verified Partner Venues</span>
+            <span className="text-white/80 font-medium">{t("services.gifts.venues")}</span>
           </div>
         </div>
 
@@ -70,8 +71,8 @@ export default function GiftCardHero({
             <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-lg"></i>
             <input
               type="text"
-              aria-label="Search gift cards by name, cuisine, or description"
-              placeholder="Search experiences (e.g., Breakfast, Coffee Trail, Soufflé)..."
+              aria-label={t("services.gifts.searchLabel")}
+              placeholder={t("services.gifts.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white/15 transition-all text-sm sm:text-base backdrop-blur-md"
@@ -79,7 +80,7 @@ export default function GiftCardHero({
             {searchQuery && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t("services.gifts.clearSearch")}
                 onClick={() => onSearchChange("")}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-1"
               >

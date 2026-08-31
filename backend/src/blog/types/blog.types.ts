@@ -26,6 +26,7 @@ export interface BlogPost {
   category: string | null;
   status: 'draft' | 'published' | 'archived' | (string & {});
   is_featured: boolean;
+  content_type?: 'blog' | 'guide';
   view_count?: number;
   author_id: string;
   published_at: string | null;
@@ -46,6 +47,7 @@ export interface RawBlogPostRow {
   category: string | null;
   status: string;
   is_featured: boolean;
+  content_type?: 'blog' | 'guide';
   view_count?: number;
   author_id: string;
   published_at: string | null;
@@ -92,6 +94,7 @@ export interface BlogSubmission {
   rejection_reason?: string | null;
   created_at: string;
   updated_at?: string;
+  content_type?: 'blog' | 'guide';
   user?: BlogSubmissionUser | null;
 }
 
@@ -106,6 +109,7 @@ export interface InsertBlogPostPayload {
   category?: string | null;
   status: string;
   is_featured: boolean;
+  content_type?: 'blog' | 'guide';
   published_at: string | null;
 }
 
@@ -119,6 +123,7 @@ export interface UpdateBlogPostPayload {
   category?: string | null;
   status?: string;
   is_featured?: boolean;
+  content_type?: 'blog' | 'guide';
   published_at?: string;
 }
 
@@ -139,6 +144,19 @@ export interface InsertBlogSubmissionPayload {
   tag_ids?: string[];
   status: string;
   payment_details?: Record<string, unknown> | null;
+  content_type: 'blog' | 'guide';
+}
+
+export interface UpdateBlogSubmissionPayload {
+  title?: string;
+  content?: string;
+  author_name?: string;
+  author_email?: string;
+  category?: string;
+  video_url?: string | null;
+  media_urls?: string[];
+  tag_ids?: string[];
+  rejection_reason?: string | null;
 }
 
 export interface GetBlogPostsFilter {
@@ -151,6 +169,7 @@ export interface GetBlogPostsFilter {
   status?: string;
   authorId?: string;
   is_featured?: string;
+  content_type?: 'blog' | 'guide';
 }
 
 export interface GetBlogSubmissionsFilter {

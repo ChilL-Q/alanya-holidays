@@ -4,6 +4,8 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
 import { adminService } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface FormState {
   status: "idle" | "loading" | "success" | "error";
@@ -13,60 +15,61 @@ interface FormState {
 const conciergeServices = [
   {
     icon: "ri-sailboat-line",
-    title: "Bespoke Experiences",
-    description: "Private yacht charters, helicopter tours, and custom itineraries designed around your preferences and pace.",
+    title: "services.contact.service.bespoke",
+    description: "services.contact.service.bespokeDesc",
   },
   {
     icon: "ri-restaurant-line",
-    title: "Dining & Reservations",
-    description: "Priority bookings at Alanya's finest restaurants, private chef arrangements, and curated tasting experiences.",
+    title: "services.contact.service.dining",
+    description: "services.contact.service.diningDesc",
   },
   {
     icon: "ri-hotel-line",
-    title: "Accommodation Guidance",
-    description: "Handpicked villa rentals, boutique hotel recommendations, and insider tips on the best neighborhoods to stay.",
+    title: "services.contact.service.stays",
+    description: "services.contact.service.staysDesc",
   },
   {
     icon: "ri-calendar-check-line",
-    title: "Itinerary Planning",
-    description: "Day-by-day plans that balance must-see landmarks with hidden local gems only residents know about.",
+    title: "services.contact.service.itinerary",
+    description: "services.contact.service.itineraryDesc",
   },
   {
     icon: "ri-car-line",
-    title: "Transfers & Transport",
-    description: "Private airport transfers, car rentals, and logistics so you spend less time worrying and more time enjoying.",
+    title: "services.contact.service.transport",
+    description: "services.contact.service.transportDesc",
   },
   {
     icon: "ri-question-answer-line",
-    title: "Local Advice",
-    description: "Honest answers about visas, residency, healthcare, and everyday life from people who actually live here.",
+    title: "services.contact.service.advice",
+    description: "services.contact.service.adviceDesc",
   },
 ];
 
 const faqs = [
   {
-    question: "Who is the concierge service for?",
-    answer: "Everyone — tourists planning their first Alanya trip, returning visitors looking for something new, expats settling in, and locals who want to discover more of their own backyard. No question is too small or too ambitious.",
+    question: "services.contact.faq.audience.q",
+    answer: "services.contact.faq.audience.a",
   },
   {
-    question: "Is there a fee for the concierge service?",
-    answer: "Our concierge advice and recommendations are completely free for community members. If you book a paid experience through one of our trusted local partners, standard pricing applies — and we never add hidden markups.",
+    question: "services.contact.faq.fee.q",
+    answer: "services.contact.faq.fee.a",
   },
   {
-    question: "How quickly will I get a response?",
-    answer: "We aim to reply within 24 hours on weekdays. During peak season (June through September), response times may stretch to 48 hours — but we always prioritise urgent requests like last-minute bookings or travel disruptions.",
+    question: "services.contact.faq.response.q",
+    answer: "services.contact.faq.response.a",
   },
   {
-    question: "Can you help with group bookings or special events?",
-    answer: "Absolutely. Whether it is a wedding party, corporate retreat, birthday celebration, or family reunion, we can coordinate group experiences, private venues, and multi-day itineraries for parties of any size.",
+    question: "services.contact.faq.group.q",
+    answer: "services.contact.faq.group.a",
   },
   {
-    question: "Do you only cover Alanya, or the wider region too?",
-    answer: "While Alanya is our home base and specialty, we cover the entire Antalya coastline — from Side and Manavgat in the east to Kemer and Phaselis in the west. If it is on the Turkish Riviera, we can help.",
+    question: "services.contact.faq.region.q",
+    answer: "services.contact.faq.region.a",
   },
 ];
 
 export default function ContactPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const yachtName = searchParams.get("yacht");
@@ -109,12 +112,12 @@ export default function ContactPage() {
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your name.";
+    if (name === "name" && !value.trim()) return t("services.validation.name");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
-    if (name === "message" && !value.trim()) return "Please enter your message.";
+    if (name === "message" && !value.trim()) return t("services.validation.message");
     return "";
   };
 
@@ -137,7 +140,7 @@ export default function ContactPage() {
 
     const honeypot = form.phone_alt.trim();
     if (honeypot) {
-      setFormState({ status: "success", message: "Thank you for reaching out! We will get back to you within 24 hours." });
+      setFormState({ status: "success", message: t("services.contact.thanks") });
       setForm({ name: "", email: "", subject: "", message: "", phone_alt: "" });
       setTimeout(() => setFormState({ status: "idle", message: "" }), 5000);
       return;
@@ -149,7 +152,7 @@ export default function ContactPage() {
     setErrors({ name: nameErr, email: emailErr, message: messageErr });
     setTouched({ name: true, email: true, message: true });
     if (nameErr || emailErr || messageErr) {
-      setFormState({ status: "error", message: "Please fix the errors below before sending." });
+      setFormState({ status: "error", message: t("services.validation.fixErrors") });
       return;
     }
 
@@ -268,31 +271,31 @@ export default function ContactPage() {
 
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Contact Concierge</span>
+              <span className="text-white/90 text-sm">{t("services.contact.title")}</span>
             </div>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Contact Our Concierge</h1>
+                <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.contact.heroTitle")}</h1>
                 <p className="text-white/70 text-sm md:text-base max-w-xl">
-                  Personalised assistance for your Alanya experience — from travel planning to local recommendations, we are here to help.
+                  {t("services.contact.heroDesc")}
                 </p>
               </div>
               <div className="flex items-center gap-5 md:gap-8 shrink-0">
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">&lt; 24h</p>
-                  <p className="text-white/50 text-xs">Response Time</p>
+                  <p className="text-white/50 text-xs">{t("services.contact.responseTime")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">100%</p>
-                  <p className="text-white/50 text-xs">Free Advice</p>
+                  <p className="text-white/50 text-xs">{t("services.contact.freeAdvice")}</p>
                 </div>
                 <div className="w-px h-8 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-white text-xl md:text-2xl font-semibold">Since '24</p>
-                  <p className="text-white/50 text-xs">Trusted</p>
+                  <p className="text-white/50 text-xs">{t("services.contact.trusted")}</p>
                 </div>
               </div>
             </div>
@@ -335,13 +338,13 @@ export default function ContactPage() {
                         {inquirySubject}
                       </span>
                       <span className="text-sm font-medium text-foreground-900 truncate">
-                        You are enquiring about: <strong>{inquiryName}</strong>
+                        {t("services.contact.enquiringAbout")} <strong>{inquiryName}</strong>
                       </span>
                     </div>
                     {yachtCompany && (
                       <p className="text-xs text-foreground-500 mt-0.5 flex items-center gap-1.5 ml-0">
                         <i className="ri-building-line text-[10px]"></i>
-                        Operated by {yachtCompany}
+                        {t("services.contact.operatedBy", { company: yachtCompany })}
                       </p>
                     )}
                   </div>
@@ -354,7 +357,7 @@ export default function ContactPage() {
                   className="flex items-center gap-1.5 text-xs text-foreground-400 hover:text-foreground-600 transition-colors shrink-0 whitespace-nowrap"
                 >
                   <i className="ri-close-circle-line text-sm"></i>
-                  Clear &amp; start fresh
+                  {t("services.contact.clearFresh")}
                 </Link>
               </div>
             </div>
@@ -367,13 +370,13 @@ export default function ContactPage() {
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-star-line text-accent-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">How We Can Help</span>
+                <span className="text-sm font-medium text-foreground-700">{t("services.contact.howHelp")}</span>
               </div>
               <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
-                Your personal guide to the Turkish Riviera
+                {t("services.contact.guideTitle")}
               </h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                Whatever brings you to Alanya, our concierge team is here to make it seamless, memorable, and stress-free.
+                {t("services.contact.guideDesc")}
               </p>
             </div>
 
@@ -386,8 +389,8 @@ export default function ContactPage() {
                   <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-accent-100 group-hover:bg-accent-200 transition-colors mb-4">
                     <i className={`${svc.icon} text-accent-600 text-lg`}></i>
                   </div>
-                  <h3 className="font-heading text-base text-foreground-900 mb-2">{svc.title}</h3>
-                  <p className="text-sm text-foreground-500 leading-relaxed">{svc.description}</p>
+                  <h3 className="font-heading text-base text-foreground-900 mb-2">{t(svc.title)}</h3>
+                  <p className="text-sm text-foreground-500 leading-relaxed">{t(svc.description)}</p>
                 </div>
               ))}
             </div>
@@ -401,8 +404,8 @@ export default function ContactPage() {
               {/* Form Column */}
               <div className="lg:col-span-3">
                 <div className="bg-white rounded-2xl p-6 md:p-8 border border-background-200/70">
-                  <h2 className="font-heading text-2xl text-foreground-900 mb-1">Send us a message</h2>
-                  <p className="text-sm text-foreground-500 mb-6">Tell us what you need and we will get back to you within 24 hours.</p>
+                  <h2 className="font-heading text-2xl text-foreground-900 mb-1">{t("services.contact.sendMessage")}</h2>
+                  <p className="text-sm text-foreground-500 mb-6">{t("services.contact.formDesc")}</p>
 
                   {/* Inline inquiry badge inside form card */}
                   {inquiryName && (
@@ -470,7 +473,7 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div>
                         <label htmlFor="concierge-name" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                          Your Name <span className="text-primary-500">*</span>
+                          {t("services.contact.name")} <span className="text-primary-500">*</span>
                         </label>
                         <input
                           id="concierge-name"
@@ -480,7 +483,7 @@ export default function ContactPage() {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           required
-                          placeholder="Jane Smith"
+                          placeholder={t("services.contact.namePlaceholder")}
                           className={`w-full px-4 py-2.5 rounded-lg border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 transition-colors ${
                             errors.name && touched.name
                               ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-100"
@@ -496,7 +499,7 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <label htmlFor="concierge-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                          Email Address <span className="text-primary-500">*</span>
+                          {t("services.contact.email")} <span className="text-primary-500">*</span>
                         </label>
                         <input
                           id="concierge-email"
@@ -506,7 +509,7 @@ export default function ContactPage() {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           required
-                          placeholder="jane@example.com"
+                          placeholder={t("services.contact.emailPlaceholder")}
                           className={`w-full px-4 py-2.5 rounded-lg border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 transition-colors ${
                             errors.email && touched.email
                               ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-100"
@@ -524,7 +527,7 @@ export default function ContactPage() {
 
                     <div>
                       <label htmlFor="concierge-subject" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                        What can we help with?
+                        {t("services.contact.whatHelp")}
                       </label>
                       <select
                         id="concierge-subject"
@@ -533,32 +536,32 @@ export default function ContactPage() {
                         onChange={handleChange}
                         className="w-full px-4 py-2.5 rounded-lg border border-background-200 bg-background-50 text-sm text-foreground-900 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-colors cursor-pointer"
                       >
-                        <option value="">Select a topic...</option>
-                        <option value="Trip Planning">Trip Planning</option>
-                        <option value="Accommodation">Accommodation</option>
-                        <option value="Experiences & Tours">Experiences &amp; Tours</option>
-                        <option value="Yacht Charter">Yacht Charter</option>
-                        <option value="Villa Stay">Villa Stay</option>
-                        <option value="Helicopter Tour">Helicopter Tour</option>
-                        <option value="Wine Tasting">Wine Tasting</option>
-                        <option value="Hammam & Spa">Hammam &amp; Spa</option>
-                        <option value="Photography Excursion">Photography Excursion</option>
-                        <option value="Dining & Reservations">Dining &amp; Reservations</option>
-                        <option value="Transport & Transfers">Transport &amp; Transfers</option>
-                        <option value="Private Jet Charter">Private Jet Charter</option>
-                        <option value="Personal Chef">Personal Chef</option>
-                        <option value="Personal Driver">Personal Driver</option>
-                        <option value="Personal Shopper">Personal Shopper</option>
-                        <option value="Expat & Relocation">Expat &amp; Relocation</option>
-                        <option value="Special Event">Special Event</option>
-                        <option value="Other">Other</option>
+                        <option value="">{t("services.contact.selectTopic")}</option>
+                        <option value="Trip Planning">{t("services.contact.topic.trip")}</option>
+                        <option value="Accommodation">{t("services.contact.topic.accommodation")}</option>
+                        <option value="Experiences & Tours">{t("services.contact.topic.experiences")}</option>
+                        <option value="Yacht Charter">{t("services.contact.topic.yacht")}</option>
+                        <option value="Villa Stay">{t("services.contact.topic.villa")}</option>
+                        <option value="Helicopter Tour">{t("services.contact.topic.helicopter")}</option>
+                        <option value="Wine Tasting">{t("services.contact.topic.wine")}</option>
+                        <option value="Hammam & Spa">{t("services.contact.topic.spa")}</option>
+                        <option value="Photography Excursion">{t("services.contact.topic.photo")}</option>
+                        <option value="Dining & Reservations">{t("services.contact.topic.dining")}</option>
+                        <option value="Transport & Transfers">{t("services.contact.topic.transport")}</option>
+                        <option value="Private Jet Charter">{t("services.contact.topic.jet")}</option>
+                        <option value="Personal Chef">{t("services.contact.topic.chef")}</option>
+                        <option value="Personal Driver">{t("services.contact.topic.driver")}</option>
+                        <option value="Personal Shopper">{t("services.contact.topic.shopper")}</option>
+                        <option value="Expat & Relocation">{t("services.contact.topic.expat")}</option>
+                        <option value="Special Event">{t("services.contact.topic.event")}</option>
+                        <option value="Other">{t("services.contact.topic.other")}</option>
                       </select>
                     </div>
 
                     {/* Preferred Contact Method */}
                     <div>
                       <label className="block text-sm font-medium text-foreground-700 mb-2">
-                        Preferred contact method
+                        {t("services.preferredContact")}
                       </label>
                       <div className="flex flex-wrap gap-3">
                         <label
@@ -577,7 +580,7 @@ export default function ContactPage() {
                             className="accent-primary-500"
                           />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                         <label
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border cursor-pointer transition-colors ${
@@ -595,7 +598,7 @@ export default function ContactPage() {
                             className="accent-primary-500"
                           />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border cursor-pointer transition-colors ${
@@ -613,14 +616,14 @@ export default function ContactPage() {
                             className="accent-primary-500"
                           />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                       </div>
                     </div>
 
                     <div>
                       <label htmlFor="concierge-message" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                        Your Message <span className="text-primary-500">*</span>
+                        {t("services.contact.yourMessage")} <span className="text-primary-500">*</span>
                       </label>
                       <textarea
                         id="concierge-message"
@@ -631,7 +634,7 @@ export default function ContactPage() {
                         required
                         maxLength={500}
                         rows={5}
-                        placeholder="Tell us about your trip — dates, group size, what you are interested in, and any special requests..."
+                        placeholder={t("services.contact.messagePlaceholder")}
                         className={`w-full px-4 py-2.5 rounded-lg border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 transition-colors resize-none ${
                           errors.message && touched.message
                             ? "border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-100"
@@ -645,7 +648,7 @@ export default function ContactPage() {
                         </p>
                       )}
                       <p className="text-xs text-foreground-400 mt-1.5 text-right">
-                        {form.message.length}/500 characters
+                        {t("services.contact.characters", { count: form.message.length })}
                       </p>
                     </div>
 
@@ -657,11 +660,11 @@ export default function ContactPage() {
                       {formState.status === "loading" ? (
                         <>
                           <i className="ri-loader-4-line animate-spin"></i>
-                          Sending...
+                            {t("services.sending")}
                         </>
                       ) : (
                         <>
-                          Send Message
+                          {t("services.contact.submit")}
                           <i className="ri-send-plane-line"></i>
                         </>
                       )}
@@ -674,7 +677,7 @@ export default function ContactPage() {
                           <i className="ri-check-line text-accent-600"></i>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-accent-800 mb-0.5">Message sent!</p>
+                          <p className="text-sm font-medium text-accent-800 mb-0.5">{t("services.contact.messageSent")}</p>
                           <p className="text-xs text-accent-700">{formState.message}</p>
                         </div>
                       </div>
@@ -686,7 +689,7 @@ export default function ContactPage() {
                           <i className="ri-error-warning-line text-primary-600"></i>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-primary-800 mb-0.5">Could not send</p>
+                          <p className="text-sm font-medium text-primary-800 mb-0.5">{t("services.contact.couldNotSend")}</p>
                           <p className="text-xs text-primary-700">{formState.message}</p>
                         </div>
                       </div>
@@ -699,7 +702,7 @@ export default function ContactPage() {
               <div className="lg:col-span-2 space-y-5">
                 {/* Contact Cards */}
                 <div className="bg-white rounded-2xl p-6 md:p-7 border border-background-200/70">
-                  <h3 className="font-heading text-lg text-foreground-900 mb-5">Reach us directly</h3>
+                  <h3 className="font-heading text-lg text-foreground-900 mb-5">{t("services.contact.reachDirectly")}</h3>
 
                   <div className="space-y-4">
                     <a
@@ -710,7 +713,7 @@ export default function ContactPage() {
                         <i className="ri-mail-line text-accent-600"></i>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground-900 mb-0.5">Email</p>
+                        <p className="text-sm font-medium text-foreground-900 mb-0.5">{t("services.email")}</p>
                         <p className="text-sm text-foreground-500 break-all">contact@alanyaholidays.com</p>
                       </div>
                     </a>
@@ -720,9 +723,9 @@ export default function ContactPage() {
                         <i className="ri-phone-line text-secondary-600"></i>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground-900 mb-0.5">Phone &amp; WhatsApp</p>
+                        <p className="text-sm font-medium text-foreground-900 mb-0.5">{t("services.contact.phoneWhatsapp")}</p>
                         <p className="text-sm text-foreground-500">+90 242 123 45 67</p>
-                        <p className="text-xs text-foreground-400 mt-1">Mon–Fri, 9:00–18:00 (GMT+3)</p>
+                        <p className="text-xs text-foreground-400 mt-1">{t("services.contact.hours")}</p>
                       </div>
                     </div>
 
@@ -731,7 +734,7 @@ export default function ContactPage() {
                         <i className="ri-map-pin-line text-secondary-600"></i>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground-900 mb-0.5">Visit Us</p>
+                        <p className="text-sm font-medium text-foreground-900 mb-0.5">{t("services.contact.visitUs")}</p>
                         <p className="text-sm text-foreground-500">İskele Cd. No:42, Alanya</p>
                         <p className="text-sm text-foreground-500">Antalya 07400, Türkiye</p>
                       </div>
@@ -741,7 +744,7 @@ export default function ContactPage() {
 
                 {/* Quick Links Card */}
                 <div className="bg-white rounded-2xl p-6 md:p-7 border border-background-200/70">
-                  <h3 className="font-heading text-lg text-foreground-900 mb-4">Quick Links</h3>
+                  <h3 className="font-heading text-lg text-foreground-900 mb-4">{t("services.contact.quickLinks")}</h3>
                   <div className="space-y-2">
                     <Link
                       to="/travel-guides"
@@ -750,7 +753,7 @@ export default function ContactPage() {
                       <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-100 shrink-0">
                         <i className="ri-book-open-line text-accent-600 text-sm"></i>
                       </div>
-                      Travel Guides
+                      {t("services.contact.travelGuides")}
                       <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
                     </Link>
                     <Link
@@ -760,7 +763,7 @@ export default function ContactPage() {
                       <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-100 shrink-0">
                         <i className="ri-calendar-event-line text-accent-600 text-sm"></i>
                       </div>
-                      Upcoming Events
+                      {t("services.contact.upcomingEvents")}
                       <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
                     </Link>
                     <Link
@@ -770,7 +773,7 @@ export default function ContactPage() {
                       <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-100 shrink-0">
                         <i className="ri-compass-3-line text-accent-600 text-sm"></i>
                       </div>
-                      Business Directory
+                      {t("services.contact.businessDirectory")}
                       <i className="ri-arrow-right-line ml-auto text-foreground-300 group-hover:text-foreground-500"></i>
                     </Link>
                   </div>
@@ -807,11 +810,11 @@ export default function ContactPage() {
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-question-line text-primary-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">Common Questions</span>
+                <span className="text-sm font-medium text-foreground-700">{t("services.contact.commonQuestions")}</span>
               </div>
-              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">Frequently Asked</h2>
+              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">{t("services.contact.frequentlyAsked")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                Quick answers to the questions we hear most often from our community members.
+                {t("services.contact.faqIntro")}
               </p>
             </div>
 
@@ -819,14 +822,14 @@ export default function ContactPage() {
               {faqs.map((faq, idx) => (
                 <details key={idx} className="group bg-white rounded-2xl border border-background-200/70 overflow-hidden">
                   <summary className="flex items-center justify-between px-6 py-4 cursor-pointer list-none">
-                    <h4 className="text-sm font-medium text-foreground-900 pr-4">{faq.question}</h4>
+                    <h4 className="text-sm font-medium text-foreground-900 pr-4">{t(faq.question)}</h4>
                     <div className="w-7 h-7 flex items-center justify-center rounded-full bg-background-100 shrink-0 group-open:bg-accent-100 transition-colors">
                       <i className="ri-add-line text-foreground-500 text-sm group-open:hidden"></i>
                       <i className="ri-subtract-line text-accent-600 text-sm hidden group-open:block"></i>
                     </div>
                   </summary>
                   <div className="px-6 pb-4">
-                    <p className="text-sm text-foreground-600 leading-relaxed">{faq.answer}</p>
+                    <p className="text-sm text-foreground-600 leading-relaxed">{t(faq.answer)}</p>
                   </div>
                 </details>
               ))}
@@ -838,24 +841,24 @@ export default function ContactPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-20 bg-gradient-to-r from-primary-500 to-primary-600">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-heading text-3xl md:text-4xl text-white mb-4">
-              Not sure where to start?
+              {t("services.contact.bottomTitle")}
             </h2>
             <p className="text-white/80 text-sm md:text-base mb-8">
-              Browse our travel guides for curated itineraries, local tips, and everything you need to fall in love with Alanya — no planning required.
+              {t("services.contact.bottomDesc")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/travel-guides"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-full text-sm font-semibold hover:bg-white/95 transition-colors whitespace-nowrap"
               >
-                Explore Travel Guides
+                {t("services.contact.exploreGuides")}
                 <i className="ri-arrow-right-line"></i>
               </Link>
               <Link
                 to="/community-hub"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white border border-white/30 rounded-full text-sm font-medium hover:bg-white/20 transition-colors whitespace-nowrap"
               >
-                Join the Community
+                {t("services.contact.joinCommunity")}
               </Link>
             </div>
           </div>

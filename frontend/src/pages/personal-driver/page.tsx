@@ -7,8 +7,11 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, driverTypes, type PersonalDriver } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function PersonalDriverPage() {
+  const { t } = useTranslation();
   const [personalDrivers, setPersonalDrivers] = useState<PersonalDriver[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -30,11 +33,11 @@ export default function PersonalDriverPage() {
       const data = await conciergeService.getPersonalDrivers();
       setPersonalDrivers(data);
     } catch {
-      setFetchError("Failed to load personal drivers. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.drivers") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadDrivers();
@@ -42,10 +45,10 @@ export default function PersonalDriverPage() {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your full name.";
+    if (name === "name" && !value.trim()) return t("services.validation.fullName");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
     return "";
   };
@@ -80,10 +83,10 @@ export default function PersonalDriverPage() {
   }, [personalDrivers, activeType, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
-    rating: "Top Rated",
-    "price-low": "Price: Low to High",
-    "price-high": "Price: High to Low",
-    capacity: "Largest Capacity",
+    rating: t("services.topRated"),
+    "price-low": t("services.priceLow"),
+    "price-high": t("services.priceHigh"),
+    capacity: t("services.mostCapacity"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,7 +104,7 @@ export default function PersonalDriverPage() {
     setFieldErrors({ name: nameErr, email: emailErr });
     setTouchedFields({ name: true, email: true });
     if (nameErr || emailErr) {
-      setFormError("Please fix the errors below before sending.");
+      setFormError(t("services.validation.fixErrors"));
       return;
     }
 
@@ -135,10 +138,10 @@ export default function PersonalDriverPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -156,15 +159,15 @@ export default function PersonalDriverPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/20 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Personal Driver</span>
+              <span className="text-white/90 text-sm">{t("services.driver.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Personal Drivers</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.driver.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Sit back and let a professional chauffeur navigate the Turkish Riviera. Airport transfers, full-day hire, or multi-day service in premium vehicles.
+              {t("services.driver.hero")}
             </p>
           </div>
         </section>
@@ -209,7 +212,7 @@ export default function PersonalDriverPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load personal drivers"
+                title={t("services.driver.unable")}
                 message={fetchError}
                 onRetry={loadDrivers}
               />
@@ -229,11 +232,11 @@ export default function PersonalDriverPage() {
               </div>
             ) : filteredDrivers.length === 0 ? (
               <EmptyState
-                title="No personal drivers found"
-                description="Try selecting a different vehicle category or clear your filters."
+                title={t("services.driver.none")}
+                description={t("services.driver.noneDesc")}
                 icon="ri-car-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveType("all");
                     setSortBy("rating");
@@ -248,7 +251,7 @@ export default function PersonalDriverPage() {
                       <img src={driver.image} alt={driver.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {driver.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -284,7 +287,7 @@ export default function PersonalDriverPage() {
                         <span className="text-sm text-foreground-500"> / day</span>
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                        <i className="ri-steering-2-line text-sm"></i>View Details
+                        <i className="ri-steering-2-line text-sm"></i>{t("services.viewDetails")}
                       </button>
                     </div>
                   </div>
@@ -306,7 +309,7 @@ export default function PersonalDriverPage() {
                 <img src={selectedDriver.image} alt={selectedDriver.name} className="w-full h-full object-cover object-top" />
                 {selectedDriver.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -324,46 +327,46 @@ export default function PersonalDriverPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedDriver.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedDriver.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedDriver.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedDriver.description || selectedDriver.bio}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-car-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Vehicle</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.vehicle")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedDriver.vehicle.split(" (")[0]}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-user-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Capacity</p>
+                    <p className="text-xs text-foreground-500">{t("services.capacity")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedDriver.capacity || selectedDriver.vehicleCapacity || 4} pax</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Base</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.base")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedDriver.base || selectedDriver.location || "Alanya"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-global-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Languages</p>
+                    <p className="text-xs text-foreground-500">{t("services.languages")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{(selectedDriver.languages || []).join(", ")}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Full Day (8 hours)</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.service.fullDayHire")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{(selectedDriver.pricePerDay || selectedDriver.dailyRate || 0).toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Hour</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perHour")}</p>
                       <p className="text-lg font-semibold text-foreground-700">€{(selectedDriver.pricePerHour || selectedDriver.hourlyRate || 0).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">What's Included</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.whatsIncluded")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {(selectedDriver.includes || selectedDriver.amenities || []).map((inc) => (
                       <span key={inc} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -377,10 +380,10 @@ export default function PersonalDriverPage() {
                     <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
-                        {contactMethod === 'whatsapp' ? <>Enquiry sent! We'll WhatsApp you soon.</> : contactMethod === 'phone_call' ? <>Enquiry sent! We'll call you soon.</> : <>Enquiry sent! We'll email you soon.</>}
+                        {contactMethod === 'whatsapp' ? t("services.form.sentWhatsapp") : contactMethod === 'phone_call' ? t("services.form.sentPhone") : t("services.form.sentEmail")}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
@@ -388,13 +391,13 @@ export default function PersonalDriverPage() {
                     <input type="hidden" name="driver_name" value={selectedDriver.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <input name="name" type="text" placeholder="Your full name" required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.name && touchedFields.name ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
+                        <input name="name" type="text" placeholder={t("services.fullName")} required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.name && touchedFields.name ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
                         {fieldErrors.name && touchedFields.name && (
                           <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{fieldErrors.name}</p>
                         )}
                       </div>
                       <div>
-                        <input name="email" type="email" placeholder="Your email address" required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.email && touchedFields.email ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
+                        <input name="email" type="email" placeholder={t("services.emailAddress")} required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.email && touchedFields.email ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
                         {fieldErrors.email && touchedFields.email && (
                           <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{fieldErrors.email}</p>
                         )}
@@ -404,26 +407,26 @@ export default function PersonalDriverPage() {
                       <select name="country_code" defaultValue="+90" className="px-2.5 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 outline-none focus:border-primary-400 transition-colors cursor-pointer appearance-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: "28px" }}>
                         <option value="+90">🇹🇷 +90</option><option value="+44">🇬🇧 +44</option><option value="+1">🇺🇸 +1</option><option value="+49">🇩🇪 +49</option><option value="+33">🇫🇷 +33</option><option value="+7">🇷🇺 +7</option><option value="+31">🇳🇱 +31</option><option value="+46">🇸🇪 +46</option><option value="+47">🇳🇴 +47</option><option value="+45">🇩🇰 +45</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
-                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" /><i className="ri-phone-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">Phone Call</span></label>
-                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" /><i className="ri-whatsapp-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">WhatsApp</span></label>
-                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" /><i className="ri-mail-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">Email</span></label>
+                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" /><i className="ri-phone-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">{t("services.phone")}</span></label>
+                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" /><i className="ri-whatsapp-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">{t("services.whatsapp")}</span></label>
+                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors"><input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" /><i className="ri-mail-line text-foreground-500 text-sm"></i><span className="text-sm text-foreground-700">{t("services.email")}</span></label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Dates needed, pickup location, number of passengers, or special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.driverNotes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{formError}</p>
                     )}
                     <div className="flex items-center gap-3">
                       <button type="submit" disabled={formSubmitting} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-60">
-                        {formSubmitting ? (<><i className="ri-loader-4-line animate-spin text-sm"></i>Sending...</>) : (<><i className="ri-calendar-check-line text-sm"></i>Enquire Now</>)}
+                        {formSubmitting ? (<><i className="ri-loader-4-line animate-spin text-sm"></i>{t("services.sending")}</>) : (<><i className="ri-calendar-check-line text-sm"></i>{t("services.enquireNow")}</>)}
                       </button>
-                      <button type="button" onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedDriver(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

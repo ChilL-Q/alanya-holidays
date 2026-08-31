@@ -4,10 +4,12 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsRepository } from './products.repository';
 import { UserRolesRepository } from '../common/auth/user-roles.repository';
+import { BillingService } from '../billing/billing.service';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { CreateProductDto, UpdateProductDto } from './dto/product-write.dto';
 
@@ -15,6 +17,9 @@ describe('ProductsService', () => {
   let service: ProductsService;
   let mockUserRolesRepo: {
     getRole: jest.Mock;
+  };
+  let mockBillingService: {
+    hasActivePremiumAccess: jest.Mock;
   };
   let mockRepository: {
     insertProduct: jest.Mock;
@@ -39,15 +44,24 @@ describe('ProductsService', () => {
     getMyCatalogItems: jest.Mock;
     createCatalogItem: jest.Mock;
     updateCatalogItem: jest.Mock;
+    deleteCatalogItem: jest.Mock;
     getOrdersContainingCatalogItems: jest.Mock;
     getAllOrders: jest.Mock;
     sellerOwnsAnyCatalogItem: jest.Mock;
     updateOrderStatus: jest.Mock;
+    getProductsAdmin: jest.Mock;
+    getCatalogItemAdmin: jest.Mock;
+    createCatalogItemAdmin: jest.Mock;
+    updateCatalogItemAdmin: jest.Mock;
+    deleteCatalogItemAdmin: jest.Mock;
   };
 
   beforeEach(async () => {
     mockUserRolesRepo = {
       getRole: jest.fn(),
+    };
+    mockBillingService = {
+      hasActivePremiumAccess: jest.fn().mockResolvedValue(true),
     };
     mockRepository = {
       insertProduct: jest.fn(),
@@ -96,10 +110,16 @@ describe('ProductsService', () => {
       getMyCatalogItems: jest.fn().mockResolvedValue([]),
       createCatalogItem: jest.fn(),
       updateCatalogItem: jest.fn(),
+      deleteCatalogItem: jest.fn(),
       getOrdersContainingCatalogItems: jest.fn().mockResolvedValue([]),
       getAllOrders: jest.fn().mockResolvedValue([]),
       sellerOwnsAnyCatalogItem: jest.fn().mockResolvedValue(false),
       updateOrderStatus: jest.fn(),
+      getProductsAdmin: jest.fn(),
+      getCatalogItemAdmin: jest.fn(),
+      createCatalogItemAdmin: jest.fn(),
+      updateCatalogItemAdmin: jest.fn(),
+      deleteCatalogItemAdmin: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -112,6 +132,10 @@ describe('ProductsService', () => {
         {
           provide: UserRolesRepository,
           useValue: mockUserRolesRepo,
+        },
+        {
+          provide: BillingService,
+          useValue: mockBillingService,
         },
       ],
     }).compile();
@@ -148,6 +172,91 @@ describe('ProductsService', () => {
         images: [],
         seller_id: 'user-1',
       });
+    });
+
+    it('rejects legacy product writes without active premium access', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValue('merchant');
+      mockBillingService.hasActivePremiumAccess.mockResolvedValue(false);
+      const dto = {
+        title: 'Gift Box',
+        description: '',
+        price: 10,
+        stock: 5,
+        category: 'souvenirs',
+        images: [],
+      };
+
+      await expect(service.createProduct(dto, 'merchant-1')).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(
+        service.updateProduct('product-id', { title: 'Changed' }, 'merchant-1'),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.deleteProduct('product-id', 'merchant-1'),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockRepository.insertProduct).not.toHaveBeenCalled();
+      expect(mockRepository.updateProduct).not.toHaveBeenCalled();
+      expect(mockRepository.deleteProduct).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('admin live catalog CRUD', () => {
+    it('maps admin creates to product_items fields and the authenticated admin seller', async () => {
+      mockRepository.createCatalogItemAdmin.mockResolvedValue({
+        id: 31,
+        name: 'Lamp',
+      });
+
+      await service.createAdminProduct(
+        {
+          name: 'Lamp',
+          description: 'Copper',
+          price: 25,
+          currency: 'eur',
+          stock: 3,
+          media: [{ url: 'https://example.com/lamp.jpg', type: 'image' }],
+          category_id: 7,
+          status: 'active',
+        },
+        'admin-1',
+      );
+
+      expect(mockRepository.createCatalogItemAdmin).toHaveBeenCalledWith({
+        name: 'Lamp',
+        description: 'Copper',
+        price: 25,
+        currency: 'EUR',
+        stock: 3,
+        media: [{ url: 'https://example.com/lamp.jpg', type: 'image' }],
+        category_id: 7,
+        status: 'active',
+        seller_id: 'admin-1',
+      });
+    });
+
+    it('uses unrestricted admin catalog update/delete methods and reports missing rows', async () => {
+      mockRepository.updateCatalogItemAdmin.mockResolvedValue({
+        id: 31,
+        stock: 5,
+      });
+      mockRepository.deleteCatalogItemAdmin.mockResolvedValue({ id: 31 });
+
+      await expect(
+        service.updateAdminProduct(31, { stock: 5, currency: 'try' }),
+      ).resolves.toEqual({ id: 31, stock: 5 });
+      expect(mockRepository.updateCatalogItemAdmin).toHaveBeenCalledWith(31, {
+        stock: 5,
+        currency: 'TRY',
+      });
+      await expect(service.deleteAdminProduct(31)).resolves.toEqual({
+        success: true,
+      });
+
+      mockRepository.deleteCatalogItemAdmin.mockResolvedValueOnce(null);
+      await expect(service.deleteAdminProduct(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -425,6 +534,35 @@ describe('ProductsService', () => {
   });
 
   describe('Seller (Business Dashboard)', () => {
+    it.each([
+      ['load', () => service.getMyProducts('seller-1')],
+      [
+        'create',
+        () => service.createMyProduct({ name: 'Mug', price: 12 }, 'seller-1'),
+      ],
+      ['update', () => service.updateMyProduct(1, { price: 15 }, 'seller-1')],
+      ['delete', () => service.deleteMyProduct(1, 'seller-1')],
+    ])(
+      'rejects %s when the seller has no active premium access',
+      async (_action, call) => {
+        mockUserRolesRepo.getRole.mockResolvedValueOnce('user');
+        mockBillingService.hasActivePremiumAccess.mockResolvedValueOnce(false);
+
+        await expect(call()).rejects.toThrow(ForbiddenException);
+        expect(mockRepository.getMyCatalogItems).not.toHaveBeenCalled();
+        expect(mockRepository.createCatalogItem).not.toHaveBeenCalled();
+        expect(mockRepository.updateCatalogItem).not.toHaveBeenCalled();
+      },
+    );
+
+    it('preserves admin access without requiring a premium subscription', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValueOnce('admin');
+      mockRepository.getMyCatalogItems.mockResolvedValueOnce([]);
+
+      await expect(service.getMyProducts('admin-1')).resolves.toEqual([]);
+      expect(mockBillingService.hasActivePremiumAccess).not.toHaveBeenCalled();
+    });
+
     it('getMyProducts should return catalog items owned by the seller', async () => {
       const items = [{ id: 1, name: 'Mug', seller_id: 'seller-1' }];
       mockRepository.getMyCatalogItems.mockResolvedValueOnce(items);
@@ -458,6 +596,23 @@ describe('ProductsService', () => {
       await expect(
         service.updateMyProduct(42, { price: 5 }, 'seller-1'),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('deleteMyProduct rejects a forged item id and deletes an owned item', async () => {
+      mockRepository.deleteCatalogItem
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 42 });
+
+      await expect(service.deleteMyProduct(42, 'seller-1')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.deleteMyProduct(42, 'seller-1')).resolves.toEqual({
+        success: true,
+      });
+      expect(mockRepository.deleteCatalogItem).toHaveBeenLastCalledWith(
+        42,
+        'seller-1',
+      );
     });
 
     it('getSellerOrders should return [] when seller has no catalog items', async () => {

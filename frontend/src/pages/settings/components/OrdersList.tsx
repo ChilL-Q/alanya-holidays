@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Package, Calendar, AlertCircle, RefreshCw, ChevronRight } from "lucide-react";
 import { ordersService, type OrderDetailsResponse, type OrderItem } from "@/api-services/orders.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export function OrdersList() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<OrderDetailsResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +19,11 @@ export function OrdersList() {
       setOrders(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       logger.error("Failed to load user orders:", err);
-      setError("Unable to load orders. Please check your connection and try again.");
+      setError(t("settings.loadOrdersError", { defaultValue: "Unable to load orders. Please check your connection and try again." }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void fetchOrders();
@@ -106,7 +108,7 @@ export function OrdersList() {
         <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-4">
           <ShoppingBag className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">No orders placed yet</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{t("settings.noOrders")}</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
           Explore our curated Alanya boutique selection, gourmet hampers, and exclusive vouchers.
         </p>
@@ -191,10 +193,10 @@ export function OrdersList() {
             {/* Footer: Recipient and Total */}
             <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
               <div className="text-xs text-slate-500">
-                {order.recipient_name && <span>Recipient: <strong className="text-slate-700">{order.recipient_name}</strong></span>}
+                {order.recipient_name && <span>{t("settings.recipient")} <strong className="text-slate-700">{order.recipient_name}</strong></span>}
               </div>
               <div className="text-right">
-                <span className="text-xs text-slate-500 mr-2">Total Amount:</span>
+                <span className="text-xs text-slate-500 mr-2">{t("settings.totalAmount")}</span>
                 <span className="font-bold text-slate-900 font-mono text-base">
                   {typeof totalPrice === "number" ? `${totalPrice.toFixed(2)} ${currency}` : `${totalPrice} ${currency}`}
                 </span>

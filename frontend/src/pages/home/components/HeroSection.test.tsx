@@ -32,6 +32,22 @@ describe("HeroSection Component", () => {
     expect(screen.queryByRole("link", { name: /plan your holiday/i })).not.toBeInTheDocument();
   });
 
+  it("keeps the Explore CTA compact and visible within the mobile hero contract", () => {
+    const { container } = render(
+      <MemoryRouter>
+        <HeroSection />
+      </MemoryRouter>
+    );
+
+    expect(container.querySelector("section")).toHaveClass("min-h-screen");
+    expect(screen.getByRole("link", { name: /explore alanya/i })).toHaveClass(
+      "px-6",
+      "py-3",
+      "md:px-8",
+      "md:py-4"
+    );
+  });
+
   it("displays community statistics bar with members, experiences, and reviews", () => {
     render(
       <MemoryRouter>

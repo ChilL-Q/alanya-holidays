@@ -8,11 +8,35 @@ import ArticleFigure from "./ArticleFigure";
 import ArticleCallout from "./ArticleCallout";
 import PullQuote from "./PullQuote";
 import LeadParagraph from "./LeadParagraph";
+import DOMPurify from "dompurify";
 
 export interface ArticleContentRendererProps {
   content?: string | ArticleBlockNode[];
   nodes?: ArticleBlockNode[];
   className?: string;
+}
+
+function allowedMarkdownHref(rawHref: string): string | null {
+  const href = rawHref.trim();
+  const hasUnsafeCharacter = Array.from(href).some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 0x20 || codePoint === 0x7f;
+  });
+  if (!href || hasUnsafeCharacter) return null;
+  if (/^https?:\/\/[^\s]+$/i.test(href)) return href;
+  if (/^mailto:[^\s@]+@[^\s@]+$/i.test(href)) return href;
+  if (/^tel:\+?[0-9().-]+$/i.test(href)) return href;
+  if (/^\/(?!\/)[^\s]*$/.test(href)) return href;
+  if (/^(?:\.\.?\/|#|\?)[^\s]*$/.test(href)) return href;
+  if (
+    !href.includes(":") &&
+    /^[A-Za-z0-9][A-Za-z0-9._~!$&'()*+,;=@%/-]*(?:\?[^\s#]*)?(?:#[^\s]*)?$/.test(
+      href,
+    )
+  ) {
+    return href;
+  }
+  return null;
 }
 
 function renderInlineFormattedText(text: string): React.ReactNode {
@@ -38,10 +62,12 @@ function renderInlineFormattedText(text: string): React.ReactNode {
     }
     const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     if (linkMatch) {
+      const href = allowedMarkdownHref(linkMatch[2]);
+      if (!href) return <span key={index}>{linkMatch[1]}</span>;
       return (
         <a
           key={index}
-          href={linkMatch[2]}
+          href={href}
           className="text-primary-600 hover:text-primary-700 underline font-medium"
           target="_blank"
           rel="noopener noreferrer"
@@ -158,6 +184,22 @@ export default function ArticleContentRenderer({
     <div className={`article-content-flow space-y-4 ${className}`}>
       {blockNodes.map((node, index) => {
         switch (node.type) {
+          case "html": {
+            const sanitized = DOMPurify.sanitize(node.content, {
+              ALLOWED_TAGS: [
+                "p", "br", "strong", "em", "s", "code", "pre", "blockquote",
+                "h2", "h3", "h4", "ul", "ol", "li", "a", "span",
+              ],
+              ALLOWED_ATTR: ["href", "target", "rel", "class"],
+            });
+            return (
+              <div
+                key={`html-${index}`}
+                className="prose prose-slate dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: sanitized }}
+              />
+            );
+          }
           case "heading": {
             if (node.level === 2) {
               return (

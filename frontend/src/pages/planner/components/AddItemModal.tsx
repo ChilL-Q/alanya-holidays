@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { directoryService, type Business } from "@/api-services/directory.service";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { aiGuideService, type ItineraryActivity } from "@/api-services/ai-guide.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -101,6 +103,7 @@ export default function AddItemModal({
   currentDayLabel,
   onDayLabelChange,
 }: AddItemModalProps) {
+  const { t } = useTranslation();
   const [businessesList, setBusinessesList] = useState<Business[]>([]);
   const [eventsList, setEventsList] = useState<ForumEvent[]>([]);
   const [sourceTab, setSourceTab] = useState<SourceTab>("favorites");
@@ -265,11 +268,11 @@ export default function AddItemModal({
   if (!isOpen) return null;
 
   const tabs: { key: SourceTab; label: string; icon: string; count?: number }[] = [
-    { key: "ai", label: "AI Suggestions", icon: "ri-sparkling-fill" },
-    { key: "favorites", label: "Favorites", icon: "ri-heart-line", count: favoriteBusinesses.length },
-    { key: "browse", label: "Browse", icon: "ri-store-2-line" },
-    { key: "events", label: "Events", icon: "ri-calendar-event-line", count: filteredEvents.length },
-    { key: "custom", label: "Custom", icon: "ri-edit-line" },
+    { key: "ai", label: t("planner.aiSuggestions"), icon: "ri-sparkling-fill" },
+    { key: "favorites", label: t("public.myFavorites"), icon: "ri-heart-line", count: favoriteBusinesses.length },
+    { key: "browse", label: t("public.browse"), icon: "ri-store-2-line" },
+    { key: "events", label: t("public.events"), icon: "ri-calendar-event-line", count: filteredEvents.length },
+    { key: "custom", label: t("planner.custom"), icon: "ri-edit-line" },
   ];
 
   return (
@@ -285,8 +288,8 @@ export default function AddItemModal({
               <i className="ri-add-line text-primary-500"></i>
             </div>
             <div>
-              <h3 className="font-heading text-base font-semibold text-foreground-900">Add to Plan</h3>
-              <p className="text-xs text-foreground-500">Choose what to add to your itinerary</p>
+              <h3 className="font-heading text-base font-semibold text-foreground-900">{t("planner.addToPlan")}</h3>
+              <p className="text-xs text-foreground-500">{t("planner.chooseWhatToAdd")}</p>
             </div>
           </div>
           <button
@@ -303,7 +306,7 @@ export default function AddItemModal({
             {/* Day selector */}
             <div className="flex-1">
               <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-2">
-                Day
+                {t("planner.dayLabel")}
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {dayLabels.map((label) => (
@@ -324,7 +327,7 @@ export default function AddItemModal({
                     type="text"
                     value={newDayLabel}
                     onChange={(e) => setNewDayLabel(e.target.value)}
-                    placeholder="New day..."
+                    placeholder={t("planner.newDayPlaceholder")}
                     className="w-24 px-2.5 py-1.5 text-xs rounded-full border border-background-200 bg-white focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleAddNewDay();
@@ -344,7 +347,7 @@ export default function AddItemModal({
             {/* Time slot selector */}
             <div className="flex-1">
               <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-2">
-                Time Slot
+                {t("planner.timeSlot")}
               </label>
               <select
                 value={selectedTimeSlot}
@@ -399,7 +402,7 @@ export default function AddItemModal({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={sourceTab === "browse" ? "Search businesses by name, category, or tag..." : "Search events..."}
+                placeholder={sourceTab === "browse" ? t("planner.searchBusinesses") : t("planner.searchEvents")}
                 className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-background-200 bg-background-50 focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300"
               />
             </div>
@@ -416,7 +419,7 @@ export default function AddItemModal({
                   type="text"
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Ask Gemini: e.g. romantic sunset spot, quiet beach..."
+                  placeholder={t("planner.askGeminiPlaceholder")}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAskAiForIdeas();
                   }}
@@ -432,7 +435,7 @@ export default function AddItemModal({
                   ) : (
                     <i className="ri-sparkling-fill"></i>
                   )}
-                  Ask AI
+                  {t("planner.askAi")}
                 </button>
               </div>
 
@@ -444,7 +447,7 @@ export default function AddItemModal({
 
               <div>
                 <p className="text-[11px] font-semibold text-foreground-400 uppercase tracking-wider mb-2">
-                  Top Recommended Alanya Highlights
+                  {t("planner.topHighlights")}
                 </p>
                 <div className="space-y-2">
                   {QUICK_AI_SUGGESTIONS.map((item, idx) => (
@@ -470,7 +473,7 @@ export default function AddItemModal({
                         onClick={() => handleAddAiSuggestion(item)}
                         className="px-3 py-1.5 rounded-lg bg-primary-500 text-white text-xs font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer shrink-0"
                       >
-                        + Add
+                        {t("planner.add")}
                       </button>
                     </div>
                   ))}
@@ -487,9 +490,9 @@ export default function AddItemModal({
                   <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-full bg-accent-100">
                     <i className="ri-heart-line text-accent-500 text-xl"></i>
                   </div>
-                  <p className="text-sm text-foreground-600 font-medium mb-1">No favorites yet</p>
+                  <p className="text-sm text-foreground-600 font-medium mb-1">{t("planner.noFavorites")}</p>
                   <p className="text-xs text-foreground-400">
-                    Heart businesses from the <a href="/explore" className="text-primary-500 underline cursor-pointer">directory</a> to add them here
+                    {t("planner.favoriteHint")} <a href="/explore" className="text-primary-500 underline cursor-pointer">{t("public.directory")}</a> {t("planner.favoriteHintAfter")}
                   </p>
                 </div>
               ) : (
@@ -548,7 +551,7 @@ export default function AddItemModal({
               ))}
               {filteredBusinesses.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-sm text-foreground-500">No businesses found</p>
+                  <p className="text-sm text-foreground-500">{t("planner.noBusinesses")}</p>
                 </div>
               )}
             </div>
@@ -578,7 +581,7 @@ export default function AddItemModal({
               ))}
               {filteredEvents.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-sm text-foreground-500">No upcoming events found</p>
+                  <p className="text-sm text-foreground-500">{t("planner.noEvents")}</p>
                 </div>
               )}
             </div>
@@ -589,36 +592,36 @@ export default function AddItemModal({
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-                  Activity Name *
+                  {t("planner.activityNameRequired")}
                 </label>
                 <input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="e.g., Morning swim at the beach, Visit the bazaar..."
+                  placeholder={t("planner.activityPlaceholder")}
                   className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-white focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-                  Description (optional)
+                  {t("planner.descriptionOptional")}
                 </label>
                 <textarea
                   value={customDescription}
                   onChange={(e) => setCustomDescription(e.target.value)}
-                  placeholder="Add any details about this activity..."
+                  placeholder={t("planner.activityDescriptionPlaceholder")}
                   rows={3}
                   className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-white focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300 resize-y"
                 ></textarea>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-                  Notes (optional)
+                  {t("planner.notesOptional")}
                 </label>
                 <textarea
                   value={itemNotes}
                   onChange={(e) => setItemNotes(e.target.value)}
-                  placeholder="Personal notes for this activity..."
+                  placeholder={t("planner.activityNotesPlaceholder")}
                   rows={2}
                   className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-white focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300 resize-y"
                 ></textarea>
@@ -629,7 +632,7 @@ export default function AddItemModal({
                 className="w-full py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-add-line mr-1.5"></i>
-                Add Custom Activity
+                {t("planner.addCustomActivity")}
               </button>
             </div>
           )}
@@ -638,12 +641,12 @@ export default function AddItemModal({
           {sourceTab !== "custom" && sourceTab !== "ai" && (
             <div className="mt-4 pt-4 border-t border-background-200">
               <label className="block text-xs font-semibold text-foreground-500 uppercase tracking-wider mb-1.5">
-                Personal Notes (optional)
+                {t("planner.personalNotesOptional")}
               </label>
               <textarea
                 value={itemNotes}
                 onChange={(e) => setItemNotes(e.target.value)}
-                placeholder="Why you want to go, who to bring, what to remember..."
+                placeholder={t("planner.personalNotesPlaceholder")}
                 rows={2}
                 className="w-full px-3 py-2.5 text-sm rounded-xl border border-background-200 bg-white focus:outline-none focus:border-primary-300 text-foreground-700 placeholder:text-foreground-300 resize-y"
               ></textarea>

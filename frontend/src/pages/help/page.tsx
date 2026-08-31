@@ -3,84 +3,86 @@ import { Link } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import { adminService } from "@/api-services/admin.service";
+import { useTranslation } from "react-i18next";
 
 const faqItems = [
   {
-    q: "How do I start a new discussion?",
-    a: "Click the 'Start a Discussion' button in the navigation bar or from any category page. Choose the relevant category and subcategory, write your post title and content, then hit publish. Your post will appear immediately in the community feed.",
+    q: "public.help.faq.start.q",
+    a: "public.help.faq.start.a",
   },
   {
-    q: "Do I need an account to browse the forum?",
-    a: "Nope! You can browse all discussions, events, and member profiles without an account. You'll only need to register when you want to post, comment, like, or join events.",
+    q: "public.help.faq.browse.q",
+    a: "public.help.faq.browse.a",
   },
   {
-    q: "How do I create an account?",
-    a: "Click 'Register' in the top navigation bar. Fill out your username, email, and a password. You can also optionally add your location and a short bio to help other members get to know you. Once registered, you can start participating immediately.",
+    q: "public.help.faq.account.q",
+    a: "public.help.faq.account.a",
   },
   {
-    q: "What are the community guidelines?",
-    a: "We keep it simple: be respectful, be helpful, be honest, and be inclusive. No hate speech, spam, harassment, or illegal content. Check our full Terms of Service for the complete guidelines. Our moderators are active but we rely on the community to keep things positive.",
+    q: "public.help.faq.guidelines.q",
+    a: "public.help.faq.guidelines.a",
   },
   {
-    q: "How do I report a post or user?",
-    a: "If you see content that violates our guidelines, use the contact form on this page to report it. Include the thread link, the username, and a brief description of the issue. Our moderation team reviews all reports within 24 hours.",
+    q: "public.help.faq.report.q",
+    a: "public.help.faq.report.a",
   },
   {
-    q: "Can I edit or delete my posts?",
-    a: "Yes! You can edit your own posts and replies at any time. Deletion is also available through your post options. Note that deleting a post that has replies may leave the conversation looking broken, so editing is often the better choice.",
+    q: "public.help.faq.edit.q",
+    a: "public.help.faq.edit.a",
   },
   {
-    q: "How do events work on Alanya Holidays?",
-    a: "Events are managed and published by administrators. Other members can browse events, RSVP, comment, and share them. You can also sync events to your personal calendar.",
+    q: "public.help.faq.events.q",
+    a: "public.help.faq.events.a",
   },
   {
-    q: "Is the marketplace safe to use?",
-    a: "The marketplace connects community members directly — we don't handle payments or mediate transactions. Always meet in public places, verify items before paying, and use common sense. Report suspicious listings and we'll remove them promptly.",
+    q: "public.help.faq.marketplace.q",
+    a: "public.help.faq.marketplace.a",
   },
   {
-    q: "How do I get the 'Verified Local' badge?",
-    a: "The Verified Local badge is given to members who have been consistently helpful and active in the community for at least 3 months. Our moderation team reviews profiles regularly and awards the badge to qualifying members. There's no application process — just keep contributing!",
+    q: "public.help.faq.badge.q",
+    a: "public.help.faq.badge.a",
   },
   {
-    q: "I forgot my password. What do I do?",
-    a: "On the login page, click 'Forgot Password', enter your email address, and we'll send you a reset link. Check your spam folder if you don't see it within a few minutes. If you're still stuck, use the contact form below and we'll help manually.",
+    q: "public.help.faq.password.q",
+    a: "public.help.faq.password.a",
   },
 ];
 
 const forumGuides = [
   {
     icon: "ri-edit-line",
-    title: "Writing Great Posts",
-    desc: "Use clear titles that summarize your question or topic. Add specific details — the more context you give, the better answers you'll get. Break long text into paragraphs for readability.",
+    title: "public.help.guide.posts.title",
+    desc: "public.help.guide.posts.desc",
   },
   {
     icon: "ri-search-line",
-    title: "Search Before Posting",
-    desc: "Chances are someone has already asked your question. Use the search bar or browse relevant categories before creating a new thread. This keeps discussions organized and reduces duplicates.",
+    title: "public.help.guide.search.title",
+    desc: "public.help.guide.search.desc",
   },
   {
     icon: "ri-image-line",
-    title: "Adding Photos",
-    desc: "You can attach images to your posts to illustrate your point. Photos of restaurants, beaches, rental properties, or events make your posts much more engaging and helpful to others.",
+    title: "public.help.guide.photos.title",
+    desc: "public.help.guide.photos.desc",
   },
   {
     icon: "ri-notification-3-line",
-    title: "Staying Updated",
-    desc: "When you post or comment on a thread, you'll automatically receive notifications when someone replies. You can also bookmark threads to follow conversations without posting in them.",
+    title: "public.help.guide.updated.title",
+    desc: "public.help.guide.updated.desc",
   },
   {
     icon: "ri-user-star-line",
-    title: "Building Reputation",
-    desc: "Your reputation score increases when other members like your posts. Higher reputation unlocks badges and signals to the community that you're a trusted contributor.",
+    title: "public.help.guide.reputation.title",
+    desc: "public.help.guide.reputation.desc",
   },
   {
     icon: "ri-chat-smile-2-line",
-    title: "Being a Good Community Member",
-    desc: "Welcome newcomers, answer questions kindly, and share your honest experiences. The best members are those who give back — even a simple 'thanks for sharing' goes a long way.",
+    title: "public.help.guide.member.title",
+    desc: "public.help.guide.member.desc",
   },
 ];
 
 export default function HelpPage() {
+  const { t } = useTranslation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [formStatus, setFormStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
 
@@ -118,16 +120,16 @@ export default function HelpPage() {
           <nav className="flex items-center gap-1.5 text-xs md:text-sm text-foreground-400 mb-4 flex-wrap">
             <Link to="/" className="hover:text-primary-500 transition-colors flex items-center gap-1">
               <i className="ri-home-4-line"></i>
-              Home
+              {t("nav.home")}
             </Link>
             <i className="ri-arrow-right-s-line text-foreground-300"></i>
-            <span className="text-foreground-600">Help & Support</span>
+            <span className="text-foreground-600">{t("public.help.title")}</span>
           </nav>
           <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl text-foreground-900 mb-3">
-            Help & Support
+            {t("public.help.title")}
           </h1>
           <p className="text-sm md:text-base text-foreground-500 max-w-2xl">
-            Everything you need to get the most out of Alanya Holidays — from getting started to becoming a top contributor.
+            {t("public.help.description")}
           </p>
         </div>
       </section>
@@ -137,11 +139,11 @@ export default function HelpPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-10 md:py-14">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {[
-              { icon: "ri-user-add-line", label: "Create Account", href: "/register" },
-              { icon: "ri-edit-line", label: "Start Discussion", href: "/new-thread" },
-              { icon: "ri-calendar-event-line", label: "Browse Events", href: "/events" },
-              { icon: "ri-stack-line", label: "All Categories", href: "/categories" },
-              { icon: "ri-information-line", label: "About Us", href: "/about" },
+              { icon: "ri-user-add-line", label: t("public.help.createAccount"), href: "/register" },
+              { icon: "ri-edit-line", label: t("public.help.startDiscussion"), href: "/new-thread" },
+              { icon: "ri-calendar-event-line", label: t("public.help.browseEvents"), href: "/events" },
+              { icon: "ri-stack-line", label: t("public.help.allCategories"), href: "/categories" },
+              { icon: "ri-information-line", label: t("public.help.aboutUs"), href: "/about" },
             ].map((link) => (
               <Link
                 key={link.label}
@@ -165,11 +167,11 @@ export default function HelpPage() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-question-answer-line text-primary-500 text-lg"></i>
               <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">
-                Got Questions?
+                {t("public.help.gotQuestions")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-8">
-              Frequently Asked Questions
+              {t("public.help.faqTitle")}
             </h2>
 
             <div className="space-y-3">
@@ -183,7 +185,7 @@ export default function HelpPage() {
                     className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left cursor-pointer"
                   >
                     <span className="font-heading text-sm md:text-base text-foreground-800 pr-4">
-                      {item.q}
+                      {t(item.q)}
                     </span>
                     <div className={`w-6 h-6 flex items-center justify-center shrink-0 rounded-full bg-background-100 transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>
                       <i className="ri-add-line text-foreground-500 text-sm"></i>
@@ -195,7 +197,7 @@ export default function HelpPage() {
                     }`}
                   >
                     <p className="px-5 text-sm text-foreground-500 leading-relaxed">
-                      {item.a}
+                      {t(item.a)}
                     </p>
                   </div>
                 </div>
@@ -210,11 +212,11 @@ export default function HelpPage() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-book-open-line text-accent-500 text-lg"></i>
               <span className="text-sm font-semibold text-accent-500 uppercase tracking-wider">
-                New Here?
+                {t("public.help.newHere")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-8">
-              Forum How-To Guides
+              {t("public.help.guidesTitle")}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -224,10 +226,10 @@ export default function HelpPage() {
                     <i className={`${guide.icon} text-accent-500`}></i>
                   </div>
                   <h3 className="font-heading text-base text-foreground-800 mb-2">
-                    {guide.title}
+                    {t(guide.title)}
                   </h3>
                   <p className="text-sm text-foreground-500 leading-relaxed">
-                    {guide.desc}
+                    {t(guide.desc)}
                   </p>
                 </div>
               ))}
@@ -241,14 +243,14 @@ export default function HelpPage() {
             <div className="flex items-center gap-2 mb-2">
               <i className="ri-mail-send-line text-primary-500 text-lg"></i>
               <span className="text-sm font-semibold text-primary-500 uppercase tracking-wider">
-                Still Need Help?
+                {t("public.help.stillNeedHelp")}
               </span>
             </div>
             <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-2">
-              Contact Our Team
+              {t("public.help.contactTeam")}
             </h2>
             <p className="text-sm text-foreground-500 mb-8">
-              Couldn&apos;t find what you were looking for? Send us a message and we&apos;ll get back to you within 24 hours.
+              {t("public.help.contactDescription")}
             </p>
 
             <form
@@ -259,27 +261,27 @@ export default function HelpPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="name" className="block text-xs font-medium text-foreground-600 mb-1.5">
-                    Your Name
+                    {t("public.yourName")}
                   </label>
                   <input
                     type="text"
                     id="name"
                     name="name"
                     required
-                    placeholder="Enter your name"
+                    placeholder={t("public.help.namePlaceholder")}
                     className="w-full bg-background-100 border border-background-200/70 rounded-lg px-4 py-2.5 text-sm text-foreground-800 placeholder:text-foreground-300 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100/60 transition-all"
                   />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-xs font-medium text-foreground-600 mb-1.5">
-                    Email Address
+                    {t("public.emailAddress")}
                   </label>
                   <input
                     type="email"
                     id="email"
                     name="email"
                     required
-                    placeholder="you@example.com"
+                    placeholder={t("public.help.emailPlaceholder")}
                     className="w-full bg-background-100 border border-background-200/70 rounded-lg px-4 py-2.5 text-sm text-foreground-800 placeholder:text-foreground-300 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100/60 transition-all"
                   />
                 </div>
@@ -287,7 +289,7 @@ export default function HelpPage() {
 
               <div>
                 <label htmlFor="subject" className="block text-xs font-medium text-foreground-600 mb-1.5">
-                  Subject
+                  {t("public.help.subject")}
                 </label>
                 <select
                   id="subject"
@@ -295,19 +297,19 @@ export default function HelpPage() {
                   required
                   className="w-full bg-background-100 border border-background-200/70 rounded-lg px-4 py-2.5 text-sm text-foreground-800 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100/60 transition-all appearance-none cursor-pointer"
                 >
-                  <option value="">Select a topic</option>
-                  <option value="account">Account Help</option>
-                  <option value="technical">Technical Issue</option>
-                  <option value="report">Report Content</option>
-                  <option value="suggestion">Suggestion</option>
-                  <option value="event">Event Question</option>
-                  <option value="other">Other</option>
+                  <option value="">{t("public.help.selectTopic")}</option>
+                  <option value="account">{t("public.help.accountHelp")}</option>
+                  <option value="technical">{t("public.help.technicalIssue")}</option>
+                  <option value="report">{t("public.help.reportContent")}</option>
+                  <option value="suggestion">{t("public.help.suggestion")}</option>
+                  <option value="event">{t("public.help.eventQuestion")}</option>
+                  <option value="other">{t("public.help.other")}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-xs font-medium text-foreground-600 mb-1.5">
-                  Your Message
+                  {t("public.yourMessage")}
                 </label>
                 <textarea
                   id="message"
@@ -315,23 +317,23 @@ export default function HelpPage() {
                   required
                   rows={5}
                   maxLength={500}
-                  placeholder="Describe your question or issue in detail..."
+                  placeholder={t("public.help.messagePlaceholder")}
                   className="w-full bg-background-100 border border-background-200/70 rounded-lg px-4 py-3 text-sm text-foreground-800 placeholder:text-foreground-300 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100/60 resize-none transition-all"
                 />
-                <p className="text-[10px] text-foreground-300 mt-1">Maximum 500 characters</p>
+                <p className="text-[10px] text-foreground-300 mt-1">{t("public.help.maxCharacters")}</p>
               </div>
 
               {/* Status messages */}
               {formStatus === "success" && (
                 <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
                   <i className="ri-check-line"></i>
-                  Message sent successfully! We&apos;ll get back to you within 24 hours.
+                  {t("public.help.success")}
                 </div>
               )}
               {formStatus === "error" && (
                 <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                   <i className="ri-error-warning-line"></i>
-                  Something went wrong. Please try again or email us directly at hello@alanyaforum.com.
+                  {t("public.help.error")}
                 </div>
               )}
 
@@ -343,11 +345,11 @@ export default function HelpPage() {
                 {formStatus === "submitting" ? (
                   <>
                     <i className="ri-loader-4-line animate-spin"></i>
-                    Sending...
+                    {t("public.sending")}
                   </>
                 ) : (
                   <>
-                    Send Message
+                    {t("public.help.sendMessage")}
                     <i className="ri-send-plane-line"></i>
                   </>
                 )}
@@ -361,7 +363,7 @@ export default function HelpPage() {
                   <i className="ri-mail-line text-primary-500"></i>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground-400">Email us directly</p>
+                  <p className="text-xs text-foreground-400">{t("public.help.emailDirect")}</p>
                   <p className="text-sm font-medium text-foreground-700">hello@alanyaforum.com</p>
                 </div>
               </div>
@@ -370,8 +372,8 @@ export default function HelpPage() {
                   <i className="ri-discord-line text-accent-500"></i>
                 </div>
                 <div>
-                  <p className="text-xs text-foreground-400">Join the conversation</p>
-                  <p className="text-sm font-medium text-foreground-700">Discord Community</p>
+                  <p className="text-xs text-foreground-400">{t("public.help.joinConversation")}</p>
+                  <p className="text-sm font-medium text-foreground-700">{t("public.help.discord")}</p>
                 </div>
               </div>
             </div>

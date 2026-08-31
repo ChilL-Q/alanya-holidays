@@ -5,6 +5,8 @@ import { UserRolesRepository } from '../../common/auth/user-roles.repository';
 import { RedisService } from '../../common/redis/redis.service';
 import { EmailOutboxRepository } from '../../bookings/email-outbox.repository';
 import { PAYMENT_GATEWAY } from '../../webhooks/domain/payment-gateway.interface';
+import { BillingService } from '../../billing/billing.service';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', () => {
   let service: DirectoryListingService;
@@ -18,6 +20,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
     updateListingStatus: jest.Mock;
     invokeFunction: jest.Mock;
     getListingAddons: jest.Mock;
+    getDirectoryAnalyticsForOwner: jest.Mock;
   };
   let mockUserRolesRepo: { getRole: jest.Mock };
   let mockRedisService: {
@@ -27,6 +30,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
   };
   let mockEmailOutbox: { enqueue: jest.Mock };
   let mockPaymentGateway: { createAddonCheckoutSession: jest.Mock };
+  let mockBillingService: { hasActivePremiumAccess: jest.Mock };
 
   const validListingId = 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d';
   const validOwnerId = 'b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e';
@@ -42,6 +46,7 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
       updateListingStatus: jest.fn(),
       invokeFunction: jest.fn(),
       getListingAddons: jest.fn().mockResolvedValue([]),
+      getDirectoryAnalyticsForOwner: jest.fn().mockResolvedValue([]),
     };
     mockUserRolesRepo = {
       getRole: jest.fn().mockResolvedValue('user'),
@@ -55,6 +60,9 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
       createAddonCheckoutSession: jest
         .fn()
         .mockResolvedValue({ url: 'https://checkout.stripe.test/x' }),
+    };
+    mockBillingService = {
+      hasActivePremiumAccess: jest.fn().mockResolvedValue(true),
     };
     mockEmailOutbox = {
       enqueue: jest.fn().mockResolvedValue(undefined),
@@ -82,6 +90,10 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
         {
           provide: PAYMENT_GATEWAY,
           useValue: mockPaymentGateway,
+        },
+        {
+          provide: BillingService,
+          useValue: mockBillingService,
         },
       ],
     }).compile();
@@ -119,6 +131,9 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
       );
 
       expect(result).toEqual(createdRecord);
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({ creation_source: 'merchant' }),
+      );
       expect(mockEmailOutbox.enqueue).toHaveBeenCalledTimes(1);
       expect(mockEmailOutbox.enqueue).toHaveBeenCalledWith({
         to: 'admin@alanyaholidays.com',
@@ -192,6 +207,57 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
 
       expect(result).toEqual(createdRecord);
       expect(mockEmailOutbox.enqueue).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('createAdminDirectoryListing', () => {
+    it('persists an unowned admin-source listing after verifying the admin role', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
+      mockRepository.insertDirectoryListing.mockImplementation(
+        (listing: Record<string, unknown>) => ({
+          id: validListingId,
+          ...listing,
+        }),
+      );
+
+      await service.createAdminDirectoryListing(
+        {
+          name: 'Admin curated museum',
+          category_id: 'attractions',
+          status: 'approved',
+        },
+        validOwnerId,
+      );
+
+      expect(mockUserRolesRepo.getRole).toHaveBeenCalledWith(validOwnerId);
+      expect(mockRepository.insertDirectoryListing).toHaveBeenCalledWith(
+        expect.objectContaining({
+          creation_source: 'admin',
+          owner_user_id: null,
+          claimed_at: null,
+          status: 'approved',
+        }),
+      );
+    });
+
+    it('lets an admin explicitly reclassify an imported listing as claimable', async () => {
+      mockUserRolesRepo.getRole.mockResolvedValue('admin');
+      mockRepository.updateDirectoryListing.mockResolvedValue({
+        id: validListingId,
+        creation_source: 'admin',
+        can_claim: true,
+      });
+
+      await service.updateAdminDirectoryListing(
+        validListingId,
+        { creation_source: 'admin' },
+        validOwnerId,
+      );
+
+      expect(mockRepository.updateDirectoryListing).toHaveBeenCalledWith(
+        validListingId,
+        { creation_source: 'admin' },
+      );
     });
   });
 
@@ -718,6 +784,19 @@ describe('DirectoryListingService - Admin Email Outbox Enqueueing (Task 2.4)', (
         listingId: validListingId,
         addonType: 'verified_badge',
       });
+    });
+  });
+
+  describe('getDirectoryAnalyticsForOwner', () => {
+    it('rejects analytics when the owner has no active premium access', async () => {
+      mockBillingService.hasActivePremiumAccess.mockResolvedValueOnce(false);
+
+      await expect(
+        service.getDirectoryAnalyticsForOwner(30, validOwnerId),
+      ).rejects.toThrow(ForbiddenException);
+      expect(
+        mockRepository.getDirectoryAnalyticsForOwner,
+      ).not.toHaveBeenCalled();
     });
   });
 });

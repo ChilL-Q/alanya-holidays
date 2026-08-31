@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import { adminService, type AdminReviewItem } from "@/api-services/admin.service";
 import { logger } from "@/lib/logger";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 type ReviewStatus = "pending" | "approved" | "rejected";
 
-const STATUS_TABS: Array<{ id: ReviewStatus; label: string; cls: string }> = [
-  { id: "pending", label: "Pending", cls: "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800" },
-  { id: "approved", label: "Approved", cls: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800" },
-  { id: "rejected", label: "Rejected", cls: "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800" },
+const STATUS_TABS: Array<{ id: ReviewStatus; cls: string }> = [
+  { id: "pending", cls: "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800" },
+  { id: "approved", cls: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800" },
+  { id: "rejected", cls: "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800" },
 ];
 
 const PAGE_SIZE = 20;
@@ -16,6 +18,7 @@ const PAGE_SIZE = 20;
 const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pending: number }) => void }> = ({
   onCountUpdate,
 }) => {
+  const { t } = useTranslation();
   const [statusTab, setStatusTab] = useState<ReviewStatus>("pending");
   const [reviews, setReviews] = useState<AdminReviewItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -39,12 +42,12 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
         }
       } catch (err) {
         logger.error("Failed to load reviews for moderation:", err);
-        setError("Failed to load reviews. Please try again.");
+        setError(t("admin.reviewsLoadFailed"));
       } finally {
         setLoading(false);
       }
     },
-    [onCountUpdate]
+    [onCountUpdate, t]
   );
 
   useEffect(() => {
@@ -68,24 +71,24 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
     <div className="space-y-5">
       {/* Status tabs */}
       <div className="flex flex-wrap gap-2">
-        {STATUS_TABS.map((t) => (
+        {STATUS_TABS.map((tab) => (
           <button
-            key={t.id}
+            key={tab.id}
             type="button"
             onClick={() => {
-              setStatusTab(t.id);
+              setStatusTab(tab.id);
               setPage(1);
             }}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer border ${
-              statusTab === t.id
+              statusTab === tab.id
                 ? "bg-accent-600 text-white border-accent-600"
                 : "bg-white dark:bg-slate-900 text-secondary-600 dark:text-slate-400 border-secondary-200 dark:border-slate-700 hover:border-accent-300"
             }`}
           >
-            {t.label}
+            {t(`admin.reviewStatus.${tab.id}`)}
           </button>
         ))}
-        <span className="ml-auto self-center text-xs text-secondary-400">{total} total</span>
+        <span className="ml-auto self-center text-xs text-secondary-400">{t("admin.totalCount", { count: total })}</span>
       </div>
 
       {error && (
@@ -104,7 +107,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
         </div>
       ) : reviews.length === 0 ? (
         <div className="p-10 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200/80 dark:border-slate-800 text-sm text-secondary-500 dark:text-slate-400">
-          No {statusTab} reviews.
+          {t("admin.noReviews", { status: t(`admin.reviewStatus.${statusTab}`) })}
         </div>
       ) : (
         <>
@@ -169,7 +172,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
                           onClick={() => act(review.id, () => adminService.approveReview(review.id))}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-white transition-colors disabled:opacity-50 cursor-pointer"
                         >
-                          Approve
+                        {t("admin.approve")}
                         </button>
                         <button
                           type="button"
@@ -177,7 +180,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
                           onClick={() => act(review.id, () => adminService.rejectReview(review.id))}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500 hover:bg-rose-400 text-white transition-colors disabled:opacity-50 cursor-pointer"
                         >
-                          Reject
+                        {t("admin.reject")}
                         </button>
                       </>
                     )}
@@ -187,7 +190,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
                       onClick={() => act(review.id, () => adminService.deleteReview(review.id))}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary-100 dark:bg-slate-800 hover:bg-secondary-200 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors disabled:opacity-50 cursor-pointer"
                     >
-                      Delete
+                      {t("admin.delete")}
                     </button>
                   </div>
                 </div>
@@ -204,10 +207,10 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
                 onClick={() => setPage((p) => p - 1)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed text-secondary-700 dark:text-slate-300"
               >
-                ← Prev
+                {t("admin.previous")}
               </button>
               <span className="text-xs text-secondary-500 dark:text-slate-400">
-                Page {page} of {totalPages}
+                {t("admin.pageOf", { page, total: totalPages })}
               </span>
               <button
                 type="button"
@@ -215,7 +218,7 @@ const ReviewsModerationTab: React.FC<{ onCountUpdate?: (c: { total: number; pend
                 onClick={() => setPage((p) => p + 1)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-700 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed text-secondary-700 dark:text-slate-300"
               >
-                Next →
+                {t("admin.next")}
               </button>
             </div>
           )}

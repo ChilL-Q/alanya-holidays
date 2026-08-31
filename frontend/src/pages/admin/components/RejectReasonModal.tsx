@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface RejectReasonModalProps {
   isOpen: boolean;
@@ -12,9 +13,10 @@ export default function RejectReasonModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "Reject Listing",
-  itemName = "this item",
+  title,
+  itemName,
 }: RejectReasonModalProps) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +27,11 @@ export default function RejectReasonModal({
     e.preventDefault();
     const trimmed = reason.trim();
     if (!trimmed) {
-      setError("Please provide a reason for rejection.");
+      setError(t("admin.rejectionReason"));
       return;
     }
     if (trimmed.length < 5) {
-      setError("Rejection reason must be at least 5 characters.");
+      setError(t("admin.rejectionMin"));
       return;
     }
 
@@ -40,7 +42,7 @@ export default function RejectReasonModal({
       setReason("");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit rejection.");
+      setError(err instanceof Error ? err.message : t("admin.rejectionSubmitFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -64,10 +66,10 @@ export default function RejectReasonModal({
                 id="reject-modal-title"
                 className="text-lg font-bold text-secondary-900 dark:text-white"
               >
-                {title}
+                {title ?? t("admin.rejectListing")}
               </h3>
               <p className="text-xs text-secondary-500 dark:text-slate-400 line-clamp-1">
-                {itemName}
+                {itemName ?? t("admin.thisItem")}
               </p>
             </div>
           </div>
@@ -86,10 +88,10 @@ export default function RejectReasonModal({
               htmlFor="reject-reason-input"
               className="block text-sm font-semibold text-secondary-700 dark:text-slate-300 mb-1.5"
             >
-              Rejection Reason & Feedback <span className="text-rose-500">*</span>
+              {t("admin.feedback")} <span className="text-rose-500">*</span>
             </label>
             <p className="text-xs text-secondary-500 dark:text-slate-400 mb-2">
-              Explain clearly why this submission was rejected. This explanation will be sent to the merchant/submitter.
+              {t("admin.feedbackDescription")}
             </p>
             <textarea
               id="reject-reason-input"
@@ -100,12 +102,12 @@ export default function RejectReasonModal({
                 setReason(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="e.g. Incomplete business details, blurry photos, or address does not match registered license..."
+              placeholder={t("admin.feedbackPlaceholder")}
               className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-secondary-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-950 outline-none transition-all resize-none"
               required
             />
             <div className="flex justify-between text-xs text-secondary-400 dark:text-slate-500 mt-1">
-              <span>Min 5 characters</span>
+              <span>{t("admin.minCharacters")}</span>
               <span>{reason.length}/1000</span>
             </div>
           </div>
@@ -124,7 +126,7 @@ export default function RejectReasonModal({
               disabled={submitting}
               className="px-4 py-2 text-sm font-medium text-secondary-700 dark:text-slate-300 hover:bg-secondary-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               type="submit"
@@ -134,12 +136,12 @@ export default function RejectReasonModal({
               {submitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin text-sm" />
-                  <span>Rejecting...</span>
+                  <span>{t("admin.rejecting")}</span>
                 </>
               ) : (
                 <>
                   <i className="ri-close-circle-line text-sm" />
-                  <span>Confirm Rejection</span>
+                  <span>{t("admin.confirmRejection")}</span>
                 </>
               )}
             </button>

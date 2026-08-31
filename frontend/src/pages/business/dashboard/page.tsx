@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {
   Store,
@@ -12,6 +13,8 @@ import {
   Eye,
   Package,
   ShoppingBag,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/useToast";
@@ -27,6 +30,8 @@ import { MyListingsTab } from "./components/MyListingsTab";
 import { PerformanceAnalyticsTab } from "./components/PerformanceAnalyticsTab";
 import { ClaimTrackerTab } from "./components/ClaimTrackerTab";
 import { MyProductsTab } from "./components/MyProductsTab";
+import { MyContentTab } from "./components/MyContentTab";
+import { MyEventsTab } from "./components/MyEventsTab";
 import { SellerOrdersTab } from "./components/SellerOrdersTab";
 import { UpgradeModal } from "./components/UpgradeModal";
 import ListBusinessModal from "@/components/feature/ListBusinessModal";
@@ -35,16 +40,31 @@ import {
   businessApplicationsService,
   type BusinessApplication,
 } from "@/api-services/business-applications.service";
+import {
+  billingService,
+  hasActivePremiumAccess,
+  type MySubscription,
+} from "@/api-services/billing.service";
+import { ApiError } from "@/lib/api-client";
 
 export type DashboardTab =
   | "listings"
   | "products"
   | "orders"
+  | "content"
+  | "events"
   | "analytics"
   | "claims";
 
 export default function MerchantDashboardPage() {
-  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
+  const {
+    user,
+    profile,
+    isAuthenticated,
+    isAdmin,
+    loading: authLoading,
+  } = useAuth();
   const { showToast, ToastContainer } = useToast();
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("listings");
@@ -54,6 +74,8 @@ export default function MerchantDashboardPage() {
   const [listings, setListings] = useState<Business[]>([]);
   const [claims, setClaims] = useState<DirectoryClaim[]>([]);
   const [analytics, setAnalytics] = useState<OwnerAnalyticsSummary | null>(null);
+  const [subscription, setSubscription] = useState<MySubscription | null>(null);
+  const [subscriptionResolved, setSubscriptionResolved] = useState(false);
 
   const [dashboardLoading, setDashboardLoading] = useState<boolean>(true);
   const [analyticsLoading, setAnalyticsLoading] = useState<boolean>(true);
@@ -84,11 +106,11 @@ export default function MerchantDashboardPage() {
       setClaims(fetchedClaims);
     } catch (err) {
       logger.error("Failed to load merchant dashboard data:", err);
-      setDashboardError(err instanceof Error ? err.message : "Failed to load dashboard data");
+      setDashboardError(err instanceof Error ? err.message : t("merchant.contentLoadFailed"));
     } finally {
       setDashboardLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, t, user]);
 
   const fetchAnalytics = useCallback(async (selectedDays: number) => {
     if (!isAuthenticated && !user) return;
@@ -101,23 +123,55 @@ export default function MerchantDashboardPage() {
       setAnalytics(fetchedAnalytics);
     } catch (err) {
       logger.error("Failed to load merchant analytics:", err);
-      setAnalyticsError(err instanceof Error ? err.message : "Failed to load analytics");
+      setAnalyticsError(err instanceof Error ? err.message : t("merchant.unableAnalytics"));
     } finally {
       setAnalyticsLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, t, user]);
+
+  const fetchSubscription = useCallback(async () => {
+    if (!isAuthenticated && !user) return;
+
+    setSubscriptionResolved(false);
+    try {
+      setSubscription(await billingService.getMySubscription());
+    } catch (err) {
+      logger.error("Failed to verify merchant subscription:", err);
+      setSubscription(null);
+      setDashboardError(
+        err instanceof ApiError && err.status === 401
+          ? t("merchant.sessionExpired")
+          : t("merchant.premiumRequired")
+      );
+    } finally {
+      setSubscriptionResolved(true);
+    }
+  }, [isAuthenticated, t, user]);
+
+  const premiumAccess = isAdmin || hasActivePremiumAccess(subscription);
 
   const refreshDashboard = useCallback(async () => {
-    await Promise.all([fetchDashboardData(), fetchAnalytics(days)]);
-  }, [fetchDashboardData, fetchAnalytics, days]);
+    await Promise.all([fetchDashboardData(), fetchSubscription()]);
+  }, [fetchDashboardData, fetchSubscription]);
 
   useEffect(() => {
     void fetchDashboardData();
   }, [fetchDashboardData]);
 
   useEffect(() => {
+    void fetchSubscription();
+  }, [fetchSubscription]);
+
+  useEffect(() => {
+    if (!subscriptionResolved) return;
+    if (!premiumAccess) {
+      setAnalytics(null);
+      setAnalyticsError(null);
+      setAnalyticsLoading(false);
+      return;
+    }
     void fetchAnalytics(days);
-  }, [fetchAnalytics, days]);
+  }, [fetchAnalytics, days, premiumAccess, subscriptionResolved]);
 
   useEffect(() => {
     if (!isAuthenticated && !user) return;
@@ -165,10 +219,10 @@ export default function MerchantDashboardPage() {
           </div>
           <div className="space-y-1.5">
             <h2 className="text-2xl font-bold font-display text-secondary-900 dark:text-white">
-              Merchant & Business Portal
+              {t("merchant.portal")}
             </h2>
             <p className="text-xs sm:text-sm text-secondary-500 dark:text-slate-400">
-              Sign in with your Alanya Holidays business account to manage your listings, drafts, paid performance analytics, and claims.
+              {t("merchant.portalDescription")}
             </p>
           </div>
           <div className="pt-2 flex flex-col gap-2.5">
@@ -178,13 +232,13 @@ export default function MerchantDashboardPage() {
               className="w-full py-3 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
             >
               <LogIn className="w-4 h-4" />
-              <span>Sign In to Merchant Hub</span>
+              <span>{t("merchant.signInHub")}</span>
             </Link>
             <Link
               to="/business/register"
               className="w-full py-3 rounded-xl text-sm font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors"
             >
-              Create Business Account
+              {t("merchant.createAccount")}
             </Link>
           </div>
         </div>
@@ -225,15 +279,15 @@ export default function MerchantDashboardPage() {
       await directoryService.deleteListing(id);
       setListings((prev) => prev.filter((item) => item.id !== id));
       showToast(
-        "Listing deleted",
-        listingToDelete?.name ? `${listingToDelete.name} was removed from your dashboard.` : "The listing was removed successfully.",
+        t("merchant.listingDeleted"),
+        listingToDelete?.name ? t("merchant.listingRemoved", { name: listingToDelete.name }) : t("merchant.listingRemovedGeneric"),
         "success"
       );
     } catch (err) {
       logger.error("Failed to delete listing:", err);
       showToast(
-        "Delete failed",
-        err instanceof Error ? err.message : "Could not delete the listing. Please try again.",
+        t("merchant.deleteFailed"),
+        err instanceof Error ? err.message : t("merchant.deleteFailedDescription"),
         "error"
       );
     } finally {
@@ -256,10 +310,10 @@ export default function MerchantDashboardPage() {
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 font-semibold text-secondary-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
-              title="Return to Main Site"
+              title={t("merchant.returnMain")}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>← Return to Main Site / На главную</span>
+              <span>{t("merchant.returnMain")}</span>
             </Link>
 
             <span className="text-secondary-300 dark:text-slate-700 hidden sm:inline">|</span>
@@ -271,11 +325,11 @@ export default function MerchantDashboardPage() {
               </Link>
               <ChevronRight className="w-3.5 h-3.5 text-secondary-400 dark:text-slate-600" />
               <Link to="/business/dashboard" className="hover:text-secondary-800 dark:hover:text-slate-200 transition-colors">
-                Merchant Portal
+                {t("merchant.portalLabel")}
               </Link>
               <ChevronRight className="w-3.5 h-3.5 text-secondary-400 dark:text-slate-600" />
               <span className="font-semibold text-secondary-900 dark:text-white" aria-current="page">
-                Dashboard
+                {t("merchant.dashboard")}
               </span>
             </nav>
           </div>
@@ -287,7 +341,7 @@ export default function MerchantDashboardPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-secondary-100 hover:bg-secondary-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-secondary-800 dark:text-slate-200 transition-colors"
             >
               <Eye className="w-3.5 h-3.5 text-amber-500" />
-              <span>👁️ Browse Live Directory / В каталог</span>
+              <span>👁️ {t("merchant.browseLiveDirectory")}</span>
             </Link>
           </div>
         </div>
@@ -317,12 +371,12 @@ export default function MerchantDashboardPage() {
 
         {businessApplication && (
           <section
-            aria-label="Business application status"
+            aria-label={t("merchant.businessApplication")}
             className={`rounded-2xl border p-4 ${applicationStatusStyles[businessApplication.status]}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide">Business application</p>
+                <p className="text-xs font-semibold uppercase tracking-wide">{t("merchant.businessApplication")}</p>
                 <p className="font-semibold">{businessApplication.businessName}</p>
               </div>
               <span className="rounded-full border border-current/20 px-3 py-1 text-xs font-bold capitalize">
@@ -346,7 +400,7 @@ export default function MerchantDashboardPage() {
               onClick={() => void refreshDashboard()}
               className="text-xs font-semibold underline hover:no-underline"
             >
-              Retry
+              {t("common.tryAgain")}
             </button>
           </div>
         )}
@@ -354,35 +408,46 @@ export default function MerchantDashboardPage() {
         {/* Dashboard Tab Navigation */}
         <div
           role="tablist"
-          aria-label="Merchant Dashboard Tabs"
+          aria-label={t("merchant.dashboardTabs")}
           className="bg-white dark:bg-slate-900 rounded-2xl p-2 sm:p-3 border border-secondary-200/80 dark:border-slate-800 shadow-sm flex flex-wrap gap-2"
         >
           {[
             {
               id: "listings" as DashboardTab,
-              label: "My Businesses & Drafts",
+              label: t("merchant.myBusinesses"),
               icon: <Building className="w-4 h-4" />,
               count: listings.length,
             },
             {
               id: "products" as DashboardTab,
-              label: "My Products",
+              label: t("merchant.myProducts"),
               icon: <Package className="w-4 h-4" />,
+              badge: premiumAccess ? t("merchant.active") : t("merchant.locked"),
             },
             {
               id: "orders" as DashboardTab,
-              label: "Incoming Orders",
+              label: t("merchant.incomingOrders"),
               icon: <ShoppingBag className="w-4 h-4" />,
             },
             {
+              id: "content" as DashboardTab,
+              label: t("merchant.myContent"),
+              icon: <FileText className="w-4 h-4" />,
+            },
+            {
+              id: "events" as DashboardTab,
+              label: t("merchant.eventsActivities"),
+              icon: <CalendarDays className="w-4 h-4" />,
+            },
+            {
               id: "analytics" as DashboardTab,
-              label: "Performance Analytics",
+              label: t("merchant.performanceAnalytics"),
               icon: <TrendingUp className="w-4 h-4" />,
-              badge: highestTier !== "explorer" ? "Active" : "Locked",
+              badge: premiumAccess ? t("merchant.active") : t("merchant.locked"),
             },
             {
               id: "claims" as DashboardTab,
-              label: "Ownership Claim Tracker",
+              label: t("merchant.ownershipTracker"),
               icon: <ShieldCheck className="w-4 h-4" />,
               count: claims.length,
             },
@@ -454,8 +519,7 @@ export default function MerchantDashboardPage() {
           {activeTab === "analytics" && (
             <PerformanceAnalyticsTab
               analytics={analytics}
-              userListings={listings}
-              highestTier={highestTier}
+              hasPremiumAccess={premiumAccess}
               loading={analyticsLoading}
               error={analyticsError}
               days={days}
@@ -465,9 +529,18 @@ export default function MerchantDashboardPage() {
             />
           )}
 
-          {activeTab === "products" && <MyProductsTab />}
+          {activeTab === "products" && (
+            <MyProductsTab
+              hasPremiumAccess={premiumAccess}
+              onOpenUpgradeModal={() => handleOpenUpgrade()}
+            />
+          )}
 
           {activeTab === "orders" && <SellerOrdersTab />}
+
+          {activeTab === "content" && <MyContentTab />}
+
+          {activeTab === "events" && <MyEventsTab />}
 
           {activeTab === "claims" && (
             <ClaimTrackerTab claims={claims} loading={dashboardLoading} />

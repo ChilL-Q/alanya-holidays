@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ProductAddToCartSectionProps {
   currentStock: number;
@@ -17,6 +19,7 @@ export function ProductAddToCartSection({
   showCheckout,
   onToggleCheckout,
 }: ProductAddToCartSectionProps) {
+  const { t } = useTranslation();
   return (
     <div className="pt-6 border-t border-background-200/70">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
@@ -50,7 +53,7 @@ export function ProductAddToCartSection({
           className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 text-background-50 rounded-full text-sm font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <i className="ri-shopping-cart-line"></i>
-          {currentStock <= 0 ? "Out of Stock" : "Add to Cart"}
+          {currentStock <= 0 ? t("product.outOfStock") : t("product.addToCart")}
         </button>
 
         {/* Buy Now */}
@@ -60,14 +63,14 @@ export function ProductAddToCartSection({
           className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent-500 text-background-50 dark:text-foreground-950 rounded-full text-sm font-semibold hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <i className="ri-flashlight-line"></i>
-          {showCheckout ? "Hide Checkout" : "Buy Now"}
+          {showCheckout ? t("product.hideCheckout") : t("product.buyNow")}
         </button>
       </div>
 
       {currentStock > 0 && currentStock <= 10 && (
         <p className="text-xs text-amber-600 mt-3 flex items-center gap-1">
           <i className="ri-alert-line"></i>
-          Only {currentStock} left in stock
+          {t("product.onlyLeft", { count: currentStock })}
         </p>
       )}
     </div>

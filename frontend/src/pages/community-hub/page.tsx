@@ -4,6 +4,8 @@ import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
 import PageHeroImage from "@/components/base/PageHeroImage";
 import { forumService, type ForumStats } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const quickLinks = [
   { icon: "ri-discuss-line", title: "Categories", description: "Browse all discussion categories", link: "/categories", color: "primary" },
@@ -11,6 +13,7 @@ const quickLinks = [
 ];
 
 export default function CommunityHubPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<ForumStats | null>(null);
 
   useEffect(() => {
@@ -39,10 +42,10 @@ export default function CommunityHubPage() {
           <div className="absolute inset-0 flex items-center justify-center text-center px-4">
             <div>
               <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-white font-bold mb-3 tracking-tight">
-                Community Hub
+                {t("public.communityHub", "Community Hub")}
               </h1>
               <p className="text-white/80 text-base md:text-lg max-w-xl mx-auto">
-                Join {totalMembers.toLocaleString()}+ travelers, expats, and locals in Alanya.
+                {t("public.joinMembers", "Join {{count}}+ travelers, expats, and locals in Alanya.", { count: totalMembers })}
               </p>
             </div>
           </div>
@@ -54,11 +57,11 @@ export default function CommunityHubPage() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
                 <i className="ri-community-line text-primary-500 text-sm"></i>
-                <span className="text-sm font-medium text-foreground-700">Welcome Home</span>
+                <span className="text-sm font-medium text-foreground-700">{t("public.welcomeHome", "Welcome Home")}</span>
               </div>
-              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">Everything Starts Here</h2>
+              <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">{t("public.everythingStarts", "Everything Starts Here")}</h2>
               <p className="text-foreground-500 text-sm md:text-base max-w-xl mx-auto">
-                Your launchpad into the Alanya Holidays community. Jump into discussions, find events, or just explore.
+                {t("public.hubDescription", "Your launchpad into the Alanya Holidays community. Jump into discussions, find events, or just explore.")}
               </p>
             </div>
 
@@ -90,23 +93,23 @@ export default function CommunityHubPage() {
 
         <section className="w-full px-4 md:px-8 lg:px-12 py-16 md:py-20 bg-background-100">
           <div className="max-w-5xl mx-auto text-center">
-            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-4">Ready to join the conversation?</h2>
+            <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-4">{t("public.readyConversation", "Ready to join the conversation?")}</h2>
             <p className="text-foreground-500 text-sm md:text-base mb-8">
-              Create your free account and become part of the Alanya Holidays community in less than a minute.
+              {t("public.createAccount", "Create your free account and become part of the Alanya Holidays community in less than a minute.")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-background-50 rounded-full text-sm font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap"
               >
-                Join Community
+                {t("nav.joinCommunity", "Join Community")}
                 <i className="ri-arrow-right-line"></i>
               </Link>
               <Link
                 to="/explore"
                 className="inline-flex items-center gap-2 px-6 py-3 border border-foreground-200 text-foreground-700 rounded-full text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap"
               >
-                Explore First
+                {t("public.exploreFirst", "Explore First")}
               </Link>
             </div>
           </div>

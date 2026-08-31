@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { forumService, type CategoryThread } from "@/api-services/forum.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface ThreadCardProps {
   thread: CategoryThread;
@@ -9,6 +11,7 @@ interface ThreadCardProps {
 }
 
 export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps) {
+  const { t } = useTranslation();
   const [isBookmarked, setIsBookmarked] = useState(Boolean(thread.isBookmarked));
   const [likes, setLikes] = useState(thread.likes);
   const [isLiked, setIsLiked] = useState(Boolean(thread.isLiked));
@@ -64,19 +67,19 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
             {thread.isPinned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full font-medium">
                 <i className="ri-pushpin-line"></i>
-                Pinned
+                {t("public.pinned")}
               </span>
             )}
             {thread.isHot && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-100 text-accent-700 text-xs rounded-full font-medium">
                 <i className="ri-fire-line"></i>
-                Hot
+                {t("public.hot")}
               </span>
             )}
             {thread.isVerified && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-secondary-100 text-secondary-700 text-xs rounded-full font-medium">
                 <i className="ri-verified-badge-line"></i>
-                Verified
+                {t("public.verified")}
               </span>
             )}
             {thread.subcategory && (
@@ -112,7 +115,7 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
             </span>
             <span className="flex items-center gap-1">
               <i className="ri-eye-line"></i>
-              {thread.views.toLocaleString()} views
+              {t("public.viewsCount", { count: thread.views.toLocaleString() })}
             </span>
           </div>
         </div>
@@ -128,7 +131,7 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
                 : "text-foreground-400 hover:text-teal-600 hover:bg-background-100"
             }`}
             title={isBookmarked ? "Remove bookmark" : "Save post"}
-            aria-label={isBookmarked ? "Remove bookmark" : "Save post"}
+            aria-label={isBookmarked ? t("common.removeBookmark") : t("common.savePost")}
           >
             <i className={`${isBookmarked ? "ri-bookmark-fill" : "ri-bookmark-line"} text-base`}></i>
           </button>
@@ -141,7 +144,7 @@ export default function ThreadCard({ thread, onBookmarkToggle }: ThreadCardProps
                 ? "text-primary-500 bg-primary-50"
                 : "text-foreground-400 hover:text-primary-500 hover:bg-background-100"
             }`}
-            aria-label={isLiked ? "Unlike post" : "Like post"}
+            aria-label={isLiked ? t("common.unlikePost") : t("common.likePost")}
           >
             <i className={`${isLiked ? "ri-heart-fill" : "ri-heart-line"} text-base`}></i>
           </button>

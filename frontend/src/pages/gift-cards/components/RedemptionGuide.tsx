@@ -1,6 +1,9 @@
 import { REDEMPTION_STEPS } from "../data/giftCardsData";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function RedemptionGuide() {
+  const { t } = useTranslation();
   return (
     <section className="w-full bg-gradient-to-b from-background-100 to-background-50 py-16 md:py-24 border-y border-background-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -8,14 +11,13 @@ export default function RedemptionGuide() {
         <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-primary-100 text-primary-700 mb-3">
             <i className="ri-guide-line text-sm"></i>
-            Effortless Gifting
+            {t("services.gifts.effortless")}
           </span>
           <h2 className="font-heading text-3xl sm:text-4xl font-bold text-foreground-900 mb-4">
-            How Alanya Gift Cards Work
+            {t("services.gifts.workTitle")}
           </h2>
           <p className="text-foreground-600 text-base sm:text-lg leading-relaxed">
-            From checkout to seaside dining — gifting memories in Alanya takes
-            less than two minutes.
+            {t("services.gifts.workDesc")}
           </p>
         </div>
 
@@ -39,19 +41,19 @@ export default function RedemptionGuide() {
               {/* Tag */}
               <div className="mb-3">
                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary-50 text-primary-700 border border-primary-100">
-                  {step.tag}
+              {t(`services.gifts.step${step.step}Tag`)}
                 </span>
               </div>
 
               {/* Content */}
               <h3 className="font-heading text-xl font-bold text-foreground-900 mb-2">
-                {step.title}
+                {t(`services.gifts.step${step.step}`)}
               </h3>
               <p className="text-xs font-semibold text-primary-600 mb-2">
-                {step.subtitle}
+                {t(`services.gifts.step${step.step}Sub`)}
               </p>
               <p className="text-sm text-foreground-600 leading-relaxed">
-                {step.description}
+                {t(`services.gifts.step${step.step}Desc`)}
               </p>
 
               {/* Step indicator footer */}
@@ -71,10 +73,10 @@ export default function RedemptionGuide() {
           </div>
           <div>
             <h4 className="text-sm font-bold text-foreground-900">
-              100% Peace of Mind Guarantee
+              {t("services.gifts.guarantee")}
             </h4>
             <p className="text-xs text-foreground-600 mt-0.5">
-              Plans change? Free recipient transfers and 14-day zero-hassle refunds on all unredeemed certificates.
+              {t("services.gifts.guaranteeDesc")}
             </p>
           </div>
         </div>

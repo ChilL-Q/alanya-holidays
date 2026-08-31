@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { forgotPasswordSchema } from "@/lib/validation/auth.schemas";
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -55,14 +57,14 @@ export default function ForgotPasswordPage() {
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-8">
             <div className="flex items-center gap-2 mb-3">
               <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-                Home
+                {t("nav.home", "Home")}
               </Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Reset Password</span>
+              <span className="text-white/90 text-sm">{t("auth.resetPassword", "Reset Password")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-4xl text-white">Check Your Email</h1>
+            <h1 className="font-heading text-3xl md:text-4xl text-white">{t("auth.checkYourEmail", "Check Your Email")}</h1>
             <p className="text-white/65 text-sm md:text-base mt-1 max-w-md">
-              If an account exists, we&apos;ve sent a reset link
+              {t("auth.resetLinkIfExists", "If an account exists, we've sent a reset link")}
             </p>
           </div>
         </section>
@@ -74,14 +76,13 @@ export default function ForgotPasswordPage() {
               <i className="ri-mail-send-line text-2xl text-accent-600"></i>
             </div>
 
-            <h2 className="font-heading text-xl text-foreground-900 mb-2">Reset link sent</h2>
+            <h2 className="font-heading text-xl text-foreground-900 mb-2">{t("auth.resetLinkSent", "Reset link sent")}</h2>
             <p className="text-sm text-foreground-500 mb-2">
-              We&apos;ve sent a password reset link to
+              {t("auth.resetLinkSentTo", "We've sent a password reset link to")}
             </p>
             <p className="text-sm font-medium text-foreground-800 mb-6">{email}</p>
             <p className="text-xs text-foreground-400 mb-6 leading-relaxed">
-              Didn&apos;t get it? Check your spam folder or try a different email.
-              The link expires in 30 minutes.
+              {t("auth.resetLinkHelp", "Didn't get it? Check your spam folder or try a different email. The link expires in 30 minutes.")}
             </p>
 
             <div className="space-y-3">
@@ -91,13 +92,13 @@ export default function ForgotPasswordPage() {
                 className="w-full h-11 flex items-center justify-center gap-2 rounded-full border border-background-200 text-sm font-medium text-foreground-700 hover:bg-background-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-arrow-left-line text-sm"></i>
-                Try a different email
+                {t("auth.differentEmail", "Try a different email")}
               </button>
               <Link
                 to="/login"
                 className="w-full h-11 flex items-center justify-center rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors cursor-pointer whitespace-nowrap"
               >
-                Back to Sign In
+                {t("auth.backToSignIn", "Back to Sign In")}
               </Link>
             </div>
           </div>
@@ -119,14 +120,14 @@ export default function ForgotPasswordPage() {
         <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-8">
           <div className="flex items-center gap-2 mb-3">
             <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">
-              Home
+                {t("nav.home", "Home")}
             </Link>
             <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-            <span className="text-white/90 text-sm">Reset Password</span>
+              <span className="text-white/90 text-sm">{t("auth.resetPassword", "Reset Password")}</span>
           </div>
-          <h1 className="font-heading text-3xl md:text-4xl text-white">Forgot Password?</h1>
+          <h1 className="font-heading text-3xl md:text-4xl text-white">{t("auth.forgotPassword", "Forgot Password?")}</h1>
           <p className="text-white/65 text-sm md:text-base mt-1 max-w-md">
-            No worries — enter your email and we&apos;ll send you a reset link
+            {t("auth.forgotPasswordSubtitle", "No worries — enter your email and we'll send you a reset link")}
           </p>
         </div>
       </section>
@@ -138,9 +139,9 @@ export default function ForgotPasswordPage() {
             <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full bg-accent-100">
               <i className="ri-key-2-line text-xl text-accent-600"></i>
             </div>
-            <h2 className="font-heading text-xl text-foreground-900 mb-1">Reset your password</h2>
+            <h2 className="font-heading text-xl text-foreground-900 mb-1">{t("auth.resetYourPassword", "Reset your password")}</h2>
             <p className="text-sm text-foreground-500">
-              Enter the email associated with your account and we&apos;ll send you a link to reset your password.
+              {t("auth.resetPasswordDescription", "Enter the email associated with your account and we'll send you a link to reset your password.")}
             </p>
           </div>
 
@@ -154,7 +155,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="reset-email" className="block text-sm font-medium text-foreground-700 mb-1.5">
-                Email address
+                {t("auth.email", "Email address")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
@@ -166,7 +167,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   className="w-full h-11 pl-10 pr-4 rounded-lg bg-background-50 border border-background-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
                 />
               </div>
@@ -180,10 +181,10 @@ export default function ForgotPasswordPage() {
               {isSubmitting ? (
                 <>
                   <i className="ri-loader-4-line animate-spin text-sm"></i>
-                  Sending link...
+                  {t("auth.sendingLink", "Sending link...")}
                 </>
               ) : (
-                "Send Reset Link"
+                t("auth.sendResetLink", "Send Reset Link")
               )}
             </button>
           </form>
@@ -194,7 +195,7 @@ export default function ForgotPasswordPage() {
               className="inline-flex items-center gap-1.5 text-sm text-foreground-500 hover:text-foreground-700 transition-colors"
             >
               <i className="ri-arrow-left-line text-sm"></i>
-              Back to Sign In
+              {t("auth.backToSignIn", "Back to Sign In")}
             </Link>
           </div>
         </div>

@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { eventsService, type ForumEvent } from "@/api-services/events.service";
 import { forumService, type ForumStats } from "@/api-services/forum.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function CommunityPulse() {
+  const { t } = useTranslation();
   const [pulseEvents, setPulseEvents] = useState<ForumEvent[]>([]);
   const [stats, setStats] = useState<ForumStats | null>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
@@ -47,8 +50,8 @@ export default function CommunityPulse() {
           {/* Title */}
           <div className="absolute bottom-6 left-6 right-6">
             <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
-              <span className="block font-light">UPCOMING</span>
-              <span className="block font-bold">EVENTS</span>
+              <span className="block font-light">{t("events.upcoming").toUpperCase()}</span>
+              <span className="block font-bold">{t("events.title").toUpperCase()}</span>
             </h2>
           </div>
         </div>
@@ -87,8 +90,8 @@ export default function CommunityPulse() {
               <div className="min-h-60 flex items-center justify-center rounded-xl border border-dashed border-background-300 bg-background-50 px-6 text-center">
                 <div>
                   <i className="ri-calendar-event-line text-3xl text-primary-400" />
-                  <p className="mt-3 font-heading text-foreground-900">More events are coming soon</p>
-                  <p className="mt-1 text-sm text-foreground-500">Check the events page for new community meetups.</p>
+                  <p className="mt-3 font-heading text-foreground-900">{t("events.comingSoon")}</p>
+                  <p className="mt-1 text-sm text-foreground-500">{t("events.comingSoonDescription")}</p>
                 </div>
               </div>
             )}

@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface MemberCardProps {
   member: {
@@ -14,6 +16,7 @@ interface MemberCardProps {
 }
 
 export default function MemberCard({ member }: MemberCardProps) {
+  const { t } = useTranslation();
   return (
     <article className="group bg-background-50 rounded-xl border border-background-200/70 p-5 hover:border-primary-200/60 transition-all duration-200">
       {/* Top section */}
@@ -66,7 +69,7 @@ export default function MemberCard({ member }: MemberCardProps) {
             <p className="text-sm font-semibold text-foreground-900">
               {member.posts.toLocaleString()}
             </p>
-            <p className="text-xs text-foreground-400">Posts</p>
+            <p className="text-xs text-foreground-400">{t("public.posts")}</p>
           </div>
         </div>
       </div>

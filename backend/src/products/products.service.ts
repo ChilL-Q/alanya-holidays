@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ProductsRepository,
@@ -28,6 +29,11 @@ import {
   UpdateProductVariantDto,
 } from './dto/product-write.dto';
 import { Money } from '../common/domain/value-objects/money.vo';
+import { BillingService } from '../billing/billing.service';
+import {
+  CreateAdminProductDto,
+  UpdateAdminProductDto,
+} from './dto/admin-product.dto';
 
 export interface Product {
   id?: string;
@@ -74,9 +80,23 @@ export class ProductsService {
   constructor(
     private readonly productsRepository: ProductsRepository,
     private readonly userRolesRepo: UserRolesRepository,
+    private readonly billingService: BillingService,
   ) {}
 
+  private async requirePremiumMerchantAccess(userId: string): Promise<void> {
+    const role = await this.userRolesRepo.getRole(userId);
+    if (role === 'admin') return;
+
+    const hasAccess = await this.billingService.hasActivePremiumAccess(userId);
+    if (!hasAccess) {
+      throw new ForbiddenException(
+        'An active premium subscription is required to manage products',
+      );
+    }
+  }
+
   async createProduct(data: CreateProductDto, requestUserId: string) {
+    await this.requirePremiumMerchantAccess(requestUserId);
     const insertData = {
       title: data.title,
       description: data.description,
@@ -97,6 +117,72 @@ export class ProductsService {
       limit,
     );
     return data as Product[];
+  }
+
+  async getProductsAdmin(
+    categoryId?: number,
+    page = 1,
+    limit = 20,
+    search?: string,
+  ) {
+    return this.productsRepository.getProductsAdmin(
+      categoryId,
+      page,
+      limit,
+      search,
+    );
+  }
+
+  async getAdminProduct(itemId: number) {
+    const item = await this.productsRepository.getCatalogItemAdmin(itemId);
+    if (!item) throw new NotFoundException('Product not found');
+    return item;
+  }
+
+  async createAdminProduct(data: CreateAdminProductDto, adminId: string) {
+    return this.productsRepository.createCatalogItemAdmin({
+      name: data.name,
+      description: data.description ?? null,
+      price: data.price,
+      currency: (data.currency || 'EUR').toUpperCase(),
+      stock: data.stock ?? 0,
+      media: data.media ?? [],
+      category_id: data.category_id ?? null,
+      status: data.status ?? 'active',
+      seller_id: adminId,
+    });
+  }
+
+  async updateAdminProduct(itemId: number, data: UpdateAdminProductDto) {
+    const updates: Record<string, unknown> = {};
+    for (const key of [
+      'name',
+      'description',
+      'price',
+      'stock',
+      'media',
+      'category_id',
+      'status',
+    ] as const) {
+      if (data[key] !== undefined) updates[key] = data[key];
+    }
+    if (data.currency !== undefined) {
+      updates.currency = data.currency.toUpperCase();
+    }
+
+    const item = await this.productsRepository.updateCatalogItemAdmin(
+      itemId,
+      updates,
+    );
+    if (!item) throw new NotFoundException('Product not found');
+    return item;
+  }
+
+  async deleteAdminProduct(itemId: number) {
+    const deleted =
+      await this.productsRepository.deleteCatalogItemAdmin(itemId);
+    if (!deleted) throw new NotFoundException('Product not found');
+    return { success: true };
   }
 
   async getFeaturedProducts(limit = 8) {
@@ -131,6 +217,7 @@ export class ProductsService {
     updates: UpdateProductDto,
     requestUserId: string,
   ) {
+    await this.requirePremiumMerchantAccess(requestUserId);
     await this.checkOwnership(id, requestUserId);
     const safeUpdates = this.mapProductUpdates(updates);
     await this.productsRepository.updateProduct(id, safeUpdates);
@@ -150,6 +237,7 @@ export class ProductsService {
   }
 
   async deleteProduct(id: string, requestUserId: string) {
+    await this.requirePremiumMerchantAccess(requestUserId);
     await this.checkOwnership(id, requestUserId);
     await this.productsRepository.deleteProduct(id);
     return { success: true };
@@ -341,10 +429,12 @@ export class ProductsService {
   // --- Seller (Business Dashboard) ---
 
   async getMyProducts(sellerId: string) {
+    await this.requirePremiumMerchantAccess(sellerId);
     return this.productsRepository.getMyCatalogItems(sellerId);
   }
 
   async createMyProduct(dto: CreateSellerProductDto, sellerId: string) {
+    await this.requirePremiumMerchantAccess(sellerId);
     return this.productsRepository.createCatalogItem(
       {
         name: dto.name,
@@ -364,6 +454,7 @@ export class ProductsService {
     dto: UpdateSellerProductDto,
     sellerId: string,
   ) {
+    await this.requirePremiumMerchantAccess(sellerId);
     const updates: Record<string, unknown> = {};
     for (const key of [
       'name',
@@ -386,6 +477,16 @@ export class ProductsService {
     // Repository scopes the update by seller_id, so a miss means "not yours".
     if (!updated) throw new NotFoundException('Product not found');
     return updated;
+  }
+
+  async deleteMyProduct(itemId: number, sellerId: string) {
+    await this.requirePremiumMerchantAccess(sellerId);
+    const deleted = await this.productsRepository.deleteCatalogItem(
+      itemId,
+      sellerId,
+    );
+    if (!deleted) throw new NotFoundException('Product not found');
+    return { success: true };
   }
 
   async getSellerOrders(sellerId: string) {

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { directoryService, type Business } from "@/api-services/directory.service";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface EmbeddedVenueCardProps {
   venue?: Business;
@@ -17,6 +19,7 @@ export default function EmbeddedVenueCard({
   onClick,
   className = "",
 }: EmbeddedVenueCardProps) {
+  const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [fetchedVenue, setFetchedVenue] = useState<Business | null>(null);
   const [isLoadingVenue, setIsLoadingVenue] = useState(Boolean(!venue && venueId));
@@ -74,7 +77,7 @@ export default function EmbeddedVenueCard({
       >
         <div className="flex items-center justify-center gap-2 text-sm text-foreground-500">
           <i className="ri-loader-4-line animate-spin text-primary-500"></i>
-          <span>Loading venue details...</span>
+          <span>{t("public.loadingVenue")}</span>
         </div>
       </div>
     );
@@ -87,12 +90,12 @@ export default function EmbeddedVenueCard({
       >
         <div className="flex items-center justify-center gap-2 text-sm">
           <i className="ri-store-2-line text-primary-500"></i>
-          <span className="text-foreground-500">Venue not found or listing unavailable.</span>
+          <span className="text-foreground-500">{t("public.venueUnavailable")}</span>
           <Link
             to="/explore"
             className="text-primary-600 dark:text-primary-400 font-medium hover:underline ml-1"
           >
-            Browse Directory
+            {t("public.browseDirectory")}
           </Link>
         </div>
       </div>
@@ -159,10 +162,10 @@ export default function EmbeddedVenueCard({
         <Link
           to={`/business/${resolvedVenue.id}`}
           onClick={handleActionClick}
-          aria-label={`View ${resolvedVenue.name}`}
+          aria-label={t("public.viewBusiness", { name: resolvedVenue.name })}
           className="shrink-0 px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-950/40 hover:bg-primary-100 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-semibold transition-colors flex items-center gap-1"
         >
-          <span>View</span>
+          <span>{t("public.view")}</span>
           <i className="ri-arrow-right-s-line"></i>
         </Link>
       </div>
@@ -220,7 +223,7 @@ export default function EmbeddedVenueCard({
                 </span>
               </div>
               <span className="text-foreground-400 text-xs">
-                ({resolvedVenue.reviewCount} reviews)
+                ({resolvedVenue.reviewCount} {t("public.reviews")})
               </span>
               {resolvedVenue.address && (
                 <span className="hidden md:inline text-xs text-foreground-500 truncate max-w-[200px]">
@@ -243,10 +246,10 @@ export default function EmbeddedVenueCard({
                 <a
                   href={`tel:${resolvedVenue.phone}`}
                   className="hover:text-primary-600 transition-colors flex items-center gap-1"
-                  title="Call venue"
+                  title={t("public.callVenue")}
                 >
                   <i className="ri-phone-line"></i>
-                  <span className="hidden sm:inline">Call</span>
+                  <span className="hidden sm:inline">{t("public.call")}</span>
                 </a>
               )}
               {resolvedVenue.website && (
@@ -255,10 +258,10 @@ export default function EmbeddedVenueCard({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-primary-600 transition-colors flex items-center gap-1"
-                  title="Visit website"
+                  title={t("public.visitWebsite")}
                 >
                   <i className="ri-global-line"></i>
-                  <span className="hidden sm:inline">Website</span>
+                  <span className="hidden sm:inline">{t("public.website")}</span>
                 </a>
               )}
             </div>
@@ -266,10 +269,10 @@ export default function EmbeddedVenueCard({
             <Link
               to={`/business/${resolvedVenue.id}`}
               onClick={handleActionClick}
-              aria-label={`View ${resolvedVenue.name}`}
+              aria-label={t("public.viewBusiness", { name: resolvedVenue.name })}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold shadow-sm transition-all hover:gap-2"
             >
-              <span>View details</span>
+              <span>{t("public.viewDetails")}</span>
               <i className="ri-arrow-right-line"></i>
             </Link>
           </div>

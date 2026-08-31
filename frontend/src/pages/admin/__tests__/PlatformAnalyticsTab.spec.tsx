@@ -137,7 +137,7 @@ describe("PlatformAnalyticsTab", () => {
 
     await waitFor(() => {
       expect(screen.getByText("API Timeout")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Try Again" })).toBeInTheDocument();
     });
   });
 });

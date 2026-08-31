@@ -8,6 +8,8 @@ import {
 import { useListingDraft } from "@/hooks/useListingDraft";
 import { logger } from "@/lib/logger";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface ListBusinessModalProps {
   isOpen: boolean;
@@ -97,6 +99,7 @@ export default function ListBusinessModal({
   initialData: propInitialData,
   userId,
 }: ListBusinessModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"tier" | "form" | "confirmed">(() => {
     if (propInitialData || propDraftId) return "form";
     return "tier";
@@ -289,17 +292,17 @@ export default function ListBusinessModal({
             <div>
               <h2 id="list-business-title" className="font-heading text-lg sm:text-xl font-bold text-foreground-900">
                 {step === "tier"
-                  ? "Choose Your Business Tier"
+                  ? t("listing.chooseTier")
                   : step === "form"
                   ? `List Your Business (${currentTierObj.name} Tier)`
-                  : "Listing Submission Confirmation"}
+                  : t("listing.confirmation")}
               </h2>
               <p className="text-xs text-foreground-500">
                 {step === "tier"
-                  ? "Select a plan that best fits your business goals in Alanya"
+                  ? t("listing.tierDescription")
                   : step === "form"
                   ? "Fill in your profile details or save as draft anytime"
-                  : "Review your confirmation notice and next steps"}
+                  : t("listing.confirmationDescription")}
               </p>
             </div>
           </div>
@@ -307,7 +310,7 @@ export default function ListBusinessModal({
             type="button"
             onClick={handleClose}
             className="w-9 h-9 rounded-full bg-background-100 text-foreground-500 hover:bg-background-200 hover:text-foreground-800 flex items-center justify-center transition-colors cursor-pointer"
-            aria-label="Close dialog"
+            aria-label={t("public.close")}
           >
             <i className="ri-close-line text-lg" />
           </button>
@@ -372,7 +375,7 @@ export default function ListBusinessModal({
                           : "bg-foreground-900 text-white hover:bg-foreground-800"
                       }`}
                     >
-                      Select {tier.name}
+                      {t("listing.selectTier", { name: tier.name })}
                     </button>
                   </div>
                 ))}
@@ -389,7 +392,7 @@ export default function ListBusinessModal({
                   <div className="flex items-center gap-2.5 text-xs text-amber-900">
                     <i className="ri-draft-line text-base text-amber-600 shrink-0" />
                     <span>
-                      <strong>Unsaved draft found:</strong> "{localDraftSummary?.name || "Untitled Draft"}" from your previous session.
+                      <strong>{t("listing.unsavedDraft")}</strong> "{localDraftSummary?.name || t("listing.untitledDraft")}" {t("listing.previousSession")}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -398,14 +401,14 @@ export default function ListBusinessModal({
                       onClick={restoreLocalDraft}
                       className="px-3.5 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors cursor-pointer"
                     >
-                      Resume Draft
+                      {t("listing.resumeDraft")}
                     </button>
                     <button
                       type="button"
                       onClick={discardLocalDraft}
                       className="px-3.5 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 text-xs font-medium hover:bg-amber-100 transition-colors cursor-pointer"
                     >
-                      Discard
+                      {t("listing.discard")}
                     </button>
                   </div>
                 </div>
@@ -423,7 +426,7 @@ export default function ListBusinessModal({
               <div className="p-4 rounded-2xl bg-background-50 border border-background-200 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <span className="px-3 py-1 rounded-full bg-primary-100 text-primary-800 text-xs font-bold uppercase tracking-wider">
-                    {currentTierObj.name} Tier
+                    {t("listing.tierName", { name: currentTierObj.name })}
                   </span>
                   <span className="text-sm font-semibold text-foreground-900">
                     {currentTierObj.price} / {currentTierObj.billing}
@@ -432,7 +435,7 @@ export default function ListBusinessModal({
                 <div className="flex items-center gap-3">
                   {lastSavedAt && (
                     <span className="text-[11px] text-foreground-400 hidden sm:inline">
-                      Autosaved {new Date(lastSavedAt).toLocaleTimeString()}
+                      {t("listing.autosaved", { time: new Date(lastSavedAt).toLocaleTimeString() })}
                     </span>
                   )}
                   <button
@@ -440,7 +443,7 @@ export default function ListBusinessModal({
                     onClick={() => setStep("tier")}
                     className="text-xs text-primary-600 font-semibold hover:underline cursor-pointer"
                   >
-                    Change Tier
+                    {t("listing.changeTier")}
                   </button>
                 </div>
               </div>
@@ -448,20 +451,20 @@ export default function ListBusinessModal({
               {/* Core Info */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-foreground-500">
-                  1. Core Business Information
+                  {t("listing.coreInformation")}
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="biz-name" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Business Name <span className="text-red-500">*</span>
+                      {t("listing.businessName")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="biz-name"
                       type="text"
                       value={draft.name || ""}
                       onChange={(e) => updateField("name", e.target.value)}
-                      placeholder="e.g. Alanya Sun & Sea Cafe"
+                      placeholder={t("listing.namePlaceholder")}
                       className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                         errors.name ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                       }`}
@@ -471,7 +474,7 @@ export default function ListBusinessModal({
 
                   <div>
                     <label htmlFor="biz-category" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Category <span className="text-red-500">*</span>
+                      {t("listing.category")} <span className="text-red-500">*</span>
                     </label>
                     <select
                       id="biz-category"
@@ -489,21 +492,21 @@ export default function ListBusinessModal({
 
                   <div>
                     <label htmlFor="biz-subcategory" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Subcategory / Speciality
+                      {t("listing.subcategory")}
                     </label>
                     <input
                       id="biz-subcategory"
                       type="text"
                       value={draft.subcategory || ""}
                       onChange={(e) => updateField("subcategory", e.target.value)}
-                      placeholder="e.g. Seafood Restaurant, Boat Tour, Boutique Hotel"
+                      placeholder={t("listing.categoryPlaceholder")}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <label htmlFor="biz-price" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Price Range
+                      {t("listing.priceRange")}
                     </label>
                     <select
                       id="biz-price"
@@ -520,7 +523,7 @@ export default function ListBusinessModal({
 
                 <div>
                   <label htmlFor="biz-description" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                    Business Description <span className="text-red-500">*</span>
+                    {t("listing.businessDescription")} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="biz-description"
@@ -528,7 +531,7 @@ export default function ListBusinessModal({
                     maxLength={isPaid ? 2000 : 500}
                     value={draft.description || ""}
                     onChange={(e) => updateField("description", e.target.value)}
-                    placeholder="Describe your services, atmosphere, specialties, and why travelers should visit..."
+                    placeholder={t("listing.descriptionPlaceholder")}
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                       errors.description ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                     }`}
@@ -551,14 +554,14 @@ export default function ListBusinessModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="biz-address" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Address <span className="text-red-500">*</span>
+                      {t("listing.address")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="biz-address"
                       type="text"
                       value={draft.address || ""}
                       onChange={(e) => updateField("address", e.target.value)}
-                      placeholder="e.g. Cleopatra Beach Road No:12, Alanya"
+                      placeholder={t("listing.addressPlaceholder")}
                       className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                         errors.address ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                       }`}
@@ -568,14 +571,14 @@ export default function ListBusinessModal({
 
                   <div>
                     <label htmlFor="biz-phone" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Contact Phone <span className="text-red-500">*</span>
+                      {t("listing.contactPhone")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="biz-phone"
                       type="tel"
                       value={draft.phone || ""}
                       onChange={(e) => updateField("phone", e.target.value)}
-                      placeholder="+90 242 000 0000"
+                      placeholder={t("listing.phonePlaceholder")}
                       className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                         errors.phone ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                       }`}
@@ -585,14 +588,14 @@ export default function ListBusinessModal({
 
                   <div>
                     <label htmlFor="biz-email" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Business Email <span className="text-red-500">*</span>
+                      {t("listing.businessEmail")} <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="biz-email"
                       type="email"
                       value={draft.email || ""}
                       onChange={(e) => updateField("email", e.target.value)}
-                      placeholder="contact@yourbusiness.com"
+                      placeholder={t("listing.emailPlaceholder")}
                       className={`w-full px-3.5 py-2.5 rounded-xl bg-white border text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
                         errors.email ? "border-red-400" : "border-foreground-200 focus:border-primary-500"
                       }`}
@@ -602,7 +605,7 @@ export default function ListBusinessModal({
 
                   <div>
                     <label htmlFor="biz-photo" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                      Cover Photo Image URL (Max {currentTierObj.maxPhotos} photos)
+                      {t("listing.coverPhotoUrl", { count: currentTierObj.maxPhotos })}
                     </label>
                     <input
                       id="biz-photo"
@@ -611,7 +614,7 @@ export default function ListBusinessModal({
                       onChange={(e) =>
                         updateField("images", e.target.value.trim() ? [e.target.value.trim()] : [])
                       }
-                      placeholder="https://images.unsplash.com/..."
+                        placeholder={t("listing.imagePlaceholder")}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                     />
                   </div>
@@ -627,28 +630,28 @@ export default function ListBusinessModal({
                       3. Unlocked Growth & Media Features
                     </h4>
                     <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      Paid Tier Unlocked
+                      {t("listing.paidTierUnlocked")}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="biz-website" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        Official Website URL
+                        {t("listing.websiteUrl")}
                       </label>
                       <input
                         id="biz-website"
                         type="url"
                         value={draft.website || ""}
                         onChange={(e) => updateField("website", e.target.value)}
-                        placeholder="https://yourbusiness.com"
+                        placeholder={t("listing.websitePlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="biz-whatsapp" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        WhatsApp Business Number
+                        {t("listing.whatsappNumber")}
                       </label>
                       <input
                         id="biz-whatsapp"
@@ -660,14 +663,14 @@ export default function ListBusinessModal({
                             whatsapp: e.target.value,
                           })
                         }
-                        placeholder="+90 532 000 0000"
+                        placeholder={t("listing.whatsappPlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="biz-instagram" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        Instagram URL
+                        {t("listing.instagramUrl")}
                       </label>
                       <input
                         id="biz-instagram"
@@ -679,14 +682,14 @@ export default function ListBusinessModal({
                             instagram: e.target.value,
                           })
                         }
-                        placeholder="https://instagram.com/yourbusiness"
+                        placeholder={t("listing.instagramPlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="biz-facebook" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        Facebook URL
+                        {t("listing.facebookUrl")}
                       </label>
                       <input
                         id="biz-facebook"
@@ -698,35 +701,35 @@ export default function ListBusinessModal({
                             facebook: e.target.value,
                           })
                         }
-                        placeholder="https://facebook.com/yourbusiness"
+                        placeholder={t("listing.facebookPlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="biz-video" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        Promotional Video URL (YouTube / Vimeo)
+                        {t("listing.promotionalVideoUrl")}
                       </label>
                       <input
                         id="biz-video"
                         type="url"
                         value={draft.video_url || ""}
                         onChange={(e) => updateField("video_url", e.target.value)}
-                        placeholder="https://youtube.com/watch?v=..."
+                        placeholder={t("listing.youtubePlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="biz-booking" className="block text-xs font-semibold text-foreground-700 mb-1.5">
-                        Instant Booking URL
+                        {t("listing.instantBookingUrl")}
                       </label>
                       <input
                         id="biz-booking"
                         type="url"
                         value={draft.booking_url || ""}
                         onChange={(e) => updateField("booking_url", e.target.value)}
-                        placeholder="https://booking.yourbusiness.com"
+                        placeholder={t("listing.bookingPlaceholder")}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-foreground-200 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500"
                       />
                     </div>
@@ -741,7 +744,7 @@ export default function ListBusinessModal({
                   onClick={() => setStep("tier")}
                   className="px-5 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-xs sm:text-sm font-medium hover:bg-background-50 transition-colors cursor-pointer"
                 >
-                  Back
+                  {t("listing.back")}
                 </button>
 
                 <div className="flex items-center gap-2.5">
@@ -752,7 +755,7 @@ export default function ListBusinessModal({
                     className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-primary-300 bg-primary-50 text-primary-700 text-xs sm:text-sm font-semibold hover:bg-primary-100 disabled:opacity-50 transition-colors shadow-2xs cursor-pointer"
                   >
                     <i className={isDraftSaving ? "ri-loader-4-line animate-spin text-sm" : "ri-draft-line text-sm"} />
-                    {isDraftSaving ? "Saving Draft..." : "Save as Draft"}
+                    {isDraftSaving ? t("listing.savingDraft") : t("listing.saveDraft")}
                   </button>
 
                   <button
@@ -763,12 +766,12 @@ export default function ListBusinessModal({
                     {isSubmitting ? (
                       <>
                         <i className="ri-loader-4-line animate-spin text-sm" />
-                        Submitting...
+                        {t("listing.submitting")}
                       </>
                     ) : (
                       <>
                         <i className="ri-send-plane-fill text-sm" />
-                        Submit Listing
+                        {t("listing.submitListing")}
                       </>
                     )}
                   </button>
@@ -787,23 +790,23 @@ export default function ListBusinessModal({
                     <i className="ri-checkbox-circle-fill" />
                   </div>
                   <h3 className="font-heading text-2xl font-bold text-foreground-900 mb-2">
-                    Thank You for Listing Your Business!
+                    {t("listing.thankYou")}
                   </h3>
                   <p className="text-sm text-foreground-600 max-w-lg mx-auto mb-6 leading-relaxed">
-                    Thank you for listing your business on AlanyaHolidays. Our team will review your submission and get back to you within 48 hours.
+                    {t("listing.thankYouDescription")}
                   </p>
                   <div className="bg-background-50 rounded-2xl p-4 max-w-md mx-auto mb-6 text-left border border-background-200">
                     <div className="flex items-center justify-between text-xs text-foreground-700 mb-1.5">
-                      <span className="font-medium">Business:</span>
-                      <span className="font-bold text-foreground-900">{draft.name || "Your Business"}</span>
+                    <span className="font-medium">{t("listing.business")}:</span>
+                      <span className="font-bold text-foreground-900">{draft.name || t("listing.yourBusiness")}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-foreground-700 mb-1.5">
-                      <span className="font-medium">Tier:</span>
-                      <span className="font-semibold text-primary-600">Explorer (Free)</span>
+                    <span className="font-medium">{t("listing.tier")}:</span>
+                      <span className="font-semibold text-primary-600">{t("listing.explorerFree")}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-foreground-700">
-                      <span className="font-medium">Status:</span>
-                      <span className="font-semibold text-amber-600">Pending Review</span>
+                    <span className="font-medium">{t("listing.status")}:</span>
+                      <span className="font-semibold text-amber-600">{t("listing.pendingReview")}</span>
                     </div>
                   </div>
                   <button
@@ -811,7 +814,7 @@ export default function ListBusinessModal({
                     onClick={handleClose}
                     className="px-8 py-2.5 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors shadow-sm cursor-pointer"
                   >
-                    Done
+                    {t("listing.done")}
                   </button>
                 </div>
               ) : (
@@ -821,10 +824,10 @@ export default function ListBusinessModal({
                     <i className="ri-bank-card-fill" />
                   </div>
                   <h3 className="font-heading text-2xl font-bold text-foreground-900 mb-2">
-                    Payment & Confirmation
+                    {t("listing.paymentConfirmation")}
                   </h3>
                   <p className="text-sm text-foreground-600 max-w-lg mx-auto mb-6 leading-relaxed">
-                    Payment details will be sent to your email shortly. Your listing will go live once payment is confirmed.
+                    {t("listing.paymentDescription")}
                   </p>
 
                   {/* Bank Transfer Details Box */}
@@ -832,34 +835,34 @@ export default function ListBusinessModal({
                     <div className="flex items-center justify-between border-b border-background-200/70 pb-3 mb-3">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-foreground-700 flex items-center gap-1.5">
                         <i className="ri-building-4-fill text-primary-500 text-sm" />
-                        Bank Transfer Instructions
+                        {t("listing.bankTransferInstructions")}
                       </h4>
                       <span className="text-xs font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
-                        Amount: {currentTierObj.price}
+                        {t("listing.amount", { amount: currentTierObj.price })}
                       </span>
                     </div>
 
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-foreground-500">Bank Name:</span>
+                        <span className="text-foreground-500">{t("listing.bankName")}:</span>
                         <span className="font-semibold text-foreground-900">Ziraat Bankası</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-foreground-500">Account Holder:</span>
+                        <span className="text-foreground-500">{t("listing.accountHolder")}:</span>
                         <span className="font-semibold text-foreground-900">Alanya Holidays Turizm Ltd. Şti.</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-foreground-500">IBAN:</span>
+                        <span className="text-foreground-500">{t("listing.iban")}:</span>
                         <span className="font-mono font-bold text-foreground-900 select-all">
                           TR89 0001 0000 1234 5678 9012 34
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-foreground-500">SWIFT / BIC:</span>
+                        <span className="text-foreground-500">{t("listing.swift")}:</span>
                         <span className="font-mono font-semibold text-foreground-900">TCZBTR2A</span>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t border-background-200/60">
-                        <span className="text-foreground-500">Payment Reference:</span>
+                        <span className="text-foreground-500">{t("listing.paymentReference")}:</span>
                         <span className="font-mono font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200 select-all">
                           {refCode}
                         </span>
@@ -874,14 +877,14 @@ export default function ListBusinessModal({
                       className="flex items-center gap-1.5 px-5 py-2.5 rounded-full border border-foreground-200 bg-white text-foreground-800 text-xs sm:text-sm font-semibold hover:bg-background-50 transition-colors shadow-xs cursor-pointer"
                     >
                       <i className={copiedBank ? "ri-check-line text-emerald-600" : "ri-file-copy-line"} />
-                      {copiedBank ? "Bank Details Copied!" : "Copy Bank Details"}
+                      {copiedBank ? t("listing.bankDetailsCopied") : t("listing.copyBankDetails")}
                     </button>
                     <button
                       type="button"
                       onClick={handleClose}
                       className="px-6 py-2.5 rounded-full bg-primary-500 text-white text-xs sm:text-sm font-semibold hover:bg-primary-600 transition-colors shadow-sm cursor-pointer"
                     >
-                      I Have Noted the Details
+                      {t("listing.notedDetails")}
                     </button>
                   </div>
                 </div>

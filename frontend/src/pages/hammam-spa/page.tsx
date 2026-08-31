@@ -7,8 +7,11 @@ import RelatedExperiences from "@/components/feature/RelatedExperiences";
 import { conciergeService, spaTypes, type HammamSpaExperience as HammamSpa } from "@/api-services/concierge.service";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function HammamSpaPage() {
+  const { t } = useTranslation();
   const [hammamSpaExperiences, setHammamSpaExperiences] = useState<HammamSpa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -30,11 +33,11 @@ export default function HammamSpaPage() {
       const data = await conciergeService.getHammamSpaExperiences();
       setHammamSpaExperiences(data);
     } catch {
-      setFetchError("Failed to load hammam & spa experiences. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.spaExperiences") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadSpas();
@@ -42,10 +45,10 @@ export default function HammamSpaPage() {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your full name.";
+    if (name === "name" && !value.trim()) return t("services.validation.fullName");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
     return "";
   };
@@ -78,8 +81,8 @@ export default function HammamSpaPage() {
     return results;
   }, [activeType, sortBy, hammamSpaExperiences]);
 
-  const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "duration": "Shortest First",
+    const sortLabelMap: Record<string, string> = {
+    "rating": t("services.topRated"), "price-low": t("services.priceLow"), "price-high": t("services.priceHigh"), "duration": t("services.shortestFirst"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -98,7 +101,7 @@ export default function HammamSpaPage() {
     setFieldErrors({ name: nameErr, email: emailErr });
     setTouchedFields({ name: true, email: true });
     if (nameErr || emailErr) {
-      setFormError("Please fix the errors below before sending.");
+      setFormError(t("services.validation.fixErrors"));
       return;
     }
 
@@ -132,10 +135,10 @@ export default function HammamSpaPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -153,15 +156,15 @@ export default function HammamSpaPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Hammam & Spa</span>
+              <span className="text-white/90 text-sm">{t("services.spa.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Traditional Hammam & Spa</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.spa.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              A full Turkish bath experience followed by aromatherapy massage in a five-star setting. Organic oils, private suites, and total relaxation.
+              {t("services.spa.hero")}
             </p>
           </div>
         </section>
@@ -197,7 +200,7 @@ export default function HammamSpaPage() {
         <section className="w-full px-4 md:px-8 lg:px-12 py-4 bg-background-50">
           <div className="max-w-7xl mx-auto">
             {!isLoading && !fetchError && (
-              <p className="text-sm text-foreground-500">{filteredSpas.length} {filteredSpas.length === 1 ? "experience" : "experiences"} available</p>
+              <p className="text-sm text-foreground-500">{t("services.service.available", { count: filteredSpas.length, item: filteredSpas.length === 1 ? t("services.service.experience") : t("services.service.experiences") })}</p>
             )}
           </div>
         </section>
@@ -206,7 +209,7 @@ export default function HammamSpaPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load spa experiences"
+                title={t("services.spa.unable")}
                 message={fetchError}
                 onRetry={loadSpas}
               />
@@ -226,11 +229,11 @@ export default function HammamSpaPage() {
               </div>
             ) : filteredSpas.length === 0 ? (
               <EmptyState
-                title="No spa experiences found"
-                description="Try selecting a different experience type or clear your filters."
+                title={t("services.spa.none")}
+                description={t("services.spa.noneDesc")}
                 icon="ri-heart-pulse-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveType("all");
                     setSortBy("rating");
@@ -245,7 +248,7 @@ export default function HammamSpaPage() {
                       <img src={spa.image} alt={spa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {spa.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -281,7 +284,7 @@ export default function HammamSpaPage() {
                           <span className="text-sm text-foreground-500"> / person</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedSpa(spa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                          <i className="ri-heart-pulse-line text-sm"></i>View Details
+                        <i className="ri-heart-pulse-line text-sm"></i>{t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -303,7 +306,7 @@ export default function HammamSpaPage() {
                 <img src={selectedSpa.image} alt={selectedSpa.name} className="w-full h-full object-cover object-top" />
                 {selectedSpa.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -318,46 +321,46 @@ export default function HammamSpaPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedSpa.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedSpa.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedSpa.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedSpa.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Duration</p>
+                    <p className="text-xs text-foreground-500">{t("services.duration")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedSpa.duration}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-map-pin-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Location</p>
+                    <p className="text-xs text-foreground-500">{t("services.location")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.location || selectedSpa.venue || "Alanya"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-calendar-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Hours</p>
+                    <p className="text-xs text-foreground-500">{t("services.hours")}</p>
                     <p className="font-semibold text-foreground-900 text-xs">{selectedSpa.openingHours || "09:00 - 22:00"}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-hearts-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Couples</p>
+                    <p className="text-xs text-foreground-500">{t("services.couples")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">€{selectedSpa.couplesPrice || Math.round(selectedSpa.pricePerPerson * 1.8)}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Person</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perPerson")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedSpa.pricePerPerson.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Couples Price</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.couples")}</p>
                       <p className="text-lg font-semibold text-foreground-700">€{(selectedSpa.couplesPrice || Math.round(selectedSpa.pricePerPerson * 1.8)).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="mb-4">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Treatments Included</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.treatmentsIncluded")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {(selectedSpa.treatments || selectedSpa.includes || []).map((t) => (
                       <span key={t} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{t}</span>
@@ -365,7 +368,7 @@ export default function HammamSpaPage() {
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Facilities</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.facilities")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {(selectedSpa.facilities || selectedSpa.oils || []).map((f) => (
                       <span key={f} className="px-3 py-1.5 rounded-full bg-background-100 border border-background-200 text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -380,15 +383,15 @@ export default function HammamSpaPage() {
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
                         {contactMethod === 'whatsapp' ? (
-                          <>Enquiry sent! We'll WhatsApp you soon.</>
+                          <>{t("services.form.sentWhatsapp")}</>
                         ) : contactMethod === 'phone_call' ? (
-                          <>Enquiry sent! We'll call you soon.</>
+                          <>{t("services.form.sentPhone")}</>
                         ) : (
-                          <>Enquiry sent! We'll email you soon.</>
+                          <>{t("services.form.sentEmail")}</>
                         )}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedSpa(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedSpa(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
@@ -396,7 +399,7 @@ export default function HammamSpaPage() {
                     <input type="hidden" name="spa_name" value={selectedSpa.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <input name="name" type="text" placeholder="Your full name" required
+                        <input name="name" type="text" placeholder={t("services.fullName")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -412,7 +415,7 @@ export default function HammamSpaPage() {
                         )}
                       </div>
                       <div>
-                        <input name="email" type="email" placeholder="Your email address" required
+                        <input name="email" type="email" placeholder={t("services.emailAddress")} required
                           onBlur={handleBookingFieldBlur}
                           onChange={handleBookingFieldChange}
                           className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${
@@ -451,29 +454,29 @@ export default function HammamSpaPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Preferred date/time or any special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.preferredDateTime")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -486,16 +489,16 @@ export default function HammamSpaPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.form.sending")}
                           </>
                         ) : (
                           <>
                             <i className="ri-calendar-check-line text-sm"></i>
-                            Book Now
+                            {t("services.bookNow")}
                           </>
                         )}
                       </button>
-                      <button type="button" onClick={() => setSelectedSpa(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedSpa(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

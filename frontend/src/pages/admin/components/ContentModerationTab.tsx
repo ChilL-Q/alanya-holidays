@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 import toast from "react-hot-toast";
 import { adminService, type BlogSubmissionAdminItem } from "@/api-services/admin.service";
 import ContentSubmissionPreviewModal from "./ContentSubmissionPreviewModal";
@@ -15,6 +17,7 @@ type SubmissionStatusFilter = "all" | "pending_review" | "approved" | "rejected"
 export default function ContentModerationTab({
   onContentCountUpdate,
 }: ContentModerationTabProps) {
+  const { t } = useTranslation();
   const [submissions, setSubmissions] = useState<BlogSubmissionAdminItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<SubmissionStatusFilter>("all");
@@ -49,11 +52,11 @@ export default function ContentModerationTab({
         onContentCountUpdateRef.current({ total, pending });
       }
     } catch {
-      toast.error("Failed to load creator submissions");
+      toast.error(t("adminQueue.submissionsError"));
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, searchQuery, t]);
 
   useEffect(() => {
     void fetchSubmissions();
@@ -113,7 +116,7 @@ export default function ContentModerationTab({
     try {
       const success = await adminService.approveContentSubmission(id);
       if (success) {
-        toast.success("Submission approved and published to Alanya blog!");
+        toast.success(t("adminQueue.approvedPublished"));
         setIsPreviewOpen(false);
         setSelectedSubmission(null);
         setSubmissions((prev) =>
@@ -125,10 +128,10 @@ export default function ContentModerationTab({
           return next;
         });
       } else {
-        toast.error("Approval failed. Please try again.");
+        toast.error(t("adminQueue.approvalFailed"));
       }
     } catch {
-      toast.error("Error approving submission.");
+      toast.error(t("adminQueue.approveError"));
     } finally {
       setIsProcessing(false);
     }
@@ -139,7 +142,7 @@ export default function ContentModerationTab({
     try {
       const success = await adminService.rejectContentSubmission(id, reason);
       if (success) {
-        toast.success("Submission rejected with feedback sent to author.");
+        toast.success(t("adminQueue.rejectedFeedback"));
         setIsPreviewOpen(false);
         setSelectedSubmission(null);
         setSubmissions((prev) =>
@@ -153,10 +156,10 @@ export default function ContentModerationTab({
           return next;
         });
       } else {
-        toast.error("Rejection failed. Please try again.");
+        toast.error(t("adminQueue.rejectionFailed"));
       }
     } catch {
-      toast.error("Error rejecting submission.");
+      toast.error(t("adminQueue.rejectError"));
     } finally {
       setIsProcessing(false);
     }
@@ -176,15 +179,15 @@ export default function ContentModerationTab({
 
       const res = await adminService.batchApproveContentSubmissions(ids);
       if (res.successful.length > 0) {
-        toast.success(`Batch approved ${res.successful.length} submission(s)`);
+        toast.success(t("adminQueue.batchSubmissionsApproved", { count: res.successful.length }));
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to approve ${res.failed.length} submission(s)`);
+        toast.error(t("adminQueue.failedSubmissionsApprove", { count: res.failed.length }));
         await fetchSubmissions();
       }
       setSelectedIds(new Set());
     } catch {
-      toast.error("Error during batch approval");
+      toast.error(t("adminQueue.batchApprovalError"));
       await fetchSubmissions();
     } finally {
       setIsBulkLoading(false);
@@ -208,16 +211,16 @@ export default function ContentModerationTab({
 
       const res = await adminService.batchRejectContentSubmissions(ids, reason);
       if (res.successful.length > 0) {
-        toast.success(`Batch rejected ${res.successful.length} submission(s)`);
+        toast.success(t("adminQueue.batchSubmissionsRejected", { count: res.successful.length }));
       }
       if (res.failed.length > 0) {
-        toast.error(`Failed to reject ${res.failed.length} submission(s)`);
+        toast.error(t("adminQueue.failedSubmissionsReject", { count: res.failed.length }));
         await fetchSubmissions();
       }
       setSelectedIds(new Set());
       setIsBulkRejectModalOpen(false);
     } catch {
-      toast.error("Error during batch rejection");
+      toast.error(t("adminQueue.batchRejectionError"));
       await fetchSubmissions();
     } finally {
       setIsBulkLoading(false);
@@ -253,15 +256,15 @@ export default function ContentModerationTab({
         <div className="flex flex-wrap items-center gap-2">
           {(
             [
-              { id: "all" as const, label: "All Submissions", count: countsByStatus.all, highlight: false },
+              { id: "all" as const, label: "adminQueue.allSubmissions", count: countsByStatus.all, highlight: false },
               {
                 id: "pending_review" as const,
-                label: "Pending Review",
+                label: "adminQueue.pendingReview",
                 count: countsByStatus.pending_review,
                 highlight: countsByStatus.pending_review > 0,
               },
-              { id: "approved" as const, label: "Approved", count: countsByStatus.approved, highlight: false },
-              { id: "rejected" as const, label: "Rejected", count: countsByStatus.rejected, highlight: false },
+              { id: "approved" as const, label: "adminQueue.claimApproved", count: countsByStatus.approved, highlight: false },
+              { id: "rejected" as const, label: "adminQueue.claimRejected", count: countsByStatus.rejected, highlight: false },
             ]
           ).map((tab) => (
             <button
@@ -273,7 +276,7 @@ export default function ContentModerationTab({
                   : "bg-secondary-50 dark:bg-slate-800 text-secondary-600 dark:text-slate-300 hover:bg-secondary-100 dark:hover:bg-slate-700"
               }`}
             >
-              <span>{tab.label}</span>
+              <span>{t(tab.label)}</span>
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
                   statusFilter === tab.id
@@ -297,7 +300,7 @@ export default function ContentModerationTab({
               onClick={isAllSelected ? deselectAll : selectAllFiltered}
               className="text-xs font-semibold text-secondary-600 dark:text-slate-300 hover:text-accent-600 dark:hover:text-accent-400 whitespace-nowrap cursor-pointer"
             >
-              {isAllSelected ? "Deselect All" : "Select All"}
+              {isAllSelected ? t("adminQueue.deselectAll") : t("adminQueue.selectAll")}
             </button>
           )}
 
@@ -307,13 +310,13 @@ export default function ContentModerationTab({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search submissions by title, creator, content..."
+              placeholder={t("adminQueue.searchSubmissions")}
               className="w-full pl-10 pr-10 py-2 text-xs sm:text-sm rounded-xl border border-secondary-200 dark:border-slate-700 bg-secondary-50/50 dark:bg-slate-900 text-secondary-900 dark:text-white placeholder:text-secondary-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-accent-500 transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
-                aria-label="Clear search"
+                aria-label={t("adminQueue.clearSearch")}
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 dark:text-slate-500 dark:hover:text-slate-300 text-base p-1 cursor-pointer"
               >
@@ -328,7 +331,7 @@ export default function ContentModerationTab({
       {loading ? (
         <div className="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-800">
           <i className="ri-loader-4-line text-3xl text-accent-600 animate-spin mb-2 inline-block" />
-          <p className="text-sm text-secondary-500 dark:text-slate-400">Loading creator submissions...</p>
+          <p className="text-sm text-secondary-500 dark:text-slate-400">{t("adminQueue.loadingSubmissions")}</p>
         </div>
       ) : filteredSubmissions.length === 0 ? (
         <div className="p-12 text-center rounded-2xl bg-white dark:bg-slate-900 border border-secondary-200 dark:border-slate-800">
@@ -336,12 +339,12 @@ export default function ContentModerationTab({
             <i className="ri-inbox-archive-line" />
           </div>
           <h3 className="text-base font-bold text-secondary-900 dark:text-white">
-            No Creator Submissions Found
+            {t("adminQueue.noSubmissions")}
           </h3>
           <p className="text-xs text-secondary-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
             {searchQuery
-              ? `No submissions matched "${searchQuery}". Try a different keyword or filter.`
-              : `No submissions currently in "${statusFilter}" state.`}
+              ? t("adminQueue.noSubmissionMatch", { query: searchQuery })
+              : t("adminQueue.noSubmissionsInStatus", { status: t(`adminQueue.${statusFilter === "pending_review" ? "pendingReview" : statusFilter === "approved" ? "claimApproved" : statusFilter === "rejected" ? "claimRejected" : "allSubmissions"}`) })}
           </p>
         </div>
       ) : (
@@ -363,7 +366,7 @@ export default function ContentModerationTab({
                     <div className="flex items-center space-x-2">
                       <input
                         type="checkbox"
-                        aria-label={`Select ${sub.title}`}
+                        aria-label={t("adminQueue.selectSubmission", { title: sub.title })}
                         checked={isSelected}
                         onChange={() => toggleSelect(sub.id)}
                         className="w-4 h-4 rounded border-secondary-300 dark:border-slate-600 text-accent-600 focus:ring-accent-500 cursor-pointer"
@@ -373,7 +376,7 @@ export default function ContentModerationTab({
                           sub.status
                         )}`}
                       >
-                        {sub.status.replace("_", " ")}
+                        {t(`adminQueue.${sub.status === "pending_review" ? "pendingReview" : sub.status === "approved" ? "claimApproved" : "claimRejected"}`)}
                       </span>
                     </div>
 
@@ -399,7 +402,7 @@ export default function ContentModerationTab({
                     <div className="flex items-center justify-between text-secondary-700 dark:text-slate-300">
                       <span className="font-medium truncate">
                         <i className="ri-user-line mr-1 text-secondary-400 dark:text-slate-500" />
-                        {sub.author_name || sub.user?.full_name || "Creator"}
+                        {sub.author_name || sub.user?.full_name || t("adminQueue.creator")}
                       </span>
                       {sub.payment_details && (
                         <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-secondary-100 dark:bg-slate-800 text-secondary-600 dark:text-slate-400">
@@ -422,14 +425,14 @@ export default function ContentModerationTab({
                   </span>
                   <button
                     type="button"
-                    aria-label={`Review ${sub.title}`}
+                    aria-label={t("adminQueue.reviewSubmission", { title: sub.title })}
                     onClick={() => {
                       setSelectedSubmission(sub);
                       setIsPreviewOpen(true);
                     }}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-accent-50 dark:bg-accent-950/50 text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/50 transition-colors cursor-pointer"
                   >
-                    <span>Review</span>
+                    <span>{t("adminQueue.review")}</span>
                     <i className="ri-arrow-right-line" />
                   </button>
                 </div>
@@ -448,9 +451,9 @@ export default function ContentModerationTab({
         onBatchApprove={handleBatchApprove}
         onBatchReject={() => setIsBulkRejectModalOpen(true)}
         isLoading={isBulkLoading}
-        itemLabel="submissions"
-        approveLabel="Approve Selected"
-        rejectLabel="Reject Selected"
+        itemLabel={t("adminQueue.submissions")}
+        approveLabel={t("adminQueue.approveSelected")}
+        rejectLabel={t("adminQueue.rejectSelected")}
       />
 
       {/* Preview & Action Modal */}
@@ -471,8 +474,8 @@ export default function ContentModerationTab({
         isOpen={isBulkRejectModalOpen}
         onClose={() => setIsBulkRejectModalOpen(false)}
         onConfirm={handleConfirmBatchReject}
-        title="Batch Reject Creator Submissions"
-        itemName={`${selectedIds.size} selected submissions`}
+        title={t("adminQueue.batchRejectSubmissions")}
+        itemName={t("adminQueue.selectedSubmissions", { count: selectedIds.size })}
       />
     </div>
   );

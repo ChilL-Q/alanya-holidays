@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export interface RelatedExperience {
   key: string;
@@ -105,6 +107,7 @@ interface RelatedExperiencesProps {
 }
 
 export default function RelatedExperiences({ currentPage }: RelatedExperiencesProps) {
+  const { t } = useTranslation();
   const filtered = allExperiences.filter((exp) => exp.key !== currentPage);
 
   return (
@@ -113,11 +116,11 @@ export default function RelatedExperiences({ currentPage }: RelatedExperiencesPr
         <div className="text-center mb-10 md:mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-5">
             <i className="ri-compass-3-line text-accent-500 text-sm"></i>
-            <span className="text-sm font-medium text-foreground-700">You Might Also Like</span>
+            <span className="text-sm font-medium text-foreground-700">{t("public.related")}</span>
           </div>
-          <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">Explore More Experiences</h2>
+          <h2 className="font-heading text-2xl md:text-3xl text-foreground-900 mb-3">{t("public.exploreMore")}</h2>
           <p className="text-foreground-500 text-sm md:text-base max-w-lg mx-auto">
-            Discover other curated experiences along the Turkish Riviera — each one handpicked by our community.
+            {t("public.relatedDescription")}
           </p>
         </div>
 
@@ -145,7 +148,7 @@ export default function RelatedExperiences({ currentPage }: RelatedExperiencesPr
               <div className="p-4 md:p-5">
                 <p className="text-sm text-foreground-500 leading-relaxed mb-3">{exp.tagline}</p>
                 <div className="flex items-center gap-1.5 text-sm font-medium text-primary-600 group-hover:text-primary-700 transition-colors">
-                  <span>Explore</span>
+                  <span>{t("public.explore")}</span>
                   <i className="ri-arrow-right-line text-sm group-hover:translate-x-0.5 transition-transform"></i>
                 </div>
               </div>

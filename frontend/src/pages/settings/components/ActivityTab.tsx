@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import "@/i18n";
 import { Activity, ShoppingBag, Compass, Bookmark, MessageSquare, BookmarkCheck } from "lucide-react";
 import { OrdersList } from "./OrdersList";
 import { BookingsList } from "./BookingsList";
 import { FavoritesList } from "./FavoritesList";
 import { ForumActivityList } from "./ForumActivityList";
 import { SavedPostsList } from "./SavedPostsList";
+import { useTranslation } from "react-i18next";
 
 export type ActivitySubtabId = "orders" | "bookings" | "favorites" | "forum" | "saved-posts";
 
@@ -13,47 +15,48 @@ export interface ActivityTabProps {
 }
 
 export function ActivityTab({ initialSubtab = "orders" }: ActivityTabProps) {
+  const { t } = useTranslation();
   const [activeSubtab, setActiveSubtab] = useState<ActivitySubtabId>(initialSubtab);
 
   const subtabs = [
     {
       id: "orders" as const,
-      label: "My Orders",
-      shortLabel: "Orders",
+      label: t("activity.myOrders", "My Orders"),
+      shortLabel: t("activity.orders", "Orders"),
       icon: ShoppingBag,
-      description: "Shop purchases, vouchers & receipts",
+      description: t("activity.ordersDescription", "Shop purchases, vouchers & receipts"),
       activeColor: "bg-amber-500 text-white shadow-xs",
     },
     {
       id: "bookings" as const,
-      label: "My Bookings",
-      shortLabel: "Bookings",
+      label: t("activity.myBookings", "My Bookings"),
+      shortLabel: t("activity.bookings", "Bookings"),
       icon: Compass,
-      description: "Villa stays & VIP concierge",
+      description: t("activity.bookingsDescription", "Villa stays & VIP concierge"),
       activeColor: "bg-indigo-600 text-white shadow-xs",
     },
     {
       id: "favorites" as const,
-      label: "My Favorites",
-      shortLabel: "Favorites",
+      label: t("activity.myFavorites", "My Favorites"),
+      shortLabel: t("activity.favorites", "Favorites"),
       icon: Bookmark,
-      description: "Saved places, villas & tours",
+      description: t("activity.favoritesDescription", "Saved places, villas & tours"),
       activeColor: "bg-rose-600 text-white shadow-xs",
     },
     {
       id: "forum" as const,
-      label: "Forum Activity",
-      shortLabel: "Forum",
+      label: t("activity.forumActivity", "Forum Activity"),
+      shortLabel: t("activity.forum", "Forum"),
       icon: MessageSquare,
-      description: "Discussions & questions",
+      description: t("activity.forumDescription", "Discussions & questions"),
       activeColor: "bg-emerald-600 text-white shadow-xs",
     },
     {
       id: "saved-posts" as const,
-      label: "Saved Posts",
-      shortLabel: "Saved",
+      label: t("activity.savedPosts", "Saved Posts"),
+      shortLabel: t("activity.savedShort", "Saved"),
       icon: BookmarkCheck,
-      description: "Bookmarked forum discussions",
+      description: t("activity.savedDescription", "Bookmarked forum discussions"),
       activeColor: "bg-teal-600 text-white shadow-xs",
     },
   ];
@@ -72,9 +75,9 @@ export function ActivityTab({ initialSubtab = "orders" }: ActivityTabProps) {
             <Activity className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">User Activity & History Hub</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t("activity.hubTitle", "User Activity & History Hub")}</h2>
             <p className="text-sm text-slate-500">
-              Manage your orders, luxury villa bookings, saved destinations, and community threads
+              {t("activity.hubDescription", "Manage your orders, luxury villa bookings, saved destinations, and community threads")}
             </p>
           </div>
         </div>
@@ -83,7 +86,7 @@ export function ActivityTab({ initialSubtab = "orders" }: ActivityTabProps) {
       {/* Subtab Navigator Pills */}
       <div
         role="tablist"
-        aria-label="Activity subtabs"
+        aria-label={t("activity.subtabs", "Activity subtabs")}
         className="flex flex-wrap gap-2 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200/60"
       >
         {subtabs.map((tab) => {

@@ -6,11 +6,14 @@ import { useAuth } from "@/context/AuthContext";
 import RichTextEditor from "@/components/base/RichTextEditor";
 import { logger } from "@/lib/logger";
 import ReportModal from "./ReportModal";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const MAX_COVER_SIZE = 5 * 1024 * 1024;
 const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type PostUpdates = { body: string; image_url: string | null };
+type PostUpdateHandler = { (updates: PostUpdates): Promise<void> | void };
 
 interface OriginalPostProps {
   thread: ThreadDetail;
@@ -18,7 +21,7 @@ interface OriginalPostProps {
   onShare: () => void;
   onScrollToReplies: () => void;
   onBookmark?: () => void;
-  onUpdate?: (updates: PostUpdates) => Promise<void> | void;
+  onUpdate?: PostUpdateHandler;
 }
 
 export default function OriginalPost({
@@ -30,6 +33,7 @@ export default function OriginalPost({
   onUpdate,
 }: OriginalPostProps) {
   const { user, profile } = useAuth();
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(thread.content);
   const [editContent, setEditContent] = useState(thread.content);
@@ -124,7 +128,7 @@ export default function OriginalPost({
       setEditCoverFile(null);
       return;
     }
-    if (file.size > MAX_COVER_SIZE) {
+    if (file.size >= MAX_COVER_SIZE) {
       setCoverError("Cover image must be 5 MB or smaller.");
       setEditCoverFile(null);
       return;
@@ -199,10 +203,10 @@ export default function OriginalPost({
               setIsEditing(true);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-600 hover:text-primary-600 hover:bg-background-100 border border-background-200 transition-colors cursor-pointer"
-            aria-label="Edit post"
+            aria-label={t("public.editPost")}
           >
             <i className="ri-edit-line text-sm"></i>
-            <span>Edit</span>
+            <span>{t("public.edit")}</span>
           </button>
         )}
       </div>
@@ -228,7 +232,7 @@ export default function OriginalPost({
               {(editCoverFile || editImageUrl) && (
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground-700">Current cover</p>
+                    <p className="text-xs font-medium text-foreground-700">{t("public.currentCover")}</p>
                     <p className="truncate text-xs text-foreground-400">
                       {editCoverFile?.name || editImageUrl}
                     </p>
@@ -241,9 +245,9 @@ export default function OriginalPost({
                       setCoverError("");
                     }}
                     className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                    aria-label="Remove cover"
+                    aria-label={t("public.removeCover")}
                   >
-                    Remove
+                    {t("public.remove")}
                   </button>
                 </div>
               )}
@@ -252,14 +256,14 @@ export default function OriginalPost({
                 className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-background-200 bg-white px-3 py-2 text-xs font-medium text-foreground-700 hover:bg-background-100 transition-colors"
               >
                 <i className="ri-image-edit-line"></i>
-                {editCoverFile || editImageUrl ? "Replace cover image" : "Add cover image"}
+                {editCoverFile || editImageUrl ? t("public.replaceCover") : t("public.addCover")}
               </label>
               <input
                 id="edit-post-cover"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 className="sr-only"
-                aria-label="Replace cover image"
+                aria-label={t("public.replaceCover")}
                 onChange={(event) => handleCoverSelection(event.target.files?.[0])}
               />
               {coverError && <p className="mt-2 text-xs text-red-600">{coverError}</p>}
@@ -268,7 +272,7 @@ export default function OriginalPost({
             <RichTextEditor
               value={editContent}
               onChange={setEditContent}
-              placeholder="Edit your post..."
+              placeholder={t("public.editPostPlaceholder")}
               userId={user?.id}
             />
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -278,7 +282,7 @@ export default function OriginalPost({
                 disabled={isSaving}
                 className="px-4 py-1.5 rounded-lg border border-background-200 text-xs font-medium text-foreground-600 hover:bg-background-100 disabled:opacity-50 transition-colors cursor-pointer"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -287,7 +291,7 @@ export default function OriginalPost({
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary-500 text-white text-xs font-medium hover:bg-primary-600 disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
               >
                 {isSaving && <i className="ri-loader-4-line animate-spin text-sm"></i>}
-                <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+                <span>{isSaving ? t("common.saving") : t("public.saveChanges")}</span>
               </button>
             </div>
           </div>
@@ -318,7 +322,7 @@ export default function OriginalPost({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-primary-500 hover:bg-background-100 transition-all cursor-pointer"
         >
           <i className="ri-chat-3-line text-sm"></i>
-          <span>{thread.replies.length} Replies</span>
+          <span>{t("public.repliesCount", { count: thread.replies.length })}</span>
         </button>
 
         {/* Bookmark button */}
@@ -330,10 +334,10 @@ export default function OriginalPost({
               ? "text-teal-600 bg-teal-50 font-semibold"
               : "text-foreground-400 hover:text-teal-600 hover:bg-background-100"
           }`}
-          aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
+          aria-label={isBookmarked ? t("public.removeBookmark") : t("public.bookmarkPost")}
         >
           <i className={`${isBookmarked ? "ri-bookmark-fill" : "ri-bookmark-line"} text-sm`}></i>
-          <span className="hidden sm:inline">{isBookmarked ? "Saved" : "Save"}</span>
+          <span className="hidden sm:inline">{isBookmarked ? t("public.saved") : t("common.save")}</span>
         </button>
 
         {/* Report button */}
@@ -341,10 +345,10 @@ export default function OriginalPost({
           type="button"
           onClick={() => setIsReportModalOpen(true)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-rose-500 hover:bg-background-100 transition-all cursor-pointer"
-          aria-label="Report post"
+          aria-label={t("public.reportPost")}
         >
           <i className="ri-flag-line text-sm"></i>
-          <span className="hidden sm:inline">Report</span>
+          <span className="hidden sm:inline">{t("public.report")}</span>
         </button>
 
         <button
@@ -352,7 +356,7 @@ export default function OriginalPost({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-400 hover:text-foreground-600 hover:bg-background-100 transition-all ml-auto cursor-pointer"
         >
           <i className="ri-share-line text-sm"></i>
-          <span className="hidden sm:inline">Share</span>
+          <span className="hidden sm:inline">{t("public.share")}</span>
         </button>
       </div>
 

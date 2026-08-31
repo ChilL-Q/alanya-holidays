@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import PageHeroImage from "@/components/base/PageHeroImage";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function NewThreadHero() {
+  const { t } = useTranslation();
   return (
     <section className="relative w-full pt-20 md:pt-24 pb-8 md:pb-12 px-4 md:px-8 lg:px-12">
       {/* Background */}
@@ -19,18 +22,17 @@ export default function NewThreadHero() {
         {/* Breadcrumb */}
         <div className="flex items-center justify-center gap-2 text-xs text-foreground-500 mb-4">
           <Link to="/" className="hover:text-primary-500 transition-colors">
-            Home
+            {t("public.home")}
           </Link>
           <i className="ri-arrow-right-s-line"></i>
-          <span className="text-foreground-700">Start a Discussion</span>
+          <span className="text-foreground-700">{t("public.startDiscussion")}</span>
         </div>
 
         <h1 className="font-heading text-2xl md:text-4xl text-foreground-900 mb-3">
-          Start a New Discussion
+          {t("public.newDiscussion")}
         </h1>
         <p className="text-sm md:text-base text-foreground-600 max-w-xl mx-auto">
-          Share your question, experience, or insight with the Alanya community.
-          Pick the right category and, if helpful, a topic so the right people can find it.
+          {t("public.newDiscussionDescription")}
         </p>
       </div>
     </section>

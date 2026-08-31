@@ -87,6 +87,19 @@ export class BusinessApplicationsRepository {
     return data ? this.toDomain(data) : null;
   }
 
+  async hasApprovedBusinessAccount(userId: string): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('business_account_applications')
+      .select('id')
+      .eq('applicant_user_id', userId)
+      .eq('status', 'approved')
+      .limit(1)
+      .maybeSingle();
+
+    if (error) this.throwPersistenceError(error);
+    return data !== null;
+  }
+
   async create(
     userId: string,
     dto: CreateBusinessApplicationDto,

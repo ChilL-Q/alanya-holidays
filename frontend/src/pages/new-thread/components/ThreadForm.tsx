@@ -5,11 +5,14 @@ import { deleteForumImage, uploadForumImage } from "@/api-services/storage.servi
 import { useAuth } from "@/context/AuthContext";
 import { logger } from "@/lib/logger";
 import RichTextEditor from "@/components/base/RichTextEditor";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const MAX_COVER_SIZE = 5 * 1024 * 1024;
 const ALLOWED_COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export default function ThreadForm() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
@@ -230,23 +233,22 @@ export default function ThreadForm() {
           <i className="ri-check-line text-3xl text-primary-500"></i>
         </div>
         <h3 className="font-heading text-xl md:text-2xl text-foreground-900 mb-3">
-          Discussion Created!
+          {t("public.discussionCreated")}
         </h3>
         <p className="text-sm md:text-base text-foreground-600 mb-8 max-w-md mx-auto">
-          Your thread has been posted to the{" "}
+          {t("public.threadPostedTo")}{" "}
           <span className="font-medium text-foreground-900">
             {selectedCategory?.name}
           </span>
           {subcategory ? (
             <span>
-              {" "}
-              → Topic:{" "}
+              {" "}→ {t("public.topic")}:{" "}
               <span className="font-medium text-foreground-900">{subcategory}</span>
             </span>
           ) : (
             ""
           )}{" "}
-          category. Others can now see it and join the conversation.
+              {" "}{t("public.categoryConversation")}
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {createdThread && (
@@ -254,7 +256,7 @@ export default function ThreadForm() {
               to={`/thread/${createdThread.slug || createdThread.id}`}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary-500 text-background-50 text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
-              View Your Thread
+              {t("public.viewYourThread")}
               <i className="ri-arrow-right-line"></i>
             </Link>
           )}
@@ -262,7 +264,7 @@ export default function ThreadForm() {
             to={`/category/${selectedCategory?.slug || categoryId}`}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap"
           >
-            View in {selectedCategory?.name}
+            {t("public.viewInCategory", { category: selectedCategory?.name })}
           </Link>
           <button
             onClick={() => {
@@ -278,7 +280,7 @@ export default function ThreadForm() {
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-foreground-200 text-foreground-700 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer"
           >
             <i className="ri-add-line"></i>
-            Create Another
+            {t("public.createAnother")}
           </button>
         </div>
       </div>
@@ -302,7 +304,7 @@ export default function ThreadForm() {
             htmlFor="thread-category"
             className="block text-sm font-semibold text-foreground-800 dark:text-background-200 mb-2"
           >
-            Category *
+            {t("public.categoryRequired")}
           </label>
           <select
             id="thread-category"
@@ -316,10 +318,10 @@ export default function ThreadForm() {
           >
             <option value="" disabled>
               {isLoadingCategories
-                ? "Loading categories…"
+                ? t("public.loadingCategories")
                 : categoriesList.length === 0
-                  ? "No categories available right now"
-                  : "Choose a category…"}
+                  ? t("public.noCategoriesAvailable")
+                  : t("public.chooseCategory")}
             </option>
             {categoriesList.map((cat) => (
               <option key={cat.id} value={cat.id}>
@@ -332,7 +334,7 @@ export default function ThreadForm() {
           )}
           {categoriesList.length === 0 && !isLoadingCategories && (
             <p className="mt-2 text-xs text-foreground-500">
-              We couldn't load any forum categories. Please try again later.
+              {t("public.categoriesLoadError")}
             </p>
           )}
         </div>
@@ -342,7 +344,7 @@ export default function ThreadForm() {
             htmlFor="thread-subcategory"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-2"
           >
-            Topic <span className="text-foreground-400">(optional)</span>
+            {t("public.topic")} <span className="text-foreground-400">({t("public.optional")})</span>
           </label>
           <select
             id="thread-subcategory"
@@ -354,8 +356,8 @@ export default function ThreadForm() {
           >
             <option value="">
               {subcategories.length === 0
-                ? "Select a category first"
-                : "All topics in this category"}
+                ? t("public.selectCategoryFirst")
+                : t("public.allTopics")}
             </option>
             {subcategories.map((sub) => (
               <option key={sub} value={sub}>
@@ -372,7 +374,7 @@ export default function ThreadForm() {
             htmlFor="thread-title"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
           >
-            Title *
+            {t("public.titleRequired")}
           </label>
           <input
             id="thread-title"
@@ -389,7 +391,7 @@ export default function ThreadForm() {
                 });
               }
             }}
-            placeholder="e.g. Hidden Cleopatra Beach Sunset Cove"
+            placeholder={t("public.postTitlePlaceholder")}
             maxLength={140}
             className={`w-full px-4 py-2.5 rounded-xl border bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               errors.title ? "border-primary-500" : "border-background-200"
@@ -405,11 +407,11 @@ export default function ThreadForm() {
             htmlFor="thread-content"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
           >
-            Story *
+            {t("public.storyRequired")}
           </label>
           <RichTextEditor
             inputId="thread-content"
-            ariaLabel="Story"
+            ariaLabel={t("public.story")}
             value={content}
             onChange={(value) => {
               setContent(value);
@@ -421,7 +423,7 @@ export default function ThreadForm() {
                 });
               }
             }}
-            placeholder="Tell the community what makes this spot special, share tips, or ask a question…"
+            placeholder={t("public.storyPlaceholder")}
           />
           {errors.content && (
             <p className="mt-2 text-xs text-primary-500">{errors.content}</p>
@@ -433,7 +435,7 @@ export default function ThreadForm() {
             htmlFor="thread-cover-image"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
           >
-            Cover Image <span className="text-xs text-foreground-400">(optional)</span>
+            {t("public.coverImage")} <span className="text-xs text-foreground-400">({t("public.optional")})</span>
           </label>
 
           {coverFile ? (
@@ -441,7 +443,7 @@ export default function ThreadForm() {
               {coverPreviewUrl ? (
                 <img
                   src={coverPreviewUrl}
-                  alt="Cover preview"
+                  alt={t("public.coverPreview")}
                   className="h-48 w-full object-cover"
                 />
               ) : (
@@ -455,7 +457,7 @@ export default function ThreadForm() {
                 className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-foreground-950/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-foreground-950/85 transition-colors cursor-pointer"
               >
                 <i className="ri-delete-bin-line"></i>
-                Remove
+                {t("public.remove")}
               </button>
             </div>
           ) : (
@@ -474,10 +476,10 @@ export default function ThreadForm() {
                 <i className="ri-image-add-line text-xl"></i>
               </span>
               <span className="text-sm font-medium text-foreground-800">
-                Drop an image here or choose a file
+                {t("public.dropOrChooseImage")}
               </span>
               <span className="mt-1 text-xs text-foreground-400">
-                JPG, PNG or WebP · max 10 MB
+                {t("public.imageLimit")}
               </span>
             </label>
           )}
@@ -499,7 +501,7 @@ export default function ThreadForm() {
             htmlFor="thread-media-url"
             className="block text-sm font-medium text-foreground-700 dark:text-background-200 mb-1"
           >
-            Media URL <span className="text-xs text-foreground-400">(optional — YouTube, Drive, Instagram)</span>
+            {t("public.mediaUrl")} <span className="text-xs text-foreground-400">({t("public.mediaOptional")})</span>
           </label>
           <input
             id="thread-media-url"
@@ -516,7 +518,7 @@ export default function ThreadForm() {
                 });
               }
             }}
-            placeholder="https://…"
+            placeholder={t("public.mediaUrlPlaceholder")}
             className={`w-full px-4 py-2.5 rounded-xl border bg-white text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               errors.mediaUrl ? "border-primary-500" : "border-background-200"
             }`}
@@ -530,7 +532,7 @@ export default function ThreadForm() {
       <div className="flex items-center gap-2 text-xs text-foreground-500 bg-background-100/70 rounded-lg px-4 py-2.5">
         <i className="ri-information-line"></i>
         <span>
-          Write a clear title and detailed description. Well-written posts get more replies!
+          {t("public.postWritingTip")}
         </span>
       </div>
 
@@ -542,11 +544,11 @@ export default function ThreadForm() {
         {isSubmitting ? (
           <>
             <i className="ri-loader-4-line animate-spin"></i>
-            {isUploadingImage ? "Uploading image…" : "Publishing…"}
+            {isUploadingImage ? t("public.uploadingImage") : t("public.publishing")}
           </>
         ) : (
           <>
-            Publish Post
+            {t("public.publishPost")}
             <i className="ri-send-plane-fill"></i>
           </>
         )}

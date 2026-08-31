@@ -5,12 +5,15 @@ import {
   getTotalWalkTime,
   getWalkingEstimate,
 } from "./types";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface TourPhotoCarouselProps {
   cafes: CafeStop[];
 }
 
 function TourPhotoCarousel({ cafes }: TourPhotoCarouselProps) {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -47,7 +50,7 @@ function TourPhotoCarousel({ cafes }: TourPhotoCarouselProps) {
         <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent-100">
           <i className="ri-gallery-line text-accent-600 text-sm"></i>
         </div>
-        <h3 className="font-heading text-lg text-foreground-900">Coffee &amp; Dessert Pairings</h3>
+        <h3 className="font-heading text-lg text-foreground-900">{t("product.pairingPhotos")}</h3>
         <span className="text-xs text-foreground-400 bg-background-200/70 px-2.5 py-0.5 rounded-full">
           7 photos
         </span>
@@ -59,7 +62,7 @@ function TourPhotoCarousel({ cafes }: TourPhotoCarouselProps) {
           <button
             onClick={() => scroll("left")}
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm border border-background-200 shadow-sm text-foreground-700 hover:bg-white hover:text-foreground-900 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-            aria-label="Previous images"
+            aria-label={t("public.previousImages")}
           >
             <i className="ri-arrow-left-s-line text-lg"></i>
           </button>
@@ -129,7 +132,7 @@ function TourPhotoCarousel({ cafes }: TourPhotoCarouselProps) {
           <button
             onClick={() => scroll("right")}
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm border border-background-200 shadow-sm text-foreground-700 hover:bg-white hover:text-foreground-900 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-            aria-label="Next images"
+            aria-label={t("public.nextImages")}
           >
             <i className="ri-arrow-right-s-line text-lg"></i>
           </button>
@@ -158,12 +161,13 @@ export function TourAddToCartBar({
   setQuantity,
   onAddToCart,
 }: TourAddToCartBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="mt-8 p-5 md:p-6 rounded-2xl bg-white border-2 border-accent-300/60 shadow-sm">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="flex-1 min-w-0">
           <p className="text-xs text-foreground-400 uppercase tracking-wider mb-1">
-            Ready to explore?
+            {t("product.readyToExplore")}
           </p>
           <p className="text-sm text-foreground-700 truncate">
             <strong className="text-foreground-900">{productName}</strong>
@@ -246,6 +250,7 @@ export function CoffeeTourSection({
   onOpenSendModal,
   onShareTour,
 }: CoffeeTourSectionProps) {
+  const { t } = useTranslation();
   const favoritedCafes = COFFEE_TOUR_CAFES.filter((cafe) =>
     favorites.has(`coffee-tour-${cafe.name}`)
   );
@@ -258,7 +263,7 @@ export function CoffeeTourSection({
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-foreground-200 bg-white mb-6">
             <i className="ri-map-pin-line text-accent-500 text-sm"></i>
-            <span className="text-sm font-medium text-foreground-700">Tour Route Preview</span>
+              <span className="text-sm font-medium text-foreground-700">{t("product.routePreview")}</span>
           </div>
           <h2 className="font-heading text-3xl md:text-4xl text-foreground-900 mb-4">
             Your Coffee Journey Through Alanya
@@ -276,21 +281,21 @@ export function CoffeeTourSection({
               <span className="text-sm font-semibold text-foreground-900 whitespace-nowrap">
                 {totalWalkTime.label}
               </span>
-              <span className="text-xs text-foreground-400 whitespace-nowrap">total walking</span>
+              <span className="text-xs text-foreground-400 whitespace-nowrap">{t("product.totalWalking")}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-background-200/70 shadow-sm">
               <span className="w-7 h-7 flex items-center justify-center rounded-full bg-accent-100">
                 <i className="ri-map-pin-2-line text-accent-600 text-sm"></i>
               </span>
               <span className="text-sm font-semibold text-foreground-900">7</span>
-              <span className="text-xs text-foreground-400 whitespace-nowrap">cafe stops</span>
+              <span className="text-xs text-foreground-400 whitespace-nowrap">{t("product.cafeStops")}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-background-200/70 shadow-sm">
               <span className="w-7 h-7 flex items-center justify-center rounded-full bg-accent-100">
                 <i className="ri-route-line text-accent-600 text-sm"></i>
               </span>
-              <span className="text-sm font-semibold text-foreground-900">Harbor → Mahmutlar</span>
-              <span className="text-xs text-foreground-400 whitespace-nowrap">route</span>
+              <span className="text-sm font-semibold text-foreground-900">{t("product.routeName")}</span>
+              <span className="text-xs text-foreground-400 whitespace-nowrap">{t("product.route")}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -326,7 +331,7 @@ export function CoffeeTourSection({
                 <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100">
                   <i className="ri-heart-fill text-red-500 text-sm"></i>
                 </div>
-                <h3 className="font-heading text-lg text-foreground-900">My Favorite Cafes</h3>
+                <h3 className="font-heading text-lg text-foreground-900">{t("product.favoriteCafes")}</h3>
                 <span className="text-xs text-foreground-400 bg-background-200/70 px-2.5 py-0.5 rounded-full">
                   {favoritedCafes.length} saved
                 </span>
@@ -359,7 +364,7 @@ export function CoffeeTourSection({
                         toggleFavorite(`coffee-tour-${cafe.name}`);
                       }}
                       className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 border-2 border-red-400 text-red-500 hover:scale-110 transition-all cursor-pointer shrink-0"
-                      title="Remove from favorites"
+                      title={t("public.removeFavorite")}
                     >
                       <i className="ri-heart-fill text-sm"></i>
                     </button>
@@ -395,7 +400,7 @@ export function CoffeeTourSection({
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Coffee Tour Alanya — Cafe Locations"
+              title={t("product.mapTitle")}
               className="absolute inset-0"
             ></iframe>
           </div>
@@ -554,7 +559,7 @@ export function CoffeeTourSection({
             <i className="ri-information-line text-accent-600 text-lg"></i>
           </div>
           <div>
-            <h4 className="font-heading text-sm text-foreground-900 mb-1">How the tour works</h4>
+            <h4 className="font-heading text-sm text-foreground-900 mb-1">{t("product.howItWorks")}</h4>
             <p className="text-sm text-foreground-500 leading-relaxed">
               Each stop on the map is a participating cafe. Show your Coffee Tour Gift Card (digital
               or printed) at the counter and they'll mark your stop — one complimentary coffee and one

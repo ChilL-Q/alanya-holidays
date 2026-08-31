@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AdminTab = "listings" | "claims" | "business-applications" | "content" | "forum" | "bookings" | "reviews" | "users" | "audit" | "analytics" | "concierge";
+export type AdminTab = "publishing" | "listings" | "claims" | "business-applications" | "content" | "forum" | "bookings" | "reviews" | "users" | "audit" | "analytics" | "concierge";
 
 interface AdminTabsNavProps {
   activeTab: AdminTab;
@@ -30,6 +30,11 @@ export default function AdminTabsNav({
   counts,
 }: AdminTabsNavProps) {
   const tabs: TabDef[] = [
+    {
+      id: "publishing",
+      label: "Content Library",
+      icon: "ri-edit-box-line",
+    },
     {
       id: "listings",
       label: "Listings Moderation",

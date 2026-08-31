@@ -1,5 +1,7 @@
 import React from "react";
 import { COUNTRY_CODES } from "./types";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 interface SendToPhoneModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export function SendToPhoneModal({
   onSetSendPhone,
   onSend,
 }: SendToPhoneModalProps) {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -50,7 +53,7 @@ export function SendToPhoneModal({
             <i className="ri-smartphone-line text-accent-600 text-lg"></i>
           </div>
           <div>
-            <h3 className="font-heading text-lg text-foreground-900">Send to My Phone</h3>
+            <h3 className="font-heading text-lg text-foreground-900">{t("public.sendToPhone")}</h3>
             <p className="text-xs text-foreground-500">
               Get the full tour route delivered to your phone
             </p>
@@ -110,7 +113,7 @@ export function SendToPhoneModal({
               onKeyDown={(e) => {
                 if (e.key === "Enter") onSend();
               }}
-              placeholder="Phone number"
+              placeholder={t("public.phoneNumber")}
               className="flex-1 px-4 py-2.5 rounded-xl border border-background-300 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-100 transition-colors"
               autoFocus
             />
@@ -123,7 +126,7 @@ export function SendToPhoneModal({
 
         {/* Preview of what's being sent */}
         <div className="mb-6 p-4 rounded-xl bg-background-100 border border-background-200/50">
-          <p className="text-xs text-foreground-400 uppercase tracking-wider mb-2">You'll receive</p>
+          <p className="text-xs text-foreground-400 uppercase tracking-wider mb-2">{t("public.youllReceive")}</p>
           <div className="flex items-start gap-2">
             <span className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
               <i className="ri-checkbox-circle-fill text-accent-500 text-sm"></i>

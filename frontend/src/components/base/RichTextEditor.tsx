@@ -13,8 +13,9 @@ export interface RichTextEditorProps {
   inputId?: string;
   ariaLabel?: string;
   userId?: string;
-  onImageUpload?: (file: File) => Promise<string>;
+  onImageUpload?: { (file: File): Promise<string> };
   modules?: Record<string, unknown>;
+  insertContent?: { id: number; html: string } | null;
 }
 
 export default function RichTextEditor({
@@ -28,6 +29,7 @@ export default function RichTextEditor({
   userId,
   onImageUpload,
   modules: customModules,
+  insertContent,
 }: RichTextEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<Quill | null>(null);
@@ -177,6 +179,15 @@ export default function RichTextEditor({
       isInternalChangeRef.current = false;
     }
   }, [value]);
+
+  useEffect(() => {
+    const editor = quillRef.current;
+    if (!editor || !insertContent?.html) return;
+    const range = editor.getSelection(true);
+    const index = range?.index ?? Math.max(0, editor.getLength() - 1);
+    editor.clipboard.dangerouslyPasteHTML(index, insertContent.html, 'user');
+    editor.setSelection(index + 1, 0);
+  }, [insertContent]);
 
   const textLength = value.replace(/<[^>]*>/g, '').length;
   const showCounter = maxLength !== undefined;

@@ -15,6 +15,7 @@ import BookingsAdminTab from "./components/BookingsAdminTab";
 import ReviewsModerationTab from "./components/ReviewsModerationTab";
 import UsersAdminTab from "./components/UsersAdminTab";
 import BusinessApplicationsTab from "./components/BusinessApplicationsTab";
+import AdminContentLibraryTab from "./components/AdminContentLibraryTab";
 import { adminService } from "@/api-services/admin.service";
 import { useToast } from "@/hooks/useToast";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -26,6 +27,7 @@ export default function AdminDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");
   const activeTab: AdminTab =
+    rawTab === "publishing" ||
     rawTab === "claims" ||
     rawTab === "business-applications" ||
     rawTab === "content" ||
@@ -215,6 +217,16 @@ export default function AdminDashboardPage() {
 
       {/* Main Tab Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === "publishing" && (
+          <div
+            id="admin-tabpanel-publishing"
+            role="tabpanel"
+            aria-labelledby="admin-tab-publishing"
+          >
+            <AdminContentLibraryTab />
+          </div>
+        )}
+
         {activeTab === "listings" && (
           <div
             id="admin-tabpanel-listings"

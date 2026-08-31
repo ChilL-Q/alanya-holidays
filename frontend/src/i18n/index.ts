@@ -7,8 +7,14 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    lng: 'en',
     fallbackLng: 'en',
+    supportedLngs: ['en', 'ru', 'tr'],
+    load: 'languageOnly',
+    detection: {
+      order: ['localStorage', 'navigator'],
+      lookupLocalStorage: 'alanya-language',
+      caches: ['localStorage'],
+    },
     debug: false,
     resources: messages,
     interpolation: {

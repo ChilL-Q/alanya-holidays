@@ -40,6 +40,15 @@ export class BillingRepository {
     return data ?? null;
   }
 
+  async hasActivePremiumAccess(userId: string): Promise<boolean> {
+    const result = await this.client.rpc('is_premium', {
+      p_user_id: userId,
+    });
+
+    if (result.error) throw new Error(result.error.message);
+    return result.data === true;
+  }
+
   async setCancelAtPeriodEnd(id: string, flag: boolean): Promise<void> {
     const { error } = await this.client
       .from('premium_subscriptions')

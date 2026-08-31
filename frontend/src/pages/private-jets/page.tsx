@@ -8,6 +8,8 @@ import { conciergeService, jetTypes, type PrivateJet } from "@/api-services/conc
 import { formatAmenity } from "@/utils/format-amenity";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const typeIconMap: Record<string, string> = {
   "Light Jet": "ri-flight-takeoff-line",
@@ -17,6 +19,7 @@ const typeIconMap: Record<string, string> = {
 };
 
 export default function PrivateJetsPage() {
+  const { t } = useTranslation();
   const [privateJets, setPrivateJets] = useState<PrivateJet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -38,11 +41,11 @@ export default function PrivateJetsPage() {
       const data = await conciergeService.getPrivateJets();
       setPrivateJets(data);
     } catch {
-      setFetchError("Failed to load private jet listings. Please check your connection and try again.");
+    setFetchError(t("services.failedLoad", { item: t("services.jets") }));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadJets();
@@ -50,10 +53,10 @@ export default function PrivateJetsPage() {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateBookingField = (name: string, value: string) => {
-    if (name === "name" && !value.trim()) return "Please enter your full name.";
+    if (name === "name" && !value.trim()) return t("services.validation.fullName");
     if (name === "email") {
-      if (!value.trim()) return "Please enter your email address.";
-      if (!validateEmail(value.trim())) return "Please enter a valid email address.";
+      if (!value.trim()) return t("services.validation.emailRequired");
+      if (!validateEmail(value.trim())) return t("services.validation.emailInvalid");
     }
     return "";
   };
@@ -94,10 +97,10 @@ export default function PrivateJetsPage() {
   }, [activeType, sortBy, privateJets]);
 
   const sortLabelMap: Record<string, string> = {
-    rating: "Top Rated",
-    "price-low": "Price: Low to High",
-    "price-high": "Price: High to Low",
-    range: "Longest Range",
+    rating: t("services.topRated"),
+    "price-low": t("services.priceLow"),
+    "price-high": t("services.priceHigh"),
+    range: t("services.longestRange"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -115,7 +118,7 @@ export default function PrivateJetsPage() {
     setFieldErrors({ name: nameErr, email: emailErr });
     setTouchedFields({ name: true, email: true });
     if (nameErr || emailErr) {
-      setFormError("Please fix the errors below before sending.");
+      setFormError(t("services.validation.fixErrors"));
       return;
     }
 
@@ -149,10 +152,10 @@ export default function PrivateJetsPage() {
         setFormSuccess(true);
         form.reset();
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -170,15 +173,15 @@ export default function PrivateJetsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/20 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Private Jets</span>
+              <span className="text-white/90 text-sm">{t("services.jet.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Private Jet Charters</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.jet.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Skip the terminal and fly on your schedule. Light jets for quick hops, heavy jets for intercontinental journeys — all departing from Antalya or Gazipaşa.
+              {t("services.jet.hero")}
             </p>
           </div>
         </section>
@@ -223,7 +226,7 @@ export default function PrivateJetsPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load private jets"
+                title={t("services.jet.unable")}
                 message={fetchError}
                 onRetry={loadJets}
               />
@@ -243,11 +246,11 @@ export default function PrivateJetsPage() {
               </div>
             ) : filteredJets.length === 0 ? (
               <EmptyState
-                title="No private jets found"
-                description="Try selecting a different aircraft category or clear your filters."
+                title={t("services.jet.none")}
+                description={t("services.jet.noneDesc")}
                 icon="ri-plane-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveType("all");
                     setSortBy("rating");
@@ -262,7 +265,7 @@ export default function PrivateJetsPage() {
                       <img src={jet.image} alt={jet.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {jet.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
@@ -301,7 +304,7 @@ export default function PrivateJetsPage() {
                           <span className="text-sm text-foreground-500"> / hour</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedJet(jet); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                          <i className="ri-plane-line text-sm"></i>View Details
+                        <i className="ri-plane-line text-sm"></i>{t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -323,7 +326,7 @@ export default function PrivateJetsPage() {
                 <img src={selectedJet.image} alt={selectedJet.name} className="w-full h-full object-cover object-top" />
                 {selectedJet.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -341,46 +344,46 @@ export default function PrivateJetsPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedJet.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedJet.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedJet.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedJet.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-user-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Capacity</p>
+                    <p className="text-xs text-foreground-500">{t("services.capacity")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedJet.capacity} pax</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-pin-distance-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Range</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.range")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedJet.range}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-speed-up-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Speed</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.speed")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedJet.speed}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-time-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Min Hours</p>
+                    <p className="text-xs text-foreground-500">{t("services.minHours", { count: selectedJet.minHours })}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedJet.minHours}h</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Flight Hour</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.service.perFlightHour")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedJet.pricePerHour.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-foreground-500 mb-0.5">Base</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.service.base")}</p>
                       <span className="px-3 py-1 rounded-full bg-accent-100 text-accent-700 text-xs font-semibold whitespace-nowrap">{selectedJet.base}</span>
                     </div>
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Amenities</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.amenities")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedJet.amenities.map((a) => (
                       <span key={a} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
@@ -392,10 +395,10 @@ export default function PrivateJetsPage() {
                     <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
                       <i className="ri-check-line text-green-600 text-lg shrink-0"></i>
                       <span className="text-sm font-medium text-green-700">
-                        {contactMethod === 'whatsapp' ? <>Enquiry sent! We'll WhatsApp you soon.</> : contactMethod === 'phone_call' ? <>Enquiry sent! We'll call you soon.</> : <>Enquiry sent! We'll email you soon.</>}
+                        {contactMethod === 'whatsapp' ? t("services.form.sentWhatsapp") : contactMethod === 'phone_call' ? t("services.form.sentPhone") : t("services.form.sentEmail")}
                       </span>
                     </div>
-                    <button onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                    <button onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
@@ -403,13 +406,13 @@ export default function PrivateJetsPage() {
                     <input type="hidden" name="jet_name" value={selectedJet.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                       <div>
-                        <input name="name" type="text" placeholder="Your full name" required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.name && touchedFields.name ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
+                        <input name="name" type="text" placeholder={t("services.fullName")} required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.name && touchedFields.name ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
                         {fieldErrors.name && touchedFields.name && (
                           <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{fieldErrors.name}</p>
                         )}
                       </div>
                       <div>
-                        <input name="email" type="email" placeholder="Your email address" required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.email && touchedFields.email ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
+                        <input name="email" type="email" placeholder={t("services.emailAddress")} required onBlur={handleBookingFieldBlur} onChange={handleBookingFieldChange} className={`w-full px-3 py-2.5 rounded-xl border text-sm text-foreground-900 placeholder:text-foreground-400 outline-none transition-colors ${fieldErrors.email && touchedFields.email ? "border-red-300 bg-red-50/30 focus:border-red-400" : "border-background-200 bg-white focus:border-primary-400"}`} />
                         {fieldErrors.email && touchedFields.email && (
                           <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{fieldErrors.email}</p>
                         )}
@@ -438,38 +441,38 @@ export default function PrivateJetsPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Preferred dates, destinations, number of passengers, or special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.jetNotes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1"><i className="ri-error-warning-line text-[10px]"></i>{formError}</p>
                     )}
                     <div className="flex items-center gap-3">
                       <button type="submit" disabled={formSubmitting} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-60">
-                        {formSubmitting ? (<><i className="ri-loader-4-line animate-spin text-sm"></i>Sending...</>) : (<><i className="ri-calendar-check-line text-sm"></i>Enquire Now</>)}
+                        {formSubmitting ? (<><i className="ri-loader-4-line animate-spin text-sm"></i>{t("services.sending")}</>) : (<><i className="ri-calendar-check-line text-sm"></i>{t("services.enquireNow")}</>)}
                       </button>
-                      <button type="button" onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedJet(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
                 )}

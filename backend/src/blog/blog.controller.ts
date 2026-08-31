@@ -38,6 +38,7 @@ import {
   GetBlogSubmissionsQueryDto,
   RejectBlogSubmissionDto,
   UpdateBlogPostDto,
+  UpdateBlogSubmissionDto,
 } from './dto';
 
 @Controller('blog')
@@ -106,6 +107,34 @@ export class BlogController {
     @CurrentUser() user: AuthUser,
   ): Promise<BlogSubmission[]> {
     return this.blogService.getUserBlogSubmissions(query, user.id);
+  }
+
+  @Get('posts/me')
+  @UseGuards(AuthGuard)
+  async getUserBlogPosts(
+    @Query() query: GetBlogQueryDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BlogPostsListResult> {
+    return this.blogService.getUserBlogPosts(query, user.id);
+  }
+
+  @Patch('submissions/:id')
+  @UseGuards(AuthGuard)
+  async updateUserBlogSubmission(
+    @Param('id') id: string,
+    @Body() body: UpdateBlogSubmissionDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BlogSubmission> {
+    return this.blogService.updateUserBlogSubmission(id, body, user.id);
+  }
+
+  @Post('submissions/:id/resubmit')
+  @UseGuards(AuthGuard)
+  async resubmitUserBlogSubmission(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<BlogSubmission> {
+    return this.blogService.resubmitUserBlogSubmission(id, user.id);
   }
 
   @Post('submissions')

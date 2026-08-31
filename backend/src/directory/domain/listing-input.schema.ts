@@ -31,6 +31,9 @@ export const PROTECTED_FIELDS = [
   'subscription_id',
   'listing_locations',
   'owner_user_id',
+  'claimed_at',
+  'creation_source',
+  'can_claim',
   'rejection_reason',
 ] as const;
 

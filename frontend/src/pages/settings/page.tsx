@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from "react";
+import "@/i18n";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/pages/home/components/Navbar";
 import Footer from "@/pages/home/components/Footer";
@@ -9,8 +10,10 @@ import { ProfileTab } from "./components/ProfileTab";
 import { SecurityTab } from "./components/SecurityTab";
 import { ActivityTab } from "./components/ActivityTab";
 import { BillingTab } from "./components/BillingTab";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { user, profile, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,15 +48,15 @@ export default function SettingsPage() {
   useEffect(() => {
     const result = searchParams.get("subscription");
     if (result === "success") {
-      showToast("Subscription activated! Welcome aboard 🎉", undefined, "success");
+      showToast(t("settings.subscriptionActivated", "Subscription activated! Welcome aboard 🎉"), undefined, "success");
     } else if (result === "cancelled") {
-      showToast("Checkout cancelled — no charge was made.", undefined, "info");
+      showToast(t("settings.checkoutCancelled", "Checkout cancelled — no charge was made."), undefined, "info");
     }
     if (result) {
       searchParams.delete("subscription");
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams, showToast]);
+  }, [searchParams, setSearchParams, showToast, t]);
 
   // Render loading skeleton while checking auth session
   if (loading) {
@@ -98,7 +101,7 @@ export default function SettingsPage() {
             <ProfileTab
               profile={profile}
               onProfileUpdated={() => {
-                showToast("Profile Updated", "Your changes have been saved to your account.", "success");
+                showToast(t("settings.profileUpdatedTitle", "Profile Updated"), t("settings.profileUpdatedDescription", "Your changes have been saved to your account."), "success");
               }}
             />
           )}
@@ -106,7 +109,7 @@ export default function SettingsPage() {
           {activeTab === "security" && (
             <SecurityTab
               onPasswordUpdated={() => {
-                showToast("Password Changed", "Your password was updated successfully.", "success");
+                showToast(t("settings.passwordChangedTitle", "Password Changed"), t("settings.passwordChangedDescription", "Your password was updated successfully."), "success");
               }}
             />
           )}

@@ -13,6 +13,8 @@ import LoadingSpinner from "@/components/base/LoadingSpinner";
 import { useFavorites } from "@/hooks/useFavorites";
 import TrustBadge from "@/components/common/TrustBadge";
 import ClaimListingModal from "@/components/feature/ClaimListingModal";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 const priceRangeLabel: Record<string, string> = {
   "$": "Budget",
@@ -118,6 +120,7 @@ function getGalleryForBusiness(businessId: string): string[] {
 }
 
 export default function BusinessDetailPage() {
+  const { t } = useTranslation();
   const { businessId } = useParams<{ businessId: string }>();
 
   const [business, setBusiness] = useState<Business | null>(null);
@@ -220,7 +223,7 @@ export default function BusinessDetailPage() {
         <Navbar />
         <div className="min-h-[60vh] bg-background-50 flex items-center justify-center p-6">
           <ErrorState
-            title="Unable to load business details"
+            title={t("business.loadFailed")}
             message={error}
             onRetry={loadData}
           />
@@ -239,7 +242,7 @@ export default function BusinessDetailPage() {
             <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-accent-100">
               <i className="ri-store-2-line text-accent-500 text-2xl"></i>
             </div>
-            <h2 className="font-heading text-2xl text-foreground-900 mb-2">Business not found</h2>
+            <h2 className="font-heading text-2xl text-foreground-900 mb-2">{t("business.notFound")}</h2>
             <p className="text-sm text-foreground-500 max-w-md mx-auto mb-6">
               This business listing might have been removed or the link is incorrect.
             </p>
@@ -278,9 +281,9 @@ export default function BusinessDetailPage() {
             <div className="max-w-7xl mx-auto">
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 mb-4">
-                <Link to="/" className="text-white/50 hover:text-white/80 text-xs transition-colors underline underline-offset-2">Home</Link>
+                <Link to="/" className="text-white/50 hover:text-white/80 text-xs transition-colors underline underline-offset-2">{t("nav.home")}</Link>
                 <i className="ri-arrow-right-s-line text-white/30 text-xs"></i>
-                <Link to="/explore" className="text-white/50 hover:text-white/80 text-xs transition-colors underline underline-offset-2">Business Directory</Link>
+                <Link to="/explore" className="text-white/50 hover:text-white/80 text-xs transition-colors underline underline-offset-2">{t("public.businessDirectory")}</Link>
                 <i className="ri-arrow-right-s-line text-white/30 text-xs"></i>
                 <span className="text-white/70 text-xs truncate max-w-[200px]">{business.name}</span>
               </div>
@@ -320,7 +323,7 @@ export default function BusinessDetailPage() {
                         ? "bg-accent-500/20 border-accent-400/40 text-white"
                         : "bg-white/10 border-white/20 text-white/70 hover:text-white hover:border-white/40 hover:bg-white/20"
                     }`}
-                    title={favorited ? "Remove from favorites" : "Save to favorites"}
+                      title={favorited ? t("public.removeFavorite") : t("public.saveFavorite")}
                   >
                     <i className={`${favorited ? "ri-heart-fill" : "ri-heart-line"} text-lg`}></i>
                   </button>
@@ -340,15 +343,17 @@ export default function BusinessDetailPage() {
                     <i className="ri-external-link-line"></i>
                     Visit Website
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => setClaimModalOpen(true)}
-                    className="flex items-center gap-2 px-5 py-3 rounded-full bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer shadow-sm"
-                    title="Claim this listing as the verified owner"
-                  >
-                    <i className="ri-shield-user-fill"></i>
-                    Claim Listing
-                  </button>
+                  {business.can_claim === true && (
+                    <button
+                      type="button"
+                      onClick={() => setClaimModalOpen(true)}
+                      className="flex items-center gap-2 px-5 py-3 rounded-full bg-accent-500 text-white text-sm font-medium hover:bg-accent-600 transition-colors whitespace-nowrap cursor-pointer shadow-sm"
+                      title={t("business.claimListing")}
+                    >
+                      <i className="ri-shield-user-fill"></i>
+                      Claim Listing
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -362,28 +367,28 @@ export default function BusinessDetailPage() {
               <div className="flex items-start gap-2">
                 <i className="ri-map-pin-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">Address</p>
+                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">{t("public.address")}</p>
                   <p className="text-sm text-foreground-900 font-medium leading-snug truncate">{business.address}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <i className="ri-time-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">Hours</p>
+                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">{t("public.hours")}</p>
                   <p className="text-sm text-foreground-900 font-medium leading-snug truncate">{business.openingHours}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <i className="ri-phone-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">Phone</p>
+                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">{t("public.phone")}</p>
                   <a href={`tel:${business.phone}`} className="text-sm text-foreground-900 font-medium hover:text-primary-500 transition-colors truncate cursor-pointer">{business.phone}</a>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <i className="ri-money-dollar-circle-line text-foreground-400 text-sm mt-0.5 shrink-0"></i>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">Price Range</p>
+                  <p className="text-[11px] font-medium text-foreground-400 uppercase tracking-wide mb-0.5">{t("business.priceRange")}</p>
                   <p className="text-sm text-foreground-900 font-medium leading-snug">{priceRangeLabel[business.priceRange] || business.priceRange}</p>
                 </div>
               </div>
@@ -399,7 +404,7 @@ export default function BusinessDetailPage() {
               <div className="flex-1 min-w-0 space-y-10">
                 {/* About */}
                 <div>
-                  <h2 className="font-heading text-xl md:text-2xl text-foreground-900 mb-4">About {business.name}</h2>
+                  <h2 className="font-heading text-xl md:text-2xl text-foreground-900 mb-4">{t("business.about", { name: business.name })}</h2>
                   <p className="text-sm md:text-base text-foreground-600 leading-relaxed">
                     {business.description}
                   </p>
@@ -424,7 +429,7 @@ export default function BusinessDetailPage() {
 
                 {/* Photo Gallery */}
                 <div>
-                  <h2 className="font-heading text-xl md:text-2xl text-foreground-900 mb-4">Photos</h2>
+                    <h2 className="font-heading text-xl md:text-2xl text-foreground-900 mb-4">{t("public.photos")}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     <div className="rounded-xl overflow-hidden aspect-[4/3]">
                       <img
@@ -453,7 +458,7 @@ export default function BusinessDetailPage() {
                 {/* Reviews */}
                 <div>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="font-heading text-xl md:text-2xl text-foreground-900">Reviews</h2>
+                    <h2 className="font-heading text-xl md:text-2xl text-foreground-900">{t("public.reviewsTitle")}</h2>
                     <span className="text-sm text-foreground-500">{reviewStats.total} reviews</span>
                   </div>
 
@@ -518,7 +523,7 @@ export default function BusinessDetailPage() {
                       <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center rounded-full bg-accent-100">
                         <i className="ri-chat-smile-2-line text-accent-500 text-xl"></i>
                       </div>
-                      <p className="text-sm text-foreground-500">No reviews yet. Be the first to review!</p>
+                      <p className="text-sm text-foreground-500">{t("business.noReviews")}</p>
                     </div>
                   )}
                 </div>
@@ -535,7 +540,7 @@ export default function BusinessDetailPage() {
                 ) : (
                   <div className="bg-white rounded-2xl border border-background-200/70 p-5 md:p-6">
                     <div className="flex items-center justify-between mb-5">
-                      <h2 className="font-heading text-xl text-foreground-900">Write a Review</h2>
+                      <h2 className="font-heading text-xl text-foreground-900">{t("business.writeReview")}</h2>
                       <button
                         onClick={() => setReviewFormOpen(false)}
                         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-background-100 text-foreground-400 hover:text-foreground-600 transition-colors cursor-pointer"
@@ -549,7 +554,7 @@ export default function BusinessDetailPage() {
                         <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full bg-accent-100">
                           <i className="ri-check-line text-accent-500 text-2xl"></i>
                         </div>
-                        <h3 className="font-heading text-lg text-foreground-900 mb-2">Review submitted!</h3>
+                        <h3 className="font-heading text-lg text-foreground-900 mb-2">{t("business.reviewSubmitted")}</h3>
                         <p className="text-sm text-foreground-500 max-w-sm mx-auto mb-5">
                           Thank you for sharing your experience. Your review helps other travelers discover great businesses in Alanya.
                         </p>
@@ -621,7 +626,7 @@ export default function BusinessDetailPage() {
 
                         {/* Star Rating */}
                         <div className="mb-5">
-                          <label className="block text-sm font-medium text-foreground-700 mb-2">Your Rating</label>
+                          <label className="block text-sm font-medium text-foreground-700 mb-2">{t("business.yourRating")}</label>
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button
@@ -646,24 +651,24 @@ export default function BusinessDetailPage() {
                         {/* Name + Email */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <label htmlFor="review-name" className="block text-sm font-medium text-foreground-700 mb-1.5">Your Name</label>
+                            <label htmlFor="review-name" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("public.yourName")}</label>
                             <input
                               id="review-name"
                               name="name"
                               type="text"
                               required
-                              placeholder="John Doe"
+                              placeholder={t("business.namePlaceholder")}
                               className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-colors"
                             />
                           </div>
                           <div>
-                            <label htmlFor="review-email" className="block text-sm font-medium text-foreground-700 mb-1.5">Your Email</label>
+                            <label htmlFor="review-email" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("business.yourEmail")}</label>
                             <input
                               id="review-email"
                               name="email"
                               type="email"
                               required
-                              placeholder="john@example.com"
+                              placeholder={t("business.emailPlaceholder")}
                               className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-colors"
                             />
                           </div>
@@ -671,7 +676,7 @@ export default function BusinessDetailPage() {
 
                         {/* Visit Type */}
                         <div className="mb-4">
-                          <label htmlFor="review-visit-type" className="block text-sm font-medium text-foreground-700 mb-1.5">Visit Type</label>
+                          <label htmlFor="review-visit-type" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("business.visitType")}</label>
                           <select
                             id="review-visit-type"
                             name="visit_type"
@@ -683,41 +688,41 @@ export default function BusinessDetailPage() {
                               paddingRight: "2.5rem",
                             }}
                           >
-                            <option value="">Select visit type</option>
-                            <option value="Couple">Couple</option>
-                            <option value="Family">Family</option>
-                            <option value="Solo">Solo</option>
-                            <option value="Friends">Friends</option>
-                            <option value="Business">Business</option>
+                            <option value="">{t("business.selectVisitType")}</option>
+                            <option value="Couple">{t("business.couple")}</option>
+                            <option value="Family">{t("business.family")}</option>
+                            <option value="Solo">{t("business.solo")}</option>
+                            <option value="Friends">{t("business.friends")}</option>
+                            <option value="Business">{t("business.business")}</option>
                           </select>
                         </div>
 
                         {/* Review Title */}
                         <div className="mb-4">
-                          <label htmlFor="review-title" className="block text-sm font-medium text-foreground-700 mb-1.5">Review Title</label>
+                          <label htmlFor="review-title" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("business.reviewTitle")}</label>
                           <input
                             id="review-title"
                             name="title"
                             type="text"
                             required
-                            placeholder="Sum up your experience in a few words"
+                            placeholder={t("business.reviewTitlePlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-colors"
                           />
                         </div>
 
                         {/* Review Content */}
                         <div className="mb-5">
-                          <label htmlFor="review-content" className="block text-sm font-medium text-foreground-700 mb-1.5">Your Review</label>
+                          <label htmlFor="review-content" className="block text-sm font-medium text-foreground-700 mb-1.5">{t("business.yourReview")}</label>
                           <textarea
                             id="review-content"
                             name="content"
                             required
                             maxLength={500}
                             rows={4}
-                            placeholder="Tell others about your experience — what did you love? Any tips for future visitors?"
+                            placeholder={t("business.reviewPlaceholder")}
                             className="w-full px-4 py-2.5 rounded-xl border border-background-200 bg-background-50 text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-300 focus:ring-2 focus:ring-primary-100 transition-colors resize-none"
                           ></textarea>
-                          <p className="text-xs text-foreground-400 mt-1">Maximum 500 characters</p>
+                          <p className="text-xs text-foreground-400 mt-1">{t("public.maxCharacters")}</p>
                         </div>
 
                         {/* Error message */}
@@ -765,7 +770,7 @@ export default function BusinessDetailPage() {
               <div className="w-full lg:w-[360px] shrink-0 space-y-6 self-start lg:sticky lg:top-24">
                 {/* Contact Card */}
                 <div className="bg-white rounded-2xl border border-background-200/70 p-5">
-                  <h3 className="font-heading text-base text-foreground-900 mb-4">Contact & Location</h3>
+                  <h3 className="font-heading text-base text-foreground-900 mb-4">{t("business.contactLocation")}</h3>
                   <div className="space-y-3 mb-5">
                     <a
                       href={`tel:${business.phone}`}
@@ -775,7 +780,7 @@ export default function BusinessDetailPage() {
                         <i className="ri-phone-line"></i>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs text-foreground-500">Phone</p>
+                        <p className="text-xs text-foreground-500">{t("public.phone")}</p>
                         <p className="text-sm font-medium text-foreground-900 truncate">{business.phone}</p>
                       </div>
                     </a>
@@ -787,7 +792,7 @@ export default function BusinessDetailPage() {
                         <i className="ri-mail-line"></i>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs text-foreground-500">Email</p>
+                        <p className="text-xs text-foreground-500">{t("public.email")}</p>
                         <p className="text-sm font-medium text-foreground-900 truncate">{business.email}</p>
                       </div>
                     </a>
@@ -801,7 +806,7 @@ export default function BusinessDetailPage() {
                         <i className="ri-global-line"></i>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs text-foreground-500">Website</p>
+                        <p className="text-xs text-foreground-500">{t("public.website")}</p>
                         <p className="text-sm font-medium text-foreground-900 truncate">{business.website.replace("https://", "").replace("http://", "").replace(/\/$/, "")}</p>
                       </div>
                     </a>
@@ -881,7 +886,7 @@ export default function BusinessDetailPage() {
             <div className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-2xl p-8 md:p-10 text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/5 mb-6">
                 <i className="ri-store-2-line text-white/80 text-sm"></i>
-                <span className="text-sm font-medium text-white/80">Discover more in Alanya</span>
+                <span className="text-sm font-medium text-white/80">{t("business.discoverMore")}</span>
               </div>
               <h2 className="font-heading text-2xl md:text-3xl text-white mb-3">
                 Ready to Explore Alanya?

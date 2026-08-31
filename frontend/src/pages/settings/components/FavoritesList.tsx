@@ -4,8 +4,10 @@ import { Bookmark, Star, MapPin, Trash2, ChevronRight, ExternalLink } from "luci
 import { useFavorites } from "@/hooks/useFavorites";
 import { directoryService, type Business } from "@/api-services/directory.service";
 import { logger } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export function FavoritesList() {
+  const { t } = useTranslation();
   const { favorites, toggleFavorite, favoriteCount } = useFavorites();
   const [allListings, setAllListings] = useState<Business[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,7 +42,7 @@ export function FavoritesList() {
         <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center mx-auto mb-4">
           <Bookmark className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">No saved favorites yet</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{t("settings.noFavorites")}</h3>
         <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
           Bookmark your preferred restaurants, luxury villas, and activities across Alanya to quickly access them here.
         </p>

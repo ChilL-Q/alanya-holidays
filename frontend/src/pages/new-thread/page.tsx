@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import NewThreadHero from "./components/NewThreadHero";
 import ThreadForm from "./components/ThreadForm";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function NewThreadPage() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-background-50 flex flex-col">
       <NewThreadHero />
@@ -17,7 +20,7 @@ export default function NewThreadPage() {
               <div className="w-7 h-7 flex items-center justify-center bg-accent-100 rounded-lg">
                 <i className="ri-lightbulb-line text-accent-600 text-sm"></i>
               </div>
-              Tips for a Great Discussion
+              {t("public.discussionTips")}
             </h3>
             <ul className="space-y-3">
               {[
@@ -57,16 +60,16 @@ export default function NewThreadPage() {
       <section className="w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
         <div className="max-w-2xl mx-auto bg-gradient-to-r from-accent-500 to-primary-500 rounded-2xl p-8 md:p-10 text-center">
           <h3 className="font-heading text-xl md:text-2xl text-background-50 mb-3">
-            Not ready to post yet?
+              {t("public.notReadyToPost")}
           </h3>
           <p className="text-background-50/80 text-sm md:text-base mb-6">
-            Browse existing discussions and see what the community is talking about right now.
+            {t("public.browseDiscussionsDescription")}
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-background-50 text-accent-600 text-sm font-medium hover:bg-background-50/90 transition-colors whitespace-nowrap"
           >
-            Browse All Categories
+            {t("public.browseAllCategories")}
             <i className="ri-arrow-right-line"></i>
           </Link>
         </div>

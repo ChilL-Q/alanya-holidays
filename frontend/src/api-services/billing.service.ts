@@ -18,6 +18,17 @@ export interface MySubscriptionResponse {
   subscription: MySubscription | null;
 }
 
+export function hasActivePremiumAccess(
+  subscription: MySubscription | null,
+  now = Date.now()
+): boolean {
+  if (!subscription || !["active", "trialing"].includes(subscription.status)) {
+    return false;
+  }
+  const periodEnd = Date.parse(subscription.current_period_end);
+  return Number.isFinite(periodEnd) && periodEnd > now;
+}
+
 export const billingService = {
   /**
    * Создаёт Stripe Checkout (mode: subscription) и возвращает URL

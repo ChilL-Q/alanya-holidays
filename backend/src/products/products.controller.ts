@@ -90,6 +90,15 @@ export class ProductsController {
     return this.productsService.updateMyProduct(id, dto, user.id);
   }
 
+  @Delete('mine/:id')
+  @UseGuards(AuthGuard)
+  async deleteMyProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.productsService.deleteMyProduct(id, user.id);
+  }
+
   @Get('orders/seller')
   @UseGuards(AuthGuard)
   async getSellerOrders(@CurrentUser() user: AuthUser) {

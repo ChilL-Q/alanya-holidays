@@ -10,8 +10,11 @@ import { formatAmenity } from "@/utils/format-amenity";
 import { createInquiryState } from "@/lib/inquiry-confirmation";
 import ErrorState from "@/components/base/ErrorState";
 import EmptyState from "@/components/base/EmptyState";
+import { useTranslation } from "react-i18next";
+import "@/i18n";
 
 export default function VillaStaysPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const initialVillas = propertiesService.getVillasSync();
   const [allVillas, setAllVillas] = useState<Villa[]>(initialVillas);
@@ -88,7 +91,7 @@ export default function VillaStaysPage() {
   }, [allVillas, activeLocation, sortBy]);
 
   const sortLabelMap: Record<string, string> = {
-    "rating": "Top Rated", "price-low": "Price: Low to High", "price-high": "Price: High to Low", "guests": "Most Guests",
+    "rating": t("services.topRated"), "price-low": t("services.priceLow"), "price-high": t("services.priceHigh"), "guests": t("services.mostCapacity"),
   };
 
   const handleBookingSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -132,10 +135,10 @@ export default function VillaStaysPage() {
         form.reset();
         navigate("/booking-confirmation", { state: confirmationState });
       } else {
-        setFormError("Something went wrong. Please try again.");
+        setFormError(t("services.form.somethingWrong"));
       }
     } catch {
-      setFormError("Network error. Please check your connection and try again.");
+      setFormError(t("services.form.networkError"));
     } finally {
       setFormSubmitting(false);
     }
@@ -153,15 +156,15 @@ export default function VillaStaysPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground-950/40 via-foreground-950/15 to-foreground-950/65"></div>
           <div className="absolute bottom-0 left-0 right-0 w-full px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
             <div className="flex items-center gap-2 mb-4">
-              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Home</Link>
+              <Link to="/" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.home")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">Explore</Link>
+              <Link to="/explore" className="text-white/60 hover:text-white/90 text-sm transition-colors underline underline-offset-2">{t("services.explore")}</Link>
               <i className="ri-arrow-right-s-line text-white/40 text-sm"></i>
-              <span className="text-white/90 text-sm">Villa Stays</span>
+              <span className="text-white/90 text-sm">{t("services.villa.breadcrumb")}</span>
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">Boutique Villa Stays</h1>
+            <h1 className="font-heading text-3xl md:text-5xl text-white mb-2">{t("services.villa.title")}</h1>
             <p className="text-white/70 text-sm md:text-base max-w-xl">
-              Handpicked luxury villas with private pools, panoramic sea views, and personal concierge service. Each property is a destination in itself.
+              {t("services.villa.hero")}
             </p>
           </div>
         </section>
@@ -215,7 +218,7 @@ export default function VillaStaysPage() {
           <div className="max-w-7xl mx-auto">
             {fetchError ? (
               <ErrorState
-                title="Unable to load villas"
+                title={t("services.villa.unable")}
                 message={fetchError}
                 onRetry={loadVillas}
               />
@@ -235,11 +238,11 @@ export default function VillaStaysPage() {
               </div>
             ) : filteredVillas.length === 0 ? (
               <EmptyState
-                title="No villas found"
-                description="Try selecting a different location or clearing filters."
+                title={t("services.villa.none")}
+                description={t("services.villa.noneDesc")}
                 icon="ri-home-4-line"
                 action={{
-                  label: "Reset Filters",
+                  label: t("services.resetFilters"),
                   onClick: () => {
                     setActiveLocation("all");
                     setSortBy("rating");
@@ -254,15 +257,15 @@ export default function VillaStaysPage() {
                       <img src={villa.image} alt={villa.name} className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500" />
                       {villa.featured && (
                         <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                          <i className="ri-star-fill text-[10px]"></i>Featured
+                          <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                         </div>
                       )}
                       <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-sm text-foreground-700 text-xs font-medium whitespace-nowrap flex items-center gap-1">
                         <i className="ri-map-pin-line text-[11px]"></i>{villa.location}
                       </div>
                       <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                        {villa.hasPool && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-drop-line text-[9px]"></i>Pool</span>}
-                        {villa.hasSeaView && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-eye-line text-[9px]"></i>Sea View</span>}
+                        {villa.hasPool && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-drop-line text-[9px]"></i>{t("services.service.pool")}</span>}
+                        {villa.hasSeaView && <span className="px-2 py-0.5 rounded-full bg-foreground-900/70 backdrop-blur-sm text-white text-[11px] font-medium whitespace-nowrap flex items-center gap-1"><i className="ri-eye-line text-[9px]"></i>{t("services.service.seaView")}</span>}
                       </div>
                     </div>
                     <div className="p-5">
@@ -289,10 +292,10 @@ export default function VillaStaysPage() {
                       <div className="flex items-center justify-between pt-4 border-t border-background-200/70">
                         <div>
                           <span className="text-lg font-bold text-foreground-900">€{villa.pricePerNight}</span>
-                          <span className="text-sm text-foreground-500"> / night</span>
+                    <span className="text-sm text-foreground-500"> / {t("services.perNight")}</span>
                         </div>
                         <button onClick={(e) => { e.stopPropagation(); setSelectedVilla(villa); }} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors whitespace-nowrap cursor-pointer">
-                          <i className="ri-hotel-line text-sm"></i>View Details
+                          <i className="ri-hotel-line text-sm"></i>{t("services.viewDetails")}
                         </button>
                       </div>
                     </div>
@@ -314,7 +317,7 @@ export default function VillaStaysPage() {
                 <img src={selectedVilla.image} alt={selectedVilla.name} className="w-full h-full object-cover object-top" />
                 {selectedVilla.featured && (
                   <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent-500 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                    <i className="ri-star-fill text-[10px]"></i>Featured
+                    <i className="ri-star-fill text-[10px]"></i>{t("services.featured")}
                   </div>
                 )}
               </div>
@@ -329,46 +332,46 @@ export default function VillaStaysPage() {
                   <div className="flex items-center gap-1 shrink-0 mt-1">
                     <i className="ri-star-fill text-yellow-400 text-base"></i>
                     <span className="text-base font-semibold text-foreground-900">{selectedVilla.rating}</span>
-                    <span className="text-sm text-foreground-500">({selectedVilla.reviewCount} reviews)</span>
+                    <span className="text-sm text-foreground-500">({selectedVilla.reviewCount} {t("services.service.reviews")})</span>
                   </div>
                 </div>
                 <p className="text-sm text-foreground-600 leading-relaxed mb-6">{selectedVilla.description}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-hotel-bed-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Bedrooms</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.bedrooms")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVilla.bedrooms}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-drop-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Bathrooms</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.bathrooms")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVilla.bathrooms}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-team-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Max Guests</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.maxGuests")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVilla.maxGuests}</p>
                   </div>
                   <div className="bg-background-100 rounded-xl p-3 text-center">
                     <i className="ri-walk-line text-foreground-500 text-lg mb-1 block"></i>
-                    <p className="text-xs text-foreground-500">Beach</p>
+                    <p className="text-xs text-foreground-500">{t("services.service.beach")}</p>
                     <p className="font-semibold text-foreground-900 text-sm">{selectedVilla.distanceToBeach}</p>
                   </div>
                 </div>
                 <div className="bg-primary-50 rounded-xl p-5 mb-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-foreground-500 mb-0.5">Per Night</p>
+                      <p className="text-xs text-foreground-500 mb-0.5">{t("services.perNight")}</p>
                       <p className="text-2xl font-bold text-foreground-900">€{selectedVilla.pricePerNight.toLocaleString()}</p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-foreground-500">
                       <i className="ri-calendar-check-line"></i>
-                      <span>Min {selectedVilla.minStay} night{selectedVilla.minStay > 1 ? "s" : ""} stay</span>
+                      <span>{t("services.service.minStay", { count: selectedVilla.minStay })}</span>
                     </div>
                   </div>
                 </div>
                 <div className="mb-6">
-                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">Amenities</h4>
+                  <h4 className="font-heading text-sm font-semibold text-foreground-900 mb-3">{t("services.amenities")}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedVilla.amenities.map((a) => (
                       <span key={a} className="px-3 py-1.5 rounded-full bg-secondary-100 text-secondary-800 text-xs font-medium whitespace-nowrap">{formatAmenity(a)}</span>
@@ -379,8 +382,8 @@ export default function VillaStaysPage() {
                     <input type="hidden" name="experience_type" value="Villa Stay" />
                     <input type="hidden" name="villa_name" value={selectedVilla.name} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                      <input name="name" type="text" placeholder="Your full name" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
-                      <input name="email" type="email" placeholder="Your email address" required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="name" type="text" placeholder={t("services.fullName")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="email" type="email" placeholder={t("services.emailAddress")} required className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="flex gap-2 mb-3">
                       <select name="country_code" defaultValue="+90" className="px-2.5 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 outline-none focus:border-primary-400 transition-colors cursor-pointer appearance-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", paddingRight: "28px" }}>
@@ -405,29 +408,29 @@ export default function VillaStaysPage() {
                         <option value="+48">🇵🇱 +48</option>
                         <option value="+40">🇷🇴 +40</option>
                       </select>
-                      <input name="phone" type="tel" placeholder="Your phone number (optional)" className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
+                      <input name="phone" type="tel" placeholder={t("services.phoneOptional")} className="flex-1 px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors" />
                     </div>
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-foreground-700 mb-2">Preferred contact method</p>
+                      <p className="text-xs font-medium text-foreground-700 mb-2">{t("services.form.contactMethod")} *</p>
                       <div className="flex flex-wrap gap-3">
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="phone_call" className="accent-primary-500" />
                           <i className="ri-phone-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Phone Call</span>
+                          <span className="text-sm text-foreground-700">{t("services.phone")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="whatsapp" className="accent-primary-500" />
                           <i className="ri-whatsapp-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">WhatsApp</span>
+                          <span className="text-sm text-foreground-700">{t("services.whatsapp")}</span>
                         </label>
                         <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-background-200 bg-white cursor-pointer hover:border-primary-200 transition-colors">
                           <input type="radio" name="preferred_contact" value="email" defaultChecked className="accent-primary-500" />
                           <i className="ri-mail-line text-foreground-500 text-sm"></i>
-                          <span className="text-sm text-foreground-700">Email</span>
+                          <span className="text-sm text-foreground-700">{t("services.email")}</span>
                         </label>
                       </div>
                     </div>
-                    <textarea name="notes" placeholder="Preferred dates, number of guests, or special requests? (optional)" maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
+                    <textarea name="notes" placeholder={t("services.form.villaNotes")} maxLength={500} rows={2} className="w-full px-3 py-2.5 rounded-xl border border-background-200 bg-white text-sm text-foreground-900 placeholder:text-foreground-400 outline-none focus:border-primary-400 transition-colors resize-none mb-3"></textarea>
                     <input name="website_alt" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" readOnly className="booking-offscreen" />
                     {formError && (
                       <p className="text-xs text-red-500 mb-3 flex items-center gap-1">
@@ -440,7 +443,7 @@ export default function VillaStaysPage() {
                         {formSubmitting ? (
                           <>
                             <i className="ri-loader-4-line animate-spin text-sm"></i>
-                            Sending...
+                            {t("services.form.sending")}
                           </>
                         ) : (
                           <>
@@ -449,7 +452,7 @@ export default function VillaStaysPage() {
                           </>
                         )}
                       </button>
-                      <button type="button" onClick={() => setSelectedVilla(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">Close</button>
+                      <button type="button" onClick={() => setSelectedVilla(null)} className="px-5 py-3 rounded-full border border-foreground-200 text-foreground-600 text-sm font-medium hover:bg-background-100 transition-colors whitespace-nowrap cursor-pointer">{t("services.close")}</button>
                     </div>
                   </form>
               </div>

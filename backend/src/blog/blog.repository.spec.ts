@@ -7,6 +7,7 @@ interface MockSupabaseClient {
   eq: jest.Mock;
   order: jest.Mock;
   range: jest.Mock;
+  limit: jest.Mock;
   rpc: jest.Mock;
 }
 
@@ -21,6 +22,7 @@ describe('BlogRepository', () => {
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
       rpc: jest.fn(),
     };
 
@@ -41,6 +43,97 @@ describe('BlogRepository', () => {
       { count: 'exact' },
     );
     expect(client.eq).toHaveBeenCalledWith('tags.tag_id', tagId);
+  });
+
+  it('filters guides inside the current blog_posts content model', async () => {
+    await repository.getBlogPosts({ content_type: 'guide' }, 20, 0, 'admin');
+    expect(client.eq).toHaveBeenCalledWith('content_type', 'guide');
+  });
+
+  it('defaults public blog listings to blog content only', async () => {
+    await repository.getBlogPosts({}, 20, 0, 'anon');
+    expect(client.eq).toHaveBeenCalledWith('content_type', 'blog');
+  });
+
+  it('excludes guides from featured blog queries', async () => {
+    await repository.getFeaturedBlogPosts(3);
+
+    expect(client.eq).toHaveBeenCalledWith('content_type', 'blog');
+  });
+
+  it('uses the repaired RPC to preserve category-first fill-to-limit results', async () => {
+    const categoryPost = {
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Category match',
+    };
+    const recentPost = {
+      id: '33333333-3333-4333-8333-333333333333',
+      title: 'Recent blog fill',
+    };
+    client.rpc.mockResolvedValue({
+      data: [categoryPost, recentPost],
+      error: null,
+    });
+
+    await expect(
+      repository.getRelatedPosts(
+        '11111111-1111-4111-8111-111111111111',
+        'Travel',
+        2,
+      ),
+    ).resolves.toEqual([categoryPost, recentPost]);
+    expect(client.rpc).toHaveBeenCalledWith('get_related_posts', {
+      p_post_id: '11111111-1111-4111-8111-111111111111',
+      p_category: 'Travel',
+      p_limit: 2,
+    });
+    expect(client.from).not.toHaveBeenCalled();
+  });
+
+  it('fills a partial category result from recent blogs when the RPC is unavailable', async () => {
+    const categoryPost = {
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Category match',
+    };
+    const recentPost = {
+      id: '33333333-3333-4333-8333-333333333333',
+      title: 'Recent blog fill',
+    };
+    const relatedQuery = (data: unknown[]) => {
+      const query = {
+        select: jest.fn(),
+        eq: jest.fn(),
+        neq: jest.fn(),
+        order: jest.fn(),
+        limit: jest.fn().mockResolvedValue({ data, error: null }),
+      };
+      query.select.mockReturnValue(query);
+      query.eq.mockReturnValue(query);
+      query.neq.mockReturnValue(query);
+      query.order.mockReturnValue(query);
+      return query;
+    };
+    const categoryQuery = relatedQuery([categoryPost]);
+    const recentQuery = relatedQuery([categoryPost, recentPost]);
+    client.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'RPC unavailable' },
+    });
+    client.from
+      .mockReturnValueOnce(categoryQuery)
+      .mockReturnValueOnce(recentQuery);
+
+    await expect(
+      repository.getRelatedPosts(
+        '11111111-1111-4111-8111-111111111111',
+        'Travel',
+        2,
+      ),
+    ).resolves.toEqual([categoryPost, recentPost]);
+    expect(categoryQuery.eq).toHaveBeenCalledWith('content_type', 'blog');
+    expect(recentQuery.eq).toHaveBeenCalledWith('content_type', 'blog');
+    expect(categoryQuery.limit).toHaveBeenCalledWith(2);
+    expect(recentQuery.limit).toHaveBeenCalledWith(3);
   });
 
   describe('bounded growing queries', () => {
@@ -91,6 +184,32 @@ describe('BlogRepository', () => {
         { id: 'page-comment-2', isLiked: true },
       ]);
     });
+  });
+
+  it('atomically restricts submission edits to reviewable statuses', async () => {
+    const updateQuery = {
+      update: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    client.from.mockReturnValueOnce(updateQuery);
+
+    await expect(
+      repository.updateBlogSubmission(
+        'submission-1',
+        { title: 'Late edit' },
+        'user-1',
+      ),
+    ).resolves.toBeNull();
+
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(1, 'id', 'submission-1');
+    expect(updateQuery.eq).toHaveBeenNthCalledWith(2, 'user_id', 'user-1');
+    expect(updateQuery.in).toHaveBeenCalledWith('status', [
+      'pending_review',
+      'rejected',
+    ]);
   });
 
   describe('toggleBlogCommentLike', () => {
